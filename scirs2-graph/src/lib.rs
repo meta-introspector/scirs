@@ -52,8 +52,8 @@ pub mod performance;
 pub mod spectral;
 pub mod temporal;
 pub mod ultrathink;
-// pub mod ultrathink_memory_profiler;
-// pub mod ultrathink_numerical_validation;
+pub mod ultrathink_memory_profiler;
+pub mod ultrathink_numerical_validation;
 pub mod weighted;
 
 // Re-export stable APIs for 1.0
@@ -127,7 +127,6 @@ pub use algorithms::{
     push_relabel_max_flow,
     radius,
     random_walk,
-    shortest_path_digraph,
     stable_marriage,
 
     strongly_connected_components,
@@ -309,15 +308,15 @@ pub use ultrathink::{
 };
 
 // Ultrathink memory profiling - experimental
-// pub use ultrathink_memory_profiler::{
-//     EfficiencyAnalysis, MemoryProfile, MemoryProfilerConfig, 
-//     MemoryStats as UltrathinkMemoryStats, // Renamed to avoid conflict
-//     OptimizationOpportunity, OptimizationType, UltrathinkMemoryProfiler,
-// };
+pub use ultrathink_memory_profiler::{
+    EfficiencyAnalysis, MemoryProfile, MemoryProfilerConfig, 
+    MemoryStats as UltrathinkMemoryStats, // Renamed to avoid conflict
+    OptimizationOpportunity, OptimizationType, UltrathinkMemoryProfiler,
+};
 
 // Ultrathink numerical validation - experimental
-// pub use ultrathink_numerical_validation::{
-//     create_comprehensive_validation_suite, run_quick_validation, UltrathinkNumericalValidator,
-//     ValidationAlgorithm, ValidationConfig, ValidationReport, ValidationResult,
-//     ValidationTolerances,
-// };
+pub use ultrathink_numerical_validation::{
+    create_comprehensive_validation_suite, run_quick_validation, UltrathinkNumericalValidator,
+    ValidationAlgorithm, ValidationConfig, ValidationReport, ValidationResult,
+    ValidationTolerances,
+};

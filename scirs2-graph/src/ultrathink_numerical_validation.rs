@@ -6,17 +6,18 @@
 
 use crate::algorithms::community::{label_propagation_result, louvain_communities_result};
 use crate::algorithms::connectivity::{connected_components, strongly_connected_components};
-use crate::algorithms::{dijkstra_path, floyd_warshall};
+use crate::algorithms::floyd_warshall;
 use crate::algorithms::{
     betweenness_centrality, closeness_centrality,
 };
 use crate::base::{Graph};
-use crate::error::Result;
+use crate::error::{Result, GraphError};
 use crate::generators::{barabasi_albert_graph, erdos_renyi_graph};
 use crate::measures::pagerank_centrality;
-use crate::ultrathink::{
-    create_ultrathink_processor, execute_with_ultrathink, UltrathinkProcessor,
-};
+// Unused imports are commented to avoid warnings
+// use crate::ultrathink::{
+//     create_ultrathink_processor, execute_with_ultrathink, UltrathinkProcessor,
+// };
 use crate::ultrathink::create_ultrathink_processor as create_enhanced_ultrathink_processor;
 use crate::ultrathink::execute_with_ultrathink as execute_with_enhanced_ultrathink;
 use std::collections::HashMap;
@@ -376,7 +377,7 @@ impl UltrathinkNumericalValidator {
     fn validate_algorithm(
         &self,
         graph: &Graph<usize, f64>,
-        _algorithm: &ValidationAlgorithm,
+        algorithm: &ValidationAlgorithm,
         tolerances: &ValidationTolerances,
     ) -> Result<ValidationResult> {
         // Run standard (reference) implementation
@@ -424,7 +425,7 @@ impl UltrathinkNumericalValidator {
     fn run_standard_algorithm(
         &self,
         graph: &Graph<usize, f64>,
-        _algorithm: &ValidationAlgorithm,
+        algorithm: &ValidationAlgorithm,
     ) -> Result<(AlgorithmOutput, Duration)> {
         let start = Instant::now();
 
@@ -461,16 +462,39 @@ impl UltrathinkNumericalValidator {
                 })
             }
             ValidationAlgorithm::ShortestPaths { source } => {
-                AlgorithmOutput::DistanceMap(dijkstra_path(graph, *source)?)
+                // Use petgraph's dijkstra for single-source shortest paths to all nodes
+                use petgraph::algo::dijkstra;
+                
+                let graph_ref = graph.inner();
+                let source_idx = graph_ref.node_indices().find(|&idx| &graph_ref[idx] == source)
+                    .ok_or_else(|| GraphError::node_not_found("source node"))?;
+                
+                let distances = dijkstra(graph_ref, source_idx, None, |e| *e.weight());
+                let mut distance_map = HashMap::new();
+                for (node_idx, distance) in distances {
+                    distance_map.insert(graph_ref[node_idx].clone(), distance);
+                }
+                AlgorithmOutput::DistanceMap(distance_map)
             }
             ValidationAlgorithm::AllPairsShortestPaths => {
-                AlgorithmOutput::AllPairsDistances(floyd_warshall(graph)?)
+                let distance_matrix = floyd_warshall(graph)?;
+                let mut distance_map = HashMap::new();
+                
+                for i in 0..distance_matrix.nrows() {
+                    for j in 0..distance_matrix.ncols() {
+                        distance_map.insert((i, j), distance_matrix[[i, j]]);
+                    }
+                }
+                
+                AlgorithmOutput::AllPairsDistances(distance_map)
             }
             ValidationAlgorithm::LouvainCommunities => {
-                AlgorithmOutput::ComponentMap(louvain_communities_result(graph, None)?)
+                let result = louvain_communities_result(graph);
+                AlgorithmOutput::ComponentMap(result.node_communities)
             }
             ValidationAlgorithm::LabelPropagation { max_iterations } => {
-                AlgorithmOutput::ComponentMap(label_propagation_result(graph, Some(*max_iterations))?)
+                let result = label_propagation_result(graph, *max_iterations);
+                AlgorithmOutput::ComponentMap(result.node_communities)
             }
         };
 
@@ -482,7 +506,7 @@ impl UltrathinkNumericalValidator {
     fn run_ultrathink_algorithm(
         &self,
         graph: &Graph<usize, f64>,
-        _algorithm: &ValidationAlgorithm,
+        algorithm: &ValidationAlgorithm,
     ) -> Result<(AlgorithmOutput, Duration)> {
         let mut processor = create_enhanced_ultrathink_processor();
         let start = Instant::now();
@@ -533,7 +557,7 @@ impl UltrathinkNumericalValidator {
                     &mut processor,
                     graph,
                     "validation_closeness_centrality",
-                    |g| closeness_centrality(g),
+                    |g| Ok(closeness_centrality(g)),
                 )?;
                 AlgorithmOutput::ScoreMap(scores)
             }
@@ -547,7 +571,7 @@ impl UltrathinkNumericalValidator {
                         for node in g.nodes() {
                             degree_map.insert(node, g.degree(node) as f64);
                         }
-                        degree_map
+                        Ok(degree_map)
                     },
                 )?;
                 AlgorithmOutput::ScoreMap(scores)
@@ -557,7 +581,19 @@ impl UltrathinkNumericalValidator {
                     &mut processor,
                     graph,
                     "validation_shortest_paths",
-                    |g| dijkstra_path(g, *source),
+                    |g| {
+                        use petgraph::algo::dijkstra;
+                        let graph_ref = g.inner();
+                        let source_idx = graph_ref.node_indices().find(|&idx| &graph_ref[idx] == source)
+                            .ok_or_else(|| crate::error::GraphError::node_not_found("source node"))?;
+                        
+                        let distances = dijkstra(graph_ref, source_idx, None, |e| *e.weight());
+                        let mut distance_map = HashMap::new();
+                        for (node_idx, distance) in distances {
+                            distance_map.insert(graph_ref[node_idx].clone(), distance);
+                        }
+                        Ok(distance_map)
+                    },
                 )?;
                 AlgorithmOutput::DistanceMap(distances)
             }
@@ -566,7 +602,18 @@ impl UltrathinkNumericalValidator {
                     &mut processor,
                     graph,
                     "validation_all_pairs_shortest_paths",
-                    |g| floyd_warshall(g),
+                    |g| {
+                        let distance_matrix = floyd_warshall(g)?;
+                        let mut distance_map = HashMap::new();
+                        
+                        for i in 0..distance_matrix.nrows() {
+                            for j in 0..distance_matrix.ncols() {
+                                distance_map.insert((i, j), distance_matrix[[i, j]]);
+                            }
+                        }
+                        
+                        Ok(distance_map)
+                    },
                 )?;
                 AlgorithmOutput::AllPairsDistances(distances)
             }
@@ -575,7 +622,7 @@ impl UltrathinkNumericalValidator {
                     &mut processor,
                     graph,
                     "validation_louvain_communities",
-                    |g| louvain_communities(g, None),
+                    |g| Ok(louvain_communities_result(g).node_communities),
                 )?;
                 AlgorithmOutput::ComponentMap(communities)
             }
@@ -584,7 +631,7 @@ impl UltrathinkNumericalValidator {
                     &mut processor,
                     graph,
                     "validation_label_propagation",
-                    |g| label_propagation_result(g, Some(*max_iterations)),
+                    |g| Ok(label_propagation_result(g, *max_iterations).node_communities),
                 )?;
                 AlgorithmOutput::ComponentMap(communities)
             }

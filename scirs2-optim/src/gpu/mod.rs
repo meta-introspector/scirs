@@ -32,22 +32,22 @@ pub trait GpuOptimizer<A: Float, D: Dimension> {
     fn is_gpu_available(&self) -> bool;
 
     /// Move optimizer state to GPU
-    fn to_gpu(&mut self) -> Result<(), GpuOptimizerError>;
+    fn to_gpu(&mut self) -> Result<(), GpuOptimError>;
 
     /// Move optimizer state back to CPU
-    fn to_cpu(&mut self) -> Result<(), GpuOptimizerError>;
+    fn to_cpu(&mut self) -> Result<(), GpuOptimError>;
 
     /// Perform optimization step on GPU
     fn step_gpu(
         &mut self,
         params: &mut Array<A, D>,
         gradients: &Array<A, D>,
-    ) -> Result<(), GpuOptimizerError>;
+    ) -> Result<(), GpuOptimError>;
 }
 
 /// Error type for GPU optimizer operations
 #[derive(Debug, thiserror::Error)]
-pub enum GpuOptimizerError {
+pub enum GpuOptimError {
     /// GPU backend error
     #[error("GPU error: {0}")]
     GpuError(#[from] GpuError),
@@ -141,7 +141,7 @@ pub struct GpuOptimizerMemory<A: Float> {
 
 impl<A: Float> GpuOptimizerMemory<A> {
     /// Create new GPU memory manager
-    pub fn new(size: usize, config: GpuOptimizerConfig) -> Result<Self, GpuOptimizerError> {
+    pub fn new(size: usize, config: GpuOptimizerConfig) -> Result<Self, GpuOptimError> {
         let context = Arc::new(GpuContext::new(config.backend)?);
 
         Ok(Self {
@@ -156,7 +156,7 @@ impl<A: Float> GpuOptimizerMemory<A> {
     }
 
     /// Allocate GPU buffers
-    pub fn allocate(&mut self) -> Result<(), GpuOptimizerError> {
+    pub fn allocate(&mut self) -> Result<(), GpuOptimError> {
         self.params_gpu = Some(self.context.create_buffer::<A>(self.size));
         self.grads_gpu = Some(self.context.create_buffer::<A>(self.size));
         self.m_gpu = Some(self.context.create_buffer::<A>(self.size));
@@ -168,19 +168,19 @@ impl<A: Float> GpuOptimizerMemory<A> {
     pub fn copy_params_to_gpu<S, D>(
         &mut self,
         params: &ArrayBase<S, D>,
-    ) -> Result<(), GpuOptimizerError>
+    ) -> Result<(), GpuOptimError>
     where
         S: Data<Elem = A>,
         D: Dimension,
     {
         if let Some(ref params_gpu) = self.params_gpu {
             let params_slice = params.as_slice().ok_or_else(|| {
-                GpuOptimizerError::InvalidState("Parameters must be contiguous".to_string())
+                GpuOptimError::InvalidState("Parameters must be contiguous".to_string())
             })?;
             params_gpu.copy_from_host(params_slice);
             Ok(())
         } else {
-            Err(GpuOptimizerError::NotInitialized)
+            Err(GpuOptimError::NotInitialized)
         }
     }
 
@@ -188,19 +188,19 @@ impl<A: Float> GpuOptimizerMemory<A> {
     pub fn copy_params_from_gpu<S, D>(
         &self,
         params: &mut ArrayBase<S, D>,
-    ) -> Result<(), GpuOptimizerError>
+    ) -> Result<(), GpuOptimError>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
     {
         if let Some(ref params_gpu) = self.params_gpu {
             let params_slice = params.as_slice_mut().ok_or_else(|| {
-                GpuOptimizerError::InvalidState("Parameters must be contiguous".to_string())
+                GpuOptimError::InvalidState("Parameters must be contiguous".to_string())
             })?;
             params_gpu.copy_to_host(params_slice);
             Ok(())
         } else {
-            Err(GpuOptimizerError::NotInitialized)
+            Err(GpuOptimError::NotInitialized)
         }
     }
 
@@ -402,7 +402,7 @@ pub struct AdvancedGpuOptimizer<A: Float, D: Dimension> {
 
 impl<A: Float, D: Dimension> AdvancedGpuOptimizer<A, D> {
     /// Create new advanced GPU optimizer
-    pub fn new(config: GpuOptimizerConfig) -> Result<Self, GpuOptimizerError> {
+    pub fn new(config: GpuOptimizerConfig) -> Result<Self, GpuOptimError> {
         let memory = GpuOptimizerMemory::new(0, config)?;
 
         Ok(Self {
@@ -418,7 +418,7 @@ impl<A: Float, D: Dimension> AdvancedGpuOptimizer<A, D> {
     }
 
     /// Initialize device information
-    pub fn initialize_device_info(&mut self) -> Result<(), GpuOptimizerError> {
+    pub fn initialize_device_info(&mut self) -> Result<(), GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             let context = self.memory.context();
@@ -453,7 +453,7 @@ impl<A: Float, D: Dimension> AdvancedGpuOptimizer<A, D> {
     }
 
     /// Perform memory cleanup if needed
-    pub fn maybe_cleanup_memory(&mut self) -> Result<(), GpuOptimizerError> {
+    pub fn maybe_cleanup_memory(&mut self) -> Result<(), GpuOptimError> {
         if !self.auto_memory_management {
             return Ok(());
         }
@@ -471,7 +471,7 @@ impl<A: Float, D: Dimension> AdvancedGpuOptimizer<A, D> {
     }
 
     /// Force memory cleanup
-    pub fn cleanup_memory(&mut self) -> Result<(), GpuOptimizerError> {
+    pub fn cleanup_memory(&mut self) -> Result<(), GpuOptimError> {
         // Clear kernel cache
         self.kernel_cache.clear();
 
@@ -496,9 +496,9 @@ impl<A: Float, D: Dimension> AdvancedGpuOptimizer<A, D> {
     }
 
     /// Execute operation with error recovery
-    pub fn execute_with_recovery<F, R>(&mut self, operation: F) -> Result<R, GpuOptimizerError>
+    pub fn execute_with_recovery<F, R>(&mut self, operation: F) -> Result<R, GpuOptimError>
     where
-        F: Fn() -> Result<R, GpuOptimizerError>,
+        F: Fn() -> Result<R, GpuOptimError>,
     {
         if !self.error_recovery_enabled {
             return operation();
@@ -517,7 +517,7 @@ impl<A: Float, D: Dimension> AdvancedGpuOptimizer<A, D> {
 
                     // Try to recover from common errors
                     match &error {
-                        GpuOptimizerError::GpuError(_) => {
+                        GpuOptimError::GpuError(_) => {
                             // Reset GPU context and retry
                             #[cfg(feature = "gpu")]
                             {
@@ -703,9 +703,9 @@ pub mod utils {
     }
 
     /// Benchmark GPU operation
-    pub fn benchmark_operation<F>(operation: F, iterations: usize) -> Result<f64, GpuOptimizerError>
+    pub fn benchmark_operation<F>(operation: F, iterations: usize) -> Result<f64, GpuOptimError>
     where
-        F: Fn() -> Result<(), GpuOptimizerError>,
+        F: Fn() -> Result<(), GpuOptimError>,
     {
         let start = std::time::Instant::now();
 

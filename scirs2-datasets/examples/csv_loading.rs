@@ -1,8 +1,8 @@
-use scirs2_datasets::loaders::load_csv;
+use scirs2_datasets::loaders::load_csv_legacy;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load a CSV file with headers and target column
-    let dataset = load_csv(
+    let dataset = load_csv_legacy(
         "scirs2-datasets/data/example.csv",
         true,    // has header
         Some(3), // target column index (0-based)

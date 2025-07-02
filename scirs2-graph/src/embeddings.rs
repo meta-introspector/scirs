@@ -7,8 +7,7 @@ use crate::base::{DiGraph, EdgeWeight, Graph, Node};
 use crate::error::{GraphError, Result};
 use rand::prelude::*;
 use rand::Rng;
-use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
+// use scirs2_core::parallel_ops::*; // Currently unused
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
@@ -387,11 +386,10 @@ impl Embedding {
         let norm_a = self.norm();
         let norm_b = other.norm();
 
-            if norm_a == 0.0 || norm_b == 0.0 {
-                Ok(0.0)
-            } else {
-                Ok(dot_product / (norm_a * norm_b))
-            }
+        if norm_a == 0.0 || norm_b == 0.0 {
+            Ok(0.0)
+        } else {
+            Ok(dot_product / (norm_a * norm_b))
         }
     }
 
@@ -445,8 +443,7 @@ impl Embedding {
             .zip(other.vector.iter())
             .map(|(a, b)| a * b)
             .sum();
-            Ok(dot)
-        }
+        Ok(dot)
     }
 
     /// Sigmoid activation function
@@ -679,23 +676,10 @@ impl<N: Node> EmbeddingModel<N> {
                     let mut target_gradient = vec![0.0; self.dimensions];
                     let mut context_gradient = vec![0.0; self.dimensions];
 
-                    // SIMD-optimized gradient computation
-                    if self.dimensions >= 4 {
-                        f64::simd_scaled_add(
-                            &mut target_gradient,
-                            &context_emb.vector,
-                            positive_error,
-                        );
-                        f64::simd_scaled_add(
-                            &mut context_gradient,
-                            &target_emb.vector,
-                            positive_error,
-                        );
-                    } else {
-                        for i in 0..self.dimensions {
-                            target_gradient[i] += positive_error * context_emb.vector[i];
-                            context_gradient[i] += positive_error * target_emb.vector[i];
-                        }
+                    // Gradient computation
+                    for i in 0..self.dimensions {
+                        target_gradient[i] += positive_error * context_emb.vector[i];
+                        context_gradient[i] += positive_error * target_emb.vector[i];
                     }
 
                     // Negative sampling
@@ -713,17 +697,8 @@ impl<N: Node> EmbeddingModel<N> {
                             let negative_prob = Embedding::sigmoid(negative_score);
                             let negative_error = -negative_prob;
 
-                            if self.dimensions >= 4 {
-                                f64::simd_scaled_add(
-                                    &mut target_gradient,
-                                    &neg_context_emb.vector,
-                                    negative_error,
-                                );
-                            } else {
-                                for i in 0..self.dimensions {
-                                    target_gradient[i] +=
-                                        negative_error * neg_context_emb.vector[i];
-                                }
+                            for i in 0..self.dimensions {
+                                target_gradient[i] += negative_error * neg_context_emb.vector[i];
                             }
                         }
                     }

@@ -10,11 +10,10 @@
 //! - **Transfer Learning**: Applies knowledge from one domain to accelerate learning in others
 //! - **Few-Shot Learning**: Quickly adapts to new image types with minimal examples
 
-use ndarray::{Array, Array1, Array2, Array3, Array4, ArrayView2, ArrayViewMut2, Axis, Zip};
+use ndarray::{Array1, Array2, Array3, ArrayView2};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::Rng;
-use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::f64::consts::PI;
+use std::collections::{HashMap, VecDeque};
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::ultrathink_fusion_core::UltrathinkConfig;
@@ -189,6 +188,17 @@ pub enum FeatureType {
     Patterns,
     Symmetry,
     Frequency,
+}
+
+/// Neural Model for AI-driven processing
+#[derive(Debug, Clone)]
+pub struct NeuralModel {
+    /// Network weights
+    pub weights: Array2<f64>,
+    /// Network biases
+    pub biases: Array1<f64>,
+    /// Model architecture metadata
+    pub architecture: String,
 }
 
 /// Processing Strategy

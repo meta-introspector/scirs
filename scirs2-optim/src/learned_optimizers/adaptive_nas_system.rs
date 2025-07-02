@@ -9,7 +9,7 @@ use rand::Rng;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::time::{Duration, Instant};
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use crate::learned_optimizers::neural_architecture_search::ArchitectureSearchSpace;
 use crate::neural_architecture_search::{
     ArchitectureController, MultiObjectiveOptimizer, NASConfig, SearchStrategy,
@@ -511,7 +511,7 @@ impl<T: Float> DiversityMaintainer<T> {
     fn ensure_diversity(
         &self,
         candidates: Vec<ArchitectureCandidate<T>>,
-    ) -> Result<Vec<ArchitectureCandidate<T>>, OptimizerError> {
+    ) -> Result<Vec<ArchitectureCandidate<T>>, OptimError> {
         if candidates.len() <= 1 {
             return Ok(candidates);
         }
@@ -541,7 +541,7 @@ impl<T: Float> DiversityMaintainer<T> {
         &self,
         arch1: &ArchitectureCandidate<T>,
         arch2: &ArchitectureCandidate<T>,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         let mut total_distance = T::zero();
         let mut metric_count = 0;
 
@@ -576,7 +576,7 @@ impl<T: Float> DiversityMaintainer<T> {
         &self,
         spec1: &ArchitectureSpecification,
         spec2: &ArchitectureSpecification,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         if spec1.layers.len() != spec2.layers.len() {
             return Ok(T::one());
         }
@@ -595,7 +595,7 @@ impl<T: Float> DiversityMaintainer<T> {
         &self,
         spec1: &ArchitectureSpecification,
         spec2: &ArchitectureSpecification,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         let param_diff = (spec1.parameter_count as f64 - spec2.parameter_count as f64).abs();
         let max_params = (spec1.parameter_count.max(spec2.parameter_count)) as f64;
 
@@ -610,7 +610,7 @@ impl<T: Float> DiversityMaintainer<T> {
         &self,
         arch1: &ArchitectureCandidate<T>,
         arch2: &ArchitectureCandidate<T>,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         match (arch1.estimated_quality, arch2.estimated_quality) {
             (Some(qual1), Some(qual2)) => Ok((qual1 - qual2).abs()),
             _ => Ok(T::zero()), // If no quality estimates, assume similar
@@ -621,7 +621,7 @@ impl<T: Float> DiversityMaintainer<T> {
         &self,
         spec1: &ArchitectureSpecification,
         spec2: &ArchitectureSpecification,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         let flops_diff = (spec1.flops as f64 - spec2.flops as f64).abs();
         let max_flops = (spec1.flops.max(spec2.flops)) as f64;
 
@@ -2156,7 +2156,7 @@ impl<T: Float> Default for AdaptiveNASConfig<T> {
 
 impl<T: Float> AdaptiveNASSystem<T> {
     /// Create new adaptive NAS system
-    pub fn new(config: AdaptiveNASConfig<T>) -> Result<Self, OptimizerError> {
+    pub fn new(config: AdaptiveNASConfig<T>) -> Result<Self, OptimError> {
         Ok(Self {
             performance_searcher: PerformanceAwareSearcher::new(&config)?,
             performance_database: ArchitecturePerformanceDatabase::new()?,
@@ -2176,7 +2176,7 @@ impl<T: Float> AdaptiveNASSystem<T> {
         &mut self,
         task_context: &OptimizationTask,
         performance_history: &[T],
-    ) -> Result<ArchitectureRecommendation<T>, OptimizerError> {
+    ) -> Result<ArchitectureRecommendation<T>, OptimError> {
         // Update system state
         self.state_tracker
             .update_state(task_context, performance_history)?;
@@ -2215,7 +2215,7 @@ impl<T: Float> AdaptiveNASSystem<T> {
         &mut self,
         architecture_id: &str,
         performance_feedback: &PerformanceFeedback<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Update performance database
         self.performance_database
             .update_performance(architecture_id, performance_feedback)?;
@@ -2251,7 +2251,7 @@ impl<T: Float> AdaptiveNASSystem<T> {
         _selected: Vec<ArchitectureCandidate<T>>,
         _predictions: Vec<PerformancePrediction<T>>,
         _quality_assessments: Vec<QualityAssessment<T>>,
-    ) -> Result<ArchitectureRecommendation<T>, OptimizerError> {
+    ) -> Result<ArchitectureRecommendation<T>, OptimError> {
         // Simplified implementation
         Ok(ArchitectureRecommendation {
             architecture_spec: ArchitectureSpecification {
@@ -2494,7 +2494,7 @@ pub struct AdaptationPerformanceMetrics<T: Float> {
 
 // Implementation stubs for complex components
 impl<T: Float> PerformanceAwareSearcher<T> {
-    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimError> {
         Ok(Self {
             strategy_selector: SearchStrategySelector::new(),
             guided_search: PerformanceGuidedSearch::new(config)?,
@@ -2526,7 +2526,7 @@ impl<T: Float> PerformanceAwareSearcher<T> {
         &mut self,
         task_context: &OptimizationTask,
         num_candidates: usize,
-    ) -> Result<Vec<ArchitectureCandidate<T>>, OptimizerError> {
+    ) -> Result<Vec<ArchitectureCandidate<T>>, OptimError> {
         // Get search strategy
         let strategy = self
             .strategy_selector
@@ -2557,7 +2557,7 @@ impl<T: Float> PerformanceAwareSearcher<T> {
 }
 
 impl<T: Float> ArchitecturePerformanceDatabase<T> {
-    fn new() -> Result<Self, OptimizerError> {
+    fn new() -> Result<Self, OptimError> {
         Ok(Self {
             performance_records: HashMap::new(),
             performance_indices: PerformanceIndices::new(),
@@ -2571,7 +2571,7 @@ impl<T: Float> ArchitecturePerformanceDatabase<T> {
         &mut self,
         _architecture_id: &str,
         _feedback: &PerformanceFeedback<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Update database with new performance data
         Ok(())
     }
@@ -2579,7 +2579,7 @@ impl<T: Float> ArchitecturePerformanceDatabase<T> {
     fn record_search_result(
         &mut self,
         _recommendation: &ArchitectureRecommendation<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Record search results in database
         Ok(())
     }
@@ -2590,7 +2590,7 @@ impl<T: Float> ArchitecturePerformanceDatabase<T> {
 }
 
 impl<T: Float> LearningBasedGenerator<T> {
-    fn new(_config: &AdaptiveNASConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(_config: &AdaptiveNASConfig<T>) -> Result<Self, OptimError> {
         Ok(Self {
             generative_model: ArchitectureGenerativeModel::new(),
             learning_algorithm: GenerativeLearningAlgorithm::VariationalAutoencoder,
@@ -2603,7 +2603,7 @@ impl<T: Float> LearningBasedGenerator<T> {
     fn generate_candidates(
         &mut self,
         _task_context: &OptimizationTask,
-    ) -> Result<Vec<ArchitectureCandidate<T>>, OptimizerError> {
+    ) -> Result<Vec<ArchitectureCandidate<T>>, OptimError> {
         // Generate architecture candidates
         Ok(vec![])
     }
@@ -2763,7 +2763,7 @@ impl<T: Float> PerformanceTrendAnalyzer<T> {
 
 // Placeholder implementations for other complex components
 impl<T: Float> MultiObjectiveArchitectureOptimizer<T> {
-    fn new(_config: &AdaptiveNASConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(_config: &AdaptiveNASConfig<T>) -> Result<Self, OptimError> {
         Ok(Self {
             algorithm: MultiObjectiveAlgorithm::NSGA2,
             objectives: vec![],
@@ -2777,7 +2777,7 @@ impl<T: Float> MultiObjectiveArchitectureOptimizer<T> {
         &self,
         _candidates: &[ArchitectureCandidate<T>],
         _predictions: &[PerformancePrediction<T>],
-    ) -> Result<Vec<ArchitectureCandidate<T>>, OptimizerError> {
+    ) -> Result<Vec<ArchitectureCandidate<T>>, OptimError> {
         Ok(vec![])
     }
 }
@@ -2845,7 +2845,7 @@ mod tests {
 
 // Stub implementations for remaining complex types
 impl<T: Float> PerformanceGuidedSearch<T> {
-    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimError> {
         Ok(Self {
             search_strategies: Vec::new(),
             performance_models: HashMap::new(),
@@ -2861,7 +2861,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
         task_context: &OptimizationTask,
         strategy: &SearchStrategyType,
         history: &SearchHistory<T>,
-    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+    ) -> Result<ArchitectureCandidate<T>, OptimError> {
         // Analyze performance trends from history
         let trend = history.get_recent_trend(20);
 
@@ -2891,7 +2891,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
     fn adjust_guidance_weights(
         &mut self,
         trend: &PerformanceTrend<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         match trend.direction {
             TrendDirection::Increasing => {
                 // Performance is improving, slightly increase exploitation
@@ -2927,7 +2927,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
         &self,
         task_context: &OptimizationTask,
         history: &SearchHistory<T>,
-    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+    ) -> Result<ArchitectureCandidate<T>, OptimError> {
         // Use performance history to guide architecture generation
         let best_configs = self.extract_best_configurations(history, 5);
 
@@ -2951,7 +2951,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
     fn generate_exploration_candidate(
         &self,
         task_context: &OptimizationTask,
-    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+    ) -> Result<ArchitectureCandidate<T>, OptimError> {
         // Generate diverse, exploratory candidate
         Ok(ArchitectureCandidate {
             id: format!("exploration_{}", rand::random::<u32>()),
@@ -2965,7 +2965,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
         &self,
         task_context: &OptimizationTask,
         history: &SearchHistory<T>,
-    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+    ) -> Result<ArchitectureCandidate<T>, OptimError> {
         // Generate candidate that exploits known good patterns
         let best_patterns = self.extract_successful_patterns(history);
 
@@ -2981,7 +2981,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
         &self,
         task_context: &OptimizationTask,
         history: &SearchHistory<T>,
-    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+    ) -> Result<ArchitectureCandidate<T>, OptimError> {
         // Balance exploration and exploitation
         let explore_factor = self
             .exploration_exploitation_balance
@@ -2998,7 +2998,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
     fn generate_default_candidate(
         &self,
         _task_context: &OptimizationTask,
-    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+    ) -> Result<ArchitectureCandidate<T>, OptimError> {
         Ok(ArchitectureCandidate {
             id: format!("default_{}", rand::random::<u32>()),
             specification: ArchitectureSpecification::default(),
@@ -3019,14 +3019,14 @@ impl<T: Float> PerformanceGuidedSearch<T> {
     fn mutate_architecture_spec(
         &self,
         _base: &ArchitectureSpecification,
-    ) -> Result<ArchitectureSpecification, OptimizerError> {
+    ) -> Result<ArchitectureSpecification, OptimError> {
         Ok(ArchitectureSpecification::default()) // Placeholder
     }
 
     fn generate_diverse_architecture(
         &self,
         _task_context: &OptimizationTask,
-    ) -> Result<ArchitectureSpecification, OptimizerError> {
+    ) -> Result<ArchitectureSpecification, OptimError> {
         Ok(ArchitectureSpecification::default()) // Placeholder
     }
 
@@ -3038,13 +3038,13 @@ impl<T: Float> PerformanceGuidedSearch<T> {
         &self,
         _patterns: &[ArchitecturePattern],
         _task_context: &OptimizationTask,
-    ) -> Result<ArchitectureSpecification, OptimizerError> {
+    ) -> Result<ArchitectureSpecification, OptimError> {
         Ok(ArchitectureSpecification::default()) // Placeholder
     }
 }
 
 impl<T: Float> ArchitectureCandidateGenerator<T> {
-    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimError> {
         Ok(Self {
             generation_strategies: vec![
                 GenerationStrategy::Random,
@@ -3062,7 +3062,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
     fn validate_candidate(
         &self,
         candidate: &ArchitectureCandidate<T>,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         // Check basic structure validity
         if candidate.specification.layers.is_empty() {
             return Ok(false);
@@ -3101,7 +3101,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
         count: usize,
         strategy: GenerationStrategy,
         context: &OptimizationTask,
-    ) -> Result<Vec<ArchitectureCandidate<T>>, OptimizerError> {
+    ) -> Result<Vec<ArchitectureCandidate<T>>, OptimError> {
         let mut candidates = Vec::with_capacity(count);
 
         for i in 0..count {
@@ -3139,7 +3139,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
     fn validate_layer_specification(
         &self,
         layer: &LayerSpecification,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         // Check input/output dimension compatibility
         if layer.input_dims.is_empty() || layer.output_dims.is_empty() {
             return Ok(false);
@@ -3178,7 +3178,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
         Ok(true)
     }
 
-    fn has_cycles(&self, connections: &ConnectionTopology) -> Result<bool, OptimizerError> {
+    fn has_cycles(&self, connections: &ConnectionTopology) -> Result<bool, OptimError> {
         let n = connections.adjacency_matrix.nrows();
         if n == 0 {
             return Ok(false);
@@ -3203,7 +3203,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
         visited: &mut Vec<bool>,
         rec_stack: &mut Vec<bool>,
         connections: &ConnectionTopology,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         visited[node] = true;
         rec_stack[node] = true;
 
@@ -3226,7 +3226,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
     fn generate_random_candidate(
         &self,
         context: &OptimizationTask,
-    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+    ) -> Result<ArchitectureCandidate<T>, OptimError> {
         let num_layers = rand::rng().gen_range(1..=8);
         let mut layers = Vec::with_capacity(num_layers);
 
@@ -3271,7 +3271,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
         &self,
         context: &OptimizationTask,
         generation: usize,
-    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+    ) -> Result<ArchitectureCandidate<T>, OptimError> {
         // For now, use random generation with some bias based on generation
         let mut candidate = self.generate_random_candidate(context)?;
 
@@ -3287,7 +3287,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
     fn generate_guided_candidate(
         &self,
         context: &OptimizationTask,
-    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+    ) -> Result<ArchitectureCandidate<T>, OptimError> {
         // Use successful patterns from history
         let mut candidate = self.generate_random_candidate(context)?;
 
@@ -3305,7 +3305,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
         layer_type: LayerType,
         position: usize,
         total_layers: usize,
-    ) -> Result<LayerSpecification, OptimizerError> {
+    ) -> Result<LayerSpecification, OptimError> {
         let mut parameters = HashMap::new();
         let (input_dims, output_dims) =
             self.generate_layer_dimensions(layer_type, position, total_layers);
@@ -3399,7 +3399,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
     fn generate_sequential_connections(
         &self,
         num_layers: usize,
-    ) -> Result<ConnectionTopology, OptimizerError> {
+    ) -> Result<ConnectionTopology, OptimError> {
         let mut adjacency_matrix = Array2::zeros((num_layers, num_layers));
         let mut connection_types = HashMap::new();
 
@@ -3487,7 +3487,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
         &self,
         mut candidate: ArchitectureCandidate<T>,
         _generation: usize,
-    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+    ) -> Result<ArchitectureCandidate<T>, OptimError> {
         // Simple mutation: modify some parameters
         for layer in &mut candidate.specification.layers {
             for (_, param) in &mut layer.parameters {
@@ -3509,7 +3509,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
     fn apply_component_guidance(
         &self,
         candidate: ArchitectureCandidate<T>,
-    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+    ) -> Result<ArchitectureCandidate<T>, OptimError> {
         // Apply guidance from component library (placeholder implementation)
         Ok(candidate)
     }
@@ -3660,7 +3660,7 @@ impl<T: Float> SearchHistory<T> {
 }
 
 impl<T: Float> PerformanceFeedbackProcessor<T> {
-    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimError> {
         Ok(Self {
             feedback_aggregator: FeedbackAggregator::new(),
             pattern_extractor: PatternExtractor::new(),
@@ -3675,7 +3675,7 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
     fn process_candidate_batch(
         &mut self,
         candidates: &[ArchitectureCandidate<T>],
-    ) -> Result<ProcessingResult<T>, OptimizerError> {
+    ) -> Result<ProcessingResult<T>, OptimError> {
         let mut batch_feedback = Vec::new();
 
         // Collect initial feedback for each candidate
@@ -3723,7 +3723,7 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
     fn update_with_performance_feedback(
         &mut self,
         feedback: &PerformanceFeedback<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Convert performance feedback to architecture feedback
         let arch_feedback = self.convert_performance_feedback(feedback)?;
 
@@ -3742,7 +3742,7 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
     fn generate_initial_feedback(
         &self,
         candidate: &ArchitectureCandidate<T>,
-    ) -> Result<ArchitectureFeedback<T>, OptimizerError> {
+    ) -> Result<ArchitectureFeedback<T>, OptimError> {
         // Analyze architecture characteristics
         let complexity_score = self.calculate_complexity_score(&candidate.specification)?;
         let efficiency_score = self.calculate_efficiency_score(&candidate.specification)?;
@@ -3773,7 +3773,7 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
     fn calculate_complexity_score(
         &self,
         spec: &ArchitectureSpecification,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         // Calculate normalized complexity score based on multiple factors
         let param_complexity = T::from(spec.parameter_count as f64 / 1_000_000.0).unwrap(); // Normalize by 1M params
         let layer_complexity = T::from(spec.layers.len() as f64 / 10.0).unwrap(); // Normalize by 10 layers
@@ -3792,7 +3792,7 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
     fn calculate_efficiency_score(
         &self,
         spec: &ArchitectureSpecification,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         // Calculate efficiency as inverse of computational cost
         let flops_ratio = T::from(spec.flops as f64 / 1_000_000_000.0).unwrap(); // Normalize by 1B FLOPS
         let memory_ratio =
@@ -3810,7 +3810,7 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
     fn calculate_novelty_score(
         &self,
         candidate: &ArchitectureCandidate<T>,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         if self.feedback_history.is_empty() {
             return Ok(T::one()); // First candidate is novel
         }
@@ -3839,7 +3839,7 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
     fn predict_candidate_quality(
         &self,
         candidate: &ArchitectureCandidate<T>,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         // Use simple heuristic-based prediction
         let complexity_score = self.calculate_complexity_score(&candidate.specification)?;
         let efficiency_score = self.calculate_efficiency_score(&candidate.specification)?;
@@ -3856,7 +3856,7 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
     fn calculate_prediction_confidence(
         &self,
         candidate: &ArchitectureCandidate<T>,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         // Confidence based on how similar this candidate is to previous ones
         let novelty = self.calculate_novelty_score(candidate)?;
 
@@ -3870,7 +3870,7 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
         &self,
         candidate: &ArchitectureCandidate<T>,
         historical_id: &str,
-    ) -> Result<Option<T>, OptimizerError> {
+    ) -> Result<Option<T>, OptimError> {
         // Simple distance calculation based on ID similarity and generation method
         let id_similarity = if candidate
             .id
@@ -3887,7 +3887,7 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
     fn convert_performance_feedback(
         &self,
         feedback: &PerformanceFeedback<T>,
-    ) -> Result<ArchitectureFeedback<T>, OptimizerError> {
+    ) -> Result<ArchitectureFeedback<T>, OptimError> {
         Ok(ArchitectureFeedback {
             candidate_id: format!("perf_feedback_{}", feedback.timestamp.elapsed().as_millis()),
             complexity_score: T::from(0.5).unwrap(), // Default values
@@ -3902,7 +3902,7 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
 }
 
 impl<T: Float> DynamicSearchSpaceManager<T> {
-    fn new(_config: &AdaptiveNASConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(_config: &AdaptiveNASConfig<T>) -> Result<Self, OptimError> {
         Ok(Self {
             current_space: ArchitectureSearchSpace::default(),
             evolution_strategy: SearchSpaceEvolutionStrategy::AdaptiveBoundary,
@@ -3915,7 +3915,7 @@ impl<T: Float> DynamicSearchSpaceManager<T> {
     fn update_based_on_feedback(
         &mut self,
         feedback: &PerformanceFeedback<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Analyze feedback to identify promising regions
         let regions = self.promising_detector.analyze_feedback(feedback)?;
 
@@ -3948,7 +3948,7 @@ impl<T: Float> DynamicSearchSpaceManager<T> {
         1000000 // Placeholder value
     }
 
-    fn evolve_search_space(&mut self) -> Result<(), OptimizerError> {
+    fn evolve_search_space(&mut self) -> Result<(), OptimError> {
         match self.evolution_strategy {
             SearchSpaceEvolutionStrategy::AdaptiveBoundary => {
                 self.space_optimizer
@@ -3968,7 +3968,7 @@ impl<T: Float> DynamicSearchSpaceManager<T> {
 }
 
 impl<T: Float> PerformancePredictorEnsemble<T> {
-    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimError> {
         let mut predictors: Vec<Box<dyn ArchitecturePerformancePredictor<T>>> = Vec::new();
 
         // Add different types of predictors to the ensemble
@@ -3992,7 +3992,7 @@ impl<T: Float> PerformancePredictorEnsemble<T> {
     fn predict_batch(
         &self,
         candidates: &[ArchitectureCandidate<T>],
-    ) -> Result<Vec<PerformancePrediction<T>>, OptimizerError> {
+    ) -> Result<Vec<PerformancePrediction<T>>, OptimError> {
         let mut batch_predictions = Vec::new();
 
         for candidate in candidates {
@@ -4031,7 +4031,7 @@ impl<T: Float> PerformancePredictorEnsemble<T> {
         &mut self,
         id: &str,
         feedback: &PerformanceFeedback<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Update quality tracker with feedback
         self.quality_tracker
             .update_predictor_performance(id, feedback)?;
@@ -4054,7 +4054,7 @@ impl<T: Float> PerformancePredictorEnsemble<T> {
         self.quality_tracker.get_ensemble_metrics()
     }
 
-    fn update_ensemble_weights(&mut self) -> Result<(), OptimizerError> {
+    fn update_ensemble_weights(&mut self) -> Result<(), OptimError> {
         // Update weights based on individual predictor performance
         let performance_scores = self.quality_tracker.get_predictor_scores();
 
@@ -4073,7 +4073,7 @@ impl<T: Float> PerformancePredictorEnsemble<T> {
 }
 
 impl<T: Float> ContinuousAdaptationEngine<T> {
-    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimError> {
         let adaptation_strategy = AdaptationStrategy {
             strategy_type: AdaptationStrategyType::PerformanceBased,
             learning_rate: config.adaptation_lr,
@@ -4123,15 +4123,15 @@ impl<T: Float> ContinuousAdaptationEngine<T> {
         })
     }
 
-    fn adapt_to_performance(&mut self, _history: &[T]) -> Result<(), OptimizerError> {
+    fn adapt_to_performance(&mut self, _history: &[T]) -> Result<(), OptimError> {
         Ok(())
     }
 
-    fn should_adapt(&self, _feedback: &PerformanceFeedback<T>) -> Result<bool, OptimizerError> {
+    fn should_adapt(&self, _feedback: &PerformanceFeedback<T>) -> Result<bool, OptimError> {
         Ok(false)
     }
 
-    fn trigger_adaptation(&mut self) -> Result<(), OptimizerError> {
+    fn trigger_adaptation(&mut self) -> Result<(), OptimError> {
         Ok(())
     }
 
@@ -4146,7 +4146,7 @@ impl<T: Float> ContinuousAdaptationEngine<T> {
 }
 
 impl<T: Float> ArchitectureQualityAssessor<T> {
-    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimError> {
         let mut quality_metrics = Vec::new();
         quality_metrics.push(QualityMetric::Performance);
         quality_metrics.push(QualityMetric::Efficiency);
@@ -4165,7 +4165,7 @@ impl<T: Float> ArchitectureQualityAssessor<T> {
     fn assess_batch(
         &self,
         candidates: &[ArchitectureCandidate<T>],
-    ) -> Result<Vec<QualityAssessment<T>>, OptimizerError> {
+    ) -> Result<Vec<QualityAssessment<T>>, OptimError> {
         let mut assessments = Vec::new();
 
         for candidate in candidates {
@@ -4204,7 +4204,7 @@ impl<T: Float> ArchitectureQualityAssessor<T> {
         &self,
         candidate: &ArchitectureCandidate<T>,
         metric: &QualityMetric<T>,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         match metric {
             QualityMetric::Performance => {
                 candidate.estimated_quality.unwrap_or(T::from(0.5).unwrap())
@@ -4244,14 +4244,14 @@ impl<T: Float> ArchitectureQualityAssessor<T> {
             }
         }
         .map_err(|_| {
-            OptimizerError::ComputationError("Failed to calculate metric score".to_string())
+            OptimError::ComputationError("Failed to calculate metric score".to_string())
         })
     }
 
     fn calculate_assessment_confidence(
         &self,
         candidate: &ArchitectureCandidate<T>,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         // Confidence based on how well-defined the candidate is
         let mut confidence_factors = Vec::new();
 
@@ -4284,7 +4284,7 @@ impl<T: Float> ArchitectureQualityAssessor<T> {
 }
 
 impl<T: Float> NASSystemStateTracker<T> {
-    fn new() -> Result<Self, OptimizerError> {
+    fn new() -> Result<Self, OptimError> {
         let current_state = NASSystemState {
             search_phase: SearchPhase::Exploration,
             active_strategies: HashSet::new(),
@@ -4327,7 +4327,7 @@ impl<T: Float> NASSystemStateTracker<T> {
         &mut self,
         _task: &OptimizationTask,
         _history: &[T],
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         Ok(())
     }
 }
@@ -4443,14 +4443,14 @@ impl<T: Float> HypervolumeCalculator<T> {
 
 // Define trait for architecture performance predictors
 pub trait ArchitecturePerformancePredictor<T: Float> {
-    fn predict(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimizerError>;
+    fn predict(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimError>;
     fn update(
         &mut self,
         architecture: &ArchitectureSpecification,
         performance: T,
-    ) -> Result<(), OptimizerError>;
+    ) -> Result<(), OptimError>;
     fn get_confidence(&self, architecture: &ArchitectureSpecification)
-        -> Result<T, OptimizerError>;
+        -> Result<T, OptimError>;
 }
 
 // Define missing types
@@ -4630,7 +4630,7 @@ impl<T: Float> PromisingRegionDetector<T> {
     fn analyze_feedback(
         &mut self,
         feedback: &PerformanceFeedback<T>,
-    ) -> Result<Vec<PromisingRegion<T>>, OptimizerError> {
+    ) -> Result<Vec<PromisingRegion<T>>, OptimError> {
         if feedback.actual_performance > self.detection_threshold {
             let region = PromisingRegion {
                 center: vec![feedback.actual_performance; 5], // 5-dimensional feature space
@@ -4670,7 +4670,7 @@ impl<T: Float> SearchSpaceOptimizer<T> {
         &self,
         space: &mut ArchitectureSearchSpace,
         region: &PromisingRegion<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Expand search space boundaries based on promising region
         if region.performance_score > T::from(0.8).unwrap() {
             // Increase parameter limits slightly
@@ -4685,7 +4685,7 @@ impl<T: Float> SearchSpaceOptimizer<T> {
         Ok(())
     }
 
-    fn adapt_boundaries(&self, space: &mut ArchitectureSearchSpace) -> Result<(), OptimizerError> {
+    fn adapt_boundaries(&self, space: &mut ArchitectureSearchSpace) -> Result<(), OptimError> {
         // Adaptive boundary adjustment based on current optimization method
         match self.optimization_method {
             SpaceOptimizationMethod::BoundaryExpansion => {
@@ -4703,7 +4703,7 @@ impl<T: Float> SearchSpaceOptimizer<T> {
     fn apply_gradient_evolution(
         &self,
         _space: &mut ArchitectureSearchSpace,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Placeholder for gradient-based space evolution
         Ok(())
     }
@@ -4712,7 +4712,7 @@ impl<T: Float> SearchSpaceOptimizer<T> {
         &self,
         _space: &mut ArchitectureSearchSpace,
         _history: &[SearchSpaceSnapshot],
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Placeholder for statistical space evolution
         Ok(())
     }
@@ -4735,7 +4735,7 @@ impl<T: Float> SimpleLinearPredictor<T> {
 }
 
 impl<T: Float> ArchitecturePerformancePredictor<T> for SimpleLinearPredictor<T> {
-    fn predict(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimizerError> {
+    fn predict(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimError> {
         // Simple linear prediction based on architecture features
         let features = self.extract_features(architecture);
         let mut prediction = self.bias;
@@ -4753,7 +4753,7 @@ impl<T: Float> ArchitecturePerformancePredictor<T> for SimpleLinearPredictor<T> 
         &mut self,
         architecture: &ArchitectureSpecification,
         performance: T,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         let features = self.extract_features(architecture);
         let prediction = self.predict(architecture)?;
         let error = performance - prediction;
@@ -4774,7 +4774,7 @@ impl<T: Float> ArchitecturePerformancePredictor<T> for SimpleLinearPredictor<T> 
     fn get_confidence(
         &self,
         architecture: &ArchitectureSpecification,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         // Confidence based on feature magnitudes
         let features = self.extract_features(architecture);
         let feature_sum: T = features.iter().cloned().sum();
@@ -4818,7 +4818,7 @@ impl<T: Float> ComplexityBasedPredictor<T> {
 }
 
 impl<T: Float> ArchitecturePerformancePredictor<T> for ComplexityBasedPredictor<T> {
-    fn predict(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimizerError> {
+    fn predict(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimError> {
         let mut complexity_score = T::zero();
 
         for layer in &architecture.layers {
@@ -4839,7 +4839,7 @@ impl<T: Float> ArchitecturePerformancePredictor<T> for ComplexityBasedPredictor<
         &mut self,
         _architecture: &ArchitectureSpecification,
         _performance: T,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // This predictor doesn't learn from feedback
         Ok(())
     }
@@ -4847,7 +4847,7 @@ impl<T: Float> ArchitecturePerformancePredictor<T> for ComplexityBasedPredictor<
     fn get_confidence(
         &self,
         _architecture: &ArchitectureSpecification,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         Ok(T::from(0.7).unwrap()) // Fixed confidence
     }
 }
@@ -4868,7 +4868,7 @@ impl<T: Float> HistoryBasedPredictor<T> {
 }
 
 impl<T: Float> ArchitecturePerformancePredictor<T> for HistoryBasedPredictor<T> {
-    fn predict(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimizerError> {
+    fn predict(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimError> {
         let features = self.extract_basic_features(architecture);
 
         if self.performance_history.is_empty() {
@@ -4894,7 +4894,7 @@ impl<T: Float> ArchitecturePerformancePredictor<T> for HistoryBasedPredictor<T> 
         &mut self,
         architecture: &ArchitectureSpecification,
         performance: T,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         let features = self.extract_basic_features(architecture);
         self.performance_history.push_back((features, performance));
 
@@ -4909,7 +4909,7 @@ impl<T: Float> ArchitecturePerformancePredictor<T> for HistoryBasedPredictor<T> 
     fn get_confidence(
         &self,
         architecture: &ArchitectureSpecification,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         let features = self.extract_basic_features(architecture);
 
         if self.performance_history.is_empty() {
@@ -4978,7 +4978,7 @@ impl<T: Float> PredictionAggregator<T> {
         &self,
         predictions: &[(T, T)], // (prediction, confidence)
         weights: &Array1<T>,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         if predictions.is_empty() {
             return Ok(T::from(0.5).unwrap());
         }
@@ -5026,7 +5026,7 @@ impl<T: Float> EnsembleUncertaintyEstimator<T> {
         }
     }
 
-    fn calculate_uncertainty(&self, predictions: &[(T, T)]) -> Result<T, OptimizerError> {
+    fn calculate_uncertainty(&self, predictions: &[(T, T)]) -> Result<T, OptimError> {
         if predictions.is_empty() {
             return Ok(T::one());
         }
@@ -5068,7 +5068,7 @@ impl<T: Float> PredictorQualityTracker<T> {
         &mut self,
         _id: &str,
         _feedback: &PerformanceFeedback<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Update predictor performance tracking
         Ok(())
     }

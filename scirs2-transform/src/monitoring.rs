@@ -6,7 +6,7 @@
 
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::validation::{check_finite, check_not_empty, check_positive};
+use scirs2_core::validation::{check_not_empty, check_positive};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -448,8 +448,24 @@ impl TransformationMonitor {
     ) -> Result<DriftDetectionResult> {
         check_not_empty(reference, "reference")?;
         check_not_empty(new_data, "new_data")?;
-        check_finite(reference, "reference")?;
-        check_finite(new_data, "new_data")?;
+        
+        // Check finite values in reference
+        for &val in reference.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Reference data contains non-finite values".to_string(),
+                ));
+            }
+        }
+        
+        // Check finite values in new_data
+        for &val in new_data.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "New data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         let (statistic, p_value, is_drift) = match method {
             DriftMethod::KolmogorovSmirnov => {

@@ -5,14 +5,13 @@
 //! It combines machine learning, hardware profiling, and adaptive algorithms
 //! to achieve optimal performance for any workload.
 
-use ndarray::{Array, Array1, Array2, ArrayView, Dimension};
-use num_traits::{Float, FromPrimitive, One, Zero};
+use ndarray::{Array1, Dimension};
+use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::performance_profiler::PerformanceProfiler;
 use crate::ultrathink_fusion_core::UltrathinkConfig;
 
 /// Adaptive optimization system for ultrathink mode operations

@@ -1251,7 +1251,7 @@ impl AdvancedGpuOrchestrator {
 
     /// Compute metrics on a specific GPU device
     fn compute_on_device<F>(
-        device_id: usize,
+        _device_id: usize,
         y_true: Array2<F>,
         y_pred: Array2<F>,
         metrics: &[&str],

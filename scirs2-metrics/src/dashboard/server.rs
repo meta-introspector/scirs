@@ -533,9 +533,9 @@ async fn generate_dashboard_html(dashboard: &Arc<InteractiveDashboard>) -> Strin
     let metrics_json = serde_json::to_string(&metrics).unwrap_or_default();
 
     // Generate AI-driven insights
-    let ai_insights = generate_ai_insights(&metrics);
-    let anomaly_alerts = detect_anomalies(&metrics);
-    let performance_predictions = predict_future_performance(&metrics);
+    let _ai_insights = generate_ai_insights(&metrics);
+    let _anomaly_alerts = detect_anomalies(&metrics);
+    let _performance_predictions = predict_future_performance(&metrics);
 
     format!(
         r#"

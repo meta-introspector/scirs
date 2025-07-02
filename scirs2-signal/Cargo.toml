@@ -26,6 +26,7 @@ scirs2-linalg = { workspace = true }
 scirs2-special = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
+rand_chacha = { workspace = true }
 plotly = { workspace = true }
 statrs = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

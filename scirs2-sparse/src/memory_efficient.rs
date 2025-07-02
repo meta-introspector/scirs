@@ -267,7 +267,7 @@ where
         for (k, (&row, &col)) in b_row_indices.iter().zip(b_col_indices.iter()).enumerate() {
             b_by_row
                 .entry(row)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push((col, b_values[k]));
         }
 
@@ -862,8 +862,8 @@ impl ChunkedOperations {
         }
 
         // Add any remaining unvisited vertices
-        for v in 0..rows {
-            if !visited[v] {
+        for (v, &is_visited) in visited.iter().enumerate().take(rows) {
+            if !is_visited {
                 ordering.push(v);
             }
         }

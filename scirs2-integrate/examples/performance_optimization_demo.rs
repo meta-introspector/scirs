@@ -363,6 +363,7 @@ fn estimate_memory_usage() -> usize {
 }
 
 /// Create an optimization report
+#[allow(dead_code)]
 fn create_optimization_report() -> PerformanceReport {
     // This would typically be generated from actual performance data
     let metrics = scirs2_integrate::performance_monitor::PerformanceMetrics::default();

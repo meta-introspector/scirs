@@ -2132,7 +2132,6 @@ fn example_usage() -> InterpolateResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array1;
 
     #[test]
     fn test_ultrathink_coordinator_creation() {

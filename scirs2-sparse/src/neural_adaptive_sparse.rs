@@ -1161,8 +1161,8 @@ impl NeuralAdaptiveSparseProcessor {
             let start_idx = indptr[row];
             let end_idx = indptr[row + 1];
 
-            for idx in start_idx..end_idx {
-                let col = indices[idx];
+            for col in indices.iter().take(end_idx).skip(start_idx) {
+                let col = *col;
                 total_accesses += 1;
 
                 if recent_cols.contains(&col) {
@@ -1403,7 +1403,7 @@ impl NeuralNetwork {
         cache: &ForwardCache,
     ) -> NetworkGradients {
         let mut gradients = NetworkGradients {
-            weight_gradients: vec![vec![vec![0.0; 0]; 0]; self.layers.len()],
+            weight_gradients: vec![Vec::new(); self.layers.len()],
             bias_gradients: vec![vec![0.0; 0]; self.layers.len()],
         };
 
@@ -1678,7 +1678,7 @@ impl RLAgent {
                     target[action_idx] = action_probs[action_idx] + self.learning_rate * advantage;
                     
                     // Ensure target is a valid probability distribution
-                    target[action_idx] = target[action_idx].max(0.01).min(0.99);
+                    target[action_idx] = target[action_idx].clamp(0.01, 0.99);
                     
                     // Train the policy network
                     let loss = policy_net.train_single(
@@ -1760,7 +1760,7 @@ impl RLAgent {
                     // Update action probability based on advantage
                     let prob_adjustment = self.learning_rate * 0.1 * advantage;
                     policy_target[action_idx] = (action_probs[action_idx] + prob_adjustment)
-                        .max(0.01).min(0.99);
+                        .clamp(0.01, 0.99);
                     
                     // Normalize to maintain probability distribution
                     let sum: f64 = policy_target.iter().sum();
@@ -1876,7 +1876,7 @@ impl RLAgent {
                         let mut policy_target = current_action_probs.clone();
                         let target_adjustment = self.learning_rate * 0.01 * policy_objective;
                         policy_target[action_idx] = (current_prob + target_adjustment)
-                            .max(0.01).min(0.99);
+                            .clamp(0.01, 0.99);
                         
                         // Normalize probabilities
                         let sum: f64 = policy_target.iter().sum();
@@ -1969,7 +1969,7 @@ impl RLAgent {
                     // Adjust action probability based on SAC objective
                     let adjustment = self.learning_rate * 0.01 * policy_objective;
                     policy_target[action_idx] = (current_action_probs[action_idx] + adjustment)
-                        .max(0.01).min(0.99);
+                        .clamp(0.01, 0.99);
                     
                     // Apply entropy regularization to encourage exploration
                     for (i, prob) in policy_target.iter_mut().enumerate() {
@@ -2059,13 +2059,13 @@ impl TransformerModel {
         let max_seq_len = 1000;
         let mut positional_encoding = vec![vec![0.0; config.model_dim]; max_seq_len];
 
-        for pos in 0..max_seq_len {
-            for i in 0..config.model_dim {
+        for (pos, encoding_row) in positional_encoding.iter_mut().enumerate().take(max_seq_len) {
+            for (i, encoding_value) in encoding_row.iter_mut().enumerate().take(config.model_dim) {
                 if i % 2 == 0 {
-                    positional_encoding[pos][i] =
+                    *encoding_value =
                         (pos as f64 / 10000.0_f64.powf(i as f64 / config.model_dim as f64)).sin();
                 } else {
-                    positional_encoding[pos][i] = (pos as f64
+                    *encoding_value = (pos as f64
                         / 10000.0_f64.powf((i - 1) as f64 / config.model_dim as f64))
                     .cos();
                 }

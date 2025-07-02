@@ -414,6 +414,7 @@ pub trait GpuFeatureExtraction<F: Float + Debug> {
 }
 
 /// GPU device management
+#[derive(Debug)]
 pub struct GpuDeviceManager {
     /// Available devices
     devices: Vec<GpuCapabilities>,
@@ -728,6 +729,12 @@ pub mod utils {
             batch_size,
             use_half_precision: data_size > 100_000,
             enable_async: true,
+            tensor_cores: TensorCoresConfig::default(),
+            memory_strategy: MemoryStrategy::PreAllocated {
+                pool_size: available_memory / 2,
+            },
+            dynamic_batching: true,
+            graph_optimization: GraphOptimizationLevel::Extended,
         }
     }
 }
@@ -1009,7 +1016,7 @@ pub mod fft {
             }
 
             let num_windows = (data.len() - window_size) / (window_size / 2) + 1;
-            let mut psd = Array1::zeros(window_size / 2 + 1);
+            let mut psd = Array1::<F>::zeros(window_size / 2 + 1);
 
             // Parallel processing of overlapping windows
             for i in 0..num_windows {
@@ -1034,7 +1041,7 @@ pub mod fft {
 
             // Normalize by number of windows
             let norm_factor = F::from(num_windows).unwrap();
-            Ok(psd.mapv(|x| x / norm_factor))
+            Ok(psd.mapv(|x: F| x / norm_factor))
         }
 
         /// Apply Hanning window for spectral analysis
@@ -1767,7 +1774,7 @@ pub mod blas {
             let col_matrix = self.im2col_transform(input, kernel_height, kernel_width, stride)?;
             let kernel_matrix = kernel
                 .view()
-                .into_shape((1, kernel_height * kernel_width))
+                .to_shape((1, kernel_height * kernel_width))
                 .unwrap();
 
             let mut output_matrix = Array2::zeros((1, output_height * output_width));
@@ -1783,7 +1790,7 @@ pub mod blas {
 
             // Reshape to output format
             Ok(output_matrix
-                .into_shape((output_height, output_width))
+                .to_shape((output_height, output_width))
                 .unwrap())
         }
 
@@ -2005,7 +2012,7 @@ pub mod algorithms {
             // Advanced parallel processing using GPU-optimized algorithms
             match method {
                 ForecastMethod::ExponentialSmoothing { alpha } => {
-                    self.gpu_batch_exponential_smoothing(batch, *alpha, forecast_steps)
+                    self.gpu_batch_exponential_smoothing(batch, F::from(*alpha).unwrap_or_else(|| F::from(0.3).unwrap()), forecast_steps)
                 }
                 ForecastMethod::LinearTrend => self.gpu_batch_linear_trend(batch, forecast_steps),
                 ForecastMethod::MovingAverage { window } => {
@@ -2329,7 +2336,7 @@ pub mod algorithms {
         ) -> Result<Array1<F>> {
             match method {
                 ForecastMethod::ExponentialSmoothing { alpha } => {
-                    self.gpu_exponential_smoothing_forecast(series, *alpha, forecast_steps)
+                    self.gpu_exponential_smoothing_forecast(series, F::from(*alpha).unwrap_or_else(|| F::from(0.3).unwrap()), forecast_steps)
                 }
                 ForecastMethod::LinearTrend => {
                     self.gpu_linear_trend_forecast(series, forecast_steps)

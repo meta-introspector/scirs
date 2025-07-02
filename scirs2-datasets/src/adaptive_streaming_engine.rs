@@ -8,8 +8,7 @@ use crate::utils::Dataset;
 use ndarray::{Array1, Array2, Axis};
 use rand::{rng, Rng};
 // Use rayon directly for parallel operations to avoid feature flag issues
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -462,7 +461,7 @@ impl AdaptiveStreamingEngine {
         let results: Vec<Dataset> = batch
             .into_par_iter()
             .chunks(config.optimal_batch_size)
-            .map(|chunk_group| self.process_chunk_group(chunk_group.collect()))
+            .map(|chunk_group| self.process_chunk_group(chunk_group.into_iter().collect()))
             .collect::<Result<Vec<_>>>()?
             .into_iter()
             .flatten()
@@ -703,7 +702,7 @@ impl AdaptiveStreamingEngine {
         let n = time_series.len();
         let mean = time_series.iter().sum::<f64>() / n as f64;
 
-        let mut max_autocorr = 0.0;
+        let mut max_autocorr: f64 = 0.0;
         for lag in 1..=n.min(10) {
             let mut numerator = 0.0;
             let mut denominator = 0.0;
@@ -755,8 +754,7 @@ impl AdaptiveStreamingEngine {
     ) -> Result<Dataset> {
         // For now, create a simple dataset from the chunk data
         // In a real implementation, this could be more sophisticated based on characteristics
-        Dataset::new(chunk.data, None)
-            .map_err(|e| DatasetsError::Other(format!("Failed to create dataset: {}", e)))
+        Ok(Dataset::new(chunk.data, None))
     }
 
     /// Get current performance metrics
@@ -948,7 +946,6 @@ pub fn create_adaptive_engine_with_config(config: AdaptiveStreamConfig) -> Adapt
 
 /// ULTRATHINK MODE ENHANCEMENTS
 /// Advanced quantum-inspired optimization, neural adaptation, and predictive analytics
-
 /// Quantum-Inspired Optimization Engine for Ultra-Advanced Stream Processing
 #[derive(Debug)]
 pub struct QuantumInspiredOptimizer {

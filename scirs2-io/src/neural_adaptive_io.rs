@@ -269,6 +269,12 @@ pub struct NeuralAdaptiveIoController {
     last_adaptation: Arc<RwLock<Instant>>,
 }
 
+impl Default for NeuralAdaptiveIoController {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NeuralAdaptiveIoController {
     /// Create a new neural adaptive I/O controller
     pub fn new() -> Self {
@@ -413,6 +419,12 @@ pub struct UltraThinkIoProcessor {
     performance_monitor: Arc<RwLock<PerformanceMonitor>>,
 }
 
+impl Default for UltraThinkIoProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UltraThinkIoProcessor {
     /// Create a new ultra-think I/O processor
     pub fn new() -> Self {
@@ -503,7 +515,7 @@ impl UltraThinkIoProcessor {
         let processed = f32::simd_add(&array.view(), &Array1::ones(array.len()).view());
 
         // Convert back to u8
-        let result: Vec<u8> = processed.iter().map(|&x| (x as u8).min(255)).collect();
+        let result: Vec<u8> = processed.iter().map(|&x| x as u8).collect();
         Ok(result)
     }
 

@@ -109,6 +109,15 @@ impl ExecutionTimer {
             start_time: Instant::now(),
         }
     }
+}
+
+impl Default for ExecutionTimer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ExecutionTimer {
     
     pub fn elapsed_ms(&self) -> f64 {
         self.start_time.elapsed().as_millis() as f64
@@ -360,7 +369,7 @@ enum ModelType {
     LinearRegression,
     MovingAverage,
     ExponentialSmoothing,
-    ARIMA,
+    Arima,
     NeuralNetwork,
 }
 
@@ -1229,7 +1238,7 @@ impl RealTimePerformanceMonitor {
         #[cfg(target_os = "linux")]
         {
             if let Ok(output) = std::process::Command::new("nvidia-smi")
-                .args(&["--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"])
+                .args(["--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"])
                 .output()
             {
                 if output.status.success() {

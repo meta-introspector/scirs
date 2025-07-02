@@ -529,7 +529,7 @@ fn solve_sparse_newton_system(
     let hessian_dense = sparse_to_dense_matrix(hessian);
 
     // Use the existing solve function from scirs2-linalg
-    use scirs2_linalg::solve::solve;
+    use scirs2_linalg::solve;
 
     solve(&hessian_dense.view(), &neg_gradient.view(), None)
         .map_err(|e| OptimizeError::ComputationError(format!("Newton system solve failed: {}", e)))

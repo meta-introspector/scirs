@@ -13,7 +13,7 @@ mod ftest;
 mod jackknife;
 mod psd;
 mod utils;
-mod validation;
+pub mod validation;
 mod windows;
 
 // Re-export public components

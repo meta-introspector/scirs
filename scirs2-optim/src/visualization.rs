@@ -4,7 +4,6 @@
 //! optimization progress, comparing optimizers, and analyzing training dynamics.
 
 use crate::error::{OptimError, Result};
-use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Write as FmtWrite;

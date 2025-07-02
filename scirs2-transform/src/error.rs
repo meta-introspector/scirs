@@ -135,21 +135,6 @@ impl<T> ErrorContext<T> for Result<T> {
     }
 }
 
-impl<T, E> ErrorContext<T> for std::result::Result<T, E>
-where
-    E: std::fmt::Display,
-{
-    fn context(self, msg: &str) -> Result<T> {
-        self.map_err(|e| TransformError::Other(format!("{}: {}", msg, e)))
-    }
-
-    fn with_context<F>(self, f: F) -> Result<T>
-    where
-        F: FnOnce() -> String,
-    {
-        self.map_err(|e| TransformError::Other(format!("{}: {}", f(), e)))
-    }
-}
 
 /// Error kind for categorizing errors
 #[derive(Debug, Clone, PartialEq, Eq)]

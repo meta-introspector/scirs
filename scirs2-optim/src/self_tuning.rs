@@ -4,10 +4,10 @@
 //! tune hyperparameters, select optimizers, and adjust configurations based
 //! on training dynamics and problem characteristics.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use crate::optimizers::*;
 use crate::schedulers::*;
-use ndarray::{Array, Array1, Array2, Dimension, ScalarOperand};
+use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;

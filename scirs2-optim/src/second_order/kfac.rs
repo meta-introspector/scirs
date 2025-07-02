@@ -6,7 +6,7 @@
 //! storing and inverting the full Fisher information matrix.
 
 use crate::error::{OptimError, Result};
-use ndarray::{s, Array, Array1, Array2, Array3, ArrayBase, Axis, Data, Dimension, Ix1, Ix2};
+use ndarray::{s, Array1, Array2, Axis, Dimension};
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -1242,7 +1242,7 @@ pub mod natural_gradients {
 pub mod advanced_kfac {
     use super::*;
     use std::collections::{BTreeMap, VecDeque};
-    use std::sync::{Arc, Mutex};
+    use std::sync::Arc;
 
     /// Distributed K-FAC optimizer for large-scale training
     #[derive(Debug)]
@@ -3476,7 +3476,6 @@ pub mod advanced_kfac {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_relative_eq;
 
     #[test]
     fn test_kfac_creation() {

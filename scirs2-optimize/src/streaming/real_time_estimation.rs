@@ -234,11 +234,11 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
         }
 
         // Solve normal equations
-        match scirs2_linalg::solve(&xtx, &xty) {
+        match scirs2_linalg::solve(&xtx.view(), &xty.view(), None) {
             Ok(solution) => {
                 self.parameters = solution;
                 // Update covariance as pseudo-inverse of X^T X
-                match scirs2_linalg::compute_pseudo_inverse(&xtx) {
+                match scirs2_linalg::compat::pinv(&xtx.view(), None, false, true) {
                     Ok(pinv) => self.covariance = pinv,
                     Err(_) => {} // Keep old covariance if inversion fails
                 }

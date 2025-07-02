@@ -21,6 +21,7 @@ use std::time::{Duration, Instant};
 use thiserror::Error;
 
 #[cfg(feature = "parallel")]
+#[allow(unused_imports)]
 use rayon::prelude::*;
 
 /// JIT compilation error types
@@ -309,6 +310,12 @@ pub enum ComputeIntensity {
     BandwidthIntensive,
 }
 
+impl Default for ComputeIntensity {
+    fn default() -> Self {
+        ComputeIntensity::Balanced
+    }
+}
+
 /// Parallelization hints
 #[derive(Debug, Clone)]
 pub struct ParallelizationHints {
@@ -506,7 +513,7 @@ pub enum OptimizationStrategy {
 }
 
 /// Machine learning model for optimization decisions
-pub trait OptimizationModel: Send + Sync {
+pub trait OptimizationModel: Send + Sync + std::fmt::Debug {
     /// Predict optimal strategy for a kernel
     fn predict_strategy(&self, kernel_features: &KernelFeatures) -> OptimizationStrategy;
 
@@ -1158,8 +1165,8 @@ kernel void reduction_op(global {data_type}* input, global {data_type}* output, 
             source,
             language: KernelLanguage::OpenCl,
             entry_point: "reduction_op".to_string(),
-            input_types: vec![data_type],
-            output_types: vec![data_type],
+            input_types: vec![data_type.clone()],
+            output_types: vec![data_type.clone()],
             hints: CompilationHints {
                 workload_size: Some(1024),
                 memory_pattern: Some(MemoryPattern::Sequential),

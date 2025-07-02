@@ -283,7 +283,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
                 let state = &mut self.neuron_states[layer_idx][neuron_idx];
                 
                 // Update neuron based on its model
-                let spiked = self.update_neuron(state, model)?;
+                let spiked = Self::update_neuron_static(state, model, self.dt, self.current_time)?;
                 
                 if spiked {
                     let spike = Spike {
@@ -418,6 +418,115 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
         Ok(false)
     }
 
+    /// Static version of update_neuron to avoid borrow checker issues
+    fn update_neuron_static(state: &mut NeuronState<F>, model: &NeuronModel, dt: f64, current_time: f64) -> Result<bool> {
+        // Check refractory period
+        if state.refractory > 0.0 {
+            state.refractory -= dt;
+            return Ok(false);
+        }
+        
+        match model {
+            NeuronModel::LeakyIntegrateFire { tau_m, v_rest, v_threshold, v_reset } => {
+                let tau_m_f = F::from(*tau_m).unwrap();
+                let v_rest_f = F::from(*v_rest).unwrap();
+                let v_threshold_f = F::from(*v_threshold).unwrap();
+                let dt_f = F::from(dt).unwrap();
+                
+                // dV/dt = (v_rest - V + R*I) / tau_m
+                let dv = ((v_rest_f - state.v + state.input_current) / tau_m_f) * dt_f;
+                state.v = state.v + dv;
+                
+                // Check for spike
+                if state.v >= v_threshold_f {
+                    state.v = F::from(*v_reset).unwrap();
+                    state.refractory = 2.0; // 2ms refractory period
+                    state.last_spike = Some(current_time);
+                    return Ok(true);
+                }
+            }
+            
+            NeuronModel::AdaptiveExpIF { tau_m, tau_w, delta_t, v_threshold, a, b } => {
+                let tau_m_f = F::from(*tau_m).unwrap();
+                let tau_w_f = F::from(*tau_w).unwrap();
+                let delta_t_f = F::from(*delta_t).unwrap();
+                let v_threshold_f = F::from(*v_threshold).unwrap();
+                let a_f = F::from(*a).unwrap();
+                let b_f = F::from(*b).unwrap();
+                let dt_f = F::from(dt).unwrap();
+                
+                // Exponential term
+                let exp_term = delta_t_f * ((state.v - v_threshold_f) / delta_t_f).exp();
+                
+                // dV/dt = (-V + exp_term + I - u) / tau_m
+                let dv = ((-state.v + exp_term + state.input_current - state.u) / tau_m_f) * dt_f;
+                state.v = state.v + dv;
+                
+                // du/dt = (a*(V - v_rest) - u) / tau_w
+                let du = ((a_f * state.v - state.u) / tau_w_f) * dt_f;
+                state.u = state.u + du;
+                
+                // Check for spike
+                if state.v >= v_threshold_f {
+                    state.v = F::from(-70.0).unwrap(); // Reset to resting potential
+                    state.u = state.u + b_f; // Spike-triggered adaptation
+                    state.refractory = 2.0;
+                    state.last_spike = Some(current_time);
+                    return Ok(true);
+                }
+            }
+            
+            NeuronModel::Izhikevich { a, b, c, d } => {
+                let a_f = F::from(*a).unwrap();
+                let b_f = F::from(*b).unwrap();
+                let dt_f = F::from(dt).unwrap();
+                
+                // dv/dt = 0.04*v^2 + 5*v + 140 - u + I
+                let dv = (F::from(0.04).unwrap() * state.v * state.v + 
+                         F::from(5.0).unwrap() * state.v + 
+                         F::from(140.0).unwrap() - state.u + state.input_current) * dt_f;
+                state.v = state.v + dv;
+                
+                // du/dt = a*(b*v - u)
+                let du = (a_f * (b_f * state.v - state.u)) * dt_f;
+                state.u = state.u + du;
+                
+                // Check for spike
+                if state.v >= F::from(30.0).unwrap() {
+                    state.v = F::from(*c).unwrap();
+                    state.u = state.u + F::from(*d).unwrap();
+                    state.last_spike = Some(current_time);
+                    return Ok(true);
+                }
+            }
+            
+            NeuronModel::HodgkinHuxley { .. } => {
+                // Simplified HH model - just use LIF dynamics for now
+                let tau_m = 20.0;
+                let v_rest = -70.0;
+                let v_threshold = -55.0;
+                let v_reset = -70.0;
+                
+                let tau_m_f = F::from(tau_m).unwrap();
+                let v_rest_f = F::from(v_rest).unwrap();
+                let v_threshold_f = F::from(v_threshold).unwrap();
+                let dt_f = F::from(dt).unwrap();
+                
+                let dv = ((v_rest_f - state.v + state.input_current) / tau_m_f) * dt_f;
+                state.v = state.v + dv;
+                
+                if state.v >= v_threshold_f {
+                    state.v = F::from(v_reset).unwrap();
+                    state.refractory = 2.0;
+                    state.last_spike = Some(current_time);
+                    return Ok(true);
+                }
+            }
+        }
+        
+        Ok(false)
+    }
+
     /// Propagate spike to next layer with synaptic delays
     fn propagate_spike(&mut self, layer_idx: usize, neuron_idx: usize) -> Result<()> {
         if layer_idx >= self.weights.len() {
@@ -430,7 +539,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
         // Add weighted input to next layer neurons (with delay)
         for target_neuron in 0..self.layer_sizes[layer_idx + 1] {
             let weight = weight_matrix[[target_neuron, neuron_idx]];
-            let delay = delay_matrix[[target_neuron, neuron_idx]];
+            let _delay = delay_matrix[[target_neuron, neuron_idx]];
             
             // For simplicity, apply immediately (real implementation would use delay buffers)
             self.neuron_states[layer_idx + 1][target_neuron].input_current = 
@@ -456,7 +565,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
         }
         
         // Apply STDP to relevant synapses
-        for (layer_idx, rule) in self.plasticity_rules.iter().enumerate() {
+        let rules = self.plasticity_rules.clone();
+        for (layer_idx, rule) in rules.iter().enumerate() {
             self.apply_stdp_rule(layer_idx, spike, rule)?;
         }
         
@@ -500,7 +610,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
             
             PlasticityRule::Hebbian { learning_rate, decay_rate } => {
                 // Simplified Hebbian learning
-                let lr = F::from(*learning_rate).unwrap();
+                let _lr = F::from(*learning_rate).unwrap();
                 let decay = F::from(*decay_rate).unwrap();
                 
                 // Apply decay to all weights
@@ -615,7 +725,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> LiquidStateMachi
             }
         ];
         
-        let mut reservoir = SpikingNeuralNetwork::new(layer_sizes, neuron_models, plasticity_rules, 0.1)?;
+        let reservoir = SpikingNeuralNetwork::new(layer_sizes, neuron_models, plasticity_rules, 0.1)?;
         
         // Initialize readout weights
         let readout_weights = Array2::zeros((output_dim, reservoir_size));
@@ -696,7 +806,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> LiquidStateMachi
             return Ok(());
         }
         
-        let n_samples = states.len();
+        let _n_samples = states.len();
         let state_dim = states[0].len();
         
         // For each output dimension, solve separately
@@ -936,7 +1046,6 @@ impl<F: Float + Debug + Clone + FromPrimitive> MemristiveNetwork<F> {
 }
 
 /// **ULTRATHINK MODE: NEXT-GENERATION NEUROMORPHIC COMPUTING**
-
 /// Bio-Realistic Dendritic Computation Model
 #[derive(Debug)]
 pub struct DendriticComputationUnit<F: Float + Debug> {
@@ -1232,9 +1341,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
         let num_segments = self.dendritic_tree.segments.len();
         let mut voltages = Array1::zeros(num_segments);
 
-        // Update each dendritic segment
-        for (i, segment) in self.dendritic_tree.segments.iter_mut().enumerate() {
-            // Collect currents for this segment
+        // First pass: compute all currents without mutable borrows
+        let mut total_currents = Vec::with_capacity(num_segments);
+        for i in 0..num_segments {
+            let segment = &self.dendritic_tree.segments[i];
             let mut total_current = F::zero();
 
             // External input current
@@ -1251,14 +1361,23 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
             // Axial currents from neighboring segments
             total_current = total_current + self.compute_axial_currents(i)?;
 
+            total_currents.push(total_current);
+        }
+
+        // Second pass: update all segments with computed currents
+        for (i, segment) in self.dendritic_tree.segments.iter_mut().enumerate() {
+            let total_current = total_currents[i];
+
             // Update membrane potential
             let cm = F::from(1.0).unwrap(); // μF/cm²
             let dv = total_current / cm * dt;
             segment.voltage = segment.voltage + dv;
 
             voltages[i] = segment.voltage;
+        }
 
-            // Update calcium dynamics
+        // Third pass: update calcium dynamics
+        for i in 0..num_segments {
             self.update_calcium_dynamics(i, dt)?;
         }
 
@@ -1269,7 +1388,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
     fn compute_active_currents(
         &self,
         segment: &DendriticSegment<F>,
-        segment_id: usize,
+        _segment_id: usize,
     ) -> crate::error::Result<F> {
         let mut total_current = F::zero();
         let v = segment.voltage;
@@ -1330,18 +1449,17 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
         let segment_voltage = self.dendritic_tree.segments[segment_id].voltage;
 
         for connection in &self.dendritic_tree.connections {
-            let mut current = F::zero();
             let resistance = F::from(connection.resistance).unwrap();
 
             if connection.from_segment == segment_id {
                 // Current flowing out to target segment
                 let target_voltage = self.dendritic_tree.segments[connection.to_segment].voltage;
-                current = (segment_voltage - target_voltage) / resistance;
+                let current = (segment_voltage - target_voltage) / resistance;
                 total_current = total_current - current; // Outward current
             } else if connection.to_segment == segment_id {
                 // Current flowing in from source segment
                 let source_voltage = self.dendritic_tree.segments[connection.from_segment].voltage;
-                current = (source_voltage - segment_voltage) / resistance;
+                let current = (source_voltage - segment_voltage) / resistance;
                 total_current = total_current + current; // Inward current
             }
         }
@@ -1355,17 +1473,17 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
             return Ok(());
         }
 
-        let segment = &mut self.dendritic_tree.segments[segment_id];
-        let ca_current = self.compute_calcium_influx(segment)?;
+        // Compute values first before borrowing mutably
+        let segment_for_influx = &self.dendritic_tree.segments[segment_id];
+        let ca_current = self.compute_calcium_influx(segment_for_influx)?;
+        let ca_removal = self.compute_calcium_removal(segment_id)?;
         
         // Calcium influx from voltage-gated channels
         let ca_influx = -ca_current / (F::from(2.0).unwrap() * F::from(96485.0).unwrap()); // Convert current to flux
         
-        // Calcium removal by pumps and buffers
-        let ca_removal = self.compute_calcium_removal(segment_id)?;
-        
         // Update calcium concentration
         let dca = (ca_influx - ca_removal) * dt;
+        let segment = &mut self.dendritic_tree.segments[segment_id];
         segment.calcium_concentration = (segment.calcium_concentration + dca).max(F::from(0.00005).unwrap()); // Minimum 50 nM
         
         // Update calcium in dynamics array
@@ -1992,10 +2110,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> OnChipLearningEngine<F> {
         match self.learning_rule {
             OnChipLearningRule::STDP => {
                 let dt = post_spike_time as i64 - pre_spike_time as i64;
-                let tau_plus = self.parameters.get("tau_plus").unwrap_or(&F::from(20.0).unwrap());
-                let tau_minus = self.parameters.get("tau_minus").unwrap_or(&F::from(20.0).unwrap());
-                let a_plus = self.parameters.get("a_plus").unwrap_or(&F::from(0.01).unwrap());
-                let a_minus = self.parameters.get("a_minus").unwrap_or(&F::from(0.01).unwrap());
+                let default_tau = F::from(20.0).unwrap();
+                let default_a = F::from(0.01).unwrap();
+                let tau_plus = self.parameters.get("tau_plus").unwrap_or(&default_tau);
+                let tau_minus = self.parameters.get("tau_minus").unwrap_or(&default_tau);
+                let a_plus = self.parameters.get("a_plus").unwrap_or(&default_a);
+                let a_minus = self.parameters.get("a_minus").unwrap_or(&default_a);
 
                 let weight_change = if dt > 0 {
                     // Post before pre -> LTP

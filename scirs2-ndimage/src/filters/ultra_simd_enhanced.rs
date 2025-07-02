@@ -13,7 +13,7 @@ use std::cmp;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::filters::BoundaryMode;
+use crate::BoundaryMode;
 
 /// Ultra-optimized SIMD convolution with specialized kernels for common operations
 ///

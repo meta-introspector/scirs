@@ -611,7 +611,7 @@ where
         // Simplified - would implement proper sampling from multivariate normal
         let dim = self.target.dim();
         let normal = Normal::new(0.0, 1.0).unwrap();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let momentum: Array1<F> =
             Array1::from_shape_fn(dim, |_| F::from(normal.sample(&mut rng)).unwrap());
@@ -664,8 +664,8 @@ where
             true
         } else {
             let accept_prob = (-energy_diff).exp();
-            let mut rng = rand::thread_rng();
-            let u: f64 = rng.gen_range(0.0..1.0);
+            let mut rng = rand::rng();
+            let u: f64 = rng.random_range(0.0..1.0);
             F::from(u).unwrap() < accept_prob
         }
     }

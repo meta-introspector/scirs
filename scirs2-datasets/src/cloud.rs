@@ -73,6 +73,7 @@ pub enum CloudCredentials {
 pub struct CloudClient {
     config: CloudConfig,
     cache: DatasetCache,
+    #[allow(dead_code)]
     external_client: ExternalClient,
 }
 
@@ -371,6 +372,7 @@ impl CloudClient {
     /// Implement HMAC-SHA256 from scratch using available SHA256
     /// HMAC(K, m) = SHA256((K' ⊕ opad) || SHA256((K' ⊕ ipad) || m))
     /// where K' is the key padded to block size (64 bytes for SHA256)
+    #[allow(dead_code)]
     fn hmac_sha256(key: &[u8], message: &[u8]) -> Result<Vec<u8>> {
         use sha2::{Digest, Sha256};
 

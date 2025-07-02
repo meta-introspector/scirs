@@ -10,7 +10,7 @@ use std::ptr;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
-use ndarray::{Array, ArrayView, Dimension, Ix2};
+use ndarray::{Array, ArrayView, ArrayView2, Dimension, Ix2};
 use num_traits::{Float, FromPrimitive};
 
 use crate::backend::gpu_acceleration_framework::{

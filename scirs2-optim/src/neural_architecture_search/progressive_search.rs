@@ -4,7 +4,7 @@
 //! complexity and search space as the search progresses.
 
 use super::NASConfig;
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use num_traits::Float;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -123,7 +123,7 @@ pub struct ProgressionRecord<T: Float> {
 
 impl<T: Float> ProgressiveNAS<T> {
     /// Create new progressive NAS
-    pub fn new(config: &NASConfig<T>) -> Result<Self, OptimizerError> {
+    pub fn new(config: &NASConfig<T>) -> Result<Self, OptimError> {
         let progression_strategy = match config.search_budget {
             budget if budget < 50 => ProgressionStrategy::TimeBased(Duration::from_secs(300)),
             budget if budget < 200 => ProgressionStrategy::BudgetBased(budget / 4),
@@ -139,7 +139,7 @@ impl<T: Float> ProgressiveNAS<T> {
     }
 
     /// Update search phase based on progress
-    pub fn update_search_phase(&mut self, generation: usize) -> Result<(), OptimizerError> {
+    pub fn update_search_phase(&mut self, generation: usize) -> Result<(), OptimError> {
         match self.progression_strategy {
             ProgressionStrategy::BudgetBased(budget_per_phase) => {
                 let phase_index = generation / budget_per_phase;
@@ -277,7 +277,7 @@ impl<T: Float> ProgressiveNAS<T> {
         architecture_id: String,
         performance: T,
         complexity: T,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         let record = ProgressionRecord {
             phase: self.current_phase,
             complexity,
@@ -333,7 +333,7 @@ pub struct SearchPhaseConfig<T: Float> {
 
 impl<T: Float> ComplexityScheduler<T> {
     /// Create new complexity scheduler
-    pub fn new() -> Result<Self, OptimizerError> {
+    pub fn new() -> Result<Self, OptimError> {
         Ok(Self {
             current_complexity: T::from(0.1).unwrap(),
             max_complexity: T::one(),

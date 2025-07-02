@@ -1635,7 +1635,6 @@ pub struct CompletionEstimate {
 }
 
 /// Convenience functions
-
 /// Run comprehensive documentation polish with default configuration
 pub fn polish_documentation_for_stable_release() -> DocumentationPolishReport {
     let config = DocumentationQualityConfig::default();

@@ -8,7 +8,7 @@ use super::{
     Spike, SpikeTrain, NeuromorphicMetrics, NeuromorphicEvent, EventPriority,
     STDPConfig, MembraneDynamicsConfig, PlasticityModel
 };
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 use ndarray::{Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;
@@ -284,7 +284,7 @@ struct SystemState<T: Float> {
 
 /// Event handler trait
 trait EventHandler<T: Float>: Send + Sync {
-    fn handle_event(&mut self, event: &NeuromorphicEvent<T>, state: &mut SystemState<T>) -> Result<(), OptimizerError>;
+    fn handle_event(&mut self, event: &NeuromorphicEvent<T>, state: &mut SystemState<T>) -> Result<(), OptimError>;
     fn can_handle(&self, event_type: EventType) -> bool;
 }
 
@@ -295,7 +295,7 @@ struct SpikeEventHandler<T: Float> {
 }
 
 impl<T: Float> EventHandler<T> for SpikeEventHandler<T> {
-    fn handle_event(&mut self, event: &NeuromorphicEvent<T>, state: &mut SystemState<T>) -> Result<(), OptimizerError> {
+    fn handle_event(&mut self, event: &NeuromorphicEvent<T>, state: &mut SystemState<T>) -> Result<(), OptimError> {
         let neuron_id = event.source_neuron;
         
         // Generate spike
@@ -325,7 +325,7 @@ impl<T: Float> EventHandler<T> for SpikeEventHandler<T> {
 }
 
 impl<T: Float> SpikeEventHandler<T> {
-    fn trigger_stdp_updates(&self, post_neuron: usize, state: &mut SystemState<T>) -> Result<(), OptimizerError> {
+    fn trigger_stdp_updates(&self, post_neuron: usize, state: &mut SystemState<T>) -> Result<(), OptimError> {
         // Check all presynaptic connections
         for pre_neuron in 0..state.last_spike_times.len() {
             if pre_neuron != post_neuron {
@@ -363,7 +363,7 @@ struct WeightUpdateEventHandler<T: Float> {
 }
 
 impl<T: Float> EventHandler<T> for WeightUpdateEventHandler<T> {
-    fn handle_event(&mut self, event: &NeuromorphicEvent<T>, state: &mut SystemState<T>) -> Result<(), OptimizerError> {
+    fn handle_event(&mut self, event: &NeuromorphicEvent<T>, state: &mut SystemState<T>) -> Result<(), OptimError> {
         let source = event.source_neuron;
         
         if let Some(target) = event.target_neuron {
@@ -491,7 +491,7 @@ impl<T: Float> EventCompressionEngine<T> {
         }
     }
     
-    fn compress_event(&mut self, event: &NeuromorphicEvent<T>) -> Result<Vec<u8>, OptimizerError> {
+    fn compress_event(&mut self, event: &NeuromorphicEvent<T>) -> Result<Vec<u8>, OptimError> {
         match self.algorithm {
             EventCompressionAlgorithm::None => {
                 // No compression, serialize directly
@@ -510,7 +510,7 @@ impl<T: Float> EventCompressionEngine<T> {
         }
     }
     
-    fn serialize_event(&self, event: &NeuromorphicEvent<T>) -> Result<Vec<u8>, OptimizerError> {
+    fn serialize_event(&self, event: &NeuromorphicEvent<T>) -> Result<Vec<u8>, OptimError> {
         // Simplified serialization
         let mut data = Vec::new();
         data.extend_from_slice(&(event.event_type as u8).to_le_bytes());
@@ -526,12 +526,12 @@ impl<T: Float> EventCompressionEngine<T> {
         Ok(data)
     }
     
-    fn delta_encode_event(&mut self, _event: &NeuromorphicEvent<T>) -> Result<Vec<u8>, OptimizerError> {
+    fn delta_encode_event(&mut self, _event: &NeuromorphicEvent<T>) -> Result<Vec<u8>, OptimError> {
         // Simplified delta encoding implementation
         Ok(vec![0u8; 16])
     }
     
-    fn sparse_encode_event(&mut self, _event: &NeuromorphicEvent<T>) -> Result<Vec<u8>, OptimizerError> {
+    fn sparse_encode_event(&mut self, _event: &NeuromorphicEvent<T>) -> Result<Vec<u8>, OptimError> {
         // Simplified sparse encoding implementation
         Ok(vec![0u8; 8])
     }
@@ -699,15 +699,15 @@ impl<T: Float> EventDrivenOptimizer<T> {
     }
     
     /// Add event to the processing queue
-    pub fn enqueue_event(&mut self, event: NeuromorphicEvent<T>) -> Result<(), OptimizerError> {
+    pub fn enqueue_event(&mut self, event: NeuromorphicEvent<T>) -> Result<(), OptimError> {
         // Check rate limits
         if !self.rate_limiter.can_process(event.event_type) {
-            return Err(OptimizerError::InvalidConfig("Rate limit exceeded".to_string()));
+            return Err(OptimError::InvalidConfig("Rate limit exceeded".to_string()));
         }
         
         // Check queue capacity
         if self.event_queue.len() >= self.config.max_queue_size {
-            return Err(OptimizerError::InvalidConfig("Event queue full".to_string()));
+            return Err(OptimError::InvalidConfig("Event queue full".to_string()));
         }
         
         let entry = PriorityEventEntry {
@@ -730,7 +730,7 @@ impl<T: Float> EventDrivenOptimizer<T> {
     }
     
     /// Process events from the queue
-    pub fn process_events(&mut self) -> Result<usize, OptimizerError> {
+    pub fn process_events(&mut self) -> Result<usize, OptimError> {
         let mut processed_count = 0;
         let start_time = Instant::now();
         let timeout = Duration::from_millis(
@@ -761,7 +761,7 @@ impl<T: Float> EventDrivenOptimizer<T> {
     }
     
     /// Process a batch of events
-    fn process_event_batch(&mut self, batch_size: usize) -> Result<usize, OptimizerError> {
+    fn process_event_batch(&mut self, batch_size: usize) -> Result<usize, OptimError> {
         let mut batch_events = Vec::with_capacity(batch_size);
         
         // Collect batch events
@@ -782,7 +782,7 @@ impl<T: Float> EventDrivenOptimizer<T> {
     }
     
     /// Process a single event
-    fn process_single_event(&mut self, event: &NeuromorphicEvent<T>) -> Result<(), OptimizerError> {
+    fn process_single_event(&mut self, event: &NeuromorphicEvent<T>) -> Result<(), OptimError> {
         let start_time = Instant::now();
         
         // Find appropriate handler
@@ -804,7 +804,7 @@ impl<T: Float> EventDrivenOptimizer<T> {
     }
     
     /// Default event handling
-    fn default_event_handling(&mut self, event: &NeuromorphicEvent<T>) -> Result<(), OptimizerError> {
+    fn default_event_handling(&mut self, event: &NeuromorphicEvent<T>) -> Result<(), OptimError> {
         match event.event_type {
             EventType::ExternalStimulus => {
                 // Apply external stimulus to neuron
@@ -826,7 +826,7 @@ impl<T: Float> EventDrivenOptimizer<T> {
     }
     
     /// Apply pending weight updates
-    fn apply_pending_updates(&mut self) -> Result<(), OptimizerError> {
+    fn apply_pending_updates(&mut self) -> Result<(), OptimError> {
         for ((pre, post), weight_change) in self.system_state.pending_updates.drain() {
             if pre < self.system_state.synaptic_weights.nrows() && 
                post < self.system_state.synaptic_weights.ncols() {

@@ -65,6 +65,7 @@ pub mod fir;
 pub mod iir;
 pub mod parallel;
 pub mod parallel_enhanced;
+pub mod parallel_ultrathink_enhanced;
 pub mod specialized;
 pub mod transform;
 
@@ -117,6 +118,14 @@ pub use parallel::{
 // Re-export enhanced parallel filter functions
 pub use parallel_enhanced::{
     enhanced_parallel_filtfilt, ParallelFilterConfig as EnhancedParallelFilterConfig,
+};
+
+// Re-export ultrathink enhanced parallel filter functions
+pub use parallel_ultrathink_enhanced::{
+    UltrathinkParallelConfig, ParallelFilterMetrics, StreamingFilterState, StreamingStats,
+    ParallelMultiRateFilterBank, SparseParallelFilter, LockFreeStreamingFilter, 
+    ParallelSpectralFilter, benchmark_parallel_filtering_operations,
+    validate_parallel_filtering_accuracy,
 };
 
 #[cfg(test)]

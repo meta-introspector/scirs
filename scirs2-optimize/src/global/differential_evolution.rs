@@ -265,7 +265,7 @@ where
         }
 
         // If x0 is provided, replace one member with it (bounds-checked)
-        if let Some(ref x0) = self.options.x0 {
+        if let Some(x0) = self.options.x0.clone() {
             for (i, &val) in x0.iter().enumerate() {
                 self.population[[0, i]] = self.ensure_bounds(i, val);
             }
@@ -417,7 +417,7 @@ where
                 lb + excess
             } else {
                 // If reflection goes beyond upper bound, use random value in range
-                self.rng.gen_range(lb..=ub)
+                self.rng.random_range(lb..=ub)
             }
         } else {
             // val > ub, reflect around upper bound
@@ -427,7 +427,7 @@ where
                 ub - excess
             } else {
                 // If reflection goes beyond lower bound, use random value in range
-                self.rng.gen_range(lb..=ub)
+                self.rng.random_range(lb..=ub)
             }
         }
     }
@@ -440,7 +440,7 @@ where
         // Select indices for mutation
         let mut indices: Vec<usize> = Vec::with_capacity(5);
         while indices.len() < 5 {
-            let idx = self.rng.gen_range(0..popsize);
+            let idx = self.rng.random_range(0..popsize);
             if idx != candidate_idx && !indices.contains(&idx) {
                 indices.push(idx);
             }
@@ -450,7 +450,7 @@ where
             self.options.mutation.0
         } else {
             self.rng
-                .gen_range(self.options.mutation.0..self.options.mutation.1)
+                .random_range(self.options.mutation.0..self.options.mutation.1)
         };
 
         match self.strategy {
@@ -461,7 +461,6 @@ where
                 let r2 = self.population.row(indices[1]);
                 for i in 0..self.ndim {
                     mutant[i] = best[i] + mutation_factor * (r1[i] - r2[i]);
-                    mutant[i] = self.ensure_bounds(i, mutant[i]);
                 }
             }
             Strategy::Rand1Bin | Strategy::Rand1Exp => {
@@ -471,7 +470,6 @@ where
                 let r2 = self.population.row(indices[2]);
                 for i in 0..self.ndim {
                     mutant[i] = r0[i] + mutation_factor * (r1[i] - r2[i]);
-                    mutant[i] = self.ensure_bounds(i, mutant[i]);
                 }
             }
             Strategy::Best2Bin | Strategy::Best2Exp => {
@@ -485,7 +483,6 @@ where
                     mutant[i] = best[i]
                         + mutation_factor * (r1[i] - r2[i])
                         + mutation_factor * (r3[i] - r4[i]);
-                    mutant[i] = self.ensure_bounds(i, mutant[i]);
                 }
             }
             Strategy::Rand2Bin | Strategy::Rand2Exp => {
@@ -499,7 +496,6 @@ where
                     mutant[i] = r0[i]
                         + mutation_factor * (r1[i] - r2[i])
                         + mutation_factor * (r3[i] - r4[i]);
-                    mutant[i] = self.ensure_bounds(i, mutant[i]);
                 }
             }
             Strategy::CurrentToBest1Bin | Strategy::CurrentToBest1Exp => {
@@ -512,9 +508,13 @@ where
                     mutant[i] = current[i]
                         + mutation_factor * (best[i] - current[i])
                         + mutation_factor * (r1[i] - r2[i]);
-                    mutant[i] = self.ensure_bounds(i, mutant[i]);
                 }
             }
+        }
+
+        // Apply bounds checking after all calculations are done
+        for i in 0..self.ndim {
+            mutant[i] = self.ensure_bounds(i, mutant[i]);
         }
 
         mutant
@@ -532,7 +532,7 @@ where
             | Strategy::Rand2Bin
             | Strategy::CurrentToBest1Bin => {
                 // Binomial crossover
-                let randn = self.rng.gen_range(0..self.ndim);
+                let randn = self.rng.random_range(0..self.ndim);
                 for i in 0..self.ndim {
                     if i == randn || self.rng.random::<f64>() < self.options.recombination {
                         trial[i] = mutant[i];
@@ -545,7 +545,7 @@ where
             | Strategy::Rand2Exp
             | Strategy::CurrentToBest1Exp => {
                 // Exponential crossover
-                let randn = self.rng.gen_range(0..self.ndim);
+                let randn = self.rng.random_range(0..self.ndim);
                 let mut i = randn;
                 loop {
                     trial[i] = mutant[i];

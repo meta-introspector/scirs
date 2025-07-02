@@ -597,7 +597,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         &self,
         deviation_matrix: &Array2<F>,
     ) -> Result<(Vec<F>, Array2<F>)> {
-        let (n_weights, rank) = deviation_matrix.dim();
+        let (_n_weights, rank) = deviation_matrix.dim();
 
         // Compute covariance matrix: D^T * D
         let covariance = deviation_matrix.t().dot(deviation_matrix);

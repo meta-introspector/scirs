@@ -9,8 +9,7 @@ use crate::gpu::{GpuBackend, GpuContext};
 use ndarray::{Array2, Axis};
 // Use local GPU implementation to avoid feature flag issues
 // TODO: Re-enable core GPU integration when features are stabilized
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -496,7 +495,7 @@ impl UltraGpuOptimizer {
 
         // Kernel parameters optimization
         let block_size = config.block_size.min(1024); // CUDA max block size
-        let grid_size = (total_elements + block_size - 1) / block_size;
+        let _grid_size = (total_elements + block_size - 1) / block_size;
 
         // Execute distribution-specific kernel
         let kernel_name = match distribution {
@@ -572,7 +571,7 @@ impl UltraGpuOptimizer {
             let profile = GpuPerformanceProfile {
                 optimal_block_size: self.calculate_optimal_block_size(elements),
                 memory_bandwidth: self.calculate_memory_bandwidth(elements, duration),
-                compute_utilization: self.calculate_compute_utilization(operation, elements),
+                compute_utilization: self.estimate_compute_utilization(operation, (elements, 1)),
                 optimal_layout: DataLayout::RowMajor, // Default for most operations
                 performance_score: self.calculate_performance_score_from_timing(elements, duration),
             };
@@ -670,11 +669,11 @@ impl UltraGpuOptimizer {
 
         // OpenCL work group optimization
         let work_group_size = config.block_size.min(256); // OpenCL typical max
-        let global_work_size =
+        let _global_work_size =
             (total_elements + work_group_size - 1) / work_group_size * work_group_size;
 
         // Distribution-specific OpenCL kernel selection
-        let kernel_source = self.generate_opencl_kernel_source(distribution);
+        let _kernel_source = self.generate_opencl_kernel_source(distribution);
 
         // Simulate OpenCL kernel compilation and execution
         let execution_time = self.estimate_opencl_kernel_time(total_elements, distribution);
@@ -803,10 +802,10 @@ impl UltraGpuOptimizer {
         cols: usize,
         distribution: &str,
     ) -> Result<Array2<f64>> {
-        use rand::rng;
+        use rand::{rng, Rng};
         use rand_distr::{Distribution, Normal, Uniform};
 
-        let mut rng = rng();
+        let _rng = rng();
         let total_elements = rows * cols;
 
         // Generate data in parallel chunks
@@ -816,15 +815,15 @@ impl UltraGpuOptimizer {
             .into_par_iter()
             .chunks(chunk_size)
             .flat_map(|chunk| {
-                let mut local_rng = rng();
+                let mut local_rng = rand::rng();
                 chunk
-                    .map(|_| match distribution {
+                    .into_iter().map(|_| match distribution {
                         "normal" => {
                             let normal = Normal::new(0.0, 1.0).unwrap();
                             normal.sample(&mut local_rng)
                         }
                         "uniform" => {
-                            let uniform = Uniform::new(0.0, 1.0);
+                            let uniform = Uniform::new(0.0, 1.0).unwrap();
                             uniform.sample(&mut local_rng)
                         }
                         _ => local_rng.random::<f64>(),
@@ -878,8 +877,8 @@ impl UltraGpuOptimizer {
 
         // Apply GPU acceleration factors
         let gpu_factor = match gpu_context.backend() {
-            GpuBackend::Cuda => 0.1,   // 10x speedup
-            GpuBackend::OpenCl => 0.2, // 5x speedup
+            GpuBackend::Cuda { .. } => 0.1,   // 10x speedup
+            GpuBackend::OpenCl { .. } => 0.2, // 5x speedup
             _ => 1.0,                  // No speedup for CPU backend
         };
 
@@ -994,8 +993,8 @@ pub fn benchmark_ultra_performance(
 impl ToString for GpuBackend {
     fn to_string(&self) -> String {
         match self {
-            GpuBackend::Cuda => "cuda".to_string(),
-            GpuBackend::OpenCl => "opencl".to_string(),
+            GpuBackend::Cuda { .. } => "cuda".to_string(),
+            GpuBackend::OpenCl { .. } => "opencl".to_string(),
             GpuBackend::Cpu => "cpu".to_string(),
         }
     }
@@ -1003,7 +1002,6 @@ impl ToString for GpuBackend {
 
 /// ULTRATHINK MODE ENHANCEMENTS
 /// Advanced AI-driven optimization and real-time monitoring capabilities
-
 /// AI-driven performance predictor using machine learning
 #[derive(Debug, Clone)]
 pub struct AIPerformancePredictor {
@@ -1490,7 +1488,7 @@ impl RealTimePerformanceMonitor {
         let mean_execution_time =
             execution_times.iter().sum::<f64>() / execution_times.len() as f64;
         let min_execution_time = execution_times.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        let max_execution_time = execution_times.iter().fold(0.0, |a, &b| a.max(b));
+        let max_execution_time = execution_times.iter().fold(0.0f64, |a, &b| a.max(b));
 
         let mean_gpu_utilization = self
             .performance_history
@@ -1587,6 +1585,7 @@ impl UltraGpuOptimizer {
             memory_pattern: MemoryAccessPattern::Sequential,
             vectorization: VectorizationStrategy::Adaptive,
             load_balancing: LoadBalancingMethod::Adaptive,
+            block_size: 256,
         })
     }
 }

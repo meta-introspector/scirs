@@ -20,6 +20,7 @@ use std::time::{Duration, Instant, SystemTime};
 use thiserror::Error;
 
 #[cfg(feature = "parallel")]
+#[allow(unused_imports)]
 use rayon::prelude::*;
 
 #[cfg(feature = "async")]

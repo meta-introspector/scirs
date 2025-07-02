@@ -4,15 +4,15 @@
 //! optimization algorithms. It provides high-level abstractions for building, optimizing,
 //! and executing XLA computations on TPU hardware.
 
-use ndarray::{s, Array, Array1, Array2, Array3, ArrayBase, Axis, Data, DataMut, Dimension};
+use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
 use super::{PodTopology, TPUConfig, TPUVersion, XLAOptimizationLevel};
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// XLA Compiler for TPU optimization
@@ -644,7 +644,7 @@ pub trait OptimizationPass<T: Float> {
     fn name(&self) -> &str;
 
     /// Run the optimization pass
-    fn run(&mut self, computation: &mut XLAComputation<T>) -> Result<bool, OptimizerError>;
+    fn run(&mut self, computation: &mut XLAComputation<T>) -> Result<bool, OptimError>;
 
     /// Check if pass should run
     fn should_run(&self, computation: &XLAComputation<T>) -> bool;
@@ -733,7 +733,7 @@ pub trait ComputationAnalysis<T: Float> {
     fn analyze(
         &mut self,
         computation: &XLAComputation<T>,
-    ) -> Result<AnalysisResult, OptimizerError>;
+    ) -> Result<AnalysisResult, OptimError>;
 
     /// Check if analysis is valid
     fn is_valid(&self, computation: &XLAComputation<T>) -> bool;
@@ -2612,7 +2612,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
     XLACompiler<T>
 {
     /// Create a new XLA compiler
-    pub fn new(config: XLACompilerConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: XLACompilerConfig) -> Result<Self, OptimError> {
         let graph_builder = ComputationGraphBuilder::new();
         let optimization_pipeline = OptimizationPipeline::new(&config)?;
         let code_generator = TPUCodeGenerator::new(&config)?;
@@ -2640,7 +2640,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
         &mut self,
         optimizer: &O,
         input_shapes: &[TensorShape],
-    ) -> Result<CompiledOptimizer<T>, OptimizerError>
+    ) -> Result<CompiledOptimizer<T>, OptimError>
     where
         O: Optimizer<T, D>,
         D: ndarray::Dimension,
@@ -2677,7 +2677,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
         &mut self,
         _optimizer: &O,
         input_shapes: &[TensorShape],
-    ) -> Result<XLAComputation<T>, OptimizerError>
+    ) -> Result<XLAComputation<T>, OptimError>
     where
         O: Optimizer<T, D>,
         D: ndarray::Dimension,
@@ -2725,7 +2725,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
     fn add_optimizer_operations(
         &mut self,
         computation: &mut XLAComputation<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Add basic operations for optimizer step
         let op_id = OperationId(self.graph_builder.operation_counter);
         self.graph_builder.operation_counter += 1;
@@ -2776,7 +2776,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
         &mut self,
         _computation: &XLAComputation<T>,
         _generated_code: &GeneratedCode,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Simplified caching implementation
         Ok(())
     }
@@ -2785,7 +2785,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
     fn estimate_performance(
         &self,
         _computation: &XLAComputation<T>,
-    ) -> Result<EstimatedPerformance, OptimizerError> {
+    ) -> Result<EstimatedPerformance, OptimError> {
         Ok(EstimatedPerformance {
             execution_time: Duration::from_micros(100),
             memory_usage: 1024 * 1024, // 1MB
@@ -3488,7 +3488,7 @@ impl<T: Float> AdvancedTPUOptimizer<T> {
     pub fn optimize_computation(
         &mut self,
         computation: &mut XLAComputation<T>,
-    ) -> Result<OptimizationResult, OptimizerError> {
+    ) -> Result<OptimizationResult, OptimError> {
         let mut optimization_result = OptimizationResult::new();
 
         // Apply tensor core optimizations
@@ -3582,7 +3582,7 @@ impl<T: Float> MemoryCoalescingOptimizer<T> {
     pub fn optimize(
         &mut self,
         _computation: &mut XLAComputation<T>,
-    ) -> Result<OptimizationResult, OptimizerError> {
+    ) -> Result<OptimizationResult, OptimError> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3603,7 +3603,7 @@ impl<T: Float> DynamicShapeOptimizer<T> {
     pub fn optimize(
         &mut self,
         _computation: &mut XLAComputation<T>,
-    ) -> Result<OptimizationResult, OptimizerError> {
+    ) -> Result<OptimizationResult, OptimError> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3624,7 +3624,7 @@ impl<T: Float> CrossReplicaOptimizer<T> {
     pub fn optimize(
         &mut self,
         _computation: &mut XLAComputation<T>,
-    ) -> Result<OptimizationResult, OptimizerError> {
+    ) -> Result<OptimizationResult, OptimError> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3649,7 +3649,7 @@ impl<T: Float> TensorCoreOptimizer<T> {
     pub fn optimize(
         &mut self,
         _computation: &mut XLAComputation<T>,
-    ) -> Result<OptimizationResult, OptimizerError> {
+    ) -> Result<OptimizationResult, OptimError> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3720,7 +3720,7 @@ impl<T: Float> SparsityOptimizer<T> {
     pub fn optimize(
         &mut self,
         _computation: &mut XLAComputation<T>,
-    ) -> Result<OptimizationResult, OptimizerError> {
+    ) -> Result<OptimizationResult, OptimError> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3744,7 +3744,7 @@ impl<T: Float> QuantizationOptimizer<T> {
     pub fn optimize(
         &mut self,
         _computation: &mut XLAComputation<T>,
-    ) -> Result<OptimizationResult, OptimizerError> {
+    ) -> Result<OptimizationResult, OptimError> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3895,7 +3895,7 @@ impl<T: Float + Default + Clone> ComputationGraphBuilder<T> {
 }
 
 impl<T: Float + Default + Clone> OptimizationPipeline<T> {
-    fn new(_config: &XLACompilerConfig) -> Result<Self, OptimizerError> {
+    fn new(_config: &XLACompilerConfig) -> Result<Self, OptimError> {
         Ok(Self {
             passes: Vec::new(),
             pass_manager: PassManager::new(),
@@ -3907,7 +3907,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
     fn optimize(
         &mut self,
         mut computation: XLAComputation<T>,
-    ) -> Result<XLAComputation<T>, OptimizerError> {
+    ) -> Result<XLAComputation<T>, OptimError> {
         // Multi-pass optimization pipeline
         let mut iterations = 0;
         let max_iterations = 10;
@@ -3954,7 +3954,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
     fn apply_constant_folding(
         &mut self,
         computation: &mut XLAComputation<T>,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         let mut changed = false;
 
         // Find operations that can be folded
@@ -3981,7 +3981,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
     fn apply_dead_code_elimination(
         &mut self,
         computation: &mut XLAComputation<T>,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         let mut changed = false;
 
         // Mark live operations starting from outputs
@@ -4010,7 +4010,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
     fn apply_operator_fusion(
         &mut self,
         computation: &mut XLAComputation<T>,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         let mut changed = false;
 
         // Find fusable operation patterns
@@ -4030,7 +4030,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
     fn apply_layout_optimization(
         &mut self,
         computation: &mut XLAComputation<T>,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         let mut changed = false;
 
         // Analyze data layout requirements
@@ -4050,7 +4050,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
     fn apply_memory_optimization(
         &mut self,
         computation: &mut XLAComputation<T>,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         let mut changed = false;
 
         // Memory reuse optimization
@@ -4072,7 +4072,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
         false // Simplified
     }
 
-    fn fold_operation(&self, _operation: &XLAOperation<T>) -> Result<Option<T>, OptimizerError> {
+    fn fold_operation(&self, _operation: &XLAOperation<T>) -> Result<Option<T>, OptimError> {
         // Perform constant folding
         Ok(None) // Simplified
     }
@@ -4100,7 +4100,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
         &self,
         _computation: &mut XLAComputation<T>,
         _candidates: Vec<OperationId>,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         // Apply fusion transformation
         Ok(false) // Simplified
     }
@@ -4108,7 +4108,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
     fn analyze_layouts(
         &self,
         _computation: &XLAComputation<T>,
-    ) -> Result<HashMap<OperandId, Layout>, OptimizerError> {
+    ) -> Result<HashMap<OperandId, Layout>, OptimError> {
         // Analyze optimal data layouts
         Ok(HashMap::new()) // Simplified
     }
@@ -4118,7 +4118,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
         _computation: &mut XLAComputation<T>,
         _operand_id: OperandId,
         _layout: Layout,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         // Apply layout transformation
         Ok(false) // Simplified
     }
@@ -4126,7 +4126,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
     fn optimize_memory_reuse(
         &self,
         _computation: &mut XLAComputation<T>,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         // Optimize memory reuse patterns
         Ok(false) // Simplified
     }
@@ -4134,19 +4134,19 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
     fn optimize_inplace_operations(
         &self,
         _computation: &mut XLAComputation<T>,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         // Convert operations to in-place where possible
         Ok(false) // Simplified
     }
 
-    fn validate_computation(&self, _computation: &XLAComputation<T>) -> Result<(), OptimizerError> {
+    fn validate_computation(&self, _computation: &XLAComputation<T>) -> Result<(), OptimError> {
         // Validate that the computation is still correct after optimizations
         Ok(())
     }
 }
 
 impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
-    fn new(_config: &XLACompilerConfig) -> Result<Self, OptimizerError> {
+    fn new(_config: &XLACompilerConfig) -> Result<Self, OptimError> {
         Ok(Self {
             target_config: TPUConfig::default(),
             strategies: vec![CodeGenerationStrategy::Balanced],
@@ -4160,7 +4160,7 @@ impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
     fn generate(
         &mut self,
         computation: &XLAComputation<T>,
-    ) -> Result<GeneratedCode, OptimizerError> {
+    ) -> Result<GeneratedCode, OptimError> {
         let start_time = Instant::now();
 
         // Phase 1: Instruction selection
@@ -4202,7 +4202,7 @@ impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
     fn select_instructions(
         &self,
         computation: &XLAComputation<T>,
-    ) -> Result<Vec<SelectedInstruction>, OptimizerError> {
+    ) -> Result<Vec<SelectedInstruction>, OptimError> {
         let mut instructions = Vec::new();
 
         for operation in computation.operations.values() {
@@ -4227,7 +4227,7 @@ impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
         &self,
         _instructions: &[RegisterAllocatedInstruction],
         _memory_layout: &MemoryLayout,
-    ) -> Result<Vec<u8>, OptimizerError> {
+    ) -> Result<Vec<u8>, OptimError> {
         // Generate actual TPU machine code
         // This is a complex process involving:
         // - Encoding instructions to TPU ISA
@@ -4269,7 +4269,7 @@ impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
     fn apply_code_optimizations(
         &self,
         mut instructions: Vec<u8>,
-    ) -> Result<Vec<u8>, OptimizerError> {
+    ) -> Result<Vec<u8>, OptimError> {
         // Apply various code optimizations:
         // - Instruction reordering
         // - Pipeline optimization
@@ -4286,7 +4286,7 @@ impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
     fn estimate_resource_requirements(
         &self,
         computation: &XLAComputation<T>,
-    ) -> Result<ResourceRequirements, OptimizerError> {
+    ) -> Result<ResourceRequirements, OptimError> {
         let mut memory_requirement = 0;
         let mut compute_requirement = 0.0;
         let mut bandwidth_requirement = 0.0;
@@ -4320,28 +4320,28 @@ impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
     fn select_add_instruction(
         &self,
         _operation: &XLAOperation<T>,
-    ) -> Result<Vec<SelectedInstruction>, OptimizerError> {
+    ) -> Result<Vec<SelectedInstruction>, OptimError> {
         Ok(vec![SelectedInstruction::VectorAdd])
     }
 
     fn select_multiply_instruction(
         &self,
         _operation: &XLAOperation<T>,
-    ) -> Result<Vec<SelectedInstruction>, OptimizerError> {
+    ) -> Result<Vec<SelectedInstruction>, OptimError> {
         Ok(vec![SelectedInstruction::VectorMultiply])
     }
 
     fn select_matmul_instruction(
         &self,
         _operation: &XLAOperation<T>,
-    ) -> Result<Vec<SelectedInstruction>, OptimizerError> {
+    ) -> Result<Vec<SelectedInstruction>, OptimError> {
         Ok(vec![SelectedInstruction::MatrixMultiply])
     }
 
     fn select_convolution_instruction(
         &self,
         _operation: &XLAOperation<T>,
-    ) -> Result<Vec<SelectedInstruction>, OptimizerError> {
+    ) -> Result<Vec<SelectedInstruction>, OptimError> {
         Ok(vec![SelectedInstruction::Convolution2D])
     }
 
@@ -4349,20 +4349,20 @@ impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
         &self,
         _operation: &XLAOperation<T>,
         _update_type: &OptimizerUpdateType,
-    ) -> Result<Vec<SelectedInstruction>, OptimizerError> {
+    ) -> Result<Vec<SelectedInstruction>, OptimError> {
         Ok(vec![SelectedInstruction::OptimizerUpdate])
     }
 
     fn select_generic_instruction(
         &self,
         _operation: &XLAOperation<T>,
-    ) -> Result<Vec<SelectedInstruction>, OptimizerError> {
+    ) -> Result<Vec<SelectedInstruction>, OptimError> {
         Ok(vec![SelectedInstruction::Generic])
     }
 }
 
 impl CompilationCache {
-    fn new(_config: &XLACompilerConfig) -> Result<Self, OptimizerError> {
+    fn new(_config: &XLACompilerConfig) -> Result<Self, OptimError> {
         Ok(Self {
             cached_computations: HashMap::new(),
             cache_metadata: CacheMetadata {
@@ -4383,7 +4383,7 @@ impl CompilationCache {
 }
 
 impl<T: Float + Default + Clone> PerformanceAnalyzer<T> {
-    fn new(_config: &XLACompilerConfig) -> Result<Self, OptimizerError> {
+    fn new(_config: &XLACompilerConfig) -> Result<Self, OptimError> {
         Ok(Self {
             models: Vec::new(),
             benchmarking_engine: BenchmarkingEngine::new(),
@@ -4394,7 +4394,7 @@ impl<T: Float + Default + Clone> PerformanceAnalyzer<T> {
 }
 
 impl<T: Float + Default + Clone> MemoryPlanner<T> {
-    fn new(_config: &XLACompilerConfig) -> Result<Self, OptimizerError> {
+    fn new(_config: &XLACompilerConfig) -> Result<Self, OptimError> {
         Ok(Self {
             algorithms: vec![PlanningAlgorithm::GreedyPlanning],
             memory_models: Vec::new(),
@@ -4405,7 +4405,7 @@ impl<T: Float + Default + Clone> MemoryPlanner<T> {
 }
 
 impl<T: Float + Default + Clone> ParallelCompilationManager<T> {
-    fn new(_config: &XLACompilerConfig) -> Result<Self, OptimizerError> {
+    fn new(_config: &XLACompilerConfig) -> Result<Self, OptimError> {
         Ok(Self {
             thread_pool: ThreadPool {
                 num_threads: num_cpus::get(),
@@ -4549,7 +4549,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
         &mut self,
         analysis_name: &str,
         computation: &XLAComputation<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Check if analysis is cached and valid
         if let Some(cached_result) = self.analysis_cache.get(analysis_name) {
             if cached_result.validity.is_valid {
@@ -4565,7 +4565,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
             "performance_analysis" => self.run_performance_analysis(computation)?,
             "layout_analysis" => self.run_layout_analysis(computation)?,
             _ => {
-                return Err(OptimizerError::InvalidConfig(format!(
+                return Err(OptimError::InvalidConfig(format!(
                     "Unknown analysis: {}",
                     analysis_name
                 )))
@@ -4582,7 +4582,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
     fn run_shape_analysis(
         &self,
         computation: &XLAComputation<T>,
-    ) -> Result<AnalysisResult, OptimizerError> {
+    ) -> Result<AnalysisResult, OptimError> {
         let mut data = HashMap::new();
 
         // Analyze shapes of all operands
@@ -4618,7 +4618,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
     fn run_memory_analysis(
         &self,
         computation: &XLAComputation<T>,
-    ) -> Result<AnalysisResult, OptimizerError> {
+    ) -> Result<AnalysisResult, OptimError> {
         let mut data = HashMap::new();
         let mut total_memory = 0;
 
@@ -4650,7 +4650,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
     fn run_dependency_analysis(
         &self,
         computation: &XLAComputation<T>,
-    ) -> Result<AnalysisResult, OptimizerError> {
+    ) -> Result<AnalysisResult, OptimError> {
         let mut data = HashMap::new();
 
         // Build dependency graph
@@ -4684,7 +4684,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
     fn run_performance_analysis(
         &self,
         computation: &XLAComputation<T>,
-    ) -> Result<AnalysisResult, OptimizerError> {
+    ) -> Result<AnalysisResult, OptimError> {
         let mut data = HashMap::new();
         let mut total_flops = 0u64;
         let mut total_time = 0u64;
@@ -4724,7 +4724,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
     fn run_layout_analysis(
         &self,
         computation: &XLAComputation<T>,
-    ) -> Result<AnalysisResult, OptimizerError> {
+    ) -> Result<AnalysisResult, OptimError> {
         let mut data = HashMap::new();
 
         // Analyze optimal layouts for tensors
@@ -4873,7 +4873,7 @@ impl<T: Float + Default + Clone> InstructionScheduler<T> {
     fn schedule(
         &mut self,
         instructions: Vec<SelectedInstruction>,
-    ) -> Result<Vec<SelectedInstruction>, OptimizerError> {
+    ) -> Result<Vec<SelectedInstruction>, OptimError> {
         // Apply scheduling algorithm
         match self.algorithm {
             SchedulingAlgorithm::ListScheduling => self.list_schedule(instructions),
@@ -4888,7 +4888,7 @@ impl<T: Float + Default + Clone> InstructionScheduler<T> {
     fn list_schedule(
         &self,
         mut instructions: Vec<SelectedInstruction>,
-    ) -> Result<Vec<SelectedInstruction>, OptimizerError> {
+    ) -> Result<Vec<SelectedInstruction>, OptimError> {
         // Simple list scheduling - prioritize by instruction type
         instructions.sort_by(|a, b| {
             self.get_instruction_priority(a)
@@ -4900,7 +4900,7 @@ impl<T: Float + Default + Clone> InstructionScheduler<T> {
     fn critical_path_schedule(
         &self,
         instructions: Vec<SelectedInstruction>,
-    ) -> Result<Vec<SelectedInstruction>, OptimizerError> {
+    ) -> Result<Vec<SelectedInstruction>, OptimError> {
         // Simplified critical path scheduling
         Ok(instructions)
     }
@@ -4908,7 +4908,7 @@ impl<T: Float + Default + Clone> InstructionScheduler<T> {
     fn resource_constrained_schedule(
         &self,
         instructions: Vec<SelectedInstruction>,
-    ) -> Result<Vec<SelectedInstruction>, OptimizerError> {
+    ) -> Result<Vec<SelectedInstruction>, OptimError> {
         // Simplified resource-constrained scheduling
         Ok(instructions)
     }
@@ -4949,7 +4949,7 @@ impl<T: Float + Default + Clone> RegisterAllocator<T> {
     fn allocate_registers(
         &mut self,
         instructions: Vec<SelectedInstruction>,
-    ) -> Result<Vec<RegisterAllocatedInstruction>, OptimizerError> {
+    ) -> Result<Vec<RegisterAllocatedInstruction>, OptimError> {
         let mut allocated_instructions = Vec::new();
         let mut register_map = HashMap::new();
         let mut next_register = 0u32;
@@ -4977,7 +4977,7 @@ impl<T: Float + Default + Clone> RegisterAllocator<T> {
         instruction: &SelectedInstruction,
         register_map: &mut HashMap<String, u32>,
         next_register: &mut u32,
-    ) -> Result<RegisterAllocatedInstruction, OptimizerError> {
+    ) -> Result<RegisterAllocatedInstruction, OptimError> {
         // Simplified linear scan allocation
         let input_registers =
             self.allocate_input_registers(instruction, register_map, next_register)?;
@@ -4998,7 +4998,7 @@ impl<T: Float + Default + Clone> RegisterAllocator<T> {
         instruction: &SelectedInstruction,
         register_map: &mut HashMap<String, u32>,
         next_register: &mut u32,
-    ) -> Result<RegisterAllocatedInstruction, OptimizerError> {
+    ) -> Result<RegisterAllocatedInstruction, OptimError> {
         // Simplified graph coloring allocation
         self.simple_allocate(instruction, register_map, next_register)
     }
@@ -5008,7 +5008,7 @@ impl<T: Float + Default + Clone> RegisterAllocator<T> {
         instruction: &SelectedInstruction,
         register_map: &mut HashMap<String, u32>,
         next_register: &mut u32,
-    ) -> Result<RegisterAllocatedInstruction, OptimizerError> {
+    ) -> Result<RegisterAllocatedInstruction, OptimError> {
         let input_registers =
             self.allocate_input_registers(instruction, register_map, next_register)?;
         let output_registers =
@@ -5028,7 +5028,7 @@ impl<T: Float + Default + Clone> RegisterAllocator<T> {
         instruction: &SelectedInstruction,
         _register_map: &mut HashMap<String, u32>,
         next_register: &mut u32,
-    ) -> Result<Vec<u32>, OptimizerError> {
+    ) -> Result<Vec<u32>, OptimError> {
         let num_inputs = match instruction {
             SelectedInstruction::VectorAdd | SelectedInstruction::VectorMultiply => 2,
             SelectedInstruction::MatrixMultiply => 2,
@@ -5051,7 +5051,7 @@ impl<T: Float + Default + Clone> RegisterAllocator<T> {
         instruction: &SelectedInstruction,
         _register_map: &mut HashMap<String, u32>,
         next_register: &mut u32,
-    ) -> Result<Vec<u32>, OptimizerError> {
+    ) -> Result<Vec<u32>, OptimError> {
         let num_outputs = match instruction {
             SelectedInstruction::VectorAdd | SelectedInstruction::VectorMultiply => 1,
             SelectedInstruction::MatrixMultiply => 1,
@@ -5073,7 +5073,7 @@ impl<T: Float + Default + Clone> RegisterAllocator<T> {
         &self,
         instruction: &SelectedInstruction,
         next_register: &mut u32,
-    ) -> Result<Vec<u32>, OptimizerError> {
+    ) -> Result<Vec<u32>, OptimError> {
         let num_temps = match instruction {
             SelectedInstruction::MatrixMultiply => 2,
             SelectedInstruction::Convolution2D => 4,
@@ -5122,7 +5122,7 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
     fn plan_memory_layout(
         &mut self,
         computation: &XLAComputation<T>,
-    ) -> Result<MemoryLayout, OptimizerError> {
+    ) -> Result<MemoryLayout, OptimError> {
         let mut tensor_layouts = HashMap::new();
         let mut memory_pools = Vec::new();
         let mut total_memory_usage = 0;
@@ -5169,7 +5169,7 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
         })
     }
 
-    fn calculate_tensor_memory_size(&self, shape: &TensorShape) -> Result<usize, OptimizerError> {
+    fn calculate_tensor_memory_size(&self, shape: &TensorShape) -> Result<usize, OptimError> {
         let element_size = 4; // Assume 32-bit floats
         let total_elements: usize = shape.dimensions.iter().product();
         Ok(total_elements * element_size)
@@ -5179,7 +5179,7 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
         &self,
         shape: &TensorShape,
         _memory_size: usize,
-    ) -> Result<TensorLayout, OptimizerError> {
+    ) -> Result<TensorLayout, OptimError> {
         // Choose layout based on tensor dimensions and access patterns
         let layout_type = if shape.dimensions.len() == 2 {
             LayoutType::RowMajor // Default for matrices
@@ -5202,7 +5202,7 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
         &self,
         dimensions: &[usize],
         layout_type: LayoutType,
-    ) -> Result<Vec<usize>, OptimizerError> {
+    ) -> Result<Vec<usize>, OptimError> {
         match layout_type {
             LayoutType::RowMajor => {
                 let mut strides = vec![1; dimensions.len()];

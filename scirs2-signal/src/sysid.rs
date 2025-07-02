@@ -1630,7 +1630,7 @@ fn update_huber_weights(
     }
 }
 
-fn estimate_robust_scale(
+pub fn estimate_robust_scale(
     target: &Array1<f64>,
     regressor: &Array2<f64>,
     parameters: &Array1<f64>,
@@ -1650,7 +1650,7 @@ fn estimate_robust_scale(
     Ok(mad * 1.4826) // Scale factor for normal distribution
 }
 
-fn detect_outliers(residuals: &Array1<f64>, scale: f64, threshold: f64) -> Vec<usize> {
+pub fn detect_outliers(residuals: &Array1<f64>, scale: f64, threshold: f64) -> Vec<usize> {
     residuals
         .iter()
         .enumerate()

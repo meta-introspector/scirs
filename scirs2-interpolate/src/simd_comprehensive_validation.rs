@@ -1100,7 +1100,6 @@ pub struct PerformanceSummary {
 }
 
 /// Convenience functions
-
 /// Run comprehensive SIMD validation with default configuration
 pub fn validate_simd_performance<T>() -> InterpolateResult<SimdValidationReport>
 where

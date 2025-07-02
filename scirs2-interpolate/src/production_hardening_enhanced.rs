@@ -2572,7 +2572,6 @@ pub enum ProductionReadiness {
 }
 
 /// Convenience functions
-
 /// Run comprehensive production hardening with default configuration
 pub fn run_production_hardening<T>() -> InterpolateResult<ProductionHardeningReport>
 where

@@ -245,7 +245,7 @@ impl LLE {
         // Validate inputs
         check_positive(self.n_neighbors, "n_neighbors")?;
         check_positive(self.n_components, "n_components")?;
-        check_shape(x, (Some(n_samples), Some(n_features)), "x")?;
+        check_shape(x, &[n_samples, n_features], "x")?;
 
         if n_samples <= self.n_neighbors {
             return Err(TransformError::InvalidInput(format!(

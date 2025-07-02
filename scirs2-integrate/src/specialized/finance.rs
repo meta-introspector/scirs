@@ -1547,6 +1547,7 @@ impl StochasticPDESolver {
 
     /// Simple FFT implementation for option pricing
     #[allow(dead_code)]
+    #[allow(clippy::only_used_in_recursion)]
     fn fft_1d(&self, input: &[Complex64]) -> Result<Vec<Complex64>> {
         use num_complex::Complex64;
         use std::f64::consts::PI;
@@ -2226,10 +2227,9 @@ pub mod ultra_monte_carlo_engine {
         pub fn get_path_buffer(&mut self, n_paths: usize, n_steps: usize) -> &mut Array2<f64> {
             let key = n_paths * 1000 + n_steps; // Simple hash
 
-            if !self.path_buffers.contains_key(&key) {
-                let buffer = vec![Array2::zeros((n_paths, n_steps))];
-                self.path_buffers.insert(key, buffer);
-            }
+            self.path_buffers.entry(key).or_insert_with(|| {
+                vec![Array2::zeros((n_paths, n_steps))]
+            });
 
             &mut self.path_buffers.get_mut(&key).unwrap()[0]
         }
@@ -2898,7 +2898,7 @@ pub mod realtime_risk_engine {
                 self.risk_history
                     .back()
                     .cloned()
-                    .unwrap_or_else(|| RiskSnapshot {
+                    .unwrap_or(RiskSnapshot {
                         timestamp: 0.0,
                         var_95: 0.0,
                         var_99: 0.0,
@@ -4808,6 +4808,7 @@ pub mod financial_optimizations {
         }
 
         /// Gauss-Hermite quadrature nodes and weights
+        #[allow(clippy::only_used_in_recursion)]
         fn gauss_hermite_quadrature(&self, n: usize) -> (Vec<f64>, Vec<f64>) {
             // Simplified implementation for common cases
             match n {
@@ -4830,10 +4831,10 @@ pub mod financial_optimizations {
                     let nodes = vec![
                         -2.930637420257244,
                         -1.981656756695843,
-                        -1.157193712446780,
+                        -1.157_193_712_446_78,
                         -0.381186990207322,
                         0.381186990207322,
-                        1.157193712446780,
+                        1.157_193_712_446_78,
                         1.981656756695843,
                         2.930637420257244,
                     ];

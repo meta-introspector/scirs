@@ -4,17 +4,14 @@
 //! to establish a baseline compilation before adding more complex features.
 
 #![warn(missing_docs)]
-
 // Core working modules
 pub mod error;
 pub mod activations;
 pub mod layers;
 pub mod losses;
 pub mod optimizers;
-
 // Re-export the error type
 pub use error::{Error, NeuralError, Result};
-
 // Optional prelude for convenience
 pub mod prelude {
     //! Convenient re-exports for common neural network operations

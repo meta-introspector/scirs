@@ -1654,7 +1654,7 @@ fn make_classification_gpu_impl(
 /// Generate a chunk of classification data on GPU
 #[allow(dead_code)]
 fn generate_classification_chunk_gpu(
-    _gpu_context: &GpuContext,
+    gpu_context: &GpuContext,
     n_samples: usize,
     n_features: usize,
     n_classes: usize,
@@ -1936,7 +1936,7 @@ fn make_regression_gpu_impl(
 /// Generate a chunk of regression data on GPU
 #[allow(dead_code)]
 fn generate_regression_chunk_gpu(
-    _gpu_context: &GpuContext,
+    gpu_context: &GpuContext,
     n_samples: usize,
     n_features: usize,
     n_informative: usize,

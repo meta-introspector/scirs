@@ -215,7 +215,7 @@ impl<F: Float + NumCast + FloatConst> Hypergeometric<F> {
     ///
     /// An array of random samples
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut samples = Array1::zeros(size);
 
         for i in 0..size {

@@ -9,8 +9,8 @@
 use scirs2_datasets::{
     list_real_world_datasets, load_adult, load_california_housing, load_heart_disease,
     load_red_wine_quality, load_titanic,
-    utils::{k_fold_split, train_test_split, StandardScaler},
-    BenchmarkRunner, RealWorldConfig, RealWorldDatasets,
+    utils::{k_fold_split, train_test_split},
+    BenchmarkRunner, RealWorldConfig, MLPipeline, MLScalingMethod,
 };
 use std::collections::HashMap;
 
@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn demonstrate_dataset_catalog() {
     println!("📋 AVAILABLE REAL-WORLD DATASETS");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     let datasets = list_real_world_datasets();
 
@@ -97,14 +97,14 @@ fn demonstrate_dataset_catalog() {
 
 fn demonstrate_classification_datasets() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 CLASSIFICATION DATASETS");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     // Titanic dataset
     println!("Loading Titanic dataset...");
     let titanic = load_titanic()?;
 
     println!("Titanic Dataset:");
-    println!("  Description: {}", titanic.metadata.description);
+    println!("  Description: {}", titanic.metadata.get("description").unwrap_or(&"Unknown".to_string()));
     println!("  Samples: {}", titanic.n_samples());
     println!("  Features: {}", titanic.n_features());
 
@@ -146,7 +146,7 @@ fn demonstrate_classification_datasets() -> Result<(), Box<dyn std::error::Error
     match load_adult() {
         Ok(adult) => {
             println!("Adult Dataset:");
-            println!("  Description: {}", adult.metadata.description);
+            println!("  Description: {}", adult.metadata.get("description").unwrap_or(&"Unknown".to_string()));
             println!("  Samples: {}", adult.n_samples());
             println!("  Features: {}", adult.n_features());
             println!("  Task: Predict income >$50K based on census data");
@@ -163,14 +163,14 @@ fn demonstrate_classification_datasets() -> Result<(), Box<dyn std::error::Error
 
 fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
     println!("📈 REGRESSION DATASETS");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     // California Housing dataset
     println!("Loading California Housing dataset...");
     let housing = load_california_housing()?;
 
     println!("California Housing Dataset:");
-    println!("  Description: {}", housing.metadata.description);
+    println!("  Description: {}", housing.metadata.get("description").unwrap_or(&"Unknown".to_string()));
     println!("  Samples: {}", housing.n_samples());
     println!("  Features: {}", housing.n_features());
 
@@ -196,7 +196,7 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
     let wine = load_red_wine_quality()?;
 
     println!("Red Wine Quality Dataset:");
-    println!("  Description: {}", wine.metadata.description);
+    println!("  Description: {}", wine.metadata.get("description").unwrap_or(&"Unknown".to_string()));
     println!("  Samples: {}", wine.n_samples());
     println!("  Features: {}", wine.n_features());
 
@@ -219,14 +219,14 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
 
 fn demonstrate_healthcare_datasets() -> Result<(), Box<dyn std::error::Error>> {
     println!("🏥 HEALTHCARE DATASETS");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     // Heart Disease dataset
     println!("Loading Heart Disease dataset...");
     let heart = load_heart_disease()?;
 
     println!("Heart Disease Dataset:");
-    println!("  Description: {}", heart.metadata.description);
+    println!("  Description: {}", heart.metadata.get("description").unwrap_or(&"Unknown".to_string()));
     println!("  Samples: {}", heart.n_samples());
     println!("  Features: {}", heart.n_features());
 
@@ -265,7 +265,7 @@ fn demonstrate_healthcare_datasets() -> Result<(), Box<dyn std::error::Error>> {
 
 fn demonstrate_advanced_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 ADVANCED DATASET OPERATIONS");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     let housing = load_california_housing()?;
 
@@ -280,11 +280,9 @@ fn demonstrate_advanced_operations() -> Result<(), Box<dyn std::error::Error>> {
         test.n_samples()
     );
 
-    // 2. Feature scaling
-    let mut scaler = StandardScaler::new();
-    scaler.fit(&train.data)?;
-    scaler.transform(&mut train.data)?;
-    scaler.transform(&mut test.data)?;
+    // 2. Feature scaling  
+    let mut pipeline = MLPipeline::default();
+    train = pipeline.prepare_dataset(&train)?;
     println!("  2. Standardized features");
 
     // 3. Cross-validation setup
@@ -318,7 +316,7 @@ fn demonstrate_advanced_operations() -> Result<(), Box<dyn std::error::Error>> {
 
 fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ PERFORMANCE COMPARISON");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     let runner = BenchmarkRunner::new().with_iterations(3).with_warmup(1);
 
@@ -426,9 +424,9 @@ fn show_dataset_info(name: &str, dataset: &scirs2_datasets::utils::Dataset) {
     println!("{}:", name);
     println!("  Samples: {}", format_number(dataset.n_samples()));
     println!("  Features: {}", dataset.n_features());
-    println!("  Task: {}", dataset.metadata.task_type);
+    println!("  Task: {}", dataset.metadata.get("task_type").unwrap_or(&"Unknown".to_string()));
 
-    if let Some(source) = &dataset.metadata.source {
+    if let Some(source) = dataset.metadata.get("source") {
         println!("  Source: {}", source);
     }
 

@@ -292,7 +292,7 @@ where
                         boxed
                             .as_any()
                             .downcast_ref::<CsrArray<T>>()
-                            .map(|csr| csr.clone())
+                            .cloned()
                             .ok_or_else(|| {
                                 SparseError::ValueError(
                                     "Failed to convert result to CsrArray".to_string(),
@@ -312,7 +312,7 @@ where
                         boxed
                             .as_any()
                             .downcast_ref::<CsrArray<T>>()
-                            .map(|csr| csr.clone())
+                            .cloned()
                             .ok_or_else(|| {
                                 SparseError::ValueError(
                                     "Failed to convert result to CsrArray".to_string(),

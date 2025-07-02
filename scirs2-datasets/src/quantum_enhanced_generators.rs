@@ -61,7 +61,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()).unwrap(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         // Initialize quantum state vectors for each sample
@@ -110,7 +110,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()).unwrap(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut data = Array2::zeros((n_samples, n_features));
@@ -164,7 +164,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()).unwrap(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut data = Array2::zeros((n_samples, n_features));
@@ -451,7 +451,7 @@ mod tests {
         assert_eq!(dataset.n_features(), 4);
 
         // Verify quantum entanglement effects in the data
-        let data = dataset.data();
+        let data = &dataset.data;
         let correlations = data.t().dot(data) / (data.nrows() as f64);
 
         // Check for non-trivial correlations due to entanglement
@@ -475,7 +475,7 @@ mod tests {
         let dataset = make_quantum_regression(50, 3, 0.1, true, Some(42)).unwrap();
         assert_eq!(dataset.n_samples(), 50);
         assert_eq!(dataset.n_features(), 3);
-        assert!(dataset.targets().is_some());
+        assert!(dataset.has_target());
     }
 
     #[test]
@@ -485,7 +485,7 @@ mod tests {
         assert_eq!(dataset.n_features(), 2);
 
         // Verify cluster formation with quantum interference
-        let targets = dataset.targets().unwrap();
+        let targets = dataset.target.as_ref().unwrap();
         let unique_clusters: std::collections::HashSet<_> =
             targets.iter().map(|&x| x as usize).collect();
         assert!(unique_clusters.len() <= 4, "Should have at most 4 clusters");

@@ -464,7 +464,7 @@ fn bessel_adaptive_session(profile: &mut UserProfile) -> Result<(), Box<dyn std:
         println!("u(r,θ,t) = J_n(k_mn·r/R)·cos(nθ)·cos(ω_mn·t)");
         println!("where k_mn are zeros of J_n(x).");
 
-        let zeros = j0_zeros(5);
+        let zeros = j0_zeros::<f64>(5).unwrap();
         println!("\nFirst 5 zeros of J₀(x):");
         for (i, zero) in zeros.iter().enumerate() {
             println!("  α₀,{} = {:.6}", i + 1, zero);
@@ -564,7 +564,7 @@ fn orthogonal_polynomial_adaptive_session(
     println!("📈 Orthogonal Polynomials Mastery");
     println!("==================================\n");
 
-    println!("📖 Orthogonal polynomials are polynomial sequences {p_n(x)} such that:");
+    println!("📖 Orthogonal polynomials are polynomial sequences {{p_n(x)}} such that:");
     println!("   ∫_a^b p_m(x) p_n(x) w(x) dx = δ_mn · h_n");
     println!("where w(x) is a weight function and δ_mn is the Kronecker delta.");
 
@@ -590,7 +590,7 @@ fn orthogonal_polynomial_adaptive_session(
     // Chebyshev polynomials
     println!("\nChebyshev polynomials:");
     for n in 0..=4 {
-        let t_val = chebyshev(n, x);
+        let t_val = chebyshev(n, x, true);
         println!("  T_{}({}) = {:.6}", n, x, t_val);
     }
 
@@ -663,7 +663,7 @@ fn advanced_topic_session(
 
 fn wright_functions_session(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("📖 Wright functions are generalizations defined by:");
-    println!("   W(α,β;z) = Σ_{n=0}^∞ z^n / (n! Γ(αn + β))");
+    println!("   W(α,β;z) = Σ_{{n=0}}^∞ z^n / (n! Γ(αn + β))");
     println!("\n🔑 Special cases:");
     println!("   • α=0: Exponential function");
     println!("   • β=1: Mittag-Leffler function");
@@ -912,7 +912,7 @@ fn error_function_series_proof(
     println!("🎯 Error Function Series Expansion");
     println!("===================================\n");
 
-    println!("📖 Prove that erf(x) = (2/√π) Σ_{n=0}^∞ (-1)ⁿ x^(2n+1) / (n!(2n+1))");
+    println!("📖 Prove that erf(x) = (2/√π) Σ_{{n=0}}^∞ (-1)ⁿ x^(2n+1) / (n!(2n+1))");
 
     let steps = vec![
         "Start with the definition: erf(x) = (2/√π) ∫₀ˣ e^(-t²) dt",
@@ -1849,7 +1849,7 @@ fn intermediate_mastery_challenge(
     // Question 3: Orthogonal polynomials
     println!("\nQuestion 3/4:");
     println!("Which polynomial family satisfies the recurrence:");
-    println!("P_{n+1}(x) = (2n+1)xP_n(x) - nP_{n-1}(x)");
+    println!("P_{{n+1}}(x) = (2n+1)xP_n(x) - nP_{{n-1}}(x)");
     println!("a) Chebyshev");
     println!("b) Legendre");
     println!("c) Hermite");

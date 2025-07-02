@@ -135,6 +135,11 @@ pub use airy::{ai, aip, bi, bip};
 // Complex Airy functions
 pub use airy::complex::{ai_complex, aip_complex, bi_complex, bip_complex};
 pub use bessel::{
+    // Hankel functions
+    hankel1,
+    hankel1e,
+    hankel2,
+    hankel2e,
     // Regular Bessel functions
     i0,
     i0e,
@@ -190,8 +195,8 @@ pub use bessel_zeros::{
     yn_zeros,
 };
 pub use boxcox::{
-    boxcox, boxcox1p, boxcox_array, boxcox1p_array, inv_boxcox, inv_boxcox1p, inv_boxcox_array,
-    inv_boxcox1p_array,
+    boxcox, boxcox1p, boxcox1p_array, boxcox_array, inv_boxcox, inv_boxcox1p, inv_boxcox1p_array,
+    inv_boxcox_array,
 };
 pub use carlson::{elliprc, elliprd, elliprf, elliprf_array, elliprg, elliprj};
 pub use combinatorial::{
@@ -266,7 +271,7 @@ pub use gamma::complex::{beta_complex, digamma_complex, gamma_complex, loggamma_
 pub use bessel::complex::{i0_complex, j0_complex, j1_complex, jn_complex, jv_complex, k0_complex};
 // Complex error functions
 pub use erf::complex::{erf_complex, erfc_complex, erfcx_complex, faddeeva_complex};
-pub use hypergeometric::{hyp1f1, hyp2f1, ln_pochhammer, pochhammer};
+pub use hypergeometric::{hyp0f1, hyp1f1, hyp2f1, hyperu, ln_pochhammer, pochhammer};
 pub use information_theory::{
     binary_entropy, cross_entropy, entr, entr_array, entropy, huber, huber_loss, kl_div,
     kl_divergence, pseudo_huber, rel_entr,

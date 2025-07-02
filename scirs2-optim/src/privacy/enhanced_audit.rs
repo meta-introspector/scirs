@@ -3,7 +3,7 @@
 //! This module provides comprehensive audit trails, compliance monitoring,
 //! and formal verification components for privacy-preserving machine learning.
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use ndarray::{Array1, Dimension};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
@@ -532,7 +532,7 @@ pub struct ProofAlgorithm<T: Float> {
     pub name: String,
 
     /// Proof generation function
-    pub generate_fn: Box<dyn Fn(&Array1<T>) -> Result<Vec<u8>, OptimizerError> + Send + Sync>,
+    pub generate_fn: Box<dyn Fn(&Array1<T>) -> Result<Vec<u8>, OptimError> + Send + Sync>,
 
     /// Proof verification function
     pub verify_fn: Box<dyn Fn(&[u8], &Array1<T>) -> bool + Send + Sync>,
@@ -854,7 +854,7 @@ pub struct CryptographicProofType<T: Float> {
 
     /// Proof generation function
     pub generate_fn: Box<
-        dyn Fn(&Array1<T>, &CryptographicKeys) -> Result<CryptographicProof, OptimizerError>
+        dyn Fn(&Array1<T>, &CryptographicKeys) -> Result<CryptographicProof, OptimError>
             + Send
             + Sync,
     >,
@@ -1290,7 +1290,7 @@ impl<T: Float> EnhancedAuditSystem<T> {
     }
 
     /// Log audit event
-    pub fn log_event(&mut self, event: AuditEvent) -> Result<(), OptimizerError> {
+    pub fn log_event(&mut self, event: AuditEvent) -> Result<(), OptimError> {
         // Add cryptographic signature
         let signed_event = self.sign_event(event)?;
 
@@ -1319,7 +1319,7 @@ impl<T: Float> EnhancedAuditSystem<T> {
         &self,
         frameworks: &[ComplianceFramework],
         period: ReportingPeriod,
-    ) -> Result<ComplianceReport, OptimizerError> {
+    ) -> Result<ComplianceReport, OptimError> {
         self.regulatory_checker
             .generate_report(frameworks, period, &self.audit_trail)
     }
@@ -1329,7 +1329,7 @@ impl<T: Float> EnhancedAuditSystem<T> {
         &self,
         data: &Array1<T>,
         context: &PrivacyContext,
-    ) -> Result<Vec<VerificationResult>, OptimizerError> {
+    ) -> Result<Vec<VerificationResult>, OptimError> {
         self.verification_engine
             .verify_all_properties(data, context)
     }
@@ -1344,12 +1344,12 @@ impl<T: Float> EnhancedAuditSystem<T> {
         &self,
         proof_type: &str,
         data: &Array1<T>,
-    ) -> Result<CryptographicProof, OptimizerError> {
+    ) -> Result<CryptographicProof, OptimError> {
         self.proof_generator.generate_proof(proof_type, data)
     }
 
     /// Sign audit event
-    fn sign_event(&self, mut event: AuditEvent) -> Result<AuditEvent, OptimizerError> {
+    fn sign_event(&self, mut event: AuditEvent) -> Result<AuditEvent, OptimError> {
         // Generate cryptographic signature
         let signature = self.generate_signature(&event)?;
         event.signature = Some(signature);
@@ -1357,7 +1357,7 @@ impl<T: Float> EnhancedAuditSystem<T> {
     }
 
     /// Generate signature for event
-    fn generate_signature(&self, event: &AuditEvent) -> Result<Vec<u8>, OptimizerError> {
+    fn generate_signature(&self, event: &AuditEvent) -> Result<Vec<u8>, OptimError> {
         use sha2::{Digest, Sha256};
 
         let mut hasher = Sha256::new();
@@ -1382,7 +1382,7 @@ impl AuditTrail {
     }
 
     /// Add event to audit trail
-    pub fn add_event(&mut self, event: AuditEvent) -> Result<(), OptimizerError> {
+    pub fn add_event(&mut self, event: AuditEvent) -> Result<(), OptimError> {
         // Add to chain for tamper detection
         self.chain.add_event(&event)?;
 
@@ -1467,7 +1467,7 @@ impl AuditChain {
     }
 
     /// Add event to chain
-    pub fn add_event(&mut self, event: &AuditEvent) -> Result<(), OptimizerError> {
+    pub fn add_event(&mut self, event: &AuditEvent) -> Result<(), OptimError> {
         // Compute hash of event
         let event_hash = self.compute_event_hash(event)?;
 
@@ -1481,11 +1481,11 @@ impl AuditChain {
     }
 
     /// Compute hash of event
-    fn compute_event_hash(&self, event: &AuditEvent) -> Result<Vec<u8>, OptimizerError> {
+    fn compute_event_hash(&self, event: &AuditEvent) -> Result<Vec<u8>, OptimError> {
         use sha2::{Digest, Sha256};
 
         let event_json = serde_json::to_string(event)
-            .map_err(|_| OptimizerError::InvalidConfig("Failed to serialize event".to_string()))?;
+            .map_err(|_| OptimError::InvalidConfig("Failed to serialize event".to_string()))?;
 
         let mut hasher = Sha256::new();
         hasher.update(event_json.as_bytes());
@@ -1511,14 +1511,14 @@ impl MerkleTree {
     }
 
     /// Add leaf to tree
-    pub fn add_leaf(&mut self, leaf_hash: Vec<u8>) -> Result<(), OptimizerError> {
+    pub fn add_leaf(&mut self, leaf_hash: Vec<u8>) -> Result<(), OptimError> {
         self.nodes.push(leaf_hash);
         self.rebuild_tree()?;
         Ok(())
     }
 
     /// Rebuild Merkle tree
-    fn rebuild_tree(&mut self) -> Result<(), OptimizerError> {
+    fn rebuild_tree(&mut self) -> Result<(), OptimError> {
         if self.nodes.is_empty() {
             return Ok(());
         }
@@ -1545,7 +1545,7 @@ impl MerkleTree {
     }
 
     /// Combine two hashes
-    fn combine_hashes(&self, left: &[u8], right: &[u8]) -> Result<Vec<u8>, OptimizerError> {
+    fn combine_hashes(&self, left: &[u8], right: &[u8]) -> Result<Vec<u8>, OptimError> {
         use sha2::{Digest, Sha256};
 
         let mut hasher = Sha256::new();
@@ -1573,7 +1573,7 @@ impl ComplianceMonitor {
         }
     }
 
-    pub fn check_event(&mut self, event: &AuditEvent) -> Result<(), OptimizerError> {
+    pub fn check_event(&mut self, event: &AuditEvent) -> Result<(), OptimError> {
         // Check event against all rules
         for framework in &self.frameworks {
             if let Some(rules) = self.rules.get(framework) {
@@ -1594,7 +1594,7 @@ impl ComplianceMonitor {
         rule: &ComplianceRule,
         event: &AuditEvent,
         result: ComplianceRuleResult,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         let violation = ComplianceViolation {
             id: format!("violation_{}", self.violations.len()),
             timestamp: SystemTime::now()
@@ -1628,7 +1628,7 @@ impl<T: Float> FormalVerificationEngine<T> {
         &self,
         data: &Array1<T>,
         context: &PrivacyContext,
-    ) -> Result<Vec<VerificationResult>, OptimizerError> {
+    ) -> Result<Vec<VerificationResult>, OptimError> {
         let mut results = Vec::new();
 
         for rule in &self.verification_rules {
@@ -1686,7 +1686,7 @@ impl PrivacyBudgetTracker {
         }
     }
 
-    pub fn record_consumption(&mut self, event: &AuditEvent) -> Result<(), OptimizerError> {
+    pub fn record_consumption(&mut self, event: &AuditEvent) -> Result<(), OptimError> {
         // Extract consumption information from event
         let consumption = BudgetConsumption {
             id: format!("consumption_{}", self.consumption_history.len()),
@@ -1736,11 +1736,11 @@ impl<T: Float> CryptographicProofGenerator<T> {
         &self,
         proof_type: &str,
         data: &Array1<T>,
-    ) -> Result<CryptographicProof, OptimizerError> {
+    ) -> Result<CryptographicProof, OptimError> {
         if let Some(proof_gen) = self.proof_types.get(proof_type) {
             (proof_gen.generate_fn)(data, &self.keys)
         } else {
-            Err(OptimizerError::InvalidConfig(format!(
+            Err(OptimError::InvalidConfig(format!(
                 "Unknown proof type: {}",
                 proof_type
             )))
@@ -1772,7 +1772,7 @@ impl RegulatoryComplianceChecker {
         frameworks: &[ComplianceFramework],
         period: ReportingPeriod,
         _audit_trail: &AuditTrail,
-    ) -> Result<ComplianceReport, OptimizerError> {
+    ) -> Result<ComplianceReport, OptimError> {
         let report = ComplianceReport {
             id: format!("report_{}", self.reports.len()),
             timestamp: SystemTime::now()
@@ -1800,7 +1800,7 @@ impl MonitoringDashboard {
         }
     }
 
-    pub fn update_metrics(&mut self, event: &AuditEvent) -> Result<(), OptimizerError> {
+    pub fn update_metrics(&mut self, event: &AuditEvent) -> Result<(), OptimError> {
         // Update relevant metrics based on event
         let timestamp = event.timestamp;
 

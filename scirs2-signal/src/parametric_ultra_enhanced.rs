@@ -16,6 +16,7 @@ use crate::parametric::{
     OrderSelection,
 };
 use crate::parametric_advanced::compute_eigendecomposition;
+use crate::sysid::{detect_outliers, estimate_robust_scale};
 use ndarray::{s, Array1, Array2, Axis};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};

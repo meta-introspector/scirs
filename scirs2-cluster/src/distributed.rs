@@ -5262,7 +5262,7 @@ pub mod edge_computing {
         /// Sample data for edge optimization
         fn sample_data(&self, data: ArrayView2<F>, target_size: usize) -> Result<Array2<F>> {
             use rand::seq::SliceRandom;
-            use rand::thread_rng;
+            use rand::rng;
             
             if target_size >= data.nrows() {
                 return Ok(data.to_owned());

@@ -278,6 +278,16 @@ pub fn make_akima_spline<F: Float + FromPrimitive + Debug>(
     AkimaSpline::new(x, y)
 }
 
+/// Convenience function for Akima interpolation
+pub fn akima_interpolate<F: Float + FromPrimitive + Debug>(
+    x: &ArrayView1<F>,
+    y: &ArrayView1<F>,
+    x_new: &ArrayView1<F>,
+) -> InterpolateResult<Array1<F>> {
+    let spline = AkimaSpline::new(x, y)?;
+    spline.evaluate_array(x_new)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

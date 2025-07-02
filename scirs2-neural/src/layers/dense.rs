@@ -4,46 +4,32 @@ use crate::activations::Activation;
 use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
 use ndarray::{s, Array, IxDyn, ScalarOperand};
-use ndarray_rand::rand::distributions::{Distribution, Uniform};
+use ndarray_rand::rand_distr::{Distribution, Uniform};
 use ndarray_rand::rand::Rng;
 use num_traits::Float;
 use std::fmt::Debug;
-
 // SIMD optimizations using scirs2-core
 // use scirs2_core::parallel_ops::*;  // Unused for now
-
 // Rand functionality already imported above
-
 /// Dense (fully connected) layer for neural networks.
 ///
 /// A dense layer is a layer where each input neuron is connected to each output neuron.
 /// It performs the operation: y = activation(W * x + b), where W is the weight matrix,
 /// x is the input vector, b is the bias vector, and activation is the activation function.
-///
 /// # Examples
-///
 /// ```
 /// use scirs2_neural::layers::{Dense, Layer};
 /// use ndarray::{Array, Array2};
 /// use rand::rngs::SmallRng;
 /// use rand::SeedableRng;
-///
 /// // Create a dense layer with 2 input neurons, 3 output neurons, and ReLU activation
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// let dense = Dense::new(2, 3, Some("relu"), &mut rng).unwrap();
-///
 /// // Forward pass with a batch of 2 samples
 /// let input = Array2::from_shape_vec((2, 2), vec![1.0f64, 2.0, 3.0, 4.0]).unwrap().into_dyn();
 /// let output = dense.forward(&input).unwrap();
-///
 /// // Output shape should be (2, 3) - 2 samples with 3 features each
 /// assert_eq!(output.shape(), &[2, 3]);
-/// ```
-/// Dense (fully connected) layer for neural networks.
-///
-/// A dense layer is a layer where each input neuron is connected to each output neuron.
-/// It performs the operation: y = activation(W * x + b), where W is the weight matrix,
-/// x is the input vector, b is the bias vector, and activation is the activation function.
 // Can't derive Debug because of the Activation trait object
 pub struct Dense<F: Float + Debug + Send + Sync> {
     /// Number of input features
@@ -65,7 +51,6 @@ pub struct Dense<F: Float + Debug + Send + Sync> {
     /// Output before activation, needed in backward pass
     output_pre_activation: std::sync::RwLock<Option<Array<F, IxDyn>>>,
 }
-
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> std::fmt::Debug for Dense<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Dense")
@@ -80,8 +65,6 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> std::fmt::Debug f
             .field("output_pre_activation", &"RwLock<Option<Array>>")
             .finish()
     }
-}
-
 // Can't implement Clone for Box<dyn Activation<F>> without major changes
 // Let's make a simplified Clone that doesn't try to clone the activation function
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Clone for Dense<F> {
@@ -100,21 +83,15 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Clone for Dense<F
                 self.output_pre_activation.read().unwrap().clone(),
             ),
         }
-    }
-}
-
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
     /// Create a new dense layer.
     ///
     /// # Arguments
-    ///
     /// * `input_dim` - Number of input features
     /// * `output_dim` - Number of output features
     /// * `activation` - Optional activation function name
     /// * `rng` - Random number generator for weight initialization
-    ///
     /// # Returns
-    ///
     /// * A new dense layer
     pub fn new<R: ndarray_rand::rand::Rng + ndarray_rand::rand::RngCore>(
         input_dim: usize,
@@ -128,17 +105,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
                 "relu" => Some(Box::new(crate::activations::ReLU::new())
                     as Box<dyn Activation<F> + Send + Sync>),
                 "sigmoid" => Some(Box::new(crate::activations::Sigmoid::new())
-                    as Box<dyn Activation<F> + Send + Sync>),
                 "tanh" => Some(Box::new(crate::activations::Tanh::new())
-                    as Box<dyn Activation<F> + Send + Sync>),
                 "softmax" => Some(Box::new(crate::activations::Softmax::new(1))
-                    as Box<dyn Activation<F> + Send + Sync>),
                 "gelu" => Some(Box::new(crate::activations::GELU::new())
-                    as Box<dyn Activation<F> + Send + Sync>),
                 "swish" => Some(Box::new(crate::activations::Swish::new(1.0))
-                    as Box<dyn Activation<F> + Send + Sync>),
                 "mish" => Some(Box::new(crate::activations::Mish::new())
-                    as Box<dyn Activation<F> + Send + Sync>),
                 _ => None,
             }
         } else {
@@ -148,7 +119,6 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
         let scale = F::from(1.0 / f64::sqrt(input_dim as f64)).ok_or_else(|| {
             NeuralError::InvalidArchitecture("Failed to convert scale factor".to_string())
         })?;
-
         // Create a 2D weights array
         let uniform = Uniform::new(-1.0, 1.0);
         let weights_vec: Vec<F> = (0..(input_dim * output_dim))
@@ -159,19 +129,15 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
                 val.map(|v| v * scale).unwrap_or_else(|_| F::zero())
             })
             .collect();
-
         let weights =
             Array::from_shape_vec(IxDyn(&[input_dim, output_dim]), weights_vec).map_err(|e| {
                 NeuralError::InvalidArchitecture(format!("Failed to create weights array: {}", e))
             })?;
-
         // Initialize biases with zeros
         let biases = Array::zeros(IxDyn(&[output_dim]));
-
         // Initialize gradient arrays with zeros
         let dweights = std::sync::RwLock::new(Array::zeros(weights.dim()));
         let dbiases = std::sync::RwLock::new(Array::zeros(biases.dim()));
-
         Ok(Self {
             input_dim,
             output_dim,
@@ -183,33 +149,24 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
             input: std::sync::RwLock::new(None),
             output_pre_activation: std::sync::RwLock::new(None),
         })
-    }
-
     /// Get the input dimension
     pub fn input_dim(&self) -> usize {
         self.input_dim
-    }
-
     /// Get the output dimension
     pub fn output_dim(&self) -> usize {
         self.output_dim
-    }
-
     /// Get the activation function name
     pub fn activation_name(&self) -> Option<&str> {
         if let Some(ref activation) = self.activation {
             // Instead of type checking, we'll try a simpler approach
             // Check activation function type by trying specific functionality
             // This is a workaround since we can't use Debug on the trait object
-
             // Try a simple test activation on a single value to get a hint about behavior
             let test_input = Array::from_elem(IxDyn(&[1, 1]), F::one());
             let result = activation.forward(&test_input).ok();
-
             // This is very approximate and doesn't handle all cases correctly
             if let Some(output) = result {
                 let val = output[[0, 0]];
-
                 // ReLU(1) = 1
                 if val == F::one() {
                     Some("relu")
@@ -217,23 +174,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
                 // Sigmoid(1) ~= 0.73
                 else if val > F::from(0.7).unwrap() && val < F::from(0.75).unwrap() {
                     Some("sigmoid")
-                }
                 // tanh(1) ~= 0.76
                 else if val > F::from(0.75).unwrap() && val < F::from(0.8).unwrap() {
                     Some("tanh")
-                }
                 // Other activations are harder to identify precisely
                 else {
                     None
-                }
             } else {
                 None
-            }
-        } else {
-            None
-        }
-    }
-
     /// SIMD-optimized matrix multiplication for forward pass
     fn simd_matmul_forward(
         &self,
@@ -243,23 +191,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
         let batch_size = input.shape()[0];
         let input_dim = self.input_dim;
         let output_dim = self.output_dim;
-
         // Use parallel processing for matrix multiplication
         #[cfg(feature = "core")]
         {
             // Use sequential processing to avoid mutable borrow issues in parallel closures
             for i in 0..batch_size {
                 self.simd_compute_row(input, output, i, input_dim, output_dim);
-            }
-        }
         #[cfg(not(feature = "core"))]
-        {
             // Fallback to sequential processing
-            for i in 0..batch_size {
-                self.simd_compute_row(input, output, i, input_dim, output_dim);
-            }
-        }
-
         // Add biases using element-wise operations
         for i in 0..batch_size {
             let mut output_row = output.slice_mut(s![i, ..]);
@@ -268,23 +207,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
                 .and(&bias_slice)
                 .for_each(|out, &bias| {
                     *out = *out + bias;
-                });
-        }
-
         Ok(())
-    }
-
     /// Compute a single output row using SIMD operations
     fn simd_compute_row(
-        &self,
-        input: &Array<F, IxDyn>,
-        output: &mut Array<F, IxDyn>,
         row_idx: usize,
         _input_dim: usize,
-        output_dim: usize,
     ) {
         let input_row = input.slice(s![row_idx, ..]);
-
         for j in 0..output_dim {
             let weight_col = self.weights.slice(s![.., j]);
             // Use standard dot product
@@ -292,23 +221,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
                 .and(&weight_col)
                 .fold(F::zero(), |acc, &x, &w| acc + x * w);
             output[[row_idx, j]] = dot_product;
-        }
-    }
-
     /// SIMD-optimized gradient computation for backward pass
     fn simd_compute_gradients(
-        &self,
-        input: &Array<F, IxDyn>,
         grad_output: &Array<F, IxDyn>,
     ) -> Result<(Array<F, IxDyn>, Array<F, IxDyn>)> {
         let _batch_size = input.shape()[0];
-        let input_dim = self.input_dim;
-        let output_dim = self.output_dim;
-
         // Initialize gradient arrays
         let mut dweights = Array::zeros(IxDyn(&[input_dim, output_dim]));
         let mut dbiases = Array::zeros(IxDyn(&[output_dim]));
-
         // Weight gradient computation (dW = input.T @ grad_output)
         for i in 0..input_dim {
             for j in 0..output_dim {
@@ -319,28 +239,16 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
                     .and(&grad_col)
                     .fold(F::zero(), |acc, &x, &g| acc + x * g);
                 dweights[[i, j]] = gradient;
-            }
-        }
-
         // Bias gradient computation (db = sum(grad_output, axis=0))
-        for j in 0..output_dim {
             let grad_col = grad_output.slice(s![.., j]);
             // Sum the column
             dbiases[j] = grad_col.fold(F::zero(), |acc, &x| acc + x);
-        }
-
         Ok((dweights, dbiases))
-    }
-}
-
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dense<F> {
     fn forward(&self, input: &Array<F, ndarray::IxDyn>) -> Result<Array<F, ndarray::IxDyn>> {
         // Cache input for backward pass
-        {
             let mut input_cache = self.input.write().unwrap();
             *input_cache = Some(input.clone());
-        }
-
         // Reshape input if needed
         let input_to_use = if input.ndim() == 1 {
             input
@@ -349,48 +257,24 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
                 .map_err(|e| {
                     NeuralError::InferenceError(format!("Failed to reshape input: {}", e))
                 })?
-        } else {
             let batch_size: usize = input.shape().iter().take(input.ndim() - 1).product();
-            input
-                .clone()
                 .into_shape_with_order(IxDyn(&[batch_size, self.input_dim]))
-                .map_err(|e| {
-                    NeuralError::InferenceError(format!("Failed to reshape input: {}", e))
-                })?
-        };
-
         // Compute linear transformation: output = input @ weights + bias
         let mut output = Array::zeros(IxDyn(&[input_to_use.shape()[0], self.output_dim]));
-
         // Use SIMD-optimized matrix multiplication
         self.simd_matmul_forward(&input_to_use, &mut output)?;
-
         // Add bias
         for mut row in output.axis_iter_mut(ndarray::Axis(0)) {
             let biases_view = self.biases.view();
             ndarray::Zip::from(&mut row)
                 .and(&biases_view)
-                .for_each(|out, &bias| {
-                    *out = *out + bias;
-                });
-        }
-
         // Cache pre-activation output
-        {
             let mut pre_activation_cache = self.output_pre_activation.write().unwrap();
             *pre_activation_cache = Some(output.clone());
-        }
-
         // Apply activation function if present
-        if let Some(ref activation) = self.activation {
             activation.forward(&output)
-        } else {
             Ok(output)
-        }
-    }
-
     fn backward(
-        &self,
         input: &Array<F, ndarray::IxDyn>,
         grad_output: &Array<F, ndarray::IxDyn>,
     ) -> Result<Array<F, ndarray::IxDyn>> {
@@ -402,123 +286,62 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
                     "No cached pre-activation output for backward pass".to_string(),
                 )
             })?
-        };
-
         // Apply activation gradient if present
         let grad_pre_activation = if let Some(ref activation) = self.activation {
             activation.backward(&pre_activation, grad_output)?
-        } else {
             grad_output.clone()
-        };
-
         // Compute gradient w.r.t. input
         let reshaped_input = if input.ndim() == 1 {
-            input
-                .clone()
-                .into_shape_with_order(IxDyn(&[1, self.input_dim]))
-                .map_err(|e| {
-                    NeuralError::InferenceError(format!("Failed to reshape input: {}", e))
-                })?
-        } else {
-            let batch_size: usize = input.shape().iter().take(input.ndim() - 1).product();
-            input
-                .clone()
-                .into_shape_with_order(IxDyn(&[batch_size, self.input_dim]))
-                .map_err(|e| {
-                    NeuralError::InferenceError(format!("Failed to reshape input: {}", e))
-                })?
-        };
-
         let reshaped_grad = if grad_pre_activation.ndim() == 1 {
             grad_pre_activation
-                .clone()
                 .into_shape_with_order(IxDyn(&[1, self.output_dim]))
-                .map_err(|e| {
                     NeuralError::InferenceError(format!("Failed to reshape gradient: {}", e))
-                })?
-        } else {
             let batch_size: usize = grad_pre_activation
                 .shape()
                 .iter()
                 .take(grad_pre_activation.ndim() - 1)
                 .product();
-            grad_pre_activation
-                .clone()
                 .into_shape_with_order(IxDyn(&[batch_size, self.output_dim]))
-                .map_err(|e| {
-                    NeuralError::InferenceError(format!("Failed to reshape gradient: {}", e))
-                })?
-        };
-
         // Compute gradients
         let (dweights, dbiases) = self.simd_compute_gradients(&reshaped_input, &reshaped_grad)?;
-
         // Update internal gradients
-        {
             let mut dweights_guard = self.dweights.write().unwrap();
             *dweights_guard = dweights;
-        }
-        {
             let mut dbiases_guard = self.dbiases.write().unwrap();
             *dbiases_guard = dbiases;
-        }
-
         // Compute gradient w.r.t. input: grad_input = grad_output @ weights.T
         // Use manual matrix multiplication to avoid trait resolution recursion
         let batch_size = reshaped_grad.shape()[0];
         let mut grad_input = Array::zeros(IxDyn(&[batch_size, self.input_dim]));
-
         for b in 0..batch_size {
             for i in 0..self.input_dim {
                 let mut sum = F::zero();
                 for j in 0..self.output_dim {
                     sum = sum + reshaped_grad[[b, j]] * self.weights[[i, j]];
-                }
                 grad_input[[b, i]] = sum;
-            }
-        }
-
         // Reshape back to original input shape
         let original_shape: Vec<usize> = input.shape().to_vec();
         grad_input
             .into_shape_with_order(IxDyn(&original_shape))
             .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape gradient: {}", e)))
-    }
-
     fn update(&mut self, learning_rate: F) -> Result<()> {
         let dweights = {
             let dweights_guard = self.dweights.read().unwrap();
             dweights_guard.clone()
-        };
         let dbiases = {
             let dbiases_guard = self.dbiases.read().unwrap();
             dbiases_guard.clone()
-        };
-
         // Update weights and biases
         self.weights = &self.weights - &(&dweights * learning_rate);
         self.biases = &self.biases - &(&dbiases * learning_rate);
-
-        Ok(())
-    }
-
     fn as_any(&self) -> &dyn std::any::Any {
         self
-    }
-
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
-        self
-    }
-
     fn layer_type(&self) -> &str {
         "Dense"
-    }
-
     fn parameter_count(&self) -> usize {
         // Count weights and biases
         self.weights.len() + self.biases.len()
-    }
-
     fn layer_description(&self) -> String {
         format!(
             "type:Dense, input_dim:{}, output_dim:{}, activation:{}",
@@ -526,69 +349,42 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
             self.output_dim,
             self.activation_name().unwrap_or("None")
         )
-    }
-}
-
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for Dense<F> {
     fn get_parameters(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
         vec![&self.weights, &self.biases]
-    }
-
     fn get_gradients(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
         // Note: This method signature doesn't work well with RwLock
         // In a real implementation, this would need to be redesigned
         // For now, we'll provide empty arrays as placeholders
         // A better design would return owned arrays or use a different interface
-
         // This is a limitation of the current trait design
         // We can't return references to data behind RwLocks
         // The trait would need to be redesigned to return owned arrays
         // or use a callback-based approach
-
         // For compatibility, return empty arrays of the right shape
         #[allow(dead_code)]
         static EMPTY_WEIGHTS: std::sync::OnceLock<Array<f64, IxDyn>> = std::sync::OnceLock::new();
-        #[allow(dead_code)]
         static EMPTY_BIASES: std::sync::OnceLock<Array<f64, IxDyn>> = std::sync::OnceLock::new();
-
         // This is a workaround - in practice, the trait would need to be redesigned
         vec![]
-    }
-
     fn set_parameters(&mut self, params: Vec<Array<F, ndarray::IxDyn>>) -> Result<()> {
         if params.len() != 2 {
             return Err(NeuralError::InvalidArchitecture(format!(
                 "Expected 2 parameters (weights, biases), got {}",
                 params.len()
             )));
-        }
-
         let weights = &params[0];
         let biases = &params[1];
-
         if weights.shape() != self.weights.shape() {
-            return Err(NeuralError::InvalidArchitecture(format!(
                 "Weights shape mismatch: expected {:?}, got {:?}",
                 self.weights.shape(),
                 weights.shape()
-            )));
-        }
-
         if biases.shape() != self.biases.shape() {
-            return Err(NeuralError::InvalidArchitecture(format!(
                 "Biases shape mismatch: expected {:?}, got {:?}",
                 self.biases.shape(),
                 biases.shape()
-            )));
-        }
-
         self.weights = weights.clone();
         self.biases = biases.clone();
-
-        Ok(())
-    }
-}
-
 // Explicit Send + Sync implementations for Dense layer
 unsafe impl<F: Float + Debug + Send + Sync> Send for Dense<F> {}
 unsafe impl<F: Float + Debug + Send + Sync> Sync for Dense<F> {}

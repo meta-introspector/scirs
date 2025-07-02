@@ -18,7 +18,7 @@ pub mod private_hyperparameter_optimization;
 pub mod secure_multiparty;
 pub mod utility_analysis;
 
-use crate::error::{OptimError, OptimizerError};
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 // Re-export key utility analysis types
@@ -215,7 +215,7 @@ where
     pub fn new(
         base_optimizer: O,
         config: DifferentialPrivacyConfig,
-    ) -> Result<Self, OptimizerError> {
+    ) -> Result<Self, OptimError> {
         let accountant = MomentsAccountant::new(
             config.noise_multiplier,
             config.target_delta,
@@ -253,7 +253,7 @@ where
         &mut self,
         params: &ArrayBase<S, D>,
         gradients: &mut ArrayBase<S, D>,
-    ) -> Result<Array<A, D>, OptimizerError>
+    ) -> Result<Array<A, D>, OptimError>
     where
         S: Data<Elem = A> + DataMut<Elem = A>,
         D: Dimension,
@@ -262,7 +262,7 @@ where
 
         // Check privacy budget
         if !self.has_privacy_budget()? {
-            return Err(OptimizerError::PrivacyBudgetExhausted {
+            return Err(OptimError::PrivacyBudgetExhausted {
                 consumed_epsilon: self.get_privacy_budget().epsilon_consumed,
                 target_epsilon: self.config.target_epsilon,
             });
@@ -324,7 +324,7 @@ where
     }
 
     /// Check if privacy budget is available
-    pub fn has_privacy_budget(&self) -> Result<bool, OptimizerError> {
+    pub fn has_privacy_budget(&self) -> Result<bool, OptimError> {
         let budget = self.get_privacy_budget();
         Ok(budget.epsilon_remaining > 0.0 && budget.delta_remaining > 0.0)
     }
@@ -390,7 +390,7 @@ where
         &mut self,
         gradients: &mut ArrayBase<S, D>,
         clip_threshold: f64,
-    ) -> Result<(), OptimizerError>
+    ) -> Result<(), OptimError>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
@@ -402,7 +402,7 @@ where
         match self.config.noise_mechanism {
             NoiseMechanism::Gaussian => {
                 let normal = Normal::new(0.0, noise_scale).map_err(|_| {
-                    OptimizerError::InvalidConfig("Invalid noise scale".to_string())
+                    OptimError::InvalidConfig("Invalid noise scale".to_string())
                 })?;
 
                 gradients.mapv_inplace(|g| {
@@ -413,7 +413,7 @@ where
             NoiseMechanism::Laplace => {
                 // Simplified Laplace noise using Normal distribution approximation
                 let normal = Normal::new(0.0, noise_scale * 1.414).map_err(|_| {
-                    OptimizerError::InvalidConfig("Invalid noise scale".to_string())
+                    OptimError::InvalidConfig("Invalid noise scale".to_string())
                 })?;
 
                 gradients.mapv_inplace(|g| {
@@ -424,7 +424,7 @@ where
             _ => {
                 // Use Gaussian as fallback
                 let normal = Normal::new(0.0, noise_scale).map_err(|_| {
-                    OptimizerError::InvalidConfig("Invalid noise scale".to_string())
+                    OptimError::InvalidConfig("Invalid noise scale".to_string())
                 })?;
 
                 gradients.mapv_inplace(|g| {
@@ -623,7 +623,7 @@ impl MomentsAccountant {
     }
 
     /// Compute privacy cost for given number of steps
-    pub fn get_privacy_spent(&self, steps: usize) -> Result<(f64, f64), OptimizerError> {
+    pub fn get_privacy_spent(&self, steps: usize) -> Result<(f64, f64), OptimError> {
         if steps == 0 {
             return Ok((0.0, 0.0));
         }
@@ -684,7 +684,6 @@ impl MomentsAccountant {
 mod tests {
     use super::*;
     use crate::optimizers::SGD;
-    use ndarray::Array1;
 
     #[test]
     fn test_dp_config_default() {

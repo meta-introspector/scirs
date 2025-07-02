@@ -2362,6 +2362,7 @@ fn get_stack_trace() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[allow(unused_imports)]
     use tempfile::tempdir;
 
     #[test]

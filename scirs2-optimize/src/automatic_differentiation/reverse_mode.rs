@@ -98,7 +98,7 @@ impl ReverseVariable {
     }
 
     /// Power operation (simple version without graph context)
-    pub fn powi(self, n: i32) -> Self {
+    pub fn powi(&self, n: i32) -> Self {
         if self.is_constant() {
             ReverseVariable::constant(self.value.powi(n))
         } else {
@@ -111,7 +111,7 @@ impl ReverseVariable {
     }
 
     /// Exponential operation (simple version without graph context)
-    pub fn exp(self) -> Self {
+    pub fn exp(&self) -> Self {
         if self.is_constant() {
             ReverseVariable::constant(self.value.exp())
         } else {
@@ -124,7 +124,7 @@ impl ReverseVariable {
     }
 
     /// Natural logarithm operation (simple version without graph context)
-    pub fn ln(self) -> Self {
+    pub fn ln(&self) -> Self {
         if self.is_constant() {
             ReverseVariable::constant(self.value.ln())
         } else {
@@ -137,7 +137,7 @@ impl ReverseVariable {
     }
 
     /// Sine operation (simple version without graph context)
-    pub fn sin(self) -> Self {
+    pub fn sin(&self) -> Self {
         if self.is_constant() {
             ReverseVariable::constant(self.value.sin())
         } else {
@@ -150,7 +150,7 @@ impl ReverseVariable {
     }
 
     /// Cosine operation (simple version without graph context)
-    pub fn cos(self) -> Self {
+    pub fn cos(&self) -> Self {
         if self.is_constant() {
             ReverseVariable::constant(self.value.cos())
         } else {
@@ -163,7 +163,7 @@ impl ReverseVariable {
     }
 
     /// Tangent operation (simple version without graph context)
-    pub fn tan(self) -> Self {
+    pub fn tan(&self) -> Self {
         if self.is_constant() {
             ReverseVariable::constant(self.value.tan())
         } else {
@@ -176,7 +176,7 @@ impl ReverseVariable {
     }
 
     /// Square root operation (simple version without graph context)
-    pub fn sqrt(self) -> Self {
+    pub fn sqrt(&self) -> Self {
         if self.is_constant() {
             ReverseVariable::constant(self.value.sqrt())
         } else {
@@ -189,7 +189,7 @@ impl ReverseVariable {
     }
 
     /// Absolute value operation (simple version without graph context)
-    pub fn abs(self) -> Self {
+    pub fn abs(&self) -> Self {
         if self.is_constant() {
             ReverseVariable::constant(self.value.abs())
         } else {

@@ -151,11 +151,10 @@ impl BlockId {
     /// Convert BlockId to u64 for serialization (using a hash-like approach)
     pub fn to_u64(&self) -> u64 {
         // Simple hash combining the fields
-        let hash = (self.matrix_id as u64)
+        self.matrix_id
             .wrapping_mul(1000000)
             .wrapping_add((self.block_row as u64) * 1000)
-            .wrapping_add(self.block_col as u64);
-        hash
+            .wrapping_add(self.block_col as u64)
     }
     
     /// Create BlockId from u64 (for deserialization)
@@ -254,6 +253,7 @@ impl MemoryMappedFile {
     fn new(file_path: PathBuf, size: usize) -> SparseResult<Self> {
         let file = OpenOptions::new()
             .create(true)
+            .truncate(true)
             .read(true)
             .write(true)
             .open(&file_path)
@@ -812,44 +812,42 @@ impl AdaptiveMemoryCompressor {
     where
         T: Float + NumAssign + Send + Sync + Copy + std::fmt::Debug,
     {
-        let mut blocks = Vec::new();
-
         // Create uncompressed blocks
-        blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
-                block_row: 0,
-                block_col: 0,
+        let blocks = vec![
+            CompressedBlock {
+                block_id: BlockId {
+                    matrix_id,
+                    block_row: 0,
+                    block_col: 0,
+                },
+                block_type: BlockType::IndPtr,
+                compressed_data: self.serialize_indptr(indptr)?,
+                original_size: std::mem::size_of_val(indptr),
+                compression_level: 0,
             },
-            block_type: BlockType::IndPtr,
-            compressed_data: self.serialize_indptr(indptr)?,
-            original_size: std::mem::size_of_val(indptr),
-            compression_level: 0,
-        });
-
-        blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
-                block_row: 0,
-                block_col: 1,
+            CompressedBlock {
+                block_id: BlockId {
+                    matrix_id,
+                    block_row: 0,
+                    block_col: 1,
+                },
+                block_type: BlockType::Indices,
+                compressed_data: self.serialize_indices(indices)?,
+                original_size: std::mem::size_of_val(indices),
+                compression_level: 0,
             },
-            block_type: BlockType::Indices,
-            compressed_data: self.serialize_indices(indices)?,
-            original_size: std::mem::size_of_val(indices),
-            compression_level: 0,
-        });
-
-        blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
-                block_row: 0,
-                block_col: 2,
+            CompressedBlock {
+                block_id: BlockId {
+                    matrix_id,
+                    block_row: 0,
+                    block_col: 2,
+                },
+                block_type: BlockType::Data,
+                compressed_data: self.serialize_data(data)?,
+                original_size: std::mem::size_of_val(data),
+                compression_level: 0,
             },
-            block_type: BlockType::Data,
-            compressed_data: self.serialize_data(data)?,
-            original_size: std::mem::size_of_val(data),
-            compression_level: 0,
-        });
+        ];
 
         Ok(blocks)
     }
@@ -1325,7 +1323,7 @@ impl AdaptiveMemoryCompressor {
         for (&value, &(code, length)) in &huffman_codes {
             compressed.extend_from_slice(&value.to_le_bytes());
             compressed.extend_from_slice(&code.to_le_bytes());
-            compressed.push(length as u8);
+            compressed.push(length);
         }
 
         // Store original data length
@@ -2001,7 +1999,7 @@ impl BlockCache {
 
 impl OutOfCoreManager {
     fn new(temp_dir: &str) -> SparseResult<Self> {
-        std::fs::create_dir_all(temp_dir).map_err(|e| SparseError::IoError(e))?;
+        std::fs::create_dir_all(temp_dir).map_err(SparseError::IoError)?;
 
         Ok(Self {
             temp_dir: temp_dir.to_string(),

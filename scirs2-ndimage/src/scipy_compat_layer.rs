@@ -9,7 +9,7 @@ use crate::filters::*;
 use crate::interpolation::*;
 use crate::measurements::*;
 use crate::morphology::*;
-use ndarray::{Array, ArrayBase, ArrayView, ArrayViewD, ArrayViewMut, Data, Dimension, IxDyn};
+use ndarray::{Array, ArrayView, ArrayViewMut, Dimension};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -410,7 +410,7 @@ pub mod scipy_ndimage {
                 .into_dimensionality::<ndarray::Ix2>()
                 .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?;
 
-            let (labeled, num_features) = crate::measurements::label(
+            let (labeled, num_features) = crate::morphology::label(
                 input_2d,
                 structure
                     .map(|s| s.into_dimensionality::<ndarray::Ix2>().ok())

@@ -730,7 +730,7 @@ fn initialize_or_evolve_consciousness(
 fn awaken_consciousness<T>(
     _image: &ArrayView2<T>,
     _state: &mut QuantumAIConsciousnessState,
-    _config: &QuantumAIConsciousnessConfig,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>>
 where
     T: Float + FromPrimitive + Copy,
@@ -745,7 +745,7 @@ fn recognize_transcendent_patterns<T>(
     _image: &ArrayView2<T>,
     _consciousness: &Array2<f64>,
     _state: &mut QuantumAIConsciousnessState,
-    _config: &QuantumAIConsciousnessConfig,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Vec<TranscendentPattern>>
 where
     T: Float + FromPrimitive + Copy,
@@ -764,7 +764,7 @@ fn process_quantum_intuition<T>(
     _image: &ArrayView2<T>,
     _patterns: &[TranscendentPattern],
     _state: &mut QuantumAIConsciousnessState,
-    _config: &QuantumAIConsciousnessConfig,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Vec<SpontaneousInsight>>
 where
     T: Float + FromPrimitive + Copy,
@@ -785,7 +785,7 @@ fn apply_emergent_intelligence<T>(
     _image: &ArrayView2<T>,
     _insights: &[SpontaneousInsight],
     _state: &mut QuantumAIConsciousnessState,
-    _config: &QuantumAIConsciousnessConfig,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<EmergentProcessingResult>
 where
     T: Float + FromPrimitive + Copy,
@@ -807,7 +807,7 @@ where
 fn apply_meta_meta_learning(
     _result: &EmergentProcessingResult,
     _state: &mut QuantumAIConsciousnessState,
-    _config: &QuantumAIConsciousnessConfig,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Vec<Improvement>> {
     Ok(vec![Improvement {
         description: "Improved learning-to-learn algorithms".to_string(),
@@ -821,7 +821,7 @@ fn apply_quantum_superintelligence<T>(
     _image: &ArrayView2<T>,
     _adaptations: &[Improvement],
     _state: &mut QuantumAIConsciousnessState,
-    _config: &QuantumAIConsciousnessConfig,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<SuperintelligentResult>
 where
     T: Float + FromPrimitive + Copy,
@@ -841,7 +841,7 @@ fn optimize_through_consciousness<T>(
     _image: &ArrayView2<T>,
     _superintelligent: &SuperintelligentResult,
     _state: &mut QuantumAIConsciousnessState,
-    _config: &QuantumAIConsciousnessConfig,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>>
 where
     T: Float + FromPrimitive + Copy,
@@ -853,14 +853,14 @@ where
 fn integrate_higher_dimensions(
     _optimized: &Array2<f64>,
     _state: &mut QuantumAIConsciousnessState,
-    _config: &QuantumAIConsciousnessConfig,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>> {
     Ok(_optimized.clone()) // Higher-dimensional integration
 }
 
 fn synchronize_consciousness(
     _state: &mut QuantumAIConsciousnessState,
-    _config: &QuantumAIConsciousnessConfig,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<()> {
     // Synchronize consciousness across all processing elements
     Ok(())
@@ -869,7 +869,7 @@ fn synchronize_consciousness(
 fn evolve_consciousness(
     _state: &mut QuantumAIConsciousnessState,
     _result: &Array2<f64>,
-    _config: &QuantumAIConsciousnessConfig,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<()> {
     // Evolve consciousness based on processing experience
     Ok(())
@@ -879,7 +879,7 @@ fn synthesize_conscious_output<T>(
     image: &ArrayView2<T>,
     _higher_dim: &Array2<f64>,
     _state: &QuantumAIConsciousnessState,
-    _config: &QuantumAIConsciousnessConfig,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -903,7 +903,7 @@ fn extract_consciousness_insights(
     _state: &QuantumAIConsciousnessState,
     patterns: &[TranscendentPattern],
     insights: &[SpontaneousInsight],
-    _config: &QuantumAIConsciousnessConfig,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<ConsciousnessInsights> {
     Ok(ConsciousnessInsights {
         consciousness_level: 0.95, // 95% consciousness level achieved

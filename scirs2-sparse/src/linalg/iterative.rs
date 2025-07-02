@@ -777,7 +777,8 @@ where
         for i in (0..inner_iter).rev() {
             y[i] = s[i];
             for j in i + 1..inner_iter {
-                y[i] = y[i] - h[i][j] * y[j];
+                let y_j = y[j];
+                y[i] -= h[i][j] * y_j;
             }
             y[i] /= h[i][i];
         }
@@ -1014,8 +1015,8 @@ where
         alpha = norm2(&u);
 
         if alpha != F::zero() {
-            for i in 0..u.len() {
-                u[i] = u[i] / alpha;
+            for elem in &mut u {
+                *elem /= alpha;
             }
         }
 
@@ -1026,8 +1027,8 @@ where
         beta = norm2(&w);
 
         if beta != F::zero() {
-            for i in 0..w.len() {
-                w[i] = w[i] / beta;
+            for elem in &mut w {
+                *elem /= beta;
             }
         }
 
@@ -1043,7 +1044,7 @@ where
         // Update solution
         let t = phi / rho_old;
         for i in 0..x.len() {
-            x[i] = x[i] + t * w[i];
+            x[i] += t * w[i];
         }
 
         // Check convergence
@@ -1119,16 +1120,16 @@ where
         });
     }
 
-    for i in 0..u.len() {
-        u[i] = u[i] / beta_1;
+    for elem in &mut u {
+        *elem /= beta_1;
     }
 
     let mut v = a.rmatvec(&u)?;
     let mut alpha_1 = norm2(&v);
 
     if alpha_1 != F::zero() {
-        for i in 0..v.len() {
-            v[i] = v[i] / alpha_1;
+        for item in &mut v {
+            *item /= alpha_1;
         }
     }
 
@@ -1149,8 +1150,8 @@ where
         let beta = norm2(&u);
 
         if beta != F::zero() {
-            for i in 0..u.len() {
-                u[i] = u[i] / beta;
+            for item in &mut u {
+                *item /= beta;
             }
         }
 
@@ -1161,8 +1162,8 @@ where
         let alpha = norm2(&h_bar);
 
         if alpha != F::zero() {
-            for i in 0..h_bar.len() {
-                h_bar[i] = h_bar[i] / alpha;
+            for item in &mut h_bar {
+                *item /= alpha;
             }
         }
 
@@ -1182,7 +1183,7 @@ where
         let t2 = -theta / rho;
 
         for i in 0..x.len() {
-            x[i] = x[i] + t1 * h[i];
+            x[i] += t1 * h[i];
             h[i] = h_bar[i] + t2 * h[i];
         }
 
@@ -1304,7 +1305,7 @@ where
 
         // Update w
         for i in 0..n {
-            w[i] = w[i] - alpha * v[i];
+            w[i] -= alpha * v[i];
         }
 
         // First half-step update
@@ -1316,7 +1317,7 @@ where
 
         for i in 0..n {
             d[i] = u[i] + (theta_old * theta_old * eta / alpha) * d[i];
-            x[i] = x[i] + eta * d[i];
+            x[i] += eta * d[i];
         }
 
         // Check convergence after first half-step
@@ -1343,7 +1344,7 @@ where
 
         for i in 0..n {
             d[i] = w[i] + (theta_old * theta_old * eta / alpha) * d[i];
-            x[i] = x[i] + eta * d[i];
+            x[i] += eta * d[i];
         }
 
         // Check convergence after second half-step

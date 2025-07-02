@@ -1119,8 +1119,7 @@ impl UltrafastDistanceMatrix {
                 for j in start_col..(start_col + width) {
                     if i < matrix.nrows() && j < matrix.ncols() {
                         // Apply cache-friendly computation pattern
-                        let val = matrix[[i, j]];
-                        matrix[[i, j]] = val; // Identity operation but cache-optimized
+                        std::hint::black_box(&matrix[[i, j]]); // Cache-optimized access
                     }
                 }
             }
@@ -1186,8 +1185,7 @@ impl UltrafastDistanceMatrix {
                         }
 
                         // Cache-optimized operation
-                        let val = matrix[[i, j]];
-                        matrix[[i, j]] = val; // Identity but cache-friendly
+                        std::hint::black_box(&matrix[[i, j]]); // Cache-friendly access
                     }
                 }
             }
@@ -1249,9 +1247,9 @@ impl UltrafastDistanceMatrix {
         let x2 = x * 0.5;
 
         // Fast approximation using bit manipulation (Quake III style)
-        let i = unsafe { std::mem::transmute::<f64, u64>(y) };
+        let i = y.to_bits();
         let i = 0x5fe6ec85e7de30da_u64 - (i >> 1); // Magic number for f64
-        y = unsafe { std::mem::transmute::<u64, f64>(i) };
+        y = f64::from_bits(i);
 
         // Newton-Raphson refinement (2 iterations for accuracy)
         y = y * (1.5 - (x2 * y * y));
@@ -1271,7 +1269,7 @@ impl UltrafastDistanceMatrix {
                 let val = matrix[[i, j]];
 
                 // Branch-free clamping: clamp(val, 0.0, 1000.0)
-                let clamped = val.min(1000.0).max(0.0);
+                let clamped = val.clamp(0.0, 1000.0);
 
                 // Branch-free normalization using smooth functions
                 let normalized = if val > 1e-12 {
@@ -1303,11 +1301,11 @@ impl UltrafastDistanceMatrix {
 
         // Partition work into cache-line-aligned chunks to avoid false sharing
         let chunk_size = 64 / std::mem::size_of::<f64>(); // 8 elements per cache line
-        let total_chunks = (rows * cols + chunk_size - 1) / chunk_size;
+        let total_chunks = (rows * cols).div_ceil(chunk_size);
 
         // Simulate lock-free parallel processing
         let num_threads = std::thread::available_parallelism().unwrap().get();
-        let chunks_per_thread = (total_chunks + num_threads - 1) / num_threads;
+        let chunks_per_thread = total_chunks.div_ceil(num_threads);
 
         for thread_id in 0..num_threads {
             let start_chunk = thread_id * chunks_per_thread;
@@ -1395,8 +1393,7 @@ impl UltrafastDistanceMatrix {
                         // Memory fence operations simulated here
                         std::sync::atomic::fence(Ordering::Acquire);
 
-                        let val = matrix[[i, j]];
-                        matrix[[i, j]] = val; // Identity but with proper memory ordering
+                        std::hint::black_box(&matrix[[i, j]]); // Memory ordering with cache optimization
 
                         std::sync::atomic::fence(Ordering::Release);
                     }

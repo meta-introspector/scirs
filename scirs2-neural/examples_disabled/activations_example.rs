@@ -3,12 +3,10 @@ use scirs2_neural::activations::{Activation, Mish, ReLU, Sigmoid, Swish, Tanh, G
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Activation Functions Demonstration");
-
     // Create a set of input values
     let x_values: Vec<f64> = (-50..=50).map(|i| i as f64 / 10.0).collect();
     let x = Array1::from(x_values.clone());
     let x_dyn = x.clone().into_dyn();
-
     // Initialize all activation functions
     let relu = ReLU::new();
     let leaky_relu = ReLU::leaky(0.1);
@@ -18,7 +16,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let gelu_fast = GELU::fast();
     let swish = Swish::new(1.0);
     let mish = Mish::new();
-
     // Compute outputs for each activation function
     let relu_output = relu.forward(&x_dyn)?;
     let leaky_relu_output = leaky_relu.forward(&x_dyn)?;
@@ -28,22 +25,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let gelu_fast_output = gelu_fast.forward(&x_dyn)?;
     let swish_output = swish.forward(&x_dyn)?;
     let mish_output = mish.forward(&x_dyn)?;
-
     // Print sample values for each activation
     println!("Sample activation values for input x = -2.0, -1.0, 0.0, 1.0, 2.0:");
-
     let indices = [5, 40, 50, 60, 95]; // Corresponding to x = -2, -1, 0, 1, 2
-
     println!(
         "| {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} |",
         "x", "-2.0", "-1.0", "0.0", "1.0", "2.0"
     );
-    println!(
         "|{:-<12}|{:-<12}|{:-<12}|{:-<12}|{:-<12}|{:-<12}|",
         "", "", "", "", "", ""
-    );
-
-    println!(
         "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "ReLU",
         relu_output[[indices[0]]],
@@ -51,84 +41,52 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         relu_output[[indices[2]]],
         relu_output[[indices[3]]],
         relu_output[[indices[4]]]
-    );
-
-    println!(
-        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "LeakyReLU",
         leaky_relu_output[[indices[0]]],
         leaky_relu_output[[indices[1]]],
         leaky_relu_output[[indices[2]]],
         leaky_relu_output[[indices[3]]],
         leaky_relu_output[[indices[4]]]
-    );
-
-    println!(
-        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "Sigmoid",
         sigmoid_output[[indices[0]]],
         sigmoid_output[[indices[1]]],
         sigmoid_output[[indices[2]]],
         sigmoid_output[[indices[3]]],
         sigmoid_output[[indices[4]]]
-    );
-
-    println!(
-        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "Tanh",
         tanh_output[[indices[0]]],
         tanh_output[[indices[1]]],
         tanh_output[[indices[2]]],
         tanh_output[[indices[3]]],
         tanh_output[[indices[4]]]
-    );
-
-    println!(
-        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "GELU",
         gelu_output[[indices[0]]],
         gelu_output[[indices[1]]],
         gelu_output[[indices[2]]],
         gelu_output[[indices[3]]],
         gelu_output[[indices[4]]]
-    );
-
-    println!(
-        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "GELU Fast",
         gelu_fast_output[[indices[0]]],
         gelu_fast_output[[indices[1]]],
         gelu_fast_output[[indices[2]]],
         gelu_fast_output[[indices[3]]],
         gelu_fast_output[[indices[4]]]
-    );
-
-    println!(
-        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "Swish",
         swish_output[[indices[0]]],
         swish_output[[indices[1]]],
         swish_output[[indices[2]]],
         swish_output[[indices[3]]],
         swish_output[[indices[4]]]
-    );
-
-    println!(
-        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "Mish",
         mish_output[[indices[0]]],
         mish_output[[indices[1]]],
         mish_output[[indices[2]]],
         mish_output[[indices[3]]],
         mish_output[[indices[4]]]
-    );
-
     // Now test the backward pass with some dummy gradient output
     println!("\nTesting backward pass...");
-
     // Create a dummy gradient output
     let dummy_grad = Array1::<f64>::ones(x.len()).into_dyn();
-
     // Compute gradients for each activation function
     let _relu_grad = relu.backward(&dummy_grad, &relu_output)?;
     let _leaky_relu_grad = leaky_relu.backward(&dummy_grad, &leaky_relu_output)?;
@@ -138,12 +96,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _gelu_fast_grad = gelu_fast.backward(&dummy_grad, &gelu_fast_output)?;
     let _swish_grad = swish.backward(&dummy_grad, &swish_output)?;
     let _mish_grad = mish.backward(&dummy_grad, &mish_output)?;
-
     println!("Backward pass completed successfully.");
-
     // Test with matrix input instead of vector
     println!("\nTesting with matrix input...");
-
     // Create a 3x4 matrix
     let mut matrix = Array2::<f64>::zeros((3, 4));
     for i in 0..3 {
@@ -151,39 +106,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             matrix[[i, j]] = -2.0 + (i as f64 * 4.0 + j as f64) * 0.5;
         }
     }
-
     // Print input matrix
     println!("Input matrix:");
-    for i in 0..3 {
         print!("[ ");
-        for j in 0..4 {
             print!("{:6.2} ", matrix[[i, j]]);
-        }
         println!("]");
-    }
-
     // Apply GELU activation to the matrix
     let gelu_matrix_output = gelu.forward(&matrix.into_dyn())?;
-
     // Print output matrix
     println!("\nAfter GELU activation:");
-    for i in 0..3 {
-        print!("[ ");
-        for j in 0..4 {
             print!("{:6.2} ", gelu_matrix_output[[i, j]]);
-        }
-        println!("]");
-    }
-
     println!("\nActivation functions demonstration completed successfully!");
-
     // Note about visualization
     println!("\nFor visualization of activation functions:");
     println!("1. You can use external plotting libraries like plotly or matplotlib");
     println!("2. To visualize these functions, you would plot the x_values against");
     println!("   the output values for each activation function");
     println!("3. The data from this example can be exported for plotting as needed");
-
     // Example of how to access the data for plotting
     println!("\nExample data points for plotting ReLU:");
     for i in 0..5 {
@@ -194,12 +133,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 x_values[idx],
                 convert_to_vec(&relu_output)[idx]
             );
-        }
-    }
-
     Ok(())
 }
-
 fn convert_to_vec<F: Clone>(array: &Array<F, ndarray::IxDyn>) -> Vec<F> {
     array.iter().cloned().collect()
-}

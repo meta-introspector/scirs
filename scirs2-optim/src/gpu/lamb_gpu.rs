@@ -6,7 +6,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use crate::error::Result as OptimResult;
-use crate::gpu::{GpuOptimizerConfig, GpuOptimizerError, GpuOptimizerMemory};
+use crate::gpu::{GpuOptimizerConfig, GpuOptimError, GpuOptimizerMemory};
 use crate::optimizers::{Optimizer, LAMB};
 
 #[cfg(feature = "gpu")]
@@ -85,7 +85,7 @@ impl<A: Float + ScalarOperand + Debug> LAMBGpu<A> {
         &mut self,
         size: usize,
         config: GpuOptimizerConfig,
-    ) -> Result<(), GpuOptimizerError> {
+    ) -> Result<(), GpuOptimError> {
         // Create GPU memory manager
         let mut gpu_memory = GpuOptimizerMemory::new(size, config)?;
         gpu_memory.allocate()?;
@@ -98,7 +98,7 @@ impl<A: Float + ScalarOperand + Debug> LAMBGpu<A> {
             } else if std::any::TypeId::of::<A>() == std::any::TypeId::of::<f64>() {
                 "lamb_update_fused_f64"
             } else {
-                return Err(GpuOptimizerError::UnsupportedOperation(
+                return Err(GpuOptimError::UnsupportedOperation(
                     "Unsupported data type for GPU LAMB".to_string(),
                 ));
             };
@@ -120,9 +120,9 @@ impl<A: Float + ScalarOperand + Debug> LAMBGpu<A> {
     }
 
     /// Move optimizer state to GPU
-    pub fn to_gpu(&mut self) -> Result<(), GpuOptimizerError> {
+    pub fn to_gpu(&mut self) -> Result<(), GpuOptimError> {
         if self.gpu_memory.is_none() {
-            return Err(GpuOptimizerError::NotInitialized);
+            return Err(GpuOptimError::NotInitialized);
         }
 
         self.on_gpu = true;
@@ -130,7 +130,7 @@ impl<A: Float + ScalarOperand + Debug> LAMBGpu<A> {
     }
 
     /// Move optimizer state back to CPU
-    pub fn to_cpu(&mut self) -> Result<(), GpuOptimizerError> {
+    pub fn to_cpu(&mut self) -> Result<(), GpuOptimError> {
         self.on_gpu = false;
         Ok(())
     }
@@ -140,14 +140,14 @@ impl<A: Float + ScalarOperand + Debug> LAMBGpu<A> {
         &mut self,
         params: &mut ArrayBase<S1, D>,
         gradients: &ArrayBase<S2, D>,
-    ) -> Result<(), GpuOptimizerError>
+    ) -> Result<(), GpuOptimError>
     where
         S1: DataMut<Elem = A>,
         S2: Data<Elem = A>,
         D: Dimension,
     {
         if !self.on_gpu {
-            return Err(GpuOptimizerError::InvalidState(
+            return Err(GpuOptimError::InvalidState(
                 "Optimizer not on GPU".to_string(),
             ));
         }
@@ -155,12 +155,12 @@ impl<A: Float + ScalarOperand + Debug> LAMBGpu<A> {
         let gpu_memory = self
             .gpu_memory
             .as_mut()
-            .ok_or(GpuOptimizerError::NotInitialized)?;
+            .ok_or(GpuOptimError::NotInitialized)?;
 
         let kernel = self
             .kernel_handle
             .as_ref()
-            .ok_or(GpuOptimizerError::NotInitialized)?;
+            .ok_or(GpuOptimError::NotInitialized)?;
 
         // Copy data to GPU
         gpu_memory.copy_params_to_gpu(params)?;
@@ -168,7 +168,7 @@ impl<A: Float + ScalarOperand + Debug> LAMBGpu<A> {
         // Copy gradients to GPU
         if let Some(ref grads_gpu) = gpu_memory.grads_gpu {
             let grads_slice = gradients.as_slice().ok_or_else(|| {
-                GpuOptimizerError::InvalidState("Gradients must be contiguous".to_string())
+                GpuOptimError::InvalidState("Gradients must be contiguous".to_string())
             })?;
             grads_gpu.copy_from_host(grads_slice);
         }
@@ -242,14 +242,14 @@ impl<A: Float + ScalarOperand + Debug> LAMBGpu<A> {
         gradients: &ArrayBase<S2, D>,
         num_gpus: usize,
         gpu_id: usize,
-    ) -> Result<(), GpuOptimizerError>
+    ) -> Result<(), GpuOptimError>
     where
         S1: DataMut<Elem = A>,
         S2: Data<Elem = A>,
         D: Dimension,
     {
         if !self.on_gpu {
-            return Err(GpuOptimizerError::InvalidState(
+            return Err(GpuOptimError::InvalidState(
                 "Optimizer not on GPU".to_string(),
             ));
         }
@@ -257,7 +257,7 @@ impl<A: Float + ScalarOperand + Debug> LAMBGpu<A> {
         let gpu_memory = self
             .gpu_memory
             .as_mut()
-            .ok_or(GpuOptimizerError::NotInitialized)?;
+            .ok_or(GpuOptimError::NotInitialized)?;
 
         // Load multi-GPU kernel
         #[cfg(feature = "gpu")]
@@ -342,7 +342,7 @@ impl<A: Float + ScalarOperand + Debug> BatchLAMBGpu<A> {
     }
 
     /// Initialize GPU for all parameter groups
-    pub fn initialize_gpu(&mut self, group_sizes: &[usize]) -> Result<(), GpuOptimizerError> {
+    pub fn initialize_gpu(&mut self, group_sizes: &[usize]) -> Result<(), GpuOptimError> {
         // Create shared GPU context
         let gpu_context = Arc::new(GpuContext::new(self.config.backend)?);
         self.gpu_context = Some(gpu_context.clone());
@@ -360,13 +360,13 @@ impl<A: Float + ScalarOperand + Debug> BatchLAMBGpu<A> {
         &mut self,
         params_list: &mut [ArrayBase<S, D>],
         gradients_list: &[ArrayBase<S, D>],
-    ) -> Result<(), GpuOptimizerError>
+    ) -> Result<(), GpuOptimError>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
     {
         if params_list.len() != gradients_list.len() || params_list.len() != self.optimizers.len() {
-            return Err(GpuOptimizerError::DimensionMismatch {
+            return Err(GpuOptimError::DimensionMismatch {
                 expected: vec![self.optimizers.len()],
                 actual: vec![params_list.len(), gradients_list.len()],
             });

@@ -12,7 +12,10 @@ use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKe
 use wgpu::{
     util::DeviceExt, Backends, Buffer, BufferDescriptor, BufferUsages, ComputePipeline, Device,
     DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits, PowerPreference, Queue,
-    RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource,
+    RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource, BindGroupLayout, BindGroupLayoutDescriptor,
+    BindGroupLayoutEntry, BindingType, StorageTextureAccess, TextureFormat, TextureSampleType,
+    TextureViewDimension, ShaderStages, BufferBindingType, BindGroupDescriptor, BindGroupEntry,
+    BindingResource,
 };
 
 // Fallback types for when WebGPU is not available
@@ -112,13 +115,13 @@ fn gemm(@builtin(global_invocation_id) global_id: vec3<u32>) {
 /// WebGPU context wrapper
 pub struct WebGPUContext {
     #[cfg(feature = "wgpu_backend")]
-    device: Device,
+    device: Arc<Device>,
     #[cfg(feature = "wgpu_backend")]
-    queue: Queue,
+    queue: Arc<Queue>,
     #[cfg(not(feature = "wgpu_backend"))]
-    device: WgpuDevice,
+    device: Arc<WgpuDevice>,
     #[cfg(not(feature = "wgpu_backend"))]
-    queue: WgpuQueue,
+    queue: Arc<WgpuQueue>,
     compiled_shaders: Arc<Mutex<HashMap<String, WebGPUShader>>>,
     memory_pool: Arc<Mutex<WebGPUMemoryPool>>,
 }
@@ -220,11 +223,21 @@ impl WebGPUContext {
             // Extract entry point from source or use default
             let entry_point = Self::extract_entry_point(source).unwrap_or("main");
 
+            // Create bind group layout for shader parameters
+            let bind_group_layout = self.create_bind_group_layout_from_source(source, name)?;
+
+            // Create pipeline layout with our bind group layout
+            let pipeline_layout = self.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some(&format!("{}_layout", name)),
+                bind_group_layouts: &[&bind_group_layout],
+                push_constant_ranges: &[],
+            });
+
             let compute_pipeline =
                 self.device
                     .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
                         label: Some(&format!("{}_pipeline", name)),
-                        layout: None,
+                        layout: Some(&pipeline_layout),
                         module: &shader_module,
                         entry_point: Some(entry_point),
                         compilation_options: Default::default(),
@@ -233,6 +246,7 @@ impl WebGPUContext {
 
             Ok(WebGPUShader {
                 pipeline: compute_pipeline,
+                bind_group_layout,
                 name: name.to_string(),
             })
         }
@@ -243,9 +257,86 @@ impl WebGPUContext {
 
             Ok(WebGPUShader {
                 pipeline,
+                bind_group_layout: std::ptr::null_mut(),
                 name: name.to_string(),
             })
         }
+    }
+
+    /// Create bind group layout from WGSL source analysis
+    #[cfg(feature = "wgpu_backend")]
+    fn create_bind_group_layout_from_source(&self, source: &str, name: &str) -> Result<BindGroupLayout, GpuError> {
+        // Parse WGSL source to extract binding information
+        let mut entries = Vec::new();
+        let mut binding_index = 0;
+
+        // Analyze shader source to determine bindings
+        for line in source.lines() {
+            let trimmed = line.trim();
+            
+            if trimmed.contains("@group(0) @binding(") {
+                // Extract binding type from the line
+                if trimmed.contains("var<storage, read_write>") || trimmed.contains("var<storage>") {
+                    // Storage buffer (read-write)
+                    entries.push(BindGroupLayoutEntry {
+                        binding: binding_index,
+                        visibility: ShaderStages::COMPUTE,
+                        ty: BindingType::Buffer {
+                            ty: BufferBindingType::Storage { read_only: false },
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    });
+                } else if trimmed.contains("var<storage, read>") {
+                    // Storage buffer (read-only)
+                    entries.push(BindGroupLayoutEntry {
+                        binding: binding_index,
+                        visibility: ShaderStages::COMPUTE,
+                        ty: BindingType::Buffer {
+                            ty: BufferBindingType::Storage { read_only: true },
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    });
+                } else if trimmed.contains("var<uniform>") {
+                    // Uniform buffer
+                    entries.push(BindGroupLayoutEntry {
+                        binding: binding_index,
+                        visibility: ShaderStages::COMPUTE,
+                        ty: BindingType::Buffer {
+                            ty: BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    });
+                }
+                binding_index += 1;
+            }
+        }
+
+        // If no bindings found, create a simple layout for basic compute
+        if entries.is_empty() {
+            entries.push(BindGroupLayoutEntry {
+                binding: 0,
+                visibility: ShaderStages::COMPUTE,
+                ty: BindingType::Buffer {
+                    ty: BufferBindingType::Storage { read_only: false },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            });
+        }
+
+        let bind_group_layout = self.device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+            label: Some(&format!("{}_bind_group_layout", name)),
+            entries: &entries,
+        });
+
+        Ok(bind_group_layout)
     }
 
     /// Allocate device memory
@@ -329,7 +420,7 @@ impl GpuContextImpl for WebGPUContext {
                 return Arc::new(WebGPUBuffer {
                     device_buffer,
                     #[cfg(feature = "wgpu_backend")]
-                    queue: self.queue.clone(),
+                    queue: Arc::clone(&self.queue),
                     #[cfg(not(feature = "wgpu_backend"))]
                     queue: self.queue,
                     size,
@@ -368,7 +459,7 @@ impl GpuContextImpl for WebGPUContext {
         Arc::new(WebGPUBuffer {
             device_buffer,
             #[cfg(feature = "wgpu_backend")]
-            queue: self.queue.clone(),
+            queue: Arc::clone(&self.queue),
             #[cfg(not(feature = "wgpu_backend"))]
             queue: self.queue,
             size,
@@ -382,13 +473,13 @@ impl GpuContextImpl for WebGPUContext {
                 memory_pool: Arc::clone(&self.memory_pool),
                 compiled_shaders: Arc::clone(&self.compiled_shaders),
                 #[cfg(feature = "wgpu_backend")]
-                device: self.device.clone(),
+                device: Arc::clone(&self.device),
                 #[cfg(feature = "wgpu_backend")]
-                queue: self.queue.clone(),
+                queue: Arc::clone(&self.queue),
                 #[cfg(not(feature = "wgpu_backend"))]
-                device: self.device,
+                device: Arc::clone(&self.device),
                 #[cfg(not(feature = "wgpu_backend"))]
-                queue: self.queue,
+                queue: Arc::clone(&self.queue),
             }),
         })
     }
@@ -400,6 +491,10 @@ struct WebGPUShader {
     pipeline: ComputePipeline,
     #[cfg(not(feature = "wgpu_backend"))]
     pipeline: WgpuComputePipeline,
+    #[cfg(feature = "wgpu_backend")]
+    bind_group_layout: BindGroupLayout,
+    #[cfg(not(feature = "wgpu_backend"))]
+    bind_group_layout: *mut std::ffi::c_void,
     name: String,
 }
 
@@ -420,9 +515,9 @@ impl GpuCompilerImpl for WebGPUCompiler {
             compiled_shaders: Arc::clone(&self.context.compiled_shaders),
             params: Arc::new(Mutex::new(HashMap::new())),
             #[cfg(feature = "wgpu_backend")]
-            device: self.context.device.clone(),
+            device: Arc::clone(&self.context.device),
             #[cfg(feature = "wgpu_backend")]
-            queue: self.context.queue.clone(),
+            queue: Arc::clone(&self.context.queue),
             #[cfg(not(feature = "wgpu_backend"))]
             device: self.context.device,
             #[cfg(not(feature = "wgpu_backend"))]
@@ -441,9 +536,9 @@ impl GpuCompilerImpl for WebGPUCompiler {
             compiled_shaders: Arc::clone(&self.context.compiled_shaders),
             params: Arc::new(Mutex::new(HashMap::new())),
             #[cfg(feature = "wgpu_backend")]
-            device: self.context.device.clone(),
+            device: Arc::clone(&self.context.device),
             #[cfg(feature = "wgpu_backend")]
-            queue: self.context.queue.clone(),
+            queue: Arc::clone(&self.context.queue),
             #[cfg(not(feature = "wgpu_backend"))]
             device: self.context.device,
             #[cfg(not(feature = "wgpu_backend"))]
@@ -528,14 +623,11 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                     compute_pass.set_pipeline(&shader.pipeline);
 
                     // Create and set bind groups with buffers and uniforms
-                    let bind_group = self.create_bind_group(&shader, &params);
-                    match bind_group {
-                        Ok(bind_group) => {
-                            compute_pass.set_bind_group(0, &bind_group, &[]);
-                        }
-                        Err(e) => {
-                            eprintln!("Warning: Failed to create bind group for shader {}: {}. Dispatching without bind groups.", self.shader_name, e);
-                        }
+                    if let Ok(bind_group) = self.create_bind_group_from_params(&shader.bind_group_layout, &params) {
+                        compute_pass.set_bind_group(0, &bind_group, &[]);
+                    } else {
+                        // Handle error by logging and continuing without bind group for now
+                        eprintln!("Warning: Failed to create bind group for shader {}", self.shader_name);
                     }
 
                     // Dispatch the compute shader
@@ -563,16 +655,123 @@ impl GpuKernelImpl for WebGPUKernelHandle {
             eprintln!("Work groups: {:?}", work_groups);
         }
     }
+
+    /// Create bind group from kernel parameters
+    #[cfg(feature = "wgpu_backend")]
+    fn create_bind_group_from_params(
+        &self,
+        bind_group_layout: &BindGroupLayout,
+        params: &HashMap<String, KernelParam>,
+    ) -> Result<wgpu::BindGroup, GpuError> {
+        let mut entries = Vec::new();
+        let mut binding_index = 0;
+
+        // Sort parameters to ensure consistent binding order
+        let mut sorted_params: Vec<_> = params.iter().collect();
+        sorted_params.sort_by_key(|(name, _)| name.as_str());
+
+        for (param_name, param) in sorted_params {
+            match param {
+                KernelParam::Buffer(buffer_impl) => {
+                    // For buffer parameters, we need to extract the underlying WebGPU buffer
+                    // This is a simplified approach - in practice, we'd need a way to get the wgpu::Buffer
+                    // from the GpuBufferImpl trait object
+                    
+                    // Create a placeholder buffer for now - in real implementation,
+                    // this would extract the actual buffer from the buffer_impl
+                    let placeholder_buffer = self.device.create_buffer(&BufferDescriptor {
+                        label: Some(&format!("param_{}", param_name)),
+                        size: 1024, // Placeholder size
+                        usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
+                        mapped_at_creation: false,
+                    });
+
+                    entries.push(BindGroupEntry {
+                        binding: binding_index,
+                        resource: BindingResource::Buffer(wgpu::BufferBinding {
+                            buffer: &placeholder_buffer,
+                            offset: 0,
+                            size: None,
+                        }),
+                    });
+                }
+                KernelParam::U32(value) | KernelParam::I32(value) => {
+                    // For uniform data, create a uniform buffer
+                    let uniform_data = [*value as u32; 1];
+                    let uniform_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                        label: Some(&format!("uniform_{}", param_name)),
+                        contents: bytemuck::cast_slice(&uniform_data),
+                        usage: BufferUsages::UNIFORM,
+                    });
+
+                    entries.push(BindGroupEntry {
+                        binding: binding_index,
+                        resource: BindingResource::Buffer(wgpu::BufferBinding {
+                            buffer: &uniform_buffer,
+                            offset: 0,
+                            size: None,
+                        }),
+                    });
+                }
+                KernelParam::F32(value) => {
+                    // For float uniform data
+                    let uniform_data = [*value; 1];
+                    let uniform_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                        label: Some(&format!("uniform_{}", param_name)),
+                        contents: bytemuck::cast_slice(&uniform_data),
+                        usage: BufferUsages::UNIFORM,
+                    });
+
+                    entries.push(BindGroupEntry {
+                        binding: binding_index,
+                        resource: BindingResource::Buffer(wgpu::BufferBinding {
+                            buffer: &uniform_buffer,
+                            offset: 0,
+                            size: None,
+                        }),
+                    });
+                }
+                KernelParam::F64(value) => {
+                    // Convert f64 to f32 for WebGPU compatibility
+                    let uniform_data = [*value as f32; 1];
+                    let uniform_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                        label: Some(&format!("uniform_{}", param_name)),
+                        contents: bytemuck::cast_slice(&uniform_data),
+                        usage: BufferUsages::UNIFORM,
+                    });
+
+                    entries.push(BindGroupEntry {
+                        binding: binding_index,
+                        resource: BindingResource::Buffer(wgpu::BufferBinding {
+                            buffer: &uniform_buffer,
+                            offset: 0,
+                            size: None,
+                        }),
+                    });
+                }
+            }
+            binding_index += 1;
+        }
+
+        // Create the bind group
+        let bind_group = self.device.create_bind_group(&BindGroupDescriptor {
+            label: Some("compute_bind_group"),
+            layout: bind_group_layout,
+            entries: &entries,
+        });
+
+        Ok(bind_group)
+    }
 }
 
 /// WebGPU buffer implementation
 struct WebGPUBuffer {
     #[cfg(feature = "wgpu_backend")]
-    device_buffer: Buffer,
+    device_buffer: Option<Buffer>,
     #[cfg(feature = "wgpu_backend")]
     queue: Queue,
     #[cfg(not(feature = "wgpu_backend"))]
-    device_buffer: WgpuBuffer,
+    device_buffer: Option<WgpuBuffer>,
     #[cfg(not(feature = "wgpu_backend"))]
     queue: WgpuQueue,
     size: usize,
@@ -685,11 +884,15 @@ impl Drop for WebGPUBuffer {
             #[cfg(feature = "wgpu_backend")]
             {
                 // In real implementation, would return buffer to pool
-                pool.deallocate(std::mem::take(&mut self.device_buffer));
+                if let Some(buffer) = self.device_buffer.take() {
+                    pool.deallocate(buffer);
+                }
             }
             #[cfg(not(feature = "wgpu_backend"))]
             {
-                pool.deallocate(self.device_buffer);
+                if let Some(buffer) = self.device_buffer.take() {
+                    pool.deallocate(buffer);
+                }
             }
         }
     }

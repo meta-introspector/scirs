@@ -5923,7 +5923,7 @@ pub mod advanced_interactive_3d {
     }
 
     /// Interactive 3D controls and user interface
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     pub struct Interactive3DControls {
         /// Camera control system
         pub camera: Camera3DControls,
@@ -6044,7 +6044,7 @@ pub mod advanced_interactive_3d {
     }
 
     /// Animation effects system
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     pub struct AnimationEffects {
         /// Particle trail effects
         pub particle_trails: bool,
@@ -6844,6 +6844,19 @@ pub mod advanced_interactive_3d {
         pub tone_mapping: ToneMappingConfig,
         /// Color grading
         pub color_grading: ColorGradingConfig,
+    }
+
+    impl Default for PostProcessingEffects {
+        fn default() -> Self {
+            Self {
+                anti_aliasing: AntiAliasingConfig::default(),
+                depth_of_field: DepthOfFieldConfig::default(),
+                motion_blur: MotionBlurConfig::default(),
+                bloom: BloomConfig::default(),
+                tone_mapping: ToneMappingConfig::default(),
+                color_grading: ColorGradingConfig::default(),
+            }
+        }
     }
 
     /// Anti-aliasing configuration
@@ -7877,18 +7890,6 @@ pub mod advanced_interactive_3d {
         }
     }
 
-    impl Default for Interactive3DControls {
-        fn default() -> Self {
-            Self {
-                camera: Camera3DControls::default(),
-                animation: Animation3DControls::default(),
-                appearance: Appearance3DControls::default(),
-                filtering: DataFiltering3D::default(),
-                parameters: ParameterControls3D::default(),
-                view_tools: ViewManipulation3D::default(),
-            }
-        }
-    }
 
     impl Default for Camera3DControls {
         fn default() -> Self {
@@ -7943,17 +7944,6 @@ pub mod advanced_interactive_3d {
         }
     }
 
-    impl Default for AnimationEffects {
-        fn default() -> Self {
-            Self {
-                particle_trails: false,
-                motion_blur: false,
-                fade_effects: FadeEffectConfig::default(),
-                morphing: MorphingConfig::default(),
-                path_visualization: PathVisualizationConfig::default(),
-            }
-        }
-    }
 
     impl Default for FadeEffectConfig {
         fn default() -> Self {
@@ -8228,18 +8218,6 @@ pub mod advanced_interactive_3d {
         }
     }
 
-    impl Default for PostProcessingEffects {
-        fn default() -> Self {
-            Self {
-                anti_aliasing: AntiAliasingConfig::default(),
-                depth_of_field: DepthOfFieldConfig::default(),
-                motion_blur: MotionBlurConfig::default(),
-                bloom: BloomConfig::default(),
-                tone_mapping: ToneMappingConfig::default(),
-                color_grading: ColorGradingConfig::default(),
-            }
-        }
-    }
 
     impl Default for AntiAliasingConfig {
         fn default() -> Self {

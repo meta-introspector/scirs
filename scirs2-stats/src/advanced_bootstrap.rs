@@ -258,7 +258,7 @@ where
     pub fn new(config: AdvancedBootstrapConfig) -> Self {
         let rng = match config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => SeedableRng::from_entropy(),
         };
 
         Self {
@@ -359,7 +359,7 @@ where
             let samples: Result<Vec<_>, _> = (0..self.config.n_bootstrap)
                 .into_par_iter()
                 .map(|_| {
-                    let mut local_rng = StdRng::from_entropy();
+                    let mut local_rng = SeedableRng::from_entropy();
                     let mut resample = Array1::zeros(n);
 
                     for i in 0..n {
@@ -601,7 +601,7 @@ where
             let mut block_length = 1;
 
             // Generate random block length using geometric distribution
-            while self.rng.random::<f64>() > p && block_length < n - pos {
+            while self.rng.gen::<f64>() > p && block_length < n - pos {
                 block_length += 1;
             }
 
@@ -698,7 +698,7 @@ where
             let mut weight_sum = F::zero();
 
             for j in 0..n {
-                let exp_sample = -self.rng.random::<f64>().ln(); // Exponential(1) sample
+                let exp_sample = -self.rng.gen::<f64>().ln(); // Exponential(1) sample
                 weights[j] = F::from(exp_sample).unwrap();
                 weight_sum = weight_sum + weights[j];
             }
@@ -739,7 +739,7 @@ where
             for j in 0..n {
                 let multiplier = match distribution {
                     WildDistribution::Rademacher => {
-                        if self.rng.random::<f64>() < 0.5 {
+                        if self.rng.gen::<f64>() < 0.5 {
                             -1.0
                         } else {
                             1.0
@@ -748,7 +748,7 @@ where
                     WildDistribution::Mammen => {
                         let golden_ratio = (1.0 + 5.0_f64.sqrt()) / 2.0;
                         let p = (5.0_f64.sqrt() + 1.0) / (2.0 * 5.0_f64.sqrt());
-                        if self.rng.random::<f64>() < p {
+                        if self.rng.gen::<f64>() < p {
                             -(5.0_f64.sqrt() - 1.0) / 2.0
                         } else {
                             (5.0_f64.sqrt() + 1.0) / 2.0
@@ -756,12 +756,12 @@ where
                     }
                     WildDistribution::Normal => {
                         // Box-Muller transform for standard normal
-                        let u1 = self.rng.random::<f64>();
-                        let u2 = self.rng.random::<f64>();
+                        let u1 = self.rng.gen::<f64>();
+                        let u2 = self.rng.gen::<f64>();
                         (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
                     }
                     WildDistribution::TwoPoint { prob_positive } => {
-                        if self.rng.random::<f64>() < *prob_positive {
+                        if self.rng.gen::<f64>() < *prob_positive {
                             1.0
                         } else {
                             -1.0
@@ -868,8 +868,8 @@ where
         let mut sample = Array1::zeros(n);
 
         for i in 0..n {
-            let u1 = self.rng.random::<f64>();
-            let u2 = self.rng.random::<f64>();
+            let u1 = self.rng.gen::<f64>();
+            let u2 = self.rng.gen::<f64>();
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             sample[i] = F::from(mean + std * z).unwrap();
         }
@@ -882,7 +882,7 @@ where
         let mut sample = Array1::zeros(n);
 
         for i in 0..n {
-            let u = self.rng.random::<f64>();
+            let u = self.rng.gen::<f64>();
             let x = -u.ln() / rate;
             sample[i] = F::from(x).unwrap();
         }
@@ -904,8 +904,8 @@ where
             // Using normal approximation for simplicity
             let mean = shape * scale;
             let std = (shape * scale * scale).sqrt();
-            let u1 = self.rng.random::<f64>();
-            let u2 = self.rng.random::<f64>();
+            let u1 = self.rng.gen::<f64>();
+            let u2 = self.rng.gen::<f64>();
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             sample[i] = F::from((mean + std * z).max(0.0)).unwrap();
         }
@@ -919,8 +919,8 @@ where
         let mut sample = Array1::zeros(n);
 
         for i in 0..n {
-            let x = self.rng.random::<f64>().powf(1.0 / alpha);
-            let y = self.rng.random::<f64>().powf(1.0 / beta);
+            let x = self.rng.gen::<f64>().powf(1.0 / alpha);
+            let y = self.rng.gen::<f64>().powf(1.0 / beta);
             let value = x / (x + y);
             sample[i] = F::from(value).unwrap();
         }

@@ -4,19 +4,17 @@
 //! enabling efficient batch parallelization and distributed optimization
 //! across multiple TPU devices and nodes.
 
-use ndarray::{Array, Array1, Array2, ArrayBase, Axis, Data, DataMut, Dimension};
+use ndarray::{Array, Array2, Dimension};
 use num_traits::Float;
 use rand::{rng, Rng};
-use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
-use std::future::Future;
-use std::pin::Pin;
-use std::sync::{mpsc, Arc, Barrier, Mutex, RwLock};
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-use super::tpu_backend::{DeviceId, TPUDevice, TaskId};
-use super::{PodTopology, TPUConfig, TPUVersion};
-use crate::error::OptimizerError;
+use super::tpu_backend::DeviceId;
+use super::PodTopology;
+use crate::error::{OptimError, Result};
 
 // Additional type aliases and error definitions
 type TopologyStatistics = HashMap<String, f64>;
@@ -1021,23 +1019,23 @@ pub struct AggregationStatistics {
 }
 
 // Define error type for resource unavailability
-impl OptimizerError {
+impl OptimError {
     pub fn resource_unavailable() -> Self {
-        OptimizerError::ConfigurationError("Resources unavailable".to_string())
+        OptimError::ConfigurationError("Resources unavailable".to_string())
     }
 }
 
 const RESOURCE_UNAVAILABLE: &str = "Resources unavailable";
 
-impl OptimizerError {
+impl OptimError {
     pub fn resource_unavailable() -> Self {
-        OptimizerError::ConfigurationError("Resources unavailable".to_string())
+        OptimError::ConfigurationError("Resources unavailable".to_string())
     }
 }
 
 impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
     /// Create a new TPU pod coordinator
-    pub fn new(config: PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: PodCoordinationConfig) -> Result<Self, OptimError> {
         let topology_manager = TopologyManager::new(&config)?;
         let communication_manager = CommunicationManager::new(&config)?;
         let synchronization_manager = SynchronizationManager::new(&config)?;
@@ -1067,7 +1065,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
         &mut self,
         batch_data: BatchData<T>,
         optimization_step: OptimizationStep<T>,
-    ) -> Result<BatchExecutionResult<T>, OptimizerError> {
+    ) -> Result<BatchExecutionResult<T>, OptimError> {
         let start_time = Instant::now();
 
         // Create batch execution
@@ -1114,7 +1112,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
         batch_id: BatchId,
         optimization_step: OptimizationStep<T>,
         resource_allocation: &ResourceAllocation,
-    ) -> Result<DistributedExecutionResult<T>, OptimizerError> {
+    ) -> Result<DistributedExecutionResult<T>, OptimError> {
         // Execute on all allocated devices concurrently
         let mut device_futures = Vec::new();
 
@@ -1150,13 +1148,13 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
         device_id: DeviceId,
         batch_id: BatchId,
         optimization_step: OptimizationStep<T>,
-    ) -> Result<DeviceExecutionResult<T>, OptimizerError> {
+    ) -> Result<DeviceExecutionResult<T>, OptimError> {
         // Get batch partition for this device
         let partition = self
             .batch_coordinator
             .get_partition(batch_id, device_id)
             .map_err(|_| {
-                OptimizerError::ConfigurationError("Failed to get partition".to_string())
+                OptimError::ConfigurationError("Failed to get partition".to_string())
             })?;
 
         // Execute optimization step on the partition
@@ -1164,7 +1162,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
         let gradients = optimization_step
             .execute(partition)
             .await
-            .map_err(|_| OptimizerError::ConfigurationError("Execution failed".to_string()))?;
+            .map_err(|_| OptimError::ConfigurationError("Execution failed".to_string()))?;
         let execution_time = start_time.elapsed();
 
         // Collect device statistics
@@ -1188,7 +1186,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
         &mut self,
         data: &mut [Array<T, ndarray::IxDyn>],
         operation: ReduceOperation,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         self.communication_manager.all_reduce(data, operation).await
     }
 
@@ -1197,7 +1195,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
         &mut self,
         data: &[Array<T, ndarray::IxDyn>],
         source_device: DeviceId,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         self.communication_manager
             .broadcast(data, source_device)
             .await
@@ -1276,7 +1274,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
     }
 
     /// Shutdown the pod coordinator gracefully
-    pub async fn shutdown(&mut self) -> Result<(), OptimizerError> {
+    pub async fn shutdown(&mut self) -> Result<(), OptimError> {
         self.batch_coordinator.shutdown().await?;
         self.communication_manager.shutdown().await?;
         self.synchronization_manager.shutdown().await?;
@@ -1289,7 +1287,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
 pub struct OptimizationStep<T: Float> {
     /// Step function
     pub step_fn: Arc<
-        dyn Fn(BatchPartition<T>) -> Result<Vec<Array<T, ndarray::IxDyn>>, OptimizerError>
+        dyn Fn(BatchPartition<T>) -> Result<Vec<Array<T, ndarray::IxDyn>>, OptimError>
             + Send
             + Sync,
     >,
@@ -1307,13 +1305,13 @@ impl<T: Float + Default + Clone + Send + Sync> OptimizationStep<T> {
     pub async fn execute(
         &self,
         partition: BatchPartition<T>,
-    ) -> Result<Vec<Array<T, ndarray::IxDyn>>, OptimizerError> {
+    ) -> Result<Vec<Array<T, ndarray::IxDyn>>, OptimError> {
         (self.step_fn)(partition)
     }
 
     pub fn new<F>(step_fn: F) -> Self
     where
-        F: Fn(BatchPartition<T>) -> Result<Vec<Array<T, ndarray::IxDyn>>, OptimizerError>
+        F: Fn(BatchPartition<T>) -> Result<Vec<Array<T, ndarray::IxDyn>>, OptimError>
             + Send
             + Sync
             + 'static,
@@ -1465,7 +1463,7 @@ pub struct PodPerformanceAnalyzer {
 }
 
 impl PodPerformanceAnalyzer {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimError> {
         Ok(Self {
             config: config.clone(),
             metrics_history: VecDeque::with_capacity(1000),
@@ -1583,7 +1581,7 @@ pub struct ResourceScheduler<T: Float> {
 }
 
 impl<T: Float> ResourceScheduler<T> {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimError> {
         let mut device_availability = HashMap::new();
 
         // Initialize device availability for all devices in the pod
@@ -1613,7 +1611,7 @@ impl<T: Float> ResourceScheduler<T> {
     pub async fn allocate_resources(
         &mut self,
         batch_id: BatchId,
-    ) -> Result<ResourceAllocation, OptimizerError> {
+    ) -> Result<ResourceAllocation, OptimError> {
         // Find available devices
         let available_devices: Vec<DeviceId> = self
             .device_availability
@@ -1623,7 +1621,7 @@ impl<T: Float> ResourceScheduler<T> {
             .collect();
 
         if available_devices.is_empty() {
-            return Err(OptimizerError::ResourceUnavailable);
+            return Err(OptimError::ResourceUnavailable);
         }
 
         // Allocate resources based on strategy
@@ -1656,7 +1654,7 @@ impl<T: Float> ResourceScheduler<T> {
         Ok(allocation)
     }
 
-    pub fn release_resources(&mut self, batch_id: BatchId) -> Result<(), OptimizerError> {
+    pub fn release_resources(&mut self, batch_id: BatchId) -> Result<(), OptimError> {
         if let Some(allocation) = self.active_allocations.remove(&batch_id) {
             // Release device resources
             for device_id in allocation.devices {
@@ -1847,7 +1845,7 @@ pub struct PodPerformanceMetrics {
 // Complete implementations for all supporting manager structures
 
 impl TopologyManager {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimError> {
         let device_layout = DeviceLayout {
             grid: vec![
                 vec![DeviceId(0), DeviceId(1)],
@@ -1907,7 +1905,7 @@ impl TopologyManager {
 }
 
 impl<T: Float + Default + Clone> CommunicationManager<T> {
-    pub fn new(_config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(_config: &PodCoordinationConfig) -> Result<Self, OptimError> {
         Ok(Self {
             active_communications: HashMap::new(),
             scheduler: HashMap::new(),
@@ -1922,7 +1920,7 @@ impl<T: Float + Default + Clone> CommunicationManager<T> {
         &mut self,
         data: &mut [Array<T, ndarray::IxDyn>],
         operation: ReduceOperation,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Simplified all-reduce implementation
         match operation {
             ReduceOperation::Sum => {
@@ -1945,7 +1943,7 @@ impl<T: Float + Default + Clone> CommunicationManager<T> {
         &mut self,
         _data: &[Array<T, ndarray::IxDyn>],
         _source_device: DeviceId,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Simplified broadcast implementation
         // In real implementation, this would coordinate actual data transfer
         Ok(())
@@ -1959,14 +1957,14 @@ impl<T: Float + Default + Clone> CommunicationManager<T> {
         stats
     }
 
-    pub async fn shutdown(&mut self) -> Result<(), OptimizerError> {
+    pub async fn shutdown(&mut self) -> Result<(), OptimError> {
         self.active_communications.clear();
         Ok(())
     }
 }
 
 impl SynchronizationManager {
-    pub fn new(_config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(_config: &PodCoordinationConfig) -> Result<Self, OptimError> {
         Ok(Self {
             active_barriers: HashMap::new(),
             sync_events: VecDeque::new(),
@@ -1976,7 +1974,7 @@ impl SynchronizationManager {
         })
     }
 
-    pub async fn global_barrier(&mut self) -> Result<(), OptimizerError> {
+    pub async fn global_barrier(&mut self) -> Result<(), OptimError> {
         // Simplified barrier implementation
         let barrier_id = BarrierId(rng().gen());
         let barrier_state = BarrierState {
@@ -2006,7 +2004,7 @@ impl SynchronizationManager {
         stats
     }
 
-    pub async fn shutdown(&mut self) -> Result<(), OptimizerError> {
+    pub async fn shutdown(&mut self) -> Result<(), OptimError> {
         self.active_barriers.clear();
         self.sync_events.clear();
         Ok(())
@@ -2014,7 +2012,7 @@ impl SynchronizationManager {
 }
 
 impl PodLoadBalancer {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimError> {
         Ok(Self {
             strategy: config.load_balancing_strategy,
             device_loads: HashMap::new(),
@@ -2036,7 +2034,7 @@ impl PodLoadBalancer {
 }
 
 impl FaultToleranceManager {
-    pub fn new(_config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(_config: &PodCoordinationConfig) -> Result<Self, OptimError> {
         Ok(Self {
             failure_detector: FailureDetector {
                 monitored_devices: HashSet::new(),
@@ -2063,7 +2061,7 @@ impl FaultToleranceManager {
 }
 
 impl<T: Float + Default + Clone> BatchCoordinator<T> {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimError> {
         Ok(Self {
             strategy: config.batch_strategy,
             active_batches: HashMap::new(),
@@ -2077,7 +2075,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
     pub async fn create_batch(
         &mut self,
         batch_data: BatchData<T>,
-    ) -> Result<BatchId, OptimizerError> {
+    ) -> Result<BatchId, OptimError> {
         let batch_id = BatchId(rng().gen());
         let batch_execution = BatchExecution {
             id: batch_id,
@@ -2102,7 +2100,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
         &mut self,
         batch_id: BatchId,
         resource_allocation: &ResourceAllocation,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Simplified data distribution
         if let Some(batch) = self.active_batches.get_mut(&batch_id) {
             for &device_id in &resource_allocation.devices {
@@ -2122,13 +2120,13 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
         &self,
         batch_id: BatchId,
         device_id: DeviceId,
-    ) -> Result<BatchPartition<T>, OptimizerError> {
+    ) -> Result<BatchPartition<T>, OptimError> {
         if let Some(batch) = self.active_batches.get(&batch_id) {
             if let Some(partition) = batch.device_assignments.get(&device_id) {
                 return Ok(partition.clone());
             }
         }
-        Err(OptimizerError::ConfigurationError(
+        Err(OptimError::ConfigurationError(
             "Partition not found".to_string(),
         ))
     }
@@ -2143,14 +2141,14 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
         stats
     }
 
-    pub async fn shutdown(&mut self) -> Result<(), OptimizerError> {
+    pub async fn shutdown(&mut self) -> Result<(), OptimError> {
         self.active_batches.clear();
         Ok(())
     }
 }
 
 impl<T: Float + Default + Clone> GradientAggregator<T> {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimError> {
         Ok(Self {
             method: config.gradient_aggregation,
             gradient_buffers: HashMap::new(),
@@ -2174,7 +2172,7 @@ impl<T: Float + Default + Clone> GradientAggregator<T> {
     pub async fn aggregate_gradients(
         &mut self,
         device_gradients: HashMap<DeviceId, Vec<Array<T, ndarray::IxDyn>>>,
-    ) -> Result<Vec<Array<T, ndarray::IxDyn>>, OptimizerError> {
+    ) -> Result<Vec<Array<T, ndarray::IxDyn>>, OptimError> {
         let start_time = Instant::now();
 
         if device_gradients.is_empty() {

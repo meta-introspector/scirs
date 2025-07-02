@@ -862,7 +862,7 @@ impl ProductionDeploymentValidator {
         // Test CPU-intensive operation
         let test_data = Array1::from_vec((0..50000).map(|i| (i as f64).sin()).collect::<Vec<_>>());
         let cpu_start = Instant::now();
-        let _ = crate::descriptive::var(&test_data.view(), 1)?;
+        let _ = crate::descriptive::var(&test_data.view(), 1, None)?;
         let cpu_time_ms = cpu_start.elapsed().as_secs_f64() * 1000.0;
 
         let status = if cpu_time_ms < 50.0 {

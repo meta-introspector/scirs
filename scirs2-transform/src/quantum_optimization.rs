@@ -5,10 +5,9 @@
 
 use crate::auto_feature_engineering::{TransformationConfig, TransformationType};
 use crate::error::{Result, TransformError};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView2};
 use rand::Rng;
-use scirs2_core::validation::{check_finite, check_not_empty};
-use scirs2_core::simd_ops::SimdUnifiedOps;
+use scirs2_core::validation::{check_not_empty};
 use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 
@@ -109,21 +108,28 @@ impl QuantumInspiredOptimizer {
 
         for iteration in 0..self.max_iterations {
             // Update quantum states and evaluate fitness
-            for particle in &mut self.particles {
-                // Apply quantum superposition effect
-                let quantum_position = self.apply_quantum_superposition(particle)?;
-                let fitness = objective_function(&quantum_position);
+            // First, collect quantum positions and fitness values without borrowing conflicts
+            let quantum_data: Vec<(Array1<f64>, f64)> = self.particles
+                .iter()
+                .map(|particle| {
+                    let quantum_position = self.apply_quantum_superposition(particle)?;
+                    let fitness = objective_function(&quantum_position);
+                    Ok((quantum_position, fitness))
+                })
+                .collect::<Result<Vec<_>>>()?;
 
+            // Now update particles with the collected data
+            for (particle, (quantum_position, fitness)) in self.particles.iter_mut().zip(quantum_data.iter()) {
                 // Update personal best
-                if fitness > particle.best_fitness {
-                    particle.best_fitness = fitness;
+                if *fitness > particle.best_fitness {
+                    particle.best_fitness = *fitness;
                     particle.best_position = quantum_position.clone();
                 }
 
                 // Update global best
-                if fitness > self.global_best_fitness {
-                    self.global_best_fitness = fitness;
-                    self.global_best_position = quantum_position;
+                if *fitness > self.global_best_fitness {
+                    self.global_best_fitness = *fitness;
+                    self.global_best_position = quantum_position.clone();
                 }
 
                 // Update quantum phase
@@ -300,7 +306,15 @@ impl QuantumTransformationOptimizer {
         _target_metric: f64,
     ) -> Result<Vec<TransformationConfig>> {
         check_not_empty(data, "data")?;
-        check_finite(data, "data")?;
+        
+        // Check finite values
+        for &val in data.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         // Define objective function based on data characteristics
         let data_clone = data.to_owned();
@@ -527,8 +541,24 @@ impl QuantumHyperparameterTuner {
     ) -> Result<HashMap<String, f64>> {
         check_not_empty(data, "data")?;
         check_not_empty(validation_data, "validation_data")?;
-        check_finite(data, "data")?;
-        check_finite(validation_data, "validation_data")?;
+        
+        // Check finite values in data
+        for &val in data.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
+        
+        // Check finite values in validation_data
+        for &val in validation_data.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Validation data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         // Define objective function for hyperparameter optimization
         let data_clone = data.to_owned();
@@ -682,7 +712,7 @@ impl UltraThinkQuantumOptimizer {
         dimension: usize,
         population_size: usize,
         bounds: Vec<(f64, f64)>,
-        max_iterations: usize,
+        _max_iterations: usize,
     ) -> Result<Self> {
         if bounds.len() != dimension {
             return Err(TransformError::InvalidInput(
@@ -800,6 +830,10 @@ impl UltraThinkQuantumOptimizer {
         let start_time = std::time::Instant::now();
 
         // ✅ ULTRATHINK MODE: Parallel fitness evaluation with rayon
+        // Extract needed data to avoid borrowing conflicts
+        let bounds = self.bounds.clone();
+        let phase_speed = self.adaptive_params.phase_speed;
+        
         let fitness_results: Vec<f64> = self
             .particles
             .par_chunks_mut(chunk_size)
@@ -807,10 +841,23 @@ impl UltraThinkQuantumOptimizer {
                 chunk
                     .par_iter_mut()
                     .map(|particle| {
-                        // ✅ ULTRATHINK OPTIMIZATION: Apply quantum superposition
-                        let quantum_position = self
-                            .apply_quantum_superposition_ultra(particle)
-                            .unwrap_or_else(|_| particle.position.clone());
+                        // ✅ ULTRATHINK OPTIMIZATION: Apply quantum superposition inline
+                        let mut quantum_position = particle.position.clone();
+                        for i in 0..quantum_position.len() {
+                            let wave_amplitude = particle.superposition[i]
+                                * (particle.phase + phase_speed * i as f64).cos();
+                            let quantum_offset = wave_amplitude * particle.entanglement * 0.1;
+
+                            quantum_position[i] += quantum_offset;
+
+                            // Enforce bounds with reflection
+                            let (min_bound, max_bound) = bounds[i];
+                            if quantum_position[i] < min_bound {
+                                quantum_position[i] = min_bound + (min_bound - quantum_position[i]);
+                            } else if quantum_position[i] > max_bound {
+                                quantum_position[i] = max_bound - (quantum_position[i] - max_bound);
+                            }
+                        }
 
                         let fitness = objective_function(&quantum_position);
 

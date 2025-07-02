@@ -1286,7 +1286,7 @@ pub mod advanced {
         }
     }
 
-    impl<F: Float + Debug + Clone + FromPrimitive> MultiScaleNeuralForecaster<F> {
+    impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MultiScaleNeuralForecaster<F> {
         pub fn new(config: MultiScaleConfig) -> Self {
             // Configure individual models for different time scales
             let short_term_config = LSTMConfig {
@@ -1490,7 +1490,7 @@ pub mod advanced {
                         + &long_predictions[i] * weights[2];
 
                     // Calculate MSE
-                    for (j, (&pred, &actual)) in combined.iter().zip(targets[i].iter()).enumerate()
+                    for (_j, (&pred, &actual)) in combined.iter().zip(targets[i].iter()).enumerate()
                     {
                         let error = pred - actual;
                         total_error = total_error + error * error;
@@ -1697,7 +1697,7 @@ pub mod advanced {
         bias: Array1<F>,
     }
 
-    impl<F: Float + Debug + Clone + FromPrimitive> AttentionForecaster<F> {
+    impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> AttentionForecaster<F> {
         pub fn new(config: NeuralConfig) -> Self {
             Self {
                 input_dim: config.lookback_window,
@@ -1909,7 +1909,6 @@ pub mod advanced {
     }
 
     /// Ensemble neural forecasting system
-    #[derive(Debug)]
     pub struct EnsembleNeuralForecaster<F: Float + Debug> {
         /// Individual forecasters
         forecasters: Vec<Box<dyn NeuralForecaster<F>>>,
@@ -1921,6 +1920,18 @@ pub mod advanced {
         model_names: Vec<String>,
         /// Whether the ensemble is trained
         trained: bool,
+    }
+
+    impl<F: Float + Debug> std::fmt::Debug for EnsembleNeuralForecaster<F> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.debug_struct("EnsembleNeuralForecaster")
+                .field("forecasters_count", &self.forecasters.len())
+                .field("weights", &self.weights)
+                .field("ensemble_method", &self.ensemble_method)
+                .field("model_names", &self.model_names)
+                .field("trained", &self.trained)
+                .finish()
+        }
     }
 
     /// Ensemble combination methods

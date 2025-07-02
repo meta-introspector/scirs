@@ -4,19 +4,18 @@
 //! computing (MPI) and GPU acceleration, enabling massive parallel optimization
 //! across multiple nodes with GPU acceleration on each node.
 
-use crate::error::{ScirsError, ScirsResult};
+use crate::error::ScirsResult;
 use ndarray::{Array1, Array2, ArrayView1};
 use std::sync::Arc;
 
 use crate::distributed::{
     DistributedConfig, DistributedOptimizationContext, DistributedStats, MPIInterface,
-    WorkAssignment,
 };
 use crate::gpu::{
-    acceleration::{AccelerationConfig, AccelerationManager, AccelerationStrategy},
-    cuda_kernels::{DifferentialEvolutionKernel, FunctionEvaluationKernel, ParticleSwarmKernel},
+    acceleration::{AccelerationConfig, AccelerationManager},
+    cuda_kernels::DifferentialEvolutionKernel,
     tensor_core_optimization::{AMPManager, TensorCoreOptimizationConfig, TensorCoreOptimizer},
-    GpuFunction, GpuOptimizationConfig, GpuOptimizationContext,
+    GpuOptimizationConfig, GpuOptimizationContext,
 };
 use crate::result::OptimizeResults;
 
@@ -265,7 +264,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         for i in 0..pop_size {
             for j in 0..dims {
                 let (low, high) = bounds[j];
-                population[[i, j]] = rng.gen_range(low..=high);
+                population[[i, j]] = rng.random_range(low..=high);
             }
         }
 
@@ -523,7 +522,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
             for j in 0..3 {
                 loop {
-                    let idx = rng.gen_range(0..pop_size);
+                    let idx = rng.random_range(0..pop_size);
                     if !selected.contains(&idx) {
                         indices[[i, j]] = idx as i32;
                         selected.insert(idx);
@@ -556,7 +555,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         let mut j_rand = Array1::zeros(pop_size);
 
         for i in 0..pop_size {
-            j_rand[i] = rng.gen_range(0..dims) as i32;
+            j_rand[i] = rng.random_range(0..dims) as i32;
         }
 
         Ok(j_rand)

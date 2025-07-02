@@ -46,6 +46,14 @@ pub enum DatasetsError {
     #[error("GPU error: {0}")]
     GpuError(String),
 
+    /// Computation error
+    #[error("Computation error: {0}")]
+    ComputationError(String),
+
+    /// Validation error
+    #[error("Validation error: {0}")]
+    ValidationError(String),
+
     /// Other error
     #[error("Error: {0}")]
     Other(String),

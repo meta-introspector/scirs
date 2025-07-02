@@ -699,12 +699,10 @@ impl<T: InterpolationFloat> SciPyCubicSpline<T> {
             } else {
                 self.inner.derivative_array(x, derivative_order)
             }
+        } else if derivative_order == 0 {
+            self.inner.evaluate_array(x)
         } else {
-            if derivative_order == 0 {
-                self.inner.evaluate_array(x)
-            } else {
-                self.inner.derivative_array(x, derivative_order)
-            }
+            self.inner.derivative_array(x, derivative_order)
         }
     }
 

@@ -11,7 +11,7 @@
 //!
 //! Run with: cargo run --example advanced_interactive_learning
 
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
 use std::collections::{HashMap, VecDeque};
@@ -907,12 +907,12 @@ fn present_analytical_content(
             println!("x²y'' + xy' + (x² - ν²)y = 0");
             println!();
             println!("Series Solution (Frobenius method):");
-            println!("Assume y = x^r ∑_{n=0}^∞ aₙx^n");
+            println!("Assume y = x^r ∑_{{n=0}}^∞ aₙx^n");
             println!();
             println!("Indicial equation: r² - ν² = 0 → r = ±ν");
             println!();
             println!("For r = ν, the solution is:");
-            println!("Jᵥ(x) = (x/2)^ν ∑_{k=0}^∞ (-1)^k / (k!Γ(ν+k+1)) (x/2)^(2k)");
+            println!("Jᵥ(x) = (x/2)^ν ∑_{{k=0}}^∞ (-1)^k / (k!Γ(ν+k+1)) (x/2)^(2k)");
             println!();
             println!("First few terms for J₀(x):");
             println!("J₀(x) = 1 - x²/4 + x⁴/64 - x⁶/2304 + ...");
@@ -967,7 +967,7 @@ fn present_practical_content(
             println!("Gamma Distribution: f(x) = (β^α/Γ(α)) x^(α-1) e^(-βx)");
             println!();
             let alpha = 2.0;
-            let beta = 1.5;
+            let beta: f64 = 1.5;
             println!("Example: α = {}, β = {}", alpha, beta);
             println!(
                 "Normalization constant: β^α/Γ(α) = {:.4}",
@@ -1901,13 +1901,13 @@ fn explore_gamma_half_proof() -> Result<(), Box<dyn std::error::Error>> {
     // Step 3
     println!("\n📝 Step 3: Recognize the Gaussian integral");
     println!("We now have: Γ(1/2) = 2∫₀^∞ e^(-u²) du");
-    println!("But we know that ∫_{-∞}^∞ e^(-u²) du = √π");
+    println!("But we know that ∫_{{-∞}}^∞ e^(-u²) du = √π");
 
     let detail = get_user_input("\nExplore why the Gaussian integral equals √π? (y/n): ")?;
     if detail.to_lowercase() == "y" {
         println!("\n🎯 The famous Gaussian integral proof:");
-        println!("Let I = ∫_{-∞}^∞ e^(-x²) dx");
-        println!("Then I² = (∫_{-∞}^∞ e^(-x²) dx)(∫_{-∞}^∞ e^(-y²) dy)");
+        println!("Let I = ∫_{{-∞}}^∞ e^(-x²) dx");
+        println!("Then I² = (∫_{{-∞}}^∞ e^(-x²) dx)(∫_{{-∞}}^∞ e^(-y²) dy)");
         println!("     = ∫∫ e^(-(x²+y²)) dx dy");
         println!("Convert to polar coordinates: x = r cos θ, y = r sin θ");
         println!("I² = ∫₀^(2π) ∫₀^∞ e^(-r²) r dr dθ = 2π ∫₀^∞ r e^(-r²) dr");
@@ -1916,7 +1916,7 @@ fn explore_gamma_half_proof() -> Result<(), Box<dyn std::error::Error>> {
 
     // Step 4
     println!("\n📝 Step 4: Complete the calculation");
-    println!("Since ∫_{-∞}^∞ e^(-u²) du = √π and e^(-u²) is even:");
+    println!("Since ∫_{{-∞}}^∞ e^(-u²) du = √π and e^(-u²) is even:");
     println!("∫₀^∞ e^(-u²) du = (1/2)√π");
     println!("Therefore: Γ(1/2) = 2 · (1/2)√π = √π ✓");
 
@@ -1954,7 +1954,7 @@ fn explore_reflection_formula_proof() -> Result<(), Box<dyn std::error::Error>> 
     let proceed = get_user_input("\nContinue with the detailed proof? (y/n): ")?;
     if proceed.to_lowercase() == "y" {
         println!("\n📝 Step 1: Start with the beta function");
-        println!("B(z, 1-z) = ∫₀¹ t^(z-1)(1-t)^(-z} dt = Γ(z)Γ(1-z)/Γ(1) = Γ(z)Γ(1-z)");
+        println!("B(z, 1-z) = ∫₀¹ t^(z-1)(1-t)^(-z) dt = Γ(z)Γ(1-z)/Γ(1) = Γ(z)Γ(1-z)");
 
         println!("\n📝 Step 2: Transform the integral");
         println!("Using the substitution t = u/(1+u):");

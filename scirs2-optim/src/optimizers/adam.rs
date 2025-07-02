@@ -227,7 +227,7 @@ where
 
         // Increment timestep with overflow protection
         self.t = self.t.checked_add(1).ok_or_else(|| {
-            crate::error::OptimizerError::InvalidConfig(
+            crate::error::OptimError::InvalidConfig(
                 "Timestep counter overflow - too many optimization steps".to_string(),
             )
         })?;
@@ -241,7 +241,7 @@ where
 
         // Compute bias-corrected first moment estimate with safe integer conversion
         let exp_beta1 = i32::try_from(self.t).map_err(|_| {
-            crate::error::OptimizerError::InvalidConfig(
+            crate::error::OptimError::InvalidConfig(
                 "Timestep too large for bias correction calculation".to_string(),
             )
         })?;
@@ -249,7 +249,7 @@ where
 
         // Compute bias-corrected second raw moment estimate with safe integer conversion
         let exp_beta2 = i32::try_from(self.t).map_err(|_| {
-            crate::error::OptimizerError::InvalidConfig(
+            crate::error::OptimError::InvalidConfig(
                 "Timestep too large for bias correction calculation".to_string(),
             )
         })?;

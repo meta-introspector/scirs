@@ -8,7 +8,7 @@ use std::fmt;
 use std::ptr::{self, NonNull};
 use std::sync::{Arc, Mutex};
 
-use crate::gpu::GpuOptimizerError;
+use crate::gpu::GpuOptimError;
 
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::GpuContext;
@@ -24,23 +24,23 @@ struct MemorySafetyValidator;
 
 impl MemorySafetyValidator {
     /// Validate allocation parameters for safety
-    fn validate_allocation_params(ptr: *mut u8, size: usize) -> Result<(), GpuOptimizerError> {
+    fn validate_allocation_params(ptr: *mut u8, size: usize) -> Result<(), GpuOptimError> {
         // Check for null pointer
         if ptr.is_null() {
-            return Err(GpuOptimizerError::InvalidState(
+            return Err(GpuOptimError::InvalidState(
                 "Null pointer provided".to_string(),
             ));
         }
 
         // Check for zero or extremely large size
         if size == 0 {
-            return Err(GpuOptimizerError::InvalidState(
+            return Err(GpuOptimError::InvalidState(
                 "Zero-sized allocation".to_string(),
             ));
         }
 
         if size > MAX_SAFE_ALLOCATION_SIZE {
-            return Err(GpuOptimizerError::InvalidState(format!(
+            return Err(GpuOptimError::InvalidState(format!(
                 "Allocation size {} exceeds maximum safe size {}",
                 size, MAX_SAFE_ALLOCATION_SIZE
             )));
@@ -48,7 +48,7 @@ impl MemorySafetyValidator {
 
         // Check memory alignment
         if (ptr as usize) % GPU_MEMORY_ALIGNMENT != 0 {
-            return Err(GpuOptimizerError::InvalidState(format!(
+            return Err(GpuOptimError::InvalidState(format!(
                 "Pointer {:p} is not aligned to {} bytes",
                 ptr, GPU_MEMORY_ALIGNMENT
             )));
@@ -56,7 +56,7 @@ impl MemorySafetyValidator {
 
         // Check for potential integer overflow in size calculations
         if let None = ptr as usize + size {
-            return Err(GpuOptimizerError::InvalidState(
+            return Err(GpuOptimError::InvalidState(
                 "Size calculation overflow".to_string(),
             ));
         }
@@ -79,11 +79,11 @@ impl MemorySafetyValidator {
     }
 
     /// Validate memory canary to detect buffer overflows
-    fn validate_canary(ptr: *mut u8, expected_canary: u64) -> Result<(), GpuOptimizerError> {
+    fn validate_canary(ptr: *mut u8, expected_canary: u64) -> Result<(), GpuOptimError> {
         // In a real implementation, this would check memory protection
         // For now, we'll do basic validation
         if ptr.is_null() {
-            return Err(GpuOptimizerError::InvalidState(
+            return Err(GpuOptimError::InvalidState(
                 "Null pointer during canary validation".to_string(),
             ));
         }
@@ -94,17 +94,17 @@ impl MemorySafetyValidator {
     }
 
     /// Safely calculate pointer offset with bounds checking
-    fn safe_ptr_add(ptr: *mut u8, offset: usize) -> Result<*mut u8, GpuOptimizerError> {
+    fn safe_ptr_add(ptr: *mut u8, offset: usize) -> Result<*mut u8, GpuOptimError> {
         let ptr_addr = ptr as usize;
 
         // Check for overflow
         let new_addr = ptr_addr.checked_add(offset).ok_or_else(|| {
-            GpuOptimizerError::InvalidState("Pointer arithmetic overflow".to_string())
+            GpuOptimError::InvalidState("Pointer arithmetic overflow".to_string())
         })?;
 
         // Ensure the result is still a valid pointer
         if new_addr > usize::MAX - 4096 {
-            return Err(GpuOptimizerError::InvalidState(
+            return Err(GpuOptimError::InvalidState(
                 "Pointer address too large".to_string(),
             ));
         }
@@ -165,12 +165,12 @@ struct MemoryBlock {
 
 impl MemoryBlock {
     /// Create a new memory block with safety validation
-    fn new(ptr: *mut u8, size: usize) -> Result<Self, GpuOptimizerError> {
+    fn new(ptr: *mut u8, size: usize) -> Result<Self, GpuOptimError> {
         // Validate input parameters
         MemorySafetyValidator::validate_allocation_params(ptr, size)?;
 
         let non_null_ptr = NonNull::new(ptr).ok_or_else(|| {
-            GpuOptimizerError::InvalidState("Null pointer in memory block".to_string())
+            GpuOptimError::InvalidState("Null pointer in memory block".to_string())
         })?;
 
         // Generate memory canary for overflow detection
@@ -203,7 +203,7 @@ impl MemoryBlock {
     }
 
     /// Validate memory integrity using canary
-    fn validate_integrity(&self) -> Result<(), GpuOptimizerError> {
+    fn validate_integrity(&self) -> Result<(), GpuOptimError> {
         MemorySafetyValidator::validate_canary(self.ptr.as_ptr(), self.memory_canary)
     }
 }
@@ -453,7 +453,7 @@ impl CudaMemoryPool {
 
     /// Create memory pool for specific GPU
     #[cfg(feature = "gpu")]
-    pub fn new_with_gpu(gpu_id: usize) -> Result<Self, GpuOptimizerError> {
+    pub fn new_with_gpu(gpu_id: usize) -> Result<Self, GpuOptimError> {
         let context = Arc::new(GpuContext::new_with_device(gpu_id)?);
 
         Ok(Self {
@@ -473,7 +473,7 @@ impl CudaMemoryPool {
     }
 
     /// Allocate memory from pool
-    pub fn allocate(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    pub fn allocate(&mut self, size: usize) -> Result<*mut u8, GpuOptimError> {
         let start_time = std::time::Instant::now();
 
         // Check for large batch optimization
@@ -511,7 +511,7 @@ impl CudaMemoryPool {
     fn try_allocate_from_batch_buffer(
         &mut self,
         size: usize,
-    ) -> Result<Option<*mut u8>, GpuOptimizerError> {
+    ) -> Result<Option<*mut u8>, GpuOptimError> {
         // Look for suitable batch buffer
         for buffer in &mut self.batch_buffers {
             if !buffer.in_use && buffer.size >= size {
@@ -693,7 +693,7 @@ impl CudaMemoryPool {
     }
 
     /// Allocate new memory block
-    fn allocate_new_block(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    fn allocate_new_block(&mut self, size: usize) -> Result<*mut u8, GpuOptimError> {
         // Check pool size limits
         if self.stats.total_allocated + size > self.max_pool_size {
             if self.enable_defrag {
@@ -701,7 +701,7 @@ impl CudaMemoryPool {
             }
 
             if self.stats.total_allocated + size > self.max_pool_size {
-                return Err(GpuOptimizerError::MemoryError);
+                return Err(GpuOptimError::MemoryError);
             }
         }
 
@@ -725,14 +725,14 @@ impl CudaMemoryPool {
     }
 
     /// Allocate raw GPU memory
-    fn allocate_raw_memory(&self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    fn allocate_raw_memory(&self, size: usize) -> Result<*mut u8, GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             if let Some(ref context) = self.gpu_context {
                 let buffer = context.allocate_memory(size)?;
                 Ok(buffer.as_ptr() as *mut u8)
             } else {
-                Err(GpuOptimizerError::InvalidState(
+                Err(GpuOptimError::InvalidState(
                     "No GPU context".to_string(),
                 ))
             }
@@ -746,7 +746,7 @@ impl CudaMemoryPool {
     }
 
     /// Deallocate memory back to pool
-    pub fn deallocate(&mut self, ptr: *mut u8, size: usize) -> Result<(), GpuOptimizerError> {
+    pub fn deallocate(&mut self, ptr: *mut u8, size: usize) -> Result<(), GpuOptimError> {
         // Validate input parameters first
         MemorySafetyValidator::validate_allocation_params(ptr, size)?;
 
@@ -755,7 +755,7 @@ impl CudaMemoryPool {
             .all_blocks
             .iter()
             .position(|block| block.as_ptr() == ptr)
-            .ok_or_else(|| GpuOptimizerError::InvalidState("Block not found".to_string()))?;
+            .ok_or_else(|| GpuOptimError::InvalidState("Block not found".to_string()))?;
 
         // Validate memory integrity before deallocation
         self.all_blocks[block_index].validate_integrity()?;
@@ -784,7 +784,7 @@ impl CudaMemoryPool {
     }
 
     /// Defragment memory by coalescing adjacent blocks
-    fn defragment_memory(&mut self) -> Result<(), GpuOptimizerError> {
+    fn defragment_memory(&mut self) -> Result<(), GpuOptimError> {
         if !self.enable_defrag {
             return Ok(());
         }
@@ -928,7 +928,7 @@ impl CudaMemoryPool {
     }
 
     /// Emergency cleanup when memory pressure is high
-    fn emergency_cleanup(&mut self) -> Result<(), GpuOptimizerError> {
+    fn emergency_cleanup(&mut self) -> Result<(), GpuOptimError> {
         // Clean up expired batch buffers
         let lifetime = self.large_batch_config.buffer_lifetime;
         self.batch_buffers.retain(|buffer| {
@@ -1015,7 +1015,7 @@ impl CudaMemoryPool {
     }
 
     /// Preallocate batch buffers for anticipated large operations
-    pub fn preallocate_batch_buffers(&mut self, sizes: &[usize]) -> Result<(), GpuOptimizerError> {
+    pub fn preallocate_batch_buffers(&mut self, sizes: &[usize]) -> Result<(), GpuOptimError> {
         for &size in sizes {
             if self.batch_buffers.len() >= self.large_batch_config.max_batch_buffers {
                 break;
@@ -1039,7 +1039,7 @@ impl CudaMemoryPool {
     }
 
     /// Cleanup unused batch buffers to free memory
-    pub fn cleanup_batch_buffers(&mut self) -> Result<usize, GpuOptimizerError> {
+    pub fn cleanup_batch_buffers(&mut self) -> Result<usize, GpuOptimError> {
         let mut freed_count = 0;
         let lifetime = self.large_batch_config.buffer_lifetime;
 
@@ -3335,7 +3335,7 @@ pub struct PerformanceDataPoint {
 
 impl AdvancedGpuMemoryPool {
     /// Create a new advanced GPU memory pool
-    pub fn new(config: GpuMemoryPoolConfig) -> Result<Self, GpuOptimizerError> {
+    pub fn new(config: GpuMemoryPoolConfig) -> Result<Self, GpuOptimError> {
         let base_pool = CudaMemoryPool::new(config.base_config)?;
         let memory_tiers = Self::initialize_memory_tiers(&config)?;
         let compaction_engine = MemoryCompactionEngine::new(config.compaction_config);
@@ -3360,7 +3360,7 @@ impl AdvancedGpuMemoryPool {
 
     fn initialize_memory_tiers(
         config: &GpuMemoryPoolConfig,
-    ) -> Result<Vec<MemoryTier>, GpuOptimizerError> {
+    ) -> Result<Vec<MemoryTier>, GpuOptimError> {
         // Simplified tier initialization
         Ok(vec![MemoryTier {
             tier_id: 0,
@@ -3741,7 +3741,7 @@ impl CudaMemoryPool {
     }
 
     /// Allocate memory from pool
-    pub fn allocate(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    pub fn allocate(&mut self, size: usize) -> Result<*mut u8, GpuOptimError> {
         // Round up to nearest power of 2 for better reuse
         let aligned_size = size.next_power_of_two();
 
@@ -3791,7 +3791,7 @@ impl CudaMemoryPool {
                 return self.allocate(size);
             }
 
-            Err(GpuOptimizerError::InvalidState(format!(
+            Err(GpuOptimError::InvalidState(format!(
                 "Memory pool limit exceeded: requested {}, available {}",
                 aligned_size,
                 self.max_pool_size - self.stats.total_allocated
@@ -3827,7 +3827,7 @@ impl CudaMemoryPool {
     }
 
     /// Defragment memory pool
-    pub fn defragment(&mut self) -> Result<(), GpuOptimizerError> {
+    pub fn defragment(&mut self) -> Result<(), GpuOptimError> {
         // Remove blocks that haven't been used recently
         let cutoff = std::time::Instant::now() - std::time::Duration::from_secs(60);
 
@@ -3867,7 +3867,7 @@ impl CudaMemoryPool {
         &mut self,
         size: usize,
         buffer_type: BatchBufferType,
-    ) -> Result<*mut u8, GpuOptimizerError> {
+    ) -> Result<*mut u8, GpuOptimError> {
         if size < self.large_batch_config.min_batch_size {
             // Use regular allocation for small buffers
             return self.allocate(size);
@@ -3921,7 +3921,7 @@ impl CudaMemoryPool {
     }
 
     /// Clean up expired batch buffers
-    pub fn cleanup_expired_buffers(&mut self) -> Result<(), GpuOptimizerError> {
+    pub fn cleanup_expired_buffers(&mut self) -> Result<(), GpuOptimError> {
         let lifetime = self.large_batch_config.buffer_lifetime;
         let mut freed_memory = 0;
 
@@ -3978,7 +3978,7 @@ impl CudaMemoryPool {
     }
 
     /// Adaptive allocation using strategy selection
-    pub fn allocate_adaptive(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    pub fn allocate_adaptive(&mut self, size: usize) -> Result<*mut u8, GpuOptimError> {
         self.update_memory_pressure();
 
         // Record allocation event
@@ -4016,7 +4016,7 @@ impl CudaMemoryPool {
     }
 
     /// First-fit allocation strategy
-    fn allocate_first_fit(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    fn allocate_first_fit(&mut self, size: usize) -> Result<*mut u8, GpuOptimError> {
         let aligned_size = size.next_power_of_two();
 
         // Find first available block that fits
@@ -4036,7 +4036,7 @@ impl CudaMemoryPool {
     }
 
     /// Best-fit allocation strategy
-    fn allocate_best_fit(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    fn allocate_best_fit(&mut self, size: usize) -> Result<*mut u8, GpuOptimError> {
         let aligned_size = size.next_power_of_two();
         let mut best_fit_size = None;
         let mut min_waste = usize::MAX;
@@ -4068,7 +4068,7 @@ impl CudaMemoryPool {
     }
 
     /// Worst-fit allocation strategy
-    fn allocate_worst_fit(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    fn allocate_worst_fit(&mut self, size: usize) -> Result<*mut u8, GpuOptimError> {
         let aligned_size = size.next_power_of_two();
         let mut worst_fit_size = None;
         let mut max_waste = 0;
@@ -4100,21 +4100,21 @@ impl CudaMemoryPool {
     }
 
     /// Buddy system allocation strategy
-    fn allocate_buddy_system(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    fn allocate_buddy_system(&mut self, size: usize) -> Result<*mut u8, GpuOptimError> {
         // Round up to next power of 2 for buddy system
         let buddy_size = size.next_power_of_two();
         self.allocate_first_fit(buddy_size)
     }
 
     /// Segregated list allocation strategy
-    fn allocate_segregated_list(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    fn allocate_segregated_list(&mut self, size: usize) -> Result<*mut u8, GpuOptimError> {
         // Use size classes for segregated allocation
         let size_class = self.get_size_class(size);
         self.allocate_first_fit(size_class)
     }
 
     /// Adaptive allocation strategy selection
-    fn allocate_adaptive_strategy(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    fn allocate_adaptive_strategy(&mut self, size: usize) -> Result<*mut u8, GpuOptimError> {
         // Analyze recent allocation patterns to choose best strategy
         let recent_history: Vec<_> = self
             .adaptive_sizing
@@ -4175,7 +4175,7 @@ impl CudaMemoryPool {
     }
 
     /// Allocate new memory block
-    fn allocate_new_block(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    fn allocate_new_block(&mut self, size: usize) -> Result<*mut u8, GpuOptimError> {
         if self.stats.total_allocated + size <= self.max_pool_size {
             let ptr = self.allocate_gpu_memory(size)?;
             let block = MemoryBlock::new(ptr, size)?;
@@ -4199,7 +4199,7 @@ impl CudaMemoryPool {
                 return self.allocate_new_block(size);
             }
 
-            Err(GpuOptimizerError::InvalidState(format!(
+            Err(GpuOptimError::InvalidState(format!(
                 "Memory pool limit exceeded: requested {}, available {}",
                 size,
                 self.max_pool_size - self.stats.total_allocated
@@ -4268,7 +4268,7 @@ impl CudaMemoryPool {
     }
 
     /// Clear all cached memory
-    pub fn clear(&mut self) -> Result<(), GpuOptimizerError> {
+    pub fn clear(&mut self) -> Result<(), GpuOptimError> {
         // Free all GPU memory
         for block in &self.all_blocks {
             self.free_gpu_memory(block.ptr)?;
@@ -4282,7 +4282,7 @@ impl CudaMemoryPool {
     }
 
     /// Allocate GPU memory (platform-specific)
-    fn allocate_gpu_memory(&self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    fn allocate_gpu_memory(&self, size: usize) -> Result<*mut u8, GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             if let Some(ref context) = self.gpu_context {
@@ -4290,20 +4290,20 @@ impl CudaMemoryPool {
                 // In real implementation, would use cudaMalloc or hipMalloc
                 Ok(ptr::null_mut()) // Placeholder
             } else {
-                Err(GpuOptimizerError::NotInitialized)
+                Err(GpuOptimError::NotInitialized)
             }
         }
 
         #[cfg(not(feature = "gpu"))]
         {
-            Err(GpuOptimizerError::UnsupportedOperation(
+            Err(GpuOptimError::UnsupportedOperation(
                 "GPU feature not enabled".to_string(),
             ))
         }
     }
 
     /// Free GPU memory (platform-specific)
-    fn free_gpu_memory(&self, ptr: *mut u8) -> Result<(), GpuOptimizerError> {
+    fn free_gpu_memory(&self, ptr: *mut u8) -> Result<(), GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             if let Some(ref _context) = self.gpu_context {
@@ -4311,13 +4311,13 @@ impl CudaMemoryPool {
                 // In real implementation, would use cudaFree or hipFree
                 Ok(())
             } else {
-                Err(GpuOptimizerError::NotInitialized)
+                Err(GpuOptimError::NotInitialized)
             }
         }
 
         #[cfg(not(feature = "gpu"))]
         {
-            Err(GpuOptimizerError::UnsupportedOperation(
+            Err(GpuOptimError::UnsupportedOperation(
                 "GPU feature not enabled".to_string(),
             ))
         }
@@ -4481,7 +4481,7 @@ impl ThreadSafeMemoryPool {
     }
 
     /// Allocate memory
-    pub fn allocate(&self, size: usize) -> Result<PooledMemory, GpuOptimizerError> {
+    pub fn allocate(&self, size: usize) -> Result<PooledMemory, GpuOptimError> {
         let ptr = self.pool.lock().unwrap().allocate(size)?;
         Ok(PooledMemory {
             ptr,
@@ -4496,7 +4496,7 @@ impl ThreadSafeMemoryPool {
     }
 
     /// Clear pool
-    pub fn clear(&self) -> Result<(), GpuOptimizerError> {
+    pub fn clear(&self) -> Result<(), GpuOptimError> {
         self.pool.lock().unwrap().clear()
     }
 }

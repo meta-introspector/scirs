@@ -3,10 +3,9 @@
 //! This module provides streaming gradient descent and other online optimization
 //! algorithms designed for real-time data processing and low-latency inference.
 
-use ndarray::{Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
+use ndarray::{Array1, Dimension};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
-use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 pub mod adaptive_streaming;
@@ -23,7 +22,7 @@ pub use enhanced_adaptive_lr::{
 pub use low_latency::{LowLatencyConfig, LowLatencyMetrics, LowLatencyOptimizer};
 pub use streaming_metrics::{MetricsSample, MetricsSummary, StreamingMetricsCollector};
 
-use crate::error::{OptimError, OptimizerError};
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// Streaming optimization configuration
@@ -397,7 +396,7 @@ where
     O: Optimizer<A> + Send + Sync,
 {
     /// Create a new streaming optimizer
-    pub fn new(base_optimizer: O, config: StreamingConfig) -> Result<Self, OptimizerError> {
+    pub fn new(base_optimizer: O, config: StreamingConfig) -> Result<Self, OptimError> {
         let lr_adaptation_state = LearningRateAdaptationState {
             current_lr: A::from(0.01).unwrap(), // Default learning rate
             accumulated_gradients: None,
@@ -500,7 +499,7 @@ where
     pub fn process_sample(
         &mut self,
         data_point: StreamingDataPoint<A>,
-    ) -> Result<Option<Array1<A>>, OptimizerError> {
+    ) -> Result<Option<Array1<A>>, OptimError> {
         let start_time = Instant::now();
         self.timing.batch_start = Some(start_time);
 
@@ -539,7 +538,7 @@ where
         }
     }
 
-    fn process_buffer(&mut self) -> Result<Option<Array1<A>>, OptimizerError> {
+    fn process_buffer(&mut self) -> Result<Option<Array1<A>>, OptimError> {
         if self.data_buffer.is_empty() {
             return Ok(None);
         }
@@ -575,9 +574,9 @@ where
         Ok(Some(updated_params))
     }
 
-    fn compute_mini_batch_gradient(&self) -> Result<Array1<A>, OptimizerError> {
+    fn compute_mini_batch_gradient(&self) -> Result<Array1<A>, OptimError> {
         if self.data_buffer.is_empty() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Empty data buffer".to_string(),
             ));
         }
@@ -606,7 +605,7 @@ where
         Ok(gradient)
     }
 
-    fn compress_gradient(&self, gradient: &Array1<A>) -> Result<Array1<A>, OptimizerError> {
+    fn compress_gradient(&self, gradient: &Array1<A>) -> Result<Array1<A>, OptimError> {
         let k = (gradient.len() as f64 * self.config.compression_ratio) as usize;
         let mut compressed = gradient.clone();
 
@@ -627,7 +626,7 @@ where
         Ok(compressed)
     }
 
-    fn adapt_learning_rate(&mut self, gradient: &Array1<A>) -> Result<(), OptimizerError> {
+    fn adapt_learning_rate(&mut self, gradient: &Array1<A>) -> Result<(), OptimError> {
         if !self.config.adaptive_learning_rate {
             return Ok(());
         }
@@ -662,7 +661,7 @@ where
         Ok(())
     }
 
-    fn adapt_adagrad(&mut self, gradient: &Array1<A>) -> Result<(), OptimizerError> {
+    fn adapt_adagrad(&mut self, gradient: &Array1<A>) -> Result<(), OptimError> {
         if self.lr_adaptation_state.accumulated_gradients.is_none() {
             self.lr_adaptation_state.accumulated_gradients = Some(Array1::zeros(gradient.len()));
         }
@@ -689,7 +688,7 @@ where
         Ok(())
     }
 
-    fn adapt_rmsprop(&mut self, gradient: &Array1<A>) -> Result<(), OptimizerError> {
+    fn adapt_rmsprop(&mut self, gradient: &Array1<A>) -> Result<(), OptimError> {
         if self.lr_adaptation_state.ema_squared_gradients.is_none() {
             self.lr_adaptation_state.ema_squared_gradients = Some(Array1::zeros(gradient.len()));
         }
@@ -717,7 +716,7 @@ where
         Ok(())
     }
 
-    fn adapt_performance_based(&mut self) -> Result<(), OptimizerError> {
+    fn adapt_performance_based(&mut self) -> Result<(), OptimError> {
         // Adapt based on recent performance
         if self.lr_adaptation_state.performance_history.len() < 2 {
             return Ok(());
@@ -745,7 +744,7 @@ where
         Ok(())
     }
 
-    fn adapt_drift_aware(&mut self) -> Result<(), OptimizerError> {
+    fn adapt_drift_aware(&mut self) -> Result<(), OptimError> {
         // Increase learning rate if drift was recently detected
         if let Some(last_drift) = self.drift_detector.last_drift {
             let time_since_drift = last_drift.elapsed();
@@ -759,7 +758,7 @@ where
         Ok(())
     }
 
-    fn check_concept_drift(&mut self, _update: &Array1<A>) -> Result<(), OptimizerError> {
+    fn check_concept_drift(&mut self, _update: &Array1<A>) -> Result<(), OptimError> {
         // Simplified concept drift detection based on loss
         let current_loss = A::from(self.metrics.current_loss).unwrap();
 
@@ -813,7 +812,7 @@ where
         Ok(())
     }
 
-    fn get_current_parameters(&self) -> Result<Array1<A>, OptimizerError> {
+    fn get_current_parameters(&self) -> Result<Array1<A>, OptimError> {
         // Placeholder - would get actual parameters from model
         Ok(Array1::zeros(10))
     }
@@ -822,7 +821,7 @@ where
         &mut self,
         params: &Array1<A>,
         gradient: &Array1<A>,
-    ) -> Result<Array1<A>, OptimizerError> {
+    ) -> Result<Array1<A>, OptimError> {
         // Apply gradient update synchronously
         self.base_optimizer.step(params, gradient)
     }
@@ -831,7 +830,7 @@ where
         &mut self,
         _params: &Array1<A>,
         gradient: &Array1<A>,
-    ) -> Result<Array1<A>, OptimizerError> {
+    ) -> Result<Array1<A>, OptimError> {
         if let Some(ref mut async_state) = self.async_state {
             // Add to update queue
             let update = AsyncUpdate {
@@ -866,7 +865,7 @@ where
         }
     }
 
-    fn process_async_updates(&mut self) -> Result<Array1<A>, OptimizerError> {
+    fn process_async_updates(&mut self) -> Result<Array1<A>, OptimError> {
         // Simplified async update processing
         if let Some(ref mut async_state) = self.async_state {
             if let Some(update) = async_state.update_queue.pop_front() {
@@ -985,7 +984,7 @@ where
     }
 
     /// Force processing of current buffer
-    pub fn flush(&mut self) -> Result<Option<Array1<A>>, OptimizerError> {
+    pub fn flush(&mut self) -> Result<Option<Array1<A>>, OptimError> {
         if !self.data_buffer.is_empty() {
             self.process_buffer()
         } else {
@@ -994,7 +993,7 @@ where
     }
 
     /// Adaptive momentum-based learning rate adaptation
-    fn adapt_momentum_based(&mut self, gradient: &Array1<A>) -> Result<(), OptimizerError> {
+    fn adapt_momentum_based(&mut self, gradient: &Array1<A>) -> Result<(), OptimError> {
         // Initialize momentum if needed
         if self.lr_adaptation_state.ema_squared_gradients.is_none() {
             self.lr_adaptation_state.ema_squared_gradients = Some(Array1::zeros(gradient.len()));
@@ -1024,7 +1023,7 @@ where
     }
 
     /// Gradient variance-based learning rate adaptation
-    fn adapt_gradient_variance(&mut self, gradient: &Array1<A>) -> Result<(), OptimizerError> {
+    fn adapt_gradient_variance(&mut self, gradient: &Array1<A>) -> Result<(), OptimError> {
         // Track gradient variance
         if self.lr_adaptation_state.accumulated_gradients.is_none() {
             self.lr_adaptation_state.accumulated_gradients = Some(Array1::zeros(gradient.len()));
@@ -1070,7 +1069,7 @@ where
     }
 
     /// Predictive learning rate adaptation
-    fn adapt_predictive(&mut self) -> Result<(), OptimizerError> {
+    fn adapt_predictive(&mut self) -> Result<(), OptimError> {
         // Use performance history to predict optimal learning rate
         if self.lr_adaptation_state.performance_history.len() < 3 {
             return Ok(());
@@ -1315,7 +1314,7 @@ pub struct MultiStreamCoordinator<A: Float> {
 }
 
 impl<A: Float> MultiStreamCoordinator<A> {
-    pub fn new(config: &StreamingConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &StreamingConfig) -> Result<Self, OptimError> {
         Ok(Self {
             stream_configs: HashMap::new(),
             sync_buffer: HashMap::new(),
@@ -1339,7 +1338,7 @@ impl<A: Float> MultiStreamCoordinator<A> {
     }
 
     /// Coordinate data from multiple streams
-    pub fn coordinate_streams(&mut self) -> Result<Vec<StreamingDataPoint<A>>, OptimizerError> {
+    pub fn coordinate_streams(&mut self) -> Result<Vec<StreamingDataPoint<A>>, OptimError> {
         let mut coordinated_data = Vec::new();
         let current_time = Instant::now();
 
@@ -1409,7 +1408,7 @@ pub struct PredictiveStreamingEngine<A: Float> {
 }
 
 impl<A: Float> PredictiveStreamingEngine<A> {
-    pub fn new(config: &StreamingConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &StreamingConfig) -> Result<Self, OptimError> {
         Ok(Self {
             prediction_model: PredictionModel::new(config.buffer_size)?,
             historical_buffer: VecDeque::with_capacity(config.buffer_size * 2),
@@ -1423,7 +1422,7 @@ impl<A: Float> PredictiveStreamingEngine<A> {
     pub fn predict_next(
         &mut self,
         current_data: &[StreamingDataPoint<A>],
-    ) -> Result<Vec<StreamingDataPoint<A>>, OptimizerError> {
+    ) -> Result<Vec<StreamingDataPoint<A>>, OptimError> {
         // Update model with current data
         for data_point in current_data {
             self.historical_buffer.push_back(data_point.clone());
@@ -1451,7 +1450,7 @@ pub struct PredictionModel<A: Float> {
 }
 
 impl<A: Float> PredictionModel<A> {
-    pub fn new(feature_dim: usize) -> Result<Self, OptimizerError> {
+    pub fn new(feature_dim: usize) -> Result<Self, OptimError> {
         Ok(Self {
             weights: Array1::zeros(feature_dim),
             feature_dim,
@@ -1463,7 +1462,7 @@ impl<A: Float> PredictionModel<A> {
         &self,
         data: &VecDeque<StreamingDataPoint<A>>,
         horizon: usize,
-    ) -> Result<Vec<StreamingDataPoint<A>>, OptimizerError> {
+    ) -> Result<Vec<StreamingDataPoint<A>>, OptimError> {
         let mut predictions = Vec::new();
 
         if data.len() < self.model_order {
@@ -1508,7 +1507,7 @@ pub struct StreamFusionOptimizer<A: Float> {
 }
 
 impl<A: Float> StreamFusionOptimizer<A> {
-    pub fn new(config: &StreamingConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &StreamingConfig) -> Result<Self, OptimError> {
         Ok(Self {
             fusion_strategy: FusionStrategy::WeightedAverage,
             stream_weights: HashMap::new(),
@@ -1521,9 +1520,9 @@ impl<A: Float> StreamFusionOptimizer<A> {
     pub fn fuse_optimization_steps(
         &mut self,
         steps: &[(String, Array1<A>)],
-    ) -> Result<Array1<A>, OptimizerError> {
+    ) -> Result<Array1<A>, OptimError> {
         if steps.is_empty() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "No optimization steps to fuse".to_string(),
             ));
         }
@@ -1560,7 +1559,7 @@ impl<A: Float> StreamFusionOptimizer<A> {
         }
     }
 
-    fn apply_consensus(&self, steps: &[(String, Array1<A>)]) -> Result<Array1<A>, OptimizerError> {
+    fn apply_consensus(&self, steps: &[(String, Array1<A>)]) -> Result<Array1<A>, OptimError> {
         // Simplified consensus implementation
         Ok(steps[0].1.clone())
     }
@@ -1672,7 +1671,7 @@ pub struct RealTimeOptimizer {
 }
 
 impl RealTimeOptimizer {
-    pub fn new(config: RealTimeConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: RealTimeConfig) -> Result<Self, OptimError> {
         Ok(Self {
             config,
             performance_metrics: RealTimeMetrics::default(),
@@ -1684,7 +1683,7 @@ impl RealTimeOptimizer {
     pub fn optimize_realtime(
         &mut self,
         _latency_budget: Duration,
-    ) -> Result<RTOptimizationResult, OptimizerError> {
+    ) -> Result<RTOptimizationResult, OptimError> {
         // Implement real-time optimization logic
         Ok(RTOptimizationResult {
             optimization_applied: true,
@@ -1737,7 +1736,7 @@ pub struct AdaptiveResourceManager {
 }
 
 impl AdaptiveResourceManager {
-    pub fn new(config: &StreamingConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &StreamingConfig) -> Result<Self, OptimError> {
         Ok(Self {
             allocation_strategy: ResourceAllocationStrategy::Adaptive,
             current_usage: ResourceUsage::default(),
@@ -1754,7 +1753,7 @@ impl AdaptiveResourceManager {
     pub fn adapt_allocation(
         &mut self,
         load_metrics: &StreamingMetrics,
-    ) -> Result<ResourceAllocation, OptimizerError> {
+    ) -> Result<ResourceAllocation, OptimError> {
         let allocation = ResourceAllocation {
             memory_allocation_mb: (load_metrics.memory_usage_mb * 1.2)
                 .min(self.constraints.max_memory_mb as f64)
@@ -1837,7 +1836,7 @@ impl<A: Float> PipelineExecutionManager<A> {
     pub fn execute_pipeline(
         &mut self,
         data: Vec<StreamingDataPoint<A>>,
-    ) -> Result<Vec<StreamingDataPoint<A>>, OptimizerError> {
+    ) -> Result<Vec<StreamingDataPoint<A>>, OptimError> {
         // Simplified pipeline execution
         Ok(data)
     }

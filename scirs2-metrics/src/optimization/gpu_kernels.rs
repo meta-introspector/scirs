@@ -1572,7 +1572,7 @@ impl AdvancedGpuComputer {
 
         // Configure work group parameters
         let local_work_size = opencl_ctx.device_info.max_work_group_size.min(256);
-        let global_work_size =
+        let _global_work_size =
             ((batch_size + local_work_size - 1) / local_work_size) * local_work_size;
 
         // Simulate OpenCL execution similar to CUDA

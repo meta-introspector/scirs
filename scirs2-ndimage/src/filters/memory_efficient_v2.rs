@@ -3,7 +3,7 @@
 //! This module provides advanced memory-efficient versions of filters that leverage
 //! scirs2-core's memory management infrastructure for optimal performance with large arrays.
 
-use ndarray::{Array, ArrayView, Dimension, Ix2, Ix3, IxDyn};
+use ndarray::{Array, ArrayView, Dimension, Ix1, Ix2, Ix3, IxDyn};
 use num_traits::{Float, FromPrimitive, NumCast, Zero};
 use std::fmt::Debug;
 use std::path::Path;
@@ -11,10 +11,9 @@ use std::path::Path;
 use scirs2_core::error::CoreResult;
 use scirs2_core::memory_efficient::AdaptiveChunking;
 use scirs2_core::memory_efficient::{
-    chunk_wise_op, create_mmap,
-    zerocopy::{self, ZeroCopyOps},
-    AccessMode, ChunkingStrategy, MemoryMappedArray,
+    chunk_wise_op, create_mmap, AccessMode, ChunkingStrategy, MemoryMappedArray,
 };
+use scirs2_core::ZeroCopyOps;
 
 use crate::chunked_v2::{ChunkConfigBuilder, ChunkConfigV2};
 use crate::error::{NdimageError, NdimageResult};
@@ -210,7 +209,11 @@ struct GaussianProcessorV2;
 impl<T: Float, D: Dimension> crate::chunked_v2::ChunkProcessorV2<T, D> for GaussianProcessorV2 {
     fn create_processor(
         &self,
-    ) -> Box<dyn Fn(&ArrayView<T, IxDyn>) -> scirs2_core::error::CoreResult<Array<T, IxDyn>> + Send + Sync> {
+    ) -> Box<
+        dyn Fn(&ArrayView<T, IxDyn>) -> scirs2_core::error::CoreResult<Array<T, IxDyn>>
+            + Send
+            + Sync,
+    > {
         Box::new(|chunk| {
             // Placeholder implementation
             Ok(chunk.to_owned().into_dyn())
@@ -348,7 +351,11 @@ struct BilateralProcessorV2;
 impl<T: Float> crate::chunked_v2::ChunkProcessorV2<T, Ix2> for BilateralProcessorV2 {
     fn create_processor(
         &self,
-    ) -> Box<dyn Fn(&ArrayView<T, IxDyn>) -> scirs2_core::error::CoreResult<Array<T, IxDyn>> + Send + Sync> {
+    ) -> Box<
+        dyn Fn(&ArrayView<T, IxDyn>) -> scirs2_core::error::CoreResult<Array<T, IxDyn>>
+            + Send
+            + Sync,
+    > {
         Box::new(|chunk| {
             // Placeholder implementation
             Ok(chunk.to_owned().into_dyn())

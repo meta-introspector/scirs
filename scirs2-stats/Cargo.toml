@@ -41,6 +41,7 @@ criterion = { workspace = true }
 plotters = { workspace = true }
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
+rand = { workspace = true }
 
 [features]
 default = []

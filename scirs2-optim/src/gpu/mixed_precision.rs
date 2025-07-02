@@ -8,7 +8,7 @@ use num_traits::Float;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-use crate::gpu::{GpuOptimizerConfig, GpuOptimizerError};
+use crate::gpu::{GpuOptimizerConfig, GpuOptimError};
 
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBuffer, GpuContext};
@@ -196,7 +196,7 @@ impl<O, A: Float> MixedPrecisionOptimizer<O, A> {
         &mut self,
         param_count: usize,
         gpu_config: GpuOptimizerConfig,
-    ) -> Result<(), GpuOptimizerError> {
+    ) -> Result<(), GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             let context = Arc::new(GpuContext::new(gpu_config.backend)?);
@@ -222,7 +222,7 @@ impl<O, A: Float> MixedPrecisionOptimizer<O, A> {
     pub fn unscale_and_check_overflow<D>(
         &mut self,
         gradients: &mut Array<A, D>,
-    ) -> Result<bool, GpuOptimizerError>
+    ) -> Result<bool, GpuOptimError>
     where
         D: Dimension,
     {

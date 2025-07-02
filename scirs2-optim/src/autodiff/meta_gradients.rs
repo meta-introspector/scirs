@@ -11,7 +11,7 @@ use std::collections::{HashMap, VecDeque};
 use super::forward_mode::ForwardModeEngine;
 use super::higher_order::{HessianConfig, HigherOrderEngine};
 use super::reverse_mode::ReverseModeEngine;
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 
 /// Meta-gradient computation engine
 pub struct MetaGradientEngine<T: Float> {
@@ -452,7 +452,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         tasks: &[MetaTask<T>],
         objective_fn: impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<MetaGradientResult<T>, OptimizerError> {
+    ) -> Result<MetaGradientResult<T>, OptimError> {
         let start_time = std::time::Instant::now();
 
         match self.algorithm {
@@ -486,7 +486,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         tasks: &[MetaTask<T>],
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<MetaGradientResult<T>, OptimizerError> {
+    ) -> Result<MetaGradientResult<T>, OptimError> {
         let start_time = std::time::Instant::now();
         let mut meta_gradients = Array1::zeros(meta_params.len());
         let mut inner_gradients = Vec::new();
@@ -557,7 +557,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         tasks: &[MetaTask<T>],
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<MetaGradientResult<T>, OptimizerError> {
+    ) -> Result<MetaGradientResult<T>, OptimError> {
         let mut meta_gradients = Array1::zeros(meta_params.len());
         let mut task_losses = Vec::new();
         let mut total_meta_loss = T::zero();
@@ -601,7 +601,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         tasks: &[MetaTask<T>],
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<MetaGradientResult<T>, OptimizerError> {
+    ) -> Result<MetaGradientResult<T>, OptimError> {
         let mut meta_gradients = Array1::zeros(meta_params.len());
         let mut task_losses = Vec::new();
         let mut total_meta_loss = T::zero();
@@ -644,7 +644,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         tasks: &[MetaTask<T>],
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<MetaGradientResult<T>, OptimizerError> {
+    ) -> Result<MetaGradientResult<T>, OptimError> {
         // L2L uses a learned optimizer, so this is a simplified implementation
         self.compute_maml_gradients(meta_params, tasks, objective_fn)
     }
@@ -655,7 +655,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         tasks: &[MetaTask<T>],
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<MetaGradientResult<T>, OptimizerError> {
+    ) -> Result<MetaGradientResult<T>, OptimError> {
         // Meta-SGD learns both parameters and learning rates
         // This is a simplified implementation
         self.compute_maml_gradients(meta_params, tasks, objective_fn)
@@ -667,7 +667,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         tasks: &[MetaTask<T>],
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<MetaGradientResult<T>, OptimizerError> {
+    ) -> Result<MetaGradientResult<T>, OptimError> {
         // Use learned optimizer for inner loop
         self.compute_maml_gradients(meta_params, tasks, objective_fn)
     }
@@ -678,7 +678,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         tasks: &[MetaTask<T>],
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<MetaGradientResult<T>, OptimizerError> {
+    ) -> Result<MetaGradientResult<T>, OptimError> {
         let mut meta_gradients = Array1::zeros(meta_params.len());
         let mut task_losses = Vec::new();
         let mut total_meta_loss = T::zero();
@@ -726,7 +726,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         let mut params = meta_params.clone();
         let lr = T::from(self.inner_loop_config.learning_rate).unwrap();
 
@@ -753,7 +753,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         let mut params = meta_params.clone();
         let lr = T::from(self.inner_loop_config.learning_rate).unwrap();
         let convergence_threshold = T::from(1e-6).unwrap();
@@ -782,7 +782,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         adapted_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         if self.advanced_config.use_higher_order_hessian {
             // Use sophisticated higher-order differentiation
             self.compute_advanced_second_order_gradients(
@@ -809,7 +809,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         adapted_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         let cache_key = format!("hessian_{}_{}", task.id, meta_params.len());
 
         // Check cache first
@@ -874,7 +874,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         // Compute gradient direction
         let gradient_direction = self.gradient_at_point(
             &|theta: &Array1<T>| -> T {
@@ -898,7 +898,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         _adapted_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         let eps = T::from(1e-6).unwrap();
         let mut meta_gradients = Array1::zeros(meta_params.len());
 
@@ -931,7 +931,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         adapted_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         // First-order approximation: gradient w.r.t. adapted parameters
         self.compute_gradient_wrt_params(adapted_params, &task.query_set, objective_fn)
     }
@@ -943,7 +943,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         optimal_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         // Simplified IFT computation
         // In practice, this would solve: dψ/dθ = -H^(-1) * d²L/dψdθ
         // where ψ are optimal params, θ are meta-params, H is Hessian
@@ -975,7 +975,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         params: &Array1<T>,
         data: &[(Array1<T>, Array1<T>)],
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         let eps = T::from(1e-6).unwrap();
         let mut gradient = Array1::zeros(params.len());
 
@@ -1002,7 +1002,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         _params: &Array1<T>,
         _task: &MetaTask<T>,
         _objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         match &self.inner_loop_config.stop_condition {
             StopCondition::FixedSteps => Ok(false), // Always run fixed number of steps
             StopCondition::Convergence { threshold } => {
@@ -1056,7 +1056,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         task2: &MetaTask<T>,
         meta_params: &Array1<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         match self.advanced_config.task_similarity_metric {
             TaskSimilarityMetric::GradientCosine => {
                 self.compute_gradient_cosine_similarity(task1, task2, meta_params, objective_fn)
@@ -1083,7 +1083,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         task2: &MetaTask<T>,
         meta_params: &Array1<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         let grad1 =
             self.compute_gradient_wrt_params(meta_params, &task1.support_set, objective_fn)?;
         let grad2 =
@@ -1107,7 +1107,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         task2: &MetaTask<T>,
         meta_params: &Array1<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         // Simplified Fisher distance computation
         // In practice, would compute Fisher Information Matrices and their distance
         let grad1 =
@@ -1128,7 +1128,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         task2: &MetaTask<T>,
         meta_params: &Array1<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         if !self.advanced_config.use_higher_order_hessian {
             // Fallback to gradient similarity
             return self.compute_gradient_cosine_similarity(
@@ -1190,7 +1190,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         task2: &MetaTask<T>,
         meta_params: &Array1<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         let adapted1 = self.inner_loop_adaptation(meta_params, task1, objective_fn)?;
         let adapted2 = self.inner_loop_adaptation(meta_params, task2, objective_fn)?;
 
@@ -1206,7 +1206,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         task2: &MetaTask<T>,
         meta_params: &Array1<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         // Sample points around meta_params and compare loss values
         let num_samples = 10;
         let perturbation_scale = T::from(0.1).unwrap();
@@ -1240,7 +1240,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         gradient: &Array1<T>,
         task: &MetaTask<T>,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         match self.advanced_config.lr_adaptation_method {
             LearningRateAdaptation::Fixed => {
                 let lr = T::from(self.inner_loop_config.learning_rate).unwrap();
@@ -1267,7 +1267,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         gradient: &Array1<T>,
         _task: &MetaTask<T>,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         let mut learning_rates = Array1::zeros(meta_params.len());
         let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
 
@@ -1286,7 +1286,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         &self,
         _meta_params: &Array1<T>,
         gradient: &Array1<T>,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         let mut learning_rates = Array1::zeros(gradient.len());
         let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
 
@@ -1322,7 +1322,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         _gradient: &Array1<T>,
         _task: &MetaTask<T>,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         // Placeholder: would use a learned neural network
         let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
         Ok(Array1::from_elem(meta_params.len(), base_lr))
@@ -1334,7 +1334,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         meta_params: &Array1<T>,
         _gradient: &Array1<T>,
         _task: &MetaTask<T>,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         // Placeholder: would use meta-learned adaptation
         let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
         Ok(Array1::from_elem(meta_params.len(), base_lr))
@@ -1378,7 +1378,7 @@ impl<T: Float + Default + Clone> CheckpointManager<T> {
         hessian: Option<Array2<T>>,
         task_state: TaskState<T>,
         step: usize,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         let memory_usage = self.estimate_checkpoint_memory(&parameters, &gradients, &hessian);
 
         let checkpoint = MetaCheckpoint {

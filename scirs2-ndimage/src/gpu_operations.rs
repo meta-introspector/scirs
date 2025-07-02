@@ -493,7 +493,7 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync,
     {
         // Use existing CPU implementation
-        crate::filters::convolve::convolve(input, kernel, mode)
+        crate::convolve(input, kernel, mode)
     }
 
     fn fallback_morphological_erosion<T>(
@@ -506,7 +506,7 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
         // Use existing CPU implementation
-        crate::morphology::grayscale::grayscale_erosion(input, structuring_element, mode)
+        crate::grey_erosion(input, structuring_element, mode, None, None)
     }
 
     fn fallback_morphological_dilation<T>(
@@ -519,7 +519,7 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
         // Use existing CPU implementation
-        crate::morphology::grayscale::grayscale_dilation(input, structuring_element, mode)
+        crate::grey_dilation(input, structuring_element, mode, None, None)
     }
 
     fn fallback_gaussian_filter<T>(
@@ -532,7 +532,7 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync,
     {
         // Use existing CPU implementation
-        crate::filters::gaussian::gaussian_filter(input, sigma, mode)
+        crate::gaussian_filter(input, sigma, mode)
     }
 
     fn fallback_distance_transform<T>(
@@ -544,7 +544,7 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
         // Use existing CPU implementation
-        crate::morphology::distance_transform::distance_transform_edt(input)
+        crate::distance_transform_edt(input)
     }
 
     // GPU kernel source code methods

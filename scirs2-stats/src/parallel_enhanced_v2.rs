@@ -285,7 +285,7 @@ where
 
             // Generate bootstrap sample
             for i in 0..n {
-                let idx = rng.gen_range(0..n);
+                let idx = rng.random_range(0..n);
                 sample[i] = data_arc[idx];
             }
 

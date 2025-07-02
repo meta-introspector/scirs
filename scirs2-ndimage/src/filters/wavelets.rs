@@ -4,7 +4,7 @@
 //! operations for image processing. Wavelets are particularly useful for
 //! denoising, compression, and multi-scale analysis.
 
-use ndarray::{Array, Array1, Array2, ArrayView1, ArrayView2, Axis, Dimension, Ix2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, Zero};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
@@ -830,9 +830,6 @@ where
 
     Ok(result)
 }
-
-
-
 
 /// Soft thresholding function
 fn soft_threshold<T>(coeffs: &ArrayView2<T>, threshold: T) -> Array2<T>

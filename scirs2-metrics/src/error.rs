@@ -62,6 +62,14 @@ pub enum MetricsError {
     #[error("Visualization error: {0}")]
     VisualizationError(String),
 
+    /// Memory allocation error
+    #[error("Memory error: {0}")]
+    MemoryError(String),
+    
+    /// Index error
+    #[error("Index error: {0}")]
+    IndexError(String),
+
     /// Core error
     #[error("Core error: {0}")]
     CoreError(#[from] scirs2_core::error::CoreError),

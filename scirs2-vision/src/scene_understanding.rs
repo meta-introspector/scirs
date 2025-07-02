@@ -185,101 +185,160 @@ pub enum SpatialRelationType {
     Custom(String),
 }
 
+/// Parameters for directional spatial relationship analysis
 #[derive(Debug, Clone)]
 pub struct DirectionalParams {
+    /// Angular tolerance for directional relationships (in radians)
     pub angular_tolerance: f32,
+    /// Whether to normalize distances for scale invariance
     pub distance_normalization: bool,
+    /// Whether to apply perspective correction
     pub perspective_correction: bool,
 }
 
+/// Parameters for temporal object tracking
 #[derive(Debug, Clone)]
 pub struct TrackingParams {
+    /// Maximum frames an object can disappear before being lost
     pub max_disappearance_frames: usize,
+    /// Tracking algorithm identifier
     pub tracking_algorithm: String,
+    /// Threshold for feature matching in tracking
     pub feature_matching_threshold: f32,
 }
 
+/// Parameters for scene change detection
 #[derive(Debug, Clone)]
 pub struct ChangeDetectionParams {
+    /// Sensitivity level for change detection (0.0-1.0)
     pub sensitivity: f32,
+    /// Size of temporal window for change analysis
     pub temporal_window: usize,
+    /// Background model type identifier
     pub background_model: String,
 }
 
+/// Parameters for scene graph simplification
 #[derive(Debug, Clone)]
 pub struct GraphSimplificationParams {
+    /// Minimum edge weight to retain in graph
     pub min_edge_weight: f32,
+    /// Whether to remove redundant edges
     pub redundancy_removal: bool,
+    /// Whether to apply hierarchical clustering
     pub hierarchical_clustering: bool,
 }
 
+/// Rule for contextual reasoning about scenes
 #[derive(Debug, Clone)]
 pub struct ReasoningRule {
+    /// Name identifier for the reasoning rule
     pub name: String,
+    /// Conditions that must be met for rule to apply
     pub conditions: Vec<String>,
+    /// Conclusions drawn when conditions are met
     pub conclusions: Vec<String>,
+    /// Confidence level of the rule (0.0-1.0)
     pub confidence: f32,
 }
 
+/// Context window for reasoning about scene elements
 #[derive(Debug, Clone)]
 pub struct ContextWindow {
+    /// Number of frames to consider for temporal context
     pub temporal_span: usize,
+    /// Spatial extent (width, height) for context
     pub spatial_extent: (f32, f32),
+    /// Threshold for relevance filtering
     pub relevance_threshold: f32,
 }
 
+/// Parameters for reasoning inference process
 #[derive(Debug, Clone)]
 pub struct InferenceParams {
+    /// Maximum iterations for inference convergence
     pub max_iterations: usize,
+    /// Threshold for determining convergence
     pub convergence_threshold: f32,
+    /// Method for handling uncertainty in inference
     pub uncertainty_handling: String,
 }
 
+/// Graph representation of scene structure and relationships
 #[derive(Debug, Clone)]
 pub struct SceneGraph {
+    /// Nodes representing objects and regions in the scene
     pub nodes: Vec<SceneGraphNode>,
+    /// Edges representing relationships between objects
     pub edges: Vec<SceneGraphEdge>,
+    /// Global scene properties and metadata
     pub global_properties: HashMap<String, f32>,
 }
 
+/// Node in scene graph representing an object or region
 #[derive(Debug, Clone)]
 pub struct SceneGraphNode {
+    /// Unique identifier for the node
     pub id: usize,
+    /// Type or class of the object
     pub object_type: String,
+    /// Properties and attributes of the object
     pub properties: HashMap<String, f32>,
+    /// Spatial location (x, y) in the scene
     pub spatial_location: (f32, f32),
 }
 
+/// Edge in scene graph representing a relationship
 #[derive(Debug, Clone)]
 pub struct SceneGraphEdge {
+    /// Source node ID
     pub source: usize,
+    /// Target node ID
     pub target: usize,
+    /// Type of relationship
     pub relation_type: String,
+    /// Strength or confidence of the relationship
     pub weight: f32,
+    /// Additional properties of the relationship
     pub properties: HashMap<String, f32>,
 }
 
+/// Temporal information for video scene understanding
 #[derive(Debug, Clone)]
 pub struct TemporalInfo {
+    /// Index of the current frame
     pub frame_index: usize,
+    /// Timestamp of the frame
     pub timestamp: f64,
+    /// Motion vectors for temporal analysis
     pub motion_vectors: Array3<f32>,
+    /// Detected changes in the scene
     pub scene_changes: Vec<SceneChange>,
 }
 
+/// Information about a detected change in the scene
 #[derive(Debug, Clone)]
 pub struct SceneChange {
+    /// Type of change that occurred
     pub change_type: String,
+    /// Location (x, y) where change occurred
     pub location: (f32, f32),
+    /// Magnitude of the change
     pub magnitude: f32,
+    /// Confidence in the change detection
     pub confidence: f32,
 }
 
+/// Result of contextual reasoning about the scene
 #[derive(Debug, Clone)]
 pub struct ReasoningResult {
+    /// Name of the rule that generated this result
     pub rule_name: String,
+    /// Conclusion reached by the reasoning process
     pub conclusion: String,
+    /// Confidence in the reasoning result
     pub confidence: f32,
+    /// Evidence supporting the conclusion
     pub evidence: Vec<String>,
 }
 

@@ -131,6 +131,10 @@ pub struct StabilityAssessment {
     pub risk_factors: Vec<RiskFactor>,
     /// Mitigation strategies
     pub mitigations: Vec<String>,
+    /// Number of breaking changes detected
+    pub breaking_changes: usize,
+    /// Number of experimental features
+    pub experimental_features: usize,
 }
 
 /// API stability levels
@@ -149,7 +153,7 @@ pub enum ApiStabilityLevel {
 }
 
 /// Risk factors affecting API stability
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum RiskFactor {
     /// Insufficient testing
     InsufficientTesting,
@@ -281,13 +285,22 @@ pub struct DeprecationItem {
 
 /// Deprecation timeline
 #[derive(Debug, Clone)]
-pub struct DeprecationTimeline {
-    /// When deprecated
-    pub deprecated_in: String,
-    /// Warning period (versions)
-    pub warning_period: usize,
-    /// When to remove
-    pub remove_in: String,
+pub enum DeprecationTimeline {
+    /// Remove immediately
+    Immediate,
+    /// Remove in next major version
+    NextMajorVersion,
+    /// Remove after grace period
+    GracePeriod(usize),
+    /// Custom timeline
+    Custom {
+        /// When deprecated
+        deprecated_in: String,
+        /// Warning period (versions)
+        warning_period: usize,
+        /// When to remove
+        remove_in: String,
+    },
 }
 
 /// Placeholder API item types for analysis
@@ -684,6 +697,8 @@ impl ApiStabilizationAnalyzer {
                 confidence: if issues.is_empty() { 0.95 } else { 0.7 },
                 risk_factors,
                 mitigations: recommendations.clone(),
+                breaking_changes: 0,
+                experimental_features: 0,
             },
             issues,
             recommendations,
@@ -774,6 +789,8 @@ impl ApiStabilizationAnalyzer {
                 confidence: if issues.is_empty() { 0.95 } else { 0.7 },
                 risk_factors,
                 mitigations: recommendations.clone(),
+                breaking_changes: 0,
+                experimental_features: 0,
             },
             issues,
             recommendations,
@@ -1008,7 +1025,7 @@ impl ApiStabilizationAnalyzer {
                     reason: "Superseded by improved implementation".to_string(),
                     replacement: Some("New improved version".to_string()),
                     removal_version: Some("0.2.0".to_string()),
-                    timeline: DeprecationTimeline {
+                    timeline: DeprecationTimeline::Custom {
                         deprecated_in: "0.1.0".to_string(),
                         warning_period: 2,
                         remove_in: "0.2.0".to_string(),
@@ -1020,19 +1037,137 @@ impl ApiStabilizationAnalyzer {
         Ok(())
     }
 
-    /// Assess overall API consistency
+    /// Assess overall API consistency with enhanced 0.1.0 stable release checks
     fn assess_api_consistency(&self) -> InterpolateResult<f32> {
         if self.analysis_results.is_empty() {
             return Ok(0.0);
         }
 
-        let total_score: f32 = self
+        let mut total_score = 0.0;
+        let mut check_count = 0;
+
+        // Basic consistency score from analysis results
+        let basic_score: f32 = self
             .analysis_results
             .iter()
             .map(|r| r.consistency_score)
-            .sum();
+            .sum::<f32>() / self.analysis_results.len() as f32;
+        
+        total_score += basic_score;
+        check_count += 1;
 
-        Ok(total_score / self.analysis_results.len() as f32)
+        // Enhanced checks for stable release
+        total_score += self.check_semver_compliance()?;
+        check_count += 1;
+
+        total_score += self.check_breaking_change_policy_compliance()?;
+        check_count += 1;
+
+        total_score += self.check_experimental_feature_handling()?;
+        check_count += 1;
+
+        total_score += self.check_deprecation_policy_compliance()?;
+        check_count += 1;
+
+        Ok(total_score / check_count as f32)
+    }
+
+    /// Check semantic versioning compliance for stable release
+    fn check_semver_compliance(&self) -> InterpolateResult<f32> {
+        let mut score: f32 = 1.0;
+        
+        // Check if all public APIs follow semver-compatible patterns
+        for result in &self.analysis_results {
+            match &result.item_type {
+                ApiItemType::Function => {
+                    // Functions should not have breaking changes marked
+                    if result.stability.breaking_changes > 0 {
+                        score -= 0.1;
+                    }
+                },
+                ApiItemType::TypeAlias => {
+                    // Public types should be stable
+                    if result.stability.risk_factors.contains(&RiskFactor::BreakingChangePotential) {
+                        score -= 0.1;
+                    }
+                },
+                _ => {}
+            }
+        }
+
+        Ok(score.max(0.0f32))
+    }
+
+    /// Check breaking change policy compliance
+    fn check_breaking_change_policy_compliance(&self) -> InterpolateResult<f32> {
+        let total_breaking_changes: usize = self.breaking_changes.len();
+        
+        if total_breaking_changes == 0 {
+            return Ok(1.0);
+        }
+
+        // For stable release, we should have very few breaking changes
+        let max_allowed = self.config.max_breaking_changes;
+        
+        if total_breaking_changes <= max_allowed {
+            Ok(1.0 - (total_breaking_changes as f32 / (max_allowed + 1) as f32) * 0.5)
+        } else {
+            Ok(0.0) // Too many breaking changes for stable release
+        }
+    }
+
+    /// Check experimental feature handling for stable release
+    fn check_experimental_feature_handling(&self) -> InterpolateResult<f32> {
+        let mut experimental_count = 0;
+        let mut total_count = 0;
+
+        for result in &self.analysis_results {
+            total_count += 1;
+            if result.stability.experimental_features > 0 {
+                experimental_count += 1;
+            }
+        }
+
+        if total_count == 0 {
+            return Ok(1.0);
+        }
+
+        let experimental_ratio = experimental_count as f32 / total_count as f32;
+
+        if self.config.allow_experimental_features {
+            // Allow some experimental features but penalize heavily
+            Ok((1.0 - experimental_ratio * 0.8).max(0.0))
+        } else {
+            // No experimental features allowed in stable release
+            if experimental_count == 0 {
+                Ok(1.0)
+            } else {
+                Ok(0.0)
+            }
+        }
+    }
+
+    /// Check deprecation policy compliance
+    fn check_deprecation_policy_compliance(&self) -> InterpolateResult<f32> {
+        let mut score = 1.0;
+
+        for deprecation in &self.deprecations {
+            match deprecation.timeline {
+                DeprecationTimeline::Immediate => {
+                    // Immediate deprecations are problematic for stable release
+                    score -= 0.2;
+                },
+                DeprecationTimeline::NextMajorVersion => {
+                    // This is acceptable
+                },
+                DeprecationTimeline::GracePeriod(_) => {
+                    // Grace period deprecations are good
+                    score += 0.1;
+                },
+            }
+        }
+
+        Ok(score.max(0.0f32).min(1.0f32))
     }
 
     /// Check documentation coverage
@@ -1111,20 +1246,91 @@ impl ApiStabilizationAnalyzer {
         let critical_issues = self.get_critical_issues();
         let documentation_coverage = self.check_documentation_coverage().unwrap_or(0.0);
         let consistency_score = self.assess_api_consistency().unwrap_or(0.0);
+        
+        // Enhanced readiness checks for 0.1.0 stable release
+        let semver_compliance = self.check_semver_compliance().unwrap_or(0.0);
+        let breaking_change_compliance = self.check_breaking_change_policy_compliance().unwrap_or(0.0);
+        let experimental_handling = self.check_experimental_feature_handling().unwrap_or(0.0);
+        let deprecation_compliance = self.check_deprecation_policy_compliance().unwrap_or(0.0);
+        
+        // Check for production readiness indicators
+        let performance_validation_score = self.assess_performance_validation_readiness();
+        let stability_validation_score = self.assess_stability_validation_readiness();
+        let test_coverage_score = self.assess_test_coverage_readiness();
 
         let readiness = if !critical_issues.is_empty() {
+            StableReleaseReadiness::NotReady
+        } else if semver_compliance < 0.95 {
+            // Semver compliance is critical for stable release
+            StableReleaseReadiness::NotReady
+        } else if breaking_change_compliance < 0.9 {
+            // Too many breaking changes
             StableReleaseReadiness::NotReady
         } else if documentation_coverage < self.config.min_documentation_coverage {
             StableReleaseReadiness::NeedsWork
         } else if consistency_score < self.config.min_consistency_score {
             StableReleaseReadiness::NeedsWork
-        } else if self.breaking_changes.len() > self.config.max_breaking_changes {
+        } else if experimental_handling < 0.8 {
+            // Too many experimental features for stable release
+            StableReleaseReadiness::NeedsWork
+        } else if deprecation_compliance < 0.8 {
+            // Deprecation policy issues
+            StableReleaseReadiness::NeedsWork
+        } else if performance_validation_score < 0.8 {
+            // Performance validation insufficient
+            StableReleaseReadiness::NeedsWork
+        } else if stability_validation_score < 0.9 {
+            // Stability validation insufficient
+            StableReleaseReadiness::NeedsWork
+        } else if test_coverage_score < 0.8 {
+            // Test coverage insufficient
             StableReleaseReadiness::NeedsWork
         } else {
             StableReleaseReadiness::Ready
         };
 
         Ok(readiness)
+    }
+
+    /// Assess performance validation readiness for stable release
+    fn assess_performance_validation_readiness(&self) -> f32 {
+        // This would check if performance benchmarks are in place
+        // For now, we'll assess based on API stability patterns
+        let mut score: f32 = 0.8; // Base score assuming basic performance considerations
+        
+        // Check if performance-critical APIs are stable
+        for result in &self.analysis_results {
+            if result.item_name.contains("interpolate") && 
+               result.stability.level == ApiStabilityLevel::Stable {
+                score += 0.05;
+            }
+        }
+        
+        score.min(1.0)
+    }
+
+    /// Assess stability validation readiness for stable release
+    fn assess_stability_validation_readiness(&self) -> f32 {
+        let stable_count = self.count_stable_items();
+        let total_count = self.count_total_api_items();
+        
+        if total_count == 0 {
+            return 0.0;
+        }
+        
+        // At least 90% of APIs should be stable for stable release
+        let stability_ratio = stable_count as f32 / total_count as f32;
+        stability_ratio
+    }
+
+    /// Assess test coverage readiness for stable release
+    fn assess_test_coverage_readiness(&self) -> f32 {
+        // This would ideally check actual test coverage
+        // For now, we'll assess based on API completeness and documentation
+        let documented_ratio = self.check_documentation_coverage().unwrap_or(0.0) / 100.0;
+        
+        // Well-documented APIs are more likely to be well-tested
+        documented_ratio * 0.9 // Conservative estimate
     }
 
     /// Helper methods
@@ -1276,7 +1482,6 @@ impl fmt::Display for ApiStabilizationReport {
 }
 
 /// Convenience functions for quick API analysis
-
 /// Run comprehensive API stabilization analysis with default configuration
 pub fn analyze_api_for_stable_release() -> InterpolateResult<ApiStabilizationReport> {
     let config = StabilizationConfig::default();

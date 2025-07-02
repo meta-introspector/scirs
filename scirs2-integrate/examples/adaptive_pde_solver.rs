@@ -70,6 +70,7 @@ pub struct AdaptivePDESolver {
     /// Performance profiler
     profiler: PerformanceProfiler,
     /// Domain size
+    #[allow(dead_code)]
     domain_size: f64,
     /// Current time
     current_time: f64,

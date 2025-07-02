@@ -82,7 +82,9 @@ pub fn gamma_f64_simd(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
 fn simd_gamma_approx_f32(x: &[f32]) -> Vec<f32> {
     // Enhanced gamma function using Lanczos approximation for better accuracy
     // Coefficients for Lanczos approximation (g=7, n=9)
+    #[allow(dead_code)]
     const G: f32 = 7.0;
+    #[allow(dead_code)]
     const LANCZOS_COEFFS: [f32; 9] = [
         0.99999999999980993,
         676.5203681218851,
@@ -160,6 +162,7 @@ fn lanczos_gamma_f32(z: f32) -> f32 {
 fn simd_gamma_approx_f64(x: &[f64]) -> Vec<f64> {
     // Enhanced gamma function using higher precision Lanczos approximation
     // Coefficients for Lanczos approximation (g=7, n=15) for better f64 precision
+    #[allow(dead_code)]
     const LANCZOS_COEFFS: [f64; 15] = [
         0.99999999999999709182,
         57.156235665862923517,

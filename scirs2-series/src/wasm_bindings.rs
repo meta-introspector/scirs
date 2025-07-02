@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     anomaly::{detect_anomalies, AnomalyMethod, AnomalyOptions},
     arima_models::{ArimaModel, ArimaSelectionOptions, SarimaParams},
-    decomposition::{stl_decompose, STLOptions},
+    decomposition::{stl_decomposition, STLOptions},
     error::Result,
     forecasting::neural::NeuralForecaster,
     utils::*,
@@ -148,7 +148,7 @@ impl WasmARIMA {
         seasonal_q: usize,
         seasonal_period: usize,
     ) -> WasmARIMA {
-        let config = ARIMAConfig {
+        let config = crate::forecasting::ArimaParams {
             p,
             d,
             q,
@@ -211,7 +211,8 @@ impl WasmARIMA {
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub struct WasmAnomalyDetector {
-    detector: AnomalyDetector,
+    method: AnomalyMethod,
+    options: AnomalyOptions,
 }
 
 #[cfg(feature = "wasm")]
@@ -221,7 +222,8 @@ impl WasmAnomalyDetector {
     #[wasm_bindgen(constructor)]
     pub fn new() -> WasmAnomalyDetector {
         WasmAnomalyDetector {
-            detector: AnomalyDetector::new(),
+            method: AnomalyMethod::ZScore,
+            options: AnomalyOptions::default(),
         }
     }
 
@@ -266,7 +268,7 @@ impl WasmAnomalyDetector {
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub struct WasmSTLDecomposition {
-    decomposition: STLDecomposition,
+    options: STLOptions,
 }
 
 #[cfg(feature = "wasm")]

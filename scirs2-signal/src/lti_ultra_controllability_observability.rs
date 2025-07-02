@@ -1019,8 +1019,9 @@ fn perform_ultra_observability_analysis(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
 ) -> SignalResult<UltraObservabilityAnalysis> {
-    // Get base enhanced analysis
-    let base_analysis = crate::lti::robust_analysis::enhanced_observability_analysis(ss, &config.base_config)?;
+    // Get base enhanced analysis using available public function
+    let control_obs_analysis = crate::lti::robust_analysis::robust_control_observability_analysis(ss, &config.base_config)?;
+    let base_analysis = control_obs_analysis.observability_analysis;
 
     // Neuromorphic measures
     let neuromorphic_measures = if config.enable_neuromorphic {

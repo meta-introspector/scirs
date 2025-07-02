@@ -29,19 +29,24 @@
 
 use ndarray::{Array1, Array2, Array3, ArrayView2};
 use scirs2_ndimage::{
+    enhanced_meta_learning_with_temporal_fusion,
     // Latest ultrathink enhancements
     enhanced_quantum_consciousness_evolution,
-    enhanced_meta_learning_with_temporal_fusion, 
     quantum_aware_resource_scheduling_optimization,
-    ultrathink_fusion_processing,
-    // Core structures
-    UltrathinkConfig, UltrathinkState, 
-    QuantumConsciousnessEvolution, ConsciousnessState, 
-    EnhancedMetaLearningSystem, QuantumAwareResourceScheduler,
-    WorkloadCharacteristics, ResourceSchedulingDecision,
-    // Quantum and neuromorphic configs
-    QuantumConfig, NeuromorphicConfig,
     quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
+    ultrathink_fusion_processing,
+    ConsciousnessState,
+    EnhancedMetaLearningSystem,
+    NeuromorphicConfig,
+    QuantumAwareResourceScheduler,
+    // Quantum and neuromorphic configs
+    QuantumConfig,
+    QuantumConsciousnessEvolution,
+    ResourceSchedulingDecision,
+    // Core structures
+    UltrathinkConfig,
+    UltrathinkState,
+    WorkloadCharacteristics,
 };
 use std::collections::HashMap;
 use std::time::Instant;
@@ -55,24 +60,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create test dataset with complex patterns
     let test_image = create_complex_test_image();
-    println!("📸 Created test image: {}x{}", test_image.nrows(), test_image.ncols());
+    println!(
+        "📸 Created test image: {}x{}",
+        test_image.nrows(),
+        test_image.ncols()
+    );
 
     // Initialize advanced ultrathink configuration
     let config = create_advanced_ultrathink_config();
     println!("⚙️ Configured advanced ultrathink parameters");
-    
+
     // Initialize consciousness evolution system
     let mut consciousness_evolution = QuantumConsciousnessEvolution::default();
     println!("🧠 Initialized quantum consciousness evolution system");
-    
+
     // Initialize enhanced meta-learning system
     let mut meta_learning_system = EnhancedMetaLearningSystem::default();
     println!("🎓 Initialized enhanced meta-learning system");
-    
+
     // Initialize quantum resource scheduler
     let mut resource_scheduler = QuantumAwareResourceScheduler::default();
     println!("⚡ Initialized quantum-aware resource scheduler");
-    
+
     println!();
 
     // Phase 1: Demonstrate Advanced Quantum Consciousness Evolution
@@ -86,15 +95,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Phase 4: Integrated Ultrathink Fusion Processing
     demonstrate_integrated_ultrathink_processing(
-        &test_image, 
-        &config, 
+        &test_image,
+        &config,
         &mut consciousness_evolution,
         &mut meta_learning_system,
-        &mut resource_scheduler
+        &mut resource_scheduler,
     )?;
 
     // Phase 5: Performance Analysis and Insights
-    analyze_ultrathink_performance(&consciousness_evolution, &meta_learning_system, &resource_scheduler)?;
+    analyze_ultrathink_performance(
+        &consciousness_evolution,
+        &meta_learning_system,
+        &resource_scheduler,
+    )?;
 
     println!();
     println!("🎉 Enhanced Ultrathink Fusion Showcase completed successfully!");
@@ -117,7 +130,7 @@ fn demonstrate_consciousness_evolution(
 
     // Create ultra-dimensional features for consciousness processing
     let ultra_features = create_mock_ultra_features(image, config);
-    
+
     // Initialize ultrathink state
     let mut ultra_state = create_mock_ultra_state(image.dim(), config);
 
@@ -135,36 +148,67 @@ fn demonstrate_consciousness_evolution(
     // Analyze consciousness evolution results
     let avg_consciousness = consciousness_output.mean().unwrap_or(0.0);
     let consciousness_variance = consciousness_output.var(0.0).mean().unwrap_or(0.0);
-    let emergence_strength = consciousness_evolution.complexity_metrics.emergence_strength;
+    let emergence_strength = consciousness_evolution
+        .complexity_metrics
+        .emergence_strength;
     let evolution_rate = consciousness_evolution.evolution_rate;
 
     println!("   📊 Consciousness Analysis Results:");
-    println!("      Average consciousness level: {:.4}", avg_consciousness);
-    println!("      Consciousness variance: {:.4}", consciousness_variance);
+    println!(
+        "      Average consciousness level: {:.4}",
+        avg_consciousness
+    );
+    println!(
+        "      Consciousness variance: {:.4}",
+        consciousness_variance
+    );
     println!("      Emergence strength: {:.4}", emergence_strength);
     println!("      Evolution rate: {:.6}", evolution_rate);
     println!("      Processing time: {:.2}ms", duration.as_millis());
-    
+
     // Display coherence optimization results
     let coherence_strategies = &consciousness_evolution.coherence_optimizer.strategies;
-    println!("   🔧 Active coherence strategies: {}", coherence_strategies.len());
-    
+    println!(
+        "   🔧 Active coherence strategies: {}",
+        coherence_strategies.len()
+    );
+
     for (i, strategy) in coherence_strategies.iter().enumerate() {
         match strategy {
-            scirs2_ndimage::CoherenceStrategy::ErrorCorrection { threshold, correction_rate } => {
-                println!("      Strategy {}: Error Correction (threshold: {:.3}, rate: {:.3})", 
-                         i + 1, threshold, correction_rate);
-            },
-            scirs2_ndimage::CoherenceStrategy::DecoherenceSuppression { suppression_strength } => {
-                println!("      Strategy {}: Decoherence Suppression (strength: {:.3})", 
-                         i + 1, suppression_strength);
-            },
-            scirs2_ndimage::CoherenceStrategy::EntanglementPurification { purification_cycles } => {
-                println!("      Strategy {}: Entanglement Purification ({} cycles)", 
-                         i + 1, purification_cycles);
-            },
+            scirs2_ndimage::CoherenceStrategy::ErrorCorrection {
+                threshold,
+                correction_rate,
+            } => {
+                println!(
+                    "      Strategy {}: Error Correction (threshold: {:.3}, rate: {:.3})",
+                    i + 1,
+                    threshold,
+                    correction_rate
+                );
+            }
+            scirs2_ndimage::CoherenceStrategy::DecoherenceSuppression {
+                suppression_strength,
+            } => {
+                println!(
+                    "      Strategy {}: Decoherence Suppression (strength: {:.3})",
+                    i + 1,
+                    suppression_strength
+                );
+            }
+            scirs2_ndimage::CoherenceStrategy::EntanglementPurification {
+                purification_cycles,
+            } => {
+                println!(
+                    "      Strategy {}: Entanglement Purification ({} cycles)",
+                    i + 1,
+                    purification_cycles
+                );
+            }
             _ => {
-                println!("      Strategy {}: Advanced quantum coherence optimization", i + 1);
+                println!(
+                    "      Strategy {}: Advanced quantum coherence optimization",
+                    i + 1
+                );
             }
         }
     }
@@ -188,7 +232,7 @@ fn demonstrate_enhanced_meta_learning(
     let consciousness_response = create_mock_response(image.dim());
     let neural_response = create_mock_response(image.dim());
     let causal_response = create_mock_response(image.dim());
-    
+
     // Initialize ultrathink state
     let mut ultra_state = create_mock_ultra_state(image.dim(), config);
 
@@ -208,16 +252,28 @@ fn demonstrate_enhanced_meta_learning(
     // Analyze meta-learning results
     let avg_output = meta_learning_output.mean().unwrap_or(0.0);
     let output_variance = meta_learning_output.var(0.0).mean().unwrap_or(0.0);
-    
+
     // Analyze temporal memory fusion
-    let short_term_memories = meta_learning_system.temporal_memory_fusion.short_term_memory.len();
-    let long_term_memories = meta_learning_system.temporal_memory_fusion.long_term_memory.len();
-    
+    let short_term_memories = meta_learning_system
+        .temporal_memory_fusion
+        .short_term_memory
+        .len();
+    let long_term_memories = meta_learning_system
+        .temporal_memory_fusion
+        .long_term_memory
+        .len();
+
     // Analyze hierarchical learning
-    let hierarchy_levels = meta_learning_system.hierarchical_learner.hierarchy_levels.len();
-    
+    let hierarchy_levels = meta_learning_system
+        .hierarchical_learner
+        .hierarchy_levels
+        .len();
+
     // Analyze strategy evolution
-    let strategy_population = meta_learning_system.strategy_evolution.strategy_population.len();
+    let strategy_population = meta_learning_system
+        .strategy_evolution
+        .strategy_population
+        .len();
 
     println!("   📊 Meta-Learning Analysis Results:");
     println!("      Average output value: {:.4}", avg_output);
@@ -230,11 +286,19 @@ fn demonstrate_enhanced_meta_learning(
 
     // Display hierarchical learning metrics
     println!("   🏗️ Hierarchical Learning Performance:");
-    for (i, level) in meta_learning_system.hierarchical_learner.hierarchy_levels.iter().enumerate() {
-        println!("      Level {}: abstraction={:.2}, learning_rate={:.4}, stability={:.3}",
-                 i, level.abstraction_degree, 
-                 level.performance_metrics.learning_rate,
-                 level.performance_metrics.stability);
+    for (i, level) in meta_learning_system
+        .hierarchical_learner
+        .hierarchy_levels
+        .iter()
+        .enumerate()
+    {
+        println!(
+            "      Level {}: abstraction={:.2}, learning_rate={:.4}, stability={:.3}",
+            i,
+            level.abstraction_degree,
+            level.performance_metrics.learning_rate,
+            level.performance_metrics.stability
+        );
     }
 
     println!();
@@ -253,7 +317,7 @@ fn demonstrate_quantum_resource_scheduling(
 
     // Create mock ultrathink state
     let mut ultra_state = create_mock_ultra_state((256, 256), config);
-    
+
     // Create workload characteristics
     let workload = create_mock_workload_characteristics();
 
@@ -274,8 +338,14 @@ fn demonstrate_quantum_resource_scheduling(
     let resource_efficiency = scheduling_decision.performance_metrics.resource_efficiency;
 
     println!("   📊 Resource Scheduling Analysis Results:");
-    println!("      Quantum coherence preservation: {:.4}", coherence_preservation);
-    println!("      Performance improvement: {:.2}x", performance_improvement);
+    println!(
+        "      Quantum coherence preservation: {:.4}",
+        coherence_preservation
+    );
+    println!(
+        "      Performance improvement: {:.2}x",
+        performance_improvement
+    );
     println!("      Quantum speedup achieved: {:.2}x", quantum_speedup);
     println!("      Resource efficiency: {:.4}", resource_efficiency);
     println!("      Processing time: {:.2}ms", duration.as_millis());
@@ -284,19 +354,19 @@ fn demonstrate_quantum_resource_scheduling(
     println!("   🔧 Active scheduling algorithms:");
     for (i, algorithm) in resource_scheduler.scheduling_algorithms.iter().enumerate() {
         match algorithm {
-            scirs2_ndimage::ultrathink_fusion_core::QuantumSchedulingAlgorithm::QuantumAnnealing { 
-                annealing_schedule, optimization_target 
+            scirs2_ndimage::ultrathink_fusion_core::QuantumSchedulingAlgorithm::QuantumAnnealing {
+                annealing_schedule, optimization_target
             } => {
                 println!("      Algorithm {}: Quantum Annealing ({} steps)", 
                          i + 1, annealing_schedule.steps);
             },
-            scirs2_ndimage::ultrathink_fusion_core::QuantumSchedulingAlgorithm::QAOA { 
-                layers, .. 
+            scirs2_ndimage::ultrathink_fusion_core::QuantumSchedulingAlgorithm::QAOA {
+                layers, ..
             } => {
                 println!("      Algorithm {}: QAOA ({} layers)", i + 1, layers);
             },
-            scirs2_ndimage::ultrathink_fusion_core::QuantumSchedulingAlgorithm::VQEScheduling { 
-                ansatz, .. 
+            scirs2_ndimage::ultrathink_fusion_core::QuantumSchedulingAlgorithm::VQEScheduling {
+                ansatz, ..
             } => {
                 println!("      Algorithm {}: VQE Scheduling (ansatz: {})", i + 1, ansatz);
             },
@@ -308,16 +378,21 @@ fn demonstrate_quantum_resource_scheduling(
 
     // Display load balancing strategies
     println!("   ⚖️ Load balancing strategies:");
-    for (i, strategy) in resource_scheduler.quantum_load_balancer.strategies.iter().enumerate() {
+    for (i, strategy) in resource_scheduler
+        .quantum_load_balancer
+        .strategies
+        .iter()
+        .enumerate()
+    {
         match strategy {
-            scirs2_ndimage::ultrathink_fusion_core::QuantumLoadBalancingStrategy::QuantumSuperposition { 
-                measurement_basis, .. 
+            scirs2_ndimage::ultrathink_fusion_core::QuantumLoadBalancingStrategy::QuantumSuperposition {
+                measurement_basis, ..
             } => {
                 println!("      Strategy {}: Quantum Superposition (basis: {})", 
                          i + 1, measurement_basis);
             },
-            scirs2_ndimage::ultrathink_fusion_core::QuantumLoadBalancingStrategy::EntanglementSharing { 
-                entanglement_strength, .. 
+            scirs2_ndimage::ultrathink_fusion_core::QuantumLoadBalancingStrategy::EntanglementSharing {
+                entanglement_strength, ..
             } => {
                 println!("      Strategy {}: Entanglement Sharing (strength: {:.3})", 
                          i + 1, entanglement_strength);
@@ -349,11 +424,8 @@ fn demonstrate_integrated_ultrathink_processing(
     let mut ultra_state = create_mock_ultra_state(image.dim(), config);
 
     // Perform integrated ultrathink fusion processing
-    let (processed_image, final_state) = ultrathink_fusion_processing(
-        image.view(),
-        config,
-        Some(ultra_state),
-    )?;
+    let (processed_image, final_state) =
+        ultrathink_fusion_processing(image.view(), config, Some(ultra_state))?;
 
     let duration = start_time.elapsed();
 
@@ -361,7 +433,7 @@ fn demonstrate_integrated_ultrathink_processing(
     let original_mean = image.mean().unwrap_or(0.0);
     let processed_mean = processed_image.mean().unwrap_or(0.0);
     let improvement_ratio = processed_mean / original_mean.max(1e-10);
-    
+
     let final_consciousness_level = final_state.efficiency_metrics.quality_efficiency;
     let final_efficiency = final_state.efficiency_metrics.ops_per_second;
 
@@ -369,17 +441,30 @@ fn demonstrate_integrated_ultrathink_processing(
     println!("      Original image mean: {:.4}", original_mean);
     println!("      Processed image mean: {:.4}", processed_mean);
     println!("      Processing improvement: {:.2}x", improvement_ratio);
-    println!("      Final consciousness level: {:.4}", final_consciousness_level);
+    println!(
+        "      Final consciousness level: {:.4}",
+        final_consciousness_level
+    );
     println!("      Operations per second: {:.0}", final_efficiency);
     println!("      Total processing time: {:.2}ms", duration.as_millis());
 
     // Display ultrathink system convergence
     println!("   🎯 System Convergence Metrics:");
-    println!("      Consciousness emergence: {:.4}", 
-             consciousness_evolution.complexity_metrics.emergence_strength);
+    println!(
+        "      Consciousness emergence: {:.4}",
+        consciousness_evolution
+            .complexity_metrics
+            .emergence_strength
+    );
     println!("      Meta-learning adaptation: Active");
-    println!("      Resource optimization: {:.2}% efficiency", 
-             resource_scheduler.performance_monitor.metrics.resource_efficiency * 100.0);
+    println!(
+        "      Resource optimization: {:.2}% efficiency",
+        resource_scheduler
+            .performance_monitor
+            .metrics
+            .resource_efficiency
+            * 100.0
+    );
 
     println!();
     Ok(())
@@ -396,10 +481,10 @@ fn analyze_ultrathink_performance(
 
     // Consciousness evolution analysis
     let consciousness_insights = analyze_consciousness_insights(consciousness_evolution);
-    
+
     // Meta-learning analysis
     let meta_learning_insights = analyze_meta_learning_insights(meta_learning_system);
-    
+
     // Resource scheduling analysis
     let scheduling_insights = analyze_scheduling_insights(resource_scheduler);
 
@@ -433,21 +518,21 @@ fn analyze_ultrathink_performance(
 fn create_complex_test_image() -> Array2<f64> {
     let size = 128;
     let mut image = Array2::zeros((size, size));
-    
+
     for y in 0..size {
         for x in 0..size {
             let fx = x as f64 / size as f64;
             let fy = y as f64 / size as f64;
-            
+
             // Create complex pattern with multiple frequency components
-            let value = (fx * 10.0).sin() * (fy * 15.0).cos() 
+            let value = (fx * 10.0).sin() * (fy * 15.0).cos()
                 + 0.5 * (fx * fy * 50.0).sin()
                 + 0.3 * ((fx - 0.5).powi(2) + (fy - 0.5).powi(2)).sqrt().cos();
-            
+
             image[(y, x)] = (value + 1.0) / 2.0; // Normalize to [0, 1]
         }
     }
-    
+
     image
 }
 
@@ -509,7 +594,7 @@ fn create_mock_ultra_state(shape: (usize, usize), config: &UltrathinkConfig) -> 
                     consciousness_emergence: 0.6,
                     efficiency: 0.85,
                 },
-            }
+            },
         )),
         temporal_memory: std::collections::VecDeque::new(),
         causal_graph: std::collections::BTreeMap::new(),
@@ -529,16 +614,16 @@ fn create_mock_ultra_state(shape: (usize, usize), config: &UltrathinkConfig) -> 
             temporal_efficiency: 0.8,
         },
     };
-    
+
     // Fill consciousness amplitudes with some initial values
     state.consciousness_amplitudes.fill(0.5);
-    
+
     state
 }
 
 fn create_mock_response(shape: (usize, usize)) -> Array2<f64> {
     let mut response = Array2::zeros(shape);
-    
+
     for y in 0..shape.0 {
         for x in 0..shape.1 {
             let fx = x as f64 / shape.1 as f64;
@@ -546,19 +631,26 @@ fn create_mock_response(shape: (usize, usize)) -> Array2<f64> {
             response[(y, x)] = (fx + fy) / 2.0;
         }
     }
-    
+
     response
 }
 
 fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
     let mut task_types = HashMap::new();
-    task_types.insert("image_processing".to_string(), scirs2_ndimage::ultrathink_fusion_core::QuantumTaskRequirements {
-        qubit_requirement: 16,
-        coherence_requirement: 50.0,
-        gate_operations: vec!["hadamard".to_string(), "cnot".to_string(), "rotation".to_string()],
-        classical_ratio: 0.7,
-    });
-    
+    task_types.insert(
+        "image_processing".to_string(),
+        scirs2_ndimage::ultrathink_fusion_core::QuantumTaskRequirements {
+            qubit_requirement: 16,
+            coherence_requirement: 50.0,
+            gate_operations: vec![
+                "hadamard".to_string(),
+                "cnot".to_string(),
+                "rotation".to_string(),
+            ],
+            classical_ratio: 0.7,
+        },
+    );
+
     WorkloadCharacteristics {
         task_types,
         intensity_pattern: vec![0.5, 0.7, 0.9, 0.8, 0.6, 0.4, 0.3, 0.5, 0.8, 0.9],
@@ -576,66 +668,88 @@ fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
 
 fn analyze_consciousness_insights(evolution: &QuantumConsciousnessEvolution) -> Vec<String> {
     let mut insights = Vec::new();
-    
+
     if evolution.complexity_metrics.emergence_strength > 0.7 {
-        insights.push("High consciousness emergence detected - system showing advanced awareness".to_string());
+        insights.push(
+            "High consciousness emergence detected - system showing advanced awareness".to_string(),
+        );
     }
-    
+
     if evolution.evolution_rate > 0.05 {
-        insights.push("Rapid consciousness evolution - adaptive parameters responding well".to_string());
+        insights.push(
+            "Rapid consciousness evolution - adaptive parameters responding well".to_string(),
+        );
     }
-    
+
     if evolution.coherence_optimizer.performance_history.len() > 10 {
-        insights.push("Extensive coherence optimization history - system learning effectively".to_string());
+        insights.push(
+            "Extensive coherence optimization history - system learning effectively".to_string(),
+        );
     }
-    
-    insights.push(format!("Consciousness complexity: {:.3} (integrated information)", 
-                         evolution.complexity_metrics.integrated_information));
-    
+
+    insights.push(format!(
+        "Consciousness complexity: {:.3} (integrated information)",
+        evolution.complexity_metrics.integrated_information
+    ));
+
     insights
 }
 
 fn analyze_meta_learning_insights(system: &EnhancedMetaLearningSystem) -> Vec<String> {
     let mut insights = Vec::new();
-    
-    let memory_count = system.temporal_memory_fusion.short_term_memory.len() + 
-                      system.temporal_memory_fusion.long_term_memory.len();
-    
+
+    let memory_count = system.temporal_memory_fusion.short_term_memory.len()
+        + system.temporal_memory_fusion.long_term_memory.len();
+
     if memory_count > 15 {
         insights.push("Rich memory system - excellent temporal pattern retention".to_string());
     }
-    
+
     if system.hierarchical_learner.hierarchy_levels.len() >= 3 {
-        insights.push("Multi-level hierarchical learning active - good abstraction capability".to_string());
+        insights.push(
+            "Multi-level hierarchical learning active - good abstraction capability".to_string(),
+        );
     }
-    
+
     if system.strategy_evolution.strategy_population.len() > 50 {
-        insights.push("Large strategy population - diverse optimization approaches available".to_string());
+        insights.push(
+            "Large strategy population - diverse optimization approaches available".to_string(),
+        );
     }
-    
-    insights.push(format!("Hierarchical learning levels: {}", 
-                         system.hierarchical_learner.hierarchy_levels.len()));
-    
+
+    insights.push(format!(
+        "Hierarchical learning levels: {}",
+        system.hierarchical_learner.hierarchy_levels.len()
+    ));
+
     insights
 }
 
 fn analyze_scheduling_insights(scheduler: &QuantumAwareResourceScheduler) -> Vec<String> {
     let mut insights = Vec::new();
-    
+
     if scheduler.performance_monitor.metrics.quantum_speedup > 1.5 {
-        insights.push("Significant quantum speedup achieved - quantum advantage demonstrated".to_string());
+        insights.push(
+            "Significant quantum speedup achieved - quantum advantage demonstrated".to_string(),
+        );
     }
-    
+
     if scheduler.performance_monitor.metrics.resource_efficiency > 0.8 {
-        insights.push("High resource efficiency - optimal utilization of available resources".to_string());
+        insights.push(
+            "High resource efficiency - optimal utilization of available resources".to_string(),
+        );
     }
-    
+
     if scheduler.scheduling_algorithms.len() >= 2 {
-        insights.push("Multiple scheduling algorithms active - adaptive optimization strategies".to_string());
+        insights.push(
+            "Multiple scheduling algorithms active - adaptive optimization strategies".to_string(),
+        );
     }
-    
-    insights.push(format!("Quantum coherence efficiency: {:.1}%", 
-                         scheduler.performance_monitor.metrics.coherence_efficiency * 100.0));
-    
+
+    insights.push(format!(
+        "Quantum coherence efficiency: {:.1}%",
+        scheduler.performance_monitor.metrics.coherence_efficiency * 100.0
+    ));
+
     insights
 }

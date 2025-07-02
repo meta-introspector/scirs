@@ -4,10 +4,10 @@
 //! for data transformation tasks, including data validation, memory optimization,
 //! and performance helpers.
 
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix2, par_azip};
+use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix2, par_azip, Zip};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::{check_finite, check_not_empty};
+use scirs2_core::validation::{check_not_empty};
 use std::collections::HashMap;
 
 use crate::error::{Result, TransformError};
@@ -97,7 +97,11 @@ impl TypeConverter {
         let result = if array.is_standard_layout() {
             // Use parallel processing for large arrays
             if array.len() > 10000 {
-                array.par_mapv(|x| num_traits::cast::<T, f64>(x).unwrap_or(0.0))
+                let mut result = Array2::zeros(array.raw_dim());
+                Zip::from(&mut result).and(array).par_for_each(|out, &inp| {
+                    *out = num_traits::cast::<T, f64>(inp).unwrap_or(0.0);
+                });
+                result
             } else {
                 array.mapv(|x| num_traits::cast::<T, f64>(x).unwrap_or(0.0))
             }
@@ -114,7 +118,13 @@ impl TypeConverter {
         };
 
         // Validate result for non-finite values
-        check_finite(&result, "converted_array")?;
+        for &val in result.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Array contains non-finite values after conversion".to_string(),
+                ));
+            }
+        }
         Ok(result)
     }
 
@@ -123,29 +133,47 @@ impl TypeConverter {
         check_not_empty(array, "array")?;
 
         let result = if array.len() > 10000 {
-            array.par_mapv(|x| x as f64)
+            let mut result = Array2::zeros(array.raw_dim());
+            Zip::from(&mut result).and(array).par_for_each(|out, &inp| {
+                *out = inp as f64;
+            });
+            result
         } else {
             array.mapv(|x| x as f64)
         };
 
-        check_finite(&result, "converted_array")?;
+        for &val in result.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Array contains non-finite values after conversion".to_string(),
+                ));
+            }
+        }
         Ok(result)
     }
 
     /// Convert f64 array to f32 with overflow checking
     pub fn f64_to_f32_safe(array: &ArrayView2<f64>) -> Result<Array2<f32>> {
         check_not_empty(array, "array")?;
-        check_finite(array, "array")?;
-
-        let result = array.try_mapv(|&x| {
-            if x.abs() > f32::MAX as f64 {
-                Err(TransformError::DataValidationError(
-                    "Value too large for f32 conversion".to_string(),
-                ))
-            } else {
-                Ok(x as f32)
+        
+        // Check finite values
+        for &val in array.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Array contains non-finite values".to_string(),
+                ));
             }
-        })?;
+        }
+
+        let mut result = Array2::zeros(array.raw_dim());
+        for (out, &inp) in result.iter_mut().zip(array.iter()) {
+            if inp.abs() > f32::MAX as f64 {
+                return Err(TransformError::DataValidationError(
+                    "Value too large for f32 conversion".to_string(),
+                ));
+            }
+            *out = inp as f32;
+        }
 
         Ok(result)
     }
@@ -158,7 +186,15 @@ impl StatUtils {
     /// Calculate robust statistics (median, MAD) efficiently
     pub fn robust_stats(data: &ArrayView1<f64>) -> Result<(f64, f64)> {
         check_not_empty(data, "data")?;
-        check_finite(data, "data")?;
+        
+        // Check finite values
+        for &val in data.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         let mut sorted_data = data.to_vec();
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
@@ -186,7 +222,15 @@ impl StatUtils {
     /// Calculate column-wise robust statistics in parallel
     pub fn robust_stats_columns(data: &ArrayView2<f64>) -> Result<(Array1<f64>, Array1<f64>)> {
         check_not_empty(data, "data")?;
-        check_finite(data, "data")?;
+        
+        // Check finite values
+        for &val in data.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         let n_features = data.ncols();
         let mut medians = Array1::zeros(n_features);
@@ -214,7 +258,15 @@ impl StatUtils {
     /// Detect outliers using IQR method
     pub fn detect_outliers_iqr(data: &ArrayView1<f64>, factor: f64) -> Result<Vec<bool>> {
         check_not_empty(data, "data")?;
-        check_finite(data, "data")?;
+        
+        // Check finite values
+        for &val in data.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         if factor <= 0.0 {
             return Err(TransformError::InvalidInput(
@@ -424,7 +476,15 @@ impl ValidationUtils {
         transformation: &str,
     ) -> Result<()> {
         check_not_empty(data, "data")?;
-        check_finite(data, "data")?;
+        
+        // Check finite values
+        for &val in data.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         let (n_samples, n_features) = data.dim();
 

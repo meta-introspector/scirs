@@ -204,7 +204,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> Graph<N, E, Ix> {
             if let Some(edge_ref) = self.graph.find_edge(src_idx, tgt_idx) {
                 Ok(self.graph[edge_ref].clone())
             } else {
-                Err(GraphError::EdgeNotFound)
+                Err(GraphError::edge_not_found("unknown", "unknown"))
             }
         } else {
             Err(GraphError::node_not_found("unknown node"))
@@ -421,7 +421,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> DiGraph<N, E, Ix> {
             if let Some(edge_ref) = self.graph.find_edge(src_idx, tgt_idx) {
                 Ok(self.graph[edge_ref].clone())
             } else {
-                Err(GraphError::EdgeNotFound)
+                Err(GraphError::edge_not_found("unknown", "unknown"))
             }
         } else {
             Err(GraphError::node_not_found("unknown node"))
@@ -583,7 +583,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> MultiGraph<N, E, Ix> {
 
             Ok(edge)
         } else {
-            Err(GraphError::EdgeNotFound)
+            Err(GraphError::edge_not_found("unknown", "unknown"))
         }
     }
 
@@ -736,7 +736,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> MultiDiGraph<N, E, Ix> {
 
             Ok(edge)
         } else {
-            Err(GraphError::EdgeNotFound)
+            Err(GraphError::edge_not_found("unknown", "unknown"))
         }
     }
 
@@ -1250,7 +1250,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, Ix> {
                 weight,
             })
         } else {
-            Err(GraphError::EdgeNotFound)
+            Err(GraphError::edge_not_found("unknown", "unknown"))
         }
     }
 

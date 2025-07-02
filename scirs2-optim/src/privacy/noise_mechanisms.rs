@@ -4,13 +4,13 @@
 //! including Gaussian, Laplace, Exponential, and advanced mechanisms like
 //! tree aggregation and truncated noise.
 
-use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
-use ndarray_rand::rand_distr::{Distribution, Exp, Normal};
+use ndarray::{s, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
+use ndarray_rand::rand_distr::{Distribution, Normal};
 use num_traits::Float;
 use rand::Rng;
 use std::marker::PhantomData;
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 
 /// Trait for differential privacy noise mechanisms
 pub trait NoiseMechanism<T: Float> {
@@ -21,7 +21,7 @@ pub trait NoiseMechanism<T: Float> {
         sensitivity: T,
         epsilon: T,
         delta: Option<T>,
-    ) -> Result<(), OptimizerError>
+    ) -> Result<(), OptimError>
     where
         S: DataMut<Elem = T>,
         D: Dimension;
@@ -151,9 +151,9 @@ where
     }
 
     /// Compute noise scale for Gaussian mechanism
-    pub fn compute_noise_scale(sensitivity: T, epsilon: T, delta: T) -> Result<T, OptimizerError> {
+    pub fn compute_noise_scale(sensitivity: T, epsilon: T, delta: T) -> Result<T, OptimError> {
         if epsilon <= T::zero() || delta <= T::zero() || delta >= T::one() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Invalid privacy parameters for Gaussian mechanism".to_string(),
             ));
         }
@@ -176,20 +176,20 @@ where
         sensitivity: T,
         epsilon: T,
         delta: Option<T>,
-    ) -> Result<(), OptimizerError>
+    ) -> Result<(), OptimError>
     where
         S: DataMut<Elem = T>,
         D: Dimension,
     {
         let delta = delta.ok_or_else(|| {
-            OptimizerError::InvalidConfig("Gaussian mechanism requires delta parameter".to_string())
+            OptimError::InvalidConfig("Gaussian mechanism requires delta parameter".to_string())
         })?;
 
         let sigma = Self::compute_noise_scale(sensitivity, epsilon, delta)?;
         let sigma_f64 = sigma.to_f64().unwrap_or(1.0);
 
         let normal = Normal::new(0.0, sigma_f64)
-            .map_err(|_| OptimizerError::InvalidConfig("Invalid noise parameters".to_string()))?;
+            .map_err(|_| OptimError::InvalidConfig("Invalid noise parameters".to_string()))?;
 
         data.mapv_inplace(|x| {
             let noise = T::from(normal.sample(&mut *self.rng)).unwrap();
@@ -233,9 +233,9 @@ where
     }
 
     /// Compute noise scale for Laplace mechanism
-    pub fn compute_noise_scale(sensitivity: T, epsilon: T) -> Result<T, OptimizerError> {
+    pub fn compute_noise_scale(sensitivity: T, epsilon: T) -> Result<T, OptimError> {
         if epsilon <= T::zero() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Epsilon must be positive for Laplace mechanism".to_string(),
             ));
         }
@@ -255,7 +255,7 @@ where
         sensitivity: T,
         epsilon: T,
         _delta: Option<T>,
-    ) -> Result<(), OptimizerError>
+    ) -> Result<(), OptimError>
     where
         S: DataMut<Elem = T>,
         D: Dimension,
@@ -321,9 +321,9 @@ where
         candidates: &[T],
         sensitivity: T,
         epsilon: T,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         if candidates.is_empty() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "No candidates provided".to_string(),
             ));
         }
@@ -386,7 +386,7 @@ where
         sensitivity: T,
         epsilon: T,
         delta: Option<T>,
-    ) -> Result<(), OptimizerError>
+    ) -> Result<(), OptimError>
     where
         S: DataMut<Elem = T>,
         D: Dimension,
@@ -436,7 +436,7 @@ where
         sensitivity: T,
         epsilon: T,
         delta: Option<T>,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         if values.is_empty() {
             return Ok(T::zero());
         }
@@ -495,7 +495,7 @@ where
         sensitivity: T,
         epsilon: T,
         delta: Option<T>,
-    ) -> Result<Option<T>, OptimizerError> {
+    ) -> Result<Option<T>, OptimError> {
         if self.queries_answered >= self.max_queries {
             return Ok(None);
         }
@@ -587,7 +587,7 @@ where
         &mut self,
         data: &mut ArrayBase<S, D>,
         actual_sensitivity: Option<T>,
-    ) -> Result<NoiseCalibrationResult<T>, OptimizerError>
+    ) -> Result<NoiseCalibrationResult<T>, OptimError>
     where
         S: DataMut<Elem = T>,
         D: Dimension,
@@ -663,14 +663,14 @@ pub fn generate_correlated_gaussian_noise<T>(
     correlation_matrix: &Array2<T>,
     scale: T,
     rng: &mut dyn rand::RngCore,
-) -> Result<Array2<T>, OptimizerError>
+) -> Result<Array2<T>, OptimError>
 where
     T: Float + Default + Clone + rand_distr::uniform::SampleUniform,
 {
     let (rows, cols) = shape;
 
     if correlation_matrix.nrows() != cols || correlation_matrix.ncols() != cols {
-        return Err(OptimizerError::InvalidConfig(
+        return Err(OptimError::InvalidConfig(
             "Correlation matrix dimensions mismatch".to_string(),
         ));
     }
@@ -678,7 +678,7 @@ where
     let mut noise = Array2::zeros((rows, cols));
     let scale_f64 = scale.to_f64().unwrap_or(1.0);
     let normal = Normal::new(0.0, scale_f64)
-        .map_err(|_| OptimizerError::InvalidConfig("Invalid noise scale".to_string()))?;
+        .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
 
     // Generate independent noise
     for i in 0..rows {
@@ -703,16 +703,16 @@ where
 pub fn validate_privacy_parameters<T: Float>(
     epsilon: T,
     delta: Option<T>,
-) -> Result<(), OptimizerError> {
+) -> Result<(), OptimError> {
     if epsilon <= T::zero() {
-        return Err(OptimizerError::InvalidConfig(
+        return Err(OptimError::InvalidConfig(
             "Epsilon must be positive".to_string(),
         ));
     }
 
     if let Some(d) = delta {
         if d < T::zero() || d >= T::one() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Delta must be in [0, 1)".to_string(),
             ));
         }

@@ -590,14 +590,18 @@ impl QuantumSparseProcessor {
         let mut j = 0;
 
         while i < cols1.len() && j < cols2.len() {
-            if cols1[i] == cols2[j] {
-                shared += 1;
-                i += 1;
-                j += 1;
-            } else if cols1[i] < cols2[j] {
-                i += 1;
-            } else {
-                j += 1;
+            match cols1[i].cmp(&cols2[j]) {
+                std::cmp::Ordering::Equal => {
+                    shared += 1;
+                    i += 1;
+                    j += 1;
+                }
+                std::cmp::Ordering::Less => {
+                    i += 1;
+                }
+                std::cmp::Ordering::Greater => {
+                    j += 1;
+                }
             }
         }
 

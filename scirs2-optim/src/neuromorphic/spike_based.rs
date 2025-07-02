@@ -7,7 +7,7 @@ use super::{
     Spike, SpikeTrain, NeuromorphicMetrics, STDPConfig, MembraneDynamicsConfig,
     PlasticityModel, NeuromorphicEvent, EventPriority
 };
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 use ndarray::{Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;
@@ -242,7 +242,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Encode continuous input as spike trains
-    pub fn encode_input(&self, input: &Array1<T>) -> Result<Vec<SpikeTrain<T>>, OptimizerError> {
+    pub fn encode_input(&self, input: &Array1<T>) -> Result<Vec<SpikeTrain<T>>, OptimError> {
         let mut spike_trains = Vec::new();
         
         for (neuron_id, &value) in input.iter().enumerate() {
@@ -272,7 +272,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Rate encoding: firing rate proportional to input value
-    fn rate_encode(&self, neuron_id: usize, value: T) -> Result<SpikeTrain<T>, OptimizerError> {
+    fn rate_encode(&self, neuron_id: usize, value: T) -> Result<SpikeTrain<T>, OptimError> {
         let max_rate = T::from(100.0).unwrap(); // 100 Hz max
         let firing_rate = value.abs() * max_rate;
         
@@ -296,7 +296,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Temporal encoding: spike time inversely proportional to input value
-    fn temporal_encode(&self, neuron_id: usize, value: T) -> Result<SpikeTrain<T>, OptimizerError> {
+    fn temporal_encode(&self, neuron_id: usize, value: T) -> Result<SpikeTrain<T>, OptimError> {
         let max_delay = T::from(20.0).unwrap(); // 20 ms max delay
         let spike_time = if value > T::zero() {
             max_delay * (T::one() - value.min(T::one()))
@@ -314,13 +314,13 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Population vector encoding
-    fn population_vector_encode(&self, neuron_id: usize, value: T) -> Result<SpikeTrain<T>, OptimizerError> {
+    fn population_vector_encode(&self, neuron_id: usize, value: T) -> Result<SpikeTrain<T>, OptimError> {
         // Simplified population vector encoding
         self.rate_encode(neuron_id, value)
     }
     
     /// Sparse encoding: only strong inputs generate spikes
-    fn sparse_encode(&self, neuron_id: usize, value: T) -> Result<SpikeTrain<T>, OptimizerError> {
+    fn sparse_encode(&self, neuron_id: usize, value: T) -> Result<SpikeTrain<T>, OptimError> {
         let threshold = T::from(0.5).unwrap();
         
         if value.abs() > threshold {
@@ -331,7 +331,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Decode spike trains to continuous output
-    pub fn decode_output(&self, spike_trains: &[SpikeTrain<T>]) -> Result<Array1<T>, OptimizerError> {
+    pub fn decode_output(&self, spike_trains: &[SpikeTrain<T>]) -> Result<Array1<T>, OptimError> {
         let mut output = Array1::zeros(spike_trains.len());
         
         for (i, spike_train) in spike_trains.iter().enumerate() {
@@ -356,7 +356,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Rate decoding: spike count normalized by time window
-    fn rate_decode(&self, spike_train: &SpikeTrain<T>) -> Result<T, OptimizerError> {
+    fn rate_decode(&self, spike_train: &SpikeTrain<T>) -> Result<T, OptimError> {
         let window_duration = self.config.temporal_window;
         let spike_count = T::from(spike_train.spike_count).unwrap();
         let rate = spike_count / (window_duration / T::from(1000.0).unwrap());
@@ -364,7 +364,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Temporal decoding: use first spike time
-    fn temporal_decode(&self, spike_train: &SpikeTrain<T>) -> Result<T, OptimizerError> {
+    fn temporal_decode(&self, spike_train: &SpikeTrain<T>) -> Result<T, OptimError> {
         if spike_train.spike_times.is_empty() {
             Ok(T::zero())
         } else {
@@ -375,7 +375,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Weighted spike count decoding
-    fn weighted_spike_count_decode(&self, spike_train: &SpikeTrain<T>) -> Result<T, OptimizerError> {
+    fn weighted_spike_count_decode(&self, spike_train: &SpikeTrain<T>) -> Result<T, OptimError> {
         if spike_train.spike_times.is_empty() {
             return Ok(T::zero());
         }
@@ -393,7 +393,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Simulate membrane dynamics for one time step
-    pub fn simulate_step(&mut self, input_spikes: &[Spike<T>]) -> Result<Vec<Spike<T>>, OptimizerError> {
+    pub fn simulate_step(&mut self, input_spikes: &[Spike<T>]) -> Result<Vec<Spike<T>>, OptimError> {
         let mut output_spikes = Vec::new();
         let dt = self.config.time_step;
         
@@ -429,7 +429,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Process an input spike
-    fn process_input_spike(&mut self, spike: &Spike<T>) -> Result<(), OptimizerError> {
+    fn process_input_spike(&mut self, spike: &Spike<T>) -> Result<(), OptimError> {
         let target_neuron = spike.postsynaptic_id.unwrap_or(spike.neuron_id);
         
         if target_neuron < self.membrane_potentials.len() {
@@ -443,7 +443,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Update membrane potential using leaky integrate-and-fire model
-    fn update_membrane_potential(&mut self, neuron_id: usize, dt: T) -> Result<(), OptimizerError> {
+    fn update_membrane_potential(&mut self, neuron_id: usize, dt: T) -> Result<(), OptimError> {
         let v = self.membrane_potentials[neuron_id];
         let v_rest = self.membrane_config.resting_potential;
         let tau = self.membrane_config.tau_membrane;
@@ -458,7 +458,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Generate a spike when threshold is reached
-    fn generate_spike(&mut self, neuron_id: usize) -> Result<Spike<T>, OptimizerError> {
+    fn generate_spike(&mut self, neuron_id: usize) -> Result<Spike<T>, OptimError> {
         // Reset membrane potential
         self.membrane_potentials[neuron_id] = self.membrane_config.reset_potential;
         
@@ -496,7 +496,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Update synaptic plasticity
-    fn update_plasticity(&mut self, output_spikes: &[Spike<T>]) -> Result<(), OptimizerError> {
+    fn update_plasticity(&mut self, output_spikes: &[Spike<T>]) -> Result<(), OptimError> {
         match self.plasticity_model {
             PlasticityModel::STDP => {
                 self.update_stdp(output_spikes)?;
@@ -514,7 +514,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Update STDP (Spike Timing Dependent Plasticity)
-    fn update_stdp(&mut self, output_spikes: &[Spike<T>]) -> Result<(), OptimizerError> {
+    fn update_stdp(&mut self, output_spikes: &[Spike<T>]) -> Result<(), OptimError> {
         for spike in output_spikes {
             let post_id = spike.neuron_id;
             let post_time = spike.time;
@@ -555,7 +555,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Update Hebbian plasticity
-    fn update_hebbian(&mut self, output_spikes: &[Spike<T>]) -> Result<(), OptimizerError> {
+    fn update_hebbian(&mut self, output_spikes: &[Spike<T>]) -> Result<(), OptimError> {
         // Simplified Hebbian learning
         for spike in output_spikes {
             let post_id = spike.neuron_id;
@@ -579,7 +579,7 @@ impl<T: Float> SpikingOptimizer<T> {
     }
     
     /// Update homeostatic scaling
-    fn update_homeostatic_scaling(&mut self) -> Result<(), OptimizerError> {
+    fn update_homeostatic_scaling(&mut self) -> Result<(), OptimError> {
         let target_rate = self.config.homeostatic_config.target_firing_rate;
         let time_constant = self.config.homeostatic_config.scaling_time_constant;
         let dt = self.config.time_step;
@@ -706,7 +706,7 @@ impl<T: Float> SpikeTrainOptimizer<T> {
     }
     
     /// Learn spike patterns from training data
-    pub fn learn_patterns(&mut self, spike_trains: &[SpikeTrain<T>]) -> Result<(), OptimizerError> {
+    pub fn learn_patterns(&mut self, spike_trains: &[SpikeTrain<T>]) -> Result<(), OptimError> {
         for spike_train in spike_trains {
             self.extract_and_learn_patterns(spike_train)?;
         }
@@ -715,7 +715,7 @@ impl<T: Float> SpikeTrainOptimizer<T> {
     }
     
     /// Extract patterns from a spike train
-    fn extract_and_learn_patterns(&mut self, spike_train: &SpikeTrain<T>) -> Result<(), OptimizerError> {
+    fn extract_and_learn_patterns(&mut self, spike_train: &SpikeTrain<T>) -> Result<(), OptimError> {
         let window_size = T::from(50.0).unwrap(); // 50 ms windows
         let step_size = T::from(10.0).unwrap();   // 10 ms steps
         
@@ -829,7 +829,7 @@ impl<T: Float> SpikeTrainOptimizer<T> {
     }
     
     /// Update existing pattern with new observation
-    fn update_pattern(&mut self, pattern_id: usize, new_pattern: &SpikePattern<T>) -> Result<(), OptimizerError> {
+    fn update_pattern(&mut self, pattern_id: usize, new_pattern: &SpikePattern<T>) -> Result<(), OptimError> {
         if let Some(existing_pattern) = self.pattern_templates.get_mut(pattern_id) {
             // Update pattern using exponential moving average
             let alpha = self.pattern_learning_rate;
@@ -851,7 +851,7 @@ impl<T: Float> SpikeTrainOptimizer<T> {
     }
     
     /// Recognize patterns in new spike train
-    pub fn recognize_patterns(&self, spike_train: &SpikeTrain<T>) -> Result<Vec<(usize, T, T)>, OptimizerError> {
+    pub fn recognize_patterns(&self, spike_train: &SpikeTrain<T>) -> Result<Vec<(usize, T, T)>, OptimError> {
         let mut recognized_patterns = Vec::new();
         let window_size = T::from(50.0).unwrap();
         let step_size = T::from(5.0).unwrap();

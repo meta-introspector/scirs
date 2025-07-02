@@ -12,7 +12,7 @@ use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKe
 #[cfg(feature = "cuda")]
 use cudarc::driver::sys::{CUcontext, CUdevice, CUdeviceptr};
 #[cfg(feature = "cuda")]
-use cudarc::driver::{CudaDevice, DevicePtr};
+use cudarc::driver::{CudaDevice, CudaSlice, DevicePtr};
 #[cfg(feature = "cuda")]
 use cudarc::nvrtc::Ptx;
 
@@ -349,7 +349,7 @@ impl CudaContext {
 
     /// Allocate device memory
     #[cfg(feature = "cuda")]
-    pub fn allocate_device_memory(&self, size: usize) -> Result<DevicePtr<u8>, GpuError> {
+    pub fn allocate_device_memory(&self, size: usize) -> Result<CudaSlice<u8>, GpuError> {
         self.device
             .alloc_zeros::<u8>(size)
             .map_err(|e| GpuError::Other(format!("CUDA memory allocation failed: {}", e)))
@@ -364,7 +364,7 @@ impl CudaContext {
 
     /// Free device memory
     #[cfg(feature = "cuda")]
-    pub fn free_device_memory(&self, _ptr: DevicePtr<u8>) -> Result<(), GpuError> {
+    pub fn free_device_memory(&self, _ptr: CudaSlice<u8>) -> Result<(), GpuError> {
         // DevicePtr automatically deallocates when dropped
         Ok(())
     }
@@ -431,7 +431,6 @@ impl GpuBufferImpl for CudaBuffer {
         #[cfg(feature = "cuda")]
         {
             // Real CUDA implementation using cudarc
-            use cudarc::driver::safe;
 
             let device_ptr = DevicePtr::from_raw(self.device_ptr as *mut u8);
             let host_slice = std::slice::from_raw_parts(data, size);

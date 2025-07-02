@@ -3,12 +3,11 @@
 //! This module provides detailed performance metrics, monitoring capabilities,
 //! and analytics for streaming optimization systems.
 
-use ndarray::{Array1, Array2};
 use num_traits::Float;
-use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::collections::{BTreeMap, HashMap};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 
 /// Streaming metrics collector and analyzer
 #[derive(Debug)]
@@ -789,7 +788,7 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
     }
 
     /// Record a new metrics sample
-    pub fn record_sample(&mut self, sample: MetricsSample<A>) -> Result<(), OptimizerError> {
+    pub fn record_sample(&mut self, sample: MetricsSample<A>) -> Result<(), OptimError> {
         // Update current metrics
         self.update_performance_metrics(&sample)?;
         self.update_resource_metrics(&sample)?;
@@ -834,7 +833,7 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
         &self,
         start_time: SystemTime,
         end_time: SystemTime,
-    ) -> Result<Vec<MetricsSnapshot<A>>, OptimizerError> {
+    ) -> Result<Vec<MetricsSnapshot<A>>, OptimError> {
         self.historical_data.get_range(start_time, end_time)
     }
 
@@ -844,13 +843,13 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
         period: AggregationPeriod,
         start_time: SystemTime,
         end_time: SystemTime,
-    ) -> Result<Vec<AggregatedMetrics<A>>, OptimizerError> {
+    ) -> Result<Vec<AggregatedMetrics<A>>, OptimError> {
         self.historical_data
             .get_aggregated(period, start_time, end_time)
     }
 
     /// Export metrics to configured destinations
-    pub fn export_metrics(&self) -> Result<(), OptimizerError> {
+    pub fn export_metrics(&self) -> Result<(), OptimError> {
         // Implementation would export to configured destinations
         Ok(())
     }
@@ -858,7 +857,7 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
     fn update_performance_metrics(
         &mut self,
         _sample: &MetricsSample<A>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Update performance metrics based on sample
         Ok(())
     }
@@ -866,12 +865,12 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
     fn update_resource_metrics(
         &mut self,
         _sample: &MetricsSample<A>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Update resource metrics based on sample
         Ok(())
     }
 
-    fn update_quality_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<(), OptimizerError> {
+    fn update_quality_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<(), OptimError> {
         // Update quality metrics based on sample
         Ok(())
     }
@@ -879,7 +878,7 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
     fn update_business_metrics(
         &mut self,
         _sample: &MetricsSample<A>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Update business metrics based on sample
         Ok(())
     }
@@ -1141,7 +1140,7 @@ impl<A: Float> HistoricalMetrics<A> {
         }
     }
 
-    fn store_snapshot(&mut self, snapshot: MetricsSnapshot<A>) -> Result<(), OptimizerError> {
+    fn store_snapshot(&mut self, snapshot: MetricsSnapshot<A>) -> Result<(), OptimError> {
         self.time_series.insert(snapshot.timestamp, snapshot);
         Ok(())
     }
@@ -1150,7 +1149,7 @@ impl<A: Float> HistoricalMetrics<A> {
         &self,
         start_time: SystemTime,
         end_time: SystemTime,
-    ) -> Result<Vec<MetricsSnapshot<A>>, OptimizerError> {
+    ) -> Result<Vec<MetricsSnapshot<A>>, OptimError> {
         let start_ts = start_time.duration_since(UNIX_EPOCH).unwrap().as_secs();
         let end_ts = end_time.duration_since(UNIX_EPOCH).unwrap().as_secs();
 
@@ -1168,7 +1167,7 @@ impl<A: Float> HistoricalMetrics<A> {
         _period: AggregationPeriod,
         _start_time: SystemTime,
         _end_time: SystemTime,
-    ) -> Result<Vec<AggregatedMetrics<A>>, OptimizerError> {
+    ) -> Result<Vec<AggregatedMetrics<A>>, OptimError> {
         // Implementation would aggregate data for the specified period
         Ok(Vec::new())
     }
@@ -1184,7 +1183,7 @@ impl<A: Float> AlertSystem<A> {
         }
     }
 
-    fn evaluate_rules(&mut self, _sample: &MetricsSample<A>) -> Result<(), OptimizerError> {
+    fn evaluate_rules(&mut self, _sample: &MetricsSample<A>) -> Result<(), OptimError> {
         // Implementation would evaluate all alert rules
         Ok(())
     }

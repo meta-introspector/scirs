@@ -66,6 +66,13 @@ impl ErrorLocation {
             function: Some(function),
         }
     }
+
+    /// Create an error location for the current position (convenience method)
+    #[must_use]
+    #[inline]
+    pub fn here() -> Self {
+        Self::new(file!(), line!())
+    }
 }
 
 impl fmt::Display for ErrorLocation {

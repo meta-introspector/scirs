@@ -855,7 +855,6 @@ impl GpuBenchmarkResults {
 }
 
 /// Utility functions for GPU operations
-
 /// Check if CUDA is available on the system
 pub fn is_cuda_available() -> bool {
     // 1. Check for CUDA environment variables

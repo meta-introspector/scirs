@@ -2735,7 +2735,7 @@ mod tests {
 
     #[test]
     fn test_gnn_metrics_creation() {
-        let metrics = GraphNeuralNetworkMetrics::new();
+        let _metrics = GraphNeuralNetworkMetrics::new();
         // Basic test to ensure creation works
     }
 

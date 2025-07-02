@@ -1772,7 +1772,7 @@ pub fn gpu_multi_head_attention(
 
     // Execute GPU kernel
     match ctx.context.execute_kernel(
-        &attention_kernel,
+        attention_kernel,
         &[&q_buffer, &k_buffer, &v_buffer, &output_buffer],
         (seq_len as u32, num_heads as u32, 1),
         &[
@@ -1843,34 +1843,33 @@ pub fn gpu_batch_matmul_transformer(
     let c_buffer = ctx.context.create_buffer::<f32>(m * n);
 
     // Optimized GPU matmul kernel with tile-based computation
-    let matmul_kernel = format!(
-        r#"
+    let matmul_kernel = r#"
         #version 450
         
         layout(local_size_x = 16, local_size_y = 16) in;
         
-        layout(set = 0, binding = 0) readonly buffer MatrixA {{
+        layout(set = 0, binding = 0) readonly buffer MatrixA {
             float a[];
-        }};
+        };
         
-        layout(set = 0, binding = 1) readonly buffer MatrixB {{
+        layout(set = 0, binding = 1) readonly buffer MatrixB {
             float b[];
-        }};
+        };
         
-        layout(set = 0, binding = 2) writeonly buffer MatrixC {{
+        layout(set = 0, binding = 2) writeonly buffer MatrixC {
             float c[];
-        }};
+        };
         
-        layout(push_constant) uniform PushConstants {{
+        layout(push_constant) uniform PushConstants {
             uint M;
             uint N;
             uint K;
-        }};
+        };
         
         shared float a_tile[16][16];
         shared float b_tile[16][16];
         
-        void main() {{
+        void main() {
             uint row = gl_GlobalInvocationID.x;
             uint col = gl_GlobalInvocationID.y;
             uint local_row = gl_LocalInvocationID.x;
@@ -1881,45 +1880,44 @@ pub fn gpu_batch_matmul_transformer(
             float result = 0.0;
             
             // Tile-based computation for better cache utilization
-            for (uint tile = 0; tile < (K + 15) / 16; tile++) {{
+            for (uint tile = 0; tile < (K + 15) / 16; tile++) {
                 // Load tile of A into shared memory
                 uint a_row = row;
                 uint a_col = tile * 16 + local_col;
-                if (a_row < M && a_col < K) {{
+                if (a_row < M && a_col < K) {
                     a_tile[local_row][local_col] = a[a_row * K + a_col];
-                }} else {{
+                } else {
                     a_tile[local_row][local_col] = 0.0;
-                }}
+                }
                 
                 // Load tile of B into shared memory
                 uint b_row = tile * 16 + local_row;
                 uint b_col = col;
-                if (b_row < K && b_col < N) {{
+                if (b_row < K && b_col < N) {
                     b_tile[local_row][local_col] = b[b_row * N + b_col];
-                }} else {{
+                } else {
                     b_tile[local_row][local_col] = 0.0;
-                }}
+                }
                 
                 barrier();
                 
                 // Compute partial result for this tile
-                for (uint k = 0; k < 16; k++) {{
+                for (uint k = 0; k < 16; k++) {
                     result += a_tile[local_row][k] * b_tile[k][local_col];
-                }}
+                }
                 
                 barrier();
-            }}
+            }
             
             c[row * N + col] = result;
-        }}
-        "#,
-    );
+        }
+        "#.to_string();
 
     // Execute tiled matmul kernel
     match ctx.context.execute_kernel(
         &matmul_kernel,
         &[&a_buffer, &b_buffer, &c_buffer],
-        (((m + 15) / 16 * 16) as u32, ((n + 15) / 16 * 16) as u32, 1),
+        ((m.div_ceil(16) * 16) as u32, (n.div_ceil(16) * 16) as u32, 1),
         &[m as u32, n as u32, k as u32],
         &[],
     ) {
@@ -1980,36 +1978,35 @@ pub fn gpu_feature_matching_ultra(
     let matches_buffer = ctx.context.create_buffer::<u32>(n1 * 3); // (idx1, idx2, valid_flag)
     let distances_buffer = ctx.context.create_buffer::<f32>(n1);
 
-    let matching_kernel = format!(
-        r#"
+    let matching_kernel = r#"
         #version 450
         
         layout(local_size_x = 256) in;
         
-        layout(set = 0, binding = 0) readonly buffer Descriptors1 {{
+        layout(set = 0, binding = 0) readonly buffer Descriptors1 {
             float desc1[];
-        }};
+        };
         
-        layout(set = 0, binding = 1) readonly buffer Descriptors2 {{
+        layout(set = 0, binding = 1) readonly buffer Descriptors2 {
             float desc2[];
-        }};
+        };
         
-        layout(set = 0, binding = 2) writeonly buffer Matches {{
+        layout(set = 0, binding = 2) writeonly buffer Matches {
             uint matches[];
-        }};
+        };
         
-        layout(set = 0, binding = 3) writeonly buffer Distances {{
+        layout(set = 0, binding = 3) writeonly buffer Distances {
             float distances[];
-        }};
+        };
         
-        layout(push_constant) uniform PushConstants {{
+        layout(push_constant) uniform PushConstants {
             uint n1;
             uint n2;
             uint dim;
             float threshold;
-        }};
+        };
         
-        void main() {{
+        void main() {
             uint idx1 = gl_GlobalInvocationID.x;
             if (idx1 >= n1) return;
             
@@ -2018,36 +2015,35 @@ pub fn gpu_feature_matching_ultra(
             bool found_match = false;
             
             // Find best match for descriptor idx1
-            for (uint idx2 = 0; idx2 < n2; idx2++) {{
+            for (uint idx2 = 0; idx2 < n2; idx2++) {
                 float distance = 0.0;
                 
                 // Compute L2 distance
-                for (uint d = 0; d < dim; d++) {{
+                for (uint d = 0; d < dim; d++) {
                     float diff = desc1[idx1 * dim + d] - desc2[idx2 * dim + d];
                     distance += diff * diff;
-                }}
+                }
                 distance = sqrt(distance);
                 
-                if (distance < best_distance && distance < threshold) {{
+                if (distance < best_distance && distance < threshold) {
                     best_distance = distance;
                     best_match = idx2;
                     found_match = true;
-                }}
-            }}
+                }
+            }
             
             // Store result
-            if (found_match) {{
+            if (found_match) {
                 matches[idx1 * 3 + 0] = idx1;
                 matches[idx1 * 3 + 1] = best_match;
                 matches[idx1 * 3 + 2] = 1; // valid flag
                 distances[idx1] = best_distance;
-            }} else {{
+            } else {
                 matches[idx1 * 3 + 2] = 0; // invalid flag
                 distances[idx1] = 1e9;
-            }}
-        }}
-        "#,
-    );
+            }
+        }
+        "#.to_string();
 
     // Execute matching kernel
     match ctx.context.execute_kernel(
@@ -2058,7 +2054,7 @@ pub fn gpu_feature_matching_ultra(
             &matches_buffer,
             &distances_buffer,
         ],
-        (((n1 + 255) / 256 * 256) as u32, 1, 1),
+        ((n1.div_ceil(256) * 256) as u32, 1, 1),
         &[n1 as u32, n2 as u32, dim1 as u32],
         &[threshold],
     ) {
@@ -2070,7 +2066,7 @@ pub fn gpu_feature_matching_ultra(
             for i in 0..n1 {
                 let valid_flag = matches_flat[i * 3 + 2];
                 if valid_flag == 1 {
-                    let idx1 = matches_flat[i * 3 + 0] as usize;
+                    let idx1 = matches_flat[i * 3] as usize;
                     let idx2 = matches_flat[i * 3 + 1] as usize;
                     let distance = distances_flat[i];
                     matches.push((idx1, idx2, distance));
@@ -2120,8 +2116,8 @@ pub fn gpu_neural_feature_extraction(
     let mut current_shape = (height, width);
 
     // Process through neural network layers
-    for (_layer_idx, (layer_config, layer_weights)) in
-        layer_configs.iter().zip(weights.iter()).enumerate()
+    for (layer_config, layer_weights) in
+        layer_configs.iter().zip(weights.iter())
     {
         match layer_config.layer_type {
             LayerType::Convolution => {

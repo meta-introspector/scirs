@@ -29,6 +29,7 @@ lazy_static::lazy_static! {
     // High-performance lookup table for Bessel J0 function
     static ref BESSEL_J0_LOOKUP: [f64; 1000] = {
         let mut table = [0.0; 1000];
+        #[allow(clippy::needless_range_loop)]
         for i in 0..1000 {
             let x = i as f64 * 0.01; // 0.00 to 9.99 with step 0.01
             table[i] = bessel_j0_series(x);
@@ -39,6 +40,7 @@ lazy_static::lazy_static! {
     // High-performance lookup table for Gamma function
     static ref GAMMA_LOOKUP: [f64; 1000] = {
         let mut table = [0.0; 1000];
+        #[allow(clippy::needless_range_loop)]
         for i in 0..1000 {
             let x = 0.1 + i as f64 * 0.01; // 0.1 to 10.09 with step 0.01
             table[i] = gamma_stirling(x);

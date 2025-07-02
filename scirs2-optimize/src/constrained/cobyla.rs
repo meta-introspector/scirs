@@ -4,7 +4,7 @@ use crate::constrained::{Constraint, ConstraintFn, ConstraintKind, Options};
 use crate::error::{OptimizeError, OptimizeResult};
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix1};
-use scirs2_core::validation::{check_finite, check_positive};
+use scirs2_core::validation::check_finite;
 
 /// COBYLA optimizer for constrained optimization
 ///

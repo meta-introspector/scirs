@@ -695,10 +695,14 @@ where
             let col_idx = indices[j] as usize;
             let val = data[j];
 
-            if col_idx == i {
-                diag_val = val;
-            } else if col_idx < i {
-                sum = sum + val * x[col_idx];
+            match col_idx.cmp(&i) {
+                std::cmp::Ordering::Equal => {
+                    diag_val = val;
+                }
+                std::cmp::Ordering::Less => {
+                    sum = sum + val * x[col_idx];
+                }
+                std::cmp::Ordering::Greater => {}
             }
         }
 
@@ -857,10 +861,10 @@ impl GpuMemoryManager {
         T: crate::gpu_ops::GpuDataType + 'static,
     {
         let size = buffer.as_slice().len();
-        let allocation_size = size * std::mem::size_of::<T>();
+        let allocation_size = std::mem::size_of_val(buffer.as_slice());
         let key = (size, std::any::TypeId::of::<T>());
 
-        let pool = self.buffer_pool.entry(key).or_insert_with(Vec::new);
+        let pool = self.buffer_pool.entry(key).or_default();
 
         // Only add to pool if under the limit and buffer is reasonably sized
         if pool.len() < self.max_pool_size && allocation_size > 1024 {
@@ -900,7 +904,7 @@ impl GpuMemoryManager {
     where
         T: crate::gpu_ops::GpuDataType + Copy,
     {
-        let transfer_size = host_data.len() * std::mem::size_of::<T>();
+        let transfer_size = std::mem::size_of_val(host_data);
         let start_time = std::time::Instant::now();
 
         let buffer = match self.device.backend() {
@@ -1320,7 +1324,7 @@ impl GpuPerformanceProfiler {
         let timings = self
             .timing_data
             .entry(operation_name.to_string())
-            .or_insert_with(Vec::new);
+            .or_default();
         timings.push(elapsed);
 
         // Keep only recent measurements to avoid memory bloat

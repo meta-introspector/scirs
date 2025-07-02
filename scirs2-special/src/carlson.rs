@@ -69,11 +69,11 @@ const TOLERANCE: f64 = 1e-15;
 /// # Examples
 /// ```
 /// use scirs2_special::elliprc;
-/// 
+///
 /// // RC(0, 1) = π/2
 /// let result = elliprc(0.0, 1.0).unwrap();
 /// assert!((result - std::f64::consts::FRAC_PI_2).abs() < 1e-10);
-/// 
+///
 /// // RC(1, 1) = 1
 /// let result = elliprc(1.0, 1.0).unwrap();
 /// assert!((result - 1.0).abs() < 1e-10);
@@ -92,7 +92,9 @@ where
     let four = T::from_f64(4.0).unwrap();
 
     if x < zero {
-        return Err(SpecialError::DomainError("x must be non-negative".to_string()));
+        return Err(SpecialError::DomainError(
+            "x must be non-negative".to_string(),
+        ));
     }
 
     if y == zero {
@@ -135,12 +137,12 @@ where
     let _s3 = s2 * s;
 
     // Series expansion
-    let c1 = T::from_f64(3.0/10.0).unwrap();
-    let c2 = T::from_f64(1.0/7.0).unwrap();
-    let c3 = T::from_f64(3.0/8.0).unwrap();
+    let c1 = T::from_f64(3.0 / 10.0).unwrap();
+    let c2 = T::from_f64(1.0 / 7.0).unwrap();
+    let c3 = T::from_f64(3.0 / 8.0).unwrap();
 
     let series = one + s2 * (c1 + s * c2 + s2 * c3);
-    
+
     Ok(series / yt.sqrt())
 }
 
@@ -159,14 +161,14 @@ where
 /// # Examples
 /// ```
 /// use scirs2_special::elliprf;
-/// 
+///
 /// // RF(0, 1, 1) = π/2
 /// let result = elliprf(0.0, 1.0, 1.0).unwrap();
 /// assert!((result - std::f64::consts::FRAC_PI_2).abs() < 1e-10);
-/// 
+///
 /// // Symmetry test
 /// let x = 2.0;
-/// let y = 3.0; 
+/// let y = 3.0;
 /// let z = 4.0;
 /// let rf1 = elliprf(x, y, z).unwrap();
 /// let rf2 = elliprf(y, z, x).unwrap();
@@ -240,10 +242,10 @@ where
     let e3 = x_dev * y_dev * z_dev;
 
     // Series expansion coefficients
-    let c1 = T::from_f64(-1.0/10.0).unwrap();
-    let c2 = T::from_f64(1.0/14.0).unwrap();
-    let c3 = T::from_f64(1.0/24.0).unwrap();
-    let c4 = T::from_f64(-3.0/44.0).unwrap();
+    let c1 = T::from_f64(-1.0 / 10.0).unwrap();
+    let c2 = T::from_f64(1.0 / 14.0).unwrap();
+    let c3 = T::from_f64(1.0 / 24.0).unwrap();
+    let c4 = T::from_f64(-3.0 / 44.0).unwrap();
 
     let series = one + c1 * e2 + c2 * e3 + c3 * e2 * e2 + c4 * e2 * e3;
 
@@ -262,7 +264,7 @@ where
 /// # Examples
 /// ```
 /// use scirs2_special::elliprd;
-/// 
+///
 /// // RD(0, 2, 1) = 3π/(4√2)
 /// let result = elliprd(0.0, 2.0, 1.0).unwrap();
 /// let expected = 3.0 * std::f64::consts::PI / (4.0 * std::f64::consts::SQRT_2);
@@ -334,22 +336,22 @@ where
     let y_dev = (a - yt) / a;
     let z_dev = (a - zt) / a;
 
-    let e2 = x_dev * y_dev + T::from_f64(6.0).unwrap() * z_dev * z_dev
-        - three * z_dev * (x_dev + y_dev);
+    let e2 =
+        x_dev * y_dev + T::from_f64(6.0).unwrap() * z_dev * z_dev - three * z_dev * (x_dev + y_dev);
     let e3 = x_dev * y_dev * z_dev;
 
     // Series expansion
-    let c1 = T::from_f64(-3.0/14.0).unwrap();
-    let c2 = T::from_f64(1.0/6.0).unwrap();
-    let c3 = T::from_f64(9.0/88.0).unwrap();
-    let c4 = T::from_f64(-3.0/22.0).unwrap();
+    let c1 = T::from_f64(-3.0 / 14.0).unwrap();
+    let c2 = T::from_f64(1.0 / 6.0).unwrap();
+    let c3 = T::from_f64(9.0 / 88.0).unwrap();
+    let c4 = T::from_f64(-3.0 / 22.0).unwrap();
 
     let series = one + c1 * e2 + c2 * e3 + c3 * e2 * e2 + c4 * e2 * e3;
 
     Ok(three * sum + factor * series / (a * a.sqrt()))
 }
 
-/// Carlson elliptic integral RG(x, y, z) 
+/// Carlson elliptic integral RG(x, y, z)
 ///
 /// Computes the symmetric elliptic integral RG(x, y, z).
 ///
@@ -364,7 +366,7 @@ where
 /// # Examples
 /// ```
 /// use scirs2_special::elliprg;
-/// 
+///
 /// // Test basic functionality
 /// let result = elliprg(1.0, 2.0, 3.0).unwrap();
 /// assert!(result > 0.0);
@@ -409,7 +411,7 @@ where
 
     // General case: RG = (z * RF - RD * z + RD(0,y,z) * z) / 4
     // Using the identity: RG(x,y,z) = [RF(x,y,z) * (x+y+z) - RD(x,y,z)*z - RD(y,z,x)*x - RD(z,x,y)*y] / 4
-    
+
     let rf_val = elliprf(x, y, z)?;
     let rd_xyz = elliprd(x, y, z)?;
     let rd_yzx = elliprd(y, z, x)?;
@@ -434,7 +436,7 @@ where
 /// # Examples
 /// ```
 /// use scirs2_special::elliprj;
-/// 
+///
 /// // Test basic functionality
 /// let result = elliprj(1.0, 2.0, 3.0, 4.0).unwrap();
 /// assert!(result > 0.0);
@@ -494,12 +496,25 @@ where
         let lambda_z = sqrt_x * sqrt_y;
 
         let delta = (sqrt_p - sqrt_x) * (sqrt_p - sqrt_y) * (sqrt_p - sqrt_z);
-        sum = sum + factor * elliprc(one, one + delta / (sqrt_p * (sqrt_p + lambda_x) * (sqrt_p + lambda_y) * (sqrt_p + lambda_z)))?;
+        sum = sum
+            + factor
+                * elliprc(
+                    one,
+                    one + delta
+                        / (sqrt_p
+                            * (sqrt_p + lambda_x)
+                            * (sqrt_p + lambda_y)
+                            * (sqrt_p + lambda_z)),
+                )?;
 
         xt = (xt + lambda_x) / four;
         yt = (yt + lambda_y) / four;
         zt = (zt + lambda_z) / four;
-        pt = (pt + sqrt_p * (sqrt_p + lambda_x) + sqrt_p * (sqrt_p + lambda_y) + sqrt_p * (sqrt_p + lambda_z)) / four;
+        pt = (pt
+            + sqrt_p * (sqrt_p + lambda_x)
+            + sqrt_p * (sqrt_p + lambda_y)
+            + sqrt_p * (sqrt_p + lambda_z))
+            / four;
         factor = factor / four;
 
         let a = (xt + yt + zt + two * pt) / T::from_f64(5.0).unwrap();
@@ -520,15 +535,14 @@ where
     let z_dev = (a - zt) / a;
     let p_dev = (a - pt) / a;
 
-    let e2 = x_dev * y_dev + x_dev * z_dev + y_dev * z_dev 
-        - three * p_dev * p_dev;
+    let e2 = x_dev * y_dev + x_dev * z_dev + y_dev * z_dev - three * p_dev * p_dev;
     let e3 = x_dev * y_dev * z_dev + two * p_dev * (x_dev + y_dev + z_dev) * p_dev;
 
     // Series expansion
-    let c1 = T::from_f64(-3.0/14.0).unwrap();
-    let c2 = T::from_f64(1.0/6.0).unwrap();
-    let c3 = T::from_f64(9.0/88.0).unwrap();
-    let c4 = T::from_f64(-3.0/22.0).unwrap();
+    let c1 = T::from_f64(-3.0 / 14.0).unwrap();
+    let c2 = T::from_f64(1.0 / 6.0).unwrap();
+    let c3 = T::from_f64(9.0 / 88.0).unwrap();
+    let c4 = T::from_f64(-3.0 / 22.0).unwrap();
 
     let series = one + c1 * e2 + c2 * e3 + c3 * e2 * e2 + c4 * e2 * e3;
 
@@ -536,12 +550,18 @@ where
 }
 
 /// Array versions of Carlson elliptic integrals
-pub fn elliprf_array<T>(x: &ArrayView1<T>, y: &ArrayView1<T>, z: &ArrayView1<T>) -> SpecialResult<Array1<T>>
+pub fn elliprf_array<T>(
+    x: &ArrayView1<T>,
+    y: &ArrayView1<T>,
+    z: &ArrayView1<T>,
+) -> SpecialResult<Array1<T>>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
     if x.len() != y.len() || y.len() != z.len() {
-        return Err(SpecialError::DomainError("Arrays must have same length".to_string()));
+        return Err(SpecialError::DomainError(
+            "Arrays must have same length".to_string(),
+        ));
     }
 
     let mut result = Array1::zeros(x.len());

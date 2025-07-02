@@ -3,12 +3,11 @@
 //! This module provides various algorithms for detecting when the underlying
 //! data distribution changes (concept drift) and adapting the optimizer accordingly.
 
-use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 
 /// Types of concept drift detection algorithms
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -402,7 +401,7 @@ impl<A: Float + std::fmt::Debug> ConceptDriftDetector<A> {
         &mut self,
         loss: A,
         is_prediction_error: bool,
-    ) -> Result<DriftStatus, OptimizerError> {
+    ) -> Result<DriftStatus, OptimError> {
         let ph_status = self.ph_detector.update(loss);
         let adwin_status = self.adwin_detector.update(loss);
         let ddm_status = self.ddm_detector.update(is_prediction_error);
@@ -1014,7 +1013,7 @@ pub mod advanced_drift_analysis {
             &mut self,
             value: A,
             context_features: &[ContextFeature<A>],
-        ) -> Result<AdvancedDriftResult<A>, OptimizerError> {
+        ) -> Result<AdvancedDriftResult<A>, OptimError> {
             // Update context
             self.context_detector.update_context(context_features);
 
@@ -1168,7 +1167,7 @@ pub mod advanced_drift_analysis {
             }
         }
 
-        fn extract_features(&mut self, data: &[A]) -> Result<PatternFeatures<A>, OptimizerError> {
+        fn extract_features(&mut self, data: &[A]) -> Result<PatternFeatures<A>, OptimError> {
             // Simplified feature extraction
             let mean = data.iter().cloned().sum::<A>() / A::from(data.len()).unwrap();
             let variance = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<A>()
@@ -1287,7 +1286,7 @@ pub mod advanced_drift_analysis {
             &mut self,
             features: &PatternFeatures<A>,
             _pattern: &Option<DriftPattern<A>>,
-        ) -> Result<DriftImpact<A>, OptimizerError> {
+        ) -> Result<DriftImpact<A>, OptimError> {
             let performance_degradation = features.variance; // Simplified
             let urgency_level = if performance_degradation > A::from(1.0).unwrap() {
                 UrgencyLevel::High
@@ -1321,7 +1320,7 @@ pub mod advanced_drift_analysis {
             _features: &PatternFeatures<A>,
             _impact: &DriftImpact<A>,
             _pattern: &Option<DriftPattern<A>>,
-        ) -> Result<Option<AdaptationStrategy<A>>, OptimizerError> {
+        ) -> Result<Option<AdaptationStrategy<A>>, OptimError> {
             // Simplified strategy selection
             let strategy = AdaptationStrategy {
                 id: "increase_lr".to_string(),

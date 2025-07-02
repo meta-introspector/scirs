@@ -426,7 +426,7 @@ fn compute_predicted_reduction(jac: &Array2<f64>, res: &Array1<f64>, step: &Arra
 
 /// Simple linear system solver (same as in other modules)
 fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
-    use scirs2_linalg::solve::solve;
+    use scirs2_linalg::solve;
 
     solve(&a.view(), &b.view(), None).ok()
 }

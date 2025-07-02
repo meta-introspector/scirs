@@ -307,7 +307,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
 
                 // Apply shift
                 for j in 0..n {
-                    d[j] = d[j] - shift;
+                    d[j] -= shift;
                 }
 
                 // Perform QL decomposition step
@@ -350,7 +350,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
 
                 // Remove shift
                 for j in 0..n {
-                    d[j] = d[j] + shift;
+                    d[j] += shift;
                 }
             }
         }

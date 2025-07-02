@@ -3,16 +3,15 @@
 //! This module provides the core TPU backend implementation for executing
 //! optimized computations on Google Cloud TPUs and compatible hardware.
 
-use ndarray::{Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
+use ndarray::{Array2, Dimension};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
-use std::sync::{Arc, Mutex, RwLock};
-use std::thread;
+use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
-use super::xla_compilation::{ComputationId, XLAComputation};
-use super::{PodTopology, TPUConfig, TPUVersion, XLAOptimizationLevel};
-use crate::error::OptimizerError;
+use super::xla_compilation::ComputationId;
+use super::{TPUConfig, TPUVersion, XLAOptimizationLevel};
+use crate::error::{OptimError, Result};
 
 /// TPU Backend Manager
 pub struct TPUBackend<T: Float> {
@@ -750,7 +749,7 @@ pub enum MemoryAllocationStrategy {
 
 impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
     /// Create a new TPU backend
-    pub fn new(config: TPUBackendConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: TPUBackendConfig) -> Result<Self, OptimError> {
         let device_manager = DeviceManager::new(&config)?;
         let execution_engine = ExecutionEngine::new(&config)?;
         let memory_manager = TPUMemoryManager::new(&config)?;
@@ -776,7 +775,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
         &mut self,
         computation_id: ComputationId,
         inputs: Vec<TPUBuffer<T>>,
-    ) -> Result<Vec<TPUBuffer<T>>, OptimizerError> {
+    ) -> Result<Vec<TPUBuffer<T>>, OptimError> {
         let start_time = Instant::now();
 
         // Get or compile the program
@@ -819,7 +818,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
     async fn get_or_compile_program(
         &self,
         computation_id: ComputationId,
-    ) -> Result<Arc<CompiledProgram>, OptimizerError> {
+    ) -> Result<Arc<CompiledProgram>, OptimError> {
         // Check cache first
         {
             let cache = self.compilation_cache.read().unwrap();
@@ -843,7 +842,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
     async fn compile_program(
         &self,
         _computation_id: ComputationId,
-    ) -> Result<CompiledProgram, OptimizerError> {
+    ) -> Result<CompiledProgram, OptimError> {
         // Simplified compilation - in reality this would invoke XLA compiler
         let binary = vec![0u8; 1024]; // Placeholder binary
 
@@ -896,7 +895,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
     }
 
     /// Shutdown the backend gracefully
-    pub async fn shutdown(&mut self) -> Result<(), OptimizerError> {
+    pub async fn shutdown(&mut self) -> Result<(), OptimError> {
         self.device_manager.shutdown().await?;
         self.memory_manager.cleanup()?;
         self.performance_monitor.flush_metrics()?;
@@ -1237,7 +1236,7 @@ impl<T: Float> TPUBuffer<T> {
     }
 
     /// Transfer buffer to device
-    pub fn transfer_to_device(&mut self, device: DeviceId) -> Result<(), OptimizerError> {
+    pub fn transfer_to_device(&mut self, device: DeviceId) -> Result<(), OptimError> {
         self.device = Some(device);
         self.metadata.last_accessed = Instant::now();
         self.metadata.access_count += 1;

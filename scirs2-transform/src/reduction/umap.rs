@@ -5,7 +5,7 @@
 
 use ndarray::{Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
-use rand::{Rng, SeedableRng};
+use rand::Rng;
 use scirs2_core::validation::{check_positive, check_shape};
 use std::collections::BinaryHeap;
 
@@ -238,11 +238,7 @@ impl UMAP {
 
     /// Initialize the low dimensional embedding
     fn initialize_embedding(&self, n_samples: usize) -> Array2<f64> {
-        let mut rng = if let Some(seed) = self.random_state {
-            rand::rngs::StdRng::seed_from_u64(seed)
-        } else {
-            rand::rngs::StdRng::from_entropy()
-        };
+        let mut rng = rand::rng();
 
         // Initialize with small random values
         let mut embedding = Array2::zeros((n_samples, self.n_components));
@@ -263,11 +259,7 @@ impl UMAP {
         n_epochs: usize,
     ) {
         let n_samples = embedding.shape()[0];
-        let mut rng = if let Some(seed) = self.random_state {
-            rand::rngs::StdRng::seed_from_u64(seed + 1)
-        } else {
-            rand::rngs::StdRng::from_entropy()
-        };
+        let mut rng = rand::rng();
 
         // Create edge list from graph
         let mut edges = Vec::new();
@@ -359,7 +351,7 @@ impl UMAP {
         check_positive(self.n_neighbors, "n_neighbors")?;
         check_positive(self.n_components, "n_components")?;
         check_positive(self.n_epochs, "n_epochs")?;
-        check_shape(x, (Some(n_samples), Some(n_features)), "x")?;
+        check_shape(x, &[n_samples, n_features], "x")?;
 
         if n_samples < self.n_neighbors {
             return Err(TransformError::InvalidInput(format!(

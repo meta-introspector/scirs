@@ -7,15 +7,13 @@
 
 use std::collections::HashMap;
 
-use ndarray::{Array, ArrayView, ArrayView1, ArrayView2, Dimension, Ix1, Ix2, Ix3};
+use ndarray::{Array, ArrayView2, Ix2, Ix3};
 use num_traits::{Float, FromPrimitive};
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::filters::{gaussian_filter as internal_gaussian_filter};
+use crate::filters::gaussian_filter as internal_gaussian_filter;
 use crate::interpolation::BoundaryMode;
-use crate::measurements::{
-    center_of_mass as internal_center_of_mass,
-};
+use crate::measurements::center_of_mass as internal_center_of_mass;
 use crate::morphology::{
     binary_dilation as internal_binary_dilation, binary_erosion as internal_binary_erosion,
 };

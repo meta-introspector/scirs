@@ -899,7 +899,6 @@ impl<T: InterpolationFloat> SciPyParityEnhancer<T> {
     }
 
     /// Helper methods for gap analysis
-
     fn estimate_implementation_effort(
         &self,
         feature: &str,
@@ -1205,7 +1204,6 @@ impl fmt::Display for SciPyParityReport {
 }
 
 /// Convenience functions
-
 /// Run comprehensive SciPy parity enhancement with default configuration
 pub fn enhance_scipy_parity_for_stable_release<T: InterpolationFloat>(
 ) -> InterpolateResult<SciPyParityReport> {

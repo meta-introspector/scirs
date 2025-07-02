@@ -5,7 +5,6 @@
 //! real-time performance adaptation.
 
 #![allow(dead_code)]
-#![cfg(test)]
 
 use crate::error::IntegrateResult;
 use crate::gpu_ultra_acceleration::UltraGPUAccelerator;

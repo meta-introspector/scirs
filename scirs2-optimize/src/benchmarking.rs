@@ -3,14 +3,14 @@
 //! This module provides a complete benchmarking suite for comparing different
 //! optimization algorithms across various test problems, metrics, and scenarios.
 
-use crate::error::{ScirsError, ScirsResult};
-use ndarray::{Array1, Array2, ArrayView1};
+use crate::error::ScirsResult;
+use ndarray::{Array1, ArrayView1};
 use std::collections::HashMap;
 use std::path::Path;
 use std::time::{Duration, Instant};
 
 use crate::result::OptimizeResults;
-use crate::visualization::{OptimizationTrajectory, OptimizationVisualizer, VisualizationConfig};
+use crate::visualization::{OptimizationTrajectory, OptimizationVisualizer};
 
 /// Standard test functions for optimization benchmarking
 pub mod test_functions {
@@ -187,7 +187,7 @@ impl TestProblem {
         for _ in 0..count {
             let mut point = Array1::zeros(self.dimensions);
             for (i, &(low, high)) in self.bounds.iter().enumerate() {
-                point[i] = rng.gen_range(low..=high);
+                point[i] = rng.random_range(low..=high);
             }
             points.push(point);
         }

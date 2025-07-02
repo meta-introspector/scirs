@@ -207,7 +207,7 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {

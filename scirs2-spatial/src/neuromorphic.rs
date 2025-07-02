@@ -1015,7 +1015,6 @@ pub struct HomeostaticNeuron {
 }
 
 /// Learning rate adaptation mechanism (duplicate removed)
-
 /// Metaplasticity controller for flexible learning
 #[derive(Debug, Clone)]
 pub struct MetaplasticityController {
@@ -1331,20 +1330,20 @@ impl HomeostaticNeuron {
         let rate_error = self.target_firing_rate - self.actual_firing_rate;
         let excitability_update = 0.001 * rate_error * dt;
         self.intrinsic_excitability += excitability_update;
-        self.intrinsic_excitability = self.intrinsic_excitability.max(0.1).min(10.0);
+        self.intrinsic_excitability = self.intrinsic_excitability.clamp(0.1, 10.0);
 
         // Synaptic scaling: global scaling of all synapses
         let scaling_rate = 0.0001;
         let scaling_update = scaling_rate * rate_error * dt;
         self.synaptic_scaling += scaling_update;
-        self.synaptic_scaling = self.synaptic_scaling.max(0.1).min(10.0);
+        self.synaptic_scaling = self.synaptic_scaling.clamp(0.1, 10.0);
     }
 
     /// Get homeostatic factor for learning modulation
     fn get_homeostatic_factor(&self) -> f64 {
         // Higher factor when firing rate is below target (need to strengthen synapses)
         let rate_ratio = self.actual_firing_rate / self.target_firing_rate.max(1e-6);
-        (2.0 / (1.0 + rate_ratio)).max(0.1).min(10.0)
+        (2.0 / (1.0 + rate_ratio)).clamp(0.1, 10.0)
     }
 }
 
@@ -1352,7 +1351,7 @@ impl LearningRateAdaptation {
     /// Create new learning rate adaptation
     fn new(base_rate: f64) -> Self {
         Self {
-            base_rate: base_rate,
+            base_rate,
             adaptation_factor: 0.1,
             performance_history: VecDeque::new(),
             adaptation_threshold: 0.1,
@@ -1483,7 +1482,7 @@ impl AdaptationScale {
     fn update(&mut self, error: f64, dt: f64) {
         let decay = (-dt / self.time_constant).exp();
         self.memory_trace = self.memory_trace * decay + (1.0 - decay) * (1.0 - error);
-        self.memory_trace = self.memory_trace.max(0.0).min(2.0);
+        self.memory_trace = self.memory_trace.clamp(0.0, 2.0);
     }
 }
 
@@ -1773,7 +1772,7 @@ impl DendriticNeuron {
         let mut avg_weights = Array1::zeros(input_dim);
 
         for dendrite in &self.dendrites {
-            avg_weights = avg_weights + &dendrite.weights;
+            avg_weights += &dendrite.weights;
         }
 
         avg_weights / self.dendrites.len() as f64
@@ -1830,7 +1829,7 @@ impl DendriticCompartment {
             *weight += weight_update;
 
             // Apply bounds
-            *weight = weight.max(0.0).min(2.0);
+            *weight = weight.clamp(0.0, 2.0);
         }
 
         Ok(())

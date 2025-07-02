@@ -11,21 +11,21 @@ use super::{
     architecture_space::{ComponentType, OptimizerComponent},
     OptimizerArchitecture, SearchResult, SearchSpaceConfig,
 };
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 
 /// Base trait for architecture controllers
 pub trait ArchitectureController<T: Float>: Send + Sync {
     /// Initialize the controller
-    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimizerError>;
+    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimError>;
 
     /// Generate new architecture
     fn generate_architecture(
         &mut self,
         context: &SearchContext<T>,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError>;
+    ) -> Result<OptimizerArchitecture<T>, OptimError>;
 
     /// Update controller with search results
-    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError>;
+    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimError>;
 
     /// Get controller statistics
     fn get_statistics(&self) -> ControllerStatistics<T>;
@@ -34,7 +34,7 @@ pub trait ArchitectureController<T: Float>: Send + Sync {
     fn name(&self) -> &str;
 
     /// Reset controller state
-    fn reset(&mut self) -> Result<(), OptimizerError>;
+    fn reset(&mut self) -> Result<(), OptimError>;
 }
 
 /// Search context for architecture generation
@@ -510,7 +510,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
         hidden_size: usize,
         num_layers: usize,
         vocab_size: usize,
-    ) -> Result<Self, OptimizerError> {
+    ) -> Result<Self, OptimError> {
         let config = RNNControllerConfig {
             hidden_size,
             num_layers,
@@ -550,7 +550,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
     }
 
     /// Forward pass through RNN
-    fn forward(&mut self, input_sequence: &[usize]) -> Result<Array2<T>, OptimizerError> {
+    fn forward(&mut self, input_sequence: &[usize]) -> Result<Array2<T>, OptimError> {
         let seq_len = input_sequence.len();
         let vocab_size = self.action_space.component_types.len();
         let mut outputs = Array2::zeros((seq_len, vocab_size));
@@ -590,7 +590,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
     }
 
     /// Sample architecture from controller
-    fn sample_architecture(&mut self) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    fn sample_architecture(&mut self) -> Result<OptimizerArchitecture<T>, OptimError> {
         let mut components = Vec::new();
         let mut sequence = Vec::new();
 
@@ -634,7 +634,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
     }
 
     /// Sample from logits using temperature
-    fn sample_from_logits(&self, logits: &Array1<T>) -> Result<usize, OptimizerError> {
+    fn sample_from_logits(&self, logits: &Array1<T>) -> Result<usize, OptimError> {
         // Apply temperature scaling
         let scaled_logits = logits.mapv(|x| x / T::from(self.config.temperature).unwrap());
 
@@ -665,7 +665,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
     fn create_component_from_type(
         &self,
         component_type: ComponentType,
-    ) -> Result<OptimizerComponent<T>, OptimizerError> {
+    ) -> Result<OptimizerComponent<T>, OptimError> {
         let mut hyperparameters = HashMap::new();
 
         // Set default hyperparameters based on component type
@@ -695,7 +695,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
 }
 
 impl<T: Float + Default + Clone + Send + Sync + 'static> ArchitectureController<T> for RNNController<T> {
-    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
+    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimError> {
         self.search_space = Some(search_space.clone());
 
         // Initialize action space from search space
@@ -717,14 +717,14 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> ArchitectureController<
     fn generate_architecture(
         &mut self,
         _context: &SearchContext<T>,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         let architecture = self.sample_architecture()?;
         self.generation_count += 1;
         self.statistics.total_generated += 1;
         Ok(architecture)
     }
 
-    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
+    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimError> {
         // Create training batch from results
         let mut batch = TrainingBatch {
             inputs: Vec::new(),
@@ -788,7 +788,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> ArchitectureController<
         "RNNController"
     }
 
-    fn reset(&mut self) -> Result<(), OptimizerError> {
+    fn reset(&mut self) -> Result<(), OptimError> {
         for state in &mut self.hidden_states {
             state.fill(T::zero());
         }
@@ -804,7 +804,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
     fn architecture_to_sequence(
         &self,
         architecture: &OptimizerArchitecture<T>,
-    ) -> Result<Vec<usize>, OptimizerError> {
+    ) -> Result<Vec<usize>, OptimError> {
         let mut sequence = vec![0]; // Start token
 
         for component in &architecture.components {
@@ -830,7 +830,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerController<T> {
         model_dim: usize,
         num_heads: usize,
         num_layers: usize,
-    ) -> Result<Self, OptimizerError> {
+    ) -> Result<Self, OptimError> {
         let config = TransformerConfig {
             model_dim,
             num_heads,
@@ -869,7 +869,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerController<T> {
 impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T>
     for TransformerController<T>
 {
-    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
+    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimError> {
         self.search_space = Some(search_space.clone());
         self.generation_count = 0;
         Ok(())
@@ -878,7 +878,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T>
     fn generate_architecture(
         &mut self,
         _context: &SearchContext<T>,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         // Simplified architecture generation for Transformer
         // In practice, this would use the full transformer forward pass
         use super::architecture_space::{ComponentType, OptimizerComponent};
@@ -905,7 +905,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T>
         })
     }
 
-    fn update_with_results(&mut self, _results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
+    fn update_with_results(&mut self, _results: &[SearchResult<T>]) -> Result<(), OptimError> {
         // Simplified update for Transformer controller
         Ok(())
     }
@@ -918,7 +918,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T>
         "TransformerController"
     }
 
-    fn reset(&mut self) -> Result<(), OptimizerError> {
+    fn reset(&mut self) -> Result<(), OptimError> {
         self.generation_count = 0;
         Ok(())
     }
@@ -926,7 +926,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T>
 
 impl<T: Float + Default + Clone + Send + Sync> RandomController<T> {
     /// Create new random controller
-    pub fn new(vocab_size: usize) -> Result<Self, OptimizerError> {
+    pub fn new(vocab_size: usize) -> Result<Self, OptimError> {
         Ok(Self {
             component_types: vec![
                 ComponentType::Adam,
@@ -942,7 +942,7 @@ impl<T: Float + Default + Clone + Send + Sync> RandomController<T> {
 }
 
 impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T> for RandomController<T> {
-    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
+    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimError> {
         self.search_space = Some(search_space.clone());
         self.component_types = search_space
             .optimizer_components
@@ -956,7 +956,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T> for Ran
     fn generate_architecture(
         &mut self,
         _context: &SearchContext<T>,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         use super::architecture_space::{ComponentType, OptimizerComponent};
 
         // Random selection of component type
@@ -1013,7 +1013,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T> for Ran
         })
     }
 
-    fn update_with_results(&mut self, _results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
+    fn update_with_results(&mut self, _results: &[SearchResult<T>]) -> Result<(), OptimError> {
         // Random controller doesn't learn from results
         Ok(())
     }
@@ -1026,7 +1026,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T> for Ran
         "RandomController"
     }
 
-    fn reset(&mut self) -> Result<(), OptimizerError> {
+    fn reset(&mut self) -> Result<(), OptimError> {
         self.generation_count = 0;
         Ok(())
     }
@@ -1038,7 +1038,7 @@ impl<T: Float + Default + Clone + 'static> RNNLayer<T> {
         layer_type: RNNType,
         input_size: usize,
         hidden_size: usize,
-    ) -> Result<Self, OptimizerError> {
+    ) -> Result<Self, OptimError> {
         let gate_size = match layer_type {
             RNNType::LSTM => hidden_size * 4,
             RNNType::GRU => hidden_size * 3,
@@ -1061,7 +1061,7 @@ impl<T: Float + Default + Clone + 'static> RNNLayer<T> {
         input: &Array1<T>,
         hidden: &Array1<T>,
         cell: &Array1<T>,
-    ) -> Result<(Array1<T>, Array1<T>), OptimizerError> {
+    ) -> Result<(Array1<T>, Array1<T>), OptimError> {
         match self.layer_type {
             RNNType::LSTM => self.lstm_forward(input, hidden, cell),
             RNNType::GRU => self.gru_forward(input, hidden),
@@ -1074,7 +1074,7 @@ impl<T: Float + Default + Clone + 'static> RNNLayer<T> {
         input: &Array1<T>,
         hidden: &Array1<T>,
         cell: &Array1<T>,
-    ) -> Result<(Array1<T>, Array1<T>), OptimizerError> {
+    ) -> Result<(Array1<T>, Array1<T>), OptimError> {
         let hidden_size = hidden.len();
 
         let gi = self.weight_ih.dot(input) + &self.bias_ih;
@@ -1106,7 +1106,7 @@ impl<T: Float + Default + Clone + 'static> RNNLayer<T> {
         &self,
         input: &Array1<T>,
         hidden: &Array1<T>,
-    ) -> Result<(Array1<T>, Array1<T>), OptimizerError> {
+    ) -> Result<(Array1<T>, Array1<T>), OptimError> {
         let hidden_size = hidden.len();
 
         let gi = self.weight_ih.dot(input) + &self.bias_ih;
@@ -1134,7 +1134,7 @@ impl<T: Float + Default + Clone + 'static> RNNLayer<T> {
         &self,
         input: &Array1<T>,
         hidden: &Array1<T>,
-    ) -> Result<(Array1<T>, Array1<T>), OptimizerError> {
+    ) -> Result<(Array1<T>, Array1<T>), OptimError> {
         let gi = self.weight_ih.dot(input) + &self.bias_ih;
         let gh = self.weight_hh.dot(hidden) + &self.bias_hh;
         let new_hidden = Self::tanh(&(gi + gh));
@@ -1156,7 +1156,7 @@ impl<T: Float + Default + Clone + 'static> OutputLayer<T> {
         input_size: usize,
         output_size: usize,
         activation: ActivationType,
-    ) -> Result<Self, OptimizerError> {
+    ) -> Result<Self, OptimError> {
         Ok(Self {
             weight: Array2::zeros((output_size, input_size)),
             bias: Array1::zeros(output_size),
@@ -1164,7 +1164,7 @@ impl<T: Float + Default + Clone + 'static> OutputLayer<T> {
         })
     }
 
-    fn forward(&self, input: &Array1<T>) -> Result<Array1<T>, OptimizerError> {
+    fn forward(&self, input: &Array1<T>) -> Result<Array1<T>, OptimError> {
         let output = self.weight.dot(input) + &self.bias;
 
         match self.activation {
@@ -1192,7 +1192,7 @@ impl<T: Float + Default + Clone + 'static> OutputLayer<T> {
 }
 
 impl<T: Float + Default + Clone> EmbeddingLayer<T> {
-    fn new(vocab_size: usize, embedding_dim: usize) -> Result<Self, OptimizerError> {
+    fn new(vocab_size: usize, embedding_dim: usize) -> Result<Self, OptimError> {
         Ok(Self {
             embeddings: Array2::zeros((vocab_size, embedding_dim)),
             vocab_size,
@@ -1200,9 +1200,9 @@ impl<T: Float + Default + Clone> EmbeddingLayer<T> {
         })
     }
 
-    fn forward(&self, token: usize) -> Result<Array1<T>, OptimizerError> {
+    fn forward(&self, token: usize) -> Result<Array1<T>, OptimError> {
         if token >= self.vocab_size {
-            return Err(OptimizerError::InvalidConfig(format!(
+            return Err(OptimError::InvalidConfig(format!(
                 "Token {} out of vocabulary",
                 token
             )));
@@ -1213,7 +1213,7 @@ impl<T: Float + Default + Clone> EmbeddingLayer<T> {
 }
 
 impl<T: Float + Default + Clone> TransformerLayer<T> {
-    fn new(model_dim: usize, num_heads: usize, ff_dim: usize) -> Result<Self, OptimizerError> {
+    fn new(model_dim: usize, num_heads: usize, ff_dim: usize) -> Result<Self, OptimError> {
         Ok(Self {
             attention: MultiHeadAttention::new(model_dim, num_heads)?,
             feed_forward: FeedForward::new(model_dim, ff_dim)?,
@@ -1225,7 +1225,7 @@ impl<T: Float + Default + Clone> TransformerLayer<T> {
 }
 
 impl<T: Float + Default + Clone> MultiHeadAttention<T> {
-    fn new(model_dim: usize, num_heads: usize) -> Result<Self, OptimizerError> {
+    fn new(model_dim: usize, num_heads: usize) -> Result<Self, OptimError> {
         let head_dim = model_dim / num_heads;
 
         Ok(Self {
@@ -1241,7 +1241,7 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
 }
 
 impl<T: Float + Default + Clone> FeedForward<T> {
-    fn new(input_dim: usize, ff_dim: usize) -> Result<Self, OptimizerError> {
+    fn new(input_dim: usize, ff_dim: usize) -> Result<Self, OptimError> {
         Ok(Self {
             linear1: LinearLayer::new(input_dim, ff_dim)?,
             linear2: LinearLayer::new(ff_dim, input_dim)?,
@@ -1252,7 +1252,7 @@ impl<T: Float + Default + Clone> FeedForward<T> {
 }
 
 impl<T: Float + Default + Clone> LinearLayer<T> {
-    fn new(input_dim: usize, output_dim: usize) -> Result<Self, OptimizerError> {
+    fn new(input_dim: usize, output_dim: usize) -> Result<Self, OptimError> {
         Ok(Self {
             weight: Array2::zeros((output_dim, input_dim)),
             bias: Array1::zeros(output_dim),
@@ -1261,7 +1261,7 @@ impl<T: Float + Default + Clone> LinearLayer<T> {
 }
 
 impl<T: Float + Default + Clone> LayerNorm<T> {
-    fn new(dim: usize) -> Result<Self, OptimizerError> {
+    fn new(dim: usize) -> Result<Self, OptimError> {
         Ok(Self {
             scale: Array1::ones(dim),
             shift: Array1::zeros(dim),
@@ -1271,7 +1271,7 @@ impl<T: Float + Default + Clone> LayerNorm<T> {
 }
 
 impl<T: Float + Default + Clone> PositionalEncoding<T> {
-    fn new(max_length: usize, model_dim: usize) -> Result<Self, OptimizerError> {
+    fn new(max_length: usize, model_dim: usize) -> Result<Self, OptimError> {
         let mut encoding = Array2::zeros((max_length, model_dim));
 
         for pos in 0..max_length {

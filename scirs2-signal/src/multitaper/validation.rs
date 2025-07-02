@@ -8,7 +8,7 @@
 
 // use super::dpss_enhanced::validate_dpss_implementation; // Commented out for now
 use super::psd::pmtm;
-use super::{enhanced_pmtm, MultitaperConfig};
+use super::{enhanced_pmtm, MultitaperConfig, EnhancedMultitaperResult};
 use crate::error::{SignalError, SignalResult};
 // Note: Array1, Array2 imports removed as unused
 use num_complex::Complex64;
@@ -1831,7 +1831,13 @@ pub fn validate_numerical_precision_enhanced(
             .map(|i| amplitude * (2.0 * PI * i as f64 / test_signals.n as f64).sin())
             .collect();
         
-        if let Ok(config) = MultitaperConfig::default_for_signal(small_signal.len()) {
+        let config = MultitaperConfig {
+            fs: test_signals.fs,
+            nw: test_signals.nw,
+            k: test_signals.k,
+            ..Default::default()
+        };
+        {
             if let Ok(result) = enhanced_pmtm(&small_signal, &config) {
                 // Check that PSD values are finite and positive
                 let finite_count = result.psd.iter().filter(|&&x| x.is_finite() && x > 0.0).count();
@@ -1848,7 +1854,13 @@ pub fn validate_numerical_precision_enhanced(
             .map(|i| amplitude * (2.0 * PI * i as f64 / test_signals.n as f64).sin())
             .collect();
         
-        if let Ok(config) = MultitaperConfig::default_for_signal(large_signal.len()) {
+        let config = MultitaperConfig {
+            fs: test_signals.fs,
+            nw: test_signals.nw,
+            k: test_signals.k,
+            ..Default::default()
+        };
+        {
             if let Ok(result) = enhanced_pmtm(&large_signal, &config) {
                 // Check for numerical overflow/underflow
                 let finite_count = result.psd.iter().filter(|&&x| x.is_finite()).count();
@@ -1864,7 +1876,13 @@ pub fn validate_numerical_precision_enhanced(
         .map(|i| (PI * i as f64).sin()) // Frequency at Nyquist
         .collect();
     
-    if let Ok(config) = MultitaperConfig::default_for_signal(nyquist_signal.len()) {
+    let config = MultitaperConfig {
+        fs: test_signals.fs,
+        nw: test_signals.nw,
+        k: test_signals.k,
+        ..Default::default()
+    };
+    {
         if let Ok(result) = enhanced_pmtm(&nyquist_signal, &config) {
             // Check spectral leakage near Nyquist frequency
             let half_len = result.psd.len() / 2;

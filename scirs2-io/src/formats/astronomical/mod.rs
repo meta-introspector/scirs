@@ -1221,7 +1221,7 @@ mod tests {
             comment: Some("Exposure time in seconds".to_string()),
         });
 
-        assert_eq!(header.get_bool("SIMPLE").unwrap(), true);
+        assert!(header.get_bool("SIMPLE").unwrap());
         assert_eq!(header.get_i64("NAXIS").unwrap(), 2);
         assert_eq!(header.get_f64("EXPTIME").unwrap(), 300.0);
     }

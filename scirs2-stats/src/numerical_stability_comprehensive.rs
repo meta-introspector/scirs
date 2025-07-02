@@ -256,7 +256,7 @@ impl NumericalStabilityTester {
         });
 
         // Test Welford's algorithm stability
-        let large_scale_data: Vec<f64> = (0..1000).map(|i| 1e9 + rand::thread_rng().gen::<f64>()).collect();
+        let large_scale_data: Vec<f64> = (0..1000).map(|i| 1e9 + rand::rng().gen::<f64>()).collect();
         self.run_test("variance_welford_large_scale", "basic_statistics", &large_scale_data, |data| {
             let arr = Array1::from_vec(data.clone());
             let result1 = crate::descriptive::var(&arr.view(), 1);
@@ -276,7 +276,7 @@ impl NumericalStabilityTester {
     fn test_standard_deviation_stability(&mut self) {
         // Test that std = sqrt(variance) relationship holds
         for _ in 0..10 {
-            let data: Vec<f64> = (0..500).map(|_| rand::thread_rng().gen_range(-1e6..1e6)).collect();
+            let data: Vec<f64> = (0..500).map(|_| rand::rng().random_range(-1e6..1e6)).collect();
             
             self.run_test("std_sqrt_variance_consistency", "basic_statistics", &data, |data| {
                 let arr = Array1::from_vec(data.clone());
@@ -358,7 +358,7 @@ impl NumericalStabilityTester {
 
         // Test with high precision requirements
         for _ in 0..5 {
-            let base_data: Vec<f64> = (0..1000).map(|_| rand::thread_rng().gen::<f64>()).collect();
+            let base_data: Vec<f64> = (0..1000).map(|_| rand::rng().gen::<f64>()).collect();
             let scaled_data: Vec<f64> = base_data.iter().map(|&x| 1e15 * x + 1e10).collect();
             
             self.run_test("correlation_high_precision", "correlation", &base_data, |base| {
@@ -471,7 +471,7 @@ impl NumericalStabilityTester {
     fn test_ill_conditioned_cases(&mut self) {
         // Test correlation with nearly collinear data
         let x: Vec<f64> = (0..1000).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&val| val + 1e-10 * rand::thread_rng().gen::<f64>()).collect();
+        let y: Vec<f64> = x.iter().map(|&val| val + 1e-10 * rand::rng().gen::<f64>()).collect();
         
         self.run_test("ill_conditioned_correlation", "ill_conditioned", &x, |_| {
             let x_arr = Array1::from_vec((0..1000).map(|i| i as f64).collect());
@@ -489,7 +489,7 @@ impl NumericalStabilityTester {
         // This would test things like iterative PCA, EM algorithms, etc.
         
         // For now, test a simple iterative mean calculation
-        let data: Vec<f64> = (0..1000).map(|_| rand::thread_rng().gen::<f64>()).collect();
+        let data: Vec<f64> = (0..1000).map(|_| rand::rng().gen::<f64>()).collect();
         
         self.run_test("iterative_convergence", "iterative", &data, |data| {
             let arr = Array1::from_vec(data.clone());

@@ -360,6 +360,9 @@ where
         // Update each level set
         let mut converged = true;
 
+        // Clone phi_list for read access during mutable iteration
+        let phi_list_snapshot: Vec<_> = phi_list.iter().map(|phi| phi.clone()).collect();
+        
         for (phase_idx, phi) in phi_list.iter_mut().enumerate() {
             let phi_old = phi.clone();
             let curvature = compute_curvature(&phi.view());
@@ -381,7 +384,7 @@ where
 
                         // Compute membership for other phases
                         let mut other_membership = 1.0;
-                        for (k, other_phi) in phi_list.iter().enumerate() {
+                        for (k, other_phi) in phi_list_snapshot.iter().enumerate() {
                             if k != phase_idx {
                                 if (region >> k) & 1 == 1 {
                                     other_membership *= heaviside(other_phi[[i, j]], epsilon);

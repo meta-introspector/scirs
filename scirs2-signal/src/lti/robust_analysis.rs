@@ -452,7 +452,7 @@ impl Default for RobustAnalysisConfig {
 }
 
 /// Enhanced controllability analysis with SVD-based robustness
-fn enhanced_controllability_analysis(
+pub fn enhanced_controllability_analysis(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,
 ) -> SignalResult<EnhancedControllabilityAnalysis> {

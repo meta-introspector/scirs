@@ -194,7 +194,7 @@ impl PolynomialFeatures {
                 array: &Array2<f64>,
                 result: &mut Array2<f64>,
                 col_idx: &mut usize,
-            ) {
+            ) -> Result<()> {
                 if degree == 0 {
                     // Skip the bias term and individual features
                     let sum: usize = powers.iter().sum();
@@ -230,7 +230,7 @@ impl PolynomialFeatures {
                         }
                         *col_idx += 1;
                     }
-                    return;
+                    return Ok(());
                 }
 
                 for j in start..powers.len() {
@@ -247,10 +247,11 @@ impl PolynomialFeatures {
                             array,
                             result,
                             col_idx,
-                        );
+                        )?;
                         powers[j] -= p;
                     }
                 }
+                Ok(())
             }
 
             // Start from degree 2 features
@@ -264,7 +265,7 @@ impl PolynomialFeatures {
                 &array_f64,
                 &mut result,
                 &mut current_col_idx,
-            );
+            )?;
         }
 
         // Final validation of the output

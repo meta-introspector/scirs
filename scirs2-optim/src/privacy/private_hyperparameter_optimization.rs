@@ -4,12 +4,12 @@
 //! optimization, ensuring that the choice of hyperparameters does not leak
 //! sensitive information about the training data.
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use crate::privacy::moment_accountant::MomentsAccountant;
 use crate::privacy::{DifferentialPrivacyConfig, PrivacyBudget};
-use ndarray::{Array1, Array2, ArrayBase, Data, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
-use rand::{Rng, SeedableRng};
+use rand::Rng;
 use rand_chacha::ChaCha20Rng;
 use std::collections::HashMap;
 
@@ -239,7 +239,7 @@ pub trait NoisyOptimizer<T: Float>: Send + Sync {
         parameter_space: &ParameterSpace<T>,
         evaluation_history: &[HPOEvaluation<T>],
         privacy_budget: &PrivacyBudget,
-    ) -> Result<ParameterConfiguration<T>, OptimizerError>;
+    ) -> Result<ParameterConfiguration<T>, OptimError>;
 
     /// Update optimizer with new evaluation result
     fn update(
@@ -247,7 +247,7 @@ pub trait NoisyOptimizer<T: Float>: Send + Sync {
         config: &ParameterConfiguration<T>,
         result: &HPOResult<T>,
         privacy_budget: &PrivacyBudget,
-    ) -> Result<(), OptimizerError>;
+    ) -> Result<(), OptimError>;
 
     /// Get optimizer name
     fn name(&self) -> &str;
@@ -420,7 +420,7 @@ pub enum ParameterValue<T: Float> {
 pub struct PrivateObjective<T: Float> {
     /// Underlying objective function
     objective_fn:
-        Box<dyn Fn(&ParameterConfiguration<T>) -> Result<f64, OptimizerError> + Send + Sync>,
+        Box<dyn Fn(&ParameterConfiguration<T>) -> Result<f64, OptimError> + Send + Sync>,
 
     /// Noise mechanism for objective evaluation
     noise_mechanism: ObjectiveNoiseMechanism<T>,
@@ -944,7 +944,7 @@ impl<T: Float + 'static> PrivateHyperparameterOptimizer<T> {
     pub fn new(
         config: PrivateHPOConfig<T>,
         parameter_space: ParameterSpace<T>,
-    ) -> Result<Self, OptimizerError> {
+    ) -> Result<Self, OptimError> {
         let budget_manager = HPOBudgetManager::new(
             config.base_privacy_config.clone(),
             config.budget_allocation,
@@ -999,9 +999,9 @@ impl<T: Float + 'static> PrivateHyperparameterOptimizer<T> {
     pub fn optimize(
         &mut self,
         objective_fn: Box<
-            dyn Fn(&ParameterConfiguration<T>) -> Result<f64, OptimizerError> + Send + Sync,
+            dyn Fn(&ParameterConfiguration<T>) -> Result<f64, OptimError> + Send + Sync,
         >,
-    ) -> Result<PrivateHPOResults<T>, OptimizerError> {
+    ) -> Result<PrivateHPOResults<T>, OptimError> {
         // Set up private objective function
         self.private_objective.set_objective(objective_fn)?;
 
@@ -1029,7 +1029,7 @@ impl<T: Float + 'static> PrivateHyperparameterOptimizer<T> {
             let config = if let Some(optimizer) = self.noisy_optimizers.get_mut(optimizer_name) {
                 optimizer.suggest_next(&self.parameter_space, &evaluations, &evaluation_budget)?
             } else {
-                return Err(OptimizerError::InvalidConfig(
+                return Err(OptimError::InvalidConfig(
                     "No optimizer available".to_string(),
                 ));
             };
@@ -1092,7 +1092,7 @@ impl<T: Float + 'static> PrivateHyperparameterOptimizer<T> {
     }
 
     /// Check early stopping criteria
-    fn should_stop_early(&self, evaluations: &[HPOEvaluation<T>]) -> Result<bool, OptimizerError> {
+    fn should_stop_early(&self, evaluations: &[HPOEvaluation<T>]) -> Result<bool, OptimError> {
         if !self.config.early_stopping.enabled {
             return Ok(false);
         }
@@ -1125,7 +1125,7 @@ impl<T: Float + 'static> PrivateHyperparameterOptimizer<T> {
     }
 
     /// Compute optimization statistics
-    fn compute_optimization_stats(&self) -> Result<OptimizationStats<T>, OptimizerError> {
+    fn compute_optimization_stats(&self) -> Result<OptimizationStats<T>, OptimError> {
         Ok(OptimizationStats {
             total_evaluations: 0,
             successful_evaluations: 0,
@@ -1243,7 +1243,7 @@ pub struct PrivateRandomSearch<T: Float> {
 }
 
 impl<T: Float> PrivateRandomSearch<T> {
-    pub fn new(config: PrivateHPOConfig<T>) -> Result<Self, OptimizerError> {
+    pub fn new(config: PrivateHPOConfig<T>) -> Result<Self, OptimError> {
         Ok(Self {
             config,
             rng: ChaCha20Rng::from_entropy(),
@@ -1258,7 +1258,7 @@ impl<T: Float> NoisyOptimizer<T> for PrivateRandomSearch<T> {
         parameter_space: &ParameterSpace<T>,
         _evaluation_history: &[HPOEvaluation<T>],
         _privacy_budget: &PrivacyBudget,
-    ) -> Result<ParameterConfiguration<T>, OptimizerError> {
+    ) -> Result<ParameterConfiguration<T>, OptimError> {
         let mut values = HashMap::new();
 
         for (param_name, param_def) in &parameter_space.parameters {
@@ -1310,7 +1310,7 @@ impl<T: Float> NoisyOptimizer<T> for PrivateRandomSearch<T> {
         _config: &ParameterConfiguration<T>,
         _result: &HPOResult<T>,
         _privacy_budget: &PrivacyBudget,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Random search doesn't need to update based on results
         Ok(())
     }
@@ -1336,7 +1336,7 @@ pub struct PrivateBayesianOptimization<T: Float> {
 }
 
 impl<T: Float> PrivateBayesianOptimization<T> {
-    pub fn new(config: PrivateHPOConfig<T>) -> Result<Self, OptimizerError> {
+    pub fn new(config: PrivateHPOConfig<T>) -> Result<Self, OptimError> {
         Ok(Self {
             config,
             gp_model: None,
@@ -1352,7 +1352,7 @@ impl<T: Float> NoisyOptimizer<T> for PrivateBayesianOptimization<T> {
         parameter_space: &ParameterSpace<T>,
         evaluation_history: &[HPOEvaluation<T>],
         privacy_budget: &PrivacyBudget,
-    ) -> Result<ParameterConfiguration<T>, OptimizerError> {
+    ) -> Result<ParameterConfiguration<T>, OptimError> {
         if evaluation_history.is_empty() {
             // First evaluation - use random sampling
             let mut rng = ChaCha20Rng::from_entropy();
@@ -1395,7 +1395,7 @@ impl<T: Float> NoisyOptimizer<T> for PrivateBayesianOptimization<T> {
         _config: &ParameterConfiguration<T>,
         _result: &HPOResult<T>,
         _privacy_budget: &PrivacyBudget,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Update Gaussian process model with new data point
         // This is a simplified implementation
         Ok(())
@@ -1480,7 +1480,7 @@ impl HPOBudgetManager {
         base_config: DifferentialPrivacyConfig,
         allocation_strategy: BudgetAllocationStrategy,
         num_evaluations: usize,
-    ) -> Result<Self, OptimizerError> {
+    ) -> Result<Self, OptimError> {
         let total_budget = PrivacyBudget {
             epsilon_consumed: 0.0,
             delta_consumed: 0.0,
@@ -1508,7 +1508,7 @@ impl HPOBudgetManager {
         })
     }
 
-    pub fn has_budget_remaining(&self) -> Result<bool, OptimizerError> {
+    pub fn has_budget_remaining(&self) -> Result<bool, OptimError> {
         Ok(self.consumed_budget.epsilon_remaining > 0.0
             && self.consumed_budget.delta_remaining > 0.0)
     }
@@ -1516,7 +1516,7 @@ impl HPOBudgetManager {
     pub fn get_evaluation_budget(
         &mut self,
         iteration: usize,
-    ) -> Result<PrivacyBudget, OptimizerError> {
+    ) -> Result<PrivacyBudget, OptimError> {
         let remaining_evaluations = self
             .total_budget
             .estimated_steps_remaining
@@ -1541,7 +1541,7 @@ impl HPOBudgetManager {
         &mut self,
         budget_used: &PrivacyBudget,
         score: f64,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         self.consumed_budget.epsilon_consumed += budget_used.epsilon_remaining;
         self.consumed_budget.delta_consumed += budget_used.delta_remaining;
         self.consumed_budget.epsilon_remaining -= budget_used.epsilon_remaining;
@@ -1573,7 +1573,7 @@ impl AdaptiveBudgetController {
 }
 
 impl<T: Float> PrivateObjective<T> {
-    pub fn new() -> Result<Self, OptimizerError> {
+    pub fn new() -> Result<Self, OptimError> {
         Ok(Self {
             objective_fn: Box::new(|_| Ok(0.0)),
             noise_mechanism: ObjectiveNoiseMechanism::new(),
@@ -1585,9 +1585,9 @@ impl<T: Float> PrivateObjective<T> {
     pub fn set_objective(
         &mut self,
         objective_fn: Box<
-            dyn Fn(&ParameterConfiguration<T>) -> Result<f64, OptimizerError> + Send + Sync,
+            dyn Fn(&ParameterConfiguration<T>) -> Result<f64, OptimError> + Send + Sync,
         >,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         self.objective_fn = objective_fn;
         Ok(())
     }
@@ -1596,7 +1596,7 @@ impl<T: Float> PrivateObjective<T> {
         &mut self,
         config: &ParameterConfiguration<T>,
         privacy_budget: &PrivacyBudget,
-    ) -> Result<HPOResult<T>, OptimizerError> {
+    ) -> Result<HPOResult<T>, OptimError> {
         let objective_value = (self.objective_fn)(config)?;
         let noisy_value = self
             .noise_mechanism
@@ -1632,14 +1632,14 @@ impl<T: Float> ObjectiveNoiseMechanism<T> {
         &mut self,
         value: f64,
         _privacy_budget: &PrivacyBudget,
-    ) -> Result<f64, OptimizerError> {
+    ) -> Result<f64, OptimError> {
         use rand_distr::{Distribution, Normal};
 
         match self.mechanism_type {
             HyperparameterNoiseMechanism::Gaussian => {
                 let noise_scale = self.noise_params.scale.to_f64().unwrap_or(1.0);
                 let normal = Normal::new(0.0, noise_scale).map_err(|_| {
-                    OptimizerError::InvalidConfig("Invalid noise scale".to_string())
+                    OptimError::InvalidConfig("Invalid noise scale".to_string())
                 })?;
 
                 let noise = normal.sample(&mut self.rng);
@@ -1734,7 +1734,7 @@ impl<T: Float> SearchStrategy<T> {
 }
 
 impl<T: Float> PrivateResultsAggregator<T> {
-    pub fn new() -> Result<Self, OptimizerError> {
+    pub fn new() -> Result<Self, OptimError> {
         Ok(Self {
             aggregation_strategy: ResultAggregationStrategy::SelectBest,
             selection_budget: PrivacyBudget {
@@ -1754,7 +1754,7 @@ impl<T: Float> PrivateResultsAggregator<T> {
     pub fn aggregate_results(
         &self,
         evaluations: &[HPOEvaluation<T>],
-    ) -> Result<AggregatedResults<T>, OptimizerError> {
+    ) -> Result<AggregatedResults<T>, OptimError> {
         let mut top_configs = Vec::new();
 
         // Sort evaluations by objective value

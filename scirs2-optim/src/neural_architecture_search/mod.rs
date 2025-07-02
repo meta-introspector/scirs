@@ -4,7 +4,7 @@
 //! for automatically discovering optimal optimization algorithms and strategies.
 //! Instead of designing neural networks, this NAS framework designs optimizers.
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
@@ -1249,7 +1249,7 @@ impl<T: Float> Default for NASConfig<T> {
 
 impl<T: Float> NeuralArchitectureSearch<T> {
     /// Create a new Neural Architecture Search engine
-    pub fn new(config: NASConfig<T>) -> Result<Self, OptimizerError> {
+    pub fn new(config: NASConfig<T>) -> Result<Self, OptimError> {
         // Initialize search strategy
         let search_strategy = Self::create_search_strategy(&config)?;
 
@@ -1303,7 +1303,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     }
 
     /// Run the neural architecture search
-    pub fn run_search(&mut self) -> Result<SearchResults<T>, OptimizerError> {
+    pub fn run_search(&mut self) -> Result<SearchResults<T>, OptimError> {
         let start_time = Instant::now();
 
         // Initialize search
@@ -1340,7 +1340,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     }
 
     /// Initialize the search process
-    fn initialize_search(&mut self) -> Result<(), OptimizerError> {
+    fn initialize_search(&mut self) -> Result<(), OptimError> {
         // Initialize search strategy
         self.search_strategy.initialize(&self.config.search_space)?;
 
@@ -1363,7 +1363,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     }
 
     /// Generate candidate architectures
-    fn generate_candidates(&mut self) -> Result<Vec<OptimizerArchitecture<T>>, OptimizerError> {
+    fn generate_candidates(&mut self) -> Result<Vec<OptimizerArchitecture<T>>, OptimError> {
         let population_size = self.config.population_size;
         let mut candidates = Vec::with_capacity(population_size);
 
@@ -1381,7 +1381,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
 
         // Ensure minimum number of candidates
         if candidates.is_empty() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "No valid candidate architectures generated".to_string(),
             ));
         }
@@ -1393,7 +1393,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     fn evaluate_candidates(
         &mut self,
         candidates: Vec<OptimizerArchitecture<T>>,
-    ) -> Result<Vec<SearchResult<T>>, OptimizerError> {
+    ) -> Result<Vec<SearchResult<T>>, OptimError> {
         let mut results = Vec::new();
 
         for architecture in candidates {
@@ -1432,7 +1432,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     }
 
     /// Update search state with new results
-    fn update_search_state(&mut self, results: Vec<SearchResult<T>>) -> Result<(), OptimizerError> {
+    fn update_search_state(&mut self, results: Vec<SearchResult<T>>) -> Result<(), OptimError> {
         // Add results to history
         for result in &results {
             self.search_history.push_back(result.clone());
@@ -1634,7 +1634,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     // Helper method implementations
     fn create_search_strategy(
         config: &NASConfig<T>,
-    ) -> Result<Box<dyn SearchStrategy<T>>, OptimizerError> {
+    ) -> Result<Box<dyn SearchStrategy<T>>, OptimError> {
         match config.search_strategy {
             SearchStrategyType::Random => {
                 let strategy = search_strategies::RandomSearch::new(Some(42));
@@ -1693,7 +1693,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
 
     fn create_multi_objective_optimizer(
         config: &MultiObjectiveConfig<T>,
-    ) -> Result<Box<dyn MultiObjectiveOptimizer<T>>, OptimizerError> {
+    ) -> Result<Box<dyn MultiObjectiveOptimizer<T>>, OptimError> {
         match config.algorithm {
             MultiObjectiveAlgorithm::NSGA2 => Ok(Box::new(multi_objective::NSGA2::new(
                 config.pareto_front_size,
@@ -1718,7 +1718,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
 
     fn create_architecture_controller(
         config: &NASConfig<T>,
-    ) -> Result<Box<dyn ArchitectureController<T>>, OptimizerError> {
+    ) -> Result<Box<dyn ArchitectureController<T>>, OptimError> {
         match config.search_strategy {
             SearchStrategyType::ReinforcementLearning => {
                 Ok(Box::new(controllers::RNNController::new(
@@ -1743,7 +1743,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     fn validate_architecture(
         &self,
         architecture: &OptimizerArchitecture<T>,
-    ) -> Result<bool, OptimizerError> {
+    ) -> Result<bool, OptimError> {
         // Use architecture validator for proper validation
         let validator = architecture_space::ArchitectureValidator::new(
             architecture_space::SearchSpace::default(),
@@ -1766,11 +1766,11 @@ impl<T: Float> NeuralArchitectureSearch<T> {
         &self,
         architecture: &OptimizerArchitecture<T>,
         eval_time: Duration,
-    ) -> Result<ResourceUsage<T>, OptimizerError> {
+    ) -> Result<ResourceUsage<T>, OptimError> {
         let mut memory_gb = T::from(0.1).unwrap(); // Base memory
         let cpu_time_seconds = T::from(eval_time.as_secs_f64()).unwrap();
         let mut gpu_time_seconds = T::zero();
-        let mut model_params = 0;
+        let mut _model_params = 0;
 
         for component in &architecture.components {
             match component.component_type {
@@ -1788,18 +1788,18 @@ impl<T: Float> NeuralArchitectureSearch<T> {
 
                     memory_gb = memory_gb
                         + T::from(hidden_size * num_layers * 8.0 / 1024.0 / 1024.0).unwrap();
-                    model_params += (hidden_size * hidden_size * 4.0 * num_layers) as usize;
+                    _model_params += (hidden_size * hidden_size * 4.0 * num_layers) as usize;
                     gpu_time_seconds =
                         gpu_time_seconds + T::from(hidden_size * num_layers * 0.001).unwrap();
                 }
                 ComponentType::TransformerOptimizer => {
                     memory_gb = memory_gb + T::from(1.0).unwrap(); // 1GB for transformer
-                    model_params += 1_000_000;
+                    _model_params += 1_000_000;
                     gpu_time_seconds = gpu_time_seconds + T::from(0.1).unwrap();
                 }
                 _ => {
                     memory_gb = memory_gb + T::from(0.01).unwrap(); // 10MB per component
-                    model_params += 1000;
+                    _model_params += 1000;
                 }
             }
         }
@@ -1821,7 +1821,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     fn encode_architecture(
         &self,
         architecture: &OptimizerArchitecture<T>,
-    ) -> Result<ArchitectureEncoding, OptimizerError> {
+    ) -> Result<ArchitectureEncoding, OptimError> {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
@@ -1893,7 +1893,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     fn update_best_architectures(
         &mut self,
         results: &[SearchResult<T>],
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         for result in results {
             let performance = result
                 .evaluation_results
@@ -1977,12 +1977,12 @@ impl<T: Float> NeuralArchitectureSearch<T> {
         self.search_statistics.total_evaluated = self.search_history.len();
     }
 
-    fn check_resource_constraints(&mut self) -> Result<(), OptimizerError> {
+    fn check_resource_constraints(&mut self) -> Result<(), OptimError> {
         // Placeholder implementation
         Ok(())
     }
 
-    fn finalize_search(&self, _search_time: Duration) -> Result<SearchResults<T>, OptimizerError> {
+    fn finalize_search(&self, _search_time: Duration) -> Result<SearchResults<T>, OptimError> {
         Ok(SearchResults {
             best_architectures: self.best_architectures.clone(),
             pareto_front: self.pareto_front.clone(),
@@ -2052,7 +2052,7 @@ impl<T: Float> ResourceMonitor<T> {
         }
     }
 
-    fn start_monitoring(&mut self) -> Result<(), OptimizerError> {
+    fn start_monitoring(&mut self) -> Result<(), OptimError> {
         self.monitoring_enabled = true;
         Ok(())
     }

@@ -1,7 +1,7 @@
 //! Trust-region algorithm for constrained optimization
 
 use crate::constrained::{Constraint, ConstraintFn, ConstraintKind, Options};
-use crate::error::{OptimizeError, OptimizeResult};
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix1};
 

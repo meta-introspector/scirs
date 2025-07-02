@@ -3391,7 +3391,7 @@ impl QuantumTSPSolver {
             evolved_amplitudes.mapv_inplace(|a| a / norm);
         }
 
-        Ok(QuantumState::new(evolved_amplitudes)?)
+        QuantumState::new(evolved_amplitudes)
     }
 
     /// Decode quantum state index to tour
@@ -4144,7 +4144,7 @@ impl QuantumVariationalClassifier {
             let mut total_gradients = Array1::zeros(self.parameters.len());
 
             // Batch gradient computation
-            for (_sample_idx, (point, &label)) in points.outer_iter().zip(labels.iter()).enumerate() {
+            for (point, &label) in points.outer_iter().zip(labels.iter()) {
                 // Forward pass
                 let prediction = self.forward_pass(&point)?;
                 

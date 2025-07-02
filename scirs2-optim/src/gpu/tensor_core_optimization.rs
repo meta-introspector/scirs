@@ -18,7 +18,7 @@ use std::sync::Arc;
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{CudaStream, GpuContext, GpuKernel};
 
-use crate::gpu::{GpuOptimizerConfig, GpuOptimizerError};
+use crate::gpu::{GpuOptimizerConfig, GpuOptimError};
 
 /// Tensor core matrix multiplication configuration
 #[derive(Debug, Clone)]
@@ -148,7 +148,7 @@ pub enum MatrixLayout {
 
 impl TensorCoreOptimizer {
     /// Create new tensor core optimizer
-    pub fn new(config: TensorCoreConfig) -> Result<Self, GpuOptimizerError> {
+    pub fn new(config: TensorCoreConfig) -> Result<Self, GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             let context = Arc::new(GpuContext::new(crate::gpu::utils::get_optimal_backend())?);
@@ -186,7 +186,7 @@ impl TensorCoreOptimizer {
         context: &GpuContext,
         config: &TensorCoreConfig,
         compute_capability: (u32, u32),
-    ) -> Result<TensorCoreKernels, GpuOptimizerError> {
+    ) -> Result<TensorCoreKernels, GpuOptimError> {
         let fp16_gemm = CudaKernel::from_ptx(context, TENSOR_CORE_FP16_PTX, "wmma_fp16_gemm")?;
         let bf16_gemm = CudaKernel::from_ptx(context, TENSOR_CORE_BF16_PTX, "wmma_bf16_gemm")?;
         let tf32_gemm = CudaKernel::from_ptx(context, TENSOR_CORE_TF32_PTX, "wmma_tf32_gemm")?;
@@ -284,14 +284,14 @@ impl TensorCoreOptimizer {
         alpha: T,
         beta: T,
         precision: TensorCorePrecision,
-    ) -> Result<(), GpuOptimizerError> {
+    ) -> Result<(), GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             let (m, k_a) = a.dim();
             let (k_b, n) = b.dim();
 
             if k_a != k_b {
-                return Err(GpuOptimizerError::InvalidParameters(
+                return Err(GpuOptimError::InvalidParameters(
                     "Matrix dimension mismatch".to_string(),
                 ));
             }
@@ -304,7 +304,7 @@ impl TensorCoreOptimizer {
                 TensorCorePrecision::BF16 => &self.kernels.bf16_gemm,
                 TensorCorePrecision::TF32 => &self.kernels.tf32_gemm,
                 TensorCorePrecision::FP8 => self.kernels.fp8_gemm.as_ref().ok_or_else(|| {
-                    GpuOptimizerError::InvalidParameters(
+                    GpuOptimError::InvalidParameters(
                         "FP8 tensor cores not available".to_string(),
                     )
                 })?,
@@ -333,7 +333,7 @@ impl TensorCoreOptimizer {
 
         #[cfg(not(feature = "gpu"))]
         {
-            return Err(GpuOptimizerError::CudaNotAvailable);
+            return Err(GpuOptimError::CudaNotAvailable);
         }
 
         Ok(())
@@ -352,7 +352,7 @@ impl TensorCoreOptimizer {
         eps: T,
         weight_decay: T,
         step: i32,
-    ) -> Result<(), GpuOptimizerError> {
+    ) -> Result<(), GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             let (m, n) = params.dim();
@@ -411,7 +411,7 @@ impl TensorCoreOptimizer {
 
         #[cfg(not(feature = "gpu"))]
         {
-            return Err(GpuOptimizerError::CudaNotAvailable);
+            return Err(GpuOptimError::CudaNotAvailable);
         }
 
         Ok(())
@@ -453,7 +453,7 @@ impl TensorCoreOptimizer {
     /// Automatic mixed precision trainer for optimizers
     pub fn create_mixed_precision_trainer(
         &self,
-    ) -> Result<MixedPrecisionTrainer, GpuOptimizerError> {
+    ) -> Result<MixedPrecisionTrainer, GpuOptimError> {
         MixedPrecisionTrainer::new(self.get_tensor_core_info(), &self.config)
     }
 
@@ -465,11 +465,11 @@ impl TensorCoreOptimizer {
         c: &mut Array2<T>,
         alpha: T,
         beta: T,
-    ) -> Result<(), GpuOptimizerError> {
+    ) -> Result<(), GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             if !self.get_tensor_core_info().supports_sparse {
-                return Err(GpuOptimizerError::UnsupportedOperation(
+                return Err(GpuOptimError::UnsupportedOperation(
                     "Sparse tensor cores not supported on this hardware".to_string(),
                 ));
             }
@@ -478,7 +478,7 @@ impl TensorCoreOptimizer {
             let (k_b, n) = b_sparse.dense_shape();
 
             if k_a != k_b {
-                return Err(GpuOptimizerError::InvalidParameters(
+                return Err(GpuOptimError::InvalidParameters(
                     "Matrix dimension mismatch".to_string(),
                 ));
             }
@@ -527,7 +527,7 @@ impl TensorCoreOptimizer {
 
         #[cfg(not(feature = "gpu"))]
         {
-            return Err(GpuOptimizerError::CudaNotAvailable);
+            return Err(GpuOptimError::CudaNotAvailable);
         }
 
         Ok(())
@@ -538,7 +538,7 @@ impl TensorCoreOptimizer {
         &self,
         batches: &[TensorCoreBatch<T>],
         precision: TensorCorePrecision,
-    ) -> Result<Vec<Array2<T>>, GpuOptimizerError> {
+    ) -> Result<Vec<Array2<T>>, GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             let mut results = Vec::with_capacity(batches.len());
@@ -568,7 +568,7 @@ impl TensorCoreOptimizer {
 
         #[cfg(not(feature = "gpu"))]
         {
-            Err(GpuOptimizerError::CudaNotAvailable)
+            Err(GpuOptimError::CudaNotAvailable)
         }
     }
 
@@ -577,7 +577,7 @@ impl TensorCoreOptimizer {
         &self,
         operations: &[TensorCoreOperation<T>],
         pipeline_config: PipelineOptimizationConfig,
-    ) -> Result<Vec<Array2<T>>, GpuOptimizerError> {
+    ) -> Result<Vec<Array2<T>>, GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             let mut results = Vec::with_capacity(operations.len());
@@ -611,7 +611,7 @@ impl TensorCoreOptimizer {
 
         #[cfg(not(feature = "gpu"))]
         {
-            Err(GpuOptimizerError::CudaNotAvailable)
+            Err(GpuOptimError::CudaNotAvailable)
         }
     }
 
@@ -636,7 +636,7 @@ impl TensorCoreOptimizer {
         operation: &TensorCoreOperation<T>,
         result: &mut Array2<T>,
         stream: &CudaStream,
-    ) -> Result<(), GpuOptimizerError> {
+    ) -> Result<(), GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             match &operation.op_type {
@@ -665,7 +665,7 @@ impl TensorCoreOptimizer {
         &self,
         next_operation: &TensorCoreOperation<T>,
         stream: &CudaStream,
-    ) -> Result<(), GpuOptimizerError> {
+    ) -> Result<(), GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             // Prefetch memory for next operation (simplified implementation)
@@ -686,7 +686,7 @@ impl TensorCoreOptimizer {
     pub fn optimize_memory_access_patterns<T: Float>(
         &mut self,
         matrices: &[Array2<T>],
-    ) -> Result<Vec<OptimizedMatrix<T>>, GpuOptimizerError> {
+    ) -> Result<Vec<OptimizedMatrix<T>>, GpuOptimError> {
         let mut optimized_matrices = Vec::with_capacity(matrices.len());
 
         for matrix in matrices {
@@ -751,7 +751,7 @@ impl TensorCoreOptimizer {
         &self,
         matrix: &Array2<T>,
         access_pattern: &MemoryAccessPattern,
-    ) -> Result<OptimizedMatrix<T>, GpuOptimizerError> {
+    ) -> Result<OptimizedMatrix<T>, GpuOptimError> {
         let (rows, cols) = matrix.dim();
 
         // Determine optimal layout based on access pattern
@@ -808,7 +808,7 @@ impl TensorCoreOptimizer {
     pub fn adaptive_tensor_core_scheduling<T: Float>(
         &mut self,
         workload: &TensorCoreWorkload<T>,
-    ) -> Result<SchedulingPlan, GpuOptimizerError> {
+    ) -> Result<SchedulingPlan, GpuOptimError> {
         let hardware_state = self.query_hardware_utilization()?;
         let optimal_config = self.compute_optimal_scheduling(workload, &hardware_state)?;
 
@@ -821,7 +821,7 @@ impl TensorCoreOptimizer {
         })
     }
 
-    fn query_hardware_utilization(&self) -> Result<HardwareUtilizationState, GpuOptimizerError> {
+    fn query_hardware_utilization(&self) -> Result<HardwareUtilizationState, GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             // In real implementation, would query actual GPU metrics
@@ -853,7 +853,7 @@ impl TensorCoreOptimizer {
         &self,
         workload: &TensorCoreWorkload<T>,
         hardware_state: &HardwareUtilizationState,
-    ) -> Result<OptimalSchedulingConfig, GpuOptimizerError> {
+    ) -> Result<OptimalSchedulingConfig, GpuOptimError> {
         let operations = &workload.operations;
         let mut operation_order = Vec::new();
         let mut stream_assignments = Vec::new();
@@ -1031,7 +1031,7 @@ impl TensorCoreOptimizer {
     /// Benchmark tensor core performance for different configurations
     pub fn benchmark_tensor_core_performance(
         &self,
-    ) -> Result<TensorCorePerformanceBenchmark, GpuOptimizerError> {
+    ) -> Result<TensorCorePerformanceBenchmark, GpuOptimError> {
         let mut benchmark = TensorCorePerformanceBenchmark::new();
 
         // Test different matrix sizes and precisions
@@ -1063,7 +1063,7 @@ impl TensorCoreOptimizer {
         n: usize,
         k: usize,
         precision: TensorCorePrecision,
-    ) -> Result<TensorCorePerformanceResult, GpuOptimizerError> {
+    ) -> Result<TensorCorePerformanceResult, GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             let a = Array2::<f32>::ones((m, k));
@@ -1212,7 +1212,7 @@ impl MixedPrecisionTrainer {
     pub fn new(
         tensor_core_info: TensorCoreInfo,
         config: &TensorCoreConfig,
-    ) -> Result<Self, GpuOptimizerError> {
+    ) -> Result<Self, GpuOptimError> {
         Ok(Self {
             loss_scale: 65536.0, // Initial loss scale
             dynamic_scaling: true,
@@ -1621,7 +1621,7 @@ pub struct StreamPool {
 
 impl StreamPool {
     #[cfg(feature = "gpu")]
-    pub fn new(context: &GpuContext, num_streams: usize) -> Result<Self, GpuOptimizerError> {
+    pub fn new(context: &GpuContext, num_streams: usize) -> Result<Self, GpuOptimError> {
         let mut streams = Vec::with_capacity(num_streams);
         for _ in 0..num_streams {
             streams.push(CudaStream::new(context)?);
@@ -1635,7 +1635,7 @@ impl StreamPool {
     }
 
     #[cfg(not(feature = "gpu"))]
-    pub fn new(_context: &GpuContext, num_streams: usize) -> Result<Self, GpuOptimizerError> {
+    pub fn new(_context: &GpuContext, num_streams: usize) -> Result<Self, GpuOptimError> {
         Ok(Self {
             _phantom: std::marker::PhantomData,
             current_stream: 0,
@@ -1654,7 +1654,7 @@ impl StreamPool {
     }
 
     #[cfg(feature = "gpu")]
-    pub fn synchronize_all(&self) -> Result<(), GpuOptimizerError> {
+    pub fn synchronize_all(&self) -> Result<(), GpuOptimError> {
         for stream in &self.streams {
             stream.synchronize()?;
         }
@@ -1662,7 +1662,7 @@ impl StreamPool {
     }
 
     #[cfg(not(feature = "gpu"))]
-    pub fn synchronize_all(&self) -> Result<(), GpuOptimizerError> {
+    pub fn synchronize_all(&self) -> Result<(), GpuOptimError> {
         Ok(())
     }
 }

@@ -2207,6 +2207,121 @@ fn analyze_breakdown_points(
     Ok(BreakdownAnalysisResult::default())
 }
 
+/// Assess numerical stability by comparing results
+fn assess_numerical_stability(simd_result: &[f64], scalar_result: &[f64]) -> f64 {
+    if simd_result.len() != scalar_result.len() || simd_result.is_empty() {
+        return 0.0;
+    }
+    
+    let mut max_relative_error = 0.0;
+    for (simd, scalar) in simd_result.iter().zip(scalar_result.iter()) {
+        if scalar.abs() > 1e-15 {
+            let relative_error = (simd - scalar).abs() / scalar.abs();
+            max_relative_error = max_relative_error.max(relative_error);
+        } else if simd.abs() > 1e-15 {
+            max_relative_error = max_relative_error.max(simd.abs());
+        }
+    }
+    
+    // Return stability score (higher is better)
+    (1.0 - max_relative_error.min(1.0)).max(0.0)
+}
+
+/// Generate test signal based on configuration
+fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> {
+    use std::f64::consts::PI;
+    
+    let length = config.length;
+    let mut signal = Array1::zeros(length);
+    let t: Vec<f64> = (0..length).map(|i| i as f64).collect();
+    
+    match config.signal_type {
+        TestSignalType::Sinusoid => {
+            let freq = config.parameters.get("frequency").unwrap_or(&0.1);
+            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            for (i, &ti) in t.iter().enumerate() {
+                signal[i] = amplitude * (2.0 * PI * freq * ti / length as f64).sin();
+            }
+        },
+        TestSignalType::Chirp => {
+            let f0 = config.parameters.get("f0").unwrap_or(&0.05);
+            let f1 = config.parameters.get("f1").unwrap_or(&0.4);
+            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            for (i, &ti) in t.iter().enumerate() {
+                let freq = f0 + (f1 - f0) * ti / length as f64;
+                signal[i] = amplitude * (2.0 * PI * freq * ti).sin();
+            }
+        },
+        TestSignalType::WhiteNoise => {
+            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let mut rng = rand::rng();
+            for i in 0..length {
+                signal[i] = amplitude * rng.random_range(-1.0..1.0);
+            }
+        },
+        TestSignalType::PinkNoise => {
+            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let mut rng = rand::rng();
+            // Simplified pink noise generation
+            for i in 0..length {
+                signal[i] = amplitude * rng.random_range(-1.0..1.0) * (1.0 / (i + 1) as f64).sqrt();
+            }
+        },
+        TestSignalType::Impulse => {
+            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let position = config.parameters.get("position").unwrap_or(&0.5);
+            let pos_idx = ((position * length as f64) as usize).min(length - 1);
+            signal[pos_idx] = *amplitude;
+        },
+        TestSignalType::Step => {
+            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let position = config.parameters.get("position").unwrap_or(&0.5);
+            let pos_idx = ((position * length as f64) as usize).min(length - 1);
+            for i in pos_idx..length {
+                signal[i] = *amplitude;
+            }
+        },
+        TestSignalType::Polynomial => {
+            let degree = config.parameters.get("degree").unwrap_or(&2.0) as &usize;
+            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            for (i, &ti) in t.iter().enumerate() {
+                let x = 2.0 * ti / length as f64 - 1.0; // Normalize to [-1, 1]
+                signal[i] = amplitude * x.powi(*degree as i32);
+            }
+        },
+        TestSignalType::Piecewise => {
+            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let segments = 4;
+            let segment_length = length / segments;
+            for i in 0..length {
+                let segment = i / segment_length;
+                signal[i] = amplitude * (segment % 2) as f64 * 2.0 - amplitude;
+            }
+        },
+        TestSignalType::Fractal => {
+            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let hurst = config.parameters.get("hurst").unwrap_or(&0.5);
+            // Simplified fractal noise
+            let mut rng = rand::rng();
+            for i in 0..length {
+                signal[i] = amplitude * rng.random_range(-1.0..1.0) * ((i + 1) as f64).powf(-hurst);
+            }
+        },
+        TestSignalType::Composite => {
+            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            // Composite of sinusoid and noise
+            let mut rng = rand::rng();
+            for (i, &ti) in t.iter().enumerate() {
+                let sinusoid = (2.0 * PI * 0.1 * ti / length as f64).sin();
+                let noise = 0.1 * rng.random_range(-1.0..1.0);
+                signal[i] = amplitude * (sinusoid + noise);
+            }
+        },
+    }
+    
+    Ok(signal)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

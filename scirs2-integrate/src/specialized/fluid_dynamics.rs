@@ -5531,7 +5531,7 @@ pub mod ultra_gpu_acceleration {
             let mut pool = self.buffer_pool.lock().unwrap();
 
             pool.entry(buffer.size)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(buffer);
         }
 
@@ -5851,9 +5851,9 @@ pub mod streaming_optimization {
             let (chunk_nx, chunk_ny, chunk_nz) = self.chunk_size;
 
             // Process domain in overlapping chunks
-            for i_chunk in 0..(total_nx + chunk_nx - 1) / chunk_nx {
-                for j_chunk in 0..(total_ny + chunk_ny - 1) / chunk_ny {
-                    for k_chunk in 0..(total_nz + chunk_nz - 1) / chunk_nz {
+            for i_chunk in 0..total_nx.div_ceil(chunk_nx) {
+                for j_chunk in 0..total_ny.div_ceil(chunk_ny) {
+                    for k_chunk in 0..total_nz.div_ceil(chunk_nz) {
                         // Calculate chunk boundaries with overlap
                         let i_start = i_chunk * chunk_nx;
                         let i_end = ((i_chunk + 1) * chunk_nx).min(total_nx);
@@ -6121,7 +6121,7 @@ pub mod multiphase_flow {
 
         /// Initialize phase field variables for diffuse interface method
         fn initialize_phase_fields(&self, volume_fractions: &[Array3<f64>]) -> Vec<Array3<f64>> {
-            volume_fractions.iter().cloned().collect()
+            volume_fractions.to_vec()
         }
 
         /// Evolve multiphase flow for one time step
@@ -6250,9 +6250,8 @@ pub mod multiphase_flow {
             let flux_z = w * self.dt / dz;
 
             let total_flux = flux_x.abs() + flux_y.abs() + flux_z.abs();
-            let advected_vf = current_vf * (1.0 - total_flux.min(1.0));
 
-            advected_vf
+            current_vf * (1.0 - total_flux.min(1.0))
         }
 
         /// Update Level Set interface
@@ -6406,11 +6405,10 @@ pub mod multiphase_flow {
                 / (dz * dz);
 
             // Mean curvature
-            let curvature = (phi_xx + phi_yy + phi_zz) / grad_mag
-                - (phi_x * phi_x * phi_xx + phi_y * phi_y * phi_yy + phi_z * phi_z * phi_zz)
-                    / (grad_mag * grad_mag * grad_mag);
 
-            curvature
+            (phi_xx + phi_yy + phi_zz) / grad_mag
+                - (phi_x * phi_x * phi_xx + phi_y * phi_y * phi_yy + phi_z * phi_z * phi_zz)
+                    / (grad_mag * grad_mag * grad_mag)
         }
 
         /// Solve momentum equation with surface tension forces

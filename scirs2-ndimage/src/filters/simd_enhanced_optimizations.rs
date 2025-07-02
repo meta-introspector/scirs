@@ -13,7 +13,7 @@ use std::cmp;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::filters::BoundaryMode;
+use crate::BoundaryMode;
 
 /// SIMD-optimized texture analysis using Local Binary Patterns (LBP)
 ///

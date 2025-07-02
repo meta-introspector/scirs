@@ -3,7 +3,7 @@
 //! This module provides functionality for processing images that are too large
 //! to fit in memory by processing them in chunks or tiles.
 
-use ndarray::{Array, ArrayView, ArrayViewMut, Dimension, Ix2, Ix3, IxDyn, ShapeBuilder, Slice};
+use ndarray::{Array, ArrayView, ArrayViewMut, Dimension, IxDyn, Slice};
 use num_traits::{Float, FromPrimitive};
 use rayon::prelude::*;
 use std::fmt::Debug;
@@ -1005,7 +1005,7 @@ where
     fn estimate_complexity(&self, shape: &[usize]) -> OperationComplexity;
 
     /// Suggest optimal overlap based on operation characteristics
-    fn suggest_overlap(&self, chunk_dims: &[usize]) -> Vec<usize> {
+    fn suggest_overlap(&self, _chunk_dims: &[usize]) -> Vec<usize> {
         self.required_overlap()
     }
 

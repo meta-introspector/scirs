@@ -576,7 +576,7 @@ where
         // Simple iteration: x = x - α * (A^T * A * x - b)
         let alpha = F::from(0.1).unwrap(); // Simple step size
         for i in 0..n {
-            x[i] = x[i] - alpha * (ata_x[i] - b[i]);
+            x[i] -= alpha * (ata_x[i] - b[i]);
         }
     }
 
@@ -1071,7 +1071,7 @@ where
         return Ok(T::zero());
     }
     for i in 0..n {
-        v[i] = v[i] / v_norm;
+        v[i] /= v_norm;
     }
 
     let mut lambda = T::zero();
@@ -1393,7 +1393,7 @@ where
         return Ok(T::zero());
     }
     for i in 0..n {
-        v[i] = v[i] / v_norm;
+        v[i] /= v_norm;
     }
 
     let mut lambda = T::zero();

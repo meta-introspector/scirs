@@ -9,7 +9,7 @@ use super::{
     STDPConfig, MembraneDynamicsConfig, PlasticityModel, ThermalManagementConfig,
     SleepModeConfig, ThermalThrottlingStrategy
 };
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 use ndarray::{Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;
@@ -762,7 +762,7 @@ impl<T: Float> EnergyEfficientOptimizer<T> {
     }
     
     /// Optimize energy consumption
-    pub fn optimize_energy(&mut self, workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>, OptimizerError> {
+    pub fn optimize_energy(&mut self, workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>, OptimError> {
         // Update energy monitoring
         self.energy_monitor.update(&self.system_state)?;
         
@@ -820,7 +820,7 @@ impl<T: Float> EnergyEfficientOptimizer<T> {
     }
     
     /// Apply DVFS optimization
-    fn apply_dvfs_optimization(&mut self, workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>, OptimizerError> {
+    fn apply_dvfs_optimization(&mut self, workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>, OptimError> {
         let initial_energy = self.system_state.current_energy;
         let initial_power = self.system_state.current_power;
         
@@ -852,7 +852,7 @@ impl<T: Float> EnergyEfficientOptimizer<T> {
     }
     
     /// Apply power gating optimization
-    fn apply_power_gating_optimization(&mut self, workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>, OptimizerError> {
+    fn apply_power_gating_optimization(&mut self, workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>, OptimError> {
         let initial_energy = self.system_state.current_energy;
         let initial_power = self.system_state.current_power;
         
@@ -882,7 +882,7 @@ impl<T: Float> EnergyEfficientOptimizer<T> {
     }
     
     /// Apply sparse computation optimization
-    fn apply_sparse_computation_optimization(&mut self, workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>, OptimizerError> {
+    fn apply_sparse_computation_optimization(&mut self, workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>, OptimError> {
         let initial_energy = self.system_state.current_energy;
         let initial_power = self.system_state.current_power;
         
@@ -907,7 +907,7 @@ impl<T: Float> EnergyEfficientOptimizer<T> {
     }
     
     /// Apply multi-level optimization
-    fn apply_multi_level_optimization(&mut self, workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>, OptimizerError> {
+    fn apply_multi_level_optimization(&mut self, workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>, OptimError> {
         let mut total_result = EnergyOptimizationResult {
             strategy_used: EnergyOptimizationStrategy::MultiLevel,
             energy_saved: T::zero(),
@@ -955,7 +955,7 @@ impl<T: Float> EnergyEfficientOptimizer<T> {
     }
     
     /// Apply default optimization
-    fn apply_default_optimization(&mut self, _workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>, OptimizerError> {
+    fn apply_default_optimization(&mut self, _workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>, OptimError> {
         // Minimal optimization - just monitoring
         Ok(EnergyOptimizationResult {
             strategy_used: self.current_strategy,
@@ -998,7 +998,7 @@ impl<T: Float> EnergyEfficientOptimizer<T> {
     }
     
     /// Consider switching optimization strategy
-    fn consider_strategy_switch(&mut self) -> Result<(), OptimizerError> {
+    fn consider_strategy_switch(&mut self) -> Result<(), OptimError> {
         if let Some(&current_effectiveness) = self.strategy_effectiveness.get(&self.current_strategy) {
             // Find best alternative strategy
             if let Some((&best_strategy, &best_effectiveness)) = self.strategy_effectiveness.iter()
@@ -1106,7 +1106,7 @@ impl<T: Float> EnergyMonitor<T> {
         }
     }
     
-    fn update(&mut self, system_state: &EnergySystemState<T>) -> Result<(), OptimizerError> {
+    fn update(&mut self, system_state: &EnergySystemState<T>) -> Result<(), OptimError> {
         let now = Instant::now();
         self.consumption_history.push_back((now, system_state.current_energy));
         self.power_history.push_back((now, system_state.current_power));

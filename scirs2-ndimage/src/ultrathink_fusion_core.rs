@@ -254,7 +254,7 @@ pub struct EfficiencyMetrics {
 pub fn ultrathink_fusion_processing<T>(
     image: ArrayView2<T>,
     config: &UltrathinkConfig,
-    previous_state: Option<UltrathinkState>,
+    _previous_state: Option<UltrathinkState>,
 ) -> NdimageResult<(Array2<T>, UltrathinkState)>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
@@ -262,7 +262,7 @@ where
     let (height, width) = image.dim();
 
     // Initialize or update ultra-advanced processing state
-    let mut ultra_state = initialize_or_update_state(previous_state, (height, width), config)?;
+    let mut ultra_state = initialize_or_update_state(_previous_state, (height, width), config)?;
 
     // Stage 1: Ultra-Dimensional Feature Extraction
     let ultra_features = extract_ultra_dimensional_features(&image, &mut ultra_state, config)?;
@@ -470,7 +470,7 @@ pub fn self_organizing_neural_processing(
 ) -> NdimageResult<Array2<f64>>
 where
 {
-    let (height, width, dimensions, temporal, consciousness) = ultra_features.dim();
+    let (height, width, _dimensions, _temporal, _consciousness) = ultra_features.dim();
     let mut neural_output = Array2::zeros((height, width));
 
     // Access the network topology with proper locking
@@ -510,20 +510,25 @@ where
                 }
 
                 // Apply activation function
-                let node = &mut topology.nodes[pixel_id];
+                let activation_type = topology.nodes[pixel_id].activation_type.clone();
                 let activated_output =
-                    apply_activation_function(node_activation, &node.activation_type, config)?;
+                    apply_activation_function(node_activation, &activation_type, config)?;
 
                 // Update node state
-                update_node_state(node, activated_output, ultra_features, (y, x), config)?;
+                update_node_state(
+                    &mut topology.nodes[pixel_id],
+                    activated_output,
+                    ultra_features,
+                    (y, x),
+                    config,
+                )?;
 
                 neural_output[(y, x)] = activated_output;
 
                 // Apply self-organization learning
                 if config.self_organization {
-                    apply_self_organization_learning(
-                        node,
-                        &mut topology.connections,
+                    apply_self_organization_learning_safe(
+                        &mut topology,
                         pixel_id,
                         config,
                     )?;
@@ -661,7 +666,7 @@ where
 // (In a real implementation, these would be fully developed)
 
 fn initialize_or_update_state(
-    previous_state: Option<UltrathinkState>,
+    _previous_state: Option<UltrathinkState>,
     shape: (usize, usize),
     config: &UltrathinkConfig,
 ) -> NdimageResult<UltrathinkState> {
@@ -714,7 +719,7 @@ fn extract_spatial_features<T>(
     pixel_value: f64,
     position: (usize, usize),
     image: &ArrayView2<T>,
-    config: &UltrathinkConfig,
+    _config: &UltrathinkConfig,
 ) -> NdimageResult<Vec<f64>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1000,7 +1005,7 @@ where
 
     for i in 1..window_size - 1 {
         for j in 1..window_size - 1 {
-            let idx = i * window_size + j;
+            let _idx = i * window_size + j;
             let left_idx = i * window_size + (j - 1);
             let right_idx = i * window_size + (j + 1);
             let top_idx = (i - 1) * window_size + j;
@@ -1248,6 +1253,15 @@ fn apply_self_organization_learning(
     _node_id: usize,
     _config: &UltrathinkConfig,
 ) -> NdimageResult<()> {
+    Ok(())
+}
+
+fn apply_self_organization_learning_safe(
+    _topology: &mut NetworkTopology,
+    _node_id: usize,
+    _config: &UltrathinkConfig,
+) -> NdimageResult<()> {
+    // Stub implementation to avoid borrowing issues
     Ok(())
 }
 
@@ -1796,7 +1810,7 @@ fn multi_scale_integration(
 
         for y in 0..target_shape.0 {
             for x in 0..target_shape.1 {
-                reconstruction = upsampled;
+                reconstruction = upsampled.clone();
                 reconstruction[(y, x)] = weight_coarse * upsampled[(y, x)]
                     + weight_fine * processed_pyramid[level_idx][(y, x)];
             }
@@ -2037,7 +2051,10 @@ pub struct QuantumCoherenceOptimizer {
 #[derive(Debug, Clone)]
 pub enum CoherenceStrategy {
     /// Error correction based coherence preservation
-    ErrorCorrection { threshold: f64, correction_rate: f64 },
+    ErrorCorrection {
+        threshold: f64,
+        correction_rate: f64,
+    },
     /// Decoherence suppression
     DecoherenceSuppression { suppression_strength: f64 },
     /// Entanglement purification
@@ -2062,9 +2079,16 @@ impl Default for QuantumConsciousnessEvolution {
             },
             coherence_optimizer: QuantumCoherenceOptimizer {
                 strategies: vec![
-                    CoherenceStrategy::ErrorCorrection { threshold: 0.95, correction_rate: 0.1 },
-                    CoherenceStrategy::DecoherenceSuppression { suppression_strength: 0.8 },
-                    CoherenceStrategy::EntanglementPurification { purification_cycles: 5 },
+                    CoherenceStrategy::ErrorCorrection {
+                        threshold: 0.95,
+                        correction_rate: 0.1,
+                    },
+                    CoherenceStrategy::DecoherenceSuppression {
+                        suppression_strength: 0.8,
+                    },
+                    CoherenceStrategy::EntanglementPurification {
+                        purification_cycles: 5,
+                    },
                 ],
                 optimization_params: HashMap::new(),
                 performance_history: VecDeque::new(),
@@ -2095,10 +2119,10 @@ where
 
     // Analyze current consciousness state
     let current_state = analyze_consciousness_state(ultra_state, config)?;
-    
+
     // Evolutionary consciousness adaptation
     evolve_consciousness_parameters(evolution_system, &current_state, config)?;
-    
+
     // Enhanced quantum processing with evolution
     for y in 0..height {
         for x in 0..width {
@@ -2168,7 +2192,7 @@ fn analyze_consciousness_state(
         .iter()
         .map(|&amp| amp.norm())
         .sum::<f64>();
-    
+
     let consciousness_level = if total_amplitudes > 0.0 {
         coherence_sum / total_amplitudes
     } else {
@@ -2183,8 +2207,9 @@ fn analyze_consciousness_state(
             let norm = amp.norm();
             (norm - consciousness_level).powi(2)
         })
-        .sum::<f64>() / total_amplitudes.max(1.0);
-    
+        .sum::<f64>()
+        / total_amplitudes.max(1.0);
+
     let coherence_quality = 1.0 / (1.0 + coherence_variance);
 
     // Calculate Phi measure (simplified integrated information)
@@ -2222,9 +2247,8 @@ fn calculate_simplified_phi_measure(
         .map(|relation| relation.strength * relation.confidence)
         .sum();
 
-    let num_pixels = ultra_state.consciousness_amplitudes.len() / 
-        (config.consciousness_depth * 2);
-    
+    let num_pixels = ultra_state.consciousness_amplitudes.len() / (config.consciousness_depth * 2);
+
     let phi = if num_pixels > 0 {
         total_causal_strength / num_pixels as f64
     } else {
@@ -2238,19 +2262,21 @@ fn calculate_simplified_phi_measure(
 fn evolve_consciousness_parameters(
     evolution_system: &mut QuantumConsciousnessEvolution,
     current_state: &ConsciousnessState,
-    config: &UltrathinkConfig,
+    _config: &UltrathinkConfig,
 ) -> NdimageResult<()> {
     // Calculate evolution pressure based on consciousness quality
-    let consciousness_fitness = (current_state.level 
-        + current_state.coherence_quality 
-        + current_state.phi_measure 
-        + current_state.self_awareness) / 4.0;
+    let consciousness_fitness = (current_state.level
+        + current_state.coherence_quality
+        + current_state.phi_measure
+        + current_state.self_awareness)
+        / 4.0;
 
     // Apply evolutionary pressure
     if consciousness_fitness > evolution_system.emergence_threshold {
         // Positive selection - enhance current parameters
         evolution_system.evolution_rate = (evolution_system.evolution_rate * 1.05).min(0.1);
-        evolution_system.selection_pressure = (evolution_system.selection_pressure * 0.95).max(0.01);
+        evolution_system.selection_pressure =
+            (evolution_system.selection_pressure * 0.95).max(0.01);
     } else {
         // Negative selection - explore parameter space
         evolution_system.evolution_rate = (evolution_system.evolution_rate * 0.95).max(0.001);
@@ -2263,7 +2289,10 @@ fn evolve_consciousness_parameters(
     evolution_system.complexity_metrics.emergence_strength = consciousness_fitness;
 
     // Evolve quantum coherence optimization strategies
-    evolve_coherence_strategies(&mut evolution_system.coherence_optimizer, consciousness_fitness)?;
+    evolve_coherence_strategies(
+        &mut evolution_system.coherence_optimizer,
+        consciousness_fitness,
+    )?;
 
     Ok(())
 }
@@ -2281,7 +2310,8 @@ fn evolve_coherence_strategies(
 
     // Calculate average performance
     let avg_performance = if !optimizer.performance_history.is_empty() {
-        optimizer.performance_history.iter().sum::<f64>() / optimizer.performance_history.len() as f64
+        optimizer.performance_history.iter().sum::<f64>()
+            / optimizer.performance_history.len() as f64
     } else {
         0.5
     };
@@ -2289,7 +2319,10 @@ fn evolve_coherence_strategies(
     // Evolve strategies based on performance
     for strategy in &mut optimizer.strategies {
         match strategy {
-            CoherenceStrategy::ErrorCorrection { ref mut threshold, ref mut correction_rate } => {
+            CoherenceStrategy::ErrorCorrection {
+                ref mut threshold,
+                ref mut correction_rate,
+            } => {
                 if fitness > avg_performance {
                     *threshold = (*threshold * 1.01).min(0.99);
                     *correction_rate = (*correction_rate * 1.02).min(0.5);
@@ -2297,21 +2330,25 @@ fn evolve_coherence_strategies(
                     *threshold = (*threshold * 0.99).max(0.8);
                     *correction_rate = (*correction_rate * 0.98).max(0.01);
                 }
-            },
-            CoherenceStrategy::DecoherenceSuppression { ref mut suppression_strength } => {
+            }
+            CoherenceStrategy::DecoherenceSuppression {
+                ref mut suppression_strength,
+            } => {
                 if fitness > avg_performance {
                     *suppression_strength = (*suppression_strength * 1.01).min(1.0);
                 } else {
                     *suppression_strength = (*suppression_strength * 0.99).max(0.1);
                 }
-            },
-            CoherenceStrategy::EntanglementPurification { ref mut purification_cycles } => {
+            }
+            CoherenceStrategy::EntanglementPurification {
+                ref mut purification_cycles,
+            } => {
                 if fitness > avg_performance {
                     *purification_cycles = (*purification_cycles + 1).min(20);
                 } else if fitness < avg_performance * 0.8 {
                     *purification_cycles = (*purification_cycles).saturating_sub(1).max(1);
                 }
-            },
+            }
             _ => {} // Other strategies can be evolved similarly
         }
     }
@@ -2330,40 +2367,31 @@ fn apply_evolved_quantum_consciousness_operators(
         return Ok(Complex::new(0.0, 0.0));
     }
 
-    let mut evolved_quantum_state = Complex::new(0.0, 0.0);
-
     // Apply base quantum consciousness processing
-    let base_state = apply_quantum_consciousness_operators(
-        feature_vector, 
-        consciousness_state, 
-        config
-    )?;
+    let base_state =
+        apply_quantum_consciousness_operators(feature_vector, consciousness_state, config)?;
 
     // Apply evolutionary enhancements
-    
+
     // 1. Consciousness level modulation
     let consciousness_level = evolution_system.complexity_metrics.emergence_strength;
-    let level_enhancement = Complex::new(
-        consciousness_level.cos(),
-        consciousness_level.sin()
-    );
+    let level_enhancement = Complex::new(consciousness_level.cos(), consciousness_level.sin());
 
     // 2. Evolutionary phase adjustment
     let evolution_phase = evolution_system.evolution_rate * PI;
-    let evolution_enhancement = Complex::new(
-        evolution_phase.cos(),
-        evolution_phase.sin()
-    );
+    let evolution_enhancement = Complex::new(evolution_phase.cos(), evolution_phase.sin());
 
     // 3. Quantum coherence optimization
     let coherence_factor = evolution_system.complexity_metrics.temporal_coherence;
     let coherence_enhancement = coherence_factor * (1.0 + 0.1 * (evolution_phase * 2.0).sin());
 
     // Combine enhancements
-    evolved_quantum_state = base_state * level_enhancement * evolution_enhancement * coherence_enhancement;
+    let mut evolved_quantum_state =
+        base_state * level_enhancement * evolution_enhancement * coherence_enhancement;
 
     // Apply consciousness emergence threshold
-    if evolution_system.complexity_metrics.emergence_strength > evolution_system.emergence_threshold {
+    if evolution_system.complexity_metrics.emergence_strength > evolution_system.emergence_threshold
+    {
         // Emergence boost for high-consciousness states
         let emergence_boost = Complex::new(1.2, 0.1);
         evolved_quantum_state *= emergence_boost;
@@ -2389,8 +2417,9 @@ fn apply_consciousness_evolution_selection(
     let base_probability = consciousness_amplitude.norm_sqr();
 
     // Apply evolutionary selection pressure
-    let selection_factor = 1.0 + evolution_system.selection_pressure * 
-        (evolution_system.complexity_metrics.emergence_strength - 0.5);
+    let selection_factor = 1.0
+        + evolution_system.selection_pressure
+            * (evolution_system.complexity_metrics.emergence_strength - 0.5);
 
     // Apply spatial consciousness gradient
     let spatial_factor = calculate_spatial_consciousness_factor(position, config);
@@ -2399,7 +2428,8 @@ fn apply_consciousness_evolution_selection(
     let temporal_factor = calculate_temporal_evolution_factor(evolution_system);
 
     // Combine factors
-    let evolved_probability = base_probability * selection_factor * spatial_factor * temporal_factor;
+    let evolved_probability =
+        base_probability * selection_factor * spatial_factor * temporal_factor;
 
     Ok(evolved_probability.clamp(0.0, 1.0))
 }
@@ -2414,38 +2444,36 @@ fn calculate_spatial_consciousness_factor(
 }
 
 /// Calculate temporal evolution factor
-fn calculate_temporal_evolution_factor(
-    evolution_system: &QuantumConsciousnessEvolution,
-) -> f64 {
+fn calculate_temporal_evolution_factor(evolution_system: &QuantumConsciousnessEvolution) -> f64 {
     let history_length = evolution_system.evolution_history.len() as f64;
     let evolution_strength = evolution_system.evolution_rate * history_length.sqrt();
-    
+
     1.0 + 0.1 * evolution_strength.tanh()
 }
 
 /// Apply evolved global consciousness coherence
 fn apply_evolved_global_consciousness_coherence(
     consciousness_output: &mut Array2<f64>,
-    ultra_state: &UltrathinkState,
+    _ultra_state: &UltrathinkState,
     evolution_system: &QuantumConsciousnessEvolution,
-    config: &UltrathinkConfig,
+    _config: &UltrathinkConfig,
 ) -> NdimageResult<()> {
     let (height, width) = consciousness_output.dim();
-    
+
     // Calculate global consciousness coherence enhancement
     let global_coherence = evolution_system.complexity_metrics.temporal_coherence;
     let emergence_strength = evolution_system.complexity_metrics.emergence_strength;
-    
+
     // Apply global coherence field
     let coherence_enhancement = global_coherence * emergence_strength;
-    
+
     for y in 0..height {
         for x in 0..width {
             let current_value = consciousness_output[(y, x)];
-            
+
             // Apply coherence enhancement
             let enhanced_value = current_value * (1.0 + 0.1 * coherence_enhancement);
-            
+
             consciousness_output[(y, x)] = enhanced_value.clamp(0.0, 1.0);
         }
     }
@@ -2458,8 +2486,10 @@ fn update_consciousness_evolution_history(
     evolution_system: &mut QuantumConsciousnessEvolution,
     current_state: &ConsciousnessState,
 ) -> NdimageResult<()> {
-    evolution_system.evolution_history.push_back(current_state.clone());
-    
+    evolution_system
+        .evolution_history
+        .push_back(current_state.clone());
+
     // Maintain history window
     if evolution_system.evolution_history.len() > 1000 {
         evolution_system.evolution_history.pop_front();
@@ -2788,7 +2818,10 @@ pub struct AdaptiveMemoryConsolidation {
 #[derive(Debug, Clone)]
 pub enum ConsolidationStrategy {
     /// Replay-based consolidation
-    Replay { replay_frequency: f64, replay_strength: f64 },
+    Replay {
+        replay_frequency: f64,
+        replay_strength: f64,
+    },
     /// Interference-based consolidation
     InterferenceBased { interference_threshold: f64 },
     /// Importance-weighted consolidation
@@ -2884,7 +2917,9 @@ impl Default for EnhancedMetaLearningSystem {
                 strategy_population: Vec::new(),
                 selection_mechanisms: vec![
                     SelectionMechanism::Tournament { tournament_size: 3 },
-                    SelectionMechanism::Elite { elite_fraction: 0.1 },
+                    SelectionMechanism::Elite {
+                        elite_fraction: 0.1,
+                    },
                 ],
                 mutation_params: MutationParameters {
                     mutation_rate: 0.1,
@@ -2901,8 +2936,13 @@ impl Default for EnhancedMetaLearningSystem {
             },
             memory_consolidation: AdaptiveMemoryConsolidation {
                 consolidation_strategies: vec![
-                    ConsolidationStrategy::Replay { replay_frequency: 0.1, replay_strength: 0.8 },
-                    ConsolidationStrategy::ImportanceWeighted { importance_decay: 0.95 },
+                    ConsolidationStrategy::Replay {
+                        replay_frequency: 0.1,
+                        replay_strength: 0.8,
+                    },
+                    ConsolidationStrategy::ImportanceWeighted {
+                        importance_decay: 0.95,
+                    },
                 ],
                 sleep_cycles: Vec::new(),
                 interference_patterns: HashMap::new(),
@@ -3040,7 +3080,7 @@ fn apply_temporal_memory_fusion(
     for y in 0..height {
         for x in 0..width {
             let current_val = consciousness_response[(y, x)];
-            
+
             // Retrieve relevant memories
             let relevant_memories = retrieve_relevant_memories(
                 &temporal_fusion.short_term_memory,
@@ -3080,9 +3120,10 @@ fn create_memory_trace(
     // Combine responses into memory content
     for y in 0..height {
         for x in 0..width {
-            content[(y, x)] = (consciousness_response[(y, x)] 
-                + neural_response[(y, x)] 
-                + causal_response[(y, x)]) / 3.0;
+            content[(y, x)] = (consciousness_response[(y, x)]
+                + neural_response[(y, x)]
+                + causal_response[(y, x)])
+                / 3.0;
         }
     }
 
@@ -3115,10 +3156,10 @@ fn calculate_memory_importance(content: &Array2<f64>) -> NdimageResult<f64> {
     let mean = content.mean().unwrap_or(0.0);
     let variance = content.var(0.0).mean().unwrap_or(0.0);
     let max_val = content.iter().fold(0.0f64, |acc, &x| acc.max(x.abs()));
-    
+
     // Importance combines magnitude, variance, and extremeness
     let importance = (mean.abs() + variance.sqrt() + max_val) / 3.0;
-    
+
     Ok(importance.tanh()) // Bounded importance score
 }
 
@@ -3330,9 +3371,16 @@ pub enum QuantumOperation {
     /// Two qubit gates
     TwoQubitGate { gate_type: String, fidelity: f64 },
     /// Multi-qubit gates
-    MultiQubitGate { gate_type: String, qubit_count: usize, fidelity: f64 },
+    MultiQubitGate {
+        gate_type: String,
+        qubit_count: usize,
+        fidelity: f64,
+    },
     /// Measurement operations
-    Measurement { measurement_type: String, accuracy: f64 },
+    Measurement {
+        measurement_type: String,
+        accuracy: f64,
+    },
     /// Error correction
     ErrorCorrection { code_type: String, threshold: f64 },
 }
@@ -3575,9 +3623,15 @@ pub enum QuantumOptimizationAlgorithm {
     /// Variational quantum eigensolver
     VQE { ansatz: String, optimizer: String },
     /// Quantum adiabatic optimization
-    AdiabaticOptimization { evolution_time: f64, schedule: String },
+    AdiabaticOptimization {
+        evolution_time: f64,
+        schedule: String,
+    },
     /// Quantum machine learning optimization
-    QMLOptimization { model_type: String, hyperparameters: HashMap<String, f64> },
+    QMLOptimization {
+        model_type: String,
+        hyperparameters: HashMap<String, f64>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -3745,13 +3799,22 @@ pub struct QuantumAnomalyDetector {
 #[derive(Debug, Clone)]
 pub enum QuantumAnomalyAlgorithm {
     /// Quantum isolation forest
-    QuantumIsolationForest { tree_count: usize, sample_size: usize },
+    QuantumIsolationForest {
+        tree_count: usize,
+        sample_size: usize,
+    },
     /// Quantum one-class SVM
     QuantumOneClassSVM { kernel: String, nu: f64 },
     /// Quantum autoencoder
-    QuantumAutoencoder { latent_dimension: usize, threshold: f64 },
+    QuantumAutoencoder {
+        latent_dimension: usize,
+        threshold: f64,
+    },
     /// Statistical anomaly detection
-    Statistical { method: String, confidence_level: f64 },
+    Statistical {
+        method: String,
+        confidence_level: f64,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -3795,12 +3858,10 @@ impl Default for QuantumAwareResourceScheduler {
                 },
             ],
             quantum_load_balancer: QuantumLoadBalancer {
-                strategies: vec![
-                    QuantumLoadBalancingStrategy::QuantumSuperposition {
-                        superposition_weights: Array1::from_elem(4, Complex::new(0.5, 0.0)),
-                        measurement_basis: "computational".to_string(),
-                    },
-                ],
+                strategies: vec![QuantumLoadBalancingStrategy::QuantumSuperposition {
+                    superposition_weights: Array1::from_elem(4, Complex::new(0.5, 0.0)),
+                    measurement_basis: "computational".to_string(),
+                }],
                 load_distribution: Array1::from_elem(4, 0.25),
                 entanglement_connections: HashMap::new(),
                 load_predictor: QuantumLoadPredictor {
@@ -3811,7 +3872,10 @@ impl Default for QuantumAwareResourceScheduler {
                             learning_rate: 0.01,
                             batch_size: 32,
                             epochs: 100,
-                            optimizer: QuantumOptimizer::QuantumAdam { beta1: 0.9, beta2: 0.999 },
+                            optimizer: QuantumOptimizer::QuantumAdam {
+                                beta1: 0.9,
+                                beta2: 0.999,
+                            },
                         },
                     },
                     prediction_horizon: 10,
@@ -3878,12 +3942,10 @@ impl Default for QuantumAwareResourceScheduler {
                     prediction_accuracy: 0.85,
                 },
                 anomaly_detector: QuantumAnomalyDetector {
-                    detection_algorithms: vec![
-                        QuantumAnomalyAlgorithm::QuantumIsolationForest {
-                            tree_count: 100,
-                            sample_size: 256,
-                        },
-                    ],
+                    detection_algorithms: vec![QuantumAnomalyAlgorithm::QuantumIsolationForest {
+                        tree_count: 100,
+                        sample_size: 256,
+                    }],
                     anomaly_threshold: 0.05,
                     baselines: HashMap::new(),
                     detected_anomalies: VecDeque::new(),
@@ -3936,11 +3998,7 @@ pub fn quantum_aware_resource_scheduling_optimization(
     )?;
 
     // Step 6: Update entanglement graph and resource states
-    update_quantum_entanglement_graph(
-        &mut scheduler.entanglement_graph,
-        &task_schedule,
-        config,
-    )?;
+    update_quantum_entanglement_graph(&mut scheduler.entanglement_graph, &task_schedule, config)?;
 
     // Step 7: Monitor and adjust in real-time
     let monitoring_feedback = quantum_performance_monitoring(
@@ -3950,11 +4008,7 @@ pub fn quantum_aware_resource_scheduling_optimization(
     )?;
 
     // Step 8: Apply feedback for continuous optimization
-    apply_quantum_optimization_feedback(
-        scheduler,
-        &monitoring_feedback,
-        config,
-    )?;
+    apply_quantum_optimization_feedback(scheduler, &monitoring_feedback, config)?;
 
     // Create final scheduling decision
     let scheduling_decision = ResourceSchedulingDecision {
@@ -3962,7 +4016,9 @@ pub fn quantum_aware_resource_scheduling_optimization(
         load_balancing: load_balancing_decision,
         task_schedule,
         performance_metrics: scheduler.performance_monitor.metrics.clone(),
-        quantum_coherence_preservation: calculate_coherence_preservation(&scheduler.entanglement_graph)?,
+        quantum_coherence_preservation: calculate_coherence_preservation(
+            &scheduler.entanglement_graph,
+        )?,
         estimated_performance_improvement: monitoring_feedback.performance_improvement,
     };
 
@@ -4226,9 +4282,7 @@ fn apply_quantum_optimization_feedback(
     Ok(())
 }
 
-fn calculate_coherence_preservation(
-    _graph: &ResourceEntanglementGraph,
-) -> NdimageResult<f64> {
+fn calculate_coherence_preservation(_graph: &ResourceEntanglementGraph) -> NdimageResult<f64> {
     // Implementation would calculate quantum coherence preservation level
     Ok(0.85)
 }

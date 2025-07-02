@@ -11,7 +11,7 @@ use std::collections::{HashMap, VecDeque};
 
 use super::moment_accountant::MomentsAccountant;
 use super::{DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// DP-SGD optimizer with privacy guarantees
@@ -206,7 +206,7 @@ where
     pub fn new(
         base_optimizer: O,
         config: DifferentialPrivacyConfig,
-    ) -> Result<Self, OptimizerError> {
+    ) -> Result<Self, OptimError> {
         let accountant = MomentsAccountant::new(
             config.noise_multiplier,
             config.target_delta,
@@ -249,7 +249,7 @@ where
         params: &ArrayBase<S, D>,
         gradients: &mut ArrayBase<S, D>,
         batch_size: usize,
-    ) -> Result<Array<A, D>, OptimizerError>
+    ) -> Result<Array<A, D>, OptimError>
     where
         S: Data<Elem = A> + DataMut<Elem = A>,
         D: Dimension + Clone,
@@ -259,7 +259,7 @@ where
 
         // Check privacy budget
         if !self.has_privacy_budget()? {
-            return Err(OptimizerError::PrivacyBudgetExhausted {
+            return Err(OptimError::PrivacyBudgetExhausted {
                 consumed_epsilon: self.privacy_budget.epsilon_consumed,
                 target_epsilon: self.privacy_budget.target_epsilon,
             });
@@ -320,7 +320,7 @@ where
     }
 
     /// Check if privacy budget is available
-    pub fn has_privacy_budget(&self) -> Result<bool, OptimizerError> {
+    pub fn has_privacy_budget(&self) -> Result<bool, OptimError> {
         Ok(
             self.privacy_budget.epsilon_consumed < self.privacy_budget.target_epsilon
                 && self.privacy_budget.delta_consumed < self.privacy_budget.target_delta,
@@ -380,12 +380,12 @@ where
     pub fn update_privacy_config(
         &mut self,
         new_config: DifferentialPrivacyConfig,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Validate that privacy budget doesn't decrease
         if new_config.target_epsilon < self.config.target_epsilon
             || new_config.target_delta < self.config.target_delta
         {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Cannot decrease privacy budget mid-training".to_string(),
             ));
         }
@@ -428,7 +428,7 @@ where
         &self,
         gradients: &mut ArrayBase<S, D>,
         threshold: f64,
-    ) -> Result<bool, OptimizerError>
+    ) -> Result<bool, OptimError>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
@@ -450,7 +450,7 @@ where
         &mut self,
         gradients: &mut ArrayBase<S, D>,
         clipping_threshold: f64,
-    ) -> Result<(), OptimizerError>
+    ) -> Result<(), OptimError>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
@@ -460,7 +460,7 @@ where
         match self.config.noise_mechanism {
             NoiseMechanism::Gaussian => {
                 let normal = Normal::new(0.0, noise_scale).map_err(|_| {
-                    OptimizerError::InvalidConfig("Invalid noise scale".to_string())
+                    OptimError::InvalidConfig("Invalid noise scale".to_string())
                 })?;
 
                 gradients.mapv_inplace(|g| {
@@ -471,7 +471,7 @@ where
             NoiseMechanism::Laplace => {
                 // Simplified Laplace noise using Normal distribution approximation
                 let normal = Normal::new(0.0, noise_scale * 1.414).map_err(|_| {
-                    OptimizerError::InvalidConfig("Invalid noise scale".to_string())
+                    OptimError::InvalidConfig("Invalid noise scale".to_string())
                 })?;
 
                 gradients.mapv_inplace(|g| {
@@ -482,7 +482,7 @@ where
             _ => {
                 // Default to Gaussian
                 let normal = Normal::new(0.0, noise_scale).map_err(|_| {
-                    OptimizerError::InvalidConfig("Invalid noise scale".to_string())
+                    OptimError::InvalidConfig("Invalid noise scale".to_string())
                 })?;
 
                 gradients.mapv_inplace(|g| {
@@ -542,7 +542,7 @@ where
     }
 
     /// Validate DP-SGD configuration
-    pub fn validate_configuration(&self) -> Result<ConfigurationValidation, OptimizerError> {
+    pub fn validate_configuration(&self) -> Result<ConfigurationValidation, OptimError> {
         let mut warnings = Vec::new();
         let mut errors = Vec::new();
 
@@ -623,7 +623,7 @@ where
 // Implementation of helper structures
 
 impl AdaptiveClippingState {
-    fn new(initial_threshold: f64, adaptation_lr: f64) -> Result<Self, OptimizerError> {
+    fn new(initial_threshold: f64, adaptation_lr: f64) -> Result<Self, OptimError> {
         Ok(Self {
             current_threshold: initial_threshold,
             target_quantile: 0.5,

@@ -10,8 +10,7 @@ fn main() {
     println!("=== Batch Operations Demonstration ===\n");
 
     // Create a cache manager for demonstration
-    let cache_dir = scirs2_datasets::get_cache_dir().unwrap();
-    let cache_manager = CacheManager::new(cache_dir, 100, 3600);
+    let cache_manager = CacheManager::new().expect("Failed to create cache manager");
 
     println!("=== Setting up Batch Operations Manager =====");
     let batch_ops = BatchOperations::new(cache_manager)

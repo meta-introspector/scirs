@@ -3,9 +3,8 @@
 //! This module provides specialized optimizers for reinforcement learning,
 //! including policy gradient methods, actor-critic algorithms, and trust region methods.
 
-use crate::error::OptimizerError;
-use crate::optimizers::Optimizer;
-use ndarray::{Array1, Array2, ArrayBase, Data, DataMut, Dimension};
+use crate::error::{OptimError, Result};
+use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
 use std::collections::HashMap;
 
@@ -139,7 +138,7 @@ impl<T: Float> TrajectoryBatch<T> {
         rewards: Array1<T>,
         values: Array1<T>,
         dones: Array1<bool>,
-    ) -> Result<Self, OptimizerError> {
+    ) -> Result<Self, OptimError> {
         let batch_size = observations.nrows();
 
         // Validate dimensions
@@ -149,7 +148,7 @@ impl<T: Float> TrajectoryBatch<T> {
             || values.len() != batch_size
             || dones.len() != batch_size
         {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Inconsistent batch dimensions".to_string(),
             ));
         }
@@ -176,7 +175,7 @@ impl<T: Float> TrajectoryBatch<T> {
         gamma: T,
         lambda: T,
         next_value: T,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         let batch_size = self.rewards.len();
         let mut gae = T::zero();
 
@@ -270,19 +269,19 @@ pub trait PolicyNetwork<T: Float> {
         &self,
         observations: &Array2<T>,
         actions: &Array2<T>,
-    ) -> Result<PolicyEvaluation<T>, OptimizerError>;
+    ) -> Result<PolicyEvaluation<T>, OptimError>;
 
     /// Get action distribution for given observations
     fn get_action_distribution(
         &self,
         observations: &Array2<T>,
-    ) -> Result<ActionDistribution<T>, OptimizerError>;
+    ) -> Result<ActionDistribution<T>, OptimError>;
 
     /// Update policy parameters with gradients
     fn update_parameters(
         &mut self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<(), OptimizerError>;
+    ) -> Result<(), OptimError>;
 
     /// Get current policy parameters
     fn get_parameters(&self) -> HashMap<String, Array1<T>>;
@@ -291,13 +290,13 @@ pub trait PolicyNetwork<T: Float> {
 /// Value network interface for RL optimizers
 pub trait ValueNetwork<T: Float> {
     /// Evaluate value function for given observations
-    fn evaluate_value(&self, observations: &Array2<T>) -> Result<Array1<T>, OptimizerError>;
+    fn evaluate_value(&self, observations: &Array2<T>) -> Result<Array1<T>, OptimError>;
 
     /// Update value function parameters with gradients
     fn update_parameters(
         &mut self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<(), OptimizerError>;
+    ) -> Result<(), OptimError>;
 
     /// Get current value function parameters
     fn get_parameters(&self) -> HashMap<String, Array1<T>>;

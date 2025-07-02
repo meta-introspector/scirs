@@ -5,12 +5,12 @@
 //! and other modern policy gradient algorithms.
 
 use super::{
-    PolicyEvaluation, PolicyNetwork, RLOptimizationMetrics, RLOptimizerConfig, RLScheduler,
+    PolicyNetwork, RLOptimizationMetrics, RLOptimizerConfig, RLScheduler,
     ScheduleType, TrajectoryBatch, ValueNetwork,
 };
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
-use ndarray::{Array1, Array2, ArrayBase, Axis, Data, DataMut, Dimension};
+use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
 use std::collections::HashMap;
 
@@ -228,14 +228,14 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     pub fn update(
         &mut self,
         trajectory: TrajectoryBatch<T>,
-    ) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
+    ) -> Result<RLOptimizationMetrics<T>, OptimError> {
         match self.config.method {
             PolicyGradientMethod::PPOClip => self.update_ppo_clip(trajectory),
             PolicyGradientMethod::PPOAdaptiveKL => self.update_ppo_adaptive_kl(trajectory),
             PolicyGradientMethod::TRPO => self.update_trpo(trajectory),
             PolicyGradientMethod::Reinforce => self.update_reinforce(trajectory),
             PolicyGradientMethod::ActorCritic => self.update_actor_critic(trajectory),
-            _ => Err(OptimizerError::InvalidConfig(
+            _ => Err(OptimError::InvalidConfig(
                 "Method not implemented".to_string(),
             )),
         }
@@ -245,7 +245,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     fn update_ppo_clip(
         &mut self,
         mut trajectory: TrajectoryBatch<T>,
-    ) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
+    ) -> Result<RLOptimizationMetrics<T>, OptimError> {
         let mut total_policy_loss = T::zero();
         let mut total_value_loss = T::zero();
         let mut total_entropy_loss = T::zero();
@@ -410,7 +410,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     fn update_ppo_adaptive_kl(
         &mut self,
         trajectory: TrajectoryBatch<T>,
-    ) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
+    ) -> Result<RLOptimizationMetrics<T>, OptimError> {
         // Similar to PPO clip but with adaptive KL penalty instead of clipping
         // Implementation would add KL penalty term to loss function
         self.update_ppo_clip(trajectory) // Simplified for now
@@ -420,7 +420,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     fn update_trpo(
         &mut self,
         trajectory: TrajectoryBatch<T>,
-    ) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
+    ) -> Result<RLOptimizationMetrics<T>, OptimError> {
         // TRPO implementation with conjugate gradient and line search
         // This is a simplified version - full TRPO requires more complex optimization
         self.update_ppo_clip(trajectory) // Simplified for now
@@ -430,7 +430,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     fn update_reinforce(
         &mut self,
         trajectory: TrajectoryBatch<T>,
-    ) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
+    ) -> Result<RLOptimizationMetrics<T>, OptimError> {
         let policy_eval = self
             .policy_network
             .evaluate_actions(&trajectory.observations, &trajectory.actions)?;
@@ -464,7 +464,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     fn update_actor_critic(
         &mut self,
         trajectory: TrajectoryBatch<T>,
-    ) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
+    ) -> Result<RLOptimizationMetrics<T>, OptimError> {
         // Similar to REINFORCE but with value function updates
         self.update_reinforce(trajectory)
     }
@@ -475,7 +475,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
         _total_loss: T,
         policy_loss: T,
         value_loss: T,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // 1. Compute gradients from losses (simplified - would use autodiff in practice)
         let policy_gradients = self.compute_policy_gradients(policy_loss)?;
         let value_gradients = if let Some(_) = self.value_network {
@@ -512,7 +512,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     fn compute_policy_gradients(
         &self,
         loss: T,
-    ) -> Result<HashMap<String, Array1<T>>, OptimizerError> {
+    ) -> Result<HashMap<String, Array1<T>>, OptimError> {
         let mut gradients = HashMap::new();
 
         // Simplified gradient computation - in practice would use autodiff
@@ -530,7 +530,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     fn compute_value_gradients(
         &self,
         loss: T,
-    ) -> Result<HashMap<String, Array1<T>>, OptimizerError> {
+    ) -> Result<HashMap<String, Array1<T>>, OptimError> {
         let mut gradients = HashMap::new();
 
         if let Some(ref value_net) = self.value_network {
@@ -550,7 +550,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
         &self,
         gradients: &HashMap<String, Array1<T>>,
         max_norm: T,
-    ) -> Result<HashMap<String, Array1<T>>, OptimizerError> {
+    ) -> Result<HashMap<String, Array1<T>>, OptimError> {
         let mut clipped_gradients = HashMap::new();
 
         // Compute global gradient norm
@@ -579,7 +579,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     fn update_policy_parameters(
         &mut self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Apply gradients to policy network
         self.policy_network.update_parameters(gradients)?;
         Ok(())
@@ -589,7 +589,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     fn update_value_parameters(
         &mut self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         if let Some(ref mut value_net) = self.value_network {
             value_net.update_parameters(gradients)?;
         }
@@ -619,9 +619,9 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     }
 
     /// Update using buffered trajectories
-    pub fn update_from_buffer(&mut self) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
+    pub fn update_from_buffer(&mut self) -> Result<RLOptimizationMetrics<T>, OptimError> {
         if self.trajectory_buffer.is_empty() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "No trajectories in buffer".to_string(),
             ));
         }
@@ -632,9 +632,9 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     }
 
     /// Combine multiple trajectories into one batch
-    fn combine_trajectories(&self) -> Result<TrajectoryBatch<T>, OptimizerError> {
+    fn combine_trajectories(&self) -> Result<TrajectoryBatch<T>, OptimError> {
         if self.trajectory_buffer.is_empty() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "No trajectories to combine".to_string(),
             ));
         }

@@ -4,6 +4,7 @@
 //! to fit in memory, using chunked processing and memory-mapped files.
 
 use ndarray::{Array1, Array2};
+use rand::Rng;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::Path;

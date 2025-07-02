@@ -421,8 +421,14 @@ mod spherical_harmonics_properties {
         let theta_val = theta.abs() % f64::consts::PI;
         let phi_val = phi % (2.0 * f64::consts::PI);
 
-        let y_lm = crate::spherical_harmonics::sph_harm_complex(l as usize, m as i32, theta_val, phi_val);
-        let y_l_neg_m = crate::spherical_harmonics::sph_harm_complex(l as usize, -(m as i32), theta_val, phi_val);
+        let y_lm =
+            crate::spherical_harmonics::sph_harm_complex(l as usize, m as i32, theta_val, phi_val);
+        let y_l_neg_m = crate::spherical_harmonics::sph_harm_complex(
+            l as usize,
+            -(m as i32),
+            theta_val,
+            phi_val,
+        );
 
         match (y_lm, y_l_neg_m) {
             (Ok((re1, im1)), Ok((re2, im2))) => {

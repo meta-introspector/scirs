@@ -384,7 +384,7 @@ pub struct AdvancedExtrapolator<T: Float> {
     pub historical_data: Option<(Array1<T>, Array1<T>)>,
 }
 
-impl<T: Float + std::fmt::Display + std::default::Default> AdvancedExtrapolator<T> {
+impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign> AdvancedExtrapolator<T> {
     /// Create a new advanced extrapolator
     pub fn new(base_extrapolator: Extrapolator<T>) -> Self {
         Self {
@@ -1880,7 +1880,7 @@ pub fn make_exponential_extrapolator<T: Float + std::fmt::Display>(
 }
 
 /// Convenience function to create a confidence-based extrapolator
-pub fn make_confidence_extrapolator<T: Float + std::fmt::Display>(
+pub fn make_confidence_extrapolator<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>(
     base_extrapolator: Extrapolator<T>,
     confidence_level: T,
     n_bootstrap: usize,
@@ -1896,7 +1896,7 @@ pub fn make_confidence_extrapolator<T: Float + std::fmt::Display>(
 }
 
 /// Convenience function to create an ensemble extrapolator
-pub fn make_ensemble_extrapolator<T: Float + std::fmt::Display>(
+pub fn make_ensemble_extrapolator<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>(
     base_extrapolator: Extrapolator<T>,
     methods_and_weights: Vec<(ExtrapolationMethod, T)>,
     strategy: EnsembleCombinationStrategy,
@@ -1911,7 +1911,7 @@ pub fn make_ensemble_extrapolator<T: Float + std::fmt::Display>(
 }
 
 /// Convenience function to create an adaptive extrapolator
-pub fn make_adaptive_extrapolator<T: Float + std::fmt::Display>(
+pub fn make_adaptive_extrapolator<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>(
     base_extrapolator: Extrapolator<T>,
     candidate_methods: Vec<ExtrapolationMethod>,
     criteria: Vec<AdaptiveSelectionCriterion>,
@@ -1927,7 +1927,7 @@ pub fn make_adaptive_extrapolator<T: Float + std::fmt::Display>(
 }
 
 /// Convenience function to create an autoregressive extrapolator
-pub fn make_autoregressive_extrapolator<T: Float + std::fmt::Display>(
+pub fn make_autoregressive_extrapolator<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>(
     base_extrapolator: Extrapolator<T>,
     ar_order: usize,
     fitting_method: ARFittingMethod,

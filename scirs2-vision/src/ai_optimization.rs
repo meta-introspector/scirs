@@ -153,6 +153,12 @@ pub struct PerformanceMetric {
     pub timestamp: Instant,
 }
 
+impl Default for RLParameterOptimizer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RLParameterOptimizer {
     /// Create a new RL parameter optimizer
     pub fn new() -> Self {
@@ -268,11 +274,10 @@ impl RLParameterOptimizer {
             self.q_table
                 .get(&experience.next_state)
                 .map(|action_values| {
-                    action_values
+                    *action_values
                         .values()
                         .max_by(|a, b| a.partial_cmp(b).unwrap())
                         .unwrap_or(&0.0)
-                        .clone()
                 })
                 .unwrap_or(0.0)
         };

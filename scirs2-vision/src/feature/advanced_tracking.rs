@@ -525,7 +525,9 @@ impl DeepSORT {
             associator: HungarianAssociation::new(),
         }
     }
+}
 
+impl DeepSORT {
     /// Configure tracker parameters
     pub fn with_params(
         mut self,

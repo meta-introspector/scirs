@@ -415,7 +415,7 @@ impl QuantumParallelProcessor {
                 })
                 .sum::<f32>();
 
-            result.push((superposed_value as u8).min(255));
+            result.push(superposed_value as u8);
         }
 
         // Pad to original size if needed
@@ -453,7 +453,7 @@ impl QuantumParallelProcessor {
             let phase = 2.0 * PI * (i as f32) / data.len() as f32;
             let interference = (phase.cos() + phase.sin()) * self.params.interference_threshold;
             let processed_byte = ((byte as f32) * (1.0 + interference)) as u8;
-            result.push(processed_byte.min(255));
+            result.push(processed_byte);
         }
 
         Ok(result)
@@ -463,7 +463,7 @@ impl QuantumParallelProcessor {
     fn strategy_quantum_tunneling(&self, data: &[u8]) -> Result<Vec<u8>> {
         let mut result = Vec::with_capacity(data.len());
 
-        for (_i, &byte) in data.iter().enumerate() {
+        for &byte in data.iter() {
             // Simulate quantum tunneling effect
             let barrier_height = 128.0;
             let tunneling_probability = (-((byte as f32 - barrier_height).abs() / 50.0)).exp();
@@ -487,7 +487,7 @@ impl QuantumParallelProcessor {
         let array = Array1::from(float_data);
         let processed = f32::simd_mul(&array.view(), &Array1::from_elem(array.len(), 1.1).view());
 
-        let result: Vec<u8> = processed.iter().map(|&x| (x as u8).min(255)).collect();
+        let result: Vec<u8> = processed.iter().map(|&x| x as u8).collect();
         Ok(result)
     }
 

@@ -86,6 +86,24 @@ impl From<scirs2_sparse::error::SparseError> for OptimizeError {
                     value, target_type
                 ))
             }
+            scirs2_sparse::error::SparseError::ConvergenceError(msg) => {
+                OptimizeError::ConvergenceError(format!("Convergence error: {}", msg))
+            }
+            scirs2_sparse::error::SparseError::InvalidFormat(msg) => {
+                OptimizeError::ValueError(format!("Invalid format: {}", msg))
+            }
+            scirs2_sparse::error::SparseError::IoError(err) => {
+                OptimizeError::IOError(format!("I/O error: {}", err))
+            }
+            scirs2_sparse::error::SparseError::CompressionError(msg) => {
+                OptimizeError::ComputationError(format!("Compression error: {}", msg))
+            }
+            scirs2_sparse::error::SparseError::Io(msg) => {
+                OptimizeError::IOError(format!("I/O error: {}", msg))
+            }
+            scirs2_sparse::error::SparseError::BlockNotFound(msg) => {
+                OptimizeError::ValueError(format!("Block not found: {}", msg))
+            }
         }
     }
 }

@@ -19,7 +19,7 @@ pub mod transformer_optimizer;
 // UltraThink Mode - Advanced AI optimization coordination
 pub mod ultrathink_coordinator;
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// Configuration for learned optimizers
@@ -439,7 +439,7 @@ pub trait NeuralOptimizerBuilder<A: Float> {
     fn build(
         &self,
         config: &LearnedOptimizerConfig,
-    ) -> Result<Box<dyn NeuralOptimizer<A>>, OptimizerError>;
+    ) -> Result<Box<dyn NeuralOptimizer<A>>, OptimError>;
 
     /// Get optimizer metadata
     fn metadata(&self) -> NeuralOptimizerMetadata;
@@ -451,19 +451,19 @@ pub trait NeuralOptimizerBuilder<A: Float> {
 /// Neural optimizer trait
 pub trait NeuralOptimizer<A: Float> {
     /// Perform optimization step
-    fn step(&mut self, gradients: &Array1<A>) -> Result<Array1<A>, OptimizerError>;
+    fn step(&mut self, gradients: &Array1<A>) -> Result<Array1<A>, OptimError>;
 
     /// Update meta-parameters
-    fn meta_update(&mut self, meta_gradients: &Array1<A>) -> Result<(), OptimizerError>;
+    fn meta_update(&mut self, meta_gradients: &Array1<A>) -> Result<(), OptimError>;
 
     /// Adapt to new task
-    fn adapt_to_task(&mut self, task_context: &TaskContext<A>) -> Result<(), OptimizerError>;
+    fn adapt_to_task(&mut self, task_context: &TaskContext<A>) -> Result<(), OptimError>;
 
     /// Get current state
     fn get_state(&self) -> OptimizerState<A>;
 
     /// Set state
-    fn set_state(&mut self, state: OptimizerState<A>) -> Result<(), OptimizerError>;
+    fn set_state(&mut self, state: OptimizerState<A>) -> Result<(), OptimError>;
 
     /// Get performance metrics
     fn get_metrics(&self) -> NeuralOptimizerMetrics<A>;
@@ -1043,7 +1043,7 @@ impl<A: Float> AdvancedNeuralOptimizerFactory<A> {
         &self,
         task_context: &TaskContext<A>,
         criteria: &AutoSelectionCriteria<A>,
-    ) -> Result<String, OptimizerError> {
+    ) -> Result<String, OptimError> {
         // Implementation would use ML-based selection
         // This is a simplified placeholder
         Ok("LSTM".to_string())
@@ -1054,9 +1054,9 @@ impl<A: Float> AdvancedNeuralOptimizerFactory<A> {
         &self,
         optimizer_name: &str,
         config: &LearnedOptimizerConfig,
-    ) -> Result<Box<dyn NeuralOptimizer<A>>, OptimizerError> {
+    ) -> Result<Box<dyn NeuralOptimizer<A>>, OptimError> {
         let builder = self.optimizer_registry.get(optimizer_name).ok_or_else(|| {
-            OptimizerError::InvalidConfig(format!("Unknown optimizer: {}", optimizer_name))
+            OptimError::InvalidConfig(format!("Unknown optimizer: {}", optimizer_name))
         })?;
 
         builder.build(config)
@@ -1107,7 +1107,7 @@ where
     pub fn new(
         config: LearnedOptimizerConfig,
         meta_optimizer: Box<dyn Optimizer<A, D> + Send + Sync>,
-    ) -> Result<Self, OptimizerError> {
+    ) -> Result<Self, OptimError> {
         let cell_state = LSTMState::new(&config)?;
         let parameters = LSTMParameters::new(&config)?;
 
@@ -1138,7 +1138,7 @@ where
         params: &ArrayBase<S, Dim>,
         gradients: &ArrayBase<S, Dim>,
         loss: Option<A>,
-    ) -> Result<Array<A, Dim>, OptimizerError>
+    ) -> Result<Array<A, Dim>, OptimError>
     where
         S: Data<Elem = A>,
         Dim: Dimension + Clone,
@@ -1177,7 +1177,7 @@ where
     }
 
     /// Meta-training step
-    pub fn meta_train_step(&mut self, meta_batch: Vec<MetaTask<A>>) -> Result<A, OptimizerError> {
+    pub fn meta_train_step(&mut self, meta_batch: Vec<MetaTask<A>>) -> Result<A, OptimError> {
         let mut total_meta_loss = A::zero();
         let batch_size = A::from(meta_batch.len()).unwrap();
 
@@ -1220,7 +1220,7 @@ where
         }
     }
 
-    fn prepare_input_features(&self, gradients: &Array1<A>) -> Result<Array1<A>, OptimizerError> {
+    fn prepare_input_features(&self, gradients: &Array1<A>) -> Result<Array1<A>, OptimError> {
         let mut features = Vec::new();
 
         // Current gradient
@@ -1288,7 +1288,7 @@ where
         Ok(Array1::from_vec(features))
     }
 
-    fn lstm_forward(&mut self, input: &Array1<A>) -> Result<Array1<A>, OptimizerError> {
+    fn lstm_forward(&mut self, input: &Array1<A>) -> Result<Array1<A>, OptimError> {
         let mut current_input = input.clone();
 
         // Forward pass through LSTM layers
@@ -1323,7 +1323,7 @@ where
         hidden: &Array1<A>,
         cell: &Array1<A>,
         layer: usize,
-    ) -> Result<(Array1<A>, Array1<A>), OptimizerError> {
+    ) -> Result<(Array1<A>, Array1<A>), OptimError> {
         // LSTM cell computation: i_t, f_t, g_t, o_t = σ(W_ih @ x_t + W_hh @ h_{t-1} + b)
         let ih_linear =
             self.parameters.weight_ih[layer].dot(input) + &self.parameters.bias_ih[layer];
@@ -1357,7 +1357,7 @@ where
         Ok((new_hidden, new_cell))
     }
 
-    fn apply_attention(&mut self, hidden: &Array1<A>) -> Result<Array1<A>, OptimizerError> {
+    fn apply_attention(&mut self, hidden: &Array1<A>) -> Result<Array1<A>, OptimError> {
         if let Some(ref attention_params) = self.parameters.attention_params {
             // Simplified attention mechanism
             // In practice, this would implement multi-head attention
@@ -1378,7 +1378,7 @@ where
         }
     }
 
-    fn compute_learned_lr(&self, gradients: &Array1<A>) -> Result<A, OptimizerError> {
+    fn compute_learned_lr(&self, gradients: &Array1<A>) -> Result<A, OptimError> {
         if let Some(ref lr_params) = self.parameters.lr_params {
             // Adaptive learning rate based on gradient statistics
             let grad_norm = gradients.iter().map(|&g| g * g).sum::<A>().sqrt();
@@ -1393,7 +1393,7 @@ where
         }
     }
 
-    fn train_on_task(&mut self, task: &MetaTask<A>) -> Result<A, OptimizerError> {
+    fn train_on_task(&mut self, task: &MetaTask<A>) -> Result<A, OptimError> {
         // Simplified task training
         let mut task_loss = A::zero();
         let data_size = A::from(task.train_data.len()).unwrap();
@@ -1411,7 +1411,7 @@ where
     fn compute_meta_gradients(
         &self,
         _meta_batch: &[MetaTask<A>],
-    ) -> Result<HashMap<String, Array1<A>>, OptimizerError> {
+    ) -> Result<HashMap<String, Array1<A>>, OptimError> {
         // Simplified meta-gradient computation
         // In practice, this would compute gradients of the meta-objective
         let mut meta_grads = HashMap::new();
@@ -1432,7 +1432,7 @@ where
     fn update_meta_parameters(
         &mut self,
         _meta_gradients: &HashMap<String, Array1<A>>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Update meta-parameters using meta-optimizer
         // This is simplified - in practice would update all LSTM parameters
         Ok(())
@@ -1452,7 +1452,7 @@ where
     }
 
     // Utility functions
-    fn flatten_array<S, Dim>(&self, array: &ArrayBase<S, Dim>) -> Result<Array1<A>, OptimizerError>
+    fn flatten_array<S, Dim>(&self, array: &ArrayBase<S, Dim>) -> Result<Array1<A>, OptimError>
     where
         S: Data<Elem = A>,
         Dim: Dimension,
@@ -1464,13 +1464,13 @@ where
         &self,
         flat_array: &Array1<A>,
         shape: Dim,
-    ) -> Result<Array<A, Dim>, OptimizerError>
+    ) -> Result<Array<A, Dim>, OptimError>
     where
         Dim: Dimension + Clone,
     {
         // Simplified reshape - in practice would handle arbitrary dimensions
         Array::from_shape_vec(shape, flat_array.to_vec())
-            .map_err(|_| OptimizerError::InvalidConfig("Reshape error".to_string()))
+            .map_err(|_| OptimError::InvalidConfig("Reshape error".to_string()))
     }
 
     fn sigmoid(&self, x: &Array1<A>) -> Array1<A> {
@@ -1503,7 +1503,7 @@ where
     }
 
     /// Load learned optimizer state
-    pub fn load_state(&mut self, state: LearnedOptimizerState<A>) -> Result<(), OptimizerError> {
+    pub fn load_state(&mut self, state: LearnedOptimizerState<A>) -> Result<(), OptimError> {
         self.parameters = state.parameters;
         self.cell_state = state.cell_state;
         self.training_state = state.training_state;
@@ -1515,7 +1515,7 @@ where
     pub fn transfer_to_domain(
         &mut self,
         target_tasks: &[MetaTask<A>],
-    ) -> Result<TransferResults<A>, OptimizerError> {
+    ) -> Result<TransferResults<A>, OptimError> {
         let initial_performance = self.evaluate_on_tasks(target_tasks)?;
 
         // Fine-tune on target domain
@@ -1549,7 +1549,7 @@ where
         })
     }
 
-    fn evaluate_on_tasks(&self, tasks: &[MetaTask<A>]) -> Result<A, OptimizerError> {
+    fn evaluate_on_tasks(&self, tasks: &[MetaTask<A>]) -> Result<A, OptimError> {
         // Simplified evaluation
         let mut total_performance = A::zero();
         for task in tasks {
@@ -1559,7 +1559,7 @@ where
         Ok(total_performance / A::from(tasks.len()).unwrap())
     }
 
-    fn evaluate_single_task(&self, task: &MetaTask<A>) -> Result<A, OptimizerError> {
+    fn evaluate_single_task(&self, task: &MetaTask<A>) -> Result<A, OptimError> {
         // Simplified single task evaluation
         let mut loss = A::zero();
         for (features, target) in &task.val_data {
@@ -1591,7 +1591,7 @@ pub struct TransferResults<A: Float> {
 // Implementation of initialization functions
 
 impl<A: Float + Default + Clone> LSTMState<A> {
-    fn new(config: &LearnedOptimizerConfig) -> Result<Self, OptimizerError> {
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self, OptimError> {
         let mut hidden_states = Vec::new();
         let mut cell_states = Vec::new();
 
@@ -1614,7 +1614,7 @@ impl<A: Float + Default + Clone> LSTMState<A> {
 }
 
 impl<A: Float + Default + Clone> LSTMParameters<A> {
-    fn new(config: &LearnedOptimizerConfig) -> Result<Self, OptimizerError> {
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self, OptimError> {
         let mut weight_ih = Vec::new();
         let mut weight_hh = Vec::new();
         let mut bias_ih = Vec::new();
@@ -1674,7 +1674,7 @@ impl<A: Float + Default + Clone> LSTMParameters<A> {
 }
 
 impl<A: Float + Default + Clone> AttentionParameters<A> {
-    fn new(config: &LearnedOptimizerConfig) -> Result<Self, OptimizerError> {
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self, OptimError> {
         let hidden_size = config.hidden_size;
         let scale = 0.1;
 
@@ -1691,7 +1691,7 @@ impl<A: Float + Default + Clone> AttentionParameters<A> {
 }
 
 impl<A: Float + Default + Clone> LearningRateParameters<A> {
-    fn new(config: &LearnedOptimizerConfig) -> Result<Self, OptimizerError> {
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self, OptimError> {
         Ok(Self {
             base_lr: A::from(config.meta_learning_rate).unwrap(),
             adaptive_factors: Array1::ones(config.output_features),
@@ -1702,7 +1702,7 @@ impl<A: Float + Default + Clone> LearningRateParameters<A> {
 }
 
 impl<A: Float + Default + Clone> MetaTrainingState<A> {
-    fn new(_config: &LearnedOptimizerConfig) -> Result<Self, OptimizerError> {
+    fn new(_config: &LearnedOptimizerConfig) -> Result<Self, OptimError> {
         Ok(Self {
             meta_step: 0,
             meta_gradients: HashMap::new(),

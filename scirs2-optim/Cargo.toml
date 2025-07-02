@@ -78,6 +78,7 @@ path = "src/bin/validate_ultrathink.rs"
 [dev-dependencies]
 plotters = { workspace = true }
 approx = { workspace = true }
+tempfile = "3"
 
 [features]
 default = []

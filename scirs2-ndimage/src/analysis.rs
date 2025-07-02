@@ -4,7 +4,7 @@
 //! quality metrics, texture analysis, multi-scale analysis, and
 //! advanced statistical measurements for scientific image processing.
 
-use ndarray::{Array, Array1, Array2, ArrayView2, Axis, Zip};
+use ndarray::{Array1, Array2, ArrayView2, Zip};
 use num_traits::{Float, FromPrimitive, Zero};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
@@ -604,7 +604,7 @@ where
 }
 
 /// Estimate fractal dimension using box-counting method
-fn estimate_fractal_dimension<T>(image: &ArrayView2<T>) -> NdimageResult<T>
+pub fn estimate_fractal_dimension<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
 {

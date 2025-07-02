@@ -15,13 +15,15 @@
 //! - **Bandwidth Adaptation**: Network-aware streaming for distributed processing
 //! - **Error Recovery AI**: Intelligent fault tolerance and recovery strategies
 
-use ndarray::{Array, Array1, Array2, Array3, ArrayView, ArrayView2, ArrayViewMut, Dimension, Ix2, Ix3, IxDyn};
-use num_traits::{Float, FromPrimitive, One, Zero};
-use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::sync::{Arc, Mutex, RwLock};
+use ndarray::{
+    Array1, Array2, ArrayView2, Dimension,
+};
+use num_traits::{Float, FromPrimitive, Zero};
+use std::collections::{HashMap, VecDeque};
+use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
-use crate::error::{NdimageError, NdimageResult};
+use crate::error::NdimageResult;
 use crate::streaming::StreamConfig;
 use scirs2_core::parallel_ops::*;
 

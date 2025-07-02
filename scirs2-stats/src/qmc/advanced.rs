@@ -529,7 +529,7 @@ impl AdvancedQMCGenerator {
 
             let mut uniform = Array1::zeros(dimension);
             for i in 0..dimension {
-                uniform[i] = rand::thread_rng().gen::<f64>();
+                uniform[i] = rand::rng().gen::<f64>();
             }
 
             // Apply inverse normal transformation and correlation
@@ -537,10 +537,10 @@ impl AdvancedQMCGenerator {
                 // Inverse normal using Box-Muller approximation
                 if u <= 0.5 {
                     -(-2.0 * u.ln()).sqrt()
-                        * (2.0 * std::f64::consts::PI * rand::thread_rng().gen::<f64>()).cos()
+                        * (2.0 * std::f64::consts::PI * rand::rng().gen::<f64>()).cos()
                 } else {
                     (-2.0 * (1.0 - u).ln()).sqrt()
-                        * (2.0 * std::f64::consts::PI * rand::thread_rng().gen::<f64>()).cos()
+                        * (2.0 * std::f64::consts::PI * rand::rng().gen::<f64>()).cos()
                 }
             });
 
@@ -554,7 +554,7 @@ impl AdvancedQMCGenerator {
             // Standard LHS
             for i in 0..dimension {
                 let stratum = current_index % 1000; // Simplified stratification
-                let u = rand::thread_rng().gen::<f64>();
+                let u = rand::rng().gen::<f64>();
                 point[i] = (stratum as f64 + u) / 1000.0;
             }
         }

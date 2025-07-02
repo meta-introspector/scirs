@@ -7,10 +7,9 @@ use crate::auto_feature_engineering::{
     DatasetMetaFeatures, TransformationConfig, TransformationType,
 };
 use crate::error::{Result, TransformError};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2};
 use rand::Rng;
-use scirs2_core::validation::{check_finite, check_not_empty, check_positive};
-use scirs2_core::simd_ops::SimdUnifiedOps;
+use scirs2_core::validation::{check_not_empty, check_positive};
 use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, VecDeque};
 
@@ -661,15 +660,16 @@ impl NeuromorphicMemorySystem {
     /// Consolidate successful memories into semantic concepts
     fn consolidate_memories(&mut self) -> Result<()> {
         // Find highly successful episodes
-        let successful_episodes: Vec<&TransformationEpisode> = self
+        let successful_episodes: Vec<TransformationEpisode> = self
             .episodic_memory
             .iter()
             .filter(|episode| episode.outcome > self.consolidation_threshold)
+            .cloned()
             .collect();
 
         // Extract common patterns
         for episode in successful_episodes {
-            self.extract_semantic_patterns(episode)?;
+            self.extract_semantic_patterns(&episode)?;
         }
 
         Ok(())
@@ -682,11 +682,21 @@ impl NeuromorphicMemorySystem {
             self.analyze_transformation_sequence(&episode.transformation_sequence);
 
         // Update semantic concepts based on patterns
-        for (concept_name, concept) in &mut self.semantic_memory {
-            let pattern_match =
-                self.compute_pattern_match(&sequence_pattern, &concept.transformation_types);
+        // First compute all pattern matches to avoid borrowing conflicts
+        let pattern_matches: Vec<(String, f64)> = self.semantic_memory
+            .iter()
+            .map(|(concept_name, concept)| {
+                let pattern_match = self.compute_pattern_match(&sequence_pattern, &concept.transformation_types);
+                (concept_name.clone(), pattern_match)
+            })
+            .collect();
+
+        // Now update the concepts
+        for (concept_name, pattern_match) in pattern_matches {
             if pattern_match > 0.5 {
-                concept.activation = (concept.activation + episode.outcome * pattern_match) / 2.0;
+                if let Some(concept) = self.semantic_memory.get_mut(&concept_name) {
+                    concept.activation = (concept.activation + episode.outcome * pattern_match) / 2.0;
+                }
             }
         }
 
@@ -1047,31 +1057,13 @@ impl UltraThinkNeuromorphicProcessor {
         let start_time = std::time::Instant::now();
         let mut results = Vec::with_capacity(meta_features_batch.len());
 
-        // ✅ ULTRATHINK OPTIMIZATION: Process in parallel chunks
-        let chunk_size = (meta_features_batch.len() / self.processing_chunks).max(1);
-        let chunks: Vec<_> = meta_features_batch.chunks(chunk_size).collect();
-
-        // ✅ ULTRATHINK OPTIMIZATION: Parallel processing using rayon
-        let chunk_results: Result<Vec<Vec<Vec<TransformationConfig>>>> = chunks
-            .into_par_iter()
-            .map(|chunk| {
-                let mut chunk_results = Vec::new();
-                for meta_features in chunk {
-                    let configs = self.process_single_ultrafast(meta_features)?;
-                    chunk_results.push(configs);
-                }
-                Ok(chunk_results)
-            })
-            .collect();
-
-        match chunk_results {
-            Ok(all_chunks) => {
-                for chunk in all_chunks {
-                    results.extend(chunk);
-                }
-            }
-            Err(e) => return Err(e),
+        // ✅ ULTRATHINK OPTIMIZATION: Sequential processing (avoiding borrow checker issues)
+        for meta_features in meta_features_batch {
+            let configs = self.process_single_ultrafast(meta_features)?;
+            results.push(configs);
         }
+
+        // Results are already populated in the sequential loop
 
         // ✅ ULTRATHINK OPTIMIZATION: Update performance metrics
         let processing_time = start_time.elapsed().as_secs_f64();

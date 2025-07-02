@@ -3,7 +3,7 @@
 //! This module implements active contour models for image segmentation,
 //! including parametric snakes and level set methods.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{arr2, Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 

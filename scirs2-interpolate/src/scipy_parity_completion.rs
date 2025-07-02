@@ -1199,7 +1199,6 @@ pub struct SciPyParityReport {
 }
 
 /// Convenience functions
-
 /// Run comprehensive SciPy parity completion with default configuration
 pub fn complete_scipy_parity<T>() -> InterpolateResult<SciPyParityReport>
 where

@@ -7,7 +7,7 @@
 use num_traits::Float;
 use std::collections::HashMap;
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 
 /// Moment accountant for tracking privacy loss
 #[derive(Debug, Clone)]
@@ -177,7 +177,7 @@ impl MomentsAccountant {
     }
 
     /// Get privacy spent after a given number of steps
-    pub fn get_privacy_spent(&self, steps: usize) -> Result<(f64, f64), OptimizerError> {
+    pub fn get_privacy_spent(&self, steps: usize) -> Result<(f64, f64), OptimError> {
         if steps == 0 {
             return Ok((0.0, 0.0));
         }
@@ -187,7 +187,7 @@ impl MomentsAccountant {
     }
 
     /// Perform comprehensive privacy analysis
-    pub fn analyze_privacy(&self, steps: usize) -> Result<PrivacyAnalysis, OptimizerError> {
+    pub fn analyze_privacy(&self, steps: usize) -> Result<PrivacyAnalysis, OptimError> {
         // Compute log moments for all orders
         let mut log_moments = HashMap::new();
 
@@ -217,9 +217,9 @@ impl MomentsAccountant {
     }
 
     /// Compute log moment for a specific order and number of steps
-    pub fn compute_log_moment(&self, order: usize, steps: usize) -> Result<f64, OptimizerError> {
+    pub fn compute_log_moment(&self, order: usize, steps: usize) -> Result<f64, OptimError> {
         if order < 2 {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Moment order must be at least 2".to_string(),
             ));
         }
@@ -243,7 +243,7 @@ impl MomentsAccountant {
     pub fn compute_enhanced_single_step_log_moment(
         &self,
         order: usize,
-    ) -> Result<f64, OptimizerError> {
+    ) -> Result<f64, OptimError> {
         // Use higher precision for better accuracy
         let q = self.sampling_probability;
         let sigma = self.noise_multiplier;
@@ -269,7 +269,7 @@ impl MomentsAccountant {
         order: usize,
         q: f64,
         sigma: f64,
-    ) -> Result<f64, OptimizerError> {
+    ) -> Result<f64, OptimError> {
         // For small q, use Taylor series expansion: M_lambda(q) ≈ q * lambda * exp(lambda/(2*sigma^2))
         let lambda = order as f64;
         let variance = sigma * sigma;
@@ -292,7 +292,7 @@ impl MomentsAccountant {
         order: usize,
         q: f64,
         sigma: f64,
-    ) -> Result<f64, OptimizerError> {
+    ) -> Result<f64, OptimError> {
         // For large q, use complementary approach
         let lambda = order as f64;
         let variance = sigma * sigma;
@@ -310,7 +310,7 @@ impl MomentsAccountant {
         order: usize,
         q: f64,
         sigma: f64,
-    ) -> Result<f64, OptimizerError> {
+    ) -> Result<f64, OptimError> {
         let lambda = order as f64;
         let variance = sigma * sigma;
 
@@ -328,7 +328,7 @@ impl MomentsAccountant {
     pub fn track_heterogeneous_composition(
         &mut self,
         mechanisms: &[MechanismParameters],
-    ) -> Result<CompositionAnalysis, OptimizerError> {
+    ) -> Result<CompositionAnalysis, OptimError> {
         let mut total_log_moments = HashMap::new();
 
         // Initialize log moments
@@ -365,7 +365,7 @@ impl MomentsAccountant {
         &self,
         order: usize,
         mechanism: &MechanismParameters,
-    ) -> Result<f64, OptimizerError> {
+    ) -> Result<f64, OptimError> {
         let _lambda = order as f64;
         let q = mechanism.sampling_probability;
         let sigma = mechanism.noise_multiplier;
@@ -392,7 +392,7 @@ impl MomentsAccountant {
         &self,
         steps: usize,
         target_delta: f64,
-    ) -> Result<f64, OptimizerError> {
+    ) -> Result<f64, OptimError> {
         // Use refined bound that accounts for finite sampling
         let mut best_epsilon = f64::INFINITY;
 
@@ -411,7 +411,7 @@ impl MomentsAccountant {
         }
 
         if best_epsilon == f64::INFINITY {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Could not compute valid epsilon bound".to_string(),
             ));
         }
@@ -456,7 +456,7 @@ impl MomentsAccountant {
     pub fn get_privacy_budget_status(
         &self,
         steps: usize,
-    ) -> Result<PrivacyBudgetStatus, OptimizerError> {
+    ) -> Result<PrivacyBudgetStatus, OptimError> {
         let analysis = self.analyze_privacy(steps)?;
         let remaining_epsilon = 1.0 - analysis.epsilon; // Assuming target epsilon = 1.0
         let utilization = analysis.epsilon;
@@ -482,7 +482,7 @@ impl MomentsAccountant {
     }
 
     /// Estimate maximum number of steps within privacy budget
-    fn estimate_max_steps(&self) -> Result<usize, OptimizerError> {
+    fn estimate_max_steps(&self) -> Result<usize, OptimError> {
         let target_epsilon = 1.0; // Configurable target
 
         // Binary search for maximum steps
@@ -506,7 +506,7 @@ impl MomentsAccountant {
     }
 
     /// Compute log moment for a single step of the mechanism
-    fn compute_single_step_log_moment(&self, order: usize) -> Result<f64, OptimizerError> {
+    fn compute_single_step_log_moment(&self, order: usize) -> Result<f64, OptimError> {
         let q = self.sampling_probability;
         let sigma = self.noise_multiplier;
         let alpha = order as f64;
@@ -542,7 +542,7 @@ impl MomentsAccountant {
     }
 
     /// Compute moment for single point change
-    fn compute_single_change_moment(&self, alpha: f64, sigma: f64) -> Result<f64, OptimizerError> {
+    fn compute_single_change_moment(&self, alpha: f64, sigma: f64) -> Result<f64, OptimError> {
         // For Gaussian mechanism with sensitivity 1:
         // M_α(λ) = exp(α(α-1)/(2σ²))
         let log_moment = alpha * (alpha - 1.0) / (2.0 * sigma * sigma);
@@ -550,7 +550,7 @@ impl MomentsAccountant {
     }
 
     /// Compute moment for double point change (advanced case)
-    fn compute_double_change_moment(&self, alpha: f64, sigma: f64) -> Result<f64, OptimizerError> {
+    fn compute_double_change_moment(&self, alpha: f64, sigma: f64) -> Result<f64, OptimError> {
         // Simplified computation for double change
         // In practice, this requires more sophisticated analysis
         let single_change = self.compute_single_change_moment(alpha, sigma)?;
@@ -561,7 +561,7 @@ impl MomentsAccountant {
     fn compute_optimal_epsilon(
         &self,
         log_moments: &HashMap<usize, f64>,
-    ) -> Result<(f64, usize), OptimizerError> {
+    ) -> Result<(f64, usize), OptimError> {
         let mut best_epsilon = f64::INFINITY;
         let mut best_order = 2;
 
@@ -578,7 +578,7 @@ impl MomentsAccountant {
         }
 
         if best_epsilon == f64::INFINITY {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Failed to compute valid epsilon".to_string(),
             ));
         }
@@ -621,7 +621,7 @@ impl MomentsAccountant {
         &self,
         mechanisms: &[MechanismParameters],
         target_delta: f64,
-    ) -> Result<CompositionAnalysis, OptimizerError> {
+    ) -> Result<CompositionAnalysis, OptimError> {
         let mut total_log_moments = HashMap::new();
         let mut total_compositions = 0;
 
@@ -655,7 +655,7 @@ impl MomentsAccountant {
         &self,
         mechanism: &MechanismParameters,
         order: usize,
-    ) -> Result<f64, OptimizerError> {
+    ) -> Result<f64, OptimError> {
         let alpha = order as f64;
         let sigma = mechanism.noise_multiplier;
         let sensitivity = mechanism.sensitivity;
@@ -671,7 +671,7 @@ impl MomentsAccountant {
         &self,
         log_moments: &HashMap<usize, f64>,
         delta: f64,
-    ) -> Result<(f64, usize), OptimizerError> {
+    ) -> Result<(f64, usize), OptimError> {
         let mut best_epsilon = f64::INFINITY;
         let mut best_order = 2;
 
@@ -719,27 +719,27 @@ impl MomentsAccountant {
     }
 
     /// Validate moment accountant configuration
-    pub fn validate_configuration(&self) -> Result<(), OptimizerError> {
+    pub fn validate_configuration(&self) -> Result<(), OptimError> {
         if self.noise_multiplier <= 0.0 {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Noise multiplier must be positive".to_string(),
             ));
         }
 
         if self.target_delta <= 0.0 || self.target_delta >= 1.0 {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Delta must be in (0, 1)".to_string(),
             ));
         }
 
         if self.batch_size == 0 || self.dataset_size == 0 {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Batch size and dataset size must be positive".to_string(),
             ));
         }
 
         if self.batch_size > self.dataset_size {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Batch size cannot exceed dataset size".to_string(),
             ));
         }
@@ -751,7 +751,7 @@ impl MomentsAccountant {
     pub fn get_analysis_summary(
         &self,
         steps: usize,
-    ) -> Result<PrivacyAnalysisSummary, OptimizerError> {
+    ) -> Result<PrivacyAnalysisSummary, OptimError> {
         let analysis = self.analyze_privacy(steps)?;
 
         Ok(PrivacyAnalysisSummary {

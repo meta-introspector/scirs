@@ -728,7 +728,7 @@ impl UltraParallelSwarmOptimizer {
         // Copy positions from all swarms
         for (swarm_idx, swarm) in self.swarm_states.iter().enumerate() {
             let start_idx = swarm_idx * self.config.swarm_size;
-            let end_idx = start_idx + self.config.swarm_size;
+            let _end_idx = start_idx + self.config.swarm_size;
 
             for i in 0..self.config.swarm_size {
                 for j in 0..problem_dim {
@@ -773,14 +773,14 @@ impl UltraParallelSwarmOptimizer {
     fn update_particle_swarm_gpu(
         &mut self,
         swarm: &mut SwarmState,
-        swarm_idx: usize,
+        _swarm_idx: usize,
         iteration: usize,
     ) -> ScirsResult<()> {
         // Use GPU kernel for particle swarm update
         if let AlgorithmSpecificState::ParticleSwarm {
             ref mut inertia_weights,
             ref acceleration_coefficients,
-            ref neighborhood_topology,
+            ref _neighborhood_topology,
         } = swarm.algorithm_state
         {
             // Adaptive inertia weight
@@ -837,8 +837,8 @@ impl UltraParallelSwarmOptimizer {
     fn update_ant_colony_gpu(
         &mut self,
         swarm: &mut SwarmState,
-        swarm_idx: usize,
-        iteration: usize,
+        _swarm_idx: usize,
+        _iteration: usize,
     ) -> ScirsResult<()> {
         if let AlgorithmSpecificState::AntColony {
             ref mut pheromone_matrix,
@@ -1014,8 +1014,8 @@ impl UltraParallelSwarmOptimizer {
     fn update_firefly_gpu(
         &mut self,
         swarm: &mut SwarmState,
-        swarm_idx: usize,
-        iteration: usize,
+        _swarm_idx: usize,
+        _iteration: usize,
     ) -> ScirsResult<()> {
         if let AlgorithmSpecificState::Firefly {
             ref mut brightness_matrix,
@@ -1047,7 +1047,7 @@ impl UltraParallelSwarmOptimizer {
                         }
 
                         // Calculate attraction
-                        let distance = distance_sq.sqrt();
+                        let _distance = distance_sq.sqrt();
                         let attraction = beta0 * (-light_absorption * distance_sq).exp();
                         attraction_matrix[[i, j]] = attraction;
 

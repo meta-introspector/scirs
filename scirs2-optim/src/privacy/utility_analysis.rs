@@ -4,10 +4,9 @@
 //! the tradeoffs between privacy guarantees and model utility in privacy-preserving
 //! machine learning systems.
 
-use crate::error::OptimizerError;
-use crate::privacy::moment_accountant::MomentsAccountant;
+use crate::error::{OptimError, Result};
 use crate::privacy::{DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
-use ndarray::{Array1, Array2, ArrayBase, Data, Dimension};
+use ndarray::{ArrayBase, Data, Dimension};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -1162,9 +1161,9 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     pub fn analyze<D: Data<Elem = T> + Sync, Dim: Dimension>(
         &mut self,
         data: &ArrayBase<D, Dim>,
-        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimizerError>
+        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimError>
             + Sync,
-    ) -> Result<PrivacyUtilityResults<T>, OptimizerError> {
+    ) -> Result<PrivacyUtilityResults<T>, OptimError> {
         let start_time = std::time::Instant::now();
         
         // 1. Generate Pareto frontier
@@ -1409,9 +1408,9 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     pub fn generate_pareto_frontier<D: Data<Elem = T> + Sync, Dim: Dimension>(
         &self,
         data: &ArrayBase<D, Dim>,
-        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimizerError>
+        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimError>
             + Sync,
-    ) -> Result<Vec<ParetoPoint<T>>, OptimizerError> {
+    ) -> Result<Vec<ParetoPoint<T>>, OptimError> {
         let mut pareto_points = Vec::new();
 
         // Generate parameter combinations using configured ranges
@@ -1499,7 +1498,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
         _total_budget: &PrivacyBudget,
         _iterations: usize,
         _utility_threshold: T,
-    ) -> Result<BudgetAllocation<T>, OptimizerError> {
+    ) -> Result<BudgetAllocation<T>, OptimError> {
         // Implementation would go here
         todo!("Implementation of budget allocation optimization")
     }
@@ -1509,10 +1508,10 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     pub fn perform_sensitivity_analysis<D: Data<Elem = T> + Sync, Dim: Dimension>(
         &self,
         data: &ArrayBase<D, Dim>,
-        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimizerError>
+        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimError>
             + Sync,
         base_config: &PrivacyConfiguration<T>,
-    ) -> Result<SensitivityResults<T>, OptimizerError> {
+    ) -> Result<SensitivityResults<T>, OptimError> {
         let mut sensitivity_results = SensitivityResults {
             base_utility: T::zero(),
             parameter_sensitivities: HashMap::new(),
@@ -1657,10 +1656,10 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     pub fn evaluate_robustness<D: Data<Elem = T> + Sync, Dim: Dimension>(
         &self,
         _data: &ArrayBase<D, Dim>,
-        _model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimizerError>
+        _model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimError>
             + Sync,
         _config: &PrivacyConfiguration<T>,
-    ) -> Result<RobustnessResults<T>, OptimizerError> {
+    ) -> Result<RobustnessResults<T>, OptimError> {
         // Implementation would go here
         todo!("Implementation of robustness evaluation")
     }
@@ -1671,7 +1670,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
         &self,
         _privacy_parameters: &[T],
         _historical_data: &[(T, T)],
-    ) -> Result<Vec<DegradationPrediction<T>>, OptimizerError> {
+    ) -> Result<Vec<DegradationPrediction<T>>, OptimError> {
         // Implementation would go here
         todo!("Implementation of utility degradation prediction")
     }
@@ -1682,7 +1681,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
         &self,
         _data: &ArrayBase<D, Dim>,
         _config: &PrivacyConfiguration<T>,
-    ) -> Result<PrivacyRiskAssessment<T>, OptimizerError> {
+    ) -> Result<PrivacyRiskAssessment<T>, OptimError> {
         // Implementation would go here
         todo!("Implementation of privacy risk assessment")
     }
@@ -1693,7 +1692,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
         &self,
         _results: &[(T, T)],
         _baseline: &[(T, T)],
-    ) -> Result<StatisticalTestResults<T>, OptimizerError> {
+    ) -> Result<StatisticalTestResults<T>, OptimError> {
         // Implementation would go here
         todo!("Implementation of statistical significance testing")
     }
@@ -1776,7 +1775,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     /// Generate privacy configurations for parameter space exploration
     fn generate_privacy_configurations(
         &self,
-    ) -> Result<Vec<PrivacyConfiguration<T>>, OptimizerError> {
+    ) -> Result<Vec<PrivacyConfiguration<T>>, OptimError> {
         let mut configurations = Vec::new();
         let params = &self.config.privacy_parameters;
 
@@ -1791,27 +1790,27 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
         let max_combinations = self.config.pareto_resolution;
         let combinations_per_dimension = (max_combinations as f64).powf(1.0 / 5.0).ceil() as usize;
 
-        for (i, &epsilon) in epsilon_values
+        for (_i, &epsilon) in epsilon_values
             .iter()
             .enumerate()
             .take(combinations_per_dimension)
         {
-            for (j, &delta) in delta_values
+            for (_j, &delta) in delta_values
                 .iter()
                 .enumerate()
                 .take(combinations_per_dimension)
             {
-                for (k, &noise_mult) in noise_values
+                for (_k, &noise_mult) in noise_values
                     .iter()
                     .enumerate()
                     .take(combinations_per_dimension)
                 {
-                    for (l, &clip_thresh) in clip_values
+                    for (_l, &clip_thresh) in clip_values
                         .iter()
                         .enumerate()
                         .take(combinations_per_dimension)
                     {
-                        for (m, &batch_size) in batch_values
+                        for (_m, &batch_size) in batch_values
                             .iter()
                             .enumerate()
                             .take(combinations_per_dimension)
@@ -1849,7 +1848,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     }
 
     /// Sample values from a parameter range
-    fn sample_parameter_range(&self, range: &ParameterRange) -> Result<Vec<T>, OptimizerError> {
+    fn sample_parameter_range(&self, range: &ParameterRange) -> Result<Vec<T>, OptimError> {
         let mut values = Vec::new();
 
         match range.sampling_strategy {
@@ -1891,7 +1890,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     }
 
     /// Compute privacy cost for a configuration (lower epsilon = higher cost)
-    fn compute_privacy_cost(&self, config: &PrivacyConfiguration<T>) -> Result<T, OptimizerError> {
+    fn compute_privacy_cost(&self, config: &PrivacyConfiguration<T>) -> Result<T, OptimError> {
         // Privacy cost is inversely related to epsilon (lower epsilon = higher privacy = higher cost)
         // Normalize by a reasonable maximum epsilon value
         let max_epsilon = T::from(10.0).unwrap();

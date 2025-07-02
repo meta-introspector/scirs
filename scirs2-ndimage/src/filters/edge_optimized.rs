@@ -98,24 +98,60 @@ where
         for j in 0..width {
             let val = if axis == 0 {
                 // Y-derivative: [1 2 1; 0 0 0; -1 -2 -1]
-                let top = get_pixel_value(input, i as isize - 1, j as isize - 1, mode) * k1
-                    + get_pixel_value(input, i as isize - 1, j as isize, mode) * k2
-                    + get_pixel_value(input, i as isize - 1, j as isize + 1, mode) * k3;
+                let top =
+                    get_pixel_value(input, i as isize - 1, j as isize - 1, mode, Some(T::zero()))
+                        * k1
+                        + get_pixel_value(input, i as isize - 1, j as isize, mode, Some(T::zero()))
+                            * k2
+                        + get_pixel_value(
+                            input,
+                            i as isize - 1,
+                            j as isize + 1,
+                            mode,
+                            Some(T::zero()),
+                        ) * k3;
 
-                let bottom = get_pixel_value(input, i as isize + 1, j as isize - 1, mode) * k1
-                    + get_pixel_value(input, i as isize + 1, j as isize, mode) * k2
-                    + get_pixel_value(input, i as isize + 1, j as isize + 1, mode) * k3;
+                let bottom =
+                    get_pixel_value(input, i as isize + 1, j as isize - 1, mode, Some(T::zero()))
+                        * k1
+                        + get_pixel_value(input, i as isize + 1, j as isize, mode, Some(T::zero()))
+                            * k2
+                        + get_pixel_value(
+                            input,
+                            i as isize + 1,
+                            j as isize + 1,
+                            mode,
+                            Some(T::zero()),
+                        ) * k3;
 
                 top - bottom
             } else {
                 // X-derivative: [-1 0 1; -2 0 2; -1 0 1]
-                let left = get_pixel_value(input, i as isize - 1, j as isize - 1, mode) * k1
-                    + get_pixel_value(input, i as isize, j as isize - 1, mode) * k2
-                    + get_pixel_value(input, i as isize + 1, j as isize - 1, mode) * k3;
+                let left =
+                    get_pixel_value(input, i as isize - 1, j as isize - 1, mode, Some(T::zero()))
+                        * k1
+                        + get_pixel_value(input, i as isize, j as isize - 1, mode, Some(T::zero()))
+                            * k2
+                        + get_pixel_value(
+                            input,
+                            i as isize + 1,
+                            j as isize - 1,
+                            mode,
+                            Some(T::zero()),
+                        ) * k3;
 
-                let right = get_pixel_value(input, i as isize - 1, j as isize + 1, mode) * k1
-                    + get_pixel_value(input, i as isize, j as isize + 1, mode) * k2
-                    + get_pixel_value(input, i as isize + 1, j as isize + 1, mode) * k3;
+                let right =
+                    get_pixel_value(input, i as isize - 1, j as isize + 1, mode, Some(T::zero()))
+                        * k1
+                        + get_pixel_value(input, i as isize, j as isize + 1, mode, Some(T::zero()))
+                            * k2
+                        + get_pixel_value(
+                            input,
+                            i as isize + 1,
+                            j as isize + 1,
+                            mode,
+                            Some(T::zero()),
+                        ) * k3;
 
                 right - left
             };
@@ -153,55 +189,91 @@ where
             for j in 0..width {
                 let val = if axis == 0 {
                     // Y-derivative
-                    let top =
-                        get_pixel_value(input_ref, i as isize - 1, j as isize - 1, &mode_clone)
-                            * k1
-                            + get_pixel_value(input_ref, i as isize - 1, j as isize, &mode_clone)
-                                * k2
-                            + get_pixel_value(
-                                input_ref,
-                                i as isize - 1,
-                                j as isize + 1,
-                                &mode_clone,
-                            ) * k3;
+                    let top = get_pixel_value(
+                        input_ref,
+                        i as isize - 1,
+                        j as isize - 1,
+                        &mode_clone,
+                        Some(T::zero()),
+                    ) * k1
+                        + get_pixel_value(
+                            input_ref,
+                            i as isize - 1,
+                            j as isize,
+                            &mode_clone,
+                            Some(T::zero()),
+                        ) * k2
+                        + get_pixel_value(
+                            input_ref,
+                            i as isize - 1,
+                            j as isize + 1,
+                            &mode_clone,
+                            Some(T::zero()),
+                        ) * k3;
 
-                    let bottom =
-                        get_pixel_value(input_ref, i as isize + 1, j as isize - 1, &mode_clone)
-                            * k1
-                            + get_pixel_value(input_ref, i as isize + 1, j as isize, &mode_clone)
-                                * k2
-                            + get_pixel_value(
-                                input_ref,
-                                i as isize + 1,
-                                j as isize + 1,
-                                &mode_clone,
-                            ) * k3;
+                    let bottom = get_pixel_value(
+                        input_ref,
+                        i as isize + 1,
+                        j as isize - 1,
+                        &mode_clone,
+                        Some(T::zero()),
+                    ) * k1
+                        + get_pixel_value(
+                            input_ref,
+                            i as isize + 1,
+                            j as isize,
+                            &mode_clone,
+                            Some(T::zero()),
+                        ) * k2
+                        + get_pixel_value(
+                            input_ref,
+                            i as isize + 1,
+                            j as isize + 1,
+                            &mode_clone,
+                            Some(T::zero()),
+                        ) * k3;
 
                     top - bottom
                 } else {
                     // X-derivative
-                    let left =
-                        get_pixel_value(input_ref, i as isize - 1, j as isize - 1, &mode_clone)
-                            * k1
-                            + get_pixel_value(input_ref, i as isize, j as isize - 1, &mode_clone)
-                                * k2
-                            + get_pixel_value(
-                                input_ref,
-                                i as isize + 1,
-                                j as isize - 1,
-                                &mode_clone,
-                            ) * k3;
+                    let left = get_pixel_value(
+                        input_ref,
+                        i as isize - 1,
+                        j as isize - 1,
+                        &mode_clone,
+                        Some(T::zero()),
+                    ) * k1
+                        + get_pixel_value(
+                            input_ref,
+                            i as isize,
+                            j as isize - 1,
+                            &mode_clone,
+                            Some(T::zero()),
+                        ) * k2
+                        + get_pixel_value(
+                            input_ref,
+                            i as isize + 1,
+                            j as isize - 1,
+                            &mode_clone,
+                            Some(T::zero()),
+                        ) * k3;
 
                     let right =
                         get_pixel_value(input_ref, i as isize - 1, j as isize + 1, &mode_clone)
                             * k1
-                            + get_pixel_value(input_ref, i as isize, j as isize + 1, &mode_clone)
-                                * k2
+                            + get_pixel_value(
+                                input_ref,
+                                i as isize,
+                                j as isize + 1,
+                                &mode_clone,
+                                Some(T::zero()),
+                            ) * k2
                             + get_pixel_value(
                                 input_ref,
                                 i as isize + 1,
                                 j as isize + 1,
                                 &mode_clone,
+                                Some(T::zero()),
                             ) * k3;
 
                     right - left
@@ -214,16 +286,22 @@ where
 }
 
 /// Get pixel value with border handling
-fn get_pixel_value<T>(input: &ArrayView2<T>, i: isize, j: isize, mode: &BorderMode) -> T
+fn get_pixel_value<T>(
+    input: &ArrayView2<T>,
+    i: isize,
+    j: isize,
+    mode: &BorderMode,
+    cval: Option<T>,
+) -> T
 where
     T: Float + FromPrimitive + Debug,
 {
     let (height, width) = input.dim();
 
     let (ni, nj) = match mode {
-        BorderMode::Constant(cval) => {
+        BorderMode::Constant => {
             if i < 0 || i >= height as isize || j < 0 || j >= width as isize {
-                return T::from(*cval).unwrap_or(T::zero());
+                return cval.unwrap_or(T::zero());
             }
             (i as usize, j as usize)
         }
@@ -350,7 +428,13 @@ where
                             sum = sum + center * eight;
                         } else {
                             sum = sum
-                                - get_pixel_value(input, i as isize + di, j as isize + dj, mode);
+                                - get_pixel_value(
+                                    input,
+                                    i as isize + di,
+                                    j as isize + dj,
+                                    mode,
+                                    Some(T::zero()),
+                                );
                         }
                     }
                 }
@@ -358,10 +442,10 @@ where
             } else {
                 // 4-connected Laplacian: cross neighbors = -1, center = 4
                 let sum = center * four
-                    - get_pixel_value(input, i as isize - 1, j as isize, mode)
-                    - get_pixel_value(input, i as isize + 1, j as isize, mode)
-                    - get_pixel_value(input, i as isize, j as isize - 1, mode)
-                    - get_pixel_value(input, i as isize, j as isize + 1, mode);
+                    - get_pixel_value(input, i as isize - 1, j as isize, mode, Some(T::zero()))
+                    - get_pixel_value(input, i as isize + 1, j as isize, mode, Some(T::zero()))
+                    - get_pixel_value(input, i as isize, j as isize - 1, mode, Some(T::zero()))
+                    - get_pixel_value(input, i as isize, j as isize + 1, mode, Some(T::zero()));
                 output[[i, j]] = sum;
             }
         }
@@ -419,10 +503,34 @@ where
                 } else {
                     // 4-connected Laplacian
                     let sum = center * four
-                        - get_pixel_value(input_ref, i as isize - 1, j as isize, &mode_clone)
-                        - get_pixel_value(input_ref, i as isize + 1, j as isize, &mode_clone)
-                        - get_pixel_value(input_ref, i as isize, j as isize - 1, &mode_clone)
-                        - get_pixel_value(input_ref, i as isize, j as isize + 1, &mode_clone);
+                        - get_pixel_value(
+                            input_ref,
+                            i as isize - 1,
+                            j as isize,
+                            &mode_clone,
+                            Some(T::zero()),
+                        )
+                        - get_pixel_value(
+                            input_ref,
+                            i as isize + 1,
+                            j as isize,
+                            &mode_clone,
+                            Some(T::zero()),
+                        )
+                        - get_pixel_value(
+                            input_ref,
+                            i as isize,
+                            j as isize - 1,
+                            &mode_clone,
+                            Some(T::zero()),
+                        )
+                        - get_pixel_value(
+                            input_ref,
+                            i as isize,
+                            j as isize + 1,
+                            &mode_clone,
+                            Some(T::zero()),
+                        );
                     row[j] = sum;
                 }
             }

@@ -363,7 +363,7 @@ impl<F: Float + NumCast> NegativeBinomial<F> {
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut samples = Vec::with_capacity(size);
 
         // For integer r, we can use a sum of geometric variables

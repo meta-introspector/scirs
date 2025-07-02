@@ -74,7 +74,9 @@ pub mod astronomy {
 
     /// Stellar classification and properties
     pub struct StellarDatasets {
+        #[allow(dead_code)]
         client: ExternalClient,
+        #[allow(dead_code)]
         cache: DatasetCache,
     }
 
@@ -397,7 +399,9 @@ pub mod genomics {
 
     /// Genomic sequence and expression datasets
     pub struct GenomicsDatasets {
+        #[allow(dead_code)]
         client: ExternalClient,
+        #[allow(dead_code)]
         cache: DatasetCache,
     }
 
@@ -650,7 +654,9 @@ pub mod climate {
 
     /// Climate and weather datasets
     pub struct ClimateDatasets {
+        #[allow(dead_code)]
         client: ExternalClient,
+        #[allow(dead_code)]
         cache: DatasetCache,
     }
 

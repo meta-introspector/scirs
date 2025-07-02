@@ -9,7 +9,7 @@ use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// Meta-Learning Framework for Learned Optimizers
@@ -426,7 +426,7 @@ pub trait MetaLearner<T: Float>: Send + Sync {
         &mut self,
         task_batch: &[MetaTask<T>],
         meta_parameters: &mut HashMap<String, Array1<T>>,
-    ) -> Result<MetaTrainingResult<T>, OptimizerError>;
+    ) -> Result<MetaTrainingResult<T>, OptimError>;
 
     /// Adapt to new task
     fn adapt_to_task(
@@ -434,14 +434,14 @@ pub trait MetaLearner<T: Float>: Send + Sync {
         task: &MetaTask<T>,
         meta_parameters: &HashMap<String, Array1<T>>,
         adaptation_steps: usize,
-    ) -> Result<TaskAdaptationResult<T>, OptimizerError>;
+    ) -> Result<TaskAdaptationResult<T>, OptimError>;
 
     /// Evaluate on query set
     fn evaluate_query_set(
         &self,
         task: &MetaTask<T>,
         adapted_parameters: &HashMap<String, Array1<T>>,
-    ) -> Result<QueryEvaluationResult<T>, OptimizerError>;
+    ) -> Result<QueryEvaluationResult<T>, OptimError>;
 
     /// Get meta-learner type
     fn get_algorithm(&self) -> MetaLearningAlgorithm;
@@ -979,7 +979,7 @@ pub enum CurvatureEstimationMethod {
 
 impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
     /// Create a new meta-learning framework
-    pub fn new(config: MetaLearningConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: MetaLearningConfig) -> Result<Self, OptimError> {
         let meta_learner = Self::create_meta_learner(&config)?;
         let task_manager = TaskDistributionManager::new(&config)?;
         let meta_validator = MetaValidator::new(&config)?;
@@ -1006,7 +1006,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
 
     fn create_meta_learner(
         config: &MetaLearningConfig,
-    ) -> Result<Box<dyn MetaLearner<T> + Send + Sync>, OptimizerError> {
+    ) -> Result<Box<dyn MetaLearner<T> + Send + Sync>, OptimError> {
         match config.algorithm {
             MetaLearningAlgorithm::MAML => {
                 let maml_config = MAMLConfig {
@@ -1040,7 +1040,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
         &mut self,
         tasks: Vec<MetaTask<T>>,
         num_epochs: usize,
-    ) -> Result<MetaTrainingResults<T>, OptimizerError> {
+    ) -> Result<MetaTrainingResults<T>, OptimError> {
         let mut meta_parameters = self.initialize_meta_parameters()?;
         let mut training_history = Vec::new();
         let mut best_performance = T::neg_infinity();
@@ -1101,7 +1101,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
         &mut self,
         task: &MetaTask<T>,
         meta_parameters: &HashMap<String, Array1<T>>,
-    ) -> Result<TaskAdaptationResult<T>, OptimizerError> {
+    ) -> Result<TaskAdaptationResult<T>, OptimError> {
         self.adaptation_engine
             .adapt(
                 task,
@@ -1118,7 +1118,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
         support_set: &TaskDataset<T>,
         query_set: &TaskDataset<T>,
         meta_parameters: &HashMap<String, Array1<T>>,
-    ) -> Result<FewShotResult<T>, OptimizerError> {
+    ) -> Result<FewShotResult<T>, OptimError> {
         self.few_shot_learner
             .learn(support_set, query_set, meta_parameters)
             .await
@@ -1130,7 +1130,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
         source_tasks: &[MetaTask<T>],
         target_tasks: &[MetaTask<T>],
         meta_parameters: &HashMap<String, Array1<T>>,
-    ) -> Result<TransferLearningResult<T>, OptimizerError> {
+    ) -> Result<TransferLearningResult<T>, OptimError> {
         self.transfer_manager
             .transfer(source_tasks, target_tasks, meta_parameters)
             .await
@@ -1141,7 +1141,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
         &mut self,
         task_sequence: &[MetaTask<T>],
         meta_parameters: &mut HashMap<String, Array1<T>>,
-    ) -> Result<ContinualLearningResult<T>, OptimizerError> {
+    ) -> Result<ContinualLearningResult<T>, OptimError> {
         self.continual_learner
             .learn_sequence(task_sequence, meta_parameters)
             .await
@@ -1152,13 +1152,13 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
         &mut self,
         tasks: &[MetaTask<T>],
         meta_parameters: &mut HashMap<String, Array1<T>>,
-    ) -> Result<MultiTaskResult<T>, OptimizerError> {
+    ) -> Result<MultiTaskResult<T>, OptimError> {
         self.multitask_coordinator
             .learn_simultaneously(tasks, meta_parameters)
             .await
     }
 
-    fn initialize_meta_parameters(&self) -> Result<HashMap<String, Array1<T>>, OptimizerError> {
+    fn initialize_meta_parameters(&self) -> Result<HashMap<String, Array1<T>>, OptimError> {
         // Initialize meta-parameters with proper initialization scheme
         let mut parameters = HashMap::new();
 
@@ -1179,7 +1179,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
         &self,
         meta_parameters: &mut HashMap<String, Array1<T>>,
         meta_gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         let meta_lr = T::from(self.config.meta_learning_rate).unwrap();
 
         for (name, gradient) in meta_gradients {
@@ -1311,7 +1311,7 @@ pub struct MetaLearningStatistics<T: Float> {
 
 // MAML implementation
 impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MAMLLearner<T, D> {
-    pub fn new(config: MAMLConfig<T>) -> Result<Self, OptimizerError> {
+    pub fn new(config: MAMLConfig<T>) -> Result<Self, OptimError> {
         let inner_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> =
             Box::new(crate::optimizers::SGD::new(config.inner_lr));
         let outer_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> =
@@ -1340,7 +1340,7 @@ impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MetaLearner<T> for 
         &mut self,
         task_batch: &[MetaTask<T>],
         meta_parameters: &mut HashMap<String, Array1<T>>,
-    ) -> Result<MetaTrainingResult<T>, OptimizerError> {
+    ) -> Result<MetaTrainingResult<T>, OptimError> {
         let mut total_meta_loss = T::zero();
         let mut task_losses = Vec::new();
         let mut meta_gradients = HashMap::new();
@@ -1404,7 +1404,7 @@ impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MetaLearner<T> for 
         task: &MetaTask<T>,
         meta_parameters: &HashMap<String, Array1<T>>,
         adaptation_steps: usize,
-    ) -> Result<TaskAdaptationResult<T>, OptimizerError> {
+    ) -> Result<TaskAdaptationResult<T>, OptimError> {
         let mut adapted_parameters = meta_parameters.clone();
         let mut adaptation_trajectory = Vec::new();
 
@@ -1457,7 +1457,7 @@ impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MetaLearner<T> for 
         &self,
         task: &MetaTask<T>,
         adapted_parameters: &HashMap<String, Array1<T>>,
-    ) -> Result<QueryEvaluationResult<T>, OptimizerError> {
+    ) -> Result<QueryEvaluationResult<T>, OptimError> {
         // Compute predictions on query set
         let mut predictions = Vec::new();
         let mut confidence_scores = Vec::new();
@@ -1500,7 +1500,7 @@ impl<T: Float + Default + Clone, D: Dimension> MAMLLearner<T, D> {
         &self,
         task: &MetaTask<T>,
         parameters: &HashMap<String, Array1<T>>,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         let mut total_loss = T::zero();
 
         for (features, target) in task
@@ -1522,7 +1522,7 @@ impl<T: Float + Default + Clone, D: Dimension> MAMLLearner<T, D> {
         &self,
         parameters: &HashMap<String, Array1<T>>,
         loss: T,
-    ) -> Result<HashMap<String, Array1<T>>, OptimizerError> {
+    ) -> Result<HashMap<String, Array1<T>>, OptimError> {
         let mut gradients = HashMap::new();
 
         // Simplified gradient computation
@@ -1545,7 +1545,7 @@ pub struct MetaValidator<T: Float> {
 }
 
 impl<T: Float + Default + Clone> MetaValidator<T> {
-    pub fn new(config: &MetaLearningConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &MetaLearningConfig) -> Result<Self, OptimError> {
         Ok(Self {
             config: config.clone(),
             _phantom: std::marker::PhantomData,
@@ -1560,7 +1560,7 @@ pub struct AdaptationEngine<T: Float> {
 }
 
 impl<T: Float + Default + Clone> AdaptationEngine<T> {
-    pub fn new(config: &MetaLearningConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &MetaLearningConfig) -> Result<Self, OptimError> {
         Ok(Self {
             config: config.clone(),
             _phantom: std::marker::PhantomData,
@@ -1575,7 +1575,7 @@ pub struct TransferLearningManager<T: Float> {
 }
 
 impl<T: Float + Default + Clone> TransferLearningManager<T> {
-    pub fn new(settings: &TransferLearningSettings) -> Result<Self, OptimizerError> {
+    pub fn new(settings: &TransferLearningSettings) -> Result<Self, OptimError> {
         Ok(Self {
             settings: settings.clone(),
             _phantom: std::marker::PhantomData,
@@ -1590,7 +1590,7 @@ pub struct ContinualLearningSystem<T: Float> {
 }
 
 impl<T: Float + Default + Clone> ContinualLearningSystem<T> {
-    pub fn new(settings: &ContinualLearningSettings) -> Result<Self, OptimizerError> {
+    pub fn new(settings: &ContinualLearningSettings) -> Result<Self, OptimError> {
         Ok(Self {
             settings: settings.clone(),
             _phantom: std::marker::PhantomData,
@@ -1605,7 +1605,7 @@ pub struct MultiTaskCoordinator<T: Float> {
 }
 
 impl<T: Float + Default + Clone> MultiTaskCoordinator<T> {
-    pub fn new(settings: &MultiTaskSettings) -> Result<Self, OptimizerError> {
+    pub fn new(settings: &MultiTaskSettings) -> Result<Self, OptimError> {
         Ok(Self {
             settings: settings.clone(),
             _phantom: std::marker::PhantomData,
@@ -1635,7 +1635,7 @@ pub struct TaskDistributionManager<T: Float> {
 }
 
 impl<T: Float + Default + Clone> TaskDistributionManager<T> {
-    pub fn new(config: &MetaLearningConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: &MetaLearningConfig) -> Result<Self, OptimError> {
         Ok(Self {
             config: config.clone(),
             _phantom: std::marker::PhantomData,
@@ -1650,7 +1650,7 @@ pub struct FewShotLearner<T: Float> {
 }
 
 impl<T: Float + Default + Clone> FewShotLearner<T> {
-    pub fn new(settings: &FewShotSettings) -> Result<Self, OptimizerError> {
+    pub fn new(settings: &FewShotSettings) -> Result<Self, OptimError> {
         Ok(Self {
             settings: settings.clone(),
             _phantom: std::marker::PhantomData,

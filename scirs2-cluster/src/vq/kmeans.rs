@@ -186,7 +186,7 @@ where
         let seed = opts.random_seed.unwrap();
         // In a real implementation, we would seed the RNG here
     } else {
-        // In a real implementation, we would use thread_rng here
+        // In a real implementation, we would use rng here
     };
 
     let mut best_centroids = None;

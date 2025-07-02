@@ -100,7 +100,7 @@ impl UltraDatasetAnalyzer {
 
     /// Perform ultra-advanced dataset quality analysis
     pub fn analyze_dataset_quality(&self, dataset: &Dataset) -> Result<UltraQualityMetrics> {
-        let data = dataset.data();
+        let data = &dataset.data;
         let n_samples = data.nrows();
         let n_features = data.ncols();
 
@@ -111,25 +111,25 @@ impl UltraDatasetAnalyzer {
         }
 
         // Calculate complexity score using advanced entropy-based measures
-        let complexity_score = self.calculate_complexity_score(data)?;
+        let complexity_score = self.calculate_complexity_score(data.view())?;
 
         // Calculate dataset entropy using information theory
-        let entropy = self.calculate_dataset_entropy(data)?;
+        let entropy = self.calculate_dataset_entropy(data.view())?;
 
         // Advanced multivariate outlier detection
-        let outlier_score = self.calculate_outlier_score(data)?;
+        let outlier_score = self.calculate_outlier_score(data.view())?;
 
         // Feature interaction analysis
-        let interaction_matrix = self.calculate_interaction_matrix(data)?;
+        let interaction_matrix = self.calculate_interaction_matrix(data.view())?;
 
         // Advanced normality assessment
-        let normality_assessment = self.assess_normality(data)?;
+        let normality_assessment = self.assess_normality(data.view())?;
 
         // ML-based quality prediction
-        let ml_quality_score = self.predict_ml_quality(data)?;
+        let ml_quality_score = self.predict_ml_quality(data.view())?;
 
         // Advanced correlation analysis
-        let correlation_insights = self.analyze_correlations(data)?;
+        let correlation_insights = self.analyze_correlations(data.view())?;
 
         Ok(UltraQualityMetrics {
             complexity_score,
@@ -753,7 +753,7 @@ mod tests {
     fn create_test_dataset() -> Dataset {
         let data = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
         let target = Array1::from_vec((0..100).map(|x| (x % 2) as f64).collect());
-        Dataset::new(data, Some(target)).unwrap()
+        Dataset::new(data, Some(target))
     }
 
     #[test]

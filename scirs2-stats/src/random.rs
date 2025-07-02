@@ -321,7 +321,7 @@ where
         if replace {
             // Weighted sampling with replacement
             for _ in 0..size {
-                let r: f64 = rng.random();
+                let r: f64 = rng.gen();
 
                 // Binary search for the index
                 let mut low = 0;
@@ -367,7 +367,7 @@ where
                 }
 
                 // Select an index based on weights
-                let r: f64 = rng.random();
+                let r: f64 = rng.gen();
                 let mut selected = 0;
 
                 for (j, &weight) in cum_weights.iter().enumerate().take(n - i) {
@@ -588,7 +588,7 @@ pub fn random_binary_matrix(
 
     for i in 0..n_rows {
         for j in 0..n_cols {
-            if rng.random::<f64>() < density {
+            if rng.gen::<f64>() < density {
                 result[[i, j]] = 1;
             }
         }

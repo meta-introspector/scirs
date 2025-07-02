@@ -720,7 +720,7 @@ impl LDA {
             }
 
             // Perform eigendecomposition on the symmetrized matrix
-            let (mut eig_vals, eig_vecs) = match scirs2_linalg::eigh::<f64>(&sym_matrix.view()) {
+            let (mut eig_vals, eig_vecs) = match scirs2_linalg::eigh::<f64>(&sym_matrix.view(), None) {
                 Ok(result) => result,
                 Err(_) => {
                     // Fallback to SVD if eigendecomposition fails

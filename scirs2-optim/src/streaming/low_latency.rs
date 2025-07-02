@@ -4,16 +4,16 @@
 //! that require extremely low latency updates, such as high-frequency trading,
 //! real-time control systems, and interactive machine learning.
 
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use num_traits::Float;
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc, Mutex,
 };
 use std::time::{Duration, Instant};
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// Low-latency optimization configuration
@@ -277,7 +277,7 @@ where
     O: Optimizer<A> + Send + Sync + 'static,
 {
     /// Create a new low-latency optimizer
-    pub fn new(base_optimizer: O, config: LowLatencyConfig) -> Result<Self, OptimizerError> {
+    pub fn new(base_optimizer: O, config: LowLatencyConfig) -> Result<Self, OptimError> {
         let base_optimizer = Arc::new(Mutex::new(base_optimizer));
 
         let precomputation_engine = if config.enable_precomputation {
@@ -315,7 +315,7 @@ where
     }
 
     /// Perform a low-latency update
-    pub fn low_latency_step(&mut self, gradient: &Array1<A>) -> Result<Array1<A>, OptimizerError> {
+    pub fn low_latency_step(&mut self, gradient: &Array1<A>) -> Result<Array1<A>, OptimError> {
         let start_time = Instant::now();
 
         // Try to use pre-computed update first
@@ -365,7 +365,7 @@ where
     }
 
     /// Perform exact update using base optimizer
-    fn exact_update(&mut self, gradient: &Array1<A>) -> Result<Array1<A>, OptimizerError> {
+    fn exact_update(&mut self, gradient: &Array1<A>) -> Result<Array1<A>, OptimError> {
         // This is a simplified version - in practice would get current parameters
         let current_params = Array1::zeros(gradient.len());
 
@@ -378,7 +378,7 @@ where
         &mut self,
         gradient: &Array1<A>,
         approximation_level: A,
-    ) -> Result<Array1<A>, OptimizerError> {
+    ) -> Result<Array1<A>, OptimError> {
         // Simplified approximation: reduce precision or use fewer operations
         let simplified_gradient = if approximation_level > A::from(0.5).unwrap() {
             self.simplify_gradient(gradient, approximation_level)?
@@ -399,7 +399,7 @@ where
         &self,
         gradient: &Array1<A>,
         level: A,
-    ) -> Result<Array1<A>, OptimizerError> {
+    ) -> Result<Array1<A>, OptimError> {
         let mut simplified = gradient.clone();
 
         // Sparsify gradient based on approximation level
@@ -448,7 +448,7 @@ where
     }
 
     /// Handle latency violations
-    fn handle_latency_violation(&mut self, latency: Duration) -> Result<(), OptimizerError> {
+    fn handle_latency_violation(&mut self, latency: Duration) -> Result<(), OptimError> {
         // Increase approximation level to reduce future latency
         self.approximation_controller.increase_approximation();
 
@@ -539,18 +539,18 @@ impl<A: Float> LockFreeBuffer<A> {
 }
 
 impl FastMemoryPool {
-    fn new(total_size: usize, block_size: usize) -> Result<Self, OptimizerError> {
+    fn new(total_size: usize, block_size: usize) -> Result<Self, OptimError> {
         let total_blocks = total_size / block_size;
         let mut blocks = Vec::with_capacity(total_blocks);
 
         // Pre-allocate all blocks
         for _ in 0..total_blocks {
             let layout = std::alloc::Layout::from_size_align(block_size, 8)
-                .map_err(|_| OptimizerError::InvalidConfig("Invalid memory layout".to_string()))?;
+                .map_err(|_| OptimError::InvalidConfig("Invalid memory layout".to_string()))?;
 
             let ptr = unsafe { std::alloc::alloc(layout) };
             if ptr.is_null() {
-                return Err(OptimizerError::InvalidConfig(
+                return Err(OptimError::InvalidConfig(
                     "Memory allocation failed".to_string(),
                 ));
             }
@@ -582,7 +582,7 @@ impl<A: Float> SIMDProcessor<A> {
         }
     }
 
-    fn process(&mut self, gradient: &Array1<A>) -> Result<Array1<A>, OptimizerError> {
+    fn process(&mut self, gradient: &Array1<A>) -> Result<Array1<A>, OptimError> {
         // Simplified SIMD processing - in practice would use actual SIMD instructions
         Ok(gradient.clone())
     }
@@ -598,7 +598,7 @@ impl<A: Float> GradientQuantizer<A> {
         }
     }
 
-    fn quantize(&mut self, gradient: &Array1<A>) -> Result<Array1<A>, OptimizerError> {
+    fn quantize(&mut self, gradient: &Array1<A>) -> Result<Array1<A>, OptimError> {
         // Simplified quantization
         let max_val = gradient
             .iter()

@@ -11,8 +11,8 @@ use std::time::{Duration, Instant};
 use ndarray::{Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::Float;
 
-use crate::error::OptimizerError;
-use crate::gpu::GpuOptimizerError;
+use crate::error::{OptimError, Result};
+use crate::gpu::GpuOptimError;
 
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuContext, GpuError};
@@ -2075,7 +2075,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Optimize memory usage for current training step
-    pub fn optimize_memory(&mut self) -> Result<MemoryOptimizationResult, OptimizerError> {
+    pub fn optimize_memory(&mut self) -> Result<MemoryOptimizationResult, OptimError> {
         let start_time = Instant::now();
         
         // Update memory pressure
@@ -2105,7 +2105,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Apply aggressive memory optimizations
-    fn apply_aggressive_optimizations(&mut self) -> Result<MemoryOptimizationResult, OptimizerError> {
+    fn apply_aggressive_optimizations(&mut self) -> Result<MemoryOptimizationResult, OptimError> {
         let mut result = MemoryOptimizationResult::default();
         
         // Reduce batch size
@@ -2134,7 +2134,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Apply moderate memory optimizations
-    fn apply_moderate_optimizations(&mut self) -> Result<MemoryOptimizationResult, OptimizerError> {
+    fn apply_moderate_optimizations(&mut self) -> Result<MemoryOptimizationResult, OptimError> {
         let mut result = MemoryOptimizationResult::default();
         
         // Checkpoint less frequently used activations
@@ -2159,7 +2159,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Apply proactive memory optimizations
-    fn apply_proactive_optimizations(&mut self) -> Result<MemoryOptimizationResult, OptimizerError> {
+    fn apply_proactive_optimizations(&mut self) -> Result<MemoryOptimizationResult, OptimError> {
         let mut result = MemoryOptimizationResult::default();
         
         // Prefetch parameters that might be needed
@@ -2183,7 +2183,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Update memory pressure monitoring
-    fn update_memory_pressure(&mut self) -> Result<(), OptimizerError> {
+    fn update_memory_pressure(&mut self) -> Result<(), OptimError> {
         let current_usage = self.get_current_memory_usage()?;
         let total_memory = self.memory_tracker.total_gpu_memory;
         
@@ -2211,7 +2211,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Get current GPU memory usage
-    fn get_current_memory_usage(&self) -> Result<usize, OptimizerError> {
+    fn get_current_memory_usage(&self) -> Result<usize, OptimError> {
         #[cfg(feature = "gpu")]
         if let Some(ref context) = self.gpu_context {
             // Get GPU memory usage from context
@@ -2250,7 +2250,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Check and trigger pressure alerts
-    fn check_pressure_alerts(&mut self, pressure: f32) -> Result<(), OptimizerError> {
+    fn check_pressure_alerts(&mut self, pressure: f32) -> Result<(), OptimError> {
         let thresholds = &self.pressure_monitor.thresholds;
         
         let level = if pressure >= thresholds.critical {
@@ -2317,7 +2317,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Trigger memory pressure alert
-    fn trigger_alert(&mut self, alert: Alert) -> Result<(), OptimizerError> {
+    fn trigger_alert(&mut self, alert: Alert) -> Result<(), OptimError> {
         // Add to alert history
         self.pressure_monitor.alerts.alert_history.push_back(alert.clone());
         
@@ -2335,7 +2335,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Force garbage collection
-    fn force_garbage_collection(&mut self) -> Result<(), OptimizerError> {
+    fn force_garbage_collection(&mut self) -> Result<(), OptimError> {
         // Platform-specific garbage collection
         #[cfg(feature = "gpu")]
         if let Some(ref context) = self.gpu_context {
@@ -2351,7 +2351,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Update profiling data
-    fn update_profiling_data(&mut self, result: &MemoryOptimizationResult) -> Result<(), OptimizerError> {
+    fn update_profiling_data(&mut self, result: &MemoryOptimizationResult) -> Result<(), OptimError> {
         if !self.profiler.enabled {
             return Ok(());
         }
@@ -2375,7 +2375,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Get detailed memory breakdown
-    fn get_memory_breakdown(&self) -> Result<HashMap<String, usize>, OptimizerError> {
+    fn get_memory_breakdown(&self) -> Result<HashMap<String, usize>, OptimError> {
         let mut breakdown = HashMap::new();
         
         breakdown.insert("parameters".to_string(), 0); // Would calculate actual usage
@@ -2388,7 +2388,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Detect memory leaks
-    fn detect_memory_leaks(&self) -> Result<Vec<MemoryLeak>, OptimizerError> {
+    fn detect_memory_leaks(&self) -> Result<Vec<MemoryLeak>, OptimError> {
         // Simplified leak detection - would be more sophisticated in practice
         let mut leaks = Vec::new();
         
@@ -2414,7 +2414,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Analyze memory access patterns
-    fn analyze_access_patterns(&self) -> Result<Vec<AccessPattern>, OptimizerError> {
+    fn analyze_access_patterns(&self) -> Result<Vec<AccessPattern>, OptimError> {
         let mut patterns = Vec::new();
         
         // Analyze checkpoint access patterns
@@ -2565,7 +2565,7 @@ impl<T: Float> GradientAccumulator<T> {
         memory_freed
     }
     
-    fn compress_gradients(&mut self) -> Result<usize, OptimizerError> {
+    fn compress_gradients(&mut self) -> Result<usize, OptimError> {
         // Stub implementation
         Ok(0)
     }
@@ -2587,7 +2587,7 @@ impl<T: Float> CheckpointManager<T> {
         }
     }
     
-    fn selective_checkpoint(&mut self) -> Result<usize, OptimizerError> {
+    fn selective_checkpoint(&mut self) -> Result<usize, OptimError> {
         // Stub implementation
         Ok(0)
     }
@@ -2610,17 +2610,17 @@ impl<T: Float> ParameterOffloadManager<T> {
         }
     }
     
-    fn aggressive_offload(&mut self) -> Result<usize, OptimizerError> {
+    fn aggressive_offload(&mut self) -> Result<usize, OptimError> {
         // Stub implementation
         Ok(0)
     }
     
-    fn frequency_based_offload(&mut self) -> Result<usize, OptimizerError> {
+    fn frequency_based_offload(&mut self) -> Result<usize, OptimError> {
         // Stub implementation
         Ok(0)
     }
     
-    fn predictive_prefetch(&mut self) -> Result<usize, OptimizerError> {
+    fn predictive_prefetch(&mut self) -> Result<usize, OptimError> {
         // Stub implementation
         Ok(0)
     }
@@ -2661,7 +2661,7 @@ impl DynamicBatchController {
         self.current_batch_size = new_size;
     }
     
-    fn optimize_for_throughput(&mut self) -> Result<Option<(usize, usize)>, OptimizerError> {
+    fn optimize_for_throughput(&mut self) -> Result<Option<(usize, usize)>, OptimError> {
         // Stub implementation
         Ok(None)
     }
@@ -2774,7 +2774,7 @@ impl<T: Float> MemoryCoalescingOptimizer<T> {
     }
 
     /// Analyze memory access patterns and optimize coalescing
-    pub fn optimize_memory_coalescing(&mut self, access_data: &[usize]) -> Result<CoalescingOptimizationResult, OptimizerError> {
+    pub fn optimize_memory_coalescing(&mut self, access_data: &[usize]) -> Result<CoalescingOptimizationResult, OptimError> {
         let mut result = CoalescingOptimizationResult::default();
         
         // Analyze access patterns
@@ -2799,9 +2799,9 @@ impl<T: Float> MemoryCoalescingOptimizer<T> {
     }
     
     /// Analyze memory access pattern
-    fn analyze_access_pattern(&mut self, access_data: &[usize]) -> Result<MemoryAccessPattern, OptimizerError> {
+    fn analyze_access_pattern(&mut self, access_data: &[usize]) -> Result<MemoryAccessPattern, OptimError> {
         if access_data.is_empty() {
-            return Err(OptimizerError::InvalidConfig("Empty access data".to_string()));
+            return Err(OptimError::InvalidConfig("Empty access data".to_string()));
         }
         
         // Calculate stride pattern
@@ -2848,7 +2848,7 @@ impl<T: Float> MemoryCoalescingOptimizer<T> {
     }
     
     /// Apply optimal padding strategy
-    fn apply_optimal_padding(&self, pattern: &MemoryAccessPattern) -> Result<PaddingResult, OptimizerError> {
+    fn apply_optimal_padding(&self, pattern: &MemoryAccessPattern) -> Result<PaddingResult, OptimError> {
         let strategy = if pattern.coalescing_efficiency < 0.5 {
             PaddingStrategy::CacheLineAlignment
         } else if pattern.bank_conflicts > 1.0 {
@@ -2910,7 +2910,7 @@ impl<T: Float> CudaLayoutOptimizer<T> {
     }
     
     /// Optimize memory layout based on access pattern
-    fn optimize_layout(&mut self, pattern: &MemoryAccessPattern) -> Result<LayoutOptimizationResult, OptimizerError> {
+    fn optimize_layout(&mut self, pattern: &MemoryAccessPattern) -> Result<LayoutOptimizationResult, OptimError> {
         // Analyze current layout efficiency
         let current_efficiency = pattern.coalescing_efficiency;
         
@@ -3073,7 +3073,7 @@ impl CacheLineOptimizer {
     }
     
     /// Optimize cache usage based on access pattern
-    fn optimize_cache_usage(&mut self, pattern: &MemoryAccessPattern) -> Result<CacheOptimizationResult, OptimizerError> {
+    fn optimize_cache_usage(&mut self, pattern: &MemoryAccessPattern) -> Result<CacheOptimizationResult, OptimError> {
         let optimization_type = if pattern.locality_score > 0.8 {
             CacheOptimizationType::Prefetching
         } else if pattern.stride > 64 {

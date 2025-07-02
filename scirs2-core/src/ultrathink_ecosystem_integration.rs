@@ -1472,7 +1472,10 @@ impl UltrathinkEcosystemCoordinator {
                 from: "ecosystem_coordinator".to_string(),
                 to: module_name.to_string(),
                 message_type: MessageType::OptimizationHint,
+                #[cfg(feature = "serde")]
                 payload: serde_json::to_vec(&opportunity).unwrap_or_default(),
+                #[cfg(not(feature = "serde"))]
+                payload: Vec::new(),
                 timestamp: Instant::now(),
             };
 

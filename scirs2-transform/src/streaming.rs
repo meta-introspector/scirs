@@ -4,7 +4,7 @@
 //! maintaining running statistics and transforming data incrementally.
 
 use ndarray::{Array1, Array2};
-// use scirs2_linalg::eigen::standard::SymmetricEigendecomposition; // TODO: Fix import
+use scirs2_linalg::eigen::eigh;
 use std::collections::VecDeque;
 
 use crate::error::{Result, TransformError};
@@ -554,6 +554,7 @@ impl StreamingPCA {
             for sample in x.rows() {
                 let centered = &sample.to_owned() - &self.mean;
                 let outer_product = centered
+                    .clone()
                     .insert_axis(ndarray::Axis(1))
                     .dot(&centered.insert_axis(ndarray::Axis(0)));
 
@@ -570,13 +571,9 @@ impl StreamingPCA {
 
     fn compute_pca(&mut self) -> Result<()> {
         // Perform proper eigendecomposition of covariance matrix
-        let eigen_decomp =
-            SymmetricEigendecomposition::new(&self.cov_matrix.view()).map_err(|e| {
-                TransformError::ComputationError(format!("Eigendecomposition failed: {}", e))
-            })?;
-
-        let eigenvalues = eigen_decomp.eigenvalues();
-        let eigenvectors = eigen_decomp.eigenvectors();
+        let (eigenvalues, eigenvectors) = eigh(&self.cov_matrix.view(), None).map_err(|e| {
+            TransformError::ComputationError(format!("Eigendecomposition failed: {}", e))
+        })?;
 
         // Sort by eigenvalues in descending order
         let mut eigen_pairs: Vec<(f64, Array1<f64>)> = eigenvalues
@@ -614,7 +611,7 @@ impl StreamingPCA {
 
             let mut result = Array2::zeros((x.shape()[0], self.n_components));
 
-            for (i, sample) in x.rows().enumerate() {
+            for (i, sample) in x.rows().into_iter().enumerate() {
                 let centered = &sample.to_owned() - &self.mean;
                 let transformed = components.dot(&centered);
                 result.row_mut(i).assign(&transformed);
@@ -735,7 +732,7 @@ impl StreamingOutlierDetector {
             OutlierMethod::ZScore => {
                 let stds = self.get_standard_deviations();
 
-                for (i, sample) in x.rows().enumerate() {
+                for (i, sample) in x.rows().into_iter().enumerate() {
                     let mut is_outlier = false;
                     for (j, &value) in sample.iter().enumerate() {
                         if stds[j] > 1e-8 {
@@ -751,7 +748,7 @@ impl StreamingOutlierDetector {
             }
             OutlierMethod::ModifiedZScore => {
                 // Simplified modified z-score using running estimates
-                for (i, sample) in x.rows().enumerate() {
+                for (i, sample) in x.rows().into_iter().enumerate() {
                     let mut is_outlier = false;
                     for (j, &value) in sample.iter().enumerate() {
                         let mad_estimate =
@@ -769,7 +766,7 @@ impl StreamingOutlierDetector {
             }
             OutlierMethod::IsolationScore => {
                 // Enhanced isolation forest-like scoring using path length estimation
-                for (i, sample) in x.rows().enumerate() {
+                for (i, sample) in x.rows().into_iter().enumerate() {
                     let anomaly_score = self.compute_isolation_score(sample);
                     outliers[i] = anomaly_score > self.threshold;
                 }
@@ -857,7 +854,7 @@ impl StreamingOutlierDetector {
         let mut scores = Array1::zeros(x.shape()[0]);
         let stds = self.get_standard_deviations();
 
-        for (i, sample) in x.rows().enumerate() {
+        for (i, sample) in x.rows().into_iter().enumerate() {
             let mut score = 0.0;
             for (j, &value) in sample.iter().enumerate() {
                 if stds[j] > 1e-8 {
@@ -1034,7 +1031,7 @@ impl StreamingFeatureSelector {
 
             let mut result = Array2::zeros((x.shape()[0], selected.len()));
 
-            for (row_idx, sample) in x.rows().enumerate() {
+            for (row_idx, sample) in x.rows().into_iter().enumerate() {
                 for (col_idx, &feature_idx) in selected.iter().enumerate() {
                     result[[row_idx, col_idx]] = sample[feature_idx];
                 }

@@ -1297,6 +1297,7 @@ pub fn simd_non_maximum_suppression_ultra(
             output[[y, x]] = value;
 
             // Mark suppression area to speed up future checks
+            #[allow(clippy::needless_range_loop)]
             for dy in y_start..y_end {
                 for dx in x_start..x_end {
                     if dy != y || dx != x {
@@ -1462,16 +1463,16 @@ pub fn simd_feature_matching_ultra(
     let mut norms1 = vec![0.0f32; n1];
     let mut norms2 = vec![0.0f32; n2];
 
-    for i in 0..n1 {
+    for (i, norm) in norms1.iter_mut().enumerate().take(n1) {
         let desc = descriptors1.row(i);
         let norm_squared = f32::simd_dot(&desc, &desc);
-        norms1[i] = norm_squared;
+        *norm = norm_squared;
     }
 
-    for j in 0..n2 {
+    for (j, norm) in norms2.iter_mut().enumerate().take(n2) {
         let desc = descriptors2.row(j);
         let norm_squared = f32::simd_dot(&desc, &desc);
-        norms2[j] = norm_squared;
+        *norm = norm_squared;
     }
 
     // Use mutual nearest neighbor matching with SIMD distance computation
@@ -1481,6 +1482,7 @@ pub fn simd_feature_matching_ultra(
         let mut best_match = None;
 
         // SIMD-accelerated distance computation
+        #[allow(clippy::needless_range_loop)]
         for j in 0..n2 {
             let desc2 = descriptors2.row(j);
 
@@ -1500,6 +1502,7 @@ pub fn simd_feature_matching_ultra(
             let mut mutual_best = f32::INFINITY;
             let mut mutual_match = None;
 
+            #[allow(clippy::needless_range_loop)]
             for k in 0..n1 {
                 let desc_k = descriptors1.row(k);
                 let dot_product = f32::simd_dot(&desc2, &desc_k);

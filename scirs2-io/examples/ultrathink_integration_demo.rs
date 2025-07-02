@@ -6,9 +6,9 @@
 
 use scirs2_io::error::Result;
 use scirs2_io::neural_adaptive_io::{
-    NeuralAdaptiveIoController, PerformanceFeedback, SystemMetrics, UltraThinkIoProcessor,
+    NeuralAdaptiveIoController, SystemMetrics, UltraThinkIoProcessor,
 };
-use scirs2_io::quantum_inspired_io::{QuantumIoParams, QuantumParallelProcessor};
+use scirs2_io::quantum_inspired_io::QuantumParallelProcessor;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -209,7 +209,7 @@ impl IntelligentIoManager {
         let recent_throughput =
             history.iter().rev().take(10).sum::<f64>() / 10.0_f64.min(total_ops as f64);
 
-        let max_throughput = history.iter().fold(0.0, |a, &b| a.max(b));
+        let max_throughput = history.iter().fold(0.0_f64, |a, &b| a.max(b));
         let min_throughput = history.iter().fold(f64::INFINITY, |a, &b| a.min(b));
 
         PerformanceAnalytics {
@@ -250,7 +250,7 @@ impl IntelligentIoManager {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum DataSizeClass {
     Small,
     Medium,

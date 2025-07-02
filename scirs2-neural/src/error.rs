@@ -2,10 +2,8 @@
 
 use std::error;
 use std::fmt;
-
 // Re-export Error trait for public use
 pub use std::error::Error as StdError;
-
 /// Error type for neural network operations
 #[derive(Debug)]
 pub enum NeuralError {
@@ -56,7 +54,6 @@ pub enum NeuralError {
     /// Other error
     Other(String),
 }
-
 impl fmt::Display for NeuralError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -88,17 +85,13 @@ impl fmt::Display for NeuralError {
 }
 
 impl error::Error for NeuralError {}
-
 /// Error type alias
 pub type Error = NeuralError;
-
 /// Result type for neural network operations
 pub type Result<T> = std::result::Result<T, Error>;
-
 /// Dummy GPU backend type for compilation when GPU features are not available
 #[cfg(not(feature = "gpu"))]
 pub struct DummyGpuBackend;
-
 // Implement conversion from std::io::Error to NeuralError
 impl From<std::io::Error> for NeuralError {
     fn from(error: std::io::Error) -> Self {

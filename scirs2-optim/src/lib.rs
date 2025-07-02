@@ -103,7 +103,7 @@ pub use gpu::{
     rmsprop_gpu::RMSpropGpu,
     rocm_backend::{RocmBackend, RocmConfig},
     sgd_gpu::SGDGpu,
-    GpuOptimizer, GpuOptimizerConfig, GpuOptimizerError,
+    GpuOptimizer, GpuOptimizerConfig, GpuOptimError,
 };
 pub use gradient_processing::*;
 #[cfg(feature = "metrics_integration")]

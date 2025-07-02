@@ -11,7 +11,7 @@
 //! - Detailed reporting and visualization
 
 use crate::error::{SignalError, SignalResult};
-use crate::filter::{butter, filtfilt, firwin, sosfilt};
+use crate::filter::{butter, butter_bandpass_bandstop, filtfilt, firwin};
 use crate::spectral::{periodogram, spectrogram, welch};
 use crate::wavelets::cwt;
 use crate::dwt;
@@ -432,10 +432,10 @@ fn benchmark_iir_filtering(signal: &Array1<f64>, size: usize, config: &Benchmark
     let name = format!("IIR_Filter_N{}", size);
     
     // Design Butterworth filter
-    let (sos, _) = butter(4, 0.3, Some("low"), false, "sos")?;
+    let (b, a) = butter(4, 0.3, "lowpass")?;
     
     benchmark_operation(name, size, config, || {
-        sosfilt(&sos, signal).unwrap()
+        filtfilt(&b, &a, &signal.to_vec()).unwrap()
     })
 }
 
@@ -619,8 +619,8 @@ fn benchmark_audio_processing_workflow(size: usize, config: &BenchmarkConfig) ->
         
         // Typical audio processing workflow:
         // 1. High-pass filter to remove DC
-        let (hp_sos, _) = butter(2, 0.01, Some("high"), false, "sos").unwrap();
-        let filtered = sosfilt(&hp_sos, &signal).unwrap();
+        let (hp_b, hp_a) = butter(2, 0.01, "highpass").unwrap();
+        let filtered = Array1::from_vec(filtfilt(&hp_b, &hp_a, &signal.to_vec()).unwrap());
         
         // 2. Compute spectrogram
         let nperseg = 1024.min(size / 4);
@@ -641,8 +641,8 @@ fn benchmark_biomedical_workflow(size: usize, config: &BenchmarkConfig) -> Signa
         
         // Biomedical signal processing workflow:
         // 1. Bandpass filter
-        let (bp_sos, _) = butter(4, [0.5, 100.0], Some("band"), false, "sos").unwrap();
-        let filtered = sosfilt(&bp_sos, &signal).unwrap();
+        let (bp_b, bp_a) = butter_bandpass_bandstop(4, 0.5, 100.0, "bandpass").unwrap();
+        let filtered = Array1::from_vec(filtfilt(&bp_b, &bp_a, &signal.to_vec()).unwrap());
         
         // 2. Artifact removal (simplified)
         let threshold = filtered.std(0.0);

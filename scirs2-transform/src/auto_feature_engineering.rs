@@ -5,8 +5,7 @@
 
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, ArrayView1, ArrayView2};
-use scirs2_core::validation::{check_finite, check_not_empty};
-use scirs2_fft::ultrathink_coordinator::OptimizationWeights;
+use scirs2_core::validation::{check_not_empty};
 use std::collections::HashMap;
 
 #[cfg(feature = "auto-feature-engineering")]
@@ -380,7 +379,15 @@ impl AutoFeatureEngineer {
     /// Extract meta-features from a dataset
     pub fn extract_meta_features(&self, x: &ArrayView2<f64>) -> Result<DatasetMetaFeatures> {
         check_not_empty(x, "x")?;
-        check_finite(x, "x")?;
+        
+        // Check finite values
+        for &val in x.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         let (n_samples, n_features) = x.dim();
 
@@ -763,7 +770,7 @@ pub struct AdvancedMetaLearningSystem {
     /// Historical performance database
     performance_db: Vec<PerformanceRecord>,
     /// Multi-objective optimization weights
-    optimization_weights: OptimizationWeights,
+    optimization_weights: FeatureOptimizationWeights,
     /// Transfer learning cache
     transfer_cache: HashMap<String, Tensor>,
 }
@@ -820,7 +827,7 @@ pub struct PerformanceRecord {
 /// Multi-objective optimization weights
 #[cfg(feature = "auto-feature-engineering")]
 #[derive(Debug, Clone)]
-pub struct OptimizationWeights {
+pub struct FeatureOptimizationWeights {
     /// Weight for prediction performance
     performance_weight: f64,
     /// Weight for computational efficiency
@@ -831,9 +838,10 @@ pub struct OptimizationWeights {
     robustness_weight: f64,
 }
 
-impl Default for OptimizationWeights {
+#[cfg(feature = "auto-feature-engineering")]
+impl Default for FeatureOptimizationWeights {
     fn default() -> Self {
-        OptimizationWeights {
+        FeatureOptimizationWeights {
             performance_weight: 0.5,
             efficiency_weight: 0.3,
             interpretability_weight: 0.1,
@@ -970,7 +978,7 @@ impl AdvancedMetaLearningSystem {
             rl_agent: None,
             device,
             performance_db: Vec::new(),
-            optimization_weights: OptimizationWeights::default(),
+            optimization_weights: FeatureOptimizationWeights::default(),
             transfer_cache: HashMap::new(),
         })
     }
@@ -1884,7 +1892,7 @@ impl AdvancedMetaLearningSystem {
                 let robustness_score = self.estimate_robustness_score(t_type, features);
 
                 // Calculate overall score using default weights
-                let weights = OptimizationWeights::default();
+                let weights = FeatureOptimizationWeights::default();
                 let overall_score = performance_score * weights.performance_weight
                     + efficiency_score * weights.efficiency_weight
                     + interpretability_score * weights.interpretability_weight

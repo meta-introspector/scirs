@@ -262,7 +262,6 @@ pub struct QuantumPerformanceMonitor {
 }
 
 /// Classical fallback computer for comparison and verification
-#[derive(Debug, Clone)]
 pub struct ClassicalFallback<F: Float> {
     /// SIMD capabilities
     simd_capabilities: PlatformCapabilities,
@@ -271,6 +270,27 @@ pub struct ClassicalFallback<F: Float> {
     /// Enable automatic fallback
     auto_fallback: bool,
     _phantom: std::marker::PhantomData<F>,
+}
+
+impl<F: Float> std::fmt::Debug for ClassicalFallback<F> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ClassicalFallback")
+            .field("simd_capabilities", &self.simd_capabilities.summary())
+            .field("performance_baseline", &self.performance_baseline)
+            .field("auto_fallback", &self.auto_fallback)
+            .finish()
+    }
+}
+
+impl<F: Float> Clone for ClassicalFallback<F> {
+    fn clone(&self) -> Self {
+        Self {
+            simd_capabilities: PlatformCapabilities::detect(), // Re-detect capabilities
+            performance_baseline: self.performance_baseline.clone(),
+            auto_fallback: self.auto_fallback,
+            _phantom: std::marker::PhantomData,
+        }
+    }
 }
 
 impl Default for QuantumConfig {
@@ -930,7 +950,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
             }
         }
 
-        *state = new_state;
+        state.copy_from_slice(&new_state);
         Ok(())
     }
 
@@ -956,7 +976,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         let probabilities: Vec<f64> = state.iter().map(|amp| amp.norm_sqr()).collect();
 
         // Sample from probability distribution
-        let random_value: f64 = rng.gen();
+        let random_value: f64 = rng.random();
         let mut cumulative_prob = 0.0;
         let mut measured_state = 0;
 
@@ -1054,7 +1074,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         s: f64,
     ) -> Result<Array2<Complex<f64>>> {
         // Linear interpolation: H(s) = (1-s)*H_initial + s*H_final
-        let interpolated = (1.0 - s) * h_initial + s * h_final;
+        let interpolated = h_initial * Complex::new(1.0 - s, 0.0) + h_final * Complex::new(s, 0.0);
         Ok(interpolated)
     }
 

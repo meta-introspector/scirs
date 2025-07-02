@@ -10,6 +10,9 @@ use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;
 
+/// Type alias for GCROT inner iteration result
+type GCROTInnerResult<T> = SparseResult<(Array1<T>, Option<Array1<T>>, Option<Array1<T>>, bool)>;
+
 /// Options for the GCROT solver
 #[derive(Debug, Clone)]
 pub struct GCROTOptions {
@@ -249,7 +252,7 @@ fn gcrot_inner_iteration<T, S>(
     c_vectors: &ndarray::ArrayView2<T>,
     u_vectors: &ndarray::ArrayView2<T>,
     tolerance: T,
-) -> SparseResult<(Array1<T>, Option<Array1<T>>, Option<Array1<T>>, bool)>
+) -> GCROTInnerResult<T>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,

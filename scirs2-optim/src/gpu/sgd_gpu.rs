@@ -6,7 +6,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use crate::error::Result as OptimResult;
-use crate::gpu::{GpuOptimizerConfig, GpuOptimizerError, GpuOptimizerMemory};
+use crate::gpu::{GpuOptimizerConfig, GpuOptimError, GpuOptimizerMemory};
 use crate::optimizers::{Optimizer, SGD};
 
 #[cfg(feature = "gpu")]
@@ -63,7 +63,7 @@ impl<A: Float + ScalarOperand + Debug> SGDGpu<A> {
         &mut self,
         size: usize,
         config: GpuOptimizerConfig,
-    ) -> Result<(), GpuOptimizerError> {
+    ) -> Result<(), GpuOptimError> {
         // Create GPU memory manager
         let mut gpu_memory = GpuOptimizerMemory::new(size, config)?;
         gpu_memory.allocate()?;
@@ -84,7 +84,7 @@ impl<A: Float + ScalarOperand + Debug> SGDGpu<A> {
                     "sgd_update_f64"
                 }
             } else {
-                return Err(GpuOptimizerError::UnsupportedOperation(
+                return Err(GpuOptimError::UnsupportedOperation(
                     "Unsupported data type for GPU SGD".to_string(),
                 ));
             };
@@ -115,9 +115,9 @@ impl<A: Float + ScalarOperand + Debug> SGDGpu<A> {
     }
 
     /// Move optimizer state to GPU
-    pub fn to_gpu(&mut self) -> Result<(), GpuOptimizerError> {
+    pub fn to_gpu(&mut self) -> Result<(), GpuOptimError> {
         if self.gpu_memory.is_none() {
-            return Err(GpuOptimizerError::NotInitialized);
+            return Err(GpuOptimError::NotInitialized);
         }
 
         self.on_gpu = true;
@@ -125,7 +125,7 @@ impl<A: Float + ScalarOperand + Debug> SGDGpu<A> {
     }
 
     /// Move optimizer state back to CPU
-    pub fn to_cpu(&mut self) -> Result<(), GpuOptimizerError> {
+    pub fn to_cpu(&mut self) -> Result<(), GpuOptimError> {
         self.on_gpu = false;
         Ok(())
     }
@@ -135,14 +135,14 @@ impl<A: Float + ScalarOperand + Debug> SGDGpu<A> {
         &mut self,
         params: &mut ArrayBase<S1, D>,
         gradients: &ArrayBase<S2, D>,
-    ) -> Result<(), GpuOptimizerError>
+    ) -> Result<(), GpuOptimError>
     where
         S1: DataMut<Elem = A>,
         S2: Data<Elem = A>,
         D: Dimension,
     {
         if !self.on_gpu {
-            return Err(GpuOptimizerError::InvalidState(
+            return Err(GpuOptimError::InvalidState(
                 "Optimizer not on GPU".to_string(),
             ));
         }
@@ -150,12 +150,12 @@ impl<A: Float + ScalarOperand + Debug> SGDGpu<A> {
         let gpu_memory = self
             .gpu_memory
             .as_mut()
-            .ok_or(GpuOptimizerError::NotInitialized)?;
+            .ok_or(GpuOptimError::NotInitialized)?;
 
         let kernel = self
             .kernel_handle
             .as_ref()
-            .ok_or(GpuOptimizerError::NotInitialized)?;
+            .ok_or(GpuOptimError::NotInitialized)?;
 
         // Copy data to GPU
         gpu_memory.copy_params_to_gpu(params)?;
@@ -163,7 +163,7 @@ impl<A: Float + ScalarOperand + Debug> SGDGpu<A> {
         // Copy gradients to GPU
         if let Some(ref grads_gpu) = gpu_memory.grads_gpu {
             let grads_slice = gradients.as_slice().ok_or_else(|| {
-                GpuOptimizerError::InvalidState("Gradients must be contiguous".to_string())
+                GpuOptimError::InvalidState("Gradients must be contiguous".to_string())
             })?;
             grads_gpu.copy_from_host(grads_slice);
         }

@@ -1459,7 +1459,7 @@ mod tests {
     #[test]
     fn test_execution_strategy_selection() {
         let config = ProductionGpuConfig::default();
-        let mut accelerator = ProductionGpuAccelerator::new(config).unwrap();
+        let accelerator = ProductionGpuAccelerator::new(config).unwrap();
 
         // Small problem should use single GPU
         let strategy = accelerator.select_execution_strategy(100, 100).unwrap();

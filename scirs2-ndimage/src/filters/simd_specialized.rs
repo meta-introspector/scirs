@@ -3,14 +3,14 @@
 //! This module provides highly optimized SIMD implementations for
 //! specialized filtering operations that benefit from vectorization.
 
-use ndarray::{s, Array, ArrayView, ArrayView1, ArrayView2, ArrayViewMut1, Axis, Dimension, Ix2};
+use ndarray::{s, Array, ArrayView2, ArrayViewMut1, Axis, Ix2};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::cmp;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::filters::BoundaryMode;
+use crate::BoundaryMode;
 
 /// Helper function for safe conversion of hardcoded constants
 fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {

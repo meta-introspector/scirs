@@ -79,7 +79,7 @@ fn main() {
         beam_radius * 1000.0
     );
 
-    let (r_s, t_s) = optics::fresnel_coefficients(1.0, 1.5, 0.5, 's').unwrap();
+    let (r_s, _t_s) = optics::fresnel_coefficients(1.0, 1.5, 0.5, 's').unwrap();
     println!("Fresnel reflection (s-pol, 30°): {:.3}", r_s.norm());
 
     // Thermal examples

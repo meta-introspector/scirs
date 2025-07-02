@@ -792,7 +792,7 @@ impl ZeroCopyMemoryManager {
 
     /// Allocate SIMD-aligned memory
     pub fn allocate_simd_aligned<T: Float>(
-        &self,
+        &mut self,
         count: usize,
         alignment: usize,
     ) -> Result<ZeroCopyBuffer<T>> {
@@ -966,7 +966,7 @@ impl SimdAlignedAllocator {
     }
 
     /// Allocate SIMD-aligned memory
-    pub fn allocate_aligned(&self, size: usize, alignment: usize) -> Result<NonNull<u8>> {
+    pub fn allocate_aligned(&mut self, size: usize, alignment: usize) -> Result<NonNull<u8>> {
         // Ensure alignment is power of 2 and at least pointer size
         let alignment = alignment.max(align_of::<usize>()).next_power_of_two();
 
@@ -983,11 +983,11 @@ impl SimdAlignedAllocator {
         self.simd_stats
             .simd_memory_usage
             .fetch_add(size, Ordering::Relaxed);
-        *self
-            .simd_stats
+        self.simd_stats
             .allocations_by_alignment
             .entry(alignment)
-            .or_insert_with(|| AtomicUsize::new(0)) += 1;
+            .or_insert_with(|| AtomicUsize::new(0))
+            .fetch_add(1, Ordering::Relaxed);
 
         Ok(NonNull::new(ptr).unwrap())
     }
@@ -1094,7 +1094,7 @@ impl MemoryMappingManager {
     }
 
     /// Map a file into memory
-    pub fn map_file(&self, file_path: &str, access_mode: AccessMode) -> Result<&MemoryMapping> {
+    pub fn map_file(&self, _file_path: &str, _access_mode: AccessMode) -> Result<&MemoryMapping> {
         // This is a simplified implementation
         // In practice, you'd use platform-specific APIs (mmap on Unix, MapViewOfFile on Windows)
         Err(MetricsError::MemoryError(

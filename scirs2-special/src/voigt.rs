@@ -59,12 +59,12 @@ use std::fmt::{Debug, Display};
 /// # Examples
 /// ```
 /// use scirs2_special::voigt_profile;
-/// 
+///
 /// // Pure Gaussian limit (γ → 0)
 /// let result = voigt_profile(0.0, 1.0, 1e-10).unwrap();
 /// let gaussian_max = 1.0 / (2.0 * std::f64::consts::PI).sqrt();
 /// assert!((result - gaussian_max).abs() < 1e-6);
-/// 
+///
 /// // Symmetric property
 /// let x = 1.5;
 /// let sigma = 0.8;
@@ -85,15 +85,15 @@ where
     let _sqrt2pi = T::from_f64((2.0 * std::f64::consts::PI).sqrt()).unwrap();
 
     // Convert to f64 for complex arithmetic (using wofz)
-    let x_f64 = x.to_f64().ok_or_else(|| {
-        SpecialError::DomainError("Cannot convert x to f64".to_string())
-    })?;
-    let sigma_f64 = sigma.to_f64().ok_or_else(|| {
-        SpecialError::DomainError("Cannot convert sigma to f64".to_string())
-    })?;
-    let gamma_f64 = gamma.to_f64().ok_or_else(|| {
-        SpecialError::DomainError("Cannot convert gamma to f64".to_string())
-    })?;
+    let x_f64 = x
+        .to_f64()
+        .ok_or_else(|| SpecialError::DomainError("Cannot convert x to f64".to_string()))?;
+    let sigma_f64 = sigma
+        .to_f64()
+        .ok_or_else(|| SpecialError::DomainError("Cannot convert sigma to f64".to_string()))?;
+    let gamma_f64 = gamma
+        .to_f64()
+        .ok_or_else(|| SpecialError::DomainError("Cannot convert gamma to f64".to_string()))?;
 
     // Compute z = (x + iγ) / (σ√2)
     let denominator = sigma_f64 * std::f64::consts::SQRT_2;
@@ -106,9 +106,8 @@ where
     let normalization = sigma_f64 * (2.0 * std::f64::consts::PI).sqrt();
     let result = w_z.re / normalization;
 
-    T::from_f64(result).ok_or_else(|| {
-        SpecialError::DomainError("Cannot convert result back to T".to_string())
-    })
+    T::from_f64(result)
+        .ok_or_else(|| SpecialError::DomainError("Cannot convert result back to T".to_string()))
 }
 
 /// Normalized Voigt profile
@@ -177,23 +176,19 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_special::voigt_profile_array;
-/// 
+///
 /// let x = array![-2.0, -1.0, 0.0, 1.0, 2.0];
 /// let result = voigt_profile_array(&x.view(), 1.0, 0.5).unwrap();
-/// 
+///
 /// // Check symmetry
 /// assert!((result[0] - result[4]).abs() < 1e-10);
 /// assert!((result[1] - result[3]).abs() < 1e-10);
-/// 
+///
 /// // Maximum should be at center
 /// assert!(result[2] >= result[0]);
 /// assert!(result[2] >= result[1]);
 /// ```
-pub fn voigt_profile_array<T>(
-    x: &ArrayView1<T>,
-    sigma: T,
-    gamma: T,
-) -> SpecialResult<Array1<T>>
+pub fn voigt_profile_array<T>(x: &ArrayView1<T>, sigma: T, gamma: T) -> SpecialResult<Array1<T>>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
@@ -241,12 +236,12 @@ where
 /// # Examples
 /// ```
 /// use scirs2_special::pseudo_voigt;
-/// 
+///
 /// // Pure Gaussian (η = 0)
 /// let result = pseudo_voigt(0.0, 1.0, 0.5, 0.0).unwrap();
 /// let gaussian_max = 1.0 / (2.0 * std::f64::consts::PI).sqrt();
 /// assert!((result - gaussian_max).abs() < 1e-10);
-/// 
+///
 /// // Pure Lorentzian (η = 1)
 /// let result = pseudo_voigt(0.0, 1.0, 0.5, 1.0).unwrap();
 /// let lorentzian_max = 1.0 / (std::f64::consts::PI * 0.5);

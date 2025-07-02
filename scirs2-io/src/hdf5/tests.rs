@@ -91,14 +91,16 @@ mod tests {
 
     #[test]
     fn test_compression_options() {
-        let mut options = CompressionOptions::default();
-        options.gzip = Some(6);
-        options.shuffle = true;
-        options.lzf = true;
+        let options = CompressionOptions {
+            gzip: Some(6),
+            shuffle: true,
+            lzf: true,
+            ..Default::default()
+        };
 
         assert_eq!(options.gzip, Some(6));
-        assert_eq!(options.shuffle, true);
-        assert_eq!(options.lzf, true);
+        assert!(options.shuffle);
+        assert!(options.lzf);
     }
 
     #[test]
@@ -119,7 +121,7 @@ mod tests {
 
         assert_eq!(options.chunk_size, Some(vec![10, 10]));
         assert_eq!(options.fill_value, Some(-999.0));
-        assert_eq!(options.fletcher32, true);
+        assert!(options.fletcher32);
     }
 
     #[test]
@@ -194,13 +196,13 @@ mod tests {
         if let Some(AttributeValue::Integer(val)) = group.attributes.get("int_attr") {
             assert_eq!(*val, 42);
         } else {
-            assert!(false, "Integer attribute not found or wrong type");
+            panic!("Integer attribute not found or wrong type");
         }
 
         if let Some(AttributeValue::String(val)) = group.attributes.get("string_attr") {
             assert_eq!(val, "hello");
         } else {
-            assert!(false, "String attribute not found or wrong type");
+            panic!("String attribute not found or wrong type");
         }
     }
 

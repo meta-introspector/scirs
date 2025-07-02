@@ -11,21 +11,21 @@ use std::collections::HashMap;
 
 use super::{
     ConstraintHandlingMethod, DiversityStrategy, EvaluationMetric, MultiObjectiveAlgorithm,
-    MultiObjectiveConfig, ObjectiveConfig, ObjectiveType, OptimizationDirection,
+    MultiObjectiveConfig, ObjectiveConfig, ObjectivePriority, ObjectiveType, OptimizationDirection,
     OptimizerArchitecture, SearchResult, UserPreferences,
 };
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 
 /// Base trait for multi-objective optimizers
 pub trait MultiObjectiveOptimizer<T: Float>: Send + Sync {
     /// Initialize the optimizer
-    fn initialize(&mut self, config: &MultiObjectiveConfig<T>) -> Result<(), OptimizerError>;
+    fn initialize(&mut self, config: &MultiObjectiveConfig<T>) -> Result<(), OptimError>;
 
     /// Update Pareto front with new results
     fn update_pareto_front(
         &mut self,
         results: &[SearchResult<T>],
-    ) -> Result<ParetoFront<T>, OptimizerError>;
+    ) -> Result<ParetoFront<T>, OptimError>;
 
     /// Get current Pareto front
     fn get_pareto_front(&self) -> &ParetoFront<T>;
@@ -35,7 +35,7 @@ pub trait MultiObjectiveOptimizer<T: Float>: Send + Sync {
         &mut self,
         population: &[OptimizerArchitecture<T>],
         objectives: &[T],
-    ) -> Result<Vec<OptimizerArchitecture<T>>, OptimizerError>;
+    ) -> Result<Vec<OptimizerArchitecture<T>>, OptimError>;
 
     /// Get algorithm name
     fn name(&self) -> &str;
@@ -576,7 +576,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NS
     }
 
     /// Initialize population
-    fn initialize_population(&mut self) -> Result<(), OptimizerError> {
+    fn initialize_population(&mut self) -> Result<(), OptimError> {
         // Initialize with random architectures
         // This would be replaced with actual architecture generation
         self.population.clear();
@@ -599,7 +599,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NS
     }
 
     /// Generate random architecture (placeholder)
-    fn generate_random_architecture(&self) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    fn generate_random_architecture(&self) -> Result<OptimizerArchitecture<T>, OptimError> {
         use super::architecture_space::{ComponentType, OptimizerComponent};
 
         // Simplified random architecture generation
@@ -1012,7 +1012,7 @@ enum DominanceRelation {
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd>
     MultiObjectiveOptimizer<T> for NSGA2<T>
 {
-    fn initialize(&mut self, config: &MultiObjectiveConfig<T>) -> Result<(), OptimizerError> {
+    fn initialize(&mut self, config: &MultiObjectiveConfig<T>) -> Result<(), OptimError> {
         self.config = config.clone();
         self.initialize_population()?;
         Ok(())
@@ -1021,7 +1021,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd>
     fn update_pareto_front(
         &mut self,
         results: &[SearchResult<T>],
-    ) -> Result<ParetoFront<T>, OptimizerError> {
+    ) -> Result<ParetoFront<T>, OptimError> {
         // Update population with new results
         for (i, result) in results.iter().enumerate() {
             if i < self.population.len() {
@@ -1067,7 +1067,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd>
         &mut self,
         _population: &[OptimizerArchitecture<T>],
         _objectives: &[T],
-    ) -> Result<Vec<OptimizerArchitecture<T>>, OptimizerError> {
+    ) -> Result<Vec<OptimizerArchitecture<T>>, OptimError> {
         // Generate new candidates through crossover and mutation
         let mut new_population = Vec::new();
 
@@ -1108,9 +1108,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NS
     fn tournament_selection(
         &self,
         tournament_size: usize,
-    ) -> Result<Individual<T>, OptimizerError> {
+    ) -> Result<Individual<T>, OptimError> {
         if self.population.is_empty() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Empty population".to_string(),
             ));
         }
@@ -1137,7 +1137,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NS
         &self,
         parent1: &Individual<T>,
         parent2: &Individual<T>,
-    ) -> Result<Individual<T>, OptimizerError> {
+    ) -> Result<Individual<T>, OptimError> {
         // Simplified crossover - in practice would be more sophisticated
         let mut offspring = parent1.clone();
         offspring.id = format!("offspring_{}", rand::random::<u32>());
@@ -1162,7 +1162,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NS
         Ok(offspring)
     }
 
-    fn mutate(&self, individual: &mut Individual<T>) -> Result<(), OptimizerError> {
+    fn mutate(&self, individual: &mut Individual<T>) -> Result<(), OptimError> {
         // Simplified mutation - in practice would be more sophisticated
         if !individual.architecture.components.is_empty() {
             for (_key, value) in individual.architecture.components[0]

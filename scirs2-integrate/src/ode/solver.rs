@@ -876,15 +876,13 @@ where
     // at each time step within the BDF Newton iteration
 
     let mass_f = move |t: F, y: ArrayView1<F>| -> Array1<F> {
-        let rhs = f(t, y);
-
         // For state-dependent mass matrices, the Newton system becomes:
         // [J - γ(∂M/∂y)y' - γM]·Δy = -G
         // This is more complex and requires careful handling of M(t,y) derivatives
 
         // For now, return the original RHS and let the BDF solver handle
         // the mass matrix in its Newton iteration
-        rhs
+        f(t, y)
     };
 
     // Configure BDF solver for state-dependent mass matrix

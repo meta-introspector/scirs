@@ -618,7 +618,7 @@ fn demonstrate_real_world_analysis(recognizer: &mut AdvancedPatternRecognizer) -
     println!("🔬 Cross-Domain Pattern Analysis:");
     let mut pattern_prevalence = std::collections::HashMap::new();
 
-    for (domain, analysis) in &domain_insights {
+    for (_domain, analysis) in &domain_insights {
         for (pattern_type, score) in &analysis.pattern_scores {
             if *score > 0.6 {
                 *pattern_prevalence.entry(pattern_type.clone()).or_insert(0) += 1;
@@ -730,7 +730,7 @@ fn generate_emergent_complexity(size: usize) -> Vec<u8> {
                 (i % 16) as u8
             };
             let emergence = ((i as f32).sqrt() * 16.0) as u8;
-            (chaos + emergence) % 256
+            ((chaos as u16 + emergence as u16) % 256) as u8
         })
         .collect()
 }
@@ -765,7 +765,7 @@ fn generate_fractal_periodicity_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
             let periodic = ((i % 32) as f32 * 0.2).sin();
-            let fractal = ((i as f32 * 0.1).sin() * (i as f32 * 0.05).cos());
+            let fractal = (i as f32 * 0.1).sin() * (i as f32 * 0.05).cos();
             ((periodic + fractal) * 127.0 + 128.0) as u8
         })
         .collect()
@@ -803,7 +803,7 @@ fn generate_image_scenario(size: usize) -> Vec<u8> {
             let y = i / 64;
             let gradient = ((x + y) * 2) as u8;
             let noise = ((i * 31) % 32) as u8;
-            (gradient + noise) % 256
+            ((gradient as u16 + noise as u16) % 256) as u8
         })
         .collect()
 }
@@ -906,7 +906,7 @@ fn generate_genomic_sequence(size: usize) -> Vec<u8> {
                 bases[i % 4]
             } else {
                 // Variable region
-                bases[((i * 31 + 17) % 4)]
+                bases[(i * 31 + 17) % 4]
             }
         })
         .collect()
@@ -934,7 +934,7 @@ fn generate_iot_sensor_data(size: usize) -> Vec<u8> {
         .map(|i| {
             let base_signal = (i as f32 * 0.05).sin() * 100.0 + 128.0;
             let noise = ((i * 7) % 40) as f32 - 20.0;
-            let drift = (i as f32 * 0.001);
+            let drift = i as f32 * 0.001;
             (base_signal + noise + drift) as u8
         })
         .collect()

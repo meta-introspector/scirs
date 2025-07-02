@@ -52,6 +52,7 @@ impl Default for DistributedConfig {
 /// Distributed dataset processor
 pub struct DistributedProcessor {
     config: DistributedConfig,
+    #[allow(dead_code)]
     cache: DatasetCache,
 }
 
@@ -741,7 +742,7 @@ mod tests {
 
     #[test]
     fn test_split_dataset_into_chunks() {
-        let dataset = make_classification(100, 5, 2, 0, 0, Some(42)).unwrap();
+        let dataset = make_classification(100, 5, 2, 3, 0, Some(42)).unwrap();
         let processor = DistributedProcessor::default().unwrap();
 
         let chunks = processor.split_dataset_into_chunks(&dataset).unwrap();
@@ -754,7 +755,7 @@ mod tests {
 
     #[test]
     fn test_distributed_sample() {
-        let dataset = make_classification(1000, 5, 2, 0, 0, Some(42)).unwrap();
+        let dataset = make_classification(1000, 5, 2, 3, 0, Some(42)).unwrap();
         let processor = DistributedProcessor::default().unwrap();
 
         let sampled = processor
@@ -767,7 +768,7 @@ mod tests {
 
     #[test]
     fn test_distributed_k_fold() {
-        let dataset = make_classification(100, 5, 2, 0, 0, Some(42)).unwrap();
+        let dataset = make_classification(100, 5, 2, 3, 0, Some(42)).unwrap();
         let processor = DistributedProcessor::default().unwrap();
 
         let folds = processor
@@ -786,8 +787,8 @@ mod tests {
 
     #[test]
     fn test_combine_datasets() {
-        let dataset1 = make_classification(50, 3, 2, 0, 0, Some(42)).unwrap();
-        let dataset2 = make_classification(30, 3, 2, 0, 0, Some(43)).unwrap();
+        let dataset1 = make_classification(50, 3, 2, 2, 0, Some(42)).unwrap();
+        let dataset2 = make_classification(30, 3, 2, 2, 0, Some(43)).unwrap();
 
         let processor = DistributedProcessor::default().unwrap();
         let combined = processor.combine_datasets(&[dataset1, dataset2]).unwrap();
@@ -798,7 +799,7 @@ mod tests {
 
     #[test]
     fn test_parallel_processing() {
-        let dataset = make_classification(200, 4, 2, 0, 0, Some(42)).unwrap();
+        let dataset = make_classification(200, 4, 2, 3, 0, Some(42)).unwrap();
         let processor = DistributedProcessor::default().unwrap();
 
         // Simple processor that counts samples

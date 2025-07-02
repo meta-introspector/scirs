@@ -4,13 +4,12 @@
 //! dynamically adjust learning rates based on multiple signals including
 //! gradient statistics, performance metrics, concept drift, and resource constraints.
 
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
-use super::{StreamingConfig, StreamingDataPoint};
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 
 /// Performance metric types for adaptation
 #[derive(Debug, Clone)]

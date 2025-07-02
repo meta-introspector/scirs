@@ -12,7 +12,7 @@ use std::time::{Duration, Instant, SystemTime};
 use super::{
     EvaluationConfig, EvaluationMetric, EvaluationResults, OptimizerArchitecture, ResourceUsage,
 };
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 
 /// Performance evaluator for optimizer architectures
 pub struct PerformanceEvaluator<T: Float> {
@@ -1345,7 +1345,7 @@ pub struct ResourceSummary<T: Float> {
 
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> PerformanceEvaluator<T> {
     /// Create new performance evaluator
-    pub fn new(config: EvaluationConfig<T>) -> Result<Self, OptimizerError> {
+    pub fn new(config: EvaluationConfig<T>) -> Result<Self, OptimError> {
         Ok(Self {
             benchmark_suite: BenchmarkSuite::new()?,
             predictor: None,
@@ -1357,7 +1357,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> PerformanceEval
     }
 
     /// Initialize the evaluator
-    pub fn initialize(&mut self) -> Result<(), OptimizerError> {
+    pub fn initialize(&mut self) -> Result<(), OptimError> {
         // Initialize benchmark suite
         self.benchmark_suite.initialize(&self.config)?;
 
@@ -1376,7 +1376,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> PerformanceEval
     pub fn evaluate_architecture(
         &mut self,
         architecture: &OptimizerArchitecture<T>,
-    ) -> Result<EvaluationResults<T>, OptimizerError> {
+    ) -> Result<EvaluationResults<T>, OptimError> {
         let start_time = Instant::now();
 
         // Check cache first
@@ -1440,7 +1440,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> PerformanceEval
         format!("arch_{}", architecture.components.len())
     }
 
-    fn aggregate_benchmark_scores(&self, results: &[TestResult<T>]) -> Result<T, OptimizerError> {
+    fn aggregate_benchmark_scores(&self, results: &[TestResult<T>]) -> Result<T, OptimError> {
         if results.is_empty() {
             return Ok(T::zero());
         }
@@ -1449,7 +1449,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> PerformanceEval
         Ok(sum / T::from(results.len()).unwrap())
     }
 
-    fn compute_convergence_speed(&self, results: &[TestResult<T>]) -> Result<T, OptimizerError> {
+    fn compute_convergence_speed(&self, results: &[TestResult<T>]) -> Result<T, OptimError> {
         // Simplified convergence speed computation
         let avg_time: f64 = results
             .iter()
@@ -1461,7 +1461,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> PerformanceEval
         Ok(T::from(1.0 / (avg_time + 1e-6)).unwrap())
     }
 
-    fn compute_stability(&self, results: &[TestResult<T>]) -> Result<T, OptimizerError> {
+    fn compute_stability(&self, results: &[TestResult<T>]) -> Result<T, OptimError> {
         if results.len() < 2 {
             return Ok(T::one());
         }
@@ -1477,7 +1477,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> PerformanceEval
         Ok(T::one() / (cv + T::from(1e-6).unwrap()))
     }
 
-    fn compute_memory_efficiency(&self, results: &[TestResult<T>]) -> Result<T, OptimizerError> {
+    fn compute_memory_efficiency(&self, results: &[TestResult<T>]) -> Result<T, OptimError> {
         let avg_memory = results
             .iter()
             .map(|r| r.resource_usage.memory_gb.to_f64().unwrap_or(1.0))
@@ -1491,7 +1491,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> PerformanceEval
     fn compute_computational_efficiency(
         &self,
         results: &[TestResult<T>],
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         let avg_cpu_time = results
             .iter()
             .map(|r| r.resource_usage.cpu_time_seconds.to_f64().unwrap_or(1.0))
@@ -1505,7 +1505,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> PerformanceEval
 
 // Implementation stubs for complex components
 impl<T: Float + Default> BenchmarkSuite<T> {
-    fn new() -> Result<Self, OptimizerError> {
+    fn new() -> Result<Self, OptimError> {
         Ok(Self {
             standard_benchmarks: Vec::new(),
             custom_benchmarks: Vec::new(),
@@ -1522,13 +1522,13 @@ impl<T: Float + Default> BenchmarkSuite<T> {
         })
     }
 
-    fn initialize(&mut self, _config: &EvaluationConfig<T>) -> Result<(), OptimizerError> {
+    fn initialize(&mut self, _config: &EvaluationConfig<T>) -> Result<(), OptimError> {
         // Initialize standard benchmarks
         self.add_standard_benchmarks()?;
         Ok(())
     }
 
-    fn add_standard_benchmarks(&mut self) -> Result<(), OptimizerError> {
+    fn add_standard_benchmarks(&mut self) -> Result<(), OptimError> {
         // Add Rosenbrock function benchmark
         self.standard_benchmarks.push(StandardBenchmark {
             name: "Rosenbrock".to_string(),
@@ -1579,7 +1579,7 @@ impl<T: Float + Default> BenchmarkSuite<T> {
     fn run_benchmarks(
         &mut self,
         _architecture: &OptimizerArchitecture<T>,
-    ) -> Result<Vec<TestResult<T>>, OptimizerError> {
+    ) -> Result<Vec<TestResult<T>>, OptimError> {
         let mut results = Vec::new();
 
         for benchmark in &self.standard_benchmarks {
@@ -1593,7 +1593,7 @@ impl<T: Float + Default> BenchmarkSuite<T> {
     fn run_single_benchmark(
         &self,
         benchmark: &StandardBenchmark<T>,
-    ) -> Result<TestResult<T>, OptimizerError> {
+    ) -> Result<TestResult<T>, OptimError> {
         let start_time = Instant::now();
 
         // Simplified benchmark execution
@@ -1634,7 +1634,7 @@ impl<T: Float + Default> BenchmarkSuite<T> {
 }
 
 impl<T: Float + Default> PerformancePredictor<T> {
-    fn new(_config: &EvaluationConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(_config: &EvaluationConfig<T>) -> Result<Self, OptimError> {
         Ok(Self {
             predictor_model: PredictorModel::new()?,
             feature_extractor: FeatureExtractor::new()?,
@@ -1700,7 +1700,7 @@ impl<T: Float + Default> StatisticalAnalyzer<T> {
     fn compute_confidence_intervals(
         &self,
         results: &[TestResult<T>],
-    ) -> Result<HashMap<EvaluationMetric, (T, T)>, OptimizerError> {
+    ) -> Result<HashMap<EvaluationMetric, (T, T)>, OptimError> {
         let mut intervals = HashMap::new();
 
         if !results.is_empty() {
@@ -1754,7 +1754,7 @@ impl<T: Float + Default> ResourceMonitor<T> {
         }
     }
 
-    fn start_monitoring(&mut self) -> Result<(), OptimizerError> {
+    fn start_monitoring(&mut self) -> Result<(), OptimError> {
         // Start resource monitoring (simplified)
         Ok(())
     }
@@ -1762,7 +1762,7 @@ impl<T: Float + Default> ResourceMonitor<T> {
 
 // Additional implementation stubs
 impl<T: Float + Default> PredictorModel<T> {
-    fn new() -> Result<Self, OptimizerError> {
+    fn new() -> Result<Self, OptimError> {
         Ok(Self {
             model_type: PredictorModelType::NeuralNetwork,
             parameters: ModelParameters {
@@ -1804,7 +1804,7 @@ impl<T: Float + Default> PredictorModel<T> {
 }
 
 impl<T: Float + Default> FeatureExtractor<T> {
-    fn new() -> Result<Self, OptimizerError> {
+    fn new() -> Result<Self, OptimError> {
         Ok(Self {
             extraction_methods: vec![
                 FeatureExtractionMethod::ArchitectureEmbedding,
@@ -1882,7 +1882,7 @@ impl<T: Float + Default> PredictionCache<T> {
 }
 
 impl<T: Float + Default> UncertaintyEstimator<T> {
-    fn new() -> Result<Self, OptimizerError> {
+    fn new() -> Result<Self, OptimError> {
         Ok(Self {
             estimation_method: UncertaintyEstimationMethod::MonteCarloDropout,
             model_ensemble: Vec::new(),

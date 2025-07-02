@@ -526,7 +526,7 @@ impl QuantumMLSuite {
         state: &Array1<Complex64>,
         partition: &(Vec<usize>, Vec<usize>),
     ) -> Result<Array2<Complex64>> {
-        let num_qubits = (state.len() as f64).log2() as usize;
+        let _num_qubits = (state.len() as f64).log2() as usize;
         let dim_a = 2_usize.pow(partition.0.len() as u32);
         let dim_b = 2_usize.pow(partition.1.len() as u32);
 

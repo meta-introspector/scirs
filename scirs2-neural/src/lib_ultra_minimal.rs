@@ -4,9 +4,7 @@
 //! to establish basic compilation.
 
 #![warn(missing_docs)]
-
 // Ultra minimal - just error handling
 pub mod error;
-
 // Re-export the error type
 pub use error::{Error, NeuralError, Result};

@@ -859,75 +859,9 @@ impl Default for PerformanceMetrics {
     }
 }
 
-impl MemoryManager {
-    fn new(config: &MemoryConfig) -> Self {
-        Self {
-            allocated_memory: AtomicUsize::new(0),
-            peak_memory: AtomicUsize::new(0),
-            memory_pools: RwLock::new(HashMap::new()),
-            gc_enabled: AtomicBool::new(config.enable_gc),
-        }
-    }
-}
 
-impl ThreadPool {
-    fn new(config: &UltraParallelConfig) -> Self {
-        let num_workers = config.hardware.cpu_cores;
-        let work_queue = Arc::new(Mutex::new(VecDeque::new()));
-        let shutdown = Arc::new(AtomicBool::new(false));
-        let active_workers = Arc::new(AtomicUsize::new(0));
 
-        let workers = (0..num_workers)
-            .map(|id| {
-                Worker::new(
-                    id,
-                    work_queue.clone(),
-                    shutdown.clone(),
-                    active_workers.clone(),
-                )
-            })
-            .collect();
 
-        Self {
-            workers,
-            work_queue,
-            shutdown,
-            active_workers,
-        }
-    }
-}
-
-impl Worker {
-    fn new(
-        id: usize,
-        _work_queue: Arc<Mutex<VecDeque<Task>>>,
-        _shutdown: Arc<AtomicBool>,
-        _active_workers: Arc<AtomicUsize>,
-    ) -> Self {
-        Self {
-            id,
-            thread: None,
-            local_queue: VecDeque::new(),
-            numa_node: None,
-        }
-    }
-}
-
-impl GpuContext {
-    fn new(config: &GpuConfig) -> Result<Self, String> {
-        if !config.enable_gpu {
-            return Err("GPU not enabled".to_string());
-        }
-
-        // Simplified - would initialize CUDA/OpenCL context
-        Ok(Self {
-            device_id: config.preferred_device.unwrap_or(0),
-            available_memory: config.gpu_memory_limit.unwrap_or(8 * 1024 * 1024 * 1024), // 8GB default
-            stream_handles: vec![],
-            unified_memory_enabled: config.enable_unified_memory,
-        })
-    }
-}
 
 impl<F> Default for UltraParallelProcessor<F>
 where
@@ -1059,7 +993,14 @@ impl ThreadPool {
         let active_workers = Arc::new(AtomicUsize::new(0));
 
         let workers = (0..num_workers)
-            .map(|id| Worker::new(id, work_queue.clone(), shutdown.clone()))
+            .map(|id| {
+                Worker::new(
+                    id,
+                    work_queue.clone(),
+                    shutdown.clone(),
+                    active_workers.clone(),
+                )
+            })
             .collect();
 
         Self {

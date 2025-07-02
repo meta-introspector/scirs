@@ -14,7 +14,6 @@ pub mod performance_estimation;
 pub mod progressive_search;
 pub mod search_algorithms;
 pub mod search_space;
-
 pub use architecture_encoding::{ArchitectureEncoding, GraphEncoding, SequentialEncoding};
 pub use controller::{ControllerConfig, NASController};
 pub use enas::{ENASController, ENASTrainer, SuperNetwork};
@@ -27,19 +26,15 @@ pub use multi_objective::{
 pub use performance_estimation::{
     EarlyStoppingEstimator, LearningCurveEstimator, MultiFidelityEstimator, PerformanceEstimator,
     SuperNetEstimator, ZeroCostEstimator,
-};
 pub use progressive_search::{ProgressiveConfig, ProgressiveSearch};
 pub use search_algorithms::{
     BayesianOptimization, DifferentiableSearch, EvolutionarySearch, RandomSearch,
     ReinforcementSearch, SearchAlgorithm,
-};
 pub use search_space::{SearchSpace, SearchSpaceConfig};
-
 use crate::error::Result;
 use crate::models::sequential::Sequential;
 use ndarray::prelude::*;
 use std::sync::Arc;
-
 /// Configuration for Neural Architecture Search
 pub struct NASConfig {
     /// Search space configuration
@@ -63,7 +58,6 @@ pub struct NASConfig {
     /// Early stopping patience
     pub early_stopping_patience: Option<usize>,
 }
-
 impl Default for NASConfig {
     fn default() -> Self {
         Self {
@@ -79,8 +73,6 @@ impl Default for NASConfig {
             early_stopping_patience: Some(10),
         }
     }
-}
-
 /// Main Neural Architecture Search engine
 pub struct NeuralArchitectureSearch {
     config: NASConfig,
@@ -94,8 +86,6 @@ pub struct NeuralArchitectureSearch {
     progressive_search: Option<ProgressiveSearch>,
     /// Hardware-aware constraints
     hardware_constraints: Option<HardwareConstraints>,
-}
-
 /// Result of a single architecture evaluation
 #[derive(Clone)]
 pub struct SearchResult {
@@ -109,14 +99,11 @@ pub struct SearchResult {
     pub parameter_count: usize,
     /// Model FLOPs
     pub flops: Option<usize>,
-}
-
 impl NeuralArchitectureSearch {
     /// Create a new NAS instance
     pub fn new(config: NASConfig) -> Result<Self> {
         let controller = NASController::new(config.search_space.clone())?;
         let evaluator = ArchitectureEvaluator::new(ControllerConfig::default())?;
-
         Ok(Self {
             config,
             controller,
@@ -124,8 +111,6 @@ impl NeuralArchitectureSearch {
             best_architecture: None,
             search_history: Vec::new(),
         })
-    }
-
     /// Run the architecture search
     pub fn search(
         &mut self,
@@ -142,7 +127,6 @@ impl NeuralArchitectureSearch {
         } else {
             f64::NEG_INFINITY
         };
-
         while evaluations < self.config.max_evaluations {
             // Check time budget
             if let Some(budget) = self.config.time_budget {
@@ -150,7 +134,6 @@ impl NeuralArchitectureSearch {
                     break;
                 }
             }
-
             // Generate architectures to evaluate
             let architectures = self.config.search_algorithm.propose_architectures(
                 &self.search_history,
@@ -158,7 +141,6 @@ impl NeuralArchitectureSearch {
                     .parallel_evaluations
                     .min(self.config.max_evaluations - evaluations),
             )?;
-
             // Evaluate architectures in parallel
             let results: Vec<SearchResult> = architectures
                 .into_iter()
@@ -166,12 +148,10 @@ impl NeuralArchitectureSearch {
                     self.evaluate_architecture(arch, train_data, train_labels, val_data, val_labels)
                 })
                 .collect::<Result<Vec<_>>>()?;
-
             // Update search history and best architecture
             for result in results {
                 evaluations += 1;
                 self.search_history.push(result.clone());
-
                 let current_metric =
                     result
                         .metrics
@@ -182,49 +162,28 @@ impl NeuralArchitectureSearch {
                                 self.config.target_metric
                             ))
                         })?;
-
                 let is_better = if self.config.minimize {
                     current_metric < best_metric
                 } else {
                     current_metric > best_metric
                 };
-
                 if is_better {
                     best_metric = current_metric;
                     self.best_architecture = Some(result.architecture.clone());
                     no_improvement_count = 0;
-                } else {
                     no_improvement_count += 1;
-                }
-            }
-
             // Early stopping
             if let Some(patience) = self.config.early_stopping_patience {
                 if no_improvement_count >= patience {
-                    break;
-                }
-            }
-        }
-
         self.best_architecture.clone().ok_or_else(|| {
             crate::error::NeuralError::InvalidArchitecture("No architecture found".to_string())
-        })
-    }
-
     /// Evaluate a single architecture
     fn evaluate_architecture(
         &self,
         architecture: Arc<dyn ArchitectureEncoding>,
-        train_data: &ArrayView2<f32>,
-        train_labels: &ArrayView1<usize>,
-        val_data: &ArrayView2<f32>,
-        val_labels: &ArrayView1<usize>,
     ) -> Result<SearchResult> {
-        let start_time = std::time::Instant::now();
-
         // Build model from architecture encoding
         let model = self.controller.build_model(&architecture)?;
-
         // Estimate performance using the configured strategy
         let metrics = self.config.performance_estimator.estimate(
             &model,
@@ -233,43 +192,31 @@ impl NeuralArchitectureSearch {
             val_data,
             val_labels,
         )?;
-
         let training_time = start_time.elapsed().as_secs_f64();
         let parameter_count = self.controller.count_parameters(&model)?;
         let flops = self.controller.estimate_flops(&model, train_data.shape())?;
-
         Ok(SearchResult {
             architecture,
             metrics,
             training_time,
             parameter_count,
             flops: Some(flops),
-        })
-    }
-
     /// Get the best architecture found
     pub fn best_architecture(&self) -> Option<&Arc<dyn ArchitectureEncoding>> {
         self.best_architecture.as_ref()
-    }
-
     /// Get the search history
     pub fn search_history(&self) -> &[SearchResult] {
         &self.search_history
-    }
-
     /// Build a model from the best architecture
     pub fn build_best_model(&self) -> Result<Sequential<f32>> {
         let arch = self.best_architecture.as_ref().ok_or_else(|| {
             crate::error::NeuralError::InvalidArchitecture("No best architecture found".to_string())
         })?;
         self.controller.build_model(arch)
-    }
-
     /// Export search results to a file
     pub fn export_results(&self, path: &str) -> Result<()> {
         use std::fs::File;
         use std::io::Write;
-
         let mut file = File::create(path)?;
         writeln!(file, "# Neural Architecture Search Results")?;
         writeln!(file, "## Configuration")?;
@@ -277,7 +224,6 @@ impl NeuralArchitectureSearch {
         writeln!(file, "- Target metric: {}", self.config.target_metric)?;
         writeln!(file, "- Minimize: {}", self.config.minimize)?;
         writeln!(file)?;
-
         writeln!(file, "## Search History")?;
         for (i, result) in self.search_history.iter().enumerate() {
             writeln!(file, "### Architecture {}", i + 1)?;
@@ -285,32 +231,20 @@ impl NeuralArchitectureSearch {
             writeln!(file, "- Parameters: {}", result.parameter_count)?;
             if let Some(flops) = result.flops {
                 writeln!(file, "- FLOPs: {}", flops)?;
-            }
             writeln!(file, "- Metrics:")?;
             for (metric, value) in result.metrics.iter() {
                 writeln!(file, "  - {}: {:.4}", metric, value)?;
-            }
             writeln!(file)?;
-        }
-
         if let Some(best) = &self.best_architecture {
             writeln!(file, "## Best Architecture")?;
             writeln!(file, "{}", best.to_string())?;
-        }
-
         Ok(())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
     fn test_nas_config_default() {
         let config = NASConfig::default();
         assert_eq!(config.max_evaluations, 100);
         assert_eq!(config.target_metric, "validation_accuracy");
         assert!(!config.minimize);
-    }
-}

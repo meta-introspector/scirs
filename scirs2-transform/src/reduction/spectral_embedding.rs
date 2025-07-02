@@ -269,7 +269,7 @@ impl SpectralEmbedding {
 
         // Validate inputs
         check_positive(self.n_components, "n_components")?;
-        check_shape(x, (Some(n_samples), Some(n_features)), "x")?;
+        check_shape(x, &[n_samples, n_features], "x")?;
 
         if self.n_components >= n_samples {
             return Err(TransformError::InvalidInput(format!(

@@ -9,7 +9,7 @@ use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use rand::prelude::*;
-use rand::thread_rng;
+use rand::rng;
 use std::fmt::Debug;
 
 use crate::error::{ClusteringError, Result};

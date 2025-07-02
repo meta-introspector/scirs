@@ -12,7 +12,8 @@ use scirs2_linalg::specialized::{
 };
 use scirs2_linalg::structured::{
     circulant_determinant, circulant_eigenvalues, circulant_inverse_fft, circulant_matvec_direct,
-    circulant_matvec_fft, hankel_determinant, hankel_matvec, hankel_matvec_fft, hankel_svd,
+    circulant_matvec_fft, dft_matrix_multiply, fast_toeplitz_inverse, gohberg_semencul_inverse,
+    hadamard_transform, hankel_determinant, hankel_matvec, hankel_matvec_fft, hankel_svd,
     levinson_durbin, solve_circulant_fft, solve_tridiagonal_lu, solve_tridiagonal_thomas,
     tridiagonal_determinant, tridiagonal_eigenvalues, tridiagonal_eigenvectors, tridiagonal_matvec,
     yule_walker,
@@ -890,60 +891,56 @@ fn bench_specialized_algorithms(c: &mut Criterion) {
         );
 
         // Fast Toeplitz matrix inversion
-        // TODO: Implement fast_toeplitz_inverse function
-        // if size <= 500 {
-        //     group.bench_with_input(
-        //         BenchmarkId::new("fast_toeplitz_inverse", size),
-        //         &first_row,
-        //         |b, r| {
-        //             b.iter(|| {
-        //                 let toeplitz =
-        //                     ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
-        //                 fast_toeplitz_inverse(&toeplitz)
-        //             })
-        //         },
-        //     );
-        // }
+        if size <= 500 {
+            group.bench_with_input(
+                BenchmarkId::new("fast_toeplitz_inverse", size),
+                &first_row,
+                |b, r| {
+                    b.iter(|| {
+                        let toeplitz =
+                            ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
+                        fast_toeplitz_inverse(&toeplitz)
+                    })
+                },
+            );
+        }
 
         // Gohberg-Semencul formula for Toeplitz inverse
-        // TODO: Implement gohberg_semencul_inverse function
-        // if size <= 500 {
-        //     group.bench_with_input(
-        //         BenchmarkId::new("gohberg_semencul_inverse", size),
-        //         &first_row,
-        //         |b, r| {
-        //             b.iter(|| {
-        //                 let toeplitz =
-        //                     ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
-        //                 gohberg_semencul_inverse(&toeplitz)
-        //             })
-        //         },
-        //     );
-        // }
+        if size <= 500 {
+            group.bench_with_input(
+                BenchmarkId::new("gohberg_semencul_inverse", size),
+                &first_row,
+                |b, r| {
+                    b.iter(|| {
+                        let toeplitz =
+                            ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
+                        gohberg_semencul_inverse(&toeplitz)
+                    })
+                },
+            );
+        }
 
         // Discrete Fourier Transform matrix operations
-        // TODO: Implement dft_matrix_multiply function
-        // group.bench_with_input(
-        //     BenchmarkId::new("dft_matrix_multiply", size),
-        //     &first_row,
-        //     |b, data| b.iter(|| dft_matrix_multiply(black_box(&data.view()))),
-        // );
+        group.bench_with_input(
+            BenchmarkId::new("dft_matrix_multiply", size),
+            &first_row,
+            |b, data| b.iter(|| dft_matrix_multiply(black_box(&data.view()))),
+        );
 
         // Hadamard matrix operations (sizes must be powers of 2)
-        // TODO: Implement hadamard_transform function
-        // let hadamard_size = (size as f64).log2().floor() as usize;
-        // let hadamard_size = 2_usize.pow(hadamard_size as u32);
-        // if hadamard_size >= 4 {
-        //     let hadamard_vector = create_test_vector(hadamard_size);
-        //     group.bench_with_input(
-        //         BenchmarkId::new(
-        //             format!("hadamard_transform_{}", hadamard_size),
-        //             hadamard_size,
-        //         ),
-        //         &hadamard_vector,
-        //         |b, v| b.iter(|| hadamard_transform(black_box(&v.view()))),
-        //     );
-        // }
+        let hadamard_size = (size as f64).log2().floor() as usize;
+        let hadamard_size = 2_usize.pow(hadamard_size as u32);
+        if hadamard_size >= 4 {
+            let hadamard_vector = create_test_vector(hadamard_size);
+            group.bench_with_input(
+                BenchmarkId::new(
+                    format!("hadamard_transform_{}", hadamard_size),
+                    hadamard_size,
+                ),
+                &hadamard_vector,
+                |b, v| b.iter(|| hadamard_transform(black_box(&v.view()))),
+            );
+        }
     }
 
     group.finish();

@@ -1384,9 +1384,7 @@ impl SpMSKernel {
         let y_slice = y.as_mut_slice();
 
         // Initialize output
-        for i in 0..rows {
-            y_slice[i] = T::zero();
-        }
+        y_slice[..rows].fill(T::zero());
 
         for row in 0..rows {
             let start = indptr_slice[row];
@@ -1506,10 +1504,14 @@ impl SpMSKernel {
                 let col = indices_slice[j];
                 let val = data_slice[j];
 
-                if col < i {
-                    sum = sum - val * x_slice[col];
-                } else if col == i {
-                    diag_val = val;
+                match col.cmp(&i) {
+                    std::cmp::Ordering::Less => {
+                        sum = sum - val * x_slice[col];
+                    }
+                    std::cmp::Ordering::Equal => {
+                        diag_val = val;
+                    }
+                    std::cmp::Ordering::Greater => {}
                 }
             }
 
@@ -2627,11 +2629,15 @@ impl AdvancedGpuOps {
                 let col = l_indices[j];
                 let val = l_data[j];
 
-                if col < i {
-                    sum = sum - val * x[col];
-                } else if col == i {
-                    x[i] = sum / val;
-                    break;
+                match col.cmp(&i) {
+                    std::cmp::Ordering::Less => {
+                        sum = sum - val * x[col];
+                    }
+                    std::cmp::Ordering::Equal => {
+                        x[i] = sum / val;
+                        break;
+                    }
+                    std::cmp::Ordering::Greater => {}
                 }
             }
         }

@@ -6,7 +6,7 @@
 use ndarray::{Array1, Array2, ArrayView2, Axis, par_azip};
 use rand::Rng;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::{check_finite, check_not_empty, check_positive};
+use scirs2_core::validation::{check_not_empty, check_positive};
 
 use crate::error::{Result, TransformError};
 use crate::utils::{DataChunker, PerfUtils, ProcessingStrategy, StatUtils};
@@ -40,7 +40,15 @@ impl EnhancedStandardScaler {
     /// Fit the scaler to the data with adaptive processing
     pub fn fit(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         check_not_empty(x, "x")?;
-        check_finite(x, "x")?;
+        
+        // Check finite values
+        for &val in x.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         let (n_samples, n_features) = x.dim();
 
@@ -234,7 +242,15 @@ impl EnhancedStandardScaler {
             .ok_or_else(|| TransformError::NotFitted("StandardScaler not fitted".to_string()))?;
 
         check_not_empty(x, "x")?;
-        check_finite(x, "x")?;
+        
+        // Check finite values
+        for &val in x.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         let (n_samples, n_features) = x.dim();
 
@@ -292,11 +308,17 @@ impl EnhancedStandardScaler {
         let (n_samples, n_features) = x.dim();
         let mut result = Array2::zeros((n_samples, n_features));
 
-        par_azip!(
-            (mut out in result.view_mut(), &inp in x, &mean in means, &std in stds) {
+        // Process each column separately to handle broadcasting
+        for (j, ((mean, std), mut col)) in means.iter()
+            .zip(stds.iter())
+            .zip(result.columns_mut())
+            .enumerate()
+        {
+            let x_col = x.column(j);
+            par_azip!((mut out in col, &inp in x_col) {
                 *out = (inp - mean) / std;
-            }
-        );
+            });
+        }
 
         Ok(result)
     }
@@ -356,6 +378,8 @@ pub struct EnhancedPCA {
     components: Option<Array2<f64>>,
     /// Explained variance
     explained_variance: Option<Array1<f64>>,
+    /// Explained variance ratio
+    explained_variance_ratio: Option<Array1<f64>>,
     /// Fitted mean (if centering)
     mean: Option<Array1<f64>>,
     /// Processing strategy
@@ -376,6 +400,7 @@ impl EnhancedPCA {
             center,
             components: None,
             explained_variance: None,
+            explained_variance_ratio: None,
             mean: None,
             strategy: ProcessingStrategy::Standard,
             memory_limit_mb,
@@ -392,7 +417,15 @@ impl EnhancedPCA {
     /// Fit the PCA model with adaptive processing
     pub fn fit(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         check_not_empty(x, "x")?;
-        check_finite(x, "x")?;
+        
+        // Check finite values
+        for &val in x.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         let (n_samples, n_features) = x.dim();
 
@@ -431,8 +464,8 @@ impl EnhancedPCA {
         let chunker = DataChunker::new(self.memory_limit_mb);
 
         // Initialize running statistics
-        let mut running_mean = Array1::zeros(n_features);
-        let mut running_var = Array1::zeros(n_features);
+        let mut running_mean = Array1::<f64>::zeros(n_features);
+        let mut running_var = Array1::<f64>::zeros(n_features);
         let mut n_samples_seen = 0;
 
         // First pass: compute mean
@@ -983,7 +1016,15 @@ impl EnhancedPCA {
             .ok_or_else(|| TransformError::NotFitted("PCA not fitted".to_string()))?;
 
         check_not_empty(x, "x")?;
-        check_finite(x, "x")?;
+        
+        // Check finite values
+        for &val in x.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         // Center data if mean was fitted
         let x_processed = if let Some(ref mean) = self.mean {
@@ -1855,7 +1896,15 @@ impl UltraFastPCA {
     /// Fit ultra-fast PCA with advanced algorithms
     pub fn fit(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         check_not_empty(x, "x")?;
-        check_finite(x, "x")?;
+        
+        // Check finite values
+        for &val in x.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         let start_time = if self.enable_profiling {
             Some(std::time::Instant::now())
@@ -2105,7 +2154,15 @@ impl UltraFastPCA {
             .ok_or_else(|| TransformError::NotFitted("UltraFastPCA not fitted".to_string()))?;
 
         check_not_empty(x, "x")?;
-        check_finite(x, "x")?;
+        
+        // Check finite values
+        for &val in x.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         let (n_samples, n_features) = x.dim();
 

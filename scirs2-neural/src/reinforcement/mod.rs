@@ -15,7 +15,6 @@ pub mod policy_optimization;
 pub mod replay_buffer;
 pub mod trpo;
 pub mod value;
-
 pub use actor_critic::{ActorCritic, A2C, A3C, PPO, SAC as ActorCriticSAC};
 pub use advanced_algorithms::{
     IMPALAConfig, RainbowConfig, RainbowDQN, TD3Config, IMPALA, TD3,
@@ -24,7 +23,6 @@ pub use advanced_algorithms::{
 };
 pub use advanced_environments::{
     MultiAgentEnvironment, MultiAgentGridWorld, MultiAgentWrapper, PursuitEvasion,
-};
 pub use algorithms::{RLAlgorithm, TrainingConfig};
 pub use curiosity::{EpisodicCuriosity, NoveltyExploration, ICM, RND};
 pub use environments::{Action, Environment, Observation, Reward};
@@ -32,15 +30,12 @@ pub use model_based::{Dyna, DynamicsModel, WorldModel, MPC};
 pub use policy::{Policy, PolicyGradient, PolicyNetwork};
 pub use policy_optimization::{
     CuriosityConfig, CuriosityDrivenAgent, MAMLAgent, MAMLConfig, NPGConfig, NaturalPolicyGradient,
-};
 pub use replay_buffer::{PrioritizedReplayBuffer, ReplayBuffer, ReplayBufferTrait};
 pub use trpo::{TRPOConfig, TRPO};
 pub use value::{DoubleDQN, QNetwork, ValueNetwork, DQN};
-
 use crate::error::Result;
 use ndarray::prelude::*;
 use std::sync::Arc;
-
 /// Configuration for reinforcement learning
 #[derive(Debug, Clone)]
 pub struct RLConfig {
@@ -71,7 +66,6 @@ pub struct RLConfig {
     /// Number of steps before update
     pub n_steps: usize,
 }
-
 impl Default for RLConfig {
     fn default() -> Self {
         Self {
@@ -90,30 +84,20 @@ impl Default for RLConfig {
             n_steps: 128,
         }
     }
-}
-
 /// Base trait for RL agents
 pub trait RLAgent: Send + Sync {
     /// Select an action given an observation
     fn act(&self, observation: &ArrayView1<f32>, training: bool) -> Result<Array1<f32>>;
-
     /// Update the agent with a batch of experiences
     fn update(&mut self, batch: &ExperienceBatch) -> Result<LossInfo>;
-
     /// Save the agent's state
     fn save(&self, path: &str) -> Result<()>;
-
     /// Load the agent's state
     fn load(&mut self, path: &str) -> Result<()>;
-
     /// Get current exploration rate (if applicable)
     fn exploration_rate(&self) -> f32 {
         0.0
-    }
-}
-
 /// Experience batch for training
-#[derive(Debug, Clone)]
 pub struct ExperienceBatch {
     /// States (batch_size, state_dim)
     pub states: Array2<f32>,
@@ -127,10 +111,7 @@ pub struct ExperienceBatch {
     pub dones: Array1<bool>,
     /// Additional info (e.g., log probabilities)
     pub info: Option<std::collections::HashMap<String, Array2<f32>>>,
-}
-
 /// Loss information from training
-#[derive(Debug, Clone)]
 pub struct LossInfo {
     /// Policy loss
     pub policy_loss: Option<f32>,
@@ -142,8 +123,6 @@ pub struct LossInfo {
     pub total_loss: f32,
     /// Additional metrics
     pub metrics: std::collections::HashMap<String, f32>,
-}
-
 /// Reinforcement learning trainer
 pub struct RLTrainer<E: Environment> {
     agent: Arc<dyn RLAgent>,
@@ -152,8 +131,6 @@ pub struct RLTrainer<E: Environment> {
     replay_buffer: Option<ReplayBuffer>,
     episode_rewards: Vec<f32>,
     episode_lengths: Vec<usize>,
-}
-
 impl<E: Environment> RLTrainer<E> {
     /// Create a new RL trainer
     pub fn new(agent: Arc<dyn RLAgent>, environment: E, config: RLConfig) -> Self {
@@ -162,36 +139,27 @@ impl<E: Environment> RLTrainer<E> {
         } else {
             None
         };
-
-        Self {
             agent,
             environment,
             config,
             replay_buffer,
             episode_rewards: Vec::new(),
             episode_lengths: Vec::new(),
-        }
-    }
-
     /// Train the agent for a number of episodes
     pub fn train(&mut self, num_episodes: usize) -> Result<TrainingStats> {
         let mut total_steps = 0;
         let mut episode_rewards = Vec::new();
         let mut episode_lengths = Vec::new();
-
         for episode in 0..num_episodes {
             let mut state = self.environment.reset()?;
             let mut episode_reward = 0.0;
             let mut episode_length = 0;
             let mut done = false;
-
             while !done {
                 // Select action
                 let action = self.agent.act(&state.view(), true)?;
-
                 // Take action in environment
                 let (next_state, reward, done_flag, _info) = self.environment.step(&action)?;
-
                 // Store experience if using replay buffer
                 if let Some(buffer) = &mut self.replay_buffer {
                     buffer.add(
@@ -201,7 +169,6 @@ impl<E: Environment> RLTrainer<E> {
                         next_state.clone(),
                         done_flag,
                     )?;
-
                     // Update agent from replay buffer
                     if buffer.len() >= self.config.batch_size {
                         let batch = buffer.sample(self.config.batch_size)?;
@@ -214,22 +181,17 @@ impl<E: Environment> RLTrainer<E> {
                             .update(&batch)?;
                     }
                 }
-
                 state = next_state;
                 episode_reward += reward;
                 episode_length += 1;
                 total_steps += 1;
                 done = done_flag;
-
                 // Max episode length
                 if episode_length >= 1000 {
                     break;
-                }
             }
-
             episode_rewards.push(episode_reward);
             episode_lengths.push(episode_length);
-
             // Log progress
             if (episode + 1) % 100 == 0 {
                 let avg_reward = episode_rewards[episode.saturating_sub(99)..=episode]
@@ -237,12 +199,8 @@ impl<E: Environment> RLTrainer<E> {
                     .sum::<f32>()
                     / 100.0;
                 println!("Episode {}: Avg Reward = {:.2}", episode + 1, avg_reward);
-            }
-        }
-
         self.episode_rewards.extend(&episode_rewards);
         self.episode_lengths.extend(&episode_lengths);
-
         Ok(TrainingStats {
             total_episodes: num_episodes,
             total_steps,
@@ -251,33 +209,11 @@ impl<E: Environment> RLTrainer<E> {
             final_avg_reward: self.episode_rewards.iter().rev().take(100).sum::<f32>()
                 / 100.0.min(self.episode_rewards.len() as f32),
         })
-    }
-
     /// Evaluate the agent
     pub fn evaluate(&mut self, num_episodes: usize) -> Result<EvaluationStats> {
-        let mut episode_rewards = Vec::new();
-        let mut episode_lengths = Vec::new();
-
         for _ in 0..num_episodes {
-            let mut state = self.environment.reset()?;
-            let mut episode_reward = 0.0;
-            let mut episode_length = 0;
-            let mut done = false;
-
             while !done && episode_length < 1000 {
                 let action = self.agent.act(&state.view(), false)?;
-                let (next_state, reward, done_flag, _info) = self.environment.step(&action)?;
-
-                state = next_state;
-                episode_reward += reward;
-                episode_length += 1;
-                done = done_flag;
-            }
-
-            episode_rewards.push(episode_reward);
-            episode_lengths.push(episode_length);
-        }
-
         let mean_reward = episode_rewards.iter().sum::<f32>() / episode_rewards.len() as f32;
         let std_reward = {
             let variance = episode_rewards
@@ -286,30 +222,19 @@ impl<E: Environment> RLTrainer<E> {
                 .sum::<f32>()
                 / episode_rewards.len() as f32;
             variance.sqrt()
-        };
-
         Ok(EvaluationStats {
             num_episodes,
             mean_reward,
             std_reward,
             min_reward: episode_rewards
-                .iter()
                 .min_by(|a, b| a.partial_cmp(b).unwrap())
                 .copied()
                 .unwrap_or(0.0),
             max_reward: episode_rewards
-                .iter()
                 .max_by(|a, b| a.partial_cmp(b).unwrap())
-                .copied()
-                .unwrap_or(0.0),
             mean_length: episode_lengths.iter().sum::<usize>() as f32
                 / episode_lengths.len() as f32,
-        })
-    }
-}
-
 /// Training statistics
-#[derive(Debug, Clone)]
 pub struct TrainingStats {
     /// Total number of episodes
     pub total_episodes: usize,
@@ -321,10 +246,7 @@ pub struct TrainingStats {
     pub episode_lengths: Vec<usize>,
     /// Final average reward (last 100 episodes)
     pub final_avg_reward: f32,
-}
-
 /// Evaluation statistics
-#[derive(Debug, Clone)]
 pub struct EvaluationStats {
     /// Number of evaluation episodes
     pub num_episodes: usize,
@@ -338,17 +260,12 @@ pub struct EvaluationStats {
     pub max_reward: f32,
     /// Mean episode length
     pub mean_length: f32,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
     fn test_rl_config_default() {
         let config = RLConfig::default();
         assert_eq!(config.discount_factor, 0.99);
         assert_eq!(config.batch_size, 32);
         assert!(config.use_gae);
-    }
-}

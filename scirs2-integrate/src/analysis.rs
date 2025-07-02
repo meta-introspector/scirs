@@ -349,7 +349,8 @@ impl BifurcationAnalyzer {
         }
 
         // Detect bifurcation curves by finding stability transitions
-        let curves = Vec::new(); // TODO: Implement bifurcation curve extraction
+        let curves = self.extract_bifurcation_curves(&stability_map, &parameter_grid, 
+                                                     parameter_range_1, parameter_range_2)?;
 
         Ok(TwoParameterBifurcationResult {
             parameter_grid,
@@ -1603,6 +1604,141 @@ impl BifurcationAnalyzer {
             normal_form_type: BifurcationType::Transcritical,
             stability_analysis: "Transcritical bifurcation analysis".to_string(),
         })
+    }
+
+    /// Extract bifurcation curves from stability map by detecting transitions
+    fn extract_bifurcation_curves(
+        &self,
+        stability_map: &Array2<f64>,
+        _parameter_grid: &Array2<f64>,
+        param_range_1: (f64, f64),
+        param_range_2: (f64, f64),
+    ) -> crate::error::IntegrateResult<Vec<BifurcationCurve>> {
+        
+        let mut curves = Vec::new();
+        let (n_points_1, n_points_2) = stability_map.dim();
+        
+        // Extract horizontal transition lines (parameter 1 direction)
+        for j in 0..n_points_2 {
+            let mut current_curve: Option<BifurcationCurve> = None;
+            
+            for i in 0..(n_points_1 - 1) {
+                let current_stability = stability_map[[i, j]];
+                let next_stability = stability_map[[i + 1, j]];
+                
+                // Check for stability transition
+                if (current_stability - next_stability).abs() > 0.5 && 
+                   current_stability >= 0.0 && next_stability >= 0.0 {
+                    
+                    // Calculate parameter values at transition
+                    let p1 = param_range_1.0 + (i as f64 / (n_points_1 - 1) as f64) * 
+                             (param_range_1.1 - param_range_1.0);
+                    let p2 = param_range_2.0 + (j as f64 / (n_points_2 - 1) as f64) * 
+                             (param_range_2.1 - param_range_2.0);
+                    
+                    // Determine bifurcation type based on stability values
+                    let curve_type = self.classify_bifurcation_type(current_stability, next_stability);
+                    
+                    match &mut current_curve {
+                        Some(curve) if curve.curve_type == curve_type => {
+                            // Continue existing curve
+                            curve.points.push((p1, p2));
+                        }
+                        _ => {
+                            // Start new curve
+                            if let Some(curve) = current_curve.take() {
+                                if curve.points.len() > 1 {
+                                    curves.push(curve);
+                                }
+                            }
+                            current_curve = Some(BifurcationCurve {
+                                points: vec![(p1, p2)],
+                                curve_type,
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Finalize curve if it exists
+            if let Some(curve) = current_curve.take() {
+                if curve.points.len() > 1 {
+                    curves.push(curve);
+                }
+            }
+        }
+        
+        // Extract vertical transition lines (parameter 2 direction)
+        for i in 0..n_points_1 {
+            let mut current_curve: Option<BifurcationCurve> = None;
+            
+            for j in 0..(n_points_2 - 1) {
+                let current_stability = stability_map[[i, j]];
+                let next_stability = stability_map[[i, j + 1]];
+                
+                // Check for stability transition
+                if (current_stability - next_stability).abs() > 0.5 && 
+                   current_stability >= 0.0 && next_stability >= 0.0 {
+                    
+                    // Calculate parameter values at transition
+                    let p1 = param_range_1.0 + (i as f64 / (n_points_1 - 1) as f64) * 
+                             (param_range_1.1 - param_range_1.0);
+                    let p2 = param_range_2.0 + (j as f64 / (n_points_2 - 1) as f64) * 
+                             (param_range_2.1 - param_range_2.0);
+                    
+                    // Determine bifurcation type based on stability values
+                    let curve_type = self.classify_bifurcation_type(current_stability, next_stability);
+                    
+                    match &mut current_curve {
+                        Some(curve) if curve.curve_type == curve_type => {
+                            // Continue existing curve
+                            curve.points.push((p1, p2));
+                        }
+                        _ => {
+                            // Start new curve
+                            if let Some(curve) = current_curve.take() {
+                                if curve.points.len() > 1 {
+                                    curves.push(curve);
+                                }
+                            }
+                            current_curve = Some(BifurcationCurve {
+                                points: vec![(p1, p2)],
+                                curve_type,
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Finalize curve if it exists
+            if let Some(curve) = current_curve.take() {
+                if curve.points.len() > 1 {
+                    curves.push(curve);
+                }
+            }
+        }
+        
+        Ok(curves)
+    }
+
+    /// Classify bifurcation type based on stability transition
+    fn classify_bifurcation_type(&self, from_stability: f64, to_stability: f64) -> BifurcationType {
+        match (from_stability, to_stability) {
+            // Transition from stable to unstable (or vice versa)
+            (f, t) if (f - 1.0).abs() < 0.1 && (t - 2.0).abs() < 0.1 => BifurcationType::Fold,
+            (f, t) if (f - 2.0).abs() < 0.1 && (t - 1.0).abs() < 0.1 => BifurcationType::Fold,
+            
+            // Transition through transcritical pattern
+            (f, t) if (f - 1.0).abs() < 0.1 && (t - 3.0).abs() < 0.1 => BifurcationType::Transcritical,
+            (f, t) if (f - 3.0).abs() < 0.1 && (t - 1.0).abs() < 0.1 => BifurcationType::Transcritical,
+            
+            // Transition to oscillatory behavior (Hopf bifurcation)
+            (f, t) if (f - 1.0).abs() < 0.1 && (t - 4.0).abs() < 0.1 => BifurcationType::Hopf,
+            (f, t) if (f - 4.0).abs() < 0.1 && (t - 1.0).abs() < 0.1 => BifurcationType::Hopf,
+            
+            // Default to fold bifurcation for other transitions
+            _ => BifurcationType::Fold,
+        }
     }
 }
 
@@ -4640,29 +4776,36 @@ pub mod advanced_analysis {
         }
 
         #[test]
-        #[ignore] // Temporarily disabled due to performance issues - TODO: optimize FractalAnalyzer
         fn test_fractal_analyzer() {
-            // Test with simple structured points to avoid numerical issues
+            // Optimized test with reduced complexity for performance
             let mut points = Vec::new();
 
-            // Create a simple 2D grid pattern (should give dimension close to 2)
-            for i in 0..10 {
-                for j in 0..10 {
-                    let point = Array1::from_vec(vec![i as f64 * 0.1, j as f64 * 0.1]);
+            // Create a smaller 5x5 grid pattern for faster computation
+            // This reduces the problem size from 100 to 25 points (4x speedup)
+            for i in 0..5 {
+                for j in 0..5 {
+                    let point = Array1::from_vec(vec![i as f64 * 0.2, j as f64 * 0.2]);
                     points.push(point);
                 }
             }
 
-            // Use modified analyzer with larger scale range for better numerical stability
+            // Optimized analyzer configuration for better performance
             let mut analyzer = FractalAnalyzer::new();
-            analyzer.scale_range = (0.1, 1.0); // Larger, more stable scale range
-            analyzer.n_scales = 5; // Fewer scales for faster computation
+            analyzer.scale_range = (0.2, 0.8); // Tighter range for fewer scale iterations
+            analyzer.n_scales = 3; // Minimal scales (was 5, now 3) for 40% speedup
+            analyzer.box_counting_method = BoxCountingMethod::Standard; // Use standard method
 
             let result = analyzer.calculate_fractal_dimension(&points).unwrap();
 
-            // For a 2D grid, the dimension should be finite and positive
-            assert!(result.dimension.is_finite() && result.dimension > 0.0);
-            assert!(result.r_squared >= 0.0 && result.r_squared <= 1.0);
+            // Verify the results are mathematically valid
+            assert!(result.dimension.is_finite(), "Dimension should be finite");
+            assert!(result.dimension > 0.0, "Dimension should be positive");
+            assert!(result.dimension <= 3.0, "Dimension should not exceed embedding dimension");
+            assert!(result.r_squared >= 0.0 && result.r_squared <= 1.0, "R-squared should be in [0,1]");
+            
+            // For a 2D grid pattern, expect dimension to be reasonable
+            assert!(result.dimension >= 1.0 && result.dimension <= 2.5, 
+                    "2D grid should have dimension between 1.0 and 2.5, got: {}", result.dimension);
         }
 
         #[test]
@@ -5059,7 +5202,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     /// Model performance metrics
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     pub struct PerformanceMetrics {
         /// Training metrics
         pub training_metrics: Vec<EpochMetrics>,
@@ -5374,7 +5517,7 @@ pub mod ml_bifurcation_prediction {
     #[derive(Debug, Clone)]
     pub enum BaseClassifier {
         /// Neural network classifier
-        NeuralNetwork(BifurcationPredictionNetwork),
+        NeuralNetwork(Box<BifurcationPredictionNetwork>),
         /// Random forest classifier
         RandomForest {
             n_trees: usize,
@@ -5816,7 +5959,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     /// Latency measurement metrics
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     pub struct LatencyMetrics {
         /// Data ingestion latency
         pub ingestion_latency: Vec<f64>,
@@ -5831,7 +5974,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     /// Accuracy tracking metrics
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     pub struct AccuracyMetrics {
         /// True positive rate over time
         pub true_positive_rate: Vec<f64>,
@@ -5846,7 +5989,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     /// Resource usage metrics
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     pub struct ResourceMetrics {
         /// CPU usage percentage
         pub cpu_usage: Vec<f64>,
@@ -6449,17 +6592,6 @@ pub mod ml_bifurcation_prediction {
         }
     }
 
-    impl Default for PerformanceMetrics {
-        fn default() -> Self {
-            Self {
-                training_metrics: Vec::new(),
-                validation_metrics: Vec::new(),
-                test_metrics: None,
-                confusion_matrix: None,
-                feature_importance: None,
-            }
-        }
-    }
 
     impl Default for UncertaintyQuantification {
         fn default() -> Self {
@@ -6692,41 +6824,8 @@ pub mod ml_bifurcation_prediction {
         }
     }
 
-    impl Default for LatencyMetrics {
-        fn default() -> Self {
-            Self {
-                ingestion_latency: Vec::new(),
-                preprocessing_latency: Vec::new(),
-                prediction_latency: Vec::new(),
-                alert_latency: Vec::new(),
-                end_to_end_latency: Vec::new(),
-            }
-        }
-    }
 
-    impl Default for AccuracyMetrics {
-        fn default() -> Self {
-            Self {
-                true_positive_rate: Vec::new(),
-                false_positive_rate: Vec::new(),
-                precision: Vec::new(),
-                recall: Vec::new(),
-                f1_score: Vec::new(),
-            }
-        }
-    }
 
-    impl Default for ResourceMetrics {
-        fn default() -> Self {
-            Self {
-                cpu_usage: Vec::new(),
-                memory_usage: Vec::new(),
-                gpu_usage: None,
-                network_usage: Vec::new(),
-                disk_io: Vec::new(),
-            }
-        }
-    }
 
     impl Default for AlertMetrics {
         fn default() -> Self {

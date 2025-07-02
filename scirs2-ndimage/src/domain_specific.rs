@@ -3,7 +3,7 @@
 //! This module provides specialized image processing functions for different domains:
 //! medical imaging, satellite/remote sensing, and microscopy.
 
-use ndarray::{Array2, Array3, ArrayView2, ArrayView3, Axis};
+use ndarray::{Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -36,7 +36,9 @@ use crate::filters::{gaussian_filter, median_filter, uniform_filter, BorderMode}
 use crate::interpolation::{rotate, zoom, InterpolationOrder};
 use crate::measurements::{center_of_mass, moments};
 use crate::morphology::label;
-use crate::morphology::{binary_closing, binary_opening, grey_dilation, grey_erosion};
+use crate::morphology::{
+    binary_closing, binary_opening, grey_dilation, grey_erosion, grey_opening,
+};
 
 /// Medical imaging functions
 pub mod medical {

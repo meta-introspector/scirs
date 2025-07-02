@@ -853,7 +853,7 @@ impl<'a> InteriorPointSolver<'a> {
 
 /// Solve linear system using LU decomposition from scirs2-linalg
 fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, OptimizeError> {
-    use scirs2_linalg::solve::solve;
+    use scirs2_linalg::solve;
 
     solve(&a.view(), &b.view(), None)
         .map_err(|e| OptimizeError::ComputationError(format!("Linear system solve failed: {}", e)))

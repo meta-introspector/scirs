@@ -1945,8 +1945,8 @@ impl<F: Float + NumCast + std::fmt::Display> UltraQuantumAnalyzer<F> {
     fn generate_quantum_noise(&self) -> F {
         // Simulate quantum noise from environmental decoherence
         use rand::Rng;
-        let mut rng = rand::thread_rng();
-        let noise: f64 = rng.gen_range(-0.01..0.01);
+        let mut rng = rand::rng();
+        let noise: f64 = rng.random_range(-0.01..0.01);
         F::from(noise).unwrap()
     }
 

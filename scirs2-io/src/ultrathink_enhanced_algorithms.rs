@@ -25,17 +25,22 @@ pub struct AdvancedPatternRecognizer {
     learning_rate: f32,
 }
 
+impl Default for AdvancedPatternRecognizer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AdvancedPatternRecognizer {
     /// Create a new advanced pattern recognizer
     pub fn new() -> Self {
-        let mut pattern_networks = Vec::new();
-
-        // Create specialized networks for different pattern types
-        pattern_networks.push(PatternNetwork::new("repetition", 16, 8, 4));
-        pattern_networks.push(PatternNetwork::new("sequential", 16, 8, 4));
-        pattern_networks.push(PatternNetwork::new("fractal", 32, 16, 8));
-        pattern_networks.push(PatternNetwork::new("entropy", 16, 8, 4));
-        pattern_networks.push(PatternNetwork::new("compression", 24, 12, 6));
+        let pattern_networks = vec![
+            PatternNetwork::new("repetition", 16, 8, 4),
+            PatternNetwork::new("sequential", 16, 8, 4),
+            PatternNetwork::new("fractal", 32, 16, 8),
+            PatternNetwork::new("entropy", 16, 8, 4),
+            PatternNetwork::new("compression", 24, 12, 6),
+        ];
 
         Self {
             pattern_networks,
@@ -337,7 +342,7 @@ impl AdvancedPatternRecognizer {
                     boxes.insert((min_val / 16, max_val / 16)); // Quantize to reduce memory
                 }
 
-                if boxes.len() > 0 {
+                if !boxes.is_empty() {
                     dimensions.push(((*scale as f32).ln(), (boxes.len() as f32).ln()));
                 }
             }
@@ -648,7 +653,7 @@ impl PatternNetwork {
 
         // Forward pass
         let hidden = self.weights.dot(&network_input) + &self.bias;
-        let activated = hidden.mapv(|x| Self::relu(x));
+        let activated = hidden.mapv(Self::relu);
 
         // Pattern-specific scoring
         let score = match self.pattern_type.as_str() {

@@ -8,7 +8,6 @@ use crate::error::Result;
 use crate::hardware::fpga::{FPGADevice, FPGAKernel, ResourceAllocation};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-
 /// Partial reconfiguration region on FPGA
 #[derive(Debug, Clone)]
 pub struct PartialRegion {
@@ -27,7 +26,6 @@ pub struct PartialRegion {
     /// Reconfiguration state
     pub state: ReconfigurationState,
 }
-
 /// Reconfiguration state
 #[derive(Debug, Clone, PartialEq)]
 pub enum ReconfigurationState {
@@ -39,10 +37,7 @@ pub enum ReconfigurationState {
     Active,
     /// Region has an error
     Error(String),
-}
-
 /// Partial bitstream for dynamic reconfiguration
-#[derive(Debug, Clone)]
 pub struct PartialBitstream {
     /// Module name
     pub module_name: String,
@@ -54,10 +49,7 @@ pub struct PartialBitstream {
     pub resource_requirements: ResourceAllocation,
     /// Configuration metadata
     pub metadata: ReconfigurationMetadata,
-}
-
 /// Reconfiguration metadata
-#[derive(Debug, Clone)]
 pub struct ReconfigurationMetadata {
     /// Reconfiguration time estimate in microseconds
     pub reconfig_time_us: u64,
@@ -67,23 +59,16 @@ pub struct ReconfigurationMetadata {
     pub interface_requirements: Vec<InterfaceRequirement>,
     /// Clock domain requirements
     pub clock_domains: Vec<ClockDomain>,
-}
-
 /// Interface requirement for partial modules
-#[derive(Debug, Clone)]
 pub struct InterfaceRequirement {
     /// Interface name
-    pub name: String,
     /// Interface type
     pub interface_type: InterfaceType,
     /// Data width in bits
     pub data_width: u32,
     /// Clock frequency in MHz
     pub clock_freq: u32,
-}
-
 /// Interface types for partial modules
-#[derive(Debug, Clone, PartialEq)]
 pub enum InterfaceType {
     /// AXI4 Stream
     AXI4Stream,
@@ -91,19 +76,13 @@ pub enum InterfaceType {
     AXI4MM,
     /// Custom interface
     Custom(String),
-}
-
 /// Clock domain specification
-#[derive(Debug, Clone)]
 pub struct ClockDomain {
     /// Clock name
-    pub name: String,
     /// Frequency in MHz
     pub frequency: u32,
     /// Phase offset in degrees
     pub phase_offset: f32,
-}
-
 /// Dynamic Partial Reconfiguration Manager
 pub struct DPRManager {
     /// FPGA device
@@ -116,8 +95,6 @@ pub struct DPRManager {
     reconfig_history: Arc<Mutex<Vec<ReconfigurationEvent>>>,
     /// Performance metrics
     metrics: Arc<Mutex<DPRMetrics>>,
-}
-
 impl DPRManager {
     /// Create a new DPR manager
     pub fn new(device: FPGADevice) -> Self {
@@ -129,56 +106,38 @@ impl DPRManager {
             metrics: Arc::new(Mutex::new(DPRMetrics::default())),
         }
     }
-
     /// Define a partial reconfiguration region
     pub fn define_region(&self, region: PartialRegion) -> Result<()> {
         let mut regions = self.regions.lock().unwrap();
-
         // Validate region coordinates and resources
         self.validate_region(&region)?;
-
         regions.insert(region.id, region);
         Ok(())
-    }
-
     /// Load a partial bitstream into the registry
     pub fn load_bitstream(&self, bitstream: PartialBitstream) -> Result<()> {
         let mut bitstreams = self.bitstreams.lock().unwrap();
-
         // Validate bitstream compatibility
         self.validate_bitstream(&bitstream)?;
-
         bitstreams.insert(bitstream.module_name.clone(), bitstream);
-        Ok(())
-    }
-
     /// Reconfigure a region with a specific module
     pub fn reconfigure_region(&self, region_id: usize, module_name: &str) -> Result<()> {
         let start_time = std::time::Instant::now();
-
         // Get region and bitstream
-        let mut regions = self.regions.lock().unwrap();
         let bitstreams = self.bitstreams.lock().unwrap();
-
         let region = regions.get_mut(&region_id).ok_or_else(|| {
             crate::error::NeuralError::InvalidArgument(format!("Region {} not found", region_id))
         })?;
-
         let bitstream = bitstreams.get(module_name).ok_or_else(|| {
             crate::error::NeuralError::InvalidArgument(format!(
                 "Bitstream {} not found",
                 module_name
             ))
-        })?;
-
         // Check if region is available for reconfiguration
         if region.state != ReconfigurationState::Idle {
             return Err(crate::error::NeuralError::InvalidState(format!(
                 "Region {} is not available for reconfiguration",
                 region_id
             )));
-        }
-
         // Validate resource requirements
         if !self.check_resource_fit(
             &region.available_resources,
@@ -187,25 +146,18 @@ impl DPRManager {
             return Err(crate::error::NeuralError::ResourceExhausted(
                 "Insufficient resources in target region".to_string(),
             ));
-        }
-
         // Start reconfiguration
         region.state = ReconfigurationState::Reconfiguring;
         drop(regions);
         drop(bitstreams);
-
         // Perform actual reconfiguration
         let result = self.perform_reconfiguration(region_id, bitstream);
-
         // Update region state
-        let mut regions = self.regions.lock().unwrap();
         let region = regions.get_mut(&region_id).unwrap();
-
         match result {
             Ok(_) => {
                 region.state = ReconfigurationState::Active;
                 region.current_module = Some(module_name.to_string());
-
                 // Record successful reconfiguration
                 let event = ReconfigurationEvent {
                     timestamp: chrono::Utc::now(),
@@ -216,63 +168,30 @@ impl DPRManager {
                     success: true,
                     error_message: None,
                 };
-
                 let mut history = self.reconfig_history.lock().unwrap();
                 history.push(event);
-
                 // Update metrics
                 let mut metrics = self.metrics.lock().unwrap();
                 metrics.total_reconfigurations += 1;
                 metrics.successful_reconfigurations += 1;
                 metrics.total_reconfig_time_us += start_time.elapsed().as_micros() as u64;
-
                 Ok(())
             }
             Err(e) => {
                 region.state = ReconfigurationState::Error(e.to_string());
-
                 // Record failed reconfiguration
-                let event = ReconfigurationEvent {
-                    timestamp: chrono::Utc::now(),
-                    region_id,
-                    module_name: module_name.to_string(),
-                    operation: ReconfigurationOperation::Load,
-                    duration_us: start_time.elapsed().as_micros() as u64,
                     success: false,
                     error_message: Some(e.to_string()),
-                };
-
-                let mut history = self.reconfig_history.lock().unwrap();
-                history.push(event);
-
-                // Update metrics
-                let mut metrics = self.metrics.lock().unwrap();
-                metrics.total_reconfigurations += 1;
                 metrics.failed_reconfigurations += 1;
-
                 Err(e)
-            }
-        }
-    }
-
     /// Unload a module from a region
     pub fn unload_region(&self, region_id: usize) -> Result<()> {
-        let mut regions = self.regions.lock().unwrap();
-
-        let region = regions.get_mut(&region_id).ok_or_else(|| {
-            crate::error::NeuralError::InvalidArgument(format!("Region {} not found", region_id))
-        })?;
-
         if region.state != ReconfigurationState::Active {
             return Err(crate::error::NeuralError::InvalidState(
                 "Region is not active".to_string(),
-            ));
-        }
-
         // Perform unload operation
         region.state = ReconfigurationState::Idle;
         let module_name = region.current_module.take();
-
         // Record unload event
         if let Some(module) = module_name {
             let event = ReconfigurationEvent {
@@ -284,23 +203,15 @@ impl DPRManager {
                 success: true,
                 error_message: None,
             };
-
             let mut history = self.reconfig_history.lock().unwrap();
             history.push(event);
-        }
-
-        Ok(())
-    }
-
     /// Get optimal module placement for a set of kernels
     pub fn get_optimal_placement(&self, kernels: &[FPGAKernel]) -> Result<Vec<PlacementDecision>> {
         let regions = self.regions.lock().unwrap();
         let mut placements = Vec::new();
-
         // Simple greedy placement algorithm
         for kernel in kernels {
             let requirements = kernel.resource_requirements();
-
             // Find best fitting region
             let best_region = regions
                 .values()
@@ -309,7 +220,6 @@ impl DPRManager {
                 .min_by_key(|r| {
                     self.calculate_placement_cost(&r.available_resources, &requirements)
                 });
-
             if let Some(region) = best_region {
                 placements.push(PlacementDecision {
                     kernel_name: kernel.name.clone(),
@@ -317,18 +227,12 @@ impl DPRManager {
                     estimated_performance: self.estimate_performance(kernel, region),
                     resource_utilization: self
                         .calculate_utilization(&region.available_resources, &requirements),
-                });
             } else {
                 return Err(crate::error::NeuralError::ResourceExhausted(format!(
                     "No suitable region found for kernel {}",
                     kernel.name
                 )));
-            }
-        }
-
         Ok(placements)
-    }
-
     /// Validate partial region definition
     fn validate_region(&self, region: &PartialRegion) -> Result<()> {
         // Check coordinate bounds
@@ -337,41 +241,19 @@ impl DPRManager {
         {
             return Err(crate::error::NeuralError::InvalidArgument(
                 "Invalid region coordinates".to_string(),
-            ));
-        }
-
         // Validate resource allocation
         if region.available_resources.dsp_slices == 0 {
-            return Err(crate::error::NeuralError::InvalidArgument(
                 "Region must have at least some DSP slices".to_string(),
-            ));
-        }
-
-        Ok(())
-    }
-
     /// Validate bitstream compatibility
     fn validate_bitstream(&self, bitstream: &PartialBitstream) -> Result<()> {
-        let regions = self.regions.lock().unwrap();
-
         // Check if target region exists
         if !regions.contains_key(&bitstream.target_region) {
             return Err(crate::error::NeuralError::InvalidArgument(format!(
                 "Target region {} does not exist",
                 bitstream.target_region
-            )));
-        }
-
         // Validate bitstream format (simplified)
         if bitstream.bitstream_data.is_empty() {
-            return Err(crate::error::NeuralError::InvalidArgument(
                 "Empty bitstream data".to_string(),
-            ));
-        }
-
-        Ok(())
-    }
-
     /// Check if resources fit in a region
     fn check_resource_fit(
         &self,
@@ -382,11 +264,8 @@ impl DPRManager {
             && available.bram_blocks >= required.bram_blocks
             && available.luts >= required.luts
             && available.registers >= required.registers
-    }
-
     /// Perform the actual reconfiguration operation
     fn perform_reconfiguration(
-        &self,
         region_id: usize,
         bitstream: &PartialBitstream,
     ) -> Result<()> {
@@ -394,76 +273,47 @@ impl DPRManager {
         std::thread::sleep(std::time::Duration::from_micros(
             bitstream.metadata.reconfig_time_us,
         ));
-
         // In real implementation, this would:
         // 1. Stop any active operations in the region
         // 2. Download the partial bitstream
         // 3. Perform clock domain crossing setup
         // 4. Restart operations with new module
-
         println!(
             "Reconfiguring region {} with module {}",
             region_id, bitstream.module_name
         );
-        Ok(())
-    }
-
     /// Calculate placement cost for optimization
     fn calculate_placement_cost(
-        &self,
-        available: &ResourceAllocation,
-        required: &ResourceAllocation,
     ) -> u64 {
         // Simple cost function based on resource waste
         let dsp_waste = available.dsp_slices.saturating_sub(required.dsp_slices);
         let bram_waste = available.bram_blocks.saturating_sub(required.bram_blocks);
         let lut_waste = available.luts.saturating_sub(required.luts);
-
         (dsp_waste * 1000 + bram_waste * 100 + lut_waste) as u64
-    }
-
     /// Estimate performance for a kernel in a region
     fn estimate_performance(&self, kernel: &FPGAKernel, region: &PartialRegion) -> f32 {
         // Simple performance model based on parallelism and clock frequency
         let base_performance = kernel.parallelism as f32;
         let region_efficiency = 0.8; // Efficiency factor for partial regions
-
         base_performance * region_efficiency
-    }
-
     /// Calculate resource utilization percentage
     fn calculate_utilization(
-        &self,
-        available: &ResourceAllocation,
-        required: &ResourceAllocation,
     ) -> f32 {
         let dsp_util = (required.dsp_slices as f32 / available.dsp_slices as f32) * 100.0;
         let bram_util = (required.bram_blocks as f32 / available.bram_blocks as f32) * 100.0;
         let lut_util = (required.luts as f32 / available.luts as f32) * 100.0;
-
         dsp_util.max(bram_util).max(lut_util)
-    }
-
     /// Get DPR statistics
     pub fn get_statistics(&self) -> DPRMetrics {
         self.metrics.lock().unwrap().clone()
-    }
-
     /// Get reconfiguration history
     pub fn get_history(&self) -> Vec<ReconfigurationEvent> {
         self.reconfig_history.lock().unwrap().clone()
-    }
-}
-
 /// Reconfiguration event for history tracking
-#[derive(Debug, Clone)]
 pub struct ReconfigurationEvent {
     /// Event timestamp
     pub timestamp: chrono::DateTime<chrono::Utc>,
-    /// Target region ID
     pub region_id: usize,
-    /// Module name
-    pub module_name: String,
     /// Operation type
     pub operation: ReconfigurationOperation,
     /// Operation duration in microseconds
@@ -472,29 +322,19 @@ pub struct ReconfigurationEvent {
     pub success: bool,
     /// Error message if failed
     pub error_message: Option<String>,
-}
-
 /// Reconfiguration operation types
-#[derive(Debug, Clone, PartialEq)]
 pub enum ReconfigurationOperation {
     Load,
     Unload,
     Reset,
-}
-
 /// Placement decision for kernel mapping
-#[derive(Debug, Clone)]
 pub struct PlacementDecision {
     /// Kernel name
     pub kernel_name: String,
-    /// Target region ID
-    pub target_region: usize,
     /// Estimated performance
     pub estimated_performance: f32,
     /// Resource utilization percentage
     pub resource_utilization: f32,
-}
-
 /// DPR performance metrics
 #[derive(Debug, Clone, Default)]
 pub struct DPRMetrics {
@@ -508,23 +348,16 @@ pub struct DPRMetrics {
     pub total_reconfig_time_us: u64,
     /// Average reconfiguration time
     pub avg_reconfig_time_us: f64,
-}
-
 impl DPRMetrics {
     /// Update average reconfiguration time
     pub fn update_average(&mut self) {
         if self.successful_reconfigurations > 0 {
             self.avg_reconfig_time_us =
                 self.total_reconfig_time_us as f64 / self.successful_reconfigurations as f64;
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::hardware::fpga::{FPGAConfig, FPGAVendor};
-
     fn create_test_fpga() -> FPGADevice {
         let config = FPGAConfig {
             vendor: FPGAVendor::Xilinx,
@@ -536,24 +369,14 @@ mod tests {
             power_budget: 20.0,
             bitstream_path: None,
         };
-
         FPGADevice::new(config).unwrap()
-    }
-
     #[test]
     fn test_dpr_manager_creation() {
         let fpga = create_test_fpga();
         let dpr_manager = DPRManager::new(fpga);
-
         let stats = dpr_manager.get_statistics();
         assert_eq!(stats.total_reconfigurations, 0);
-    }
-
-    #[test]
     fn test_region_definition() {
-        let fpga = create_test_fpga();
-        let dpr_manager = DPRManager::new(fpga);
-
         let region = PartialRegion {
             id: 0,
             name: "test_region".to_string(),
@@ -567,33 +390,10 @@ mod tests {
             },
             current_module: None,
             state: ReconfigurationState::Idle,
-        };
-
         assert!(dpr_manager.define_region(region).is_ok());
-    }
-
-    #[test]
     fn test_bitstream_loading() {
-        let fpga = create_test_fpga();
-        let dpr_manager = DPRManager::new(fpga);
-
         // First define a region
-        let region = PartialRegion {
-            id: 0,
-            name: "test_region".to_string(),
-            start_coords: (0, 0),
-            end_coords: (10, 10),
-            available_resources: ResourceAllocation {
-                dsp_slices: 100,
-                bram_blocks: 50,
-                luts: 10000,
-                registers: 20000,
-            },
-            current_module: None,
-            state: ReconfigurationState::Idle,
-        };
         dpr_manager.define_region(region).unwrap();
-
         let bitstream = PartialBitstream {
             module_name: "test_module".to_string(),
             target_region: 0,
@@ -603,15 +403,9 @@ mod tests {
                 bram_blocks: 25,
                 luts: 5000,
                 registers: 10000,
-            },
             metadata: ReconfigurationMetadata {
                 reconfig_time_us: 1000,
                 power_estimate: 2.5,
                 interface_requirements: vec![],
                 clock_domains: vec![],
-            },
-        };
-
         assert!(dpr_manager.load_bitstream(bitstream).is_ok());
-    }
-}

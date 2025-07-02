@@ -13,7 +13,7 @@ pub mod higher_order;
 pub mod meta_gradients;
 pub mod reverse_mode;
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 
 /// Automatic differentiation configuration
 #[derive(Debug, Clone)]
@@ -258,9 +258,9 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Compute gradients using reverse-mode AD
-    pub fn backward(&mut self, output_id: usize) -> Result<Vec<T>, OptimizerError> {
+    pub fn backward(&mut self, output_id: usize) -> Result<Vec<T>, OptimError> {
         if output_id >= self.graph.len() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Invalid output node ID".to_string(),
             ));
         }
@@ -285,19 +285,19 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Compute Hessian matrix
-    pub fn compute_hessian(&mut self, output_id: usize) -> Result<Array2<T>, OptimizerError> {
+    pub fn compute_hessian(&mut self, output_id: usize) -> Result<Array2<T>, OptimError> {
         match self.config.hessian_approximation {
             HessianApproximation::Exact => self.compute_exact_hessian(output_id),
             HessianApproximation::BFGS => self.compute_bfgs_hessian(),
             HessianApproximation::LBFGS => self.compute_lbfgs_hessian(),
             HessianApproximation::Diagonal => self.compute_diagonal_hessian(output_id),
-            _ => Err(OptimizerError::InvalidConfig(
+            _ => Err(OptimError::InvalidConfig(
                 "Unsupported Hessian approximation".to_string(),
             )),
         }
     }
 
-    fn compute_exact_hessian(&mut self, output_id: usize) -> Result<Array2<T>, OptimizerError> {
+    fn compute_exact_hessian(&mut self, output_id: usize) -> Result<Array2<T>, OptimError> {
         let n_vars = self.variables.len();
         let mut hessian = Array2::zeros((n_vars, n_vars));
 
@@ -318,7 +318,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         output_id: usize,
         var1: usize,
         var2: usize,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         // Enhanced second derivative computation with checkpointing
         if self.config.gradient_checkpointing {
             return self.compute_second_derivative_checkpointed(output_id, var1, var2);
@@ -364,7 +364,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         output_id: usize,
         var1: usize,
         var2: usize,
-    ) -> Result<T, OptimizerError> {
+    ) -> Result<T, OptimError> {
         let chunk_size = self.config.checkpoint_chunk_size;
         let eps = T::from(1e-8).unwrap();
 
@@ -406,40 +406,40 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
                 / (T::from(4.0).unwrap() * eps * eps);
             Ok(second_deriv)
         } else {
-            Err(OptimizerError::InvalidConfig(
+            Err(OptimError::InvalidConfig(
                 "Insufficient results for second derivative".to_string(),
             ))
         }
     }
 
-    fn evaluate_node(&self, node_id: usize) -> Result<T, OptimizerError> {
+    fn evaluate_node(&self, node_id: usize) -> Result<T, OptimError> {
         if node_id >= self.graph.len() {
-            return Err(OptimizerError::InvalidConfig("Invalid node ID".to_string()));
+            return Err(OptimError::InvalidConfig("Invalid node ID".to_string()));
         }
 
         Ok(self.graph[node_id].value)
     }
 
-    fn compute_bfgs_hessian(&self) -> Result<Array2<T>, OptimizerError> {
+    fn compute_bfgs_hessian(&self) -> Result<Array2<T>, OptimError> {
         if let Some(ref state) = self.hessian_state {
             if let Some(ref inv_hessian) = state.inverse_hessian {
                 return Ok(inv_hessian.clone());
             }
         }
 
-        Err(OptimizerError::InvalidConfig(
+        Err(OptimError::InvalidConfig(
             "BFGS Hessian not initialized".to_string(),
         ))
     }
 
-    fn compute_lbfgs_hessian(&self) -> Result<Array2<T>, OptimizerError> {
+    fn compute_lbfgs_hessian(&self) -> Result<Array2<T>, OptimError> {
         if let Some(ref state) = self.hessian_state {
             if let Some(ref lbfgs) = state.lbfgs_memory {
                 return self.lbfgs_two_loop_recursion(lbfgs);
             }
         }
 
-        Err(OptimizerError::InvalidConfig(
+        Err(OptimError::InvalidConfig(
             "L-BFGS memory not initialized".to_string(),
         ))
     }
@@ -447,11 +447,11 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     fn lbfgs_two_loop_recursion(
         &self,
         lbfgs: &LBFGSMemory<T>,
-    ) -> Result<Array2<T>, OptimizerError> {
+    ) -> Result<Array2<T>, OptimError> {
         let n = lbfgs
             .s_history
             .get(0)
-            .ok_or_else(|| OptimizerError::InvalidConfig("Empty L-BFGS history".to_string()))?
+            .ok_or_else(|| OptimError::InvalidConfig("Empty L-BFGS history".to_string()))?
             .len();
 
         let mut result = Array2::eye(n);
@@ -462,7 +462,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         Ok(result)
     }
 
-    fn compute_diagonal_hessian(&mut self, output_id: usize) -> Result<Array2<T>, OptimizerError> {
+    fn compute_diagonal_hessian(&mut self, output_id: usize) -> Result<Array2<T>, OptimError> {
         let n_vars = self.variables.len();
         let mut hessian = Array2::zeros((n_vars, n_vars));
 
@@ -481,7 +481,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         gradient_new: &Array1<T>,
         gradient_old: &Array1<T>,
         step: &Array1<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         if self.hessian_state.is_none() {
             let n = gradient_new.len();
             self.hessian_state = Some(HessianApproximationState {
@@ -546,9 +546,9 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         &mut self,
         inner_steps: usize,
         outer_objective_id: usize,
-    ) -> Result<Vec<T>, OptimizerError> {
+    ) -> Result<Vec<T>, OptimError> {
         if !self.config.enable_meta_gradients {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Meta-gradients not enabled".to_string(),
             ));
         }
@@ -605,9 +605,9 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     fn restore_checkpoint(
         &mut self,
         checkpoint: &ComputationCheckpoint<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         if checkpoint.values.len() != self.graph.len() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Checkpoint size mismatch".to_string(),
             ));
         }
@@ -628,7 +628,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// External framework integration hooks
-    pub fn integrate_with_candle(&mut self, enable: bool) -> Result<(), OptimizerError> {
+    pub fn integrate_with_candle(&mut self, enable: bool) -> Result<(), OptimError> {
         if enable {
             // Enhanced integration with candle-core for production use
             self.context.higher_order = true;
@@ -643,7 +643,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Set up candle-core compatibility layer
-    fn setup_candle_compatibility(&mut self) -> Result<(), OptimizerError> {
+    fn setup_candle_compatibility(&mut self) -> Result<(), OptimError> {
         // Configure automatic differentiation for candle tensors
         self.config.max_derivative_order = 3; // Support higher-order derivatives
         self.config.enable_hessian = true;
@@ -663,7 +663,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     pub fn from_candle_gradients<D: Dimension>(
         &mut self,
         gradients: &Array<T, D>,
-    ) -> Result<Vec<T>, OptimizerError> {
+    ) -> Result<Vec<T>, OptimError> {
         if let Some(grad_slice) = gradients.as_slice() {
             Ok(grad_slice.to_vec())
         } else {
@@ -678,15 +678,15 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         &self,
         gradients: &[T],
         shape: &[usize],
-    ) -> Result<Array<T, D>, OptimizerError> {
+    ) -> Result<Array<T, D>, OptimError> {
         if gradients.len() != shape.iter().product() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Gradient size mismatch with shape".to_string(),
             ));
         }
 
         Array::from_shape_vec(shape, gradients.to_vec())
-            .map_err(|_| OptimizerError::InvalidConfig("Invalid shape for gradients".to_string()))
+            .map_err(|_| OptimError::InvalidConfig("Invalid shape for gradients".to_string()))
     }
 
     /// Compute candle-compatible Jacobian-vector product
@@ -694,9 +694,9 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         &mut self,
         output_id: usize,
         tangent: &[T],
-    ) -> Result<Vec<T>, OptimizerError> {
+    ) -> Result<Vec<T>, OptimError> {
         if tangent.len() != self.variables.len() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Tangent vector size mismatch".to_string(),
             ));
         }
@@ -733,7 +733,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         &mut self,
         output_id: usize,
         cotangent: T,
-    ) -> Result<Vec<T>, OptimizerError> {
+    ) -> Result<Vec<T>, OptimError> {
         // Reverse-mode AD for computing VJP
         let mut vjp_values = vec![T::zero(); self.graph.len()];
         vjp_values[output_id] = cotangent;
@@ -795,7 +795,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Optimize computation graph for candle operations
-    pub fn optimize_for_candle(&mut self) -> Result<(), OptimizerError> {
+    pub fn optimize_for_candle(&mut self) -> Result<(), OptimError> {
         // Graph optimization passes for candle integration
         self.fuse_operations()?;
         self.eliminate_dead_code()?;
@@ -805,7 +805,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Fuse compatible operations for better performance
-    fn fuse_operations(&mut self) -> Result<(), OptimizerError> {
+    fn fuse_operations(&mut self) -> Result<(), OptimError> {
         // Identify fusion opportunities (e.g., add + multiply, exp + log)
         let mut fused_operations = Vec::new();
 
@@ -842,7 +842,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Eliminate dead code in computation graph
-    fn eliminate_dead_code(&mut self) -> Result<(), OptimizerError> {
+    fn eliminate_dead_code(&mut self) -> Result<(), OptimError> {
         // Mark reachable nodes from outputs
         let mut reachable = vec![false; self.graph.len()];
         let mut stack = Vec::new();
@@ -870,7 +870,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Optimize memory layout for better cache performance
-    fn optimize_memory_layout(&mut self) -> Result<(), OptimizerError> {
+    fn optimize_memory_layout(&mut self) -> Result<(), OptimError> {
         // Sort tape entries to improve memory locality
         self.tape.sort_by_key(|entry| entry.output);
 
@@ -908,7 +908,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// JAX-style transformation compatibility  
-    pub fn enable_jax_transforms(&mut self, enable: bool) -> Result<(), OptimizerError> {
+    pub fn enable_jax_transforms(&mut self, enable: bool) -> Result<(), OptimError> {
         if enable {
             // Enable JAX-compatible transformations
             self.config.enable_forward_mode = true;
@@ -938,7 +938,7 @@ impl AutodiffUtils {
         gradient_fn: impl Fn(&[T]) -> Vec<T>,
         point: &[T],
         epsilon: T,
-    ) -> Result<GradientCheckResult<T>, OptimizerError> {
+    ) -> Result<GradientCheckResult<T>, OptimError> {
         let analytical_grad = gradient_fn(point);
         let mut numerical_grad = vec![T::zero(); point.len()];
 

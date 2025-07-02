@@ -49,15 +49,15 @@ use std::fmt::{Debug, Display};
 /// # Examples
 /// ```
 /// use scirs2_special::boxcox;
-/// 
+///
 /// // λ = 0 case (logarithmic)
 /// let result = boxcox(2.718, 0.0).unwrap();
 /// assert!((result - 1.0).abs() < 1e-10);
-/// 
+///
 /// // λ = 1 case (identity minus 1)
 /// let result = boxcox(5.0, 1.0).unwrap();
 /// assert!((result - 4.0).abs() < 1e-10);
-/// 
+///
 /// // λ = 0.5 case (square root transformation)
 /// let result = boxcox(4.0, 0.5).unwrap();
 /// assert!((result - 2.0).abs() < 1e-10);
@@ -97,11 +97,11 @@ where
 /// # Examples
 /// ```
 /// use scirs2_special::boxcox1p;
-/// 
+///
 /// // λ = 0 case
 /// let result = boxcox1p(1.718, 0.0).unwrap();
 /// assert!((result - (1.0 + 1.718_f64).ln()).abs() < 1e-10);
-/// 
+///
 /// // Small x values
 /// let result = boxcox1p(0.01, 0.5).unwrap();
 /// assert!(result.is_finite());
@@ -146,7 +146,7 @@ where
 /// # Examples
 /// ```
 /// use scirs2_special::{boxcox, inv_boxcox};
-/// 
+///
 /// let x = 5.0;
 /// let lmbda = 0.3;
 /// let y = boxcox(x, lmbda).unwrap();
@@ -169,13 +169,13 @@ where
     } else {
         // λ ≠ 0: (λ*y + 1)^(1/λ)
         let lambda_y_plus_1 = lmbda * y + one;
-        
+
         if lambda_y_plus_1 <= zero {
             return Err(SpecialError::DomainError(
                 "Invalid argument for inverse transformation".to_string(),
             ));
         }
-        
+
         Ok(lambda_y_plus_1.powf(one / lmbda))
     }
 }
@@ -193,7 +193,7 @@ where
 /// # Examples
 /// ```
 /// use scirs2_special::{boxcox1p, inv_boxcox1p};
-/// 
+///
 /// let x = 0.5;
 /// let lmbda = -0.2;
 /// let y = boxcox1p(x, lmbda).unwrap();
@@ -216,13 +216,13 @@ where
     } else {
         // λ ≠ 0: (λ*y + 1)^(1/λ) - 1
         let lambda_y_plus_1 = lmbda * y + one;
-        
+
         if lambda_y_plus_1 <= zero {
             return Err(SpecialError::DomainError(
                 "Invalid argument for inverse transformation".to_string(),
             ));
         }
-        
+
         Ok(lambda_y_plus_1.powf(one / lmbda) - one)
     }
 }
@@ -239,7 +239,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_special::boxcox_array;
-/// 
+///
 /// let x = array![1.0, 2.0, 4.0, 8.0];
 /// let result = boxcox_array(&x.view(), 0.0).unwrap();
 /// // Should be approximately [0, ln(2), ln(4), ln(8)]
@@ -249,11 +249,11 @@ where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
     let mut result = Array1::zeros(x.len());
-    
+
     for (i, &val) in x.iter().enumerate() {
         result[i] = boxcox(val, lmbda)?;
     }
-    
+
     Ok(result)
 }
 
@@ -263,11 +263,11 @@ where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
     let mut result = Array1::zeros(x.len());
-    
+
     for (i, &val) in x.iter().enumerate() {
         result[i] = boxcox1p(val, lmbda)?;
     }
-    
+
     Ok(result)
 }
 
@@ -277,11 +277,11 @@ where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
     let mut result = Array1::zeros(y.len());
-    
+
     for (i, &val) in y.iter().enumerate() {
         result[i] = inv_boxcox(val, lmbda)?;
     }
-    
+
     Ok(result)
 }
 
@@ -291,11 +291,11 @@ where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
     let mut result = Array1::zeros(y.len());
-    
+
     for (i, &val) in y.iter().enumerate() {
         result[i] = inv_boxcox1p(val, lmbda)?;
     }
-    
+
     Ok(result)
 }
 

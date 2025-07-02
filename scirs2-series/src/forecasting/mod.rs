@@ -1992,7 +1992,7 @@ pub mod ensemble {
             let train_data = if test_start == 0 {
                 data.slice(ndarray::s![test_end..]).to_owned()
             } else {
-                let mut train_part1 = data.slice(ndarray::s![..test_start]).to_owned();
+                let train_part1 = data.slice(ndarray::s![..test_start]).to_owned();
                 let train_part2 = data.slice(ndarray::s![test_end..]).to_owned();
                 let mut combined = Array1::zeros(train_part1.len() + train_part2.len());
                 combined

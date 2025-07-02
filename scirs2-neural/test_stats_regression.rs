@@ -10,10 +10,8 @@ fn main() {
         1.0, 3.0, 4.0,
         1.0, 4.0, 5.0,
     ]).unwrap();
-
     // Target values: y = 1 + 2*x1 + 3*x2
     let y = array![4.0, 9.0, 14.0, 19.0, 24.0];
-
     // Perform regression analysis
     match linear_regression(&x.view(), &y.view(), None) {
         Ok(results) => {
@@ -26,12 +24,10 @@ fn main() {
             assert!((results.coefficients[0] - 1.0).abs() < 1e-6);  // intercept
             assert!((results.coefficients[1] - 2.0).abs() < 1e-6);  // x1 coefficient
             assert!((results.coefficients[2] - 3.0).abs() < 1e-6);  // x2 coefficient
-            
             println!("\nTest passed! The migration from ndarray-linalg to scirs2-linalg was successful.");
         }
         Err(e) => {
             eprintln!("Error performing regression: {:?}", e);
             std::process::exit(1);
-        }
     }
 }

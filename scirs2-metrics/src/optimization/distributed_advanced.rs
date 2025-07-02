@@ -4431,7 +4431,7 @@ impl DistributedClusterOrchestrator {
             }
             ScalingAction::ScaleDown(count) => {
                 // Select nodes to decommission (e.g., least loaded nodes)
-                let mut node_ids_to_remove: Vec<String> = self
+                let node_ids_to_remove: Vec<String> = self
                     .nodes
                     .iter()
                     .take(count)
@@ -4446,7 +4446,7 @@ impl DistributedClusterOrchestrator {
                     self.provision_new_nodes(diff)?;
                 } else if target_count < current_count {
                     let diff = current_count - target_count;
-                    let mut node_ids_to_remove: Vec<String> = self
+                    let node_ids_to_remove: Vec<String> = self
                         .nodes
                         .iter()
                         .take(diff)

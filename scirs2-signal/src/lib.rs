@@ -85,6 +85,7 @@ pub mod dwt2d_boundary_enhanced;
 pub mod dwt2d_enhanced;
 pub mod dwt2d_image;
 pub mod dwt2d_ultra_refined;
+pub mod dwt2d_ultrathink_validation;
 pub mod dwt2d_validation;
 pub mod emd;
 pub mod features;
@@ -112,6 +113,7 @@ pub mod lombscargle_enhanced_validation_improvements;
 pub mod lombscargle_scipy_validation;
 pub mod lombscargle_simd;
 pub mod lombscargle_ultra_validation;
+pub mod lombscargle_ultrathink_enhanced;
 pub mod lombscargle_validation;
 pub mod lti;
 pub mod lti_analysis_enhanced;
@@ -124,6 +126,7 @@ pub mod memory_optimized;
 pub mod memory_optimized_advanced;
 pub mod multirate;
 pub mod multitaper;
+pub mod multitaper_scipy_validation;
 pub mod nlm;
 pub mod parallel_spectral;
 pub mod parametric;
@@ -147,6 +150,7 @@ pub mod separation;
 pub mod simd_advanced;
 pub mod simd_memory_optimization;
 pub mod simd_ops;
+pub mod simd_ultrathink_enhanced;
 pub mod sparse;
 pub mod spectral;
 pub mod spline;
@@ -162,6 +166,7 @@ pub mod sysid_robust_enhancements;
 pub mod sysid_ultra_enhanced;
 pub mod tv;
 pub mod ultrathink_comprehensive_validation;
+pub mod ultrathink_validation_suite;
 pub mod validation_runner;
 pub mod waveforms;
 pub mod wavelet_vis;
@@ -172,6 +177,7 @@ pub mod wpt;
 pub mod wpt2d;
 pub mod wpt_comprehensive_validation;
 pub mod wpt_ultra_validation;
+pub mod wpt_ultrathink_validation;
 pub mod wpt_validation;
 pub mod wvd;
 
@@ -205,6 +211,11 @@ pub use filter::{
     cheby1, cheby2, check_filter_stability, comb_filter, ellip, filtfilt, firwin, lfilter,
     matched_filter, matched_filter_detect, minimum_phase, notch_filter, peak_filter,
     prewarp_frequency, remez, FilterAnalysis, FilterStability,
+    // Ultrathink Enhanced Parallel Filtering
+    UltrathinkParallelConfig, ParallelFilterMetrics, StreamingFilterState, StreamingStats,
+    ParallelMultiRateFilterBank, SparseParallelFilter, LockFreeStreamingFilter, 
+    ParallelSpectralFilter, benchmark_parallel_filtering_operations,
+    validate_parallel_filtering_accuracy,
 };
 pub use filter_banks::{
     CosineModulatedFilterBank, FilterBankAnalysis, FilterBankType, FilterBankWindow, IirStabilizer,
@@ -246,6 +257,14 @@ pub use lombscargle::{
     find_peaks as find_ls_peaks, lombscargle, significance_levels, AutoFreqMethod,
 };
 pub use lombscargle_simd::{simd_lombscargle, SimdLombScargleResult, ValidationMetrics};
+
+// Ultrathink Enhanced Lomb-Scargle Validation
+pub use lombscargle_ultrathink_enhanced::{
+    run_ultrathink_lombscargle_validation, generate_ultrathink_lombscargle_report,
+    UltrathinkLombScargleResult, ComprehensiveAccuracyResult, ScipyComparisonResult,
+    CompleteSimdValidation, MemoryProfilingResult, StatisticalValidationResult,
+    PerformanceRegressionResult,
+};
 pub use median::{
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
     rank_filter_1d, EdgeMode, MedianConfig,
@@ -309,6 +328,15 @@ pub use simd_memory_optimization::{
     simd_optimized_fir_filter, simd_optimized_matrix_multiply, SimdMemoryConfig, SimdMemoryResult,
 };
 pub use simd_ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
+
+// Ultrathink Enhanced SIMD Operations
+pub use simd_ultrathink_enhanced::{
+    ultrathink_simd_fft, ultrathink_simd_rfft, ultrathink_simd_stft, ultrathink_simd_dwt,
+    ultrathink_simd_resample, generate_simd_performance_report,
+    UltrathinkSimdConfig, SimdFftResult, SimdStftResult, SimdWaveletResult,
+    FftPerformanceMetrics, StftPerformanceMetrics, WaveletPerformanceMetrics,
+    SimdUtilizationStats,
+};
 pub use sparse::{
     basis_pursuit, compressed_sensing_recover, cosamp, estimate_rip_constant, fista, iht,
     image_inpainting, ista, lasso, matrix_coherence, measure_sparsity, mp, omp,
@@ -346,6 +374,14 @@ pub use multitaper::{
     adaptive_psd, coherence, dpss, multitaper_filtfilt, multitaper_spectrogram, pmtm,
 };
 
+// Enhanced multitaper validation with SciPy reference
+pub use multitaper_scipy_validation::{
+    run_scipy_multitaper_validation, generate_multitaper_validation_report,
+    MultitaperScipyValidationResult, TestResult, PerformanceComparison,
+    StatisticalValidationMetrics, SimdValidationMetrics, PrecisionAnalysisResult,
+    EnhancedTestSignalConfig, TestSignalType,
+};
+
 // Wavelet transform functions already re-exported above
 pub use dwt2d::{dwt2d_decompose, dwt2d_reconstruct, wavedec2, waverec2, Dwt2dResult};
 pub use dwt2d_advanced_denoising::{
@@ -362,6 +398,16 @@ pub use dwt2d_boundary_enhanced::{
     wavedec2_enhanced, waverec2_enhanced, AdaptiveBoundaryParams, ArtifactMeasures,
     BoundaryConfig2D, BoundaryInfo2D, BoundaryMode2D, BoundaryPreprocessing,
     BoundaryQualityMetrics, EnhancedDWT2DDecomposition, ExtensionInfo, WindowType, WindowingConfig,
+};
+
+// 2D wavelet ultrathink validation
+pub use dwt2d_ultrathink_validation::{
+    run_dwt2d_ultrathink_validation, run_quick_dwt2d_validation, generate_dwt2d_ultrathink_report,
+    Dwt2dUltrathinkConfig, Dwt2dUltrathinkResult, ReconstructionValidationResult,
+    OrthogonalityValidationResult, EnergyConservationResult, BoundaryValidationResult,
+    MultilevelValidationResult, DenoisingValidationResult, CompressionValidationResult,
+    StabilityValidationResult, PerformanceAnalysisResult, SimdOptimizationResult,
+    MemoryAnalysisResult, ConsistencyAnalysisResult,
 };
 pub use swt::{iswt, swt, swt_decompose, swt_reconstruct};
 pub use swt2d::{iswt2d, swt2d, swt2d_decompose, swt2d_reconstruct, Swt2dResult};
@@ -392,6 +438,20 @@ pub use wpt::{
 };
 pub use wpt2d::{wpt2d_full, wpt2d_selective, WaveletPacket2D, WaveletPacketTree2D};
 pub use wpt_ultra_validation::{run_ultra_wpt_validation, UltraWptValidationResult};
+
+// Wavelet packet ultrathink validation
+pub use wpt_ultrathink_validation::{
+    run_wpt_ultrathink_validation, run_quick_wpt_validation, generate_wpt_ultrathink_report,
+    WptUltrathinkConfig, WptUltrathinkResult, TreeValidationResult, CoefficientValidationResult,
+    ReconstructionValidationResult as WptReconstructionValidationResult, BestBasisValidationResult, 
+    CompressionValidationResult as WptCompressionValidationResult,
+    DenoisingValidationResult as WptDenoisingValidationResult, TwoDValidationResult, 
+    StabilityValidationResult as WptStabilityValidationResult,
+    PerformanceAnalysisResult as WptPerformanceAnalysisResult, 
+    MemoryAnalysisResult as WptMemoryAnalysisResult, 
+    ConsistencyAnalysisResult as WptConsistencyAnalysisResult,
+    TreeStructureType, EntropyMeasure,
+};
 
 // LTI systems functions
 pub use lti::system::{c2d, ss, tf, zpk};
@@ -531,12 +591,20 @@ pub use ultrathink_comprehensive_validation::{
     UltrathinkValidationResult,
 };
 
+// Ultrathink validation suite
+pub use ultrathink_validation_suite::{
+    generate_ultrathink_report as generate_ultra_validation_report, 
+    run_ultrathink_validation, run_quick_ultrathink_validation, run_full_ultrathink_validation,
+    UltrathinkValidationConfig, UltrathinkValidationResult as UltraValidationResult,
+    UltrathinkValidationSummary, MultitaperUltraResults, LombScargleUltraResults,
+    ParametricUltraResults, Wavelet2dUltraResults, WaveletPacketUltraResults,
+};
+
 // Comprehensive performance benchmarking
 pub use benchmarking::{
     run_comprehensive_benchmarks, run_quick_benchmark, BenchmarkConfig, BenchmarkResult,
     BenchmarkSuite, BenchmarkSummary, EfficiencyMetrics, MemoryUsageStats, SystemInfo,
 };
-pub use memory_optimized::TimingStats;
 
 #[cfg(test)]
 mod tests {

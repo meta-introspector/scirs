@@ -12,7 +12,6 @@
 
 #![warn(missing_docs)]
 #![recursion_limit = "524288"]
-
 pub mod activations;
 /// Data augmentation module
 pub mod augmentation;
@@ -72,9 +71,7 @@ pub mod utils;
 pub mod visualization;
 /// WebAssembly module
 pub mod wasm;
-
 // Export specific items from each module to avoid name conflicts
 // Use the prelude module for a convenient import
-
 // Re-export the error type
 pub use error::{Error, NeuralError, Result};

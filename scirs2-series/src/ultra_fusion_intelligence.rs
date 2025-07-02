@@ -18,7 +18,7 @@
 
 use ndarray::Array1;
 use num_complex::Complex;
-use num_traits::{Float, FromPrimitive, Zero};
+use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 
@@ -439,6 +439,16 @@ pub struct CoherencePreservationProtocols<F: Float + Debug> {
     decoherence_detection: DecoherenceDetector<F>,
 }
 
+impl<F: Float + Debug> CoherencePreservationProtocols<F> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            protocols: Vec::new(),
+            preservation_strength: F::from(0.9).unwrap(),
+            decoherence_detection: DecoherenceDetector::new()?,
+        })
+    }
+}
+
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct CoherenceProtocol<F: Float + Debug> {
@@ -464,12 +474,32 @@ pub struct DecoherenceDetector<F: Float + Debug> {
     correction_triggers: Vec<F>,
 }
 
+impl<F: Float + Debug> DecoherenceDetector<F> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            detection_threshold: F::from(0.1).unwrap(),
+            measurement_frequency: F::from(1.0).unwrap(),
+            correction_triggers: Vec::new(),
+        })
+    }
+}
+
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct InformationEncodingSchemes<F: Float + Debug> {
     encoding_schemes: Vec<EncodingScheme<F>>,
     efficiency_metrics: Vec<F>,
     error_rates: Vec<F>,
+}
+
+impl<F: Float + Debug> InformationEncodingSchemes<F> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            encoding_schemes: Vec::new(),
+            efficiency_metrics: Vec::new(),
+            error_rates: Vec::new(),
+        })
+    }
 }
 
 #[allow(dead_code)]
@@ -1985,7 +2015,7 @@ pub struct InsightValidator<F: Float + Debug> {
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
-pub enum ValidationMethod {
+pub enum ScientificValidationMethod {
     LogicalVerification,
     EmpiricalTesting,
     PeerReview,
@@ -3092,13 +3122,15 @@ pub struct QuantumProcessingUnit<F: Float + Debug> {
     /// Number of logical qubits
     logical_qubits: usize,
     /// Quantum error correction system
-    error_correction: QuantumErrorCorrectionAdvanced<F>,
+    error_correction: QuantumErrorCorrectionAdvanced,
     /// Quantum algorithm library
-    algorithm_library: QuantumAlgorithmLibrary<F>,
+    algorithm_library: QuantumAlgorithmLibrary,
     /// Quantum coherence optimization
-    coherence_optimizer: QuantumCoherenceOptimizer<F>,
+    coherence_optimizer: QuantumCoherenceOptimizer,
     /// Quantum entanglement network
-    entanglement_network: QuantumEntanglementNetwork<F>,
+    entanglement_network: QuantumEntanglementNetwork,
+    /// Type parameter marker for consistency with other processing units
+    _phantom: std::marker::PhantomData<F>,
 }
 
 /// Neuromorphic processing unit with bio-realistic features
@@ -3609,7 +3641,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + Send + Sync + 'static> UltraFusi
         for i in 1..tunneled.len()-1 {
             let barrier_height = F::from(0.5).unwrap();
             let tunneling_probability = (-barrier_height).exp();
-            let phase = F::from(std::f64::consts::PI).unwrap() * tunneling_probability;
+            let _phase = F::from(std::f64::consts::PI).unwrap() * tunneling_probability;
             
             let tunneling_factor = Complex::new(
                 tunneling_probability.cos() * tunneling_probability,
@@ -3907,6 +3939,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
             algorithm_library: QuantumAlgorithmLibrary::new()?,
             coherence_optimizer: QuantumCoherenceOptimizer::new()?,
             entanglement_network: QuantumEntanglementNetwork::new()?,
+            _phantom: std::marker::PhantomData,
         })
     }
     

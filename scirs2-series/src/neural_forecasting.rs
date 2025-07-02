@@ -1491,7 +1491,6 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
 }
 
 /// **ULTRATHINK MODE: Cutting-Edge Neural Architectures**
-
 /// Mamba/State Space Model implementation for time series
 /// Based on "Mamba: Linear-Time Sequence Modeling with Selective State Spaces"
 #[derive(Debug)]
@@ -2189,7 +2188,6 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
 }
 
 /// **MODERN ATTENTION MECHANISMS**
-
 /// Multi-Query Attention (MQA) - More efficient than Multi-Head Attention
 #[derive(Debug)]
 pub struct MultiQueryAttention<F: Float + Debug> {
@@ -2766,7 +2764,6 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
 }
 
 /// **ULTRATHINK MODE: NEXT-GENERATION ATTENTION MECHANISMS**
-
 /// Ring Attention for distributed computation across multiple devices
 #[derive(Debug)]
 pub struct RingAttention<F: Float + Debug> {

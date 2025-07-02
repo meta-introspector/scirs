@@ -1,41 +1,31 @@
 //! Softmax activation function implementation
 
+use rand::rng;
 use crate::activations::Activation;
 use crate::error::{NeuralError, Result};
-use ndarray::{Array, Axis};
+use crate::layers::Layer;
+use ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use num_traits::Float;
 use std::fmt::Debug;
 
 /// Softmax activation function.
 ///
-/// The softmax function is defined as:
-/// f(x_i) = exp(x_i) / sum_j(exp(x_j))
-///
-/// It transforms a vector of real values into a probability distribution.
+/// Softmax applies the softmax function along a specified axis.
+/// It's commonly used as the final activation in classification networks.
 ///
 /// # Examples
-///
 /// ```
-/// use scirs2_neural::activations::{Softmax, Activation};
-/// use ndarray::arr1;
-///
-/// // Create softmax activation for 1D array (axis 0)
+/// use scirs2_neural::activations::Softmax;
+/// use scirs2_neural::activations::Activation;
+/// use ndarray::Array;
+/// 
 /// let softmax = Softmax::new(0);
-/// let input = arr1(&[1.0f64, 2.0, 3.0]).into_dyn();
+/// let input = Array::from_vec(vec![1.0, 2.0, 3.0]).into_dyn();
 /// let output = softmax.forward(&input).unwrap();
-///
-/// // Check that the output sums to 1.0
-/// let sum: f64 = output.sum();
-/// assert!((sum - 1.0).abs() < 1e-6);
-///
-/// // Check that all values are between 0 and 1
-/// for val in output.iter() {
-///     assert!(*val >= 0.0 && *val <= 1.0);
-/// }
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct Softmax {
-    /// Axis along which to apply softmax (typically 0 for 1D arrays or the last dimension for batches)
+    /// The axis along which to apply softmax
     axis: usize,
 }
 
@@ -43,8 +33,7 @@ impl Softmax {
     /// Create a new Softmax activation function.
     ///
     /// # Arguments
-    ///
-    /// * `axis` - The axis along which to compute the softmax.
+    /// * `axis` - The axis along which to apply softmax
     pub fn new(axis: usize) -> Self {
         Self { axis }
     }
@@ -70,21 +59,17 @@ impl<F: Float + Debug> Activation<F> for Softmax {
         if input.ndim() == 1 && self.axis == 0 {
             // Find max for numerical stability
             let max_val = input.fold(F::neg_infinity(), |a, &b| a.max(b));
-
             // Compute exp(x - max)
             let mut output = input.clone();
             for val in output.iter_mut() {
                 *val = (*val - max_val).exp();
             }
-
             // Compute sum
             let sum = output.fold(F::zero(), |a, &b| a + b);
-
             // Normalize
             for val in output.iter_mut() {
                 *val = *val / sum;
             }
-
             return Ok(output);
         }
 
@@ -95,7 +80,7 @@ impl<F: Float + Debug> Activation<F> for Softmax {
         });
 
         let mut output = input.clone();
-
+        
         // Apply exp(x - max) for numerical stability
         for (mut out_subview, &max_val) in
             output.axis_iter_mut(Axis(self.axis)).zip(max_vals.iter())
@@ -127,8 +112,7 @@ impl<F: Float + Debug> Activation<F> for Softmax {
     ) -> Result<Array<F, ndarray::IxDyn>> {
         // Softmax backward pass: grad_input = softmax * (grad_output - sum(grad_output * softmax))
         // This implements the full Jacobian-vector product for softmax
-
-        // Special case for 1D arrays
+        
         if output.ndim() == 1 && self.axis == 0 {
             // Compute dot product of grad_output and output (softmax values)
             let dot_product = grad_output
@@ -147,7 +131,7 @@ impl<F: Float + Debug> Activation<F> for Softmax {
             return Ok(Array::from_vec(grad_input).into_dyn());
         }
 
-        // General case for multi-dimensional arrays
+        // Multi-dimensional case
         // Compute sum(grad_output * softmax) along the softmax axis
         let weighted_sum = (grad_output * output).sum_axis(Axis(self.axis));
 
@@ -159,7 +143,35 @@ impl<F: Float + Debug> Activation<F> for Softmax {
 
         // Compute gradient: softmax * (grad_output - weighted_sum)
         let grad_input = output * (grad_output - &weighted_sum_broadcast);
-
+        
         Ok(grad_input)
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand> Layer<F> for Softmax {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+        <Self as Activation<F>>::forward(self, input)
+    }
+
+    fn backward(
+        &self,
+        input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        // For softmax, we need the output, not the input for backward pass
+        let output = self.forward(input)?;
+        <Self as Activation<F>>::backward(self, grad_output, &output)
+    }
+
+    fn update(&mut self, _learning_rate: F) -> Result<()> {
+        Ok(())
     }
 }

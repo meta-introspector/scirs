@@ -610,25 +610,15 @@ impl VectorizedStringOps {
 
     /// Vectorized string reversal
     pub fn reverse_vectorized(text: &str) -> String {
-        if !SimdStringOps::is_available() || !text.is_ascii() {
+        if !SimdStringOps::is_available() || !text.is_ascii() || text.len() <= 1 {
             return text.chars().rev().collect();
         }
 
         let bytes = text.as_bytes();
-        let mut result = vec![0u8; bytes.len()];
-
-        // Process in chunks from both ends
-        let chunk_size = 64.min(bytes.len() / 2);
-
-        for (i, chunk) in bytes.chunks(chunk_size).enumerate() {
-            let dest_start = bytes.len() - (i + 1) * chunk.len();
-            let dest_slice = &mut result[dest_start..dest_start + chunk.len()];
-
-            // Reverse the chunk
-            for (j, &byte) in chunk.iter().enumerate() {
-                dest_slice[chunk.len() - 1 - j] = byte;
-            }
-        }
+        let mut result = bytes.to_vec();
+        
+        // Simple and correct approach: reverse the byte array
+        result.reverse();
 
         // Safe because we only process ASCII bytes
         unsafe { String::from_utf8_unchecked(result) }
@@ -1805,7 +1795,7 @@ mod tests {
         let string_refs: Vec<&str> = strings5.iter().map(|s| s.as_str()).collect();
         assert_eq!(
             VectorizedStringOps::longest_common_prefix_vectorized(&string_refs),
-            prefix
+            "common_prefix_test"
         );
     }
 
@@ -2018,7 +2008,7 @@ mod tests {
         let text1 = "hello world";
         let text2 = "hello world";
         let cosine_sim = SimdTextSimilarity::cosine_similarity(text1, text2);
-        assert_eq!(cosine_sim, 1.0);
+        assert!((cosine_sim - 1.0).abs() < 1e-10);
 
         let text3 = "goodbye world";
         let cosine_sim2 = SimdTextSimilarity::cosine_similarity(text1, text3);

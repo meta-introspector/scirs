@@ -302,10 +302,11 @@ pub use self::neuromorphic_computing::{
 
 // Ultrathink fusion core exports
 pub use self::ultrathink_fusion_core::{
-    enhanced_quantum_consciousness_evolution, enhanced_meta_learning_with_temporal_fusion,
-    quantum_aware_resource_scheduling_optimization, ultrathink_fusion_processing, UltrathinkConfig,
-    UltrathinkState, QuantumConsciousnessEvolution, ConsciousnessState, ConsciousnessComplexity,
-    QuantumCoherenceOptimizer, CoherenceStrategy, EnhancedMetaLearningSystem, TemporalMemoryFusion,
-    HierarchicalLearner, StrategyEvolution, MetaLearningTracker, AdaptiveMemoryConsolidation,
-    QuantumAwareResourceScheduler, WorkloadCharacteristics, ResourceSchedulingDecision,
+    enhanced_meta_learning_with_temporal_fusion, enhanced_quantum_consciousness_evolution,
+    quantum_aware_resource_scheduling_optimization, ultrathink_fusion_processing,
+    AdaptiveMemoryConsolidation, CoherenceStrategy, ConsciousnessComplexity, ConsciousnessState,
+    EnhancedMetaLearningSystem, HierarchicalLearner, MetaLearningTracker,
+    QuantumAwareResourceScheduler, QuantumCoherenceOptimizer, QuantumConsciousnessEvolution,
+    ResourceSchedulingDecision, StrategyEvolution, TemporalMemoryFusion, UltrathinkConfig,
+    UltrathinkState, WorkloadCharacteristics,
 };

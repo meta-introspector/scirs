@@ -7,6 +7,7 @@
 #[cfg(feature = "distributed")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use scirs2_core::Rng;
 
 use crate::error::{Result, TransformError};
 use crate::utils::ProcessingStrategy;

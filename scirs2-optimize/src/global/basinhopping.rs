@@ -24,7 +24,7 @@ fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f6
             lb + excess
         } else {
             // If reflection goes beyond upper bound, use random value in range
-            rng.gen_range(lb..=ub)
+            rng.random_range(lb..=ub)
         }
     } else {
         // val > ub, reflect around upper bound
@@ -34,7 +34,7 @@ fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f6
             ub - excess
         } else {
             // If reflection goes beyond lower bound, use random value in range
-            rng.gen_range(lb..=ub)
+            rng.random_range(lb..=ub)
         }
     }
 }
@@ -159,7 +159,7 @@ where
     ) -> Self {
         let ndim = x0.len();
         let seed = options.seed.unwrap_or_else(rand::random);
-        let rng = StdRng::seed_from_u64(seed);
+        let mut rng = StdRng::seed_from_u64(seed);
 
         // Default accept test is Metropolis criterion
         let accept_test = accept_test.unwrap_or_else(|| {

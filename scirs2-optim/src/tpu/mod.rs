@@ -3,16 +3,15 @@
 //! This module provides TPU acceleration for optimizers using XLA (Accelerated Linear Algebra)
 //! compilation for maximum performance on Google Cloud TPUs and other XLA-compatible hardware.
 
-use ndarray::{Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
+use ndarray::{Array, ArrayBase, Data, Dimension};
 use num_traits::Float;
 use std::collections::HashMap;
-use std::sync::Arc;
 
 pub mod pod_coordination;
 pub mod tpu_backend;
 pub mod xla_compilation;
 
-use crate::error::{OptimError, OptimizerError};
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// TPU configuration for optimization
@@ -618,7 +617,7 @@ where
     O: Optimizer<A> + Send + Sync,
 {
     /// Create a new TPU optimizer
-    pub fn new(base_optimizer: O, config: TPUConfig) -> Result<Self, OptimizerError> {
+    pub fn new(base_optimizer: O, config: TPUConfig) -> Result<Self, OptimError> {
         let memory_allocator = TPUMemoryAllocator::new(&config)?;
         let pod_coordinator = if config.enable_pod_coordination {
             Some(TPUPodCoordinator::new(&config)?)
@@ -641,7 +640,7 @@ where
     }
 
     /// Initialize XLA computation graph
-    pub fn initialize_xla_graph(&mut self) -> Result<(), OptimizerError> {
+    pub fn initialize_xla_graph(&mut self) -> Result<(), OptimError> {
         if !self.config.enable_xla {
             return Ok(());
         }
@@ -668,7 +667,7 @@ where
     }
 
     /// Compile optimizer step for TPU execution
-    pub fn compile_step(&mut self, input_shapes: &[XLAShape]) -> Result<String, OptimizerError> {
+    pub fn compile_step(&mut self, input_shapes: &[XLAShape]) -> Result<String, OptimError> {
         let compilation_id = format!("optimizer_step_{}", self.step_count);
 
         if self.computation_cache.contains_key(&compilation_id) {
@@ -705,7 +704,7 @@ where
         &mut self,
         params: &ArrayBase<S, D>,
         gradients: &ArrayBase<S, D>,
-    ) -> Result<Array<A, D>, OptimizerError>
+    ) -> Result<Array<A, D>, OptimError>
     where
         S: Data<Elem = A>,
         D: Dimension + Clone,
@@ -744,7 +743,7 @@ where
     fn build_optimizer_computation(
         &self,
         input_shapes: &[XLAShape],
-    ) -> Result<XLAComputationGraph<A>, OptimizerError> {
+    ) -> Result<XLAComputationGraph<A>, OptimError> {
         // Simplified computation graph building
         // In a real implementation, this would build the full optimizer computation
         let mut graph = self.xla_graph.as_ref().unwrap().clone();
@@ -761,7 +760,7 @@ where
     fn apply_optimization_passes(
         &self,
         mut computation: XLAComputationGraph<A>,
-    ) -> Result<XLAComputationGraph<A>, OptimizerError> {
+    ) -> Result<XLAComputationGraph<A>, OptimError> {
         for pass in &computation.optimization_passes {
             computation = self.apply_single_pass(computation, pass)?;
         }
@@ -772,7 +771,7 @@ where
         &self,
         computation: XLAComputationGraph<A>,
         _pass: &XLAOptimizationPass,
-    ) -> Result<XLAComputationGraph<A>, OptimizerError> {
+    ) -> Result<XLAComputationGraph<A>, OptimError> {
         // Apply specific optimization pass
         // This is simplified - real implementation would transform the computation graph
         Ok(computation)
@@ -781,7 +780,7 @@ where
     fn compile_to_tpu(
         &self,
         computation: XLAComputationGraph<A>,
-    ) -> Result<CompiledComputation, OptimizerError> {
+    ) -> Result<CompiledComputation, OptimError> {
         // Compile XLA computation to TPU executable
         let compilation_id = format!(
             "tpu_comp_{}",
@@ -825,7 +824,7 @@ where
         _computation_id: &str,
         params: &ArrayBase<S, D>,
         gradients: &ArrayBase<S, D>,
-    ) -> Result<Array<A, D>, OptimizerError>
+    ) -> Result<Array<A, D>, OptimError>
     where
         S: Data<Elem = A>,
         D: Dimension + Clone,
@@ -840,7 +839,7 @@ where
         _computation_id: &str,
         params: &ArrayBase<S, D>,
         gradients: &ArrayBase<S, D>,
-    ) -> Result<Array<A, D>, OptimizerError>
+    ) -> Result<Array<A, D>, OptimError>
     where
         S: Data<Elem = A>,
         D: Dimension + Clone,
@@ -850,7 +849,7 @@ where
         self.execute_single_tpu(_computation_id, params, gradients)
     }
 
-    fn array_to_xla_shape<S, D>(&self, array: &ArrayBase<S, D>) -> Result<XLAShape, OptimizerError>
+    fn array_to_xla_shape<S, D>(&self, array: &ArrayBase<S, D>) -> Result<XLAShape, OptimError>
     where
         S: Data<Elem = A>,
         D: Dimension,
@@ -889,7 +888,7 @@ where
     }
 
     /// Optimize TPU memory layout
-    pub fn optimize_memory_layout(&mut self) -> Result<(), OptimizerError> {
+    pub fn optimize_memory_layout(&mut self) -> Result<(), OptimError> {
         self.memory_allocator.optimize_layout()?;
         Ok(())
     }
@@ -958,7 +957,7 @@ pub struct TPUTopologyInfo {
 // Implementation details for supporting structures
 
 impl<A: Float> TPUMemoryAllocator<A> {
-    fn new(config: &TPUConfig) -> Result<Self, OptimizerError> {
+    fn new(config: &TPUConfig) -> Result<Self, OptimError> {
         let total_memory = match config.tpu_version {
             TPUVersion::V2 => 8 * 1024 * 1024 * 1024 * config.num_cores,
             TPUVersion::V3 => 16 * 1024 * 1024 * 1024 * config.num_cores,
@@ -981,7 +980,7 @@ impl<A: Float> TPUMemoryAllocator<A> {
         })
     }
 
-    fn optimize_layout(&mut self) -> Result<(), OptimizerError> {
+    fn optimize_layout(&mut self) -> Result<(), OptimError> {
         // Implement memory layout optimization
         Ok(())
     }
@@ -1001,7 +1000,7 @@ impl<A: Float> TPUMemoryAllocator<A> {
 }
 
 impl TPUPodCoordinator {
-    fn new(config: &TPUConfig) -> Result<Self, OptimizerError> {
+    fn new(config: &TPUConfig) -> Result<Self, OptimError> {
         let num_cores = match config.pod_topology {
             PodTopology::Single => 1,
             PodTopology::Pod2x2 => 4,

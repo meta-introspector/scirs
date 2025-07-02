@@ -9,22 +9,22 @@ use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
 use super::{ComponentType, EvaluationMetric, OptimizerArchitecture, SearchResult, SearchSpaceConfig};
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 
 /// Base trait for all search strategies
 pub trait SearchStrategy<T: Float>: Send + Sync {
     /// Initialize the search strategy
-    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimizerError>;
+    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimError>;
 
     /// Generate a new architecture candidate
     fn generate_architecture(
         &mut self,
         search_space: &SearchSpaceConfig,
         history: &VecDeque<SearchResult<T>>,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError>;
+    ) -> Result<OptimizerArchitecture<T>, OptimError>;
 
     /// Update strategy with evaluation results
-    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError>;
+    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimError>;
 
     /// Get strategy name
     fn name(&self) -> &str;
@@ -301,7 +301,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> RandomSearch<T>
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
     for RandomSearch<T>
 {
-    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
+    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimError> {
         self.search_space = Some(search_space.clone());
         Ok(())
     }
@@ -310,7 +310,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         &mut self,
         search_space: &SearchSpaceConfig,
         _history: &VecDeque<SearchResult<T>>,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         use super::OptimizerComponent;
 
         // Randomly select number of components
@@ -375,7 +375,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         })
     }
 
-    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
+    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimError> {
         if !results.is_empty() {
             let performances: Vec<T> = results
                 .iter()
@@ -434,7 +434,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
     fn initialize_population(
         &mut self,
         search_space: &SearchSpaceConfig,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         self.population.clear();
 
         // Use random search to generate initial population
@@ -450,7 +450,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
         Ok(())
     }
 
-    fn selection(&self, fitness_scores: &[T]) -> Result<usize, OptimizerError> {
+    fn selection(&self, fitness_scores: &[T]) -> Result<usize, OptimError> {
         // Tournament selection
         let mut best_idx = 0;
         let mut best_fitness = T::neg_infinity();
@@ -470,7 +470,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
         &self,
         parent1: &OptimizerArchitecture<T>,
         parent2: &OptimizerArchitecture<T>,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         let mut child_components = Vec::new();
         let max_len = parent1.components.len().max(parent2.components.len());
 
@@ -502,7 +502,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
         &self,
         architecture: &mut OptimizerArchitecture<T>,
         search_space: &SearchSpaceConfig,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         for component in &mut architecture.components {
             for (param_name, param_range) in search_space
                 .optimizer_components
@@ -544,7 +544,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
     for EvolutionarySearch<T>
 {
-    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
+    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimError> {
         self.initialize_population(search_space)?;
         self.generation_count = 0;
         Ok(())
@@ -554,7 +554,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         &mut self,
         search_space: &SearchSpaceConfig,
         history: &VecDeque<SearchResult<T>>,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         if self.population.is_empty() {
             self.initialize_population(search_space)?;
         }
@@ -609,7 +609,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         Ok(self.population[idx].clone())
     }
 
-    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
+    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimError> {
         if !results.is_empty() {
             let performances: Vec<T> = results
                 .iter()
@@ -703,7 +703,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> ReinforcementLe
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> SearchStrategy<T>
     for ReinforcementLearningSearch<T>
 {
-    fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
+    fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimError> {
         // Initialize controller network
         self.controller_network.reset_states();
         Ok(())
@@ -713,7 +713,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> Searc
         &mut self,
         search_space: &SearchSpaceConfig,
         _history: &VecDeque<SearchResult<T>>,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         // Use controller to generate architecture
         let state = self.encode_search_space(search_space)?;
         let actions = self.controller_network.forward(&state)?;
@@ -725,7 +725,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> Searc
         Ok(architecture)
     }
 
-    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
+    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimError> {
         // Update experience buffer and train controller
         for result in results {
             let reward = result
@@ -795,7 +795,7 @@ impl<T: Float + Default + Clone> ReinforcementLearningSearch<T> {
     fn encode_search_space(
         &self,
         _search_space: &SearchSpaceConfig,
-    ) -> Result<Array1<T>, OptimizerError> {
+    ) -> Result<Array1<T>, OptimError> {
         // Simplified encoding - in practice this would be more sophisticated
         Ok(Array1::zeros(64))
     }
@@ -804,7 +804,7 @@ impl<T: Float + Default + Clone> ReinforcementLearningSearch<T> {
         &self,
         _actions: &Array1<T>,
         search_space: &SearchSpaceConfig,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         use super::OptimizerComponent;
 
         // Simplified decoding - randomly select for now
@@ -826,7 +826,7 @@ impl<T: Float + Default + Clone> ReinforcementLearningSearch<T> {
         })
     }
 
-    fn train_controller(&mut self) -> Result<(), OptimizerError> {
+    fn train_controller(&mut self) -> Result<(), OptimError> {
         // Simplified controller training
         // In practice, this would implement policy gradient methods
         Ok(())
@@ -881,7 +881,7 @@ impl<T: Float + Default + Clone + 'static> ControllerNetwork<T> {
         }
     }
 
-    fn forward(&mut self, input: &Array1<T>) -> Result<Array1<T>, OptimizerError> {
+    fn forward(&mut self, input: &Array1<T>) -> Result<Array1<T>, OptimError> {
         let mut current_input = input.clone();
 
         // Simplified LSTM forward pass
@@ -1094,7 +1094,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> DifferentiableS
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
     for DifferentiableSearch<T>
 {
-    fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
+    fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimError> {
         // Initialize architecture weights with small random values
         self.architecture_weights =
             Array3::from_shape_fn(self.architecture_weights.raw_dim(), |_| {
@@ -1107,7 +1107,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         &mut self,
         _search_space: &SearchSpaceConfig,
         _history: &VecDeque<SearchResult<T>>,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         if self.continuous_relaxation {
             // Generate continuous relaxation of architecture
             let mut sampled_weights = Array3::zeros(self.architecture_weights.raw_dim());
@@ -1130,7 +1130,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         }
     }
 
-    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
+    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimError> {
         if results.is_empty() {
             return Ok(());
         }
@@ -1224,7 +1224,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> BayesianOptimiz
         Array1::from_vec(encoding)
     }
 
-    fn fit_gp(&mut self) -> Result<(), OptimizerError> {
+    fn fit_gp(&mut self) -> Result<(), OptimError> {
         if self.observed_architectures.len() < 2 {
             return Ok(());
         }
@@ -1246,7 +1246,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> BayesianOptimiz
     fn suggest_next_architecture(
         &mut self,
         search_space: &SearchSpaceConfig,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         if self.observed_architectures.len() < 5 {
             // Use random search for initial points
             let mut random_search = RandomSearch::<T>::new(Some(42));
@@ -1286,7 +1286,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> BayesianOptimiz
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
     for BayesianOptimization<T>
 {
-    fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
+    fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimError> {
         self.observed_architectures.clear();
         self.observed_performances.clear();
         Ok(())
@@ -1296,13 +1296,13 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         &mut self,
         search_space: &SearchSpaceConfig,
         _history: &VecDeque<SearchResult<T>>,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         let architecture = self.suggest_next_architecture(search_space)?;
         self.statistics.total_architectures_generated += 1;
         Ok(architecture)
     }
 
-    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
+    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimError> {
         for result in results {
             if let Some(&performance) = result
                 .evaluation_results
@@ -1368,12 +1368,12 @@ impl<T: Float + Default> GaussianProcess<T> {
         }
     }
 
-    fn fit(&mut self, _x: &[Array1<T>], _y: &[T]) -> Result<(), OptimizerError> {
+    fn fit(&mut self, _x: &[Array1<T>], _y: &[T]) -> Result<(), OptimError> {
         // Simplified GP fitting
         Ok(())
     }
 
-    fn predict(&self, _x: &Array1<T>) -> Result<(T, T), OptimizerError> {
+    fn predict(&self, _x: &Array1<T>) -> Result<(T, T), OptimError> {
         // Simplified prediction - return mean and variance
         Ok((T::from(0.5).unwrap(), T::from(0.1).unwrap()))
     }
@@ -1459,7 +1459,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> Neura
     fn predict_performance(
         &self,
         architecture: &OptimizerArchitecture<T>,
-    ) -> Result<(T, T), OptimizerError> {
+    ) -> Result<(T, T), OptimError> {
         // Encode architecture
         let encoded = self.architecture_encoder.encode(architecture)?;
 
@@ -1474,7 +1474,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> Neura
         &mut self,
         architectures: &[OptimizerArchitecture<T>],
         performances: &[T],
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         if architectures.len() != performances.len() || architectures.is_empty() {
             return Ok(());
         }
@@ -1507,7 +1507,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> Neura
     fn generate_candidate_with_uncertainty(
         &mut self,
         search_space: &SearchSpaceConfig,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         // Generate multiple candidates and select based on uncertainty
         let num_candidates = 50;
         let mut candidates = Vec::new();
@@ -1545,7 +1545,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> Neura
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> SearchStrategy<T>
     for NeuralPredictorSearch<T>
 {
-    fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
+    fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimError> {
         // Initialize predictor network with random weights
         self.predictor_network.initialize()?;
         Ok(())
@@ -1555,7 +1555,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> Searc
         &mut self,
         search_space: &SearchSpaceConfig,
         history: &VecDeque<SearchResult<T>>,
-    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+    ) -> Result<OptimizerArchitecture<T>, OptimError> {
         // Train predictor if enough data is available
         if history.len() > 10 {
             let architectures: Vec<_> = history.iter().map(|r| r.architecture.clone()).collect();
@@ -1588,7 +1588,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> Searc
         Ok(architecture)
     }
 
-    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
+    fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimError> {
         if results.is_empty() {
             return Ok(());
         }
@@ -1654,14 +1654,14 @@ impl<T: Float + Default + Clone + 'static> PredictorNetwork<T> {
         }
     }
 
-    fn initialize(&mut self) -> Result<(), OptimizerError> {
+    fn initialize(&mut self) -> Result<(), OptimError> {
         for layer in &mut self.layers {
             layer.initialize()?;
         }
         Ok(())
     }
 
-    fn forward_with_uncertainty(&self, input: &Array1<T>) -> Result<(T, T), OptimizerError> {
+    fn forward_with_uncertainty(&self, input: &Array1<T>) -> Result<(T, T), OptimError> {
         let mut current = input.clone();
 
         // Forward pass through all layers
@@ -1686,7 +1686,7 @@ impl<T: Float + Default + Clone + 'static> PredictorNetwork<T> {
         _input: &Array1<T>,
         _target: T,
         _optimizer: &mut SearchOptimizer<T>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Simplified backward pass - in practice would implement proper backpropagation
         Ok(())
     }
@@ -1711,7 +1711,7 @@ impl<T: Float + Default + Clone + 'static> PredictorLayer<T> {
         }
     }
 
-    fn initialize(&mut self) -> Result<(), OptimizerError> {
+    fn initialize(&mut self) -> Result<(), OptimError> {
         // Xavier initialization
         let fan_in = self.weights.ncols() as f64;
         let fan_out = self.weights.nrows() as f64;
@@ -1724,7 +1724,7 @@ impl<T: Float + Default + Clone + 'static> PredictorLayer<T> {
         Ok(())
     }
 
-    fn forward(&self, input: &Array1<T>) -> Result<Array1<T>, OptimizerError> {
+    fn forward(&self, input: &Array1<T>) -> Result<Array1<T>, OptimError> {
         let linear_output = self.weights.dot(input) + &self.bias;
         Ok(self.apply_activation(&linear_output))
     }
@@ -1758,7 +1758,7 @@ impl<T: Float + Default + Clone> ArchitectureEncoder<T> {
         }
     }
 
-    fn encode(&self, architecture: &OptimizerArchitecture<T>) -> Result<Array1<T>, OptimizerError> {
+    fn encode(&self, architecture: &OptimizerArchitecture<T>) -> Result<Array1<T>, OptimError> {
         // Simple encoding: one-hot component types + hyperparameters
         let mut encoding = Vec::new();
 
@@ -1795,7 +1795,7 @@ impl<T: Float + Default + Clone> SearchOptimizer<T> {
     fn update_parameters(
         &mut self,
         _gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Simplified parameter update
         Ok(())
     }

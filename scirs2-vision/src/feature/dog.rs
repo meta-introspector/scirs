@@ -36,7 +36,7 @@ impl Default for DogConfig {
 }
 
 /// Represents a detected blob
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Blob {
     /// X coordinate of the blob center
     pub x: usize,
@@ -300,7 +300,7 @@ fn non_max_suppression(mut blobs: Vec<Blob>) -> Vec<Blob> {
             continue;
         }
 
-        kept.push(blobs[i].clone());
+        kept.push(blobs[i]);
 
         // Suppress nearby blobs
         for j in i + 1..blobs.len() {

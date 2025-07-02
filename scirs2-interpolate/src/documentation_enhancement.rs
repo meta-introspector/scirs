@@ -1089,7 +1089,6 @@ println!("Interpolated values: {:?}", y_new);"#
     }
 
     /// Helper methods for creating guide sections and examples
-
     fn create_guide_section(
         &self,
         title: &str,
@@ -1509,7 +1508,6 @@ impl fmt::Display for DocumentationReport {
 }
 
 /// Convenience functions
-
 /// Run comprehensive documentation enhancement with default configuration
 pub fn enhance_documentation_for_stable_release() -> InterpolateResult<DocumentationReport> {
     let config = DocumentationConfig::default();

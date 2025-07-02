@@ -1982,7 +1982,7 @@ pub mod quantum_algorithms {
 
             // Measure all stabilizers
             for (qubits, pauli_type) in &stabilizers {
-                let syndrome = match pauli_type.as_ref() {
+                let syndrome = match *pauli_type {
                     "X" => self.measure_x_stabilizer(&corrected_state, qubits)?,
                     "Z" => self.measure_z_stabilizer(&corrected_state, qubits)?,
                     _ => false,
@@ -2913,7 +2913,7 @@ pub mod quantum_algorithms {
                 let v_norm_sqr = v.iter().map(|&z| z.norm_sqr()).sum::<f64>();
                 if v_norm_sqr > self.tolerance {
                     for i in 0..n - k - 1 {
-                        v[i] = v[i] / v_norm_sqr.sqrt();
+                        v[i] /= v_norm_sqr.sqrt();
                     }
                 }
 
@@ -2952,8 +2952,7 @@ pub mod quantum_algorithms {
             for i in 0..m {
                 for j in 0..m {
                     let householder_elem = tau * v[i] * v[j].conj();
-                    a[[start_idx + i, start_idx + j]] =
-                        a[[start_idx + i, start_idx + j]] - householder_elem;
+                    a[[start_idx + i, start_idx + j]] -= householder_elem;
                 }
             }
 
@@ -4663,7 +4662,7 @@ impl AdvancedBasisSets {
                 let x_val = scaled_x[i];
                 let wavelet_val = if (0.0..0.5).contains(&x_val) {
                     param.coefficient
-                } else if x_val >= 0.5 && x_val < 1.0 {
+                } else if (0.5..1.0).contains(&x_val) {
                     -param.coefficient
                 } else {
                     0.0
@@ -4884,7 +4883,7 @@ impl GPUQuantumSolver {
         let mut potential = Array1::zeros(self.n_points);
 
         // Simulate GPU kernel launch with thread blocks
-        let n_blocks = (self.n_points + self.block_size - 1) / self.block_size;
+        let n_blocks = self.n_points.div_ceil(self.block_size);
 
         for block_id in 0..n_blocks {
             let start_idx = block_id * self.block_size;
@@ -4945,7 +4944,7 @@ impl GPUQuantumSolver {
         let dt_half = self.dt / 2.0;
 
         // GPU kernel for momentum space evolution
-        let n_blocks = (n + self.block_size - 1) / self.block_size;
+        let n_blocks = n.div_ceil(self.block_size);
         for block_id in 0..n_blocks {
             let start_idx = block_id * self.block_size;
             let end_idx = (start_idx + self.block_size).min(n);
@@ -4992,7 +4991,7 @@ impl GPUQuantumSolver {
         let n = result_amplitudes.len();
 
         // GPU kernel for potential operator application
-        let n_blocks = (n + self.block_size - 1) / self.block_size;
+        let n_blocks = n.div_ceil(self.block_size);
 
         for block_id in 0..n_blocks {
             let start_idx = block_id * self.block_size;
@@ -5145,9 +5144,7 @@ impl GPUQuantumSolver {
         // - Potential array: real
         // - FFT workspace: complex
         // - Temporary arrays: 2 * complex
-        let total_bytes = self.n_points * (4 * complex_size + real_size + 2 * complex_size);
-
-        total_bytes
+        self.n_points * (4 * complex_size + real_size + 2 * complex_size)
     }
 
     /// Configure GPU for optimal performance
@@ -5259,7 +5256,7 @@ impl GPUMultiBodyQuantumSolver {
         for k in 1..20 {
             // Sufficient for most cases
             term = self.gpu_matrix_multiply(&term, &scaled_matrix)? / k as f64;
-            result = result + &term;
+            result += &term;
 
             // Check convergence (simplified)
             if k > 10 && term.iter().all(|&x| x.norm() < 1e-12) {
@@ -5332,7 +5329,7 @@ impl GPUMultiBodyQuantumSolver {
         let mut result = Array1::zeros(m);
 
         // GPU parallelization across rows
-        let n_blocks = (m + self.block_size - 1) / self.block_size;
+        let n_blocks = m.div_ceil(self.block_size);
 
         for block_id in 0..n_blocks {
             let start_row = block_id * self.block_size;
@@ -5486,11 +5483,10 @@ impl QuantumAnnealingSolver {
         let mut state = Array1::from_elem(self.n_qubits, 0.5); // Start in superposition
         let dt = self.annealing_time / self.temperature_schedule.len() as f64;
 
-        for (_step, (&temperature, &h_field)) in self
+        for (&temperature, &h_field) in self
             .temperature_schedule
             .iter()
             .zip(self.transverse_field_schedule.iter())
-            .enumerate()
         {
             // Quantum Monte Carlo update
             if self.use_qmc {
@@ -5770,14 +5766,9 @@ impl VariationalQuantumEigensolver {
         let sin_half = (angle / 2.0).sin();
 
         for i in 0..state.len() {
-            let bit = (i >> qubit) & 1;
             let other_index = i ^ (1 << qubit);
 
-            if bit == 0 {
-                new_state[i] = cos_half * state[i] - Complex64::i() * sin_half * state[other_index];
-            } else {
-                new_state[i] = cos_half * state[i] - Complex64::i() * sin_half * state[other_index];
-            }
+            new_state[i] = cos_half * state[i] - Complex64::i() * sin_half * state[other_index];
         }
 
         Ok(new_state)

@@ -5,7 +5,7 @@ use num_traits::Float;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-use crate::gpu::GpuOptimizerError;
+use crate::gpu::GpuOptimError;
 
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBuffer, GpuContext, GpuKernelHandle};
@@ -334,7 +334,7 @@ impl<A: Float> MultiGpuSync<A> {
         context: Arc<GpuContext>,
         config: MultiGpuConfig,
         max_param_size: usize,
-    ) -> Result<Self, GpuOptimizerError> {
+    ) -> Result<Self, GpuOptimError> {
         // Load synchronization kernels
         let sync_kernels = Self::load_sync_kernels(&context, &config)?;
 
@@ -363,7 +363,7 @@ impl<A: Float> MultiGpuSync<A> {
     pub fn sync_gradients<S, D>(
         &mut self,
         gradients: &mut ArrayBase<S, D>,
-    ) -> Result<(), GpuOptimizerError>
+    ) -> Result<(), GpuOptimError>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
@@ -396,7 +396,7 @@ impl<A: Float> MultiGpuSync<A> {
                 if self.config.async_param_updates {
                     self.pipeline_parallel_async(gradients)
                 } else {
-                    Err(GpuOptimizerError::UnsupportedOperation(
+                    Err(GpuOptimError::UnsupportedOperation(
                         "Pipeline parallel requires async updates enabled".to_string(),
                     ))
                 }
@@ -422,7 +422,7 @@ impl<A: Float> MultiGpuSync<A> {
     }
 
     /// Ring all-reduce implementation
-    fn ring_allreduce<S, D>(&self, gradients: &mut ArrayBase<S, D>) -> Result<(), GpuOptimizerError>
+    fn ring_allreduce<S, D>(&self, gradients: &mut ArrayBase<S, D>) -> Result<(), GpuOptimError>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
@@ -433,10 +433,10 @@ impl<A: Float> MultiGpuSync<A> {
                 .sync_kernels
                 .ring_allreduce
                 .as_ref()
-                .ok_or(GpuOptimizerError::NotInitialized)?;
+                .ok_or(GpuOptimError::NotInitialized)?;
 
             let grad_slice = gradients.as_slice_mut().ok_or_else(|| {
-                GpuOptimizerError::InvalidState("Gradients must be contiguous".to_string())
+                GpuOptimError::InvalidState("Gradients must be contiguous".to_string())
             })?;
 
             // Create GPU buffer for gradients
@@ -469,7 +469,7 @@ impl<A: Float> MultiGpuSync<A> {
     }
 
     /// Tree all-reduce implementation
-    fn tree_allreduce<S, D>(&self, gradients: &mut ArrayBase<S, D>) -> Result<(), GpuOptimizerError>
+    fn tree_allreduce<S, D>(&self, gradients: &mut ArrayBase<S, D>) -> Result<(), GpuOptimError>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
@@ -480,10 +480,10 @@ impl<A: Float> MultiGpuSync<A> {
                 .sync_kernels
                 .tree_allreduce
                 .as_ref()
-                .ok_or(GpuOptimizerError::NotInitialized)?;
+                .ok_or(GpuOptimError::NotInitialized)?;
 
             let grad_slice = gradients.as_slice_mut().ok_or_else(|| {
-                GpuOptimizerError::InvalidState("Gradients must be contiguous".to_string())
+                GpuOptimError::InvalidState("Gradients must be contiguous".to_string())
             })?;
 
             // Create GPU buffer for gradients
@@ -528,7 +528,7 @@ impl<A: Float> MultiGpuSync<A> {
     fn hierarchical_allreduce<S, D>(
         &self,
         gradients: &mut ArrayBase<S, D>,
-    ) -> Result<(), GpuOptimizerError>
+    ) -> Result<(), GpuOptimError>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
@@ -539,10 +539,10 @@ impl<A: Float> MultiGpuSync<A> {
                 .sync_kernels
                 .hierarchical_allreduce
                 .as_ref()
-                .ok_or(GpuOptimizerError::NotInitialized)?;
+                .ok_or(GpuOptimError::NotInitialized)?;
 
             let grad_slice = gradients.as_slice_mut().ok_or_else(|| {
-                GpuOptimizerError::InvalidState("Gradients must be contiguous".to_string())
+                GpuOptimError::InvalidState("Gradients must be contiguous".to_string())
             })?;
 
             // Calculate local and global ranks
@@ -591,7 +591,7 @@ impl<A: Float> MultiGpuSync<A> {
     fn pipeline_parallel_async<S, D>(
         &mut self,
         gradients: &mut ArrayBase<S, D>,
-    ) -> Result<(), GpuOptimizerError>
+    ) -> Result<(), GpuOptimError>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
@@ -599,7 +599,7 @@ impl<A: Float> MultiGpuSync<A> {
         #[cfg(feature = "gpu")]
         {
             let grad_slice = gradients.as_slice_mut().ok_or_else(|| {
-                GpuOptimizerError::InvalidState("Gradients must be contiguous".to_string())
+                GpuOptimError::InvalidState("Gradients must be contiguous".to_string())
             })?;
 
             // Create async communication handle
@@ -684,7 +684,7 @@ impl<A: Float> MultiGpuSync<A> {
     }
 
     /// Force synchronization of all pending operations
-    pub fn synchronize_all(&mut self) -> Result<(), GpuOptimizerError> {
+    pub fn synchronize_all(&mut self) -> Result<(), GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             self.context.synchronize();
@@ -706,7 +706,7 @@ impl<A: Float> MultiGpuSync<A> {
     pub fn compress_gradients<S, D>(
         &mut self,
         gradients: &ArrayBase<S, D>,
-    ) -> Result<(Vec<A>, Vec<i32>), GpuOptimizerError>
+    ) -> Result<(Vec<A>, Vec<i32>), GpuOptimError>
     where
         S: Data<Elem = A>,
         D: Dimension,
@@ -717,7 +717,7 @@ impl<A: Float> MultiGpuSync<A> {
                 .sync_kernels
                 .compress_gradients
                 .as_ref()
-                .ok_or(GpuOptimizerError::NotInitialized)?;
+                .ok_or(GpuOptimError::NotInitialized)?;
 
             let k = (gradients.len() as f32 * self.config.compression_ratio) as usize;
 
@@ -733,7 +733,7 @@ impl<A: Float> MultiGpuSync<A> {
 
         #[cfg(not(feature = "gpu"))]
         {
-            Err(GpuOptimizerError::UnsupportedOperation(
+            Err(GpuOptimError::UnsupportedOperation(
                 "GPU feature not enabled".to_string(),
             ))
         }
@@ -743,7 +743,7 @@ impl<A: Float> MultiGpuSync<A> {
     fn load_sync_kernels(
         context: &Arc<GpuContext>,
         config: &MultiGpuConfig,
-    ) -> Result<SyncKernels, GpuOptimizerError> {
+    ) -> Result<SyncKernels, GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             let ring_kernel = if matches!(config.sync_strategy, SyncStrategy::RingAllReduce) {
@@ -803,7 +803,7 @@ impl<A: Float> MultiGpuSync<A> {
         context: &Arc<GpuContext>,
         config: &MultiGpuConfig,
         max_param_size: usize,
-    ) -> Result<WorkspaceBuffers<A>, GpuOptimizerError> {
+    ) -> Result<WorkspaceBuffers<A>, GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             let recv_buffer = Some(context.create_buffer::<A>(max_param_size));
@@ -853,7 +853,7 @@ pub struct MultiGpuSetup {
 
 impl MultiGpuSetup {
     /// Initialize multi-GPU setup
-    pub fn new(num_gpus: usize, max_param_size: usize) -> Result<Self, GpuOptimizerError> {
+    pub fn new(num_gpus: usize, max_param_size: usize) -> Result<Self, GpuOptimError> {
         let mut contexts = Vec::new();
         let mut sync_managers = Vec::new();
 

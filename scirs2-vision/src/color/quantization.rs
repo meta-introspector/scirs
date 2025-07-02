@@ -11,7 +11,7 @@ use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 
 /// K-means color quantization parameters
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct KMeansParams {
     /// Number of colors in the palette
     pub k: usize,
@@ -172,9 +172,12 @@ fn initialize_random(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
     let mut indices: Vec<_> = (0..colors.len()).collect();
     indices.shuffle(&mut rng);
 
-    for i in 0..k.min(colors.len()) {
-        centers.push(colors[indices[i]]);
-    }
+    centers.extend(
+        indices
+            .iter()
+            .take(k.min(colors.len()))
+            .map(|&i| colors[i])
+    );
 
     centers
 }
@@ -266,13 +269,16 @@ fn update_centers(colors: &[[f32; 3]], assignments: &[usize], k: usize) -> Vec<[
     }
 
     // Compute means
-    for i in 0..k {
-        if counts[i] > 0 {
-            new_centers[i][0] /= counts[i] as f32;
-            new_centers[i][1] /= counts[i] as f32;
-            new_centers[i][2] /= counts[i] as f32;
-        }
-    }
+    new_centers
+        .iter_mut()
+        .zip(counts.iter())
+        .filter(|(_, &count)| count > 0)
+        .for_each(|(center, &count)| {
+            let count_f32 = count as f32;
+            center[0] /= count_f32;
+            center[1] /= count_f32;
+            center[2] /= count_f32;
+        });
 
     new_centers
 }

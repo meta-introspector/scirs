@@ -8,7 +8,7 @@ use num_traits::Float;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-use crate::gpu::{GpuOptimizerConfig, GpuOptimizerError};
+use crate::gpu::{GpuOptimizerConfig, GpuOptimError};
 
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBackend, GpuContext};
@@ -82,7 +82,7 @@ pub struct RocmBackend<A: Float> {
 
 impl<A: Float> RocmBackend<A> {
     /// Create a new ROCm backend
-    pub fn new(config: RocmConfig) -> Result<Self, GpuOptimizerError> {
+    pub fn new(config: RocmConfig) -> Result<Self, GpuOptimError> {
         // Create GPU context with ROCm backend
         let gpu_config = GpuOptimizerConfig {
             backend: GpuBackend::Rocm,
@@ -118,7 +118,7 @@ impl<A: Float> RocmBackend<A> {
     }
 
     /// Get device properties
-    pub fn get_device_properties(&self) -> Result<RocmDeviceProperties, GpuOptimizerError> {
+    pub fn get_device_properties(&self) -> Result<RocmDeviceProperties, GpuOptimError> {
         // In a real implementation, would query HIP device properties
         Ok(RocmDeviceProperties {
             name: "AMD GPU".to_string(),
@@ -153,7 +153,7 @@ impl<A: Float> RocmBackend<A> {
     }
 
     /// Detect AMD GPU architecture for optimizations
-    pub fn detect_gpu_architecture(&self) -> Result<AmdGpuArchitecture, GpuOptimizerError> {
+    pub fn detect_gpu_architecture(&self) -> Result<AmdGpuArchitecture, GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             // In practice, would query hipDeviceGetAttribute
@@ -183,7 +183,7 @@ impl<A: Float> RocmBackend<A> {
     pub fn get_optimal_block_config(
         &self,
         problem_size: usize,
-    ) -> Result<BlockConfiguration, GpuOptimizerError> {
+    ) -> Result<BlockConfiguration, GpuOptimError> {
         let arch = self.detect_gpu_architecture()?;
         let properties = self.get_device_properties()?;
 
@@ -275,7 +275,7 @@ impl<A: Float> RocmBackend<A> {
         kernel_name: &str,
         data_size: usize,
         iterations: usize,
-    ) -> Result<RocmKernelBenchmark, GpuOptimizerError> {
+    ) -> Result<RocmKernelBenchmark, GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             let start_time = std::time::Instant::now();
@@ -426,7 +426,7 @@ impl RocmMemoryPool {
     }
 
     /// Allocate buffer from pool
-    pub fn allocate(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
+    pub fn allocate(&mut self, size: usize) -> Result<*mut u8, GpuOptimError> {
         // Try to find existing buffer
         for buffer in &mut self.buffers {
             if !buffer.in_use && buffer.size >= size {
@@ -447,7 +447,7 @@ impl RocmMemoryPool {
             self.current_size += size;
             Ok(ptr)
         } else {
-            Err(GpuOptimizerError::InvalidState(
+            Err(GpuOptimError::InvalidState(
                 "Memory pool limit exceeded".to_string(),
             ))
         }

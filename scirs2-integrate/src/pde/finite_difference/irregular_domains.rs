@@ -896,8 +896,8 @@ impl ImmersedBoundary {
         let neighbor_radius = 2; // Search within 2 grid points
         let mut interpolation_points = Vec::new();
 
-        for di in -(neighbor_radius as i32)..=(neighbor_radius as i32) {
-            for dj in -(neighbor_radius as i32)..=(neighbor_radius as i32) {
+        for di in -neighbor_radius..=neighbor_radius {
+            for dj in -neighbor_radius..=neighbor_radius {
                 let ni = gi as i32 + di;
                 let nj = gj as i32 + dj;
 

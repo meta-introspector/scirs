@@ -11,6 +11,12 @@ use std::fmt::Debug;
 use std::iter::Sum;
 use std::marker::PhantomData;
 
+/// Type alias for matrix-vector function
+type MatVecFn<F> = Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>;
+
+/// Type alias for solver function
+type SolverFn<F> = Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>;
+
 /// Trait for representing a linear operator
 ///
 /// This trait provides an abstract interface for linear operators,
@@ -479,8 +485,8 @@ impl<F: Float + NumAssign> LinearOperator<F> for ProductOperator<F> {
 /// Function-based linear operator for matrix-free implementations
 pub struct FunctionOperator<F> {
     shape: (usize, usize),
-    matvec_fn: Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>,
-    rmatvec_fn: Option<Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>>,
+    matvec_fn: MatVecFn<F>,
+    rmatvec_fn: Option<MatVecFn<F>>,
 }
 
 impl<F: Float + 'static> FunctionOperator<F> {
@@ -536,7 +542,7 @@ impl<F: Float> LinearOperator<F> for FunctionOperator<F> {
 /// Note: This is a conceptual operator, actual implementation depends on the specific matrix
 pub struct InverseOperator<F> {
     original: Box<dyn LinearOperator<F>>,
-    solver_fn: Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>,
+    solver_fn: SolverFn<F>,
 }
 
 impl<F: Float> InverseOperator<F> {

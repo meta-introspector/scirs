@@ -13,7 +13,7 @@
 //! - Real-time performance monitoring and self-optimization
 
 use scirs2_io::error::Result;
-use scirs2_io::ultrathink_coordinator::{ProcessingResult, UltraThinkCoordinator};
+use scirs2_io::ultrathink_coordinator::UltraThinkCoordinator;
 use std::time::{Duration, Instant};
 
 fn main() -> Result<()> {
@@ -817,7 +817,7 @@ fn generate_backup_process_data(size: usize) -> Vec<u8> {
         .map(|i| {
             let backup_chunk = ((i / 1024) % 256) as u8;
             let data_variation = ((i * 23) % 64) as u8;
-            (backup_chunk + data_variation) % 256
+            ((backup_chunk as u16 + data_variation as u16) % 256) as u8
         })
         .collect()
 }

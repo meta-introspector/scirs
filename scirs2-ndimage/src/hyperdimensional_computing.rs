@@ -20,7 +20,7 @@ use ndarray::{s, Array, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis, Zi
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::Rng;
 use std::collections::hash_map::DefaultHasher;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 

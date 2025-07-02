@@ -743,9 +743,11 @@ where
         let degree = self.spline.degree();
 
         // Find the knot span using cached lookup
+        // Clone necessary data to avoid borrowing conflicts
+        let knots_clone = knots.to_owned();
         let span = self
             .cache
-            .get_or_compute_span(x, || self.find_knot_span(x, knots, degree));
+            .get_or_compute_span(x, || Self::find_knot_span(x, &knots_clone, degree));
 
         // Compute basis functions using cache
         let mut result = T::zero();
@@ -760,8 +762,8 @@ where
                 };
 
                 let basis_value = self.cache.get_or_compute_basis_with_key(basis_key, || {
-                    if basis_index < knots.len() - degree - 1 {
-                        self.compute_basis_function(x, basis_index, degree, knots)
+                    if basis_index < knots_clone.len() - degree - 1 {
+                        Self::compute_basis_function(x, basis_index, degree, &knots_clone)
                     } else {
                         T::zero()
                     }
@@ -784,7 +786,7 @@ where
 
     /// Compute all non-zero basis functions at x using De Boor's algorithm
     fn compute_basis_functions_at_x(&self, x: T, knots: &Array1<T>, degree: usize) -> Array1<T> {
-        let span = self.find_knot_span(x, knots, degree);
+        let span = Self::find_knot_span(x, knots, degree);
         let mut basis = Array1::zeros(degree + 1);
 
         // De Boor's algorithm for all basis functions at once
@@ -863,7 +865,7 @@ where
     }
 
     /// Find the knot span containing x
-    fn find_knot_span(&self, x: T, knots: &Array1<T>, degree: usize) -> usize {
+    fn find_knot_span(x: T, knots: &Array1<T>, degree: usize) -> usize {
         let n = knots.len() - degree - 1;
 
         if x >= knots[n] {
@@ -892,7 +894,7 @@ where
 
     /// Compute a single basis function value
     #[allow(clippy::only_used_in_recursion)]
-    fn compute_basis_function(&self, x: T, i: usize, degree: usize, knots: &Array1<T>) -> T {
+    fn compute_basis_function(x: T, i: usize, degree: usize, knots: &Array1<T>) -> T {
         // De Boor's algorithm for a single basis function
         if degree == 0 {
             if i < knots.len() - 1 && x >= knots[i] && x < knots[i + 1] {
@@ -906,13 +908,13 @@ where
 
             // Left recursion
             if i < knots.len() - degree - 1 && knots[i + degree] != knots[i] {
-                let basis_left = self.compute_basis_function(x, i, degree - 1, knots);
+                let basis_left = Self::compute_basis_function(x, i, degree - 1, knots);
                 left = (x - knots[i]) / (knots[i + degree] - knots[i]) * basis_left;
             }
 
             // Right recursion
             if i + 1 < knots.len() - degree - 1 && knots[i + degree + 1] != knots[i + 1] {
-                let basis_right = self.compute_basis_function(x, i + 1, degree - 1, knots);
+                let basis_right = Self::compute_basis_function(x, i + 1, degree - 1, knots);
                 right = (knots[i + degree + 1] - x) / (knots[i + degree + 1] - knots[i + 1])
                     * basis_right;
             }

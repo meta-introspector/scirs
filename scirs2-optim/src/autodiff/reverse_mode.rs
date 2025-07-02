@@ -7,7 +7,7 @@ use ndarray::{Array1, Dimension};
 use num_traits::Float;
 use std::collections::HashMap;
 
-use crate::error::OptimizerError;
+use crate::error::{OptimError, Result};
 
 /// Reverse-mode AD engine (gradient tape)
 pub struct ReverseModeEngine<T: Float> {
@@ -303,12 +303,12 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Addition operation
-    pub fn add(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimizerError> {
+    pub fn add(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
         self.binary_op(ReverseOpType::Add, lhs, rhs, BackwardFunction::AddBackward)
     }
 
     /// Subtraction operation
-    pub fn subtract(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimizerError> {
+    pub fn subtract(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
         self.binary_op(
             ReverseOpType::Subtract,
             lhs,
@@ -318,7 +318,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Multiplication operation
-    pub fn multiply(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimizerError> {
+    pub fn multiply(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
         // Save operand values for backward pass
         let lhs_val = self.get_value(lhs)?;
         let rhs_val = self.get_value(rhs)?;
@@ -341,7 +341,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Division operation
-    pub fn divide(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimizerError> {
+    pub fn divide(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
         let lhs_val = self.get_value(lhs)?;
         let rhs_val = self.get_value(rhs)?;
 
@@ -363,7 +363,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Power operation
-    pub fn power(&mut self, base: usize, exponent: T) -> Result<usize, OptimizerError> {
+    pub fn power(&mut self, base: usize, exponent: T) -> Result<usize, OptimError> {
         let base_val = self.get_value(base)?;
 
         let output_id = self.tape.len();
@@ -384,17 +384,17 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Exponential function
-    pub fn exp(&mut self, input: usize) -> Result<usize, OptimizerError> {
+    pub fn exp(&mut self, input: usize) -> Result<usize, OptimError> {
         self.unary_op(ReverseOpType::Exp, input, BackwardFunction::ExpBackward)
     }
 
     /// Natural logarithm
-    pub fn log(&mut self, input: usize) -> Result<usize, OptimizerError> {
+    pub fn log(&mut self, input: usize) -> Result<usize, OptimError> {
         self.unary_op(ReverseOpType::Log, input, BackwardFunction::LogBackward)
     }
 
     /// Sine function
-    pub fn sin(&mut self, input: usize) -> Result<usize, OptimizerError> {
+    pub fn sin(&mut self, input: usize) -> Result<usize, OptimError> {
         self.unary_op(
             ReverseOpType::Sin,
             input,
@@ -405,7 +405,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Cosine function
-    pub fn cos(&mut self, input: usize) -> Result<usize, OptimizerError> {
+    pub fn cos(&mut self, input: usize) -> Result<usize, OptimError> {
         self.unary_op(
             ReverseOpType::Cos,
             input,
@@ -416,7 +416,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Hyperbolic tangent
-    pub fn tanh(&mut self, input: usize) -> Result<usize, OptimizerError> {
+    pub fn tanh(&mut self, input: usize) -> Result<usize, OptimError> {
         self.unary_op(
             ReverseOpType::Tanh,
             input,
@@ -427,7 +427,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Sigmoid function
-    pub fn sigmoid(&mut self, input: usize) -> Result<usize, OptimizerError> {
+    pub fn sigmoid(&mut self, input: usize) -> Result<usize, OptimError> {
         self.unary_op(
             ReverseOpType::Sigmoid,
             input,
@@ -438,7 +438,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// ReLU function
-    pub fn relu(&mut self, input: usize) -> Result<usize, OptimizerError> {
+    pub fn relu(&mut self, input: usize) -> Result<usize, OptimError> {
         self.unary_op(
             ReverseOpType::ReLU,
             input,
@@ -449,7 +449,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Leaky ReLU function
-    pub fn leaky_relu(&mut self, input: usize, alpha: f64) -> Result<usize, OptimizerError> {
+    pub fn leaky_relu(&mut self, input: usize, alpha: f64) -> Result<usize, OptimError> {
         self.unary_op(
             ReverseOpType::LeakyReLU,
             input,
@@ -460,7 +460,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Matrix multiplication
-    pub fn matmul(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimizerError> {
+    pub fn matmul(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
         let lhs_val = self.get_value(lhs)?;
         let rhs_val = self.get_value(rhs)?;
 
@@ -485,7 +485,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Dot product
-    pub fn dot(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimizerError> {
+    pub fn dot(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
         self.binary_op(
             ReverseOpType::Dot,
             lhs,
@@ -495,7 +495,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Sum reduction
-    pub fn sum(&mut self, input: usize, axis: Option<usize>) -> Result<usize, OptimizerError> {
+    pub fn sum(&mut self, input: usize, axis: Option<usize>) -> Result<usize, OptimError> {
         let input_val = self.get_value(input)?;
         let input_shape = input_val.shape().to_vec();
 
@@ -521,7 +521,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Mean reduction
-    pub fn mean(&mut self, input: usize, axis: Option<usize>) -> Result<usize, OptimizerError> {
+    pub fn mean(&mut self, input: usize, axis: Option<usize>) -> Result<usize, OptimError> {
         let input_val = self.get_value(input)?;
         let input_shape = input_val.shape().to_vec();
 
@@ -547,7 +547,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// L2 norm
-    pub fn norm(&mut self, input: usize) -> Result<usize, OptimizerError> {
+    pub fn norm(&mut self, input: usize) -> Result<usize, OptimError> {
         let input_val = self.get_value(input)?;
         let input_shape = input_val.shape().to_vec();
 
@@ -573,7 +573,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Reshape operation
-    pub fn reshape(&mut self, input: usize, new_shape: &[usize]) -> Result<usize, OptimizerError> {
+    pub fn reshape(&mut self, input: usize, new_shape: &[usize]) -> Result<usize, OptimError> {
         let input_val = self.get_value(input)?;
         let original_shape = input_val.shape().to_vec();
 
@@ -599,7 +599,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
         &mut self,
         output_id: usize,
         gradient: Option<Array1<T>>,
-    ) -> Result<(), OptimizerError> {
+    ) -> Result<(), OptimError> {
         // Initialize output gradient
         if output_id >= self.gradients.len() {
             self.gradients.resize(output_id + 1, None);
@@ -673,7 +673,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
         lhs: usize,
         rhs: usize,
         backward_fn: BackwardFunction<T>,
-    ) -> Result<usize, OptimizerError> {
+    ) -> Result<usize, OptimError> {
         let output_id = self.tape.len();
 
         if self.recording {
@@ -696,7 +696,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
         op_type: ReverseOpType,
         input: usize,
         backward_fn: BackwardFunction<T>,
-    ) -> Result<usize, OptimizerError> {
+    ) -> Result<usize, OptimError> {
         let input_val = self.get_value(input)?;
 
         let output_id = self.tape.len();
@@ -716,9 +716,9 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
         Ok(output_id)
     }
 
-    fn get_value(&self, var_id: usize) -> Result<Array1<T>, OptimizerError> {
+    fn get_value(&self, var_id: usize) -> Result<Array1<T>, OptimError> {
         if var_id >= self.tape.len() {
-            return Err(OptimizerError::InvalidConfig(
+            return Err(OptimError::InvalidConfig(
                 "Invalid variable ID".to_string(),
             ));
         }
@@ -737,7 +737,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
         &self,
         op: &ReverseOperation<T>,
         output_grad: &Array1<T>,
-    ) -> Result<Vec<Array1<T>>, OptimizerError> {
+    ) -> Result<Vec<Array1<T>>, OptimError> {
         match &op.backward_fn {
             BackwardFunction::Identity => Ok(vec![output_grad.clone()]),
 
@@ -758,7 +758,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
                     let rhs_grad = output_grad * lhs_val;
                     Ok(vec![lhs_grad, rhs_grad])
                 } else {
-                    Err(OptimizerError::InvalidConfig(
+                    Err(OptimError::InvalidConfig(
                         "Missing saved values for multiplication".to_string(),
                     ))
                 }
@@ -771,7 +771,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
                     let rhs_grad = -output_grad * lhs_val / (rhs_val * rhs_val);
                     Ok(vec![lhs_grad, rhs_grad])
                 } else {
-                    Err(OptimizerError::InvalidConfig(
+                    Err(OptimError::InvalidConfig(
                         "Missing saved values for division".to_string(),
                     ))
                 }
@@ -784,7 +784,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
                     let grad = output_grad * &derivative;
                     Ok(vec![grad])
                 } else {
-                    Err(OptimizerError::InvalidConfig(
+                    Err(OptimError::InvalidConfig(
                         "Missing saved values for power".to_string(),
                     ))
                 }
@@ -797,7 +797,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
                     let grad = output_grad * &exp_val;
                     Ok(vec![grad])
                 } else {
-                    Err(OptimizerError::InvalidConfig(
+                    Err(OptimError::InvalidConfig(
                         "Missing saved values for exp".to_string(),
                     ))
                 }
@@ -809,7 +809,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
                     let grad = output_grad / input_val;
                     Ok(vec![grad])
                 } else {
-                    Err(OptimizerError::InvalidConfig(
+                    Err(OptimError::InvalidConfig(
                         "Missing saved values for log".to_string(),
                     ))
                 }
@@ -825,7 +825,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
                     let grad = output_grad * &derivative;
                     Ok(vec![grad])
                 } else {
-                    Err(OptimizerError::InvalidConfig(
+                    Err(OptimError::InvalidConfig(
                         "Missing saved values for trig function".to_string(),
                     ))
                 }
@@ -854,7 +854,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
                     let grad = output_grad * &derivative;
                     Ok(vec![grad])
                 } else {
-                    Err(OptimizerError::InvalidConfig(
+                    Err(OptimError::InvalidConfig(
                         "Missing saved values for activation".to_string(),
                     ))
                 }
@@ -888,7 +888,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
                             };
                             Ok(vec![grad])
                         } else {
-                            Err(OptimizerError::InvalidConfig(
+                            Err(OptimError::InvalidConfig(
                                 "Missing saved values for norm".to_string(),
                             ))
                         }

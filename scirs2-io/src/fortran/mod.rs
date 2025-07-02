@@ -775,7 +775,7 @@ mod tests {
         {
             let mut file = FortranFile::create(path)?;
             file.write_scalar(42i32)?;
-            file.write_scalar(3.14f64)?;
+            file.write_scalar(std::f64::consts::PI)?;
             file.flush()?;
         }
 
@@ -786,7 +786,7 @@ mod tests {
             let float_val: f64 = file.read_scalar()?;
 
             assert_eq!(int_val, 42);
-            assert!((float_val - 3.14).abs() < 1e-10);
+            assert!((float_val - std::f64::consts::PI).abs() < 1e-10);
         }
 
         Ok(())

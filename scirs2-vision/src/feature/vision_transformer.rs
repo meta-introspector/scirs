@@ -26,6 +26,15 @@ use crate::feature::KeyPoint;
 use crate::gpu_ops::GpuVisionContext;
 use ndarray::{s, Array1, Array2, Array3, Array4, ArrayView2, Axis};
 
+/// Type alias for feature matches (index, confidence score)
+type FeatureMatches = Vec<(usize, f32)>;
+
+/// Type alias for attention scores matrix
+type AttentionScores = Array2<f32>;
+
+/// Type alias for feature matching result
+type FeatureMatchResult = Result<(FeatureMatches, AttentionScores)>;
+
 /// Vision Transformer configuration
 #[derive(Clone, Debug)]
 pub struct ViTConfig {
@@ -1113,7 +1122,7 @@ impl CrossAttentionMatcher {
         &self,
         features1: &Array2<f32>,
         features2: &Array2<f32>,
-    ) -> Result<(Vec<(usize, f32)>, Array2<f32>)> {
+    ) -> FeatureMatchResult {
         let mut feat1 = features1.clone();
         let mut feat2 = features2.clone();
 

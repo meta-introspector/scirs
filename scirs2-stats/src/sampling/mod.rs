@@ -190,7 +190,7 @@ where
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -280,7 +280,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -371,7 +371,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -463,7 +463,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -544,7 +544,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -634,7 +634,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value + 1),
         None => {
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }

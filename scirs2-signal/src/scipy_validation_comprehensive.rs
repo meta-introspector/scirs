@@ -22,6 +22,7 @@ use crate::wpt::wp_decompose;
 use ndarray::{Array1, Array2, ArrayView1};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
+use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
 use std::f64::consts::PI;

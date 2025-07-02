@@ -626,7 +626,7 @@ impl PerformanceRegressionDetector {
                 current_value: *values.last().unwrap(),
                 change_percentage: self.calculate_change_percentage(&values, baseline.as_ref()),
                 regression_type: self.classify_regression_type(metric_type, &values),
-                evidence: statistical_result.evidence,
+                evidence: statistical_result.evidence.clone(),
                 recommendations: self.generate_recommendations(metric_type, &statistical_result),
             };
 

@@ -181,7 +181,7 @@ impl NeuromorphicProcessor {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         // Initialize neuromorphic network
@@ -233,7 +233,7 @@ impl NeuromorphicProcessor {
     ) -> Result<Dataset> {
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         // Initialize adaptive neural network
@@ -282,7 +282,7 @@ impl NeuromorphicProcessor {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut network = self.initialize_network(&mut rng)?;
@@ -736,7 +736,7 @@ mod tests {
 
         assert_eq!(dataset.n_samples(), 50);
         assert_eq!(dataset.n_features(), 5);
-        assert!(dataset.targets().is_some());
+        assert!(dataset.has_target());
     }
 
     #[test]

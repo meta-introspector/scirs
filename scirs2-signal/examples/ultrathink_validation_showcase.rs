@@ -1,8 +1,14 @@
 //! Ultrathink Mode Enhanced Validation Showcase
 //!
-//! This example demonstrates the enhanced validation capabilities added to scirs2-signal
-//! in ultrathink mode, focusing on multitaper spectral estimation and Lomb-Scargle
-//! periodogram validation improvements.
+//! This example demonstrates the comprehensive validation capabilities added to scirs2-signal
+//! in ultrathink mode, including:
+//! - Enhanced multitaper spectral estimation validation
+//! - Comprehensive Lomb-Scargle periodogram testing
+//! - Parametric spectral estimation validation (AR, ARMA)
+//! - 2D wavelet transform validation and refinement
+//! - SIMD and parallel processing validation
+//! - Numerical precision and stability testing
+//! - Performance benchmarking and scaling analysis
 
 use scirs2_signal::error::SignalResult;
 use scirs2_signal::multitaper::{

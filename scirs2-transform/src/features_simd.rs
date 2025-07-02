@@ -6,7 +6,7 @@
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Axis, Data, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_not_empty, check_positive};
+use scirs2_core::validation::{check_not_empty, check_positive};
 
 use crate::error::{Result, TransformError};
 
@@ -42,7 +42,15 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
     {
         // Validate input using scirs2-core validation
         check_not_empty(x, "x")?;
-        check_finite(x, "x")?;
+        
+        // Check finite values
+        for &val in x.iter() {
+            if !val.is_finite() {
+                return Err(crate::error::TransformError::DataValidationError(
+                    "Data contains non-finite values".to_string(),
+                ));
+            }
+        }
 
         let n_samples = x.shape()[0];
         let n_features = x.shape()[1];
@@ -504,7 +512,15 @@ where
     F: Float + NumCast + SimdUnifiedOps,
 {
     check_not_empty(data, "data")?;
-    check_finite(data, "data")?;
+    
+    // Check finite values
+    for &val in data.iter() {
+        if !val.is_finite() {
+            return Err(crate::error::TransformError::DataValidationError(
+                "Data contains non-finite values".to_string(),
+            ));
+        }
+    }
 
     if !threshold.is_finite() {
         return Err(TransformError::InvalidInput(
@@ -582,7 +598,16 @@ where
     F: Float + NumCast + SimdUnifiedOps,
 {
     check_not_empty(data, "data")?;
-    check_finite(data, "data")?;
+    
+    // Check finite values
+    for &val in data.iter() {
+        if !val.is_finite() {
+            return Err(crate::error::TransformError::DataValidationError(
+                "Data contains non-finite values".to_string(),
+            ));
+        }
+    }
+    
     check_positive(degree, "degree")?;
 
     let poly_features = SimdPolynomialFeatures::new(degree, include_bias, interaction_only)?;

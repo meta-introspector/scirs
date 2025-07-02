@@ -14,6 +14,9 @@ use num_traits::Float;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
+/// Type alias for bidiagonal SVD result
+type BidiagonalSvdResult<T> = (Vec<T>, Vec<Vec<f64>>, Vec<Vec<f64>>);
+
 /// SVD computation methods
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SVDMethod {
@@ -554,7 +557,7 @@ fn solve_bidiagonal_svd<T>(
     alpha: &[T],
     beta: &[T],
     k: usize,
-) -> SparseResult<(Vec<T>, Vec<Vec<f64>>, Vec<Vec<f64>>)>
+) -> SparseResult<BidiagonalSvdResult<T>>
 where
     T: Float
         + Debug

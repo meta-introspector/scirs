@@ -2,7 +2,6 @@
 
 use crate::error::Result;
 use std::collections::HashMap;
-
 /// Client selection strategy trait
 pub trait ClientSelection: Send + Sync {
     /// Select clients for a round
@@ -12,11 +11,9 @@ pub trait ClientSelection: Send + Sync {
         num_select: usize,
         client_info: &HashMap<usize, ClientInfo>,
     ) -> Result<Vec<usize>>;
-
     /// Get strategy name
     fn name(&self) -> &str;
 }
-
 /// Client information for selection
 #[derive(Debug, Clone)]
 pub struct ClientInfo {
@@ -34,60 +31,36 @@ pub struct ClientInfo {
     pub reliability: f32,
     /// Data distribution info
     pub label_distribution: Vec<f32>,
-}
-
 /// Sampling strategy trait
 pub trait SamplingStrategy: Send + Sync {
     /// Sample data from local dataset
     fn sample(&self, data_size: usize, round: usize) -> Result<Vec<usize>>;
-
-    /// Get strategy name
-    fn name(&self) -> &str;
-}
-
 /// Random client selection
 pub struct RandomSelection {
     seed: Option<u64>,
-}
-
 impl RandomSelection {
     /// Create new random selection
     pub fn new() -> Self {
         Self { seed: None }
     }
-
     /// Set seed for reproducibility
     pub fn with_seed(seed: u64) -> Self {
         Self { seed: Some(seed) }
-    }
-}
-
 impl ClientSelection for RandomSelection {
-    fn select(
-        &self,
-        available_clients: &[usize],
-        num_select: usize,
         _client_info: &HashMap<usize, ClientInfo>,
     ) -> Result<Vec<usize>> {
         use rand::prelude::*;
-
+use rand::rng;
         let mut rng = if let Some(seed) = self.seed {
             StdRng::seed_from_u64(seed)
         } else {
-            StdRng::from_rng(&mut ndarray_rand::rand::thread_rng()).unwrap()
+            StdRng::from_rng(&mut rng()).unwrap()
         };
-
         let mut clients = available_clients.to_vec();
         clients.shuffle(&mut rng);
-
         Ok(clients.into_iter().take(num_select).collect())
-    }
-
     fn name(&self) -> &str {
         "RandomSelection"
-    }
-}
-
 /// Importance-based client selection
 pub struct ImportanceSelection {
     /// Weight for data size
@@ -96,46 +69,27 @@ pub struct ImportanceSelection {
     compute_weight: f32,
     /// Weight for reliability
     reliability_weight: f32,
-}
-
 impl ImportanceSelection {
     /// Create new importance selection
-    pub fn new() -> Self {
         Self {
             data_weight: 0.5,
             compute_weight: 0.3,
             reliability_weight: 0.2,
         }
-    }
-
     /// Set weights
     pub fn with_weights(data: f32, compute: f32, reliability: f32) -> Self {
-        Self {
             data_weight: data,
             compute_weight: compute,
             reliability_weight: reliability,
-        }
-    }
-
     /// Calculate client importance score
     fn calculate_importance(&self, info: &ClientInfo) -> f32 {
         let data_score = (info.num_samples as f32).ln();
         let compute_score = info.compute_capacity;
         let reliability_score = info.reliability;
-
         self.data_weight * data_score
             + self.compute_weight * compute_score
             + self.reliability_weight * reliability_score
-    }
-}
-
 impl ClientSelection for ImportanceSelection {
-    fn select(
-        &self,
-        available_clients: &[usize],
-        num_select: usize,
-        client_info: &HashMap<usize, ClientInfo>,
-    ) -> Result<Vec<usize>> {
         // Calculate importance scores
         let mut scored_clients: Vec<(usize, f32)> = available_clients
             .iter()
@@ -145,51 +99,28 @@ impl ClientSelection for ImportanceSelection {
                     .map(|info| (client_id, self.calculate_importance(info)))
             })
             .collect();
-
         // Sort by importance (descending)
         scored_clients.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-
         // Select top clients
         Ok(scored_clients
             .into_iter()
             .take(num_select)
             .map(|(id, _)| id)
             .collect())
-    }
-
-    fn name(&self) -> &str {
         "ImportanceSelection"
-    }
-}
-
 /// Power-aware client selection
 pub struct PowerAwareSelection {
     /// Minimum battery threshold
     min_battery: f32,
     /// Prefer plugged devices
     prefer_plugged: bool,
-}
-
 impl PowerAwareSelection {
     /// Create new power-aware selection
     pub fn new(min_battery: f32) -> Self {
-        Self {
             min_battery,
             prefer_plugged: true,
-        }
-    }
-}
-
 impl ClientSelection for PowerAwareSelection {
-    fn select(
-        &self,
-        available_clients: &[usize],
-        num_select: usize,
-        client_info: &HashMap<usize, ClientInfo>,
-    ) -> Result<Vec<usize>> {
         let mut eligible_clients: Vec<(usize, f32)> = available_clients
-            .iter()
-            .filter_map(|&client_id| {
                 client_info.get(&client_id).and_then(|info| {
                     match info.battery_level {
                         None => Some((client_id, 2.0)), // Plugged device, highest priority
@@ -197,47 +128,25 @@ impl ClientSelection for PowerAwareSelection {
                         _ => None, // Battery too low
                     }
                 })
-            })
-            .collect();
-
         // Sort by power status (plugged first, then by battery level)
         eligible_clients.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-
         // Randomly sample from eligible clients if we have more than needed
-        use rand::prelude::*;
         if eligible_clients.len() > num_select {
-            let mut rng = ndarray_rand::rand::thread_rng();
+            let mut rng = rng();
             eligible_clients.partial_shuffle(&mut rng, num_select);
-        }
-
         Ok(eligible_clients
-            .into_iter()
-            .take(num_select)
-            .map(|(id, _)| id)
-            .collect())
-    }
-
-    fn name(&self) -> &str {
         "PowerAwareSelection"
-    }
-}
-
 /// Diversity-aware client selection
 pub struct DiversitySelection {
     /// Number of clusters
     num_clusters: usize,
-}
-
 impl DiversitySelection {
     /// Create new diversity selection
     pub fn new(num_clusters: usize) -> Self {
         Self { num_clusters }
-    }
-
     /// Simple clustering based on label distribution
     fn cluster_clients(&self, client_info: &HashMap<usize, ClientInfo>) -> HashMap<usize, usize> {
         let mut clusters = HashMap::new();
-
         // Simple k-means style clustering on label distributions
         for (&client_id, info) in client_info {
             // Assign to cluster based on dominant label
@@ -248,27 +157,13 @@ impl DiversitySelection {
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                 .map(|(idx, _)| idx % self.num_clusters)
                 .unwrap_or(0);
-
             clusters.insert(client_id, cluster);
-        }
-
         clusters
-    }
-}
-
 impl ClientSelection for DiversitySelection {
-    fn select(
-        &self,
-        available_clients: &[usize],
-        num_select: usize,
-        client_info: &HashMap<usize, ClientInfo>,
-    ) -> Result<Vec<usize>> {
         let clusters = self.cluster_clients(client_info);
         let clients_per_cluster = num_select / self.num_clusters;
         let remainder = num_select % self.num_clusters;
-
         let mut selected = Vec::new();
-
         // Group clients by cluster
         let mut cluster_groups: HashMap<usize, Vec<usize>> = HashMap::new();
         for &client_id in available_clients {
@@ -278,12 +173,8 @@ impl ClientSelection for DiversitySelection {
                     .or_insert_with(Vec::new)
                     .push(client_id);
             }
-        }
-
         // Select from each cluster
-        use rand::prelude::*;
-        let mut rng = ndarray_rand::rand::thread_rng();
-
+        let mut rng = rng();
         for (cluster_id, mut clients) in cluster_groups {
             clients.shuffle(&mut rng);
             let take = if cluster_id < remainder {
@@ -291,109 +182,58 @@ impl ClientSelection for DiversitySelection {
             } else {
                 clients_per_cluster
             };
-
             selected.extend(clients.into_iter().take(take));
-        }
-
         Ok(selected)
-    }
-
-    fn name(&self) -> &str {
         "DiversitySelection"
-    }
-}
-
 /// Uniform data sampling
 pub struct UniformSampling;
-
 impl SamplingStrategy for UniformSampling {
     fn sample(&self, data_size: usize, _round: usize) -> Result<Vec<usize>> {
         Ok((0..data_size).collect())
-    }
-
-    fn name(&self) -> &str {
         "UniformSampling"
-    }
-}
-
 /// Stratified sampling
 pub struct StratifiedSampling {
     /// Fraction to sample per stratum
     sample_fraction: f32,
-}
-
 impl StratifiedSampling {
     /// Create new stratified sampling
     pub fn new(sample_fraction: f32) -> Self {
         Self { sample_fraction }
-    }
-}
-
 impl SamplingStrategy for StratifiedSampling {
-    fn sample(&self, data_size: usize, _round: usize) -> Result<Vec<usize>> {
-        use rand::prelude::*;
-        let mut rng = ndarray_rand::rand::thread_rng();
-
         let sample_size = (data_size as f32 * self.sample_fraction) as usize;
         let mut indices: Vec<usize> = (0..data_size).collect();
         indices.partial_shuffle(&mut rng, sample_size);
-
         Ok(indices.into_iter().take(sample_size).collect())
-    }
-
-    fn name(&self) -> &str {
         "StratifiedSampling"
-    }
-}
-
 /// Cyclic sampling
 pub struct CyclicSampling {
     /// Batch size
     batch_size: usize,
-}
-
 impl CyclicSampling {
     /// Create new cyclic sampling
     pub fn new(batch_size: usize) -> Self {
         Self { batch_size }
-    }
-}
-
 impl SamplingStrategy for CyclicSampling {
     fn sample(&self, data_size: usize, round: usize) -> Result<Vec<usize>> {
         let start = (round * self.batch_size) % data_size;
         let indices: Vec<usize> = (0..self.batch_size)
             .map(|i| (start + i) % data_size)
-            .collect();
-
         Ok(indices)
-    }
-
-    fn name(&self) -> &str {
         "CyclicSampling"
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
     fn test_random_selection() {
         let selector = RandomSelection::with_seed(42);
         let clients = vec![0, 1, 2, 3, 4];
         let info = HashMap::new();
-
         let selected = selector.select(&clients, 3, &info).unwrap();
         assert_eq!(selected.len(), 3);
         assert!(selected.iter().all(|id| clients.contains(id)));
-    }
-
-    #[test]
     fn test_importance_selection() {
         let selector = ImportanceSelection::new();
         let clients = vec![0, 1];
-
         let mut info = HashMap::new();
         info.insert(
             0,
@@ -407,9 +247,7 @@ mod tests {
                 label_distribution: vec![0.5, 0.5],
             },
         );
-        info.insert(
             1,
-            ClientInfo {
                 num_samples: 100,
                 device_type: "mobile".to_string(),
                 compute_capacity: 0.2,
@@ -417,10 +255,5 @@ mod tests {
                 battery_level: Some(0.5),
                 reliability: 0.7,
                 label_distribution: vec![0.8, 0.2],
-            },
-        );
-
         let selected = selector.select(&clients, 1, &info).unwrap();
         assert_eq!(selected, vec![0]); // Should select client 0 due to higher importance
-    }
-}

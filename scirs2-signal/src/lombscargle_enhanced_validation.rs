@@ -13,7 +13,7 @@
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
 use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
-use crate::lombscargle_validation::{validate_analytical_cases, ValidationResult};
+use crate::lombscargle_validation::{validate_analytical_cases, ValidationResult, validate_lombscargle_enhanced};
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use rand::prelude::*;
@@ -5252,7 +5252,7 @@ pub struct NumericalRobustnessResult {
 /// Ultra-comprehensive validation results
 #[derive(Debug, Clone)]
 pub struct UltraComprehensiveResult {
-    pub base_validation: UltraComprehensiveValidationResult,
+    pub base_validation: ValidationResult,
     pub edge_case_validation: EdgeCaseValidationResult,
     pub robustness_validation: NumericalRobustnessResult,
     pub scipy_comparison: SciPyValidationResult,

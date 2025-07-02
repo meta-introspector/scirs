@@ -6,7 +6,6 @@
 
 // We re-export the autograd crate
 pub extern crate autograd;
-
 /// Example function showing how autograd can be used
 pub fn autograd_example() {
     // This demonstrates basic usage of autograd for a simple neural network operation
@@ -15,7 +14,6 @@ pub fn autograd_example() {
     println!();
     println!("For more examples, see:");
     println!("https://docs.rs/autograd/latest/autograd/");
-    println!();
     println!("This integration is provided as a simple demonstration of how to use");
     println!("autograd with SciRS2-neural.");
 }

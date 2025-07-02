@@ -12,7 +12,7 @@ use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::Float;
 
 use crate::error::{OptimError, Result};
-use crate::gpu::{GpuOptimizerConfig, GpuOptimizerError};
+use crate::gpu::{GpuOptimizerConfig, GpuOptimError};
 
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBackend, GpuContext};
