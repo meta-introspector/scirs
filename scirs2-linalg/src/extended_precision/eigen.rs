@@ -40,6 +40,7 @@
 
 use ndarray::{Array1, Array2, ArrayView2};
 use num_traits::{Float, One, Zero};
+use num_complex::Complex;
 
 use super::{DemotableTo, PromotableTo};
 use crate::error::LinalgResult;
@@ -191,16 +192,53 @@ where
         )));
     }
 
-    // Currently returns only the eigenvalues - full implementation would compute eigenvectors too
+    // Compute eigenvalues first
     let eigenvalues = extended_eigvals(a, max_iter, tol)?;
 
-    // This is a placeholder - a more complete implementation would compute the eigenvectors
-    // in extended precision as well
-    // For now, we'll return identity matrix as eigenvectors to make the interface complete
+    // Now compute eigenvectors using inverse iteration in extended precision
     let n = a.nrows();
     let mut eigenvectors = Array2::zeros((n, n));
+
+    // Convert matrix to higher precision for computation
+    let mut a_high = Array2::zeros((n, n));
     for i in 0..n {
-        eigenvectors[[i, i]] = num_complex::Complex::new(A::one(), A::zero());
+        for j in 0..n {
+            a_high[[i, j]] = a[[i, j]].promote();
+        }
+    }
+
+    // For each eigenvalue, compute the corresponding eigenvector using inverse iteration
+    for (k, lambda) in eigenvalues.iter().enumerate() {
+        // Create (A - λI) matrix in extended precision as complex numbers
+        let mut shifted_matrix = Array2::zeros((n, n));
+        let lambda_high = num_complex::Complex::new(lambda.re.promote(), lambda.im.promote());
+        
+        // Convert real matrix to complex and subtract eigenvalue from diagonal
+        for i in 0..n {
+            for j in 0..n {
+                shifted_matrix[[i, j]] = num_complex::Complex::new(a_high[[i, j]], I::zero());
+            }
+        }
+        
+        for i in 0..n {
+            shifted_matrix[[i, i]] = shifted_matrix[[i, i]] - lambda_high;
+        }
+
+        // Compute eigenvector using inverse iteration with extended precision
+        let eigenvector_high = compute_eigenvector_inverse_iteration(
+            &shifted_matrix, 
+            lambda_high, 
+            max_iter.unwrap_or(100),
+            I::from(tol.unwrap_or(A::epsilon().sqrt()).promote()).unwrap()
+        );
+
+        // Convert eigenvector back to original precision
+        for i in 0..n {
+            eigenvectors[[i, k]] = num_complex::Complex::new(
+                eigenvector_high[i].re.demote(),
+                eigenvector_high[i].im.demote(),
+            );
+        }
     }
 
     Ok((eigenvalues, eigenvectors))
@@ -1019,7 +1057,7 @@ where
 /// - Kahan summation for compensated arithmetic
 /// - Multiple-stage Rayleigh quotient iteration
 /// - Newton's method eigenvalue correction
-/// - Ultra-aggressive adaptive tolerance based on matrix conditioning 
+/// - Ultra-aggressive adaptive tolerance based on matrix conditioning
 /// - Enhanced Gram-Schmidt orthogonalization
 /// - Automatic ultra-precision activation for high precision targets
 ///
@@ -1095,10 +1133,11 @@ where
     };
 
     // Auto-detect if ultra-precision mode should be activated (more aggressive in ultrathink mode)
-    let use_ultra_precision = auto_detect && (
-        condition_number > A::from(1e12).unwrap() || 
-        target_precision <= A::from(1e-11).unwrap() // Activate for high precision targets
-    );
+    let use_ultra_precision = auto_detect
+        && (
+            condition_number > A::from(1e12).unwrap() || target_precision <= A::from(1e-11).unwrap()
+            // Activate for high precision targets
+        );
 
     if use_ultra_precision {
         ultra_precision_solver_internal(a, max_iter, adaptive_tolerance)
@@ -1731,4 +1770,129 @@ mod tests {
             println!("Eigenvector {} residual: {}", j, error);
         }
     }
+}
+
+/// Compute eigenvector using inverse iteration in extended precision
+fn compute_eigenvector_inverse_iteration<I>(
+    shifted_matrix: &Array2<num_complex::Complex<I>>,
+    _lambda: num_complex::Complex<I>,
+    max_iter: usize,
+    tol: I,
+) -> Array1<num_complex::Complex<I>>
+where
+    I: Float + Zero + One + Copy + std::fmt::Debug + std::ops::AddAssign + std::ops::SubAssign + std::ops::DivAssign,
+{
+    let n = shifted_matrix.nrows();
+    
+    // Start with a random vector
+    let mut v = Array1::zeros(n);
+    v[0] = num_complex::Complex::new(I::one(), I::zero());
+    
+    for _ in 0..max_iter {
+        // Solve (A - λI)u = v for u using LU decomposition
+        let mut u = solve_linear_system_complex(shifted_matrix, &v);
+        
+        // Normalize u
+        let norm = compute_complex_norm(&u);
+        if norm > I::epsilon() {
+            let norm_complex = num_complex::Complex::new(norm, I::zero());
+            for i in 0..n {
+                u[i] = u[i] / norm_complex;
+            }
+        }
+        
+        // Check convergence
+        let mut diff = I::zero();
+        for i in 0..n {
+            let delta = (u[i] - v[i]).norm();
+            diff = diff + delta;
+        }
+        
+        if diff < tol {
+            return u;
+        }
+        
+        v = u;
+    }
+    
+    v
+}
+
+/// Solve complex linear system using simplified Gaussian elimination
+fn solve_linear_system_complex<I>(
+    a: &Array2<num_complex::Complex<I>>,
+    b: &Array1<num_complex::Complex<I>>,
+) -> Array1<num_complex::Complex<I>>
+where
+    I: Float + Zero + One + Copy + std::fmt::Debug,
+{
+    let n = a.nrows();
+    let mut aug = Array2::zeros((n, n + 1));
+    
+    // Create augmented matrix
+    for i in 0..n {
+        for j in 0..n {
+            aug[[i, j]] = a[[i, j]];
+        }
+        aug[[i, n]] = b[i];
+    }
+    
+    // Forward elimination
+    for k in 0..n {
+        // Find pivot
+        let mut max_row = k;
+        for i in k + 1..n {
+            if aug[[i, k]].norm() > aug[[max_row, k]].norm() {
+                max_row = i;
+            }
+        }
+        
+        // Swap rows
+        if max_row != k {
+            for j in 0..n + 1 {
+                let temp = aug[[k, j]];
+                aug[[k, j]] = aug[[max_row, j]];
+                aug[[max_row, j]] = temp;
+            }
+        }
+        
+        // Make diagonal elements 1
+        let pivot = aug[[k, k]];
+        if pivot.norm() > I::epsilon() {
+            for j in k..n + 1 {
+                aug[[k, j]] = aug[[k, j]] / pivot;
+            }
+        }
+        
+        // Eliminate column
+        for i in k + 1..n {
+            let factor = aug[[i, k]];
+            for j in k..n + 1 {
+                aug[[i, j]] = aug[[i, j]] - factor * aug[[k, j]];
+            }
+        }
+    }
+    
+    // Back substitution
+    let mut x = Array1::zeros(n);
+    for i in (0..n).rev() {
+        x[i] = aug[[i, n]];
+        for j in i + 1..n {
+            x[i] = x[i] - aug[[i, j]] * x[j];
+        }
+    }
+    
+    x
+}
+
+/// Compute the norm of a complex vector
+fn compute_complex_norm<I>(v: &Array1<num_complex::Complex<I>>) -> I
+where
+    I: Float + Zero + Copy,
+{
+    let mut sum = I::zero();
+    for &val in v.iter() {
+        sum = sum + val.norm_sqr();
+    }
+    sum.sqrt()
 }
