@@ -317,7 +317,7 @@ pub mod complex {
         }
 
         // For small |z|, use series expansion
-        if z.norm() < 6.0 {
+        if z.norm() < 4.0 {
             return erf_series_complex(z);
         }
 
@@ -359,7 +359,7 @@ pub mod complex {
         }
 
         // Use the relation erfc(z) = 1 - erf(z) for small arguments
-        if z.norm() < 6.0 {
+        if z.norm() < 4.0 {
             return Complex64::new(1.0, 0.0) - erf_complex(z);
         }
 
@@ -463,7 +463,7 @@ pub mod complex {
         let z_squared = z * z;
         let mut term = z;
 
-        for n in 1..=50 {
+        for n in 1..=70 {
             term *= -z_squared / Complex64::new(n as f64, 0.0);
             let factorial_term = Complex64::new((2 * n + 1) as f64, 0.0);
             result += term / factorial_term;
@@ -477,14 +477,14 @@ pub mod complex {
     }
 
     /// Asymptotic expansion for erf(z) for large |z|
-    fn erf_asymptotic_complex(z: Complex64) -> Complex64 {
-        // For large |z|, use erf(z) = 1 - erfc(z) and compute erfc asymptotically
-        Complex64::new(1.0, 0.0) - erfc_asymptotic_complex(z)
+    fn erfc_asymptotic_complex(z: Complex64) -> Complex64 {
+        // For large |z|, use erfc(z) = 1 - erf(z) and compute erf asymptotically
+        Complex64::new(1.0, 0.0) - erf_asymptotic_complex(z)
     }
 
     /// Asymptotic expansion for erfc(z) for large |z|
-    fn erfc_asymptotic_complex(z: Complex64) -> Complex64 {
-        // erfc(z) ≈ (e^(-z²))/(√π * z) * [1 - 1/(2z²) + 3/(4z⁴) - ...]
+    fn erf_asymptotic_complex(z: Complex64) -> Complex64 {
+        // erf(z) ≈ z / √z^2 - (e^(-z²))/(√π * z) * [1 - 1/(2z²) + 3/(4z⁴) - ...]
         let sqrt_pi = PI.sqrt();
         let z_squared = z * z;
         let exp_minus_z2 = (-z_squared).exp();
@@ -498,14 +498,18 @@ pub mod complex {
         series += Complex64::new(3.0, 0.0) * z_inv_2 * z_inv_2 / Complex64::new(4.0, 0.0);
         series -=
             Complex64::new(15.0, 0.0) * z_inv_2 * z_inv_2 * z_inv_2 / Complex64::new(8.0, 0.0);
+        series += Complex64::new(105.0, 0.0) * z_inv_2 * z_inv_2 * z_inv_2 * z_inv_2
+            / Complex64::new(16.0, 0.0);
 
-        exp_minus_z2 / Complex64::new(sqrt_pi, 0.0) * z_inv * series
+        z / z_squared.sqrt() - exp_minus_z2 / Complex64::new(sqrt_pi, 0.0) * z_inv * series
     }
 
     /// Asymptotic expansion for erfcx(z) for large |z|
     fn erfcx_asymptotic_complex(z: Complex64) -> Complex64 {
-        // erfcx(z) ≈ 1/(√π * z) * [1 - 1/(2z²) + 3/(4z⁴) - ...]
+        // erfcx(z) ≈ (e^(z²)) * (1 - z / √z^2) + 1/(√π * z) * [1 - 1/(2z²) + 3/(4z⁴) - ...]
         let sqrt_pi = PI.sqrt();
+        let z_squared = z * z;
+        let exp_z2 = z_squared.exp();
 
         let z_inv = Complex64::new(1.0, 0.0) / z;
         let z_inv_2 = z_inv * z_inv;
@@ -516,8 +520,11 @@ pub mod complex {
         series += Complex64::new(3.0, 0.0) * z_inv_2 * z_inv_2 / Complex64::new(4.0, 0.0);
         series -=
             Complex64::new(15.0, 0.0) * z_inv_2 * z_inv_2 * z_inv_2 / Complex64::new(8.0, 0.0);
+        series += Complex64::new(105.0, 0.0) * z_inv_2 * z_inv_2 * z_inv_2 * z_inv_2
+            / Complex64::new(16.0, 0.0);
 
-        z_inv / Complex64::new(sqrt_pi, 0.0) * series
+        exp_z2 * (Complex64::new(1., 0.) - z / z_squared.sqrt())
+            + z_inv / Complex64::new(sqrt_pi, 0.0) * series
     }
 
     /// Asymptotic expansion for erfcx(x) for large real x
