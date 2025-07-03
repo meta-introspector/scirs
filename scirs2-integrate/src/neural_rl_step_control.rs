@@ -181,7 +181,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
     pub fn new() -> IntegrateResult<Self> {
         let gpu_context = Arc::new(Mutex::new(
             gpu::GpuContext::new(gpu::GpuBackend::Cuda).map_err(|e| {
-                IntegrateError::ComputationError(format!("GPU context creation failed: {:?}", e))
+                IntegrateError::ComputationError(format!("GPU context creation failed: {e:?}"))
             })?,
         ));
 
@@ -359,7 +359,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
                 ],
             )
             .map_err(|e| {
-                IntegrateError::ComputationError(format!("Neural RL kernel launch failed: {:?}", e))
+                IntegrateError::ComputationError(format!("Neural RL kernel launch failed: {e:?}"))
             })?;
 
         // Retrieve updated weights from GPU
@@ -518,9 +518,8 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
     fn transfer_states_to_gpu(&self, batch: &[Experience<F>]) -> IntegrateResult<gpu::GpuPtr<F>> {
         // Simplified GPU transfer - allocate GPU memory
         let states: Vec<F> = batch.iter().flat_map(|e| e.state.iter().cloned()).collect();
-        gpu::GpuPtr::allocate(states.len()).map_err(|e| {
-            IntegrateError::ComputationError(format!("GPU allocation failed: {:?}", e))
-        })
+        gpu::GpuPtr::allocate(states.len())
+            .map_err(|e| IntegrateError::ComputationError(format!("GPU allocation failed: {e:?}")))
     }
 
     fn transfer_actions_to_gpu(&self, batch: &[Experience<F>]) -> IntegrateResult<gpu::GpuPtr<F>> {
@@ -528,16 +527,14 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
             .iter()
             .map(|e| F::from(e.action).unwrap_or(F::zero()))
             .collect();
-        gpu::GpuPtr::allocate(actions.len()).map_err(|e| {
-            IntegrateError::ComputationError(format!("GPU allocation failed: {:?}", e))
-        })
+        gpu::GpuPtr::allocate(actions.len())
+            .map_err(|e| IntegrateError::ComputationError(format!("GPU allocation failed: {e:?}")))
     }
 
     fn transfer_rewards_to_gpu(&self, batch: &[Experience<F>]) -> IntegrateResult<gpu::GpuPtr<F>> {
         let rewards: Vec<F> = batch.iter().map(|e| e.reward).collect();
-        gpu::GpuPtr::allocate(rewards.len()).map_err(|e| {
-            IntegrateError::ComputationError(format!("GPU allocation failed: {:?}", e))
-        })
+        gpu::GpuPtr::allocate(rewards.len())
+            .map_err(|e| IntegrateError::ComputationError(format!("GPU allocation failed: {e:?}")))
     }
 
     fn transfer_next_states_to_gpu(
@@ -548,9 +545,8 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
             .iter()
             .flat_map(|e| e.next_state.iter().cloned())
             .collect();
-        gpu::GpuPtr::allocate(next_states.len()).map_err(|e| {
-            IntegrateError::ComputationError(format!("GPU allocation failed: {:?}", e))
-        })
+        gpu::GpuPtr::allocate(next_states.len())
+            .map_err(|e| IntegrateError::ComputationError(format!("GPU allocation failed: {e:?}")))
     }
 
     fn retrieve_updated_weights_from_gpu(&self) -> IntegrateResult<()> {

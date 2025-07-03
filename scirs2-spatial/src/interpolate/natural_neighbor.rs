@@ -127,8 +127,7 @@ impl NaturalNeighborInterpolator {
 
         if dim != 2 {
             return Err(SpatialError::DimensionError(format!(
-                "Natural neighbor interpolation currently only supports 2D points, got {}D",
-                dim
+                "Natural neighbor interpolation currently only supports 2D points, got {dim}D"
             )));
         }
 
@@ -531,8 +530,7 @@ impl NaturalNeighborInterpolator {
 
         if n < 3 {
             return Err(SpatialError::ValueError(format!(
-                "Polygon must have at least 3 vertices, got {}",
-                n
+                "Polygon must have at least 3 vertices, got {n}"
             )));
         }
 

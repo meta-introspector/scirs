@@ -102,8 +102,7 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> Wishart
         let min_dof = F::from(p).unwrap() - F::one();
         if dof <= min_dof {
             return Err(LinalgError::InvalidInputError(format!(
-                "Degrees of freedom must be > {}, got {:?}",
-                min_dof, dof
+                "Degrees of freedom must be > {min_dof}, got {dof:?}"
             )));
         }
 

@@ -4,10 +4,12 @@
 //! (CNNs) in Rust, including Conv2D layers, pooling, and fully connected
 //! layers for image classification tasks.
 
-use autograd::rand::distributions::{Distribution, Uniform};
-use autograd::rand::prelude::SliceRandom;
-use autograd::rand::rngs::SmallRng;
-use autograd::rand::{Rng, SeedableRng};
+#![allow(dead_code)]
+
+use rand::distributions::{Distribution, Uniform};
+use rand::prelude::SliceRandom;
+use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
 use ndarray::{s, Array, Array1, Array2, Array4, ArrayView1, Axis};
 use scirs2_neural::error::Result;
 use serde::{Deserialize, Serialize};
@@ -24,6 +26,8 @@ enum ActivationFunction {
     Sigmoid,
     Tanh,
     Linear,
+}
+
 impl ActivationFunction {
     /// Apply the activation function to an array
     fn apply<D>(&self, x: &Array<f32, D>) -> Array<f32, D>
@@ -39,6 +43,10 @@ impl ActivationFunction {
     }
     /// Compute the derivative of the activation function
     fn derivative<D>(&self, x: &Array<f32, D>) -> Array<f32, D>
+    where
+        D: ndarray::Dimension,
+    {
+        match self {
             ActivationFunction::ReLU => x.mapv(|v| if v > 0.0 { 1.0 } else { 0.0 }),
             ActivationFunction::Sigmoid => {
                 let sigmoid = x.mapv(|v| 1.0 / (1.0 + (-v).exp()));
@@ -47,19 +55,28 @@ impl ActivationFunction {
             ActivationFunction::Tanh => {
                 let tanh = x.mapv(|v| v.tanh());
                 tanh.mapv(|t| 1.0 - t * t)
+            }
             ActivationFunction::Linear => Array::ones(x.dim()),
+        }
+    }
     /// Get a string representation of the activation function
     fn as_str(&self) -> &str {
+        match self {
             ActivationFunction::ReLU => "ReLU",
             ActivationFunction::Sigmoid => "Sigmoid",
             ActivationFunction::Tanh => "Tanh",
             ActivationFunction::Linear => "Linear",
+        }
+    }
+}
 /// Loss function type
 #[allow(dead_code)]
 #[allow(clippy::upper_case_acronyms)]
 enum LossFunction {
     MSE,
     CategoricalCrossEntropy,
+}
+
 impl LossFunction {
     /// Compute the loss between predictions and targets
     fn compute(&self, predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
@@ -131,6 +148,7 @@ trait Layer {
     fn get_description(&self) -> String;
     /// Get number of trainable parameters
     fn num_parameters(&self) -> usize;
+}
 /// Convolutional layer (Conv2D)
 #[derive(Debug, Serialize, Deserialize)]
 struct Conv2D {
@@ -150,8 +168,11 @@ struct Conv2D {
     input: Option<Array4<f32>>,
     z: Option<Array4<f32>>, // Pre-activation
     output: Option<Array4<f32>>,
+}
+
 impl Conv2D {
     /// Create a new Conv2D layer
+    #[allow(clippy::too_many_arguments)]
     fn new(
         input_channels: usize,
         filters: usize,
@@ -185,6 +206,8 @@ impl Conv2D {
             input: None,
             z: None,
             output: None,
+        }
+    }
     /// Calculate output dimensions based on input and layer parameters
     fn calculate_output_shape(&self, input_shape: &[usize]) -> [usize; 4] {
         let batch_size = input_shape[0];
@@ -195,9 +218,11 @@ impl Conv2D {
                 let h = (input_height - self.kernel_size.0) / self.stride.0 + 1;
                 let w = (input_width - self.kernel_size.1) / self.stride.1 + 1;
                 (h, w)
+            }
             PaddingMode::Same => (input_height / self.stride.0, input_width / self.stride.1),
         };
         [batch_size, self.filters, output_height, output_width]
+    }
     /// Calculate padding based on padding mode
     fn calculate_padding(&self, input_shape: &[usize]) -> (usize, usize, usize, usize) {
         match self.padding {
@@ -216,10 +241,16 @@ impl Conv2D {
                 let pad_left = pad_width / 2;
                 let pad_right = pad_width - pad_left;
                 (pad_top, pad_bottom, pad_left, pad_right)
+            }
+        }
+    }
     /// Apply convolution operation
     fn convolve(&self, input: &Array4<f32>) -> Array4<f32> {
         let input_shape = input.shape();
+        let batch_size = input_shape[0];
         let input_channels = input_shape[1];
+        let input_height = input_shape[2];
+        let input_width = input_shape[3];
         // Calculate padding
         let (pad_top, pad_bottom, pad_left, pad_right) = self.calculate_padding(input_shape);
         // Apply padding if needed
@@ -233,9 +264,14 @@ impl Conv2D {
                     for h in 0..input_height {
                         for w in 0..input_width {
                             padded[[b, c, h + pad_top, w + pad_left]] = input[[b, c, h, w]];
+                        }
+                    }
+                }
+            }
             padded
         } else {
             input.clone()
+        };
         // Calculate output dimensions
         let output_shape = self.calculate_output_shape(input_shape);
         let output_height = output_shape[2];
@@ -265,7 +301,12 @@ impl Conv2D {
                         val += self.biases[f];
                         // Store result
                         output[[b, f, h_out, w_out]] = val;
+                    }
+                }
+            }
+        }
         output
+    }
     /// Compute gradients for the convolution operation
     fn convolve_backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
         let input = self
@@ -273,6 +314,35 @@ impl Conv2D {
             .as_ref()
             .expect("Forward pass must be called first");
         let output_shape = grad_output.shape();
+        let batch_size = output_shape[0];
+        let output_height = output_shape[2];
+        let output_width = output_shape[3];
+        let input_channels = input.shape()[1];
+        let input_height = input.shape()[2];
+        let input_width = input.shape()[3];
+        
+        // Calculate padding
+        let (pad_top, pad_bottom, pad_left, pad_right) = self.calculate_padding(input.shape());
+        
+        // Apply padding to input if needed
+        let padded_input = if pad_top > 0 || pad_bottom > 0 || pad_left > 0 || pad_right > 0 {
+            let padded_height = input_height + pad_top + pad_bottom;
+            let padded_width = input_width + pad_left + pad_right;
+            let mut padded = Array4::zeros([batch_size, input_channels, padded_height, padded_width]);
+            for b in 0..batch_size {
+                for c in 0..input_channels {
+                    for h in 0..input_height {
+                        for w in 0..input_width {
+                            padded[[b, c, h + pad_top, w + pad_left]] = input[[b, c, h, w]];
+                        }
+                    }
+                }
+            }
+            padded
+        } else {
+            input.clone()
+        };
+        
         // Initialize gradients for weights and biases
         let mut dweights = Array4::zeros(self.weights.dim());
         let mut dbiases = Array1::zeros(self.filters);
@@ -281,11 +351,17 @@ impl Conv2D {
         // Compute gradients for biases (sum over batch, height, and width dimensions)
         for f in 0..self.filters {
             let mut sum = 0.0;
+            for b in 0..batch_size {
                 for h in 0..output_height {
                     for w in 0..output_width {
                         sum += grad_output[[b, f, h, w]];
+                    }
+                }
+            }
             dbiases[f] = sum;
+        }
         // Compute gradients for weights
+        for f in 0..self.filters {
             for c in 0..input_channels {
                 for kh in 0..self.kernel_size.0 {
                     for kw in 0..self.kernel_size.1 {
@@ -295,25 +371,47 @@ impl Conv2D {
                                 let h_in = h_out * self.stride.0;
                                 for w_out in 0..output_width {
                                     let w_in = w_out * self.stride.1;
+                                    let h = h_in + kh;
+                                    let w = w_in + kw;
+                                    if h < padded_input.shape()[2] && w < padded_input.shape()[3] {
                                         sum += padded_input[[b, c, h, w]]
                                             * grad_output[[b, f, h_out, w_out]];
+                                    }
+                                }
+                            }
+                        }
                         dweights[[f, c, kh, kw]] = sum;
+                    }
+                }
+            }
+        }
         // Compute gradients for inputs (full convolution with transposed weights)
         let padded_height = padded_input.shape()[2];
         let padded_width = padded_input.shape()[3];
         // Rotate weights by 180 degrees (flip horizontally and vertically)
         let mut rotated_weights = Array4::zeros(self.weights.dim());
+        for f in 0..self.filters {
+            for c in 0..input_channels {
+                for kh in 0..self.kernel_size.0 {
+                    for kw in 0..self.kernel_size.1 {
                         rotated_weights[[f, c, kh, kw]] = self.weights[[
                             f,
                             c,
                             self.kernel_size.0 - 1 - kh,
                             self.kernel_size.1 - 1 - kw,
                         ]];
+                    }
+                }
+            }
+        }
         let mut padded_grad =
             Array4::zeros([batch_size, input_channels, padded_height, padded_width]);
         // Compute input gradients
+        for b in 0..batch_size {
+            for c in 0..input_channels {
                 for h in 0..padded_height {
                     for w in 0..padded_width {
+                        let mut sum = 0.0;
                         for f in 0..self.filters {
                             // Calculate bounds for the convolution window
                             let h_start = h.saturating_sub(self.kernel_size.0 - 1);
@@ -324,21 +422,40 @@ impl Conv2D {
                                 let kh = h - h_out * self.stride.0;
                                 if kh >= self.kernel_size.0 {
                                     continue;
+                                }
                                 for w_out in (w_start..w_end).step_by(self.stride.1) {
                                     let kw = w - w_out * self.stride.1;
                                     if kw >= self.kernel_size.1 {
                                         continue;
+                                    }
                                     sum += rotated_weights[[f, c, kh, kw]]
                                         * grad_output[[b, f, h_out, w_out]];
+                                }
+                            }
+                        }
                         padded_grad[[b, c, h, w]] = sum;
+                    }
+                }
+            }
+        }
         // Extract the gradient without padding
+        for b in 0..batch_size {
+            for c in 0..input_channels {
                 for h in 0..input_height {
                     for w in 0..input_width {
                         dinput[[b, c, h, w]] = padded_grad[[b, c, h + pad_top, w + pad_left]];
+                    }
+                }
+            }
+        }
+        
         // Store gradients
         self.dweights = Some(dweights);
         self.dbiases = Some(dbiases);
         dinput
+    }
+}
+
 impl Layer for Conv2D {
     fn forward(&mut self, x: &Array4<f32>) -> Array4<f32> {
         // Store input for backward pass
@@ -349,6 +466,8 @@ impl Layer for Conv2D {
         // Apply activation function
         let output = self.activation.apply(&z);
         self.output = Some(output.clone());
+        output
+    }
     fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
         // Derivative of activation function
         let z = self.z.as_ref().expect("Forward pass must be called first");
@@ -357,6 +476,7 @@ impl Layer for Conv2D {
         let grad_z = grad_output * &activation_grad;
         // Compute gradients for weights, biases, and inputs
         self.convolve_backward(&grad_z)
+    }
     fn update_parameters(&mut self, learning_rate: f32) {
         if let (Some(dweights), Some(dbiases)) = (&self.dweights, &self.dbiases) {
             // Update weights
@@ -366,6 +486,8 @@ impl Layer for Conv2D {
             // Clear gradients
             self.dweights = None;
             self.dbiases = None;
+        }
+    }
     fn get_description(&self) -> String {
         format!(
             "Conv2D: {}x{} kernels, {} filters, stride {:?}, padding {:?}, activation {}",
@@ -379,35 +501,62 @@ impl Layer for Conv2D {
             },
             self.activation.as_str()
         )
+    }
+    
     fn num_parameters(&self) -> usize {
         self.weights.len() + self.biases.len()
+    }
+}
 /// Max pooling layer
 struct MaxPool2D {
     pool_size: (usize, usize),
+    stride: (usize, usize),
     max_indices: Option<Array4<(usize, usize)>>, // Indices of max values
+}
+
 impl MaxPool2D {
     /// Create a new MaxPool2D layer
     fn new(pool_size: (usize, usize), stride: Option<(usize, usize)>) -> Self {
         // Default stride is same as pool size
         let stride = stride.unwrap_or(pool_size);
+        Self {
             pool_size,
+            stride,
             max_indices: None,
+        }
+    }
     /// Calculate output dimensions
+    fn calculate_output_shape(&self, input_shape: &[usize]) -> [usize; 4] {
+        let batch_size = input_shape[0];
         let channels = input_shape[1];
+        let input_height = input_shape[2];
+        let input_width = input_shape[3];
         let output_height = (input_height - self.pool_size.0) / self.stride.0 + 1;
         let output_width = (input_width - self.pool_size.1) / self.stride.1 + 1;
         [batch_size, channels, output_height, output_width]
+    }
+}
 impl Layer for MaxPool2D {
+    fn forward(&mut self, x: &Array4<f32>) -> Array4<f32> {
         let input_shape = x.shape();
+        let batch_size = input_shape[0];
+        let channels = input_shape[1];
         let _input_height = input_shape[2];
         let _input_width = input_shape[3];
         // Calculate output shape
+        let output_shape = self.calculate_output_shape(input_shape);
+        let output_height = output_shape[2];
+        let output_width = output_shape[3];
+        let mut output = Array4::zeros(output_shape);
         // Initialize output array and max indices
         let mut max_indices = Array4::from_elem(output_shape, (0, 0));
         // Perform max pooling
+        for b in 0..batch_size {
             for c in 0..channels {
+                for h_out in 0..output_height {
                     let h_start = h_out * self.stride.0;
                     let h_end = h_start + self.pool_size.0;
+                    for w_out in 0..output_width {
                         let w_start = w_out * self.stride.1;
                         let w_end = w_start + self.pool_size.1;
                         // Find maximum value in the pooling window
@@ -421,30 +570,81 @@ impl Layer for MaxPool2D {
                                     max_val = val;
                                     max_h = h;
                                     max_w = w;
+                                }
+                            }
+                        }
                         output[[b, c, h_out, w_out]] = max_val;
                         max_indices[[b, c, h_out, w_out]] = (max_h, max_w);
+                    }
+                }
+            }
+        }
         // Store for backward pass
         self.max_indices = Some(max_indices);
+        output
+    }
+    fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
         let max_indices = self
             .max_indices
+            .as_ref()
+            .expect("Forward pass must be called first");
+        
+        let output_shape = grad_output.shape();
+        let batch_size = output_shape[0];
+        let channels = output_shape[1];
+        let output_height = output_shape[2];
+        let output_width = output_shape[3];
+        
+        // Calculate input dimensions from output and pooling parameters
+        let input_height = (output_height - 1) * self.stride.0 + self.pool_size.0;
+        let input_width = (output_width - 1) * self.stride.1 + self.pool_size.1;
+        
         // Initialize gradient with respect to input
+        let mut dinput = Array4::zeros([batch_size, channels, input_height, input_width]);
+        
         // Distribute gradients to max locations
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for h_out in 0..output_height {
+                    for w_out in 0..output_width {
                         let (max_h, max_w) = max_indices[[b, c, h_out, w_out]];
                         dinput[[b, c, max_h, max_w]] += grad_output[[b, c, h_out, w_out]];
+                    }
+                }
+            }
+        }
+        dinput
+    }
     fn update_parameters(&mut self, _learning_rate: f32) {
         // MaxPool has no parameters to update
+    }
+    
+    fn get_description(&self) -> String {
+        format!(
             "MaxPool2D: {}x{} pool size, stride {:?}",
             self.pool_size.0, self.pool_size.1, self.stride
+        )
+    }
+    
+    fn num_parameters(&self) -> usize {
         0 // No trainable parameters
+    }
+}
 /// Flatten layer to convert from 4D to 2D (for fully connected layers)
 struct Flatten {
     input_shape: Option<Vec<usize>>,
+}
+
 impl Flatten {
     /// Create a new Flatten layer
     fn new() -> Self {
         Self { input_shape: None }
+    }
+}
 impl Layer for Flatten {
+    fn forward(&mut self, x: &Array4<f32>) -> Array4<f32> {
         let input_shape = x.shape().to_vec();
+        let batch_size = input_shape[0];
         // Calculate flattened size (excluding batch dimension)
         let flat_size: usize = input_shape[1..].iter().product();
         // Reshape to (batch_size, flat_size, 1, 1) - a 4D tensor with last two dims = 1
@@ -455,56 +655,122 @@ impl Layer for Flatten {
         // Store original shape for backward pass
         self.input_shape = Some(input_shape);
         flattened
+    }
+    fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
         let input_shape = self
             .input_shape
+            .as_ref()
+            .expect("Forward pass must be called first");
         // Reshape back to original shape
         let reshaped = grad_output
+            .clone()
             .into_shape_with_order(input_shape.clone())
+            .unwrap();
         let reshaped_4d: Array4<f32> = reshaped.into_dimensionality().unwrap();
         reshaped_4d
+    }
+    fn update_parameters(&mut self, _learning_rate: f32) {
         // Flatten has no parameters to update
+    }
+    
+    fn get_description(&self) -> String {
         "Flatten".to_string()
+    }
+    
+    fn num_parameters(&self) -> usize {
+        0 // No trainable parameters
+    }
+}
 /// Dense (fully connected) layer
 struct Dense {
     input_size: usize,
     output_size: usize,
+    activation: ActivationFunction,
     weights: Array2<f32>,
     biases: Array1<f32>,
     dweights: Option<Array2<f32>>,
+    dbiases: Option<Array1<f32>>,
     z: Option<Array4<f32>>,
+    input: Option<Array4<f32>>,
+}
+
 impl Dense {
     /// Create a new Dense layer
+    fn new(
         input_size: usize,
         output_size: usize,
+        activation: ActivationFunction,
+        rng: &mut SmallRng,
+    ) -> Self {
         let std_dev = (2.0 / input_size as f32).sqrt();
+        let dist = Uniform::new_inclusive(-std_dev, std_dev);
         // Initialize weights and biases
         let weights = Array2::from_shape_fn((input_size, output_size), |_| dist.sample(rng));
         let biases = Array1::zeros(output_size);
+        Self {
             input_size,
             output_size,
+            activation,
+            weights,
+            biases,
+            dweights: None,
+            dbiases: None,
+            z: None,
+            input: None,
+        }
+    }
+}
 impl Layer for Dense {
+    fn forward(&mut self, x: &Array4<f32>) -> Array4<f32> {
+        // Store input for backward pass
+        self.input = Some(x.clone());
         let batch_size = x.shape()[0];
         // Reshape input from [batch_size, features, 1, 1] to [batch_size, features]
         let x_2d = x
+            .clone()
             .into_shape_with_order((batch_size, self.input_size))
+            .unwrap();
         // Compute linear transformation: z = x @ W + b
         let mut z_2d = Array2::<f32>::zeros((batch_size, self.output_size));
         for i in 0..batch_size {
             for j in 0..self.output_size {
+                let mut sum = 0.0;
                 for k in 0..self.input_size {
                     sum += x_2d[[i, k]] * self.weights[[k, j]];
+                }
                 z_2d[[i, j]] = sum + self.biases[j];
+            }
+        }
         let output_2d = self.activation.apply(&z_2d);
         // Reshape back to 4D: [batch_size, output_size, 1, 1]
         let z = z_2d
+            .clone()
             .into_shape_with_order((batch_size, self.output_size, 1, 1))
+            .unwrap();
         let output = output_2d
+            .into_shape_with_order((batch_size, self.output_size, 1, 1))
+            .unwrap();
+        // Store for backward pass
+        self.z = Some(z);
+        output
+    }
+    fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
+        let input = self.input.as_ref().expect("Forward pass must be called first");
+        let z = self.z.as_ref().expect("Forward pass must be called first");
         let batch_size = input.shape()[0];
         // Reshape arrays to 2D
         let input_2d = input
+            .clone()
+            .into_shape_with_order((batch_size, self.input_size))
+            .unwrap();
         let z_2d = z
+            .clone()
             .into_shape_with_order((batch_size, self.output_size))
+            .unwrap();
         let grad_output_2d = grad_output
+            .clone()
+            .into_shape_with_order((batch_size, self.output_size))
+            .unwrap();
         // Compute gradient of activation function
         let dactivation = self.activation.derivative(&z_2d);
         let delta = &grad_output_2d * &dactivation;
@@ -515,34 +781,75 @@ impl Layer for Dense {
         let dinput_2d = delta.dot(&self.weights.t());
         // Reshape to 4D
         let dinput = dinput_2d.into_shape_with_order(input.dim()).unwrap();
+        // Store gradients
+        self.dweights = Some(dweights);
+        self.dbiases = Some(dbiases);
+        dinput
+    }
+    fn update_parameters(&mut self, learning_rate: f32) {
+        if let (Some(dweights), Some(dbiases)) = (&self.dweights, &self.dbiases) {
+            // Update weights
+            self.weights = &self.weights - &(dweights * learning_rate);
+            // Update biases
+            self.biases = &self.biases - &(dbiases * learning_rate);
+            // Clear gradients
+            self.dweights = None;
+            self.dbiases = None;
+        }
+    }
+    
+    fn get_description(&self) -> String {
+        format!(
             "Dense: {} -> {}, activation {}",
             self.input_size,
             self.output_size,
+            self.activation.as_str()
+        )
+    }
+    
+    fn num_parameters(&self) -> usize {
+        self.weights.len() + self.biases.len()
+    }
+}
 /// Sequential model that chains multiple layers
 struct Sequential {
     layers: Vec<Box<dyn Layer>>,
     loss_fn: LossFunction,
+}
+
 impl Sequential {
     /// Create a new sequential model
     fn new(loss_fn: LossFunction) -> Self {
+        Self {
             layers: Vec::new(),
             loss_fn,
+        }
+    }
     /// Add a layer to the model
     fn add<L: Layer + 'static>(&mut self, layer: L) -> &mut Self {
         self.layers.push(Box::new(layer));
         self
+    }
+    
     /// Forward pass through all layers
+    fn forward(&mut self, x: &Array4<f32>) -> Array4<f32> {
         let mut output = x.clone();
         for layer in &mut self.layers {
             output = layer.forward(&output);
+        }
+        output
+    }
     /// Compute loss (for 2D output)
     fn compute_loss(&self, predictions: &Array4<f32>, targets: &Array2<f32>) -> f32 {
         let batch_size = predictions.shape()[0];
         let output_size = predictions.shape()[1];
         // Reshape predictions to 2D for loss computation
         let predictions_2d = predictions
+            .clone()
             .into_shape_with_order((batch_size, output_size))
+            .unwrap();
         self.loss_fn.compute(&predictions_2d, targets)
+    }
     /// Backward pass and update parameters
     fn backward(&mut self, x: &Array4<f32>, y: &Array2<f32>, learning_rate: f32) -> f32 {
         // Forward pass
@@ -550,6 +857,12 @@ impl Sequential {
         // Compute loss
         let loss = self.compute_loss(&predictions, y);
         // Reshape predictions to 2D for loss derivative
+        let batch_size = predictions.shape()[0];
+        let output_size = predictions.shape()[1];
+        let predictions_2d = predictions
+            .clone()
+            .into_shape_with_order((batch_size, output_size))
+            .unwrap();
         // Compute gradient of loss with respect to predictions
         let dloss = self.loss_fn.derivative(&predictions_2d, y);
         // Reshape back to 4D for backward pass
@@ -558,10 +871,15 @@ impl Sequential {
         let mut grad = dloss_4d;
         for layer in self.layers.iter_mut().rev() {
             grad = layer.backward(&grad);
+        }
         // Update parameters
+        for layer in &mut self.layers {
             layer.update_parameters(learning_rate);
+        }
         loss
+    }
     /// Train the model for a number of epochs
+    #[allow(clippy::too_many_arguments)]
     fn train(
         &mut self,
         x: &Array4<f32>,
@@ -596,24 +914,38 @@ impl Sequential {
                         for h in 0..x.shape()[2] {
                             for w in 0..x.shape()[3] {
                                 batch_x[[i, c, h, w]] = x[[idx, c, h, w]];
+                            }
+                        }
+                    }
                     for j in 0..y.shape()[1] {
                         batch_y[[i, j]] = y[[idx, j]];
+                    }
+                }
                 // Train on mini-batch
                 let batch_loss = self.backward(&batch_x, &batch_y, learning_rate);
                 epoch_loss += batch_loss;
                 batch_count += 1;
+            }
             // Compute average loss
             epoch_loss /= batch_count as f32;
             losses.push(epoch_loss);
             // Print progress
             if epoch % 10 == 0 || epoch == epochs - 1 {
                 println!("Epoch {}/{}: loss = {:.6}", epoch + 1, epochs, epoch_loss);
+            }
+        }
         losses
+    }
     /// Make predictions
     fn predict(&mut self, x: &Array4<f32>) -> Array2<f32> {
+        let predictions = self.forward(x);
+        let batch_size = predictions.shape()[0];
+        let output_size = predictions.shape()[1];
         // Reshape to 2D for easier handling
         predictions
+            .into_shape_with_order((batch_size, output_size))
             .unwrap()
+    }
     /// Print a summary of the model
     fn summary(&self) {
         println!("Model Summary:");
@@ -633,8 +965,13 @@ impl Sequential {
                 layer.get_description(),
                 params
             );
+        }
         println!("Total parameters: {}", total_params);
+        println!();
+    }
+}
 /// Create an MNIST-like synthetic dataset (small 4x4 images, 10 classes)
+#[allow(clippy::too_many_arguments)]
 fn create_synthetic_dataset(
     num_samples: usize,
     num_classes: usize,
@@ -653,21 +990,29 @@ fn create_synthetic_dataset(
                 |_| {
                     if rng.random::<f32>() > 0.7 {
                         1.0
-                },
+                    } else {
+                        0.0
+                    }
+                });
         class_patterns.push(pattern);
+    }
     // Generate samples with noise
     for i in 0..num_samples {
         // Assign a random class
-        let class = rng.random_range(0..num_classes);
+        let class = rng.gen_range(0..num_classes);
         // Add the class pattern with noise
         for h in 0..image_size.0 {
             for w in 0..image_size.1 {
                 let noise = rng.random::<f32>() * 0.3;
                 let pixel = (class_patterns[class][[h, w]] + noise).min(1.0);
                 images[[i, 0, h, w]] = pixel;
+            }
+        }
         // One-hot encode the label
         labels[[i, class]] = 1.0;
+    }
     (images, labels)
+}
 // Helper function to find index of maximum value in array
 fn argmax(arr: ArrayView1<f32>) -> usize {
     let mut max_idx = 0;
@@ -676,7 +1021,10 @@ fn argmax(arr: ArrayView1<f32>) -> usize {
         if val > max_val {
             max_val = val;
             max_idx = idx;
+        }
+    }
     max_idx
+}
 /// Train and evaluate a simple CNN model
 fn train_cnn_example() -> Result<()> {
     // Set up RNG
@@ -712,7 +1060,16 @@ fn train_cnn_example() -> Result<()> {
         &mut rng,
     ));
     model.add(MaxPool2D::new((2, 2), None));
+    model.add(Conv2D::new(
+        16,
         32,
+        (3, 3),
+        (1, 1),
+        PaddingMode::Same,
+        ActivationFunction::ReLU,
+        &mut rng,
+    ));
+    model.add(MaxPool2D::new((2, 2), None));
     model.add(Flatten::new());
     // Calculate the size after flattening
     // After 2 max pooling operations with size (2,2), the image dimension is reduced to 1/4
@@ -720,8 +1077,15 @@ fn train_cnn_example() -> Result<()> {
     model.add(Dense::new(
         flattened_size,
         64,
+        ActivationFunction::ReLU,
+        &mut rng,
+    ));
+    model.add(Dense::new(
+        64,
         num_classes,
         ActivationFunction::Sigmoid,
+        &mut rng,
+    ));
     // Print model summary
     model.summary();
     // Train the model
@@ -729,12 +1093,13 @@ fn train_cnn_example() -> Result<()> {
     let learning_rate = 0.01;
     let batch_size = 32;
     let epochs = 50;
-    model.train(
+    let _losses = model.train(
         &train_images,
         &train_labels,
         learning_rate,
         epochs,
         batch_size,
+    );
     // Evaluate on test set
     println!("\nEvaluating model on test set...");
     let predictions = model.predict(&test_images);
@@ -745,15 +1110,19 @@ fn train_cnn_example() -> Result<()> {
         let predicted_class = argmax(predictions.row(i));
         if true_class == predicted_class {
             correct += 1;
+        }
+    }
     let accuracy = correct as f32 / test_size as f32;
+    println!(
         "Test accuracy: {:.2}% ({}/{})",
         accuracy * 100.0,
         correct,
         test_size
+    );
     // Make some example predictions
     println!("\nExample predictions:");
     for i in 0..5 {
-        let idx = rng.random_range(0..test_size);
+        let idx = rng.gen_range(0..test_size);
         let true_class = argmax(test_labels.row(idx));
         let predicted_class = argmax(predictions.row(idx));
         println!(
@@ -761,8 +1130,13 @@ fn train_cnn_example() -> Result<()> {
             i + 1,
             true_class,
             predicted_class
+        );
+    }
     Ok(())
+}
 /// Main function
 fn main() -> Result<()> {
     println!("Convolutional Neural Network Implementation Example\n");
     train_cnn_example()?;
+    Ok(())
+}

@@ -524,15 +524,13 @@ impl<T: Clone> RTree<T> {
 
         if min_entries < 1 || min_entries > max_entries / 2 {
             return Err(SpatialError::ValueError(format!(
-                "min_entries must be between 1 and max_entries/2, got: {}",
-                min_entries
+                "min_entries must be between 1 and max_entries/2, got: {min_entries}"
             )));
         }
 
         if max_entries < 2 {
             return Err(SpatialError::ValueError(format!(
-                "max_entries must be at least 2, got: {}",
-                max_entries
+                "max_entries must be at least 2, got: {max_entries}"
             )));
         }
 

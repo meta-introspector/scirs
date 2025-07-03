@@ -129,7 +129,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Check if any points in region
         let has_points = quadtree.points_in_region(region);
-        println!("  Contains points: {}", has_points);
+        println!("  Contains points: {has_points}");
 
         // Get all points in region
         let indices = quadtree.get_points_in_region(region);
@@ -139,7 +139,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("  Points in region:");
             for &idx in &indices {
                 let point = points.row(idx);
-                println!("    Point #{} at [{:.2}, {:.2}]", idx, point[0], point[1]);
+                println!("    Point #{idx} at [{:.2}, {:.2}]", point[0], point[1]);
             }
         }
     }
@@ -149,7 +149,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("-----------------------------");
 
     let n_points = 10000;
-    println!("Creating a random dataset with {} points...", n_points);
+    println!("Creating a random dataset with {n_points} points...");
 
     let mut rng = rand::rng();
     let mut large_points = Array2::zeros((n_points, 2));
@@ -165,7 +165,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let large_quadtree = Quadtree::new(&large_points.view())?;
     let build_time = start.elapsed();
 
-    println!("  Built quadtree in {:.2?}", build_time);
+    println!("  Built quadtree in {build_time:.2?}");
     println!("  Maximum depth: {}", large_quadtree.max_depth());
 
     // Test nearest neighbor query performance
@@ -176,7 +176,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (_indices, _) = large_quadtree.query_nearest(&query_point.view(), 10)?;
     let query_time = start.elapsed();
 
-    println!("  Found 10 nearest neighbors in {:.2?}", query_time);
+    println!("  Found 10 nearest neighbors in {query_time:.2?}");
 
     // Test radius search performance
     let start = std::time::Instant::now();

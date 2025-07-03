@@ -153,8 +153,7 @@ where
             } else {
                 // Should never happen due to bounds check
                 Err(LinalgError::IndexError(format!(
-                    "Index out of bounds: sum index {} exceeds matrix dimensions",
-                    sum_idx
+                    "Index out of bounds: sum index {sum_idx} exceeds matrix dimensions"
                 )))
             }
         }

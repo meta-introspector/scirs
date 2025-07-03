@@ -107,8 +107,7 @@ where
             let shape = core.shape();
             if shape.len() != 3 {
                 return Err(LinalgError::ShapeError(format!(
-                    "Core {} must be 3-dimensional, got shape {:?}",
-                    k, shape
+                    "Core {k} must be 3-dimensional, got shape {shape:?}"
                 )));
             }
 
@@ -188,8 +187,7 @@ where
         for (k, (&idx, &size)) in indices.iter().zip(self.mode_sizes.iter()).enumerate() {
             if idx >= size {
                 return Err(LinalgError::ShapeError(format!(
-                    "Index {} out of bounds for dimension {} (size {})",
-                    idx, k, size
+                    "Index {idx} out of bounds for dimension {k} (size {size})"
                 )));
             }
         }
@@ -232,8 +230,7 @@ where
         // Prevent excessive memory allocation
         if total_size > 1_000_000 {
             return Err(LinalgError::ShapeError(format!(
-                "Dense tensor would be too large: {} elements",
-                total_size
+                "Dense tensor would be too large: {total_size} elements"
             )));
         }
 
@@ -486,7 +483,7 @@ where
         let core = u_trunc
             .to_owned()
             .into_shape_with_order((ranks[k], n_k, r_k))
-            .map_err(|e| LinalgError::ShapeError(format!("Step {}: {}", k, e)))?;
+            .map_err(|e| LinalgError::ShapeError(format!("Step {k}: {e}")))?;
         cores.push(core);
 
         // Update for next iteration
@@ -500,10 +497,7 @@ where
     }
 
     // Last core (k = d-1)
-    eprintln!(
-        "Creating last core: d={}, current_shape={:?}",
-        d, current_shape
-    );
+    eprintln!("Creating last core: d={d}, current_shape={current_shape:?}");
 
     // The last core should handle all remaining dimensions
     let expected_elements = current_data.len();
@@ -524,13 +518,13 @@ where
     // We reshape current_data directly
     let reshaped_last_core =
         ndarray::Array2::from_shape_vec((r_prev, remaining_size), current_data)
-            .map_err(|e| LinalgError::ShapeError(format!("Last core reshape: {}", e)))?;
+            .map_err(|e| LinalgError::ShapeError(format!("Last core reshape: {e}")))?;
 
     // Convert to 3D with last dimension = 1
     let n_d = remaining_size;
     let last_core = reshaped_last_core
         .into_shape_with_order((r_prev, n_d, 1))
-        .map_err(|e| LinalgError::ShapeError(format!("Last core 3D: {}", e)))?;
+        .map_err(|e| LinalgError::ShapeError(format!("Last core 3D: {e}")))?;
 
     cores.push(last_core);
     ranks.push(1); // r_d = 1

@@ -277,7 +277,7 @@ impl SchrodingerSolver {
         // Kinetic energy evolution in momentum space using FFT
         // Transform to momentum space
         let psi_k = fft(&state.psi.to_vec(), None).map_err(|e| {
-            crate::error::IntegrateError::ComputationError(format!("FFT failed: {:?}", e))
+            crate::error::IntegrateError::ComputationError(format!("FFT failed: {e:?}"))
         })?;
 
         // Calculate k-space grid (momentum values)
@@ -301,7 +301,7 @@ impl SchrodingerSolver {
 
         // Transform back to position space
         let psi_evolved = ifft(&psi_k_evolved, None).map_err(|e| {
-            crate::error::IntegrateError::ComputationError(format!("IFFT failed: {:?}", e))
+            crate::error::IntegrateError::ComputationError(format!("IFFT failed: {e:?}"))
         })?;
 
         // Update state with evolved wave function
@@ -1379,8 +1379,7 @@ pub mod quantum_algorithms {
                 }
                 _ => {
                     return Err(IntegrateError::ComputationError(format!(
-                        "Unknown gate: {}",
-                        gate_name
+                        "Unknown gate: {gate_name}"
                     )));
                 }
             }

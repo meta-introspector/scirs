@@ -100,8 +100,7 @@ where
 
         // If we can't convert, return an error
         return Err(FFTError::ValueError(format!(
-            "Could not convert {:?} to f64",
-            val
+            "Could not convert {val:?} to f64"
         )));
     }
 
@@ -199,9 +198,9 @@ where
             }
 
             // If we can't convert, return an error
+            let val = x[[r, c]];
             return Err(FFTError::ValueError(format!(
-                "Could not convert {:?} to f64",
-                x[[r, c]]
+                "Could not convert {val:?} to f64"
             )));
         }
     }
@@ -359,7 +358,7 @@ fn _ihfftn_real(
     let ndim = x_shape.len();
 
     // Handle empty array case
-    if ndim == 0 || x_shape.iter().any(|&d| d == 0) {
+    if ndim == 0 || x_shape.contains(&0) {
         return Ok(Array::zeros(IxDyn(&[])));
     }
 
@@ -389,8 +388,7 @@ fn _ihfftn_real(
             for &ax in &sorted_axes {
                 if ax >= ndim {
                     return Err(FFTError::ValueError(format!(
-                        "Axis {} is out of bounds for array of dimension {}",
-                        ax, ndim
+                        "Axis {ax} is out of bounds for array of dimension {ndim}"
                     )));
                 }
             }

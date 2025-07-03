@@ -221,8 +221,7 @@ where
             Ok((sum_sq * scale).sqrt())
         }
         _ => Err(LinalgError::InvalidInputError(format!(
-            "Unknown norm type: {}",
-            norm_type
+            "Unknown norm type: {norm_type}"
         ))),
     }
 }

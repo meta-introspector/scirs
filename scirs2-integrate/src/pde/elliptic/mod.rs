@@ -213,7 +213,7 @@ impl PoissonSolver2D {
             // Print progress if verbose
             if self.options.verbose && (iter % 100 == 0 || iter == self.options.max_iterations - 1)
             {
-                println!("Iteration {}: residual = {:.6e}", iter, residual_norm);
+                println!("Iteration {iter}: residual = {residual_norm:.6e}");
             }
 
             iter += 1;

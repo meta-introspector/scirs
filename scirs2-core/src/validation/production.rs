@@ -221,7 +221,7 @@ impl ProductionValidator {
                 result.is_valid = false;
                 result.errors.push(ValidationError {
                     code: "VALUE_TOO_SMALL".to_string(),
-                    message: format!("Value {} is below minimum {}", value, min),
+                    message: format!("Value {value} is below minimum {min}"),
                     field: constraints.field_name.clone(),
                     suggestion: Some(format!("{min}")),
                     severity: ValidationSeverity::Error,
@@ -235,7 +235,7 @@ impl ProductionValidator {
                 result.is_valid = false;
                 result.errors.push(ValidationError {
                     code: "VALUE_TOO_LARGE".to_string(),
-                    message: format!("Value {} exceeds maximum {}", value, max),
+                    message: format!("Value {value} exceeds maximum {max}"),
                     field: constraints.field_name.clone(),
                     suggestion: Some(format!("{max}")),
                     severity: ValidationSeverity::Error,
@@ -317,9 +317,9 @@ impl ProductionValidator {
                 result.is_valid = false;
                 result.errors.push(ValidationError {
                     code: "COLLECTION_TOO_SMALL".to_string(),
-                    message: format!("Size {} is below minimum {}", size, min_size),
+                    message: format!("Size {size} is below minimum {min_size}"),
                     field: constraints.field_name.clone(),
-                    suggestion: Some(format!("Provide at least {} elements", min_size)),
+                    suggestion: Some(format!("Provide at least {min_size} elements")),
                     severity: ValidationSeverity::Error,
                 });
             }
@@ -331,9 +331,9 @@ impl ProductionValidator {
                 result.is_valid = false;
                 result.errors.push(ValidationError {
                     code: "COLLECTION_TOO_LARGE".to_string(),
-                    message: format!("Size {} exceeds maximum {}", size, max_size),
+                    message: format!("Size {size} exceeds maximum {max_size}"),
                     field: constraints.field_name.clone(),
-                    suggestion: Some(format!("Limit collection to {} elements", max_size)),
+                    suggestion: Some(format!("Limit collection to {max_size} elements")),
                     severity: ValidationSeverity::Error,
                 });
             }
@@ -346,8 +346,7 @@ impl ProductionValidator {
                 if start_time.elapsed() > self.context.timeout {
                     result.metrics.timed_out = true;
                     result.warnings.push(format!(
-                        "Validation timed out after checking {} elements",
-                        index
+                        "Validation timed out after checking {index} elements"
                     ));
                     break;
                 }
@@ -359,7 +358,7 @@ impl ProductionValidator {
                     result.is_valid = false;
                     result.errors.push(ValidationError {
                         code: "ELEMENT_VALIDATION_FAILED".to_string(),
-                        message: format!("Index {}: {}", index, error),
+                        message: format!("Index {index}: {error}"),
                         field: constraints.field_name.clone(),
                         suggestion: Some("Check element constraints".to_string()),
                         severity: ValidationSeverity::Error,
@@ -413,7 +412,7 @@ impl ProductionValidator {
                         min_length
                     ),
                     field: constraints.field_name.clone(),
-                    suggestion: Some(format!("Provide at least {} characters", min_length)),
+                    suggestion: Some(format!("Provide at least {min_length} characters")),
                     severity: ValidationSeverity::Error,
                 });
             }
@@ -431,7 +430,7 @@ impl ProductionValidator {
                         max_length
                     ),
                     field: constraints.field_name.clone(),
-                    suggestion: Some(format!("Limit string to {} characters", max_length)),
+                    suggestion: Some(format!("Limit string to {max_length} characters")),
                     severity: ValidationSeverity::Error,
                 });
             }
@@ -460,7 +459,7 @@ impl ProductionValidator {
                     result.is_valid = false;
                     result.errors.push(ValidationError {
                         code: "INVALID_CHARACTER".to_string(),
-                        message: format!("Character '{}' is not allowed", ch),
+                        message: format!("Character '{ch}' is not allowed"),
                         field: constraints.field_name.clone(),
                         suggestion: Some("Use only allowed characters".to_string()),
                         severity: ValidationSeverity::Error,
@@ -735,16 +734,14 @@ pub fn validate_array_dimensions(dims: &[usize], max_dimensions: usize) -> CoreR
     for (i, &dim) in dims.iter().enumerate() {
         if dim == 0 {
             return Err(CoreError::ValidationError(ErrorContext::new(format!(
-                "Dimension {} has size 0, which is not allowed",
-                i
+                "Dimension {i} has size 0, which is not allowed"
             ))));
         }
 
         // Prevent integer overflow in total size calculation
         if dim > usize::MAX / 1024 {
             return Err(CoreError::ValidationError(ErrorContext::new(format!(
-                "Dimension {} size {} is too large",
-                i, dim
+                "Dimension {i} size {dim} is too large"
             ))));
         }
     }
@@ -760,8 +757,7 @@ pub fn validate_array_dimensions(dims: &[usize], max_dimensions: usize) -> CoreR
     const MAX_TOTAL_SIZE: usize = 1024 * 1024 * 1024 / 8;
     if total_size > MAX_TOTAL_SIZE {
         return Err(CoreError::ValidationError(ErrorContext::new(format!(
-            "Array total size {} exceeds maximum allowed size {}",
-            total_size, MAX_TOTAL_SIZE
+            "Array total size {total_size} exceeds maximum allowed size {MAX_TOTAL_SIZE}"
         ))));
     }
 
@@ -796,8 +792,7 @@ pub fn validate_file_path(path: &str) -> CoreResult<()> {
     for pattern in &dangerous_patterns {
         if path.contains(pattern) {
             return Err(CoreError::ValidationError(ErrorContext::new(format!(
-                "Dangerous pattern '{}' detected in file path",
-                pattern
+                "Dangerous pattern '{pattern}' detected in file path"
             ))));
         }
     }

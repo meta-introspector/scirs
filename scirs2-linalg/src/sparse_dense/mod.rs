@@ -121,8 +121,7 @@ where
         if let Some(&max_index) = indices.iter().max() {
             if max_index >= cols {
                 return Err(LinalgError::ValueError(format!(
-                    "Column index out of bounds: {} for a matrix with {} columns",
-                    max_index, cols
+                    "Column index out of bounds: {max_index} for a matrix with {cols} columns"
                 )));
             }
         }
@@ -852,7 +851,7 @@ pub mod advanced {
         for i in 0..sparse.nrows() {
             for j in sparse.indptr[i]..sparse.indptr[i + 1] {
                 let col = sparse.indices[j];
-                let distance = if i > col { i - col } else { col - i };
+                let distance = i.abs_diff(col);
                 bandwidth = bandwidth.max(distance);
             }
         }
@@ -1076,8 +1075,7 @@ pub mod utils {
             "csr" => Ok(sparse.clone()),
             "csc" => sparse_transpose(sparse), // CSC is essentially transposed CSR
             _ => Err(LinalgError::ValueError(format!(
-                "Unsupported sparse format: {}",
-                format
+                "Unsupported sparse format: {format}"
             ))),
         }
     }

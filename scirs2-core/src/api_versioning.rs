@@ -796,7 +796,11 @@ impl ApiCompatibilityChecker {
                             && old_param.type_name != new_param.type_name
                         {
                             violations.push(CompatibilityViolation {
-                                api_name: format!("{}::{}", current_api.module, current_api.name),
+                                api_name: {
+                                    let module = &current_api.module;
+                                    let name = &current_api.name;
+                                    format!("{module}::{name}")
+                                },
                                 violation_type: CompatibilityRuleType::ParameterTypeChange,
                                 severity: CompatibilitySeverity::Breaking,
                                 description: format!(

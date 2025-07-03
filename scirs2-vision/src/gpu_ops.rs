@@ -88,8 +88,7 @@ impl GpuVisionContext {
 
                 // If all backends fail, return the original error with helpful context
                 Err(VisionError::Other(format!(
-                    "Failed to create GPU context with any backend. Preferred backend {:?} failed with: {}. All fallback backends also failed. Check GPU drivers and compute capabilities.",
-                    preferred_backend, preferred_error
+                    "Failed to create GPU context with any backend. Preferred backend {preferred_backend:?} failed with: {preferred_error}. All fallback backends also failed. Check GPU drivers and compute capabilities."
                 )))
             }
         }
@@ -99,53 +98,44 @@ impl GpuVisionContext {
     pub fn with_backend(backend: GpuBackend) -> Result<Self> {
         match GpuContext::new(backend) {
             Ok(context) => {
-                eprintln!(
-                    "Successfully created GPU context with requested backend: {:?}",
-                    backend
-                );
+                eprintln!("Successfully created GPU context with requested backend: {backend:?}");
                 Ok(Self { context, backend })
             }
             Err(error) => {
                 let detailed_error = match backend {
                     GpuBackend::Cuda => {
                         format!(
-                            "CUDA backend failed: {}. Ensure NVIDIA drivers are installed and CUDA-capable GPU is available.",
-                            error
+                            "CUDA backend failed: {error}. Ensure NVIDIA drivers are installed and CUDA-capable GPU is available."
                         )
                     }
                     GpuBackend::Metal => {
                         format!(
-                            "Metal backend failed: {}. Metal is only available on macOS with compatible hardware.",
-                            error
+                            "Metal backend failed: {error}. Metal is only available on macOS with compatible hardware."
                         )
                     }
                     GpuBackend::OpenCL => {
                         format!(
-                            "OpenCL backend failed: {}. Check OpenCL runtime installation and driver support.",
-                            error
+                            "OpenCL backend failed: {error}. Check OpenCL runtime installation and driver support."
                         )
                     }
                     GpuBackend::Wgpu => {
                         format!(
-                            "WebGPU backend failed: {}. Check GPU drivers and WebGPU support.",
-                            error
+                            "WebGPU backend failed: {error}. Check GPU drivers and WebGPU support."
                         )
                     }
                     GpuBackend::Cpu => {
                         format!(
-                            "CPU backend failed: {}. This should not happen as CPU backend should always be available.",
-                            error
+                            "CPU backend failed: {error}. This should not happen as CPU backend should always be available."
                         )
                     }
                     GpuBackend::Rocm => {
                         format!(
-                            "ROCm backend failed: {}. Check ROCm installation and AMD GPU drivers.",
-                            error
+                            "ROCm backend failed: {error}. Check ROCm installation and AMD GPU drivers."
                         )
                     }
                 };
 
-                eprintln!("GPU context creation failed: {}", detailed_error);
+                eprintln!("GPU context creation failed: {detailed_error}");
                 Err(VisionError::Other(detailed_error))
             }
         }
@@ -264,7 +254,7 @@ pub fn gpu_convolve_2d(
 
             // Reshape to 2D array
             Ok(Array2::from_shape_vec((out_height, out_width), result_flat)
-                .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))?)
+                .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))?)
         }
         Err(_) => {
             // Kernel not found, fall back to custom implementation or SIMD
@@ -399,7 +389,7 @@ fn conv2d_vision(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 output_buffer.copy_to_host(&mut result_flat);
 
                 Array2::from_shape_vec((height, width), result_flat)
-                    .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
+                    .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
             }
             Err(compile_error) => {
                 // Log compilation error for debugging
@@ -563,7 +553,7 @@ fn gradient_magnitude(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 output_buffer.copy_to_host(&mut result_flat);
 
                 Array2::from_shape_vec((height, width), result_flat)
-                    .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
+                    .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
             }
             Err(compile_error) => {
                 // Log compilation error and fall back to CPU
@@ -671,7 +661,7 @@ fn gpu_separable_convolution(
     )?;
 
     Array2::from_shape_vec((height, width), final_result)
-        .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
+        .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
 }
 
 /// Perform a single 1D convolution pass (horizontal or vertical)
@@ -942,7 +932,7 @@ fn element_wise_multiply(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 output_buffer.copy_to_host(&mut result_flat);
 
                 Array2::from_shape_vec((height, width), result_flat)
-                    .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
+                    .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
             }
             Err(compile_error) => {
                 eprintln!(
@@ -1069,7 +1059,7 @@ fn harris_response(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 output_buffer.copy_to_host(&mut result_flat);
 
                 Array2::from_shape_vec((height, width), result_flat)
-                    .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
+                    .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
             }
             Err(compile_error) => {
                 eprintln!(
@@ -1252,8 +1242,7 @@ pub fn gpu_batch_convolve_2d(
     for (i, image) in images.iter().enumerate() {
         if image.dim() != (height, width) {
             return Err(VisionError::InvalidInput(format!(
-                "Image {} has different dimensions",
-                i
+                "Image {i} has different dimensions"
             )));
         }
     }
@@ -1547,13 +1536,12 @@ impl GpuPerformanceProfiler {
                 let min = times.iter().min().unwrap();
                 let max = times.iter().max().unwrap();
 
+                let avg_ms = avg.as_secs_f64() * 1000.0;
+                let min_ms = min.as_secs_f64() * 1000.0;
+                let max_ms = max.as_secs_f64() * 1000.0;
+                let count = times.len();
                 summary.push_str(&format!(
-                    "  {}: avg={:.2}ms, min={:.2}ms, max={:.2}ms, count={}\n",
-                    operation,
-                    avg.as_secs_f64() * 1000.0,
-                    min.as_secs_f64() * 1000.0,
-                    max.as_secs_f64() * 1000.0,
-                    times.len()
+                    "  {operation}: avg={avg_ms:.2}ms, min={min_ms:.2}ms, max={max_ms:.2}ms, count={count}\n"
                 ));
             }
         }
@@ -1784,9 +1772,8 @@ pub fn gpu_multi_head_attention(
     ) {
         Ok(_) => {
             let result_flat: Vec<f32> = ctx.context.read_buffer(&output_buffer)?;
-            Array2::from_shape_vec((seq_len, hidden_dim), result_flat).map_err(|e| {
-                VisionError::Other(format!("Failed to reshape attention output: {}", e))
-            })
+            Array2::from_shape_vec((seq_len, hidden_dim), result_flat)
+                .map_err(|e| VisionError::Other(format!("Failed to reshape attention output: {e}")))
         }
         Err(_) => {
             // Fall back to SIMD
@@ -1928,7 +1915,7 @@ pub fn gpu_batch_matmul_transformer(
         Ok(_) => {
             let result_flat: Vec<f32> = ctx.context.read_buffer(&c_buffer)?;
             Array2::from_shape_vec((m, n), result_flat)
-                .map_err(|e| VisionError::Other(format!("Failed to reshape matmul output: {}", e)))
+                .map_err(|e| VisionError::Other(format!("Failed to reshape matmul output: {e}")))
         }
         Err(_) => {
             // Fall back to SIMD
@@ -2162,7 +2149,7 @@ pub fn gpu_neural_feature_extraction(
     }
 
     Array2::from_shape_vec(current_shape, result_flat)
-        .map_err(|e| VisionError::Other(format!("Failed to reshape neural output: {}", e)))
+        .map_err(|e| VisionError::Other(format!("Failed to reshape neural output: {e}")))
 }
 
 /// Configuration for neural network layers

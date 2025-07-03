@@ -989,10 +989,10 @@ impl VideoStreamReader {
                 let mut files = Vec::new();
                 if path.is_dir() {
                     for entry in std::fs::read_dir(path).map_err(|e| {
-                        crate::error::VisionError::Other(format!("Failed to read directory: {}", e))
+                        crate::error::VisionError::Other(format!("Failed to read directory: {e}"))
                     })? {
                         let entry = entry.map_err(|e| {
-                            crate::error::VisionError::Other(format!("Failed to read entry: {}", e))
+                            crate::error::VisionError::Other(format!("Failed to read entry: {e}"))
                         })?;
                         let path = entry.path();
                         if path.is_file() {
@@ -1923,15 +1923,12 @@ impl AdaptivePerformanceMonitor {
         let mut report = String::new();
 
         report.push_str("=== Adaptive Performance Monitor Report ===\n");
-        report.push_str(&format!("Monitoring {} stages\n", self.stage_metrics.len()));
-        report.push_str(&format!(
-            "Total threads: {}\n",
-            self.resource_monitor.total_threads
-        ));
-        report.push_str(&format!(
-            "CPU usage: {:.1}%\n",
-            self.resource_monitor.cpu_usage
-        ));
+        let stage_count = self.stage_metrics.len();
+        report.push_str(&format!("Monitoring {stage_count} stages\n"));
+        let total_threads = self.resource_monitor.total_threads;
+        report.push_str(&format!("Total threads: {total_threads}\n"));
+        let cpu_usage = self.resource_monitor.cpu_usage;
+        report.push_str(&format!("CPU usage: {cpu_usage:.1}%\n"));
         report.push_str(&format!(
             "Memory usage: {:.1} MB\n",
             self.resource_monitor.memory_usage as f64 / 1_048_576.0

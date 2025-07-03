@@ -90,7 +90,7 @@ where
             } else {
                 // Not a complex number, try to convert to f64 and make into a complex with zero imaginary part
                 let real = num_traits::cast::<T, f64>(val).ok_or_else(|| {
-                    crate::FFTError::ValueError(format!("Could not convert {:?} to f64", val))
+                    crate::FFTError::ValueError(format!("Could not convert {val:?} to f64"))
                 })?;
                 complex_input[[i, j]] = Complex64::new(real, 0.0);
             }
@@ -276,7 +276,7 @@ where
             } else {
                 // Not a complex number, try to convert to f64 and make into a complex with zero imaginary part
                 let real = num_traits::cast::<T, f64>(val).ok_or_else(|| {
-                    crate::FFTError::ValueError(format!("Could not convert {:?} to f64", val))
+                    crate::FFTError::ValueError(format!("Could not convert {val:?} to f64"))
                 })?;
                 complex_input[[i, j]] = Complex64::new(real, 0.0);
             }

@@ -64,42 +64,49 @@ pub use community::{
     since = "0.1.0-beta.2",
     note = "Use `louvain_communities_result` instead"
 )]
+#[allow(deprecated)]
 pub use community::louvain_communities;
 
 #[deprecated(
     since = "0.1.0-beta.2",
     note = "Use `label_propagation_result` instead"
 )]
+#[allow(deprecated)]
 pub use community::label_propagation;
 
 #[deprecated(
     since = "0.1.0-beta.2",
     note = "Use `fluid_communities_result` instead"
 )]
+#[allow(deprecated)]
 pub use community::fluid_communities;
 
 #[deprecated(
     since = "0.1.0-beta.2",
     note = "Use `hierarchical_communities_result` instead"
 )]
+#[allow(deprecated)]
 pub use community::hierarchical_communities;
 
 #[deprecated(
     since = "0.1.0-beta.2",
     note = "Use `modularity_optimization_result` instead"
 )]
+#[allow(deprecated)]
 pub use community::modularity_optimization;
 
 #[deprecated(
     since = "0.1.0-beta.2",
     note = "Use `greedy_modularity_optimization_result` instead"
 )]
+#[allow(deprecated)]
 pub use community::greedy_modularity_optimization;
 
 #[deprecated(
     since = "0.1.0-beta.2",
     note = "Use `parallel_louvain_communities_result` instead"
 )]
+#[allow(deprecated)]
 pub use community::parallel_louvain_communities;
 pub use connectivity::*;
 pub use decomposition::*;

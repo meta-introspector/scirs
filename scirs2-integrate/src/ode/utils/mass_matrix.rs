@@ -60,7 +60,7 @@ where
 
     // Use our custom solver
     solve_linear_system(&matrix, &b).map_err(|err| {
-        IntegrateError::ComputationError(format!("Failed to solve mass matrix system: {}", err))
+        IntegrateError::ComputationError(format!("Failed to solve mass matrix system: {err}"))
     })
 }
 
@@ -185,7 +185,7 @@ impl<F: IntegrateFloat> LUDecomposition<F> {
         // Note: For a proper LU-based solver, we would need to implement one
         // For now, this is a simpler approach that still works
         solve_linear_system(&self.lu.view(), &b).map_err(|err| {
-            IntegrateError::ComputationError(format!("Failed to solve with matrix: {}", err))
+            IntegrateError::ComputationError(format!("Failed to solve with matrix: {err}"))
         })
     }
 }
@@ -218,8 +218,7 @@ where
 
             if rows != n || cols != n {
                 return Err(IntegrateError::ValueError(format!(
-                    "Mass matrix dimensions ({},{}) do not match state vector length ({})",
-                    rows, cols, n
+                    "Mass matrix dimensions ({rows},{cols}) do not match state vector length ({n})"
                 )));
             }
 

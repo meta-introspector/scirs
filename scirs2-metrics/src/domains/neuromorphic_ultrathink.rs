@@ -1735,28 +1735,36 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManage
     }
 
     fn strengthen_critical_synapses(&mut self) -> Result<()> {
-        // Identify and strengthen important synapses based on their activity and importance
+        // Identify and strengthen important STDP windows based on their parameters
         let strengthening_factor = F::from(1.1).unwrap(); // 10% increase
         let activity_threshold = F::from(0.8).unwrap(); // High activity threshold
 
-        // Iterate through synapses and strengthen those with high activity or importance
-        for (_connection, synapse) in self.synapses.connections.iter_mut() {
-            // Calculate synapse importance based on weight magnitude and plasticity state
-            let weight_magnitude = synapse.weight.abs();
-            let ltp_strength = synapse.plasticity_state.ltp_level;
-            let importance_score = weight_magnitude + ltp_strength;
+        // Iterate through STDP windows and strengthen those with high parameters
+        for (_name, stdp_window) in self.stdp_windows.iter_mut() {
+            // Calculate importance based on LTP and LTD amplitudes
+            let ltp_strength = stdp_window.curve_parameters.a_ltp;
+            let ltd_strength = stdp_window.curve_parameters.a_ltd;
+            let importance_score = ltp_strength + ltd_strength;
 
-            // Strengthen synapses that exceed the activity threshold
+            // Strengthen windows that exceed the activity threshold
             if importance_score > activity_threshold {
-                synapse.weight = synapse.weight * strengthening_factor;
+                stdp_window.curve_parameters.a_ltp =
+                    stdp_window.curve_parameters.a_ltp * strengthening_factor;
 
-                // Update plasticity state to reflect strengthening
-                synapse.plasticity_state.ltp_level =
-                    synapse.plasticity_state.ltp_level * strengthening_factor;
+                // Update LTD proportionally but keep balance
+                stdp_window.curve_parameters.a_ltd =
+                    stdp_window.curve_parameters.a_ltd * strengthening_factor;
 
-                // Ensure weights stay within bounds
-                synapse.weight = synapse
-                    .weight
+                // Ensure parameters stay within bounds
+                stdp_window.curve_parameters.a_ltp = stdp_window
+                    .curve_parameters
+                    .a_ltp
+                    .max(F::from(-2.0).unwrap())
+                    .min(F::from(2.0).unwrap());
+
+                stdp_window.curve_parameters.a_ltd = stdp_window
+                    .curve_parameters
+                    .a_ltd
                     .max(F::from(-2.0).unwrap())
                     .min(F::from(2.0).unwrap());
             }

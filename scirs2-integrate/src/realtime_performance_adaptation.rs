@@ -459,7 +459,7 @@ impl<F: IntegrateFloat + Default> RealTimeAdaptiveOptimizer<F> {
             let mut monitor = monitor.lock().unwrap();
             loop {
                 if let Err(e) = monitor.collect_metrics() {
-                    eprintln!("Performance monitoring error: {:?}", e);
+                    eprintln!("Performance monitoring error: {e:?}");
                 }
                 thread::sleep(Duration::from_millis(100)); // 10Hz monitoring
             }
@@ -517,7 +517,7 @@ impl<F: IntegrateFloat + Default> RealTimeAdaptiveOptimizer<F> {
                     } {
                         if !anomaly_result.is_empty() {
                             // Handle anomalies
-                            println!("Performance anomaly detected: {:?}", anomaly_result);
+                            println!("Performance anomaly detected: {anomaly_result:?}");
                         }
                     }
 

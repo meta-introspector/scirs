@@ -3205,6 +3205,7 @@ pub fn black_scholes<F: Float + Clone>(
 /// EGARCH (Exponential GARCH) model for asymmetric volatility
 #[derive(Debug)]
 pub struct EgarchModel<F: Float + Debug> {
+    #[allow(dead_code)]
     config: EgarchConfig,
     fitted: bool,
     parameters: Option<EgarchParameters<F>>,

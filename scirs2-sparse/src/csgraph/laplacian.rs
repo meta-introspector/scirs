@@ -125,23 +125,23 @@ where
 
     match laplacian_type {
         LaplacianType::Standard => compute_standard_laplacian(
-            &row_indices,
-            &col_indices,
-            &values,
+            row_indices.as_slice().unwrap(),
+            col_indices.as_slice().unwrap(),
+            values.as_slice().unwrap(),
             &degrees,
             n,
         ),
         LaplacianType::Normalized => compute_normalized_laplacian(
-            &row_indices,
-            &col_indices,
-            &values,
+            row_indices.as_slice().unwrap(),
+            col_indices.as_slice().unwrap(),
+            values.as_slice().unwrap(),
             &degrees,
             n,
         ),
         LaplacianType::RandomWalk => compute_random_walk_laplacian(
-            &row_indices,
-            &col_indices,
-            &values,
+            row_indices.as_slice().unwrap(),
+            col_indices.as_slice().unwrap(),
+            values.as_slice().unwrap(),
             &degrees,
             n,
         ),

@@ -591,8 +591,7 @@ where
 
     if k != k2 {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix dimensions incompatible: {}x{} * {}x{}",
-            m, k, k2, n
+            "Matrix dimensions incompatible: {m}x{k} * {k2}x{n}"
         )));
     }
 

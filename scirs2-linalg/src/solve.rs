@@ -299,8 +299,7 @@ where
         let max_dim = a.nrows().max(a.ncols());
         let max_dim_f = F::from(max_dim).ok_or_else(|| {
             LinalgError::NumericalError(format!(
-                "Failed to convert matrix dimension {} to numeric type",
-                max_dim
+                "Failed to convert matrix dimension {max_dim} to numeric type"
             ))
         })?;
         let threshold = s[0] * max_dim_f * F::epsilon();

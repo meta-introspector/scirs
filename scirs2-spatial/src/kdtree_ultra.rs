@@ -265,15 +265,13 @@ impl UltraKDTree {
 
         if n_points > 10_000_000 {
             return Err(SpatialError::ValueError(format!(
-                "Dataset too large: {} points. Ultra KD-Tree supports up to 10M points",
-                n_points
+                "Dataset too large: {n_points} points. Ultra KD-Tree supports up to 10M points"
             )));
         }
 
         if n_dims > 50 {
             return Err(SpatialError::ValueError(format!(
-                "Dimension too high: {}. Ultra KD-Tree is efficient up to 50 dimensions",
-                n_dims
+                "Dimension too high: {n_dims}. Ultra KD-Tree is efficient up to 50 dimensions"
             )));
         }
 
@@ -282,8 +280,7 @@ impl UltraKDTree {
             for (j, &coord) in row.iter().enumerate() {
                 if !coord.is_finite() {
                     return Err(SpatialError::ValueError(format!(
-                        "Point {} has invalid coordinate {} at dimension {}",
-                        i, coord, j
+                        "Point {i} has invalid coordinate {coord} at dimension {j}"
                     )));
                 }
             }
@@ -456,8 +453,7 @@ impl UltraKDTree {
 
         if k > self.points.nrows() {
             return Err(SpatialError::ValueError(format!(
-                "k ({}) cannot be larger than number of points ({})",
-                k,
+                "k ({k}) cannot be larger than number of points ({})",
                 self.points.nrows()
             )));
         }

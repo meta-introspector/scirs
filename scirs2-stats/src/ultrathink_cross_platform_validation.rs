@@ -488,7 +488,7 @@ impl CrossPlatformValidator {
             let mut total_time = std::time::Duration::ZERO;
             let mut all_passed = true;
 
-            for i in 0..iterations {
+            for _i in 0..iterations {
                 let data = generate_normal_data(size);
                 let start_time = Instant::now();
 

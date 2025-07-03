@@ -71,7 +71,7 @@ where
         // Copy data to input buffer with proper conversion
         for (i, &val) in i_lane.iter().enumerate() {
             let val_f64 = NumCast::from(val).ok_or_else(|| {
-                FFTError::ValueError(format!("Failed to convert value at index {} to f64", i))
+                FFTError::ValueError(format!("Failed to convert value at index {i} to f64"))
             })?;
             buffer[i] = Complex64::new(val_f64, 0.0);
         }

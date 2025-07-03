@@ -67,9 +67,9 @@ impl Clone for VisionError {
             VisionError::OperationError(s) => VisionError::OperationError(s.clone()),
             VisionError::OperationFailed(s) => VisionError::OperationFailed(s.clone()),
             VisionError::NdimageError(s) => VisionError::NdimageError(s.clone()),
-            VisionError::IoError(e) => VisionError::Other(format!("I/O error: {}", e)),
+            VisionError::IoError(e) => VisionError::Other(format!("I/O error: {e}")),
             VisionError::TypeConversionError(s) => VisionError::TypeConversionError(s.clone()),
-            VisionError::ShapeError(e) => VisionError::Other(format!("Shape error: {}", e)),
+            VisionError::ShapeError(e) => VisionError::Other(format!("Shape error: {e}")),
             VisionError::LinAlgError(s) => VisionError::LinAlgError(s.clone()),
             VisionError::GpuError(s) => VisionError::GpuError(s.clone()),
             VisionError::DimensionMismatch(s) => VisionError::DimensionMismatch(s.clone()),
@@ -452,8 +452,8 @@ impl ErrorRecoveryManager {
         }
 
         // Remove duplicate strategies
-        strategies.sort_by_key(|s| format!("{:?}", s));
-        strategies.dedup_by_key(|s| format!("{:?}", s));
+        strategies.sort_by_key(|s| format!("{s:?}"));
+        strategies.dedup_by_key(|s| format!("{s:?}"));
 
         strategies
     }
@@ -494,7 +494,7 @@ impl ErrorRecoveryManager {
             strategy: strategy.clone(),
             success,
             duration: start_time.elapsed(),
-            details: format!("Attempted {:?} recovery", strategy),
+            details: format!("Attempted {strategy:?} recovery"),
         };
 
         error.recovery_attempts.push(attempt);
@@ -611,7 +611,7 @@ impl ErrorRecoveryManager {
         } else {
             0.0
         };
-        report.push_str(&format!("Overall success rate: {:.1}%\n", success_rate));
+        report.push_str(&format!("Overall success rate: {success_rate:.1}%\n"));
 
         report.push_str(&format!(
             "Average recovery time: {:?}\n",
@@ -620,12 +620,13 @@ impl ErrorRecoveryManager {
 
         report.push_str("\n--- Strategy Success Rates ---\n");
         for (strategy, rate) in &self.recovery_stats.strategy_success_rates {
-            report.push_str(&format!("{}: {:.1}%\n", strategy, rate * 100.0));
+            let rate_pct = rate * 100.0;
+            report.push_str(&format!("{strategy}: {rate_pct:.1}%\n"));
         }
 
         report.push_str("\n--- Common Error Types ---\n");
         for (error_type, count) in &self.recovery_stats.common_errors {
-            report.push_str(&format!("{}: {} occurrences\n", error_type, count));
+            report.push_str(&format!("{error_type}: {count} occurrences\n"));
         }
 
         report

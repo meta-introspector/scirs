@@ -157,14 +157,20 @@ where
                     if float_val > max {
                         return Err(NumericConversionError::Overflow {
                             value: format!("{value}"),
-                            max: format!("{}", T::max_value()),
+                            max: {
+                                let max_val = T::max_value();
+                                format!("{max_val}")
+                            },
                         });
                     }
 
                     if float_val < min {
                         return Err(NumericConversionError::Underflow {
                             value: format!("{value}"),
-                            min: format!("{}", T::min_value()),
+                            min: {
+                                let min_val = T::min_value();
+                                format!("{min_val}")
+                            },
                         });
                     }
 
@@ -185,7 +191,10 @@ where
                     if value > max_s {
                         return Err(NumericConversionError::Overflow {
                             value: format!("{value}"),
-                            max: format!("{}", T::max_value()),
+                            max: {
+                                let max_val = T::max_value();
+                                format!("{max_val}")
+                            },
                         });
                     }
                 }
@@ -195,7 +204,10 @@ where
                     if value < min_s {
                         return Err(NumericConversionError::Underflow {
                             value: format!("{value}"),
-                            min: format!("{}", T::min_value()),
+                            min: {
+                                let min_val = T::min_value();
+                                format!("{min_val}")
+                            },
                         });
                     }
                 }
@@ -433,7 +445,10 @@ where
 
     fn to_algebraic_string(&self) -> String {
         if self.im.is_zero() {
-            format!("{}", self.re)
+            {
+                let re_val = self.re;
+                format!("{re_val}")
+            }
         } else if self.im.is_sign_positive() {
             format!("{re}+{im}i", re = self.re, im = self.im)
         } else {
@@ -979,8 +994,16 @@ pub mod units {
         pub fn multiply(&self, other: &Quantity) -> Quantity {
             let new_dimensions = self.unit.dimensions.multiply(&other.unit.dimensions);
             let new_unit = Unit::new(
-                format!("{}.{}", self.unit.symbol, other.unit.symbol),
-                format!("{}.{}", self.unit.symbol, other.unit.symbol),
+                {
+                    let self_symbol = &self.unit.symbol;
+                    let other_symbol = &other.unit.symbol;
+                    format!("{self_symbol}.{other_symbol}")
+                },
+                {
+                    let self_symbol = &self.unit.symbol;
+                    let other_symbol = &other.unit.symbol;
+                    format!("{self_symbol}.{other_symbol}")
+                },
                 new_dimensions,
                 self.unit.scale_factor * other.unit.scale_factor,
             );
@@ -992,8 +1015,16 @@ pub mod units {
         pub fn divide(&self, other: &Quantity) -> Quantity {
             let new_dimensions = self.unit.dimensions.divide(&other.unit.dimensions);
             let new_unit = Unit::new(
-                format!("{}/{}", self.unit.symbol, other.unit.symbol),
-                format!("{}/{}", self.unit.symbol, other.unit.symbol),
+                {
+                    let self_symbol = &self.unit.symbol;
+                    let other_symbol = &other.unit.symbol;
+                    format!("{self_symbol}/{other_symbol}")
+                },
+                {
+                    let self_symbol = &self.unit.symbol;
+                    let other_symbol = &other.unit.symbol;
+                    format!("{self_symbol}/{other_symbol}")
+                },
                 new_dimensions,
                 self.unit.scale_factor / other.unit.scale_factor,
             );

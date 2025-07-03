@@ -206,8 +206,7 @@ pub fn parallel_pdist(points: &ArrayView2<'_, f64>, metric: &str) -> SpatialResu
         "chebyshev" => SimdMetric::Chebyshev,
         _ => {
             return Err(SpatialError::ValueError(format!(
-                "Unsupported metric: {}",
-                metric
+                "Unsupported metric: {metric}"
             )))
         }
     };
@@ -282,8 +281,7 @@ pub fn parallel_cdist(
         "chebyshev" => SimdMetric::Chebyshev,
         _ => {
             return Err(SpatialError::ValueError(format!(
-                "Unsupported metric: {}",
-                metric
+                "Unsupported metric: {metric}"
             )))
         }
     };
@@ -370,8 +368,7 @@ pub fn simd_knn_search(
         "chebyshev" => SimdMetric::Chebyshev,
         _ => {
             return Err(SpatialError::ValueError(format!(
-                "Unsupported metric: {}",
-                metric
+                "Unsupported metric: {metric}"
             )))
         }
     };
@@ -757,8 +754,7 @@ pub mod ultra_simd_clustering {
 
             if k > n_data {
                 return Err(SpatialError::ValueError(format!(
-                    "k ({}) cannot be larger than number of data points ({})",
-                    k, n_data
+                    "k ({k}) cannot be larger than number of data points ({n_data})"
                 )));
             }
 
@@ -1055,8 +1051,7 @@ pub mod hardware_specific_simd {
 
             if k > n_data {
                 return Err(SpatialError::ValueError(format!(
-                    "k ({}) cannot be larger than number of data points ({})",
-                    k, n_data
+                    "k ({k}) cannot be larger than number of data points ({n_data})"
                 )));
             }
 
@@ -1325,8 +1320,7 @@ pub mod bench {
             if let (Some(f32_time), Some(f32_speedup)) = (self.simd_f32_time, self.simd_f32_speedup)
             {
                 println!(
-                    "  SIMD f32 time:    {:.6} seconds ({:.2}x speedup)",
-                    f32_time, f32_speedup
+                    "  SIMD f32 time:    {f32_time:.6} seconds ({f32_speedup:.2}x speedup)"
                 );
             }
         }
@@ -1356,7 +1350,7 @@ pub mod bench {
             2.0
         };
 
-        println!("  Theoretical Max Speedup: {:.1}x", theoretical_speedup);
+        println!("  Theoretical Max Speedup: {theoretical_speedup:.1}x");
     }
 }
 

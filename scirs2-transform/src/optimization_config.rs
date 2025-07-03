@@ -357,8 +357,8 @@ impl OptimizationConfig {
 
         if estimated_memory > system.memory_mb as f64 * 0.9 {
             return Err(TransformError::MemoryError(format!(
-                "Polynomial features would require {:.1} MB, but only {} MB available",
-                estimated_memory, system.memory_mb
+                "Polynomial features would require {estimated_memory:.1} MB, but only {} MB available",
+                system.memory_mb
             )));
         }
 

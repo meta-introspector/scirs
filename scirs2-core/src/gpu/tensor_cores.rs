@@ -634,11 +634,7 @@ __global__ void tensor_core_gemm(
         wmma::store_matrix_sync(C + c_row * N + c_col, c_frag, N, wmma::mem_row_major);
     }}
 }}
-"#,
-        dtype_str = dtype_str,
-        accumulator_type = accumulator_type,
-        tile_m = tile_m,
-        tile_n = tile_n,
+"#
     ))
 }
 
@@ -792,10 +788,7 @@ kernel void neural_engine_gemm(
     
     C[row * N + col] = sum;
 }}
-"#,
-        dtype_str = dtype_str,
-        tile_m = tile_m,
-        tile_n = tile_n,
+"#
     ))
 }
 
@@ -826,9 +819,9 @@ where
 
     eprintln!("Executing tensor core GEMM:");
     eprintln!("  Kernel source length: {} characters", kernel_source.len());
-    eprintln!("  Dimensions: {}x{}x{}", m, n, k);
-    eprintln!("  Grid dimensions: {}x{}", grid_dim_x, grid_dim_y);
-    eprintln!("  Tile size: {:?}", tile_size);
+    eprintln!("  Dimensions: {m}x{n}x{k}");
+    eprintln!("  Grid dimensions: {grid_dim_x}x{grid_dim_y}");
+    eprintln!("  Tile size: {tile_size:?}");
     eprintln!("  Backend: {:?}", manager.backend);
     eprintln!("  Data type: {}", manager.config().data_type);
 

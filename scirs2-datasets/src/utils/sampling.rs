@@ -80,7 +80,7 @@ pub fn random_sample(
     if replace {
         // Bootstrap sampling (with replacement)
         for _ in 0..sample_size {
-            indices.push(rng.random_range(0..n_samples));
+            indices.push(rng.gen_range(0..n_samples));
         }
     } else {
         // Sampling without replacement
@@ -306,7 +306,7 @@ pub fn importance_sample(
         }
 
         // Generate random number between 0 and current_sum
-        let random_value = rng.random_range(0.0..current_sum);
+        let random_value = rng.gen_range(0.0..current_sum);
 
         // Find the index corresponding to this random value
         let mut cumulative_weight = 0.0;

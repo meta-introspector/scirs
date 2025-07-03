@@ -91,8 +91,7 @@ where
             }
         }
         _ => Err(LinalgError::InvalidInputError(format!(
-            "Matrix norm computation failed: Invalid norm order '{}'\nSupported norms: 'fro', 'f', 'frobenius', '1', 'inf', '2'",
-            ord
+            "Matrix norm computation failed: Invalid norm order '{ord}'\nSupported norms: 'fro', 'f', 'frobenius', '1', 'inf', '2'"
         ))),
     }
 }
@@ -332,8 +331,7 @@ where
             }
         }
         _ => Err(LinalgError::InvalidInputError(format!(
-            "Condition number computation failed: Invalid norm type '{}'\nSupported norms: '1', '2' (default), 'fro', 'f', 'frobenius', 'inf'",
-            norm_type
+            "Condition number computation failed: Invalid norm type '{norm_type}'\nSupported norms: '1', '2' (default), 'fro', 'f', 'frobenius', 'inf'"
         ))),
     }
 }

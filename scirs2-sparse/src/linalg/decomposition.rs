@@ -251,9 +251,9 @@ where
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
-        &row_indices,
-        &col_indices,
-        &values,
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        values.as_slice().unwrap(),
         n,
     );
 
@@ -478,9 +478,9 @@ where
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
-        &row_indices,
-        &col_indices,
-        &values,
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        values.as_slice().unwrap(),
         n,
     );
 
@@ -576,9 +576,9 @@ where
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
-        &row_indices,
-        &col_indices,
-        &values,
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        values.as_slice().unwrap(),
         n,
     );
 
@@ -729,9 +729,9 @@ where
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
-        &row_indices,
-        &col_indices,
-        &values,
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        values.as_slice().unwrap(),
         n,
     );
 
@@ -899,9 +899,9 @@ where
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
-        &row_indices,
-        &col_indices,
-        &values,
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        values.as_slice().unwrap(),
         n,
     );
 
@@ -994,9 +994,9 @@ where
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
-        &row_indices,
-        &col_indices,
-        &values,
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        values.as_slice().unwrap(),
         n,
     );
 

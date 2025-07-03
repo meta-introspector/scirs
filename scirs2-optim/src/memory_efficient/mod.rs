@@ -3,7 +3,7 @@
 //! This module provides in-place parameter update capabilities and
 //! memory-efficient implementations of optimization algorithms.
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::fmt::Debug;

@@ -3,7 +3,7 @@
 //! This module provides utilities for accumulating gradients across multiple
 //! micro-batches to simulate larger batch sizes without increasing memory usage.
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use ndarray::{Array, Dimension, ScalarOperand, Zip};
 use num_traits::Float;
 use std::fmt::Debug;

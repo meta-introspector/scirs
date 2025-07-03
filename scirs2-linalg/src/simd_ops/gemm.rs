@@ -72,14 +72,12 @@ pub fn simd_gemm_f32(
     // Validate matrix dimensions
     if k1 != k2 {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix inner dimensions must match: A({}, {}) * B({}, {})",
-            m, k1, k2, n
+            "Matrix inner dimensions must match: A({m}, {k1}) * B({k2}, {n})"
         )));
     }
     if cm != m || cn != n {
         return Err(LinalgError::ShapeError(format!(
-            "Result matrix dimensions must match: C({}, {}) for A({}, {}) * B({}, {})",
-            cm, cn, m, k1, k2, n
+            "Result matrix dimensions must match: C({cm}, {cn}) for A({m}, {k1}) * B({k2}, {n})"
         )));
     }
 
@@ -121,14 +119,12 @@ pub fn simd_gemm_f64(
     // Validate matrix dimensions
     if k1 != k2 {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix inner dimensions must match: A({}, {}) * B({}, {})",
-            m, k1, k2, n
+            "Matrix inner dimensions must match: A({m}, {k1}) * B({k2}, {n})"
         )));
     }
     if cm != m || cn != n {
         return Err(LinalgError::ShapeError(format!(
-            "Result matrix dimensions must match: C({}, {}) for A({}, {}) * B({}, {})",
-            cm, cn, m, k1, k2, n
+            "Result matrix dimensions must match: C({cm}, {cn}) for A({m}, {k1}) * B({k2}, {n})"
         )));
     }
 

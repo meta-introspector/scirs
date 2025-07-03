@@ -456,7 +456,7 @@ impl MetabolicPathway {
         Self {
             name,
             enzymes: Vec::new(),
-            metabolites: (0..num_metabolites).map(|i| format!("M{}", i)).collect(),
+            metabolites: (0..num_metabolites).map(|i| format!("M{i}")).collect(),
             stoichiometry_matrix: Array2::zeros((num_enzymes, num_metabolites)),
             regulations: Vec::new(),
             external_metabolites: HashMap::new(),

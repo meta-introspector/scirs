@@ -144,7 +144,7 @@ impl FormalVerificationEngine {
 
     /// Get verification status for an API
     pub fn get_verification_status(&self, api_name: &str, module: &str) -> VerificationStatus {
-        let task_id = format!("{module}::{api_name}");
+        let task_id = format!("{module}-{api_name}");
 
         if let Ok(tasks) = self.verification_tasks.lock() {
             if let Some(task) = tasks.get(&task_id) {
@@ -233,7 +233,7 @@ impl RuntimeContractValidator {
         call_context: &ApiCallContext,
     ) -> CoreResult<()> {
         let start_time = Instant::now();
-        let key = format!("{}-{}", module, api_name);
+        let key = format!("{module}-{api_name}");
 
         // Update statistics
         {
@@ -258,8 +258,7 @@ impl RuntimeContractValidator {
 
         let contract = contract.ok_or_else(|| {
             CoreError::ValidationError(ErrorContext::new(format!(
-                "No contract found for {}::{}",
-                module, api_name
+                "No contract found for {module}::{api_name}"
             )))
         })?;
 
@@ -764,7 +763,7 @@ impl ImmutableAuditTrail {
         record.record_hash = self.calculate_record_hash(&record);
 
         // Add digital signature (simplified)
-        record.signature = format!("{}", record.record_hash);
+        record.signature = record.record_hash.to_string();
 
         // Add to chain
         {
@@ -893,8 +892,7 @@ impl ImmutableAuditTrail {
         if let Ok(chain) = self.audit_chain.read() {
             serde_json::to_string_pretty(&*chain).map_err(|e| {
                 CoreError::ValidationError(ErrorContext::new(format!(
-                    "Failed to serialize audit trail: {}",
-                    e
+                    "Failed to serialize audit trail: {e}"
                 )))
             })
         } else {

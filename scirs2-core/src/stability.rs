@@ -805,7 +805,7 @@ impl StabilityGuaranteeManager {
 
     /// Get contract for an API
     pub fn get_contract(&self, api_name: &str, module: &str) -> Option<&ApiContract> {
-        let key = format!("{}::{}", module, api_name);
+        let key = format!("{module}::{api_name}");
         self.contracts.get(&key)
     }
 
@@ -830,8 +830,7 @@ impl StabilityGuaranteeManager {
     ) -> CoreResult<()> {
         let contract = self.get_contract(api_name, module).ok_or_else(|| {
             CoreError::ValidationError(ErrorContext::new(format!(
-                "No contract found for {}::{}",
-                module, api_name
+                "No contract found for {module}::{api_name}"
             )))
         })?;
 
@@ -851,24 +850,19 @@ impl StabilityGuaranteeManager {
             if let Some(contract_time) = contract.performance.max_execution_time {
                 if contract_time > max_time {
                     return Err(CoreError::ValidationError(ErrorContext::new(format!(
-                        "Performance requirement not met: max execution time {:?} > required {:?}",
-                        contract_time, max_time
+                        "Performance requirement not met: max execution time {contract_time:?} > required {max_time:?}"
                     ))));
                 }
             }
         }
 
         // Check concurrency requirements
-        if usage_context.requires_thread_safety {
-            match contract.concurrency.thread_safety {
-                ThreadSafety::NotThreadSafe => {
-                    return Err(CoreError::ValidationError(ErrorContext::new(format!(
-                        "Thread safety required but {}::{} is not thread-safe",
-                        module, api_name
-                    ))));
-                }
-                _ => {} // Other levels provide some thread safety
-            }
+        if usage_context.requires_thread_safety
+            && contract.concurrency.thread_safety == ThreadSafety::NotThreadSafe
+        {
+            return Err(CoreError::ValidationError(ErrorContext::new(format!(
+                "Thread safety required but {module}::{api_name} is not thread-safe"
+            ))));
         }
 
         Ok(())
@@ -936,26 +930,11 @@ impl StabilityGuaranteeManager {
             .count();
 
         report.push_str("## Summary\n\n");
-        report.push_str(&format!(
-            "- Total APIs with contracts: {}\n",
-            total_contracts
-        ));
-        report.push_str(&format!(
-            "- Stable APIs: {stable_count}\n",
-            stable_count = stable_count
-        ));
-        report.push_str(&format!(
-            "- Evolving APIs: {evolving_count}\n",
-            evolving_count = evolving_count
-        ));
-        report.push_str(&format!(
-            "- Experimental APIs: {experimental_count}\n",
-            experimental_count = experimental_count
-        ));
-        report.push_str(&format!(
-            "- Deprecated APIs: {deprecated_count}\n",
-            deprecated_count = deprecated_count
-        ));
+        report.push_str(&format!("- Total APIs with contracts: {total_contracts}\n"));
+        report.push_str(&format!("- Stable APIs: {stable_count}\n"));
+        report.push_str(&format!("- Evolving APIs: {evolving_count}\n"));
+        report.push_str(&format!("- Experimental APIs: {experimental_count}\n"));
+        report.push_str(&format!("- Deprecated APIs: {deprecated_count}\n"));
 
         // Stability coverage
         let coverage = if total_contracts > 0 {
@@ -963,7 +942,7 @@ impl StabilityGuaranteeManager {
         } else {
             0.0
         };
-        report.push_str(&format!("- Stability coverage: {:.1}%\n\n", coverage));
+        report.push_str(&format!("- Stability coverage: {coverage:.1}%\n\n"));
 
         // Breaking changes
         report.push_str("## Breaking Changes\n\n");
@@ -991,7 +970,7 @@ impl StabilityGuaranteeManager {
 
         report.push_str("## Contracts by Module\n\n");
         for (module, contracts) in modules {
-            report.push_str(&format!("### Module: {module}\n\n", module = module));
+            report.push_str(&format!("### Module: {module}\n\n"));
             for contract in contracts {
                 report.push_str(&format!(
                     "- **{}** ({:?})\n",

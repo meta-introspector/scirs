@@ -839,7 +839,7 @@ impl CloudStorageBackend for S3Backend {
 
         for i in 0..max {
             let key = if let Some(prefix) = prefix {
-                format!("{prefix, i}")
+                format!("{prefix}_{i}")
             } else {
                 format!("{i}")
             };
@@ -1022,7 +1022,7 @@ impl CloudStorageBackend for GoogleCloudBackend {
 
         for i in 0..max {
             let key = if let Some(prefix) = prefix {
-                format!("{prefix, i}")
+                format!("{prefix}_{i}")
             } else {
                 format!("{i}")
             };
@@ -1202,7 +1202,7 @@ impl CloudStorageBackend for AzureBackend {
 
         for i in 0..max {
             let key = if let Some(prefix) = prefix {
-                format!("{prefix, i}")
+                format!("{prefix}_{i}")
             } else {
                 format!("{i}")
             };

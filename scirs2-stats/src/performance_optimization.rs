@@ -45,9 +45,15 @@ impl Default for PerformanceConfig {
         let capabilities = scirs2_core::simd_ops::PlatformCapabilities::detect();
 
         Self {
-            enable_simd: capabilities.avx2 || capabilities.avx512 || capabilities.sse4_1,
+            enable_simd: capabilities.avx2_available
+                || capabilities.avx512_available
+                || capabilities.simd_available,
             enable_parallel: num_cpus::get() > 1,
-            simd_threshold: if capabilities.avx512 { 32 } else { 64 },
+            simd_threshold: if capabilities.avx512_available {
+                32
+            } else {
+                64
+            },
             parallel_threshold: 1000,
             max_threads: None,
             auto_tune: true,

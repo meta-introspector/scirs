@@ -22,14 +22,14 @@
 //! fn safe_gamma(x: f64) -> SpecialResult<f64> {
 //!     if x <= 0.0 && x.fract() == 0.0 {
 //!         return Err(SpecialError::DomainError(
-//!             format!("Gamma function undefined for non-positive integer: {}", x)
+//!             format!("Gamma function undefined for non-positive integer: {x}")
 //!         ));
 //!     }
 //!     
 //!     let result = gamma(x);
 //!     if !result.is_finite() {
 //!         return Err(SpecialError::OverflowError(
-//!             format!("Gamma({}) resulted in overflow", x)
+//!             format!("Gamma({x}) resulted in overflow")
 //!         ));
 //!     }
 //!     
@@ -169,8 +169,8 @@ pub enum SpecialError {
 /// // Pattern matching for error handling
 /// match safe_computation(-1.0) {
 ///     Ok(result) => println!("Result: {}", result),
-///     Err(SpecialError::DomainError(msg)) => eprintln!("Domain error: {}", msg),
-///     Err(e) => eprintln!("Other error: {}", e),
+///     Err(SpecialError::DomainError(msg)) => eprintln!("Domain error: {msg}"),
+///     Err(e) => eprintln!("Other error: {e}"),
 /// }
 /// ```
 pub type SpecialResult<T> = Result<T, SpecialError>;
@@ -183,7 +183,7 @@ pub type SpecialResult<T> = Result<T, SpecialError>;
 /// for seamless error propagation when parsing numerical input.
 impl From<std::num::ParseFloatError> for SpecialError {
     fn from(err: std::num::ParseFloatError) -> Self {
-        SpecialError::ValueError(format!("Failed to parse float: {}", err))
+        SpecialError::ValueError(format!("Failed to parse float: {err}"))
     }
 }
 
@@ -193,6 +193,6 @@ impl From<std::num::ParseFloatError> for SpecialError {
 /// for handling file I/O failures during computation or data loading.
 impl From<std::io::Error> for SpecialError {
     fn from(err: std::io::Error) -> Self {
-        SpecialError::ComputationError(format!("IO error: {}", err))
+        SpecialError::ComputationError(format!("IO error: {err}"))
     }
 }

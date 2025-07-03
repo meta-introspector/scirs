@@ -65,8 +65,7 @@ pub fn simd_transpose_inplace_f32(matrix: &mut Array2<f32>) -> LinalgResult<()> 
 
     if rows != cols {
         return Err(LinalgError::ShapeError(format!(
-            "In-place transpose requires square matrix, got shape ({}, {})",
-            rows, cols
+            "In-place transpose requires square matrix, got shape ({rows}, {cols})"
         )));
     }
 
@@ -102,8 +101,7 @@ pub fn simd_transpose_inplace_f64(matrix: &mut Array2<f64>) -> LinalgResult<()> 
 
     if rows != cols {
         return Err(LinalgError::ShapeError(format!(
-            "In-place transpose requires square matrix, got shape ({}, {})",
-            rows, cols
+            "In-place transpose requires square matrix, got shape ({rows}, {cols})"
         )));
     }
 

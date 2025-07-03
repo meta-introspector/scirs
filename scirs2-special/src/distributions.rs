@@ -481,22 +481,19 @@ pub fn kolmogi<T: Float + FromPrimitive + Display>(p: T) -> SpecialResult<T> {
     // Try different methods in order of sophistication
 
     // Method 1: Halley's method (fastest convergence when it works)
-    match kolmogorov_inverse_halley(p, initial_guess, tol) {
-        Ok(result) => return Ok(result),
-        Err(_) => {} // Continue to next method
-    }
+    if let Ok(result) = kolmogorov_inverse_halley(p, initial_guess, tol) {
+        return Ok(result);
+    } // Continue to next method
 
     // Method 2: Newton's method with improved derivative estimation
-    match kolmogorov_inverse_newton_improved(p, initial_guess, tol) {
-        Ok(result) => return Ok(result),
-        Err(_) => {} // Continue to next method
-    }
+    if let Ok(result) = kolmogorov_inverse_newton_improved(p, initial_guess, tol) {
+        return Ok(result);
+    } // Continue to next method
 
     // Method 3: Bracketed Newton (combines Newton with bracketing for robustness)
-    match kolmogorov_inverse_bracketed_newton(p, tol) {
-        Ok(result) => return Ok(result),
-        Err(_) => {} // Continue to next method
-    }
+    if let Ok(result) = kolmogorov_inverse_bracketed_newton(p, tol) {
+        return Ok(result);
+    } // Continue to next method
 
     // Method 4: Enhanced bisection with better bounds as fallback
     kolmogorov_inverse_enhanced_bisection(p, tol)

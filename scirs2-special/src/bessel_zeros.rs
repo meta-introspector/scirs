@@ -203,8 +203,7 @@ where
 
     if x >= T::one() {
         return Err(SpecialError::DomainError(format!(
-            "itj0y0: x must be < 1 for numerical integration, got x = {}",
-            x
+            "itj0y0: x must be < 1 for numerical integration, got x = {x}"
         )));
     }
 
@@ -366,8 +365,7 @@ where
                 numerical_itj0y0_integration(x, n)
             } else {
                 Err(SpecialError::NotImplementedError(format!(
-                    "itj0y0: n={} too large (max supported: 10)",
-                    n
+                    "itj0y0: n={n} too large (max supported: 10)"
                 )))
             }
         }

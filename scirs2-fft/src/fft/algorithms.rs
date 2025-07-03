@@ -624,8 +624,7 @@ where
     for &axis in &axes {
         if axis >= input_ndim {
             return Err(FFTError::ValueError(format!(
-                "Axis {} out of bounds for array of dimension {}",
-                axis, input_ndim
+                "Axis {axis} out of bounds for array of dimension {input_ndim}"
             )));
         }
     }
@@ -805,8 +804,7 @@ where
     for &axis in &axes {
         if axis >= input_ndim {
             return Err(FFTError::ValueError(format!(
-                "Axis {} out of bounds for array of dimension {}",
-                axis, input_ndim
+                "Axis {axis} out of bounds for array of dimension {input_ndim}"
             )));
         }
     }

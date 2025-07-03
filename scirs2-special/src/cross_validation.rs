@@ -256,22 +256,20 @@ impl CrossValidator {
         let mut report = String::from("# Cross-Validation Report\n\n");
 
         for (function, results) in &self.results {
-            report.push_str(&format!("## {}\n\n", function));
+            report.push_str(&format!("## {function}\n\n"));
 
             // Summary statistics
             let total: usize = results.len();
             let passed = results.iter().filter(|r| r.passed).count();
             let failed = total - passed;
 
-            report.push_str(&format!("- Total tests: {}\n", total));
+            report.push_str(&format!("- Total tests: {total}\n"));
             report.push_str(&format!(
-                "- Passed: {} ({:.1}%)\n",
-                passed,
+                "- Passed: {passed} ({:.1}%)\n",
                 100.0 * passed as f64 / total as f64
             ));
             report.push_str(&format!(
-                "- Failed: {} ({:.1}%)\n",
-                failed,
+                "- Failed: {failed} ({:.1}%)\n",
                 100.0 * failed as f64 / total as f64
             ));
 
@@ -287,18 +285,19 @@ impl CrossValidator {
 
                 for result in results.iter().filter(|r| !r.passed).take(10) {
                     report.push_str(&format!(
-                        "| {:?} | {:.6e} | {:.6e} | {:.2e} | {} | {} |\n",
-                        result.test_case.inputs,
-                        result.test_case.expected,
-                        result.computed,
-                        result.relative_error,
-                        result.ulp_error,
-                        result.test_case.source,
+                        "| {inputs:?} | {expected:.6e} | {computed:.6e} | {rel_error:.2e} | {ulp_error} | {source} |\n",
+                        inputs = result.test_case.inputs,
+                        expected = result.test_case.expected,
+                        computed = result.computed,
+                        rel_error = result.relative_error,
+                        ulp_error = result.ulp_error,
+                        source = result.test_case.source,
                     ));
                 }
 
                 if failed > 10 {
-                    report.push_str(&format!("\n... and {} more failed cases\n", failed - 10));
+                    let more_failed = failed - 10;
+                    report.push_str(&format!("\n... and {more_failed} more failed cases\n"));
                 }
             }
 
@@ -341,19 +340,19 @@ impl PythonValidator {
 
     /// Run Python script to compute reference values
     pub fn compute_reference(&self, function: &str, args: &[f64]) -> SpecialResult<f64> {
+        let args_str = args
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
         let script = format!(
             r#"
 import scipy.special as sp
 import sys
 
-result = sp.{}({})
+result = sp.{function}({args_str})
 print(result)
-"#,
-            function,
-            args.iter()
-                .map(|x| x.to_string())
-                .collect::<Vec<_>>()
-                .join(", ")
+"#
         );
 
         let output = Command::new(&self.python_path)
@@ -389,29 +388,27 @@ pub fn generate_test_suite() -> SpecialResult<()> {
 
     for (function, cases) in validator.test_cases {
         for (i, case) in cases.iter().enumerate() {
+            let source_lower = case.source.to_lowercase();
+            let input_str = case.inputs[0]
+                .to_string()
+                .replace('.', "_")
+                .replace('-', "neg");
+            let args_str = case
+                .inputs
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
             test_code.push_str(&format!(
                 r#"
     #[test]
-    fn test_{}_{}_{}_{}() {{
-        let result = {}({});
-        assert_relative_eq!(result, {}, epsilon = {});
+    fn test_{function}_{source_lower}_{i}_{input_str}() {{
+        let result = {function}({args_str});
+        assert_relative_eq!(result, {expected}, epsilon = {tolerance});
     }}
 "#,
-                function,
-                case.source.to_lowercase(),
-                i,
-                case.inputs[0]
-                    .to_string()
-                    .replace('.', "_")
-                    .replace('-', "neg"),
-                function,
-                case.inputs
-                    .iter()
-                    .map(|x| x.to_string())
-                    .collect::<Vec<_>>()
-                    .join(", "),
-                case.expected,
-                case.tolerance,
+                expected = case.expected,
+                tolerance = case.tolerance,
             ));
         }
     }

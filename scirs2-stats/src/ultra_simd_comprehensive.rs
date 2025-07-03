@@ -42,11 +42,11 @@ impl Default for UltraComprehensiveSimdConfig {
     fn default() -> Self {
         let capabilities = PlatformCapabilities::detect();
 
-        let (f64_lanes, f32_lanes, memory_alignment) = if capabilities.avx512 {
+        let (f64_lanes, f32_lanes, memory_alignment) = if capabilities.avx512_available {
             (8, 16, 64) // 512-bit vectors, 64-byte alignment
-        } else if capabilities.avx2 {
+        } else if capabilities.avx2_available {
             (4, 8, 32) // 256-bit vectors, 32-byte alignment
-        } else if capabilities.sse4_1 {
+        } else if capabilities.simd_available {
             (2, 4, 16) // 128-bit vectors, 16-byte alignment
         } else {
             (1, 1, 8) // Scalar fallback
@@ -907,9 +907,9 @@ where
     /// Get performance metrics
     pub fn get_performance_metrics(&self) -> PerformanceMetrics {
         PerformanceMetrics {
-            simd_utilization: if self.config.capabilities.avx512 {
+            simd_utilization: if self.config.capabilities.avx512_available {
                 0.95
-            } else if self.config.capabilities.avx2 {
+            } else if self.config.capabilities.avx2_available {
                 0.85
             } else {
                 0.70

@@ -102,8 +102,10 @@ impl SystemInfo {
             cpu_info: Self::get_cpu_info(),
             gpu_info: Self::get_gpu_info(),
             memory_info: Self::get_memory_info(),
-            rust_version: std::env::var("RUSTC_VERSION")
-                .unwrap_or_else(|_| format!("rustc {}", env!("CARGO_PKG_RUST_VERSION", "unknown"))),
+            rust_version: std::env::var("RUSTC_VERSION").unwrap_or_else(|_| {
+                let version = env!("CARGO_PKG_RUST_VERSION", "unknown");
+                format!("rustc {version}")
+            }),
             feature_flags,
         }
     }
@@ -134,7 +136,7 @@ impl SystemInfo {
                 .len()
             {
                 0 => None,
-                n => Some(format!("{} GPU device(s) available", n)),
+                n => Some(format!("{n} GPU device(s) available")),
             }
         }
         #[cfg(not(feature = "gpu"))]
@@ -207,7 +209,7 @@ impl GammaBenchmarks {
                         Err(e) => {
                             result.success = false;
                             result.error_message =
-                                Some(format!("Parallel accuracy test failed: {}", e));
+                                Some(format!("Parallel accuracy test failed: {e}"));
                         }
                     }
                 }
@@ -227,7 +229,7 @@ impl GammaBenchmarks {
                         }
                         Err(e) => {
                             result.success = false;
-                            result.error_message = Some(format!("GPU accuracy test failed: {}", e));
+                            result.error_message = Some(format!("GPU accuracy test failed: {e}"));
                         }
                     }
                 }
@@ -395,7 +397,7 @@ impl GammaBenchmarks {
                 }
                 Err(e) => {
                     if error_msg.is_none() {
-                        error_msg = Some(format!("GPU error: {}", e));
+                        error_msg = Some(format!("GPU error: {e}"));
                     }
                 }
             }
@@ -526,8 +528,7 @@ impl GammaBenchmarks {
         match crate::gpu_ops::gamma_gpu(&data.view()) {
             Ok(result) => Ok(result),
             Err(e) => Err(crate::error::SpecialError::ComputationError(format!(
-                "GPU gamma computation failed: {}",
-                e
+                "GPU gamma computation failed: {e}"
             ))),
         }
     }
@@ -585,15 +586,15 @@ impl GammaBenchmarks {
             if result.success {
                 if result.average_time.is_zero() {
                     return Err(crate::error::SpecialError::ComputationError(format!(
-                        "Invalid timing for {}",
-                        result.implementation
+                        "Invalid timing for {implementation}",
+                        implementation = result.implementation
                     )));
                 }
 
                 if result.throughput_ops_per_sec <= 0.0 {
                     return Err(crate::error::SpecialError::ComputationError(format!(
-                        "Invalid throughput for {}",
-                        result.implementation
+                        "Invalid throughput for {implementation}",
+                        implementation = result.implementation
                     )));
                 }
             }
@@ -629,8 +630,8 @@ impl GammaBenchmarks {
                 if let Some(accuracy) = result.numerical_accuracy {
                     if accuracy > 1e-6 {
                         return Err(crate::error::SpecialError::ComputationError(format!(
-                            "Numerical accuracy {} exceeds threshold for {}",
-                            accuracy, result.implementation
+                            "Numerical accuracy {accuracy} exceeds threshold for {implementation}",
+                            implementation = result.implementation
                         )));
                     }
                 }
@@ -638,15 +639,17 @@ impl GammaBenchmarks {
                 // Validate performance metrics
                 if result.throughput_ops_per_sec <= 0.0 {
                     return Err(crate::error::SpecialError::ComputationError(format!(
-                        "Invalid throughput for {}: {}",
-                        result.implementation, result.throughput_ops_per_sec
+                        "Invalid throughput for {implementation}: {throughput}",
+                        implementation = result.implementation,
+                        throughput = result.throughput_ops_per_sec
                     )));
                 }
 
                 if result.average_time.is_zero() {
                     return Err(crate::error::SpecialError::ComputationError(format!(
-                        "Invalid timing for {}: {:?}",
-                        result.implementation, result.average_time
+                        "Invalid timing for {implementation}: {timing:?}",
+                        implementation = result.implementation,
+                        timing = result.average_time
                     )));
                 }
             }
@@ -681,16 +684,17 @@ impl BenchmarkSuite {
 
         // System information
         report.push_str("System Information:\n");
-        report.push_str(&format!("  CPU: {}\n", self.system_info.cpu_info));
+        let cpu_info = &self.system_info.cpu_info;
+        report.push_str(&format!("  CPU: {cpu_info}\n"));
         if let Some(ref gpu_info) = self.system_info.gpu_info {
-            report.push_str(&format!("  GPU: {}\n", gpu_info));
+            report.push_str(&format!("  GPU: {gpu_info}\n"));
         }
-        report.push_str(&format!("  Rust: {}\n", self.system_info.rust_version));
-        report.push_str(&format!(
-            "  Features: {:?}\n",
-            self.system_info.feature_flags
-        ));
-        report.push_str(&format!("  Total time: {:?}\n\n", self.total_duration));
+        let rust_version = &self.system_info.rust_version;
+        report.push_str(&format!("  Rust: {rust_version}\n"));
+        let features = &self.system_info.feature_flags;
+        report.push_str(&format!("  Features: {features:?}\n"));
+        let total_duration = self.total_duration;
+        report.push_str(&format!("  Total time: {total_duration:?}\n\n"));
 
         // Results by array size
         let mut size_groups: HashMap<usize, Vec<&BenchmarkResult>> = HashMap::new();
@@ -707,7 +711,7 @@ impl BenchmarkSuite {
         for &size in sizes {
             let group = &size_groups[&size];
 
-            report.push_str(&format!("Array Size: {} elements\n", size));
+            report.push_str(&format!("Array Size: {size} elements\n"));
             report.push_str(&"-".repeat(50));
             report.push('\n');
 

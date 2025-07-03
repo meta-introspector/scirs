@@ -3,7 +3,7 @@
 //! This module provides comprehensive visualization capabilities for tracking
 //! optimization progress, comparing optimizers, and analyzing training dynamics.
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Write as FmtWrite;

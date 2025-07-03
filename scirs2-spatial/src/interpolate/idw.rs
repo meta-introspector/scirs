@@ -99,8 +99,7 @@ impl IDWInterpolator {
 
         if power < 0.0 {
             return Err(SpatialError::ValueError(format!(
-                "Power parameter must be non-negative, got {}",
-                power
+                "Power parameter must be non-negative, got {power}"
             )));
         }
 
@@ -112,8 +111,7 @@ impl IDWInterpolator {
             }
             if k > n_points {
                 return Err(SpatialError::ValueError(format!(
-                    "Number of neighbors ({}) cannot exceed number of points ({})",
-                    k, n_points
+                    "Number of neighbors ({k}) cannot exceed number of points ({n_points})"
                 )));
             }
         }
@@ -271,8 +269,7 @@ impl IDWInterpolator {
     pub fn set_power(&mut self, power: f64) -> SpatialResult<()> {
         if power < 0.0 {
             return Err(SpatialError::ValueError(format!(
-                "Power parameter must be non-negative, got {}",
-                power
+                "Power parameter must be non-negative, got {power}"
             )));
         }
 

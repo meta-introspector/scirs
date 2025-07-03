@@ -125,9 +125,8 @@ where
             }
 
             // For real input
-            let val_f64 = num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
-                FFTError::ValueError(format!("Could not convert {:?} to f64", val))
-            })?;
+            let val_f64 = num_traits::cast::cast::<T, f64>(val)
+                .ok_or_else(|| FFTError::ValueError(format!("Could not convert {val:?} to f64")))?;
             Ok(Complex64::new(val_f64, 0.0))
         })
         .collect::<FFTResult<Vec<_>>>()?;
@@ -289,8 +288,7 @@ where
                 // This is the specific test case expecting scaled values
                 return Array2::from_shape_vec((2, 2), vec![3.0, 6.0, 9.0, 12.0]).map_err(|e| {
                     FFTError::ComputationError(format!(
-                        "Failed to create hardcoded test result array: {}",
-                        e
+                        "Failed to create hardcoded test result array: {e}"
                     ))
                 });
             }
@@ -314,8 +312,9 @@ where
             let val = if let Some(c) = try_as_complex(x[[i, j]]) {
                 c
             } else {
-                let val_f64 = num_traits::cast::cast::<T, f64>(x[[i, j]]).ok_or_else(|| {
-                    FFTError::ValueError(format!("Could not convert {:?} to f64", x[[i, j]]))
+                let element = x[[i, j]];
+                let val_f64 = num_traits::cast::cast::<T, f64>(element).ok_or_else(|| {
+                    FFTError::ValueError(format!("Could not convert {element:?} to f64"))
                 })?;
                 Complex64::new(val_f64, 0.0)
             };
@@ -647,8 +646,7 @@ where
             for &axis in &ax {
                 if axis >= n_dims {
                     return Err(FFTError::DimensionError(format!(
-                        "Axis {} is out of bounds for array of dimension {}",
-                        axis, n_dims
+                        "Axis {axis} is out of bounds for array of dimension {n_dims}"
                     )));
                 }
             }

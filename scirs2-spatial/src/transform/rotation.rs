@@ -58,8 +58,7 @@ impl EulerConvention {
             "zxz" => Ok(EulerConvention::Zxz),
             "zyz" => Ok(EulerConvention::Zyz),
             _ => Err(SpatialError::ValueError(format!(
-                "Invalid Euler convention: {}",
-                s
+                "Invalid Euler convention: {s}"
             ))),
         }
     }
@@ -203,8 +202,7 @@ impl Rotation {
 
         if (det - 1.0).abs() > 1e-6 {
             return Err(SpatialError::ValueError(format!(
-                "Matrix is not orthogonal, determinant = {}",
-                det
+                "Matrix is not orthogonal, determinant = {det}"
             )));
         }
 

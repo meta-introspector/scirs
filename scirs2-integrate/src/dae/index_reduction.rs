@@ -457,8 +457,7 @@ impl<
 
         if self.structure.index != DAEIndex::Index1 {
             return Err(IntegrateError::ConvergenceError(format!(
-                "Failed to reduce DAE to index-1 after {} iterations",
-                max_iterations
+                "Failed to reduce DAE to index-1 after {max_iterations} iterations"
             )));
         }
 
@@ -762,8 +761,7 @@ impl<
 
         if final_index != DAEIndex::Index1 {
             return Err(IntegrateError::ComputationError(format!(
-                "Dummy derivative method failed to reduce to index-1. Final index: {:?}",
-                final_index
+                "Dummy derivative method failed to reduce to index-1. Final index: {final_index:?}"
             )));
         }
 
@@ -1165,8 +1163,7 @@ impl<
         // Check if the projection was successful
         if residual > self.constraint_tol {
             return Err(IntegrateError::ComputationError(format!(
-                "Failed to project solution onto constraint manifold. Residual: {}",
-                residual
+                "Failed to project solution onto constraint manifold. Residual: {residual}"
             )));
         }
 
@@ -1221,8 +1218,7 @@ impl<
 
         if g_norm > self.constraint_tol {
             return Err(IntegrateError::ComputationError(format!(
-                "Failed to find consistent initial conditions after {} iterations. Residual: {}",
-                max_iter, g_norm
+                "Failed to find consistent initial conditions after {max_iter} iterations. Residual: {g_norm}"
             )));
         }
 
@@ -1352,8 +1348,7 @@ where
         Ok(sol) => sol,
         Err(e) => {
             return Err(IntegrateError::ComputationError(format!(
-                "Failed to solve least squares system: {}",
-                e
+                "Failed to solve least squares system: {e}"
             )))
         }
     };

@@ -788,8 +788,7 @@ impl Word2Vec {
         match self.vocabulary.get_index(word) {
             Some(idx) => Ok(self.input_embeddings.as_ref().unwrap().row(idx).to_owned()),
             None => Err(TextError::VocabularyError(format!(
-                "Word '{}' not in vocabulary",
-                word
+                "Word '{word}' not in vocabulary"
             ))),
         }
     }

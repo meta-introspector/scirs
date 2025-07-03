@@ -1721,7 +1721,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
     ) -> InterpolateResult<ArrayD<F>> {
         // Simplified kriging implementation
         // For production, this would use proper variogram fitting and covariance matrices
-        let nugget = parameters
+        let _nugget = parameters
             .get("nugget")
             .cloned()
             .unwrap_or_else(|| F::from(0.01).unwrap());
@@ -2001,7 +2001,8 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         }
 
         let mut smoothed = result.clone();
-        let result_1d = result.as_slice().unwrap_or(&[F::zero()]);
+        let default_value = [F::zero()];
+        let result_1d = result.as_slice().unwrap_or(&default_value);
         let smoothed_1d = smoothed.as_slice_mut().unwrap();
 
         // Apply simple moving average smoothing
@@ -2934,7 +2935,7 @@ mod tests {
     fn test_ultrathink_config_default() {
         let config = UltrathinkInterpolationConfig::default();
         assert!(config.enable_method_selection);
-        assert!(config.enable_accuracy_optimization);
+        assert!(config.enable_adaptive_optimization);
         assert!(config.enable_quantum_optimization);
     }
 

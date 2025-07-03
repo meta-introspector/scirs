@@ -72,7 +72,7 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
         }
 
         // Try to solve the Newton system first
-        match solve(&regularized_hessian, &(-gradient)) {
+        match solve(&regularized_hessian.view(), &(-gradient).view(), None) {
             Ok(newton_step) => {
                 let step_norm = newton_step.mapv(|x| x * x).sum().sqrt();
 

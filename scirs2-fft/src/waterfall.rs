@@ -664,8 +664,7 @@ pub fn apply_colormap(amplitudes: &Array1<f64>, colormap: &str) -> FFTResult<Arr
         }
         _ => {
             return Err(FFTError::ValueError(format!(
-                "Unknown colormap: {}. Use 'jet', 'viridis', 'plasma', 'grayscale', or 'hot'.",
-                colormap
+                "Unknown colormap: {colormap}. Use 'jet', 'viridis', 'plasma', 'grayscale', or 'hot'."
             )));
         }
     }

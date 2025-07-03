@@ -10,13 +10,13 @@ fn main() {
 
     // Generate and print the report
     let report = generate_frozen_api_report();
-    println!("{}", report);
+    println!("{report}");
 
     // Optionally write to file
     if let Some(output_path) = std::env::args().nth(1) {
         match std::fs::write(&output_path, &report) {
-            Ok(_) => println!("\nReport written to: {}", output_path),
-            Err(e) => eprintln!("\nError writing report to file: {}", e),
+            Ok(_) => println!("\nReport written to: {output_path}"),
+            Err(e) => eprintln!("\nError writing report to file: {e}"),
         }
     }
 }

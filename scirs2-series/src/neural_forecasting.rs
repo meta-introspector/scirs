@@ -107,18 +107,25 @@ pub struct LSTMState<F: Float> {
 #[derive(Debug)]
 pub struct LSTMCell<F: Float + Debug> {
     /// Input size
+    #[allow(dead_code)]
     input_size: usize,
     /// Hidden size
+    #[allow(dead_code)]
     hidden_size: usize,
     /// Forget gate weights
+    #[allow(dead_code)]
     w_forget: Array2<F>,
     /// Input gate weights
+    #[allow(dead_code)]
     w_input: Array2<F>,
     /// Candidate gate weights
+    #[allow(dead_code)]
     w_candidate: Array2<F>,
     /// Output gate weights
+    #[allow(dead_code)]
     w_output: Array2<F>,
     /// Bias terms
+    #[allow(dead_code)]
     bias: Array1<F>,
 }
 
@@ -253,12 +260,16 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
 #[derive(Debug)]
 pub struct LSTMNetwork<F: Float + Debug> {
     /// LSTM layers
+    #[allow(dead_code)]
     layers: Vec<LSTMCell<F>>,
     /// Output projection layer
+    #[allow(dead_code)]
     output_layer: Array2<F>,
     /// Output bias
+    #[allow(dead_code)]
     output_bias: Array1<F>,
     /// Dropout probability
+    #[allow(dead_code)]
     dropout_prob: F,
 }
 
@@ -410,16 +421,22 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMNetwork<F> {
 #[derive(Debug)]
 pub struct MultiHeadAttention<F: Float + Debug> {
     /// Number of attention heads
+    #[allow(dead_code)]
     num_heads: usize,
     /// Model dimension
+    #[allow(dead_code)]
     model_dim: usize,
     /// Head dimension
+    #[allow(dead_code)]
     head_dim: usize,
     /// Query projection weights
+    #[allow(dead_code)]
     w_query: Array2<F>,
     /// Key projection weights
+    #[allow(dead_code)]
     w_key: Array2<F>,
     /// Value projection weights
+    #[allow(dead_code)]
     w_value: Array2<F>,
     /// Output projection weights
     w_output: Array2<F>,
@@ -710,6 +727,7 @@ pub struct TransformerBlock<F: Float + Debug> {
     ln2_gamma: Array1<F>,
     ln2_beta: Array1<F>,
     /// Model dimension
+    #[allow(dead_code)]
     model_dim: usize,
 }
 
@@ -799,6 +817,7 @@ pub struct TransformerForecaster<F: Float + Debug> {
     /// Output projection
     output_projection: Array2<F>,
     /// Model parameters
+    #[allow(dead_code)]
     model_dim: usize,
     max_seq_len: usize,
 }
@@ -807,9 +826,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> TransformerForecaster<F> {
     /// Create new transformer forecaster
     pub fn new(
         input_dim: usize,
-        model_dim: usize,
+        #[allow(dead_code)] model_dim: usize,
         num_layers: usize,
-        num_heads: usize,
+        #[allow(dead_code)] num_heads: usize,
         ffn_hidden_dim: usize,
         max_seq_len: usize,
         output_dim: usize,
@@ -1723,10 +1742,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
 #[derive(Debug)]
 pub struct FlashAttention<F: Float + Debug> {
     /// Model dimension
+    #[allow(dead_code)]
     model_dim: usize,
     /// Number of attention heads
+    #[allow(dead_code)]
     num_heads: usize,
     /// Head dimension
+    #[allow(dead_code)]
     head_dim: usize,
     /// Block size for tiling
     block_size: usize,
@@ -1739,8 +1761,8 @@ pub struct FlashAttention<F: Float + Debug> {
 impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
     /// Create new Flash Attention layer
     pub fn new(
-        model_dim: usize,
-        num_heads: usize,
+        #[allow(dead_code)] model_dim: usize,
+        #[allow(dead_code)] num_heads: usize,
         block_size: usize,
     ) -> crate::error::Result<Self> {
         if model_dim % num_heads != 0 {
@@ -1968,6 +1990,7 @@ pub struct TemporalFusionTransformer<F: Float + Debug> {
     target_dim: usize,
     /// Model configuration
     hidden_dim: usize,
+    #[allow(dead_code)]
     num_heads: usize,
     num_layers: usize,
     dropout_rate: F,
@@ -2192,16 +2215,22 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
 #[derive(Debug)]
 pub struct MultiQueryAttention<F: Float + Debug> {
     /// Model dimension
+    #[allow(dead_code)]
     model_dim: usize,
     /// Number of query heads
+    #[allow(dead_code)]
     num_heads: usize,
     /// Head dimension
+    #[allow(dead_code)]
     head_dim: usize,
     /// Query projection (multiple heads)
+    #[allow(dead_code)]
     w_query: Array2<F>,
     /// Key projection (single head)
+    #[allow(dead_code)]
     w_key: Array2<F>,
     /// Value projection (single head)
+    #[allow(dead_code)]
     w_value: Array2<F>,
     /// Output projection
     w_output: Array2<F>,
@@ -2496,6 +2525,7 @@ pub struct ALiBiAttention<F: Float + Debug> {
     /// ALiBi slopes for each head
     slopes: Array1<F>,
     /// Number of heads
+    #[allow(dead_code)]
     num_heads: usize,
 }
 
@@ -2670,6 +2700,7 @@ pub struct EnhancedTransformerBlock<F: Float + Debug> {
     norm1: LayerNorm<F>,
     norm2: LayerNorm<F>,
     /// Model dimension
+    #[allow(dead_code)]
     model_dim: usize,
 }
 
@@ -2688,8 +2719,8 @@ pub enum AttentionType<F: Float + Debug> {
 impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
     /// Create new enhanced transformer block
     pub fn new(
-        model_dim: usize,
-        num_heads: usize,
+        #[allow(dead_code)] model_dim: usize,
+        #[allow(dead_code)] num_heads: usize,
         ffn_hidden_dim: usize,
         attention_variant: &str,
         use_rope: bool,
@@ -2768,10 +2799,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
 #[derive(Debug)]
 pub struct RingAttention<F: Float + Debug> {
     /// Model dimension
+    #[allow(dead_code)]
     model_dim: usize,
     /// Number of attention heads
+    #[allow(dead_code)]
     num_heads: usize,
     /// Head dimension
+    #[allow(dead_code)]
     head_dim: usize,
     /// Ring size (number of devices/partitions)
     ring_size: usize,
@@ -2788,8 +2822,8 @@ pub struct RingAttention<F: Float + Debug> {
 impl<F: Float + Debug + Clone + FromPrimitive> RingAttention<F> {
     /// Create new Ring Attention layer
     pub fn new(
-        model_dim: usize,
-        num_heads: usize,
+        #[allow(dead_code)] model_dim: usize,
+        #[allow(dead_code)] num_heads: usize,
         ring_size: usize,
         device_rank: usize,
     ) -> crate::error::Result<Self> {
@@ -3116,6 +3150,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RingAttention<F> {
 #[derive(Debug)]
 pub struct HyenaAttention<F: Float + Debug> {
     /// Model dimension
+    #[allow(dead_code)]
     model_dim: usize,
     /// Filter order (number of convolution layers)
     order: usize,
@@ -3351,6 +3386,7 @@ pub struct RetrievalAugmentedTimeSeries<F: Float + Debug> {
     /// Decoder for final prediction
     decoder: FeedForwardNetwork<F>,
     /// Dimensions
+    #[allow(dead_code)]
     model_dim: usize,
     memory_size: usize,
     pattern_dim: usize,
@@ -3359,8 +3395,8 @@ pub struct RetrievalAugmentedTimeSeries<F: Float + Debug> {
 impl<F: Float + Debug + Clone + FromPrimitive> RetrievalAugmentedTimeSeries<F> {
     /// Create new RATS model
     pub fn new(
-        model_dim: usize,
-        num_heads: usize,
+        #[allow(dead_code)] model_dim: usize,
+        #[allow(dead_code)] num_heads: usize,
         memory_size: usize,
         pattern_dim: usize,
     ) -> crate::error::Result<Self> {
@@ -3569,8 +3605,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> RetrievalAugmentedTimeSeries<F> {
 #[derive(Debug)]
 pub struct QuantumSuperpositionAttention<F: Float + Debug> {
     /// Model dimension
+    #[allow(dead_code)]
     model_dim: usize,
     /// Number of quantum attention heads
+    #[allow(dead_code)]
     num_heads: usize,
     /// Quantum state dimension (number of qubits)
     num_qubits: usize,
@@ -3587,8 +3625,8 @@ pub struct QuantumSuperpositionAttention<F: Float + Debug> {
 impl<F: Float + Debug + Clone + FromPrimitive> QuantumSuperpositionAttention<F> {
     /// Create new Quantum Superposition Attention
     pub fn new(
-        model_dim: usize,
-        num_heads: usize,
+        #[allow(dead_code)] model_dim: usize,
+        #[allow(dead_code)] num_heads: usize,
         num_qubits: usize,
     ) -> crate::error::Result<Self> {
         let scale = F::from(2.0).unwrap() / F::from(model_dim).unwrap();
@@ -3848,7 +3886,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> SpeculativeDecoder<F> {
     pub fn new(
         main_model_dim: usize,
         draft_model_dim: usize,
-        num_heads: usize,
+        #[allow(dead_code)] num_heads: usize,
         max_speculative_steps: usize,
         acceptance_threshold: F,
     ) -> crate::error::Result<Self> {

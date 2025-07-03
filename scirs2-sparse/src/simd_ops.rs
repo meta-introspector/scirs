@@ -546,9 +546,9 @@ where
     } else {
         // Sequential transpose
         CsrArray::from_triplets(
-            &col_indices,
-            &row_indices,
-            &values,
+            col_indices.as_slice().expect("Array should be contiguous"),
+            row_indices.as_slice().expect("Array should be contiguous"),
+            values.as_slice().expect("Array should be contiguous"),
             (cols, rows),
             false,
         )
@@ -785,7 +785,11 @@ where
         "fro" | "frobenius" => {
             // Frobenius norm: sqrt(sum of squares)
             if opts.use_parallel && values.len() >= opts.parallel_threshold {
-                let chunks: Vec<_> = &values.chunks(opts.chunk_size).collect();
+                let chunks: Vec<_> = values
+                    .as_slice()
+                    .expect("Array should be contiguous")
+                    .chunks(opts.chunk_size)
+                    .collect();
                 let partial_sums: Vec<T> = parallel_map(&chunks, |chunk| {
                     let chunk_view = ArrayView1::from(chunk);
                     T::simd_dot(&chunk_view, &chunk_view)
@@ -916,8 +920,12 @@ where
 
     let scaled_values = if opts.use_parallel && values.len() >= opts.parallel_threshold {
         // Parallel scaling with SIMD
-        let chunks: Vec<_> = &values.chunks(opts.chunk_size).collect();
-        let scaled_chunks: Vec<Vec<T>> = parallel_map(&chunks, |chunk| {
+        let chunks: Vec<_> = values
+            .as_slice()
+            .expect("Array should be contiguous")
+            .chunks(opts.chunk_size)
+            .collect();
+        let scaled_chunks: Vec<Vec<T>> = parallel_map(&chunks, |chunk: &&[T]| {
             let _scalar_vec = vec![scalar; chunk.len()];
             let mut result = vec![T::zero(); chunk.len()];
 
@@ -936,8 +944,8 @@ where
     };
 
     CsrArray::from_triplets(
-        &row_indices,
-        &col_indices,
+        row_indices.as_slice().expect("Array should be contiguous"),
+        col_indices.as_slice().expect("Array should be contiguous"),
         &scaled_values,
         (rows, cols),
         false,

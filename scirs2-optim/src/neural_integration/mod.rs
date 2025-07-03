@@ -3,7 +3,7 @@
 //! This module provides interfaces and utilities for integrating optimizers with neural networks,
 //! including generic parameter optimization, lazy registration, and architecture-aware optimizations.
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::collections::HashMap;

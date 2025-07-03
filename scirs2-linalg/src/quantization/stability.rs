@@ -200,8 +200,7 @@ where
 
     if bits < recommended_min_bits {
         suggestions.push(format!(
-            "Increase bit width to at least {} bits to better capture the dynamic range",
-            recommended_min_bits
+            "Increase bit width to at least {recommended_min_bits} bits to better capture the dynamic range"
         ));
     }
 

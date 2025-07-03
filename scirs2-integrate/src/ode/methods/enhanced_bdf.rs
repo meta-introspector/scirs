@@ -412,8 +412,7 @@ where
         ))
     } else {
         Some(format!(
-            "Integration completed successfully. Jacobian strategy: {:?}, Final order: {}",
-            jacobian_strategy, current_order
+            "Integration completed successfully. Jacobian strategy: {jacobian_strategy:?}, Final order: {current_order}"
         ))
     };
 

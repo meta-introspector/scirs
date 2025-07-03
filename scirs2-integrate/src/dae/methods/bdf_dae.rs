@@ -408,8 +408,7 @@ where
             // If step size gets too small, the problem might be too stiff
             if h < min_step {
                 return Err(IntegrateError::ComputationError(format!(
-                    "Failed to converge at t = {}. Step size too small.",
-                    t_current
+                    "Failed to converge at t = {t_current}. Step size too small."
                 )));
             }
 
@@ -496,11 +495,10 @@ where
         y: y_values,
         success,
         message: if success {
-            Some(format!("Successful integration. {} steps taken.", n_steps))
+            Some(format!("Successful integration. {n_steps} steps taken."))
         } else {
             Some(format!(
-                "Integration did not reach end time. {} steps taken.",
-                n_steps
+                "Integration did not reach end time. {n_steps} steps taken."
             ))
         },
         n_eval: n_f_evals,
@@ -831,8 +829,7 @@ where
             // If step size gets too small, the problem might be too stiff
             if h < min_step {
                 return Err(IntegrateError::ComputationError(format!(
-                    "Failed to converge at t = {}. Step size too small.",
-                    t_current
+                    "Failed to converge at t = {t_current}. Step size too small."
                 )));
             }
 
@@ -913,11 +910,10 @@ where
         y: empty_y,
         success,
         message: if success {
-            Some(format!("Successful integration. {} steps taken.", n_steps))
+            Some(format!("Successful integration. {n_steps} steps taken."))
         } else {
             Some(format!(
-                "Integration did not reach end time. {} steps taken.",
-                n_steps
+                "Integration did not reach end time. {n_steps} steps taken."
             ))
         },
         n_eval: n_f_evals,
@@ -1274,8 +1270,7 @@ where
         // Check for singularity
         if a_copy[[k, k]].abs() < F::from_f64(1e-10).unwrap() {
             return Err(IntegrateError::ComputationError(format!(
-                "Matrix is singular at row {}",
-                k
+                "Matrix is singular at row {k}"
             )));
         }
 

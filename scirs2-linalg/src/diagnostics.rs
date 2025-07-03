@@ -53,15 +53,15 @@ impl<F: Float + fmt::Display> fmt::Display for MatrixDiagnostics<F> {
         writeln!(f, "  Symmetric: {}", self.is_symmetric)?;
 
         if let Some(cond) = self.condition_number {
-            writeln!(f, "  Condition number: {}", cond)?;
+            writeln!(f, "  Condition number: {cond}")?;
         }
 
         if let Some(rank) = self.rank {
-            writeln!(f, "  Rank: {}", rank)?;
+            writeln!(f, "  Rank: {rank}")?;
         }
 
         if let Some(pd) = self.is_positive_definite {
-            writeln!(f, "  Positive definite: {}", pd)?;
+            writeln!(f, "  Positive definite: {pd}")?;
         }
 
         writeln!(f, "  Sparsity ratio: {:.3}", self.sparsity_ratio)?;
@@ -69,31 +69,30 @@ impl<F: Float + fmt::Display> fmt::Display for MatrixDiagnostics<F> {
         if let Some(precision_loss) = self.precision_loss_estimate {
             writeln!(
                 f,
-                "  Estimated precision loss: {:.1} decimal digits",
-                precision_loss
+                "  Estimated precision loss: {precision_loss:.1} decimal digits"
             )?;
         }
 
         if let Some(max_diag) = self.max_diagonal {
-            writeln!(f, "  Max diagonal element: {}", max_diag)?;
+            writeln!(f, "  Max diagonal element: {max_diag}")?;
         }
 
         if let Some(min_diag) = self.min_diagonal {
-            writeln!(f, "  Min diagonal element: {}", min_diag)?;
+            writeln!(f, "  Min diagonal element: {min_diag}")?;
         }
 
         if let Some(gershgorin) = self.gershgorin_radius {
-            writeln!(f, "  Gershgorin circle radius: {}", gershgorin)?;
+            writeln!(f, "  Gershgorin circle radius: {gershgorin}")?;
         }
 
         if let Some(near_zero) = self.near_zero_eigenvalues {
-            writeln!(f, "  Estimated near-zero eigenvalues: {}", near_zero)?;
+            writeln!(f, "  Estimated near-zero eigenvalues: {near_zero}")?;
         }
 
         if !self.suggestions.is_empty() {
             writeln!(f, "\nSuggestions:")?;
             for suggestion in &self.suggestions {
-                writeln!(f, "  - {}", suggestion)?;
+                writeln!(f, "  - {suggestion}")?;
             }
         }
 
@@ -357,10 +356,7 @@ where
 {
     if let Some(a) = matrix {
         let diagnostics = analyze_matrix(a);
-        let message = format!(
-            "{}\n\nOperation: {}\n{}",
-            base_error, operation, diagnostics
-        );
+        let message = format!("{base_error}\n\nOperation: {operation}\n{diagnostics}");
         LinalgError::ComputationError(message)
     } else {
         base_error
@@ -387,10 +383,8 @@ where
         .suggestions
         .push("Consider using the pseudoinverse for least-squares solutions.".to_string());
 
-    let message = format!(
-        "Matrix is singular or nearly singular\n\nOperation: {}\n{}",
-        operation, diagnostics
-    );
+    let message =
+        format!("Matrix is singular or nearly singular\n\nOperation: {operation}\n{diagnostics}");
 
     LinalgError::SingularMatrixError(message)
 }
@@ -530,7 +524,7 @@ where
             if rank < a.nrows() {
                 report
                     .warnings
-                    .push(format!("Matrix appears rank deficient (rank ≈ {})", rank));
+                    .push(format!("Matrix appears rank deficient (rank ≈ {rank})"));
                 report
                     .recommendations
                     .push("Consider using rank-revealing decompositions".to_string());
@@ -596,24 +590,24 @@ impl<F: Float + fmt::Display> fmt::Display for StabilityReport<F> {
         )?;
 
         if let Some(cond) = self.effective_condition_number {
-            writeln!(f, "  Effective condition number: {:.2e}", cond)?;
+            writeln!(f, "  Effective condition number: {cond:.2e}")?;
         }
 
         if let Some(rank) = self.numerical_rank_estimate {
-            writeln!(f, "  Estimated numerical rank: {}", rank)?;
+            writeln!(f, "  Estimated numerical rank: {rank}")?;
         }
 
         if !self.warnings.is_empty() {
             writeln!(f, "\nWarnings:")?;
             for warning in &self.warnings {
-                writeln!(f, "  ⚠ {}", warning)?;
+                writeln!(f, "  ⚠ {warning}")?;
             }
         }
 
         if !self.recommendations.is_empty() {
             writeln!(f, "\nRecommendations:")?;
             for rec in &self.recommendations {
-                writeln!(f, "  → {}", rec)?;
+                writeln!(f, "  → {rec}")?;
             }
         }
 

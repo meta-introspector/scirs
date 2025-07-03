@@ -25,8 +25,7 @@ where
 {
     if matrix.is_empty() {
         return Err(LinalgError::ShapeError(format!(
-            "{} failed: Input matrix cannot be empty",
-            operation
+            "{operation} failed: Input matrix cannot be empty"
         )));
     }
     Ok(())
@@ -49,8 +48,7 @@ where
 {
     if vector.is_empty() {
         return Err(LinalgError::ShapeError(format!(
-            "{} failed: Input vector cannot be empty",
-            operation
+            "{operation} failed: Input vector cannot be empty"
         )));
     }
     Ok(())
@@ -158,8 +156,7 @@ where
     for &val in matrix.iter() {
         if !val.is_finite() {
             return Err(LinalgError::InvalidInputError(format!(
-                "{} failed: Matrix contains non-finite values",
-                operation
+                "{operation} failed: Matrix contains non-finite values"
             )));
         }
     }
@@ -184,8 +181,7 @@ where
     for &val in vector.iter() {
         if !val.is_finite() {
             return Err(LinalgError::InvalidInputError(format!(
-                "{} failed: Vector contains non-finite values",
-                operation
+                "{operation} failed: Vector contains non-finite values"
             )));
         }
     }
@@ -358,16 +354,14 @@ where
 {
     if !value.is_finite() {
         return Err(LinalgError::InvalidInputError(format!(
-            "{} failed: Parameter '{}' must be finite, got {:?}",
-            operation, parameter_name, value
+            "{operation} failed: Parameter '{parameter_name}' must be finite, got {value:?}"
         )));
     }
 
     if let Some(min_val) = min {
         if value < min_val {
             return Err(LinalgError::InvalidInputError(format!(
-                "{} failed: Parameter '{}' must be >= {:?}, got {:?}",
-                operation, parameter_name, min_val, value
+                "{operation} failed: Parameter '{parameter_name}' must be >= {min_val:?}, got {value:?}"
             )));
         }
     }
@@ -375,8 +369,7 @@ where
     if let Some(max_val) = max {
         if value > max_val {
             return Err(LinalgError::InvalidInputError(format!(
-                "{} failed: Parameter '{}' must be <= {:?}, got {:?}",
-                operation, parameter_name, max_val, value
+                "{operation} failed: Parameter '{parameter_name}' must be <= {max_val:?}, got {value:?}"
             )));
         }
     }
@@ -410,8 +403,7 @@ where
 {
     if max_iterations == 0 {
         return Err(LinalgError::InvalidInputError(format!(
-            "{} failed: Maximum iterations must be > 0, got {}",
-            operation, max_iterations
+            "{operation} failed: Maximum iterations must be > 0, got {max_iterations}"
         )));
     }
 
@@ -419,8 +411,7 @@ where
 
     if tolerance == F::zero() {
         return Err(LinalgError::InvalidInputError(format!(
-            "{} failed: Tolerance must be > 0 for convergence, got {:?}",
-            operation, tolerance
+            "{operation} failed: Tolerance must be > 0 for convergence, got {tolerance:?}"
         )));
     }
 
@@ -471,8 +462,7 @@ where
     if let Some(min) = min_size {
         if size < min {
             return Err(LinalgError::InvalidInputError(format!(
-                "{} failed: Matrix size {} is below minimum required size {}",
-                operation, size, min
+                "{operation} failed: Matrix size {size} is below minimum required size {min}"
             )));
         }
     }
@@ -480,8 +470,7 @@ where
     if let Some(max) = max_size {
         if size > max {
             return Err(LinalgError::InvalidInputError(format!(
-                "{} failed: Matrix size {} exceeds maximum allowed size {}",
-                operation, size, max
+                "{operation} failed: Matrix size {size} exceeds maximum allowed size {max}"
             )));
         }
     }

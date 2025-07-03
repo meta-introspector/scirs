@@ -238,8 +238,10 @@ struct LoadBalancerState {
     /// Round-robin counter
     round_robin_counter: usize,
     /// Node weights for weighted distribution
+    #[allow(dead_code)]
     node_weights: HashMap<String, f64>,
     /// Node load history
+    #[allow(dead_code)]
     load_history: HashMap<String, Vec<f64>>,
 }
 

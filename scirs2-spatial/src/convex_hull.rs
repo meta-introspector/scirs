@@ -193,8 +193,7 @@ impl ConvexHull {
             ConvexHullAlgorithm::GrahamScan | ConvexHullAlgorithm::JarvisMarch => {
                 if ndim != 2 {
                     return Err(SpatialError::ValueError(format!(
-                        "{:?} algorithm only supports 2D points, got {}D",
-                        algorithm, ndim
+                        "{algorithm:?} algorithm only supports 2D points, got {ndim}D"
                     )));
                 }
             }
@@ -263,8 +262,7 @@ impl ConvexHull {
                             return Self::handle_special_case_3d(points);
                         } else {
                             return Err(SpatialError::ComputationError(format!(
-                                "Qhull error: {}",
-                                e
+                                "Qhull error: {e}"
                             )));
                         }
                     }
@@ -441,7 +439,7 @@ impl ConvexHull {
         let qh = Qh::builder()
             .compute(false)
             .build_from_iter(points_vec)
-            .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {}", e)))?;
+            .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {e}")))?;
 
         // Compute facet equations for 2D hull
         let equations = Self::compute_2d_hull_equations(points, &vertex_indices);
@@ -523,7 +521,7 @@ impl ConvexHull {
         let qh = Qh::builder()
             .compute(false)
             .build_from_iter(points_vec)
-            .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {}", e)))?;
+            .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {e}")))?;
 
         // Compute facet equations for 2D hull
         let equations = Self::compute_2d_hull_equations(points, &vertex_indices);
@@ -601,8 +599,7 @@ impl ConvexHull {
                 Ok(qh) => qh,
                 Err(e) => {
                     return Err(SpatialError::ComputationError(format!(
-                        "Qhull error: {}",
-                        e
+                        "Qhull error: {e}"
                     )))
                 }
             };
@@ -648,8 +645,7 @@ impl ConvexHull {
                 Ok(qh) => qh,
                 Err(e) => {
                     return Err(SpatialError::ComputationError(format!(
-                        "Qhull error: {}",
-                        e
+                        "Qhull error: {e}"
                     )))
                 }
             };
@@ -694,8 +690,7 @@ impl ConvexHull {
                 Ok(qh) => qh,
                 Err(e) => {
                     return Err(SpatialError::ComputationError(format!(
-                        "Qhull error: {}",
-                        e
+                        "Qhull error: {e}"
                     )))
                 }
             };

@@ -381,7 +381,7 @@ impl ProfilingScope {
 impl Drop for ProfilingScope {
     fn drop(&mut self) {
         let duration = self.start.elapsed();
-        let thread_count = scirs2_core::parallel_ops::current_num_threads();
+        let thread_count = scirs2_core::parallel_ops::get_num_threads();
 
         let mut profiler = PROFILER
             .lock()

@@ -20,7 +20,7 @@ use crate::streaming::FrameMetadata;
 use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2};
 use rand::seq::IteratorRandom;
-use rand::{rng, Rng};
+use rand::Rng;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
@@ -552,7 +552,7 @@ impl QuantumAnnealingStage {
             (-delta_cost / self.temperature).exp()
         };
 
-        if rng.random_f64() < acceptance_probability {
+        if rng.random::<f64>() < acceptance_probability {
             self.parameters = neighbor_params;
 
             if neighbor_cost < self.best_cost {
@@ -840,7 +840,7 @@ impl QuantumSuperpositionStage {
         // Create multiple processing variants
         for i in 0..num_variants {
             let variant = ProcessingVariant {
-                name: format!("Variant_{}", i),
+                name: format!("Variant_{i}"),
                 sigma: rng.random_range(0.5..2.0),
                 threshold: rng.random_range(0.05..0.3),
                 enhancement_factor: rng.random_range(0.8..1.2),

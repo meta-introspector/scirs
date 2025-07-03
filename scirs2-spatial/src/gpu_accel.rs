@@ -1074,7 +1074,7 @@ pub fn report_gpu_status() {
         println!("  Supported Backends: {:?}", caps.supported_backends);
 
         for (i, name) in caps.device_names.iter().enumerate() {
-            println!("  Device {}: {}", i, name);
+            println!("  Device {i}: {name}");
         }
     } else {
         println!("  Reason: No compatible GPU devices found");

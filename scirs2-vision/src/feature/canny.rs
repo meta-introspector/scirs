@@ -259,20 +259,20 @@ fn compute_gradients(image: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
             // Horizontal gradient (Sobel-X)
-            gx[[y, x]] = -1.0 * image[[y - 1, x - 1]]
-                + 1.0 * image[[y - 1, x + 1]]
+            gx[[y, x]] = -image[[y - 1, x - 1]]
+                + image[[y - 1, x + 1]]
                 + -2.0 * image[[y, x - 1]]
                 + 2.0 * image[[y, x + 1]]
-                + -1.0 * image[[y + 1, x - 1]]
-                + 1.0 * image[[y + 1, x + 1]];
+                + -image[[y + 1, x - 1]]
+                + image[[y + 1, x + 1]];
 
             // Vertical gradient (Sobel-Y)
-            gy[[y, x]] = -1.0 * image[[y - 1, x - 1]]
+            gy[[y, x]] = -image[[y - 1, x - 1]]
                 + -2.0 * image[[y - 1, x]]
-                + -1.0 * image[[y - 1, x + 1]]
-                + 1.0 * image[[y + 1, x - 1]]
+                + -image[[y - 1, x + 1]]
+                + image[[y + 1, x - 1]]
                 + 2.0 * image[[y + 1, x]]
-                + 1.0 * image[[y + 1, x + 1]];
+                + image[[y + 1, x + 1]];
         }
     }
 

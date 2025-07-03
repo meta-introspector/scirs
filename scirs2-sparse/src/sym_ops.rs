@@ -540,7 +540,7 @@ mod tests {
 
         // Compute using the standard function
         let linear_op = full_csr.as_linear_operator();
-        let y_standard = linear_op.matvec(&x).unwrap();
+        let y_standard = linear_op.matvec(x.as_slice().unwrap()).unwrap();
 
         // Compare results
         for i in 0..y_optimized.len() {

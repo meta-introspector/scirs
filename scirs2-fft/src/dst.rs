@@ -54,7 +54,7 @@ where
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val)
-                .ok_or_else(|| FFTError::ValueError(format!("Could not convert {:?} to f64", val)))
+                .ok_or_else(|| FFTError::ValueError(format!("Could not convert {val:?} to f64")))
         })
         .collect::<FFTResult<Vec<_>>>()?;
 
@@ -109,7 +109,7 @@ where
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val)
-                .ok_or_else(|| FFTError::ValueError(format!("Could not convert {:?} to f64", val)))
+                .ok_or_else(|| FFTError::ValueError(format!("Could not convert {val:?} to f64")))
         })
         .collect::<FFTResult<Vec<_>>>()?;
 

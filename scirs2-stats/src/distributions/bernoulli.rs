@@ -44,7 +44,9 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
         let _ = check_probability(p, "Success probability").map_err(StatsError::from)?;
 
         // Create RNG for Bernoulli distribution
-        let p_f64 = <f64 as num_traits::NumCast>::from(p).unwrap();
+        let p_f64 = <f64 as num_traits::NumCast>::from(p).ok_or_else(|| {
+            StatsError::ComputationError("Failed to convert p to f64".to_string())
+        })?;
         let rand_distr = match RandBernoulli::new(p_f64) {
             Ok(distr) => distr,
             Err(_) => {
@@ -317,8 +319,8 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     pub fn skewness(&self) -> F {
         // Skewness = (1 - 2p) / sqrt(p * (1 - p))
-        let one = F::from(1.0).unwrap();
-        let two = F::from(2.0).unwrap();
+        let one = F::from(1.0).unwrap_or_else(|| F::zero());
+        let two = F::from(2.0).unwrap_or_else(|| F::zero());
 
         let q = one - self.p; // q = 1 - p
 
@@ -347,8 +349,8 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     pub fn kurtosis(&self) -> F {
         // Excess Kurtosis = (1 - 6p(1-p)) / (p(1-p))
-        let one = F::from(1.0).unwrap();
-        let six = F::from(6.0).unwrap();
+        let one = F::from(1.0).unwrap_or_else(|| F::zero());
+        let six = F::from(6.0).unwrap_or_else(|| F::zero());
 
         let q = one - self.p; // q = 1 - p
         let pq = self.p * q;

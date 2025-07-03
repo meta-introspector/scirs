@@ -194,8 +194,8 @@ impl VisualizationEngine {
 
         let mut metadata = PlotMetadata::default();
         metadata.title = "Phase Space Plot".to_string();
-        metadata.xlabel = format!("Variable {}", x_index);
-        metadata.ylabel = format!("Variable {}", y_index);
+        metadata.xlabel = format!("Variable {x_index}");
+        metadata.ylabel = format!("Variable {y_index}");
 
         Ok(PhaseSpacePlot {
             x,
@@ -360,8 +360,8 @@ impl VisualizationEngine {
         }
 
         // Add axis labels
-        result.push_str(&format!("\nX range: [{:.3}, {:.3}]\n", x_min, x_max));
-        result.push_str(&format!("Y range: [{:.3}, {:.3}]\n", y_min, y_max));
+        result.push_str(&format!("\nX range: [{x_min:.3}, {x_max:.3}]\n"));
+        result.push_str(&format!("Y range: [{y_min:.3}, {y_max:.3}]\n"));
 
         result
     }
@@ -622,11 +622,11 @@ impl VisualizationEngine {
 
         let mut metadata = PlotMetadata::default();
         metadata.title = "3D Phase Space Trajectory".to_string();
-        metadata.xlabel = format!("Variable {}", x_index);
-        metadata.ylabel = format!("Variable {}", y_index);
+        metadata.xlabel = format!("Variable {x_index}");
+        metadata.ylabel = format!("Variable {y_index}");
         metadata
             .annotations
-            .insert("zlabel".to_string(), format!("Variable {}", z_index));
+            .insert("zlabel".to_string(), format!("Variable {z_index}"));
 
         Ok(PhaseSpace3D {
             x,
@@ -1243,7 +1243,7 @@ impl InteractiveParameterExplorer {
     fn params_to_cache_key(&self, params: &Array1<f64>) -> String {
         params
             .iter()
-            .map(|&p| format!("{:.6}", p))
+            .map(|&p| format!("{p:.6}"))
             .collect::<Vec<_>>()
             .join(",")
     }
@@ -2601,9 +2601,9 @@ pub mod advanced_visualization {
                 }
 
                 let mut metadata = PlotMetadata::default();
-                metadata.title = format!("Trajectory Animation - Frame {}", frame_idx);
-                metadata.xlabel = format!("Variable {}", x_index);
-                metadata.ylabel = format!("Variable {}", y_index);
+                metadata.title = format!("Trajectory Animation - Frame {frame_idx}");
+                metadata.xlabel = format!("Variable {x_index}");
+                metadata.ylabel = format!("Variable {y_index}");
 
                 let frame = PhaseSpacePlot {
                     x: x_data,
@@ -3135,7 +3135,7 @@ pub mod specialized_visualizations {
                     (1, probability_density.len()),
                     probability_density.to_vec(),
                 )
-                .map_err(|e| IntegrateError::ComputationError(format!("Shape error: {}", e)))?,
+                .map_err(|e| IntegrateError::ComputationError(format!("Shape error: {e}")))?,
                 metadata,
             })
         }
@@ -3513,7 +3513,7 @@ pub mod specialized_visualizations {
             greek_name: &str,
         ) -> Result<HeatMapPlot> {
             let mut metadata = PlotMetadata::default();
-            metadata.title = format!("{} Surface", greek_name);
+            metadata.title = format!("{greek_name} Surface");
             metadata.xlabel = "Strike Price".to_string();
             metadata.ylabel = "Spot Price".to_string();
 
@@ -3535,7 +3535,7 @@ pub mod specialized_visualizations {
             let vols_vec = implied_vols.to_vec();
 
             let mut metadata = PlotMetadata::default();
-            metadata.title = format!("Volatility Smile (T = {:.2})", maturity);
+            metadata.title = format!("Volatility Smile (T = {maturity:.2})");
             metadata.xlabel = "Strike Price".to_string();
             metadata.ylabel = "Implied Volatility".to_string();
 
@@ -3558,7 +3558,7 @@ pub mod specialized_visualizations {
             let x = Array1::from_iter(0..n_scenarios).mapv(|i| i as f64);
             let y = Array1::from_elem(1, 0.0);
             let z = Array2::from_shape_vec((1, n_scenarios), portfolio_values.to_vec())
-                .map_err(|e| IntegrateError::ComputationError(format!("Shape error: {}", e)))?;
+                .map_err(|e| IntegrateError::ComputationError(format!("Shape error: {e}")))?;
 
             let mut metadata = PlotMetadata::default();
             metadata.title = "Risk Scenario Analysis".to_string();
@@ -5305,19 +5305,14 @@ impl ConvergenceVisualizationEngine {
             .metric_tracker
             .metrics
             .get(metric_name)
-            .ok_or_else(|| {
-                IntegrateError::ValueError(format!("Metric {} not found", metric_name))
-            })?;
+            .ok_or_else(|| IntegrateError::ValueError(format!("Metric {metric_name} not found")))?;
 
         let time_data = self
             .metric_tracker
             .time_points
             .get(metric_name)
             .ok_or_else(|| {
-                IntegrateError::ValueError(format!(
-                    "Time data for metric {} not found",
-                    metric_name
-                ))
+                IntegrateError::ValueError(format!("Time data for metric {metric_name} not found"))
             })?;
 
         let x_data = Array1::from_vec(time_data.clone());
@@ -5336,7 +5331,7 @@ impl ConvergenceVisualizationEngine {
         };
 
         let mut metadata = PlotMetadata::default();
-        metadata.title = format!("Convergence of {}", metric_name);
+        metadata.title = format!("Convergence of {metric_name}");
         metadata.xlabel = "Iteration/Time".to_string();
         metadata.ylabel = metric_name.to_string();
 
@@ -5461,11 +5456,7 @@ impl ConvergenceVisualizationEngine {
         let mut smoothed = Array1::zeros(data.len());
 
         for i in 0..data.len() {
-            let start = if i >= window_size / 2 {
-                i - window_size / 2
-            } else {
-                0
-            };
+            let start = i.saturating_sub(window_size / 2);
             let end = (i + window_size / 2 + 1).min(data.len());
 
             let window_sum: f64 = data.slice(s![start..end]).sum();
@@ -7294,7 +7285,7 @@ pub mod advanced_interactive_3d {
                             // Generate or fetch new frame
                             if let Ok(frame) = stream.generate_next_frame() {
                                 if let Err(e) = update_callback(&frame) {
-                                    eprintln!("Visualization update error: {:?}", e);
+                                    eprintln!("Visualization update error: {e:?}");
                                 }
                                 stream.update_metrics(elapsed);
                                 last_update = current_time;
@@ -7816,10 +7807,10 @@ pub mod advanced_interactive_3d {
             }
 
             let points = Array2::from_shape_vec((n_points, 3), points_data).map_err(|e| {
-                IntegrateError::DimensionMismatch(format!("Points array shape error: {}", e))
+                IntegrateError::DimensionMismatch(format!("Points array shape error: {e}"))
             })?;
             let colors = Array2::from_shape_vec((n_points, 3), colors_data).map_err(|e| {
-                IntegrateError::DimensionMismatch(format!("Colors array shape error: {}", e))
+                IntegrateError::DimensionMismatch(format!("Colors array shape error: {e}"))
             })?;
             let vectors = Array2::zeros((n_points, 3));
 

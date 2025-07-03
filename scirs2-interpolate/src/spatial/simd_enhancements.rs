@@ -3,8 +3,10 @@
 //! This module provides enhanced SIMD operations that complement the existing
 //! optimized_search.rs functionality with more specialized optimizations.
 
-use ndarray::{ArrayView1, ArrayView2};
-use num_traits::{Float, Zero};
+use crate::error::InterpolateResult;
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use num_traits::{Float, FromPrimitive, Zero};
+use std::fmt::Debug;
 
 #[cfg(feature = "simd")]
 use scirs2_core::simd_ops::SimdUnifiedOps;

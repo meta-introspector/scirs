@@ -249,8 +249,7 @@ where
     let shape = a.shape();
     if shape[0] != shape[1] {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix must be square for inversion, got shape {:?}",
-            shape
+            "Matrix must be square for inversion, got shape {shape:?}"
         )));
     }
 
@@ -360,8 +359,7 @@ where
     let shape = a.shape();
     if shape[0] != shape[1] {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix must be square for determinant, got shape {:?}",
-            shape
+            "Matrix must be square for determinant, got shape {shape:?}"
         )));
     }
 

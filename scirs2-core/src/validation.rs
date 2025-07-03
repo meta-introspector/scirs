@@ -64,8 +64,11 @@ where
 {
     if value <= T::zero() {
         return Err(CoreError::ValueError(
-            ErrorContext::new(format!("{} must be positive, got {value}", name.into()))
-                .with_location(ErrorLocation::new(file!(), line!())),
+            ErrorContext::new({
+                let name_str = name.into();
+                format!("{name_str} must be positive, got {value}")
+            })
+            .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
     Ok(value)
@@ -93,8 +96,11 @@ where
 {
     if value < T::zero() {
         return Err(CoreError::ValueError(
-            ErrorContext::new(format!("{} must be non-negative, got {value}", name.into()))
-                .with_location(ErrorLocation::new(file!(), line!())),
+            ErrorContext::new({
+                let name_str = name.into();
+                format!("{name_str} must be non-negative, got {value}")
+            })
+            .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
     Ok(value)
@@ -122,8 +128,11 @@ where
 {
     if !value.is_finite() {
         return Err(CoreError::ValueError(
-            ErrorContext::new(format!("{} must be finite, got {value}", name.into()))
-                .with_location(ErrorLocation::new(file!(), line!())),
+            ErrorContext::new({
+                let name_str = name.into();
+                format!("{name_str} must be finite, got {value}")
+            })
+            .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
     Ok(value)
@@ -227,8 +236,12 @@ where
 {
     if array.ndim() != 1 {
         return Err(CoreError::ShapeError(
-            ErrorContext::new(format!("{} must be 1D, got {}D", name.into(), array.ndim()))
-                .with_location(ErrorLocation::new(file!(), line!())),
+            ErrorContext::new({
+                let name_str = name.into();
+                let ndim = array.ndim();
+                format!("{name_str} must be 1D, got {ndim}D")
+            })
+            .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
     Ok(())
@@ -257,8 +270,12 @@ where
 {
     if array.ndim() != 2 {
         return Err(CoreError::ShapeError(
-            ErrorContext::new(format!("{} must be 2D, got {}D", name.into(), array.ndim()))
-                .with_location(ErrorLocation::new(file!(), line!())),
+            ErrorContext::new({
+                let name_str = name.into();
+                let ndim = array.ndim();
+                format!("{name_str} must be 2D, got {ndim}D")
+            })
+            .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
     Ok(())
@@ -408,8 +425,7 @@ where
         if p < S::Elem::zero() || p > S::Elem::one() {
             return Err(CoreError::ValueError(
                 ErrorContext::new(format!(
-                    "{} must contain only values between 0 and 1, got {} at {:?}",
-                    name, p, idx
+                    "{name} must contain only values between 0 and 1, got {p} at {idx:?}"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
@@ -456,8 +472,11 @@ where
 
     if (sum - one).abs() > tol {
         return Err(CoreError::ValueError(
-            ErrorContext::new(format!("{} must sum to 1, got sum = {sum}", name.into()))
-                .with_location(ErrorLocation::new(file!(), line!())),
+            ErrorContext::new({
+                let name_str = name.into();
+                format!("{name_str} must sum to 1, got sum = {sum}")
+            })
+            .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
 
@@ -483,8 +502,11 @@ where
 {
     if array.is_empty() {
         return Err(CoreError::ValueError(
-            ErrorContext::new(format!("{} cannot be empty", name.into()))
-                .with_location(ErrorLocation::new(file!(), line!())),
+            ErrorContext::new({
+                let name_str = name.into();
+                format!("{name_str} cannot be empty")
+            })
+            .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
     Ok(())
@@ -557,8 +579,7 @@ pub mod clustering {
         if n_clusters == 0 {
             return Err(CoreError::ValueError(
                 ErrorContext::new(format!(
-                    "{}: number of clusters must be > 0, got {}",
-                    operation, n_clusters
+                    "{operation}: number of clusters must be > 0, got {n_clusters}"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
@@ -567,8 +588,7 @@ pub mod clustering {
         if n_clusters > n_samples {
             return Err(CoreError::ValueError(
                 ErrorContext::new(format!(
-                    "{}: number of clusters ({}) cannot exceed number of samples ({})",
-                    operation, n_clusters, n_samples
+                    "{operation}: number of clusters ({n_clusters}) cannot exceed number of samples ({n_samples})"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
@@ -1014,7 +1034,10 @@ pub mod custom {
         }
 
         fn description(&self) -> String {
-            format!("IF condition THEN {}", self.validator.description())
+            {
+                let desc = self.validator.description();
+                format!("IF condition THEN {desc}")
+            }
         }
     }
 
@@ -1093,11 +1116,8 @@ pub mod custom {
                 if !valid {
                     let op = if self.min_inclusive { ">=" } else { ">" };
                     return Err(CoreError::ValueError(
-                        ErrorContext::new(format!(
-                            "{} must be {} {}, got {}",
-                            name, op, min, value
-                        ))
-                        .with_location(ErrorLocation::new(file!(), line!())),
+                        ErrorContext::new(format!("{name} must be {op} {min}, got {value}"))
+                            .with_location(ErrorLocation::new(file!(), line!())),
                     ));
                 }
             }
@@ -1111,11 +1131,8 @@ pub mod custom {
                 if !valid {
                     let op = if self.max_inclusive { "<=" } else { "<" };
                     return Err(CoreError::ValueError(
-                        ErrorContext::new(format!(
-                            "{} must be {} {}, got {}",
-                            name, op, max, value
-                        ))
-                        .with_location(ErrorLocation::new(file!(), line!())),
+                        ErrorContext::new(format!("{name} must be {op} {max}, got {value}"))
+                            .with_location(ErrorLocation::new(file!(), line!())),
                     ));
                 }
             }
@@ -1248,11 +1265,17 @@ pub mod custom {
             }
 
             if let Some(ref size_validator) = self.size_validator {
-                parts.push(format!("size {}", size_validator.description()));
+                {
+                    let desc = size_validator.description();
+                    parts.push(format!("size {desc}"));
+                }
             }
 
             if let Some(ref element_validator) = self.element_validator {
-                parts.push(format!("elements {}", element_validator.description()));
+                {
+                    let desc = element_validator.description();
+                    parts.push(format!("elements {desc}"));
+                }
             }
 
             if parts.is_empty() {

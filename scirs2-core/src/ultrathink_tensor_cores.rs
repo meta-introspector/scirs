@@ -2251,8 +2251,7 @@ mod gpu_implementation {
         ) -> CoreResult<PerformancePrediction> {
             let performance_predictor = self.performance_predictor.read().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire performance predictor lock: {}",
-                    e
+                    "Failed to acquire performance predictor lock: {e}"
                 )))
             })?;
 

@@ -8,7 +8,7 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::error::Result;
-use ndarray::{Array1, Array2, Array3};
+use ndarray::{Array1, Array2};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};

@@ -233,8 +233,7 @@ impl TriangularQuadrature {
             6 => Ok(Self::order_6()),
             12 => Ok(Self::order_12()),
             _ => Err(PDEError::FiniteElementError(format!(
-                "Quadrature rule of order {} is not implemented",
-                order
+                "Quadrature rule of order {order} is not implemented"
             ))),
         }
     }

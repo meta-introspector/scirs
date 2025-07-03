@@ -3,6 +3,7 @@
 //! This module provides streaming gradient descent and other online optimization
 //! algorithms designed for real-time data processing and low-latency inference.
 
+use crate::error::{OptimError, Result};
 use ndarray::{Array1, Dimension};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};

@@ -228,8 +228,7 @@ pub fn lambert_w_real(x: f64, tol: f64) -> SpecialResult<f64> {
         Ok(result.re)
     } else {
         Err(SpecialError::DomainError(format!(
-            "Lambert W function gives a complex result for x={}",
-            x
+            "Lambert W function gives a complex result for x={x}"
         )))
     }
 }

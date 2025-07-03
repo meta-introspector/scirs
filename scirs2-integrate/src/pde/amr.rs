@@ -102,24 +102,24 @@ impl<F: IntegrateFloat> std::fmt::Debug for RefinementCriteria<F> {
                 coarsen_threshold,
             } => f
                 .debug_struct("GradientBased")
-                .field("threshold", &format!("{:?}", threshold))
-                .field("coarsen_threshold", &format!("{:?}", coarsen_threshold))
+                .field("threshold", &format!("{threshold:?}"))
+                .field("coarsen_threshold", &format!("{coarsen_threshold:?}"))
                 .finish(),
             Self::CurvatureBased {
                 threshold,
                 coarsen_threshold,
             } => f
                 .debug_struct("CurvatureBased")
-                .field("threshold", &format!("{:?}", threshold))
-                .field("coarsen_threshold", &format!("{:?}", coarsen_threshold))
+                .field("threshold", &format!("{threshold:?}"))
+                .field("coarsen_threshold", &format!("{coarsen_threshold:?}"))
                 .finish(),
             Self::ErrorBased {
                 threshold,
                 coarsen_threshold,
             } => f
                 .debug_struct("ErrorBased")
-                .field("threshold", &format!("{:?}", threshold))
-                .field("coarsen_threshold", &format!("{:?}", coarsen_threshold))
+                .field("threshold", &format!("{threshold:?}"))
+                .field("coarsen_threshold", &format!("{coarsen_threshold:?}"))
                 .finish(),
         }
     }

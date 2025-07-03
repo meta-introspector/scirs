@@ -679,9 +679,9 @@ where
     // Check if integration was successful
     let success = t >= t_end;
     let message = if success {
-        Some(format!("Integration successful, reached t = {:?}", t))
+        Some(format!("Integration successful, reached t = {t:?}"))
     } else {
-        Some(format!("Integration incomplete, stopped at t = {:?}", t))
+        Some(format!("Integration incomplete, stopped at t = {t:?}"))
     };
 
     // Create dense output if requested

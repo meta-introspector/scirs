@@ -117,8 +117,7 @@ where
             let (m, n) = (block.nrows(), block.ncols());
             if m != n {
                 return Err(LinalgError::ShapeError(format!(
-                    "Diagonal block {} must be square, got {}x{}",
-                    i, m, n
+                    "Diagonal block {i} must be square, got {m}x{n}"
                 )));
             }
             block_dims.push(m);
@@ -225,11 +224,7 @@ where
         }
 
         // Check if this is a valid block in the tridiagonal structure
-        let diff = if block_row > block_col {
-            block_row - block_col
-        } else {
-            block_col - block_row
-        };
+        let diff = block_row.abs_diff(block_col);
 
         if diff > 1 {
             // Outside the tridiagonal structure, element is zero

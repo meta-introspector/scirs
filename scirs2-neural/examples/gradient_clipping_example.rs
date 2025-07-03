@@ -51,12 +51,15 @@ fn main() -> Result<()> {
     if max_abs > max_value as f64 {
         println!("Applying value clipping");
         // Clip all gradients
+        for grad in &mut gradients {
             for val in grad.iter_mut() {
                 if *val > max_value {
                     *val = max_value;
                 } else if *val < -max_value {
                     *val = -max_value;
                 }
+            }
+        }
         // Find new maximum absolute value
         let mut new_max_abs = 0.0;
         for grad in &gradients {
@@ -64,8 +67,13 @@ fn main() -> Result<()> {
                 let abs_val = val.abs() as f64;
                 if abs_val > new_max_abs {
                     new_max_abs = abs_val;
+                }
+            }
+        }
         println!("Maximum absolute value after clipping: {:.4}", new_max_abs);
+    } else {
         println!("No clipping needed, all values are below threshold");
+    }
     println!("\nFor production use, the GradientClipping callback provides:");
     println!("- Integration with the training loop through callbacks");
     println!("- Automatic application of clipping before optimization step");

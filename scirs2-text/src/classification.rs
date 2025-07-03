@@ -413,7 +413,7 @@ impl TextDataset {
                 index
                     .get(label)
                     .copied()
-                    .ok_or_else(|| TextError::InvalidInput(format!("Unknown label: {}", label)))
+                    .ok_or_else(|| TextError::InvalidInput(format!("Unknown label: {label}")))
             })
             .collect()
     }

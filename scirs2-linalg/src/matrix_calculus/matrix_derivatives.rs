@@ -464,8 +464,7 @@ where
             Ok(result)
         }
         _ => Err(LinalgError::InvalidInputError(format!(
-            "Unsupported norm type: {}. Supported: 'fro', 'frobenius', '2', 'spectral'",
-            norm_type
+            "Unsupported norm type: {norm_type}. Supported: 'fro', 'frobenius', '2', 'spectral'"
         ))),
     }
 }

@@ -343,8 +343,7 @@ pub fn e1(x: f64) -> SpecialResult<f64> {
 pub fn expint(n: i32, x: f64) -> SpecialResult<f64> {
     if x <= 0.0 && n <= 1 {
         return Err(SpecialError::DomainError(format!(
-            "Exponential integral E₍{}₎({}) is not defined",
-            n, x
+            "Exponential integral E₍{n}₎({x}) is not defined"
         )));
     }
 

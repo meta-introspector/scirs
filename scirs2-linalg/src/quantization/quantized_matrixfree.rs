@@ -502,8 +502,7 @@ where
         for &(i, j) in &indices {
             if i >= rows || j >= cols {
                 return Err(LinalgError::ShapeError(format!(
-                    "Index ({}, {}) out of bounds for matrix of shape ({}, {})",
-                    i, j, rows, cols
+                    "Index ({i}, {j}) out of bounds for matrix of shape ({rows}, {cols})"
                 )));
             }
         }

@@ -371,8 +371,7 @@ where
         for j in 0..n {
             if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() {
                 return Err(LinalgError::ShapeError(format!(
-                    "Matrix {} must be symmetric for eigh_gen",
-                    name
+                    "Matrix {name} must be symmetric for eigh_gen"
                 )));
             }
         }

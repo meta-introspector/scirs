@@ -350,8 +350,7 @@ impl ADI2D {
 
         // Create result
         let info = Some(format!(
-            "Time steps: {}, Linear system solves: {}",
-            num_steps, num_linear_solves
+            "Time steps: {num_steps}, Linear system solves: {num_linear_solves}"
         ));
 
         Ok(ADIResult {

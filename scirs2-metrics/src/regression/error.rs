@@ -97,8 +97,8 @@ where
     // Use SIMD optimizations for vector operations when data is contiguous
     let squared_error_sum = if y_true.is_standard_layout() && y_pred.is_standard_layout() {
         // SIMD-optimized computation - convert to 1D views for SIMD ops
-        let y_true_1d = y_true.view().into_dimensionality::<ndarray::Ix1>().unwrap();
-        let y_pred_1d = y_pred.view().into_dimensionality::<ndarray::Ix1>().unwrap();
+        let y_true_1d = y_true.view().to_shape(y_true.len()).unwrap();
+        let y_pred_1d = y_pred.view().to_shape(y_pred.len()).unwrap();
         let diff = F::simd_sub(&y_true_1d, &y_pred_1d);
         let squared_diff = F::simd_mul(&diff.view(), &diff.view());
         F::simd_sum(&squared_diff.view())
@@ -201,10 +201,12 @@ where
 
     // Use SIMD optimizations for vector operations when data is contiguous
     let abs_error_sum = if y_true.is_standard_layout() && y_pred.is_standard_layout() {
-        // SIMD-optimized computation
-        let diff = F::simd_sub(&y_true.view(), &y_pred.view());
-        let abs_diff = F::simd_abs(&diff);
-        F::simd_sum(&abs_diff)
+        // SIMD-optimized computation for 1D arrays
+        let y_true_1d = y_true.view().to_shape(y_true.len()).unwrap();
+        let y_pred_1d = y_pred.view().to_shape(y_pred.len()).unwrap();
+        let diff = F::simd_sub(&y_true_1d, &y_pred_1d);
+        let abs_diff = F::simd_abs(&diff.view());
+        F::simd_sum(&abs_diff.view())
     } else {
         // Fallback for non-contiguous arrays
         let mut sum = F::zero();

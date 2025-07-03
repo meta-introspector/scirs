@@ -19,7 +19,7 @@ use std::time::{Duration, Instant, SystemTime};
 
 /// Advanced streaming metrics with concept drift detection
 #[derive(Debug)]
-pub struct AdaptiveStreamingMetrics<F: Float + std::fmt::Debug> {
+pub struct AdaptiveStreamingMetrics<F: Float + std::fmt::Debug + Send + Sync> {
     /// Configuration for the streaming system
     config: StreamingConfig,
     /// Drift detection algorithms
@@ -178,7 +178,7 @@ pub enum AlertSeverity {
 }
 
 /// Concept drift detector trait
-pub trait ConceptDriftDetector<F: Float>: std::fmt::Debug {
+pub trait ConceptDriftDetector<F: Float + std::fmt::Debug + Send + Sync>: std::fmt::Debug {
     /// Update detector with new prediction
     fn update(&mut self, prediction_correct: bool, error: F) -> Result<DriftDetectionResult>;
 
@@ -251,7 +251,7 @@ struct Bucket<F: Float + std::fmt::Debug> {
     used_buckets: usize,
 }
 
-impl<F: Float> Bucket<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> Bucket<F> {
     fn new(max_buckets: usize) -> Self {
         Self {
             max_buckets,
@@ -430,8 +430,8 @@ pub struct PerformanceDegradation {
 }
 
 /// Anomaly detector for streaming data
-#[derive(Debug, Clone)]
-pub struct AnomalyDetector<F: Float + std::fmt::Debug> {
+#[derive(Debug)]
+pub struct AnomalyDetector<F: Float + std::fmt::Debug + Send + Sync> {
     algorithm: AnomalyDetectionAlgorithm,
     history_buffer: VecDeque<F>,
     anomaly_scores: VecDeque<F>,
@@ -473,12 +473,25 @@ pub struct AnomalyStatistics<F: Float + std::fmt::Debug> {
 }
 
 /// Ensemble of different metrics
-#[derive(Debug, Clone)]
 pub struct MetricEnsemble<F: Float + std::fmt::Debug> {
     base_metrics: HashMap<String, Box<dyn StreamingMetric<F> + Send + Sync>>,
     weights: HashMap<String, F>,
     aggregation_strategy: EnsembleAggregation,
     consensus_threshold: F,
+}
+
+impl<F: Float + std::fmt::Debug> std::fmt::Debug for MetricEnsemble<F> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MetricEnsemble")
+            .field(
+                "base_metrics",
+                &format!("{} metrics", self.base_metrics.len()),
+            )
+            .field("weights", &self.weights)
+            .field("aggregation_strategy", &self.aggregation_strategy)
+            .field("consensus_threshold", &self.consensus_threshold)
+            .finish()
+    }
 }
 
 /// Streaming metric trait
@@ -603,7 +616,7 @@ impl Default for StreamingConfig {
     }
 }
 
-impl<F: Float + std::fmt::Debug> AdaptiveStreamingMetrics<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> AdaptiveStreamingMetrics<F> {
     /// Create new adaptive streaming metrics
     pub fn new(config: StreamingConfig) -> Result<Self> {
         let mut drift_detectors: Vec<Box<dyn ConceptDriftDetector<F> + Send + Sync>> = Vec::new();
@@ -834,7 +847,7 @@ pub struct AnomalySummary<F: Float + std::fmt::Debug> {
 }
 
 // Real implementation of ADWIN detector for efficient streaming
-impl<F: Float + std::iter::Sum> AdwinDetector<F> {
+impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F> {
     fn new(confidence: f64) -> Result<Self> {
         if !(0.0..=1.0).contains(&confidence) {
             return Err(MetricsError::InvalidInput(
@@ -967,7 +980,7 @@ impl<F: Float + std::iter::Sum> AdwinDetector<F> {
     }
 }
 
-impl<F: Float + std::fmt::Debug> ConceptDriftDetector<F> for AdwinDetector<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> ConceptDriftDetector<F> for AdwinDetector<F> {
     fn update(&mut self, _prediction_correct: bool, error: F) -> Result<DriftDetectionResult> {
         self.samples_count += 1;
 
@@ -1073,7 +1086,7 @@ impl<F: Float + std::fmt::Debug> ConceptDriftDetector<F> for AdwinDetector<F> {
     }
 }
 
-impl<F: Float> DdmDetector<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> DdmDetector<F> {
     fn new(warning_level: f64, drift_level: f64) -> Self {
         Self {
             warning_level,
@@ -1092,7 +1105,7 @@ impl<F: Float> DdmDetector<F> {
     }
 }
 
-impl<F: Float + std::fmt::Debug> ConceptDriftDetector<F> for DdmDetector<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> ConceptDriftDetector<F> for DdmDetector<F> {
     fn update(&mut self, prediction_correct: bool, _error: F) -> Result<DriftDetectionResult> {
         self.num_instances += 1;
         if !prediction_correct {
@@ -1175,7 +1188,7 @@ impl<F: Float + std::fmt::Debug> ConceptDriftDetector<F> for DdmDetector<F> {
     }
 }
 
-impl<F: Float + std::fmt::Debug> PageHinkleyDetector<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> PageHinkleyDetector<F> {
     fn new(threshold: f64, alpha: f64) -> Self {
         Self {
             threshold,
@@ -1190,7 +1203,7 @@ impl<F: Float + std::fmt::Debug> PageHinkleyDetector<F> {
     }
 }
 
-impl<F: Float + std::fmt::Debug> ConceptDriftDetector<F> for PageHinkleyDetector<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> ConceptDriftDetector<F> for PageHinkleyDetector<F> {
     fn update(&mut self, prediction_correct: bool, _error: F) -> Result<DriftDetectionResult> {
         self.samples_count += 1;
 
@@ -1261,7 +1274,7 @@ impl<F: Float + std::fmt::Debug> ConceptDriftDetector<F> for PageHinkleyDetector
 }
 
 // Optimized adaptive window manager for efficient streaming
-impl<F: Float + std::fmt::Debug> AdaptiveWindowManager<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> AdaptiveWindowManager<F> {
     fn new(
         base_size: usize,
         min_size: usize,
@@ -1550,7 +1563,7 @@ impl<F: Float + std::fmt::Debug> AdaptiveWindowManager<F> {
     }
 }
 
-impl<F: Float + std::fmt::Debug> PerformanceMonitor<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
     fn new(interval: Duration) -> Self {
         let mut thresholds = HashMap::new();
         thresholds.insert("accuracy".to_string(), F::from(0.8).unwrap()); // 80% accuracy threshold
@@ -1724,7 +1737,7 @@ impl<F: Float + std::fmt::Debug> PerformanceMonitor<F> {
     }
 }
 
-impl<F: Float + std::iter::Sum + std::fmt::Debug> AnomalyDetector<F> {
+impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<F> {
     fn new(algorithm: AnomalyDetectionAlgorithm) -> Result<Self> {
         let threshold = match &algorithm {
             AnomalyDetectionAlgorithm::ZScore { threshold } => F::from(*threshold).unwrap(),
@@ -2014,7 +2027,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug> AnomalyDetector<F> {
     }
 }
 
-impl<F: Float + std::fmt::Debug> MetricEnsemble<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> MetricEnsemble<F> {
     fn new() -> Self {
         Self {
             base_metrics: HashMap::new(),
@@ -2034,7 +2047,7 @@ impl<F: Float + std::fmt::Debug> MetricEnsemble<F> {
     }
 }
 
-impl<F: Float + std::fmt::Debug> HistoryBuffer<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> HistoryBuffer<F> {
     fn new(max_size: usize) -> Self {
         Self {
             max_size,
@@ -2063,7 +2076,7 @@ impl<F: Float + std::fmt::Debug> HistoryBuffer<F> {
     }
 }
 
-impl<F: Float + std::fmt::Debug> StreamingStatistics<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> StreamingStatistics<F> {
     fn new() -> Self {
         Self {
             total_samples: 0,
@@ -2150,7 +2163,7 @@ impl AlertsManager {
 /// This system uses neural networks and reinforcement learning to automatically
 /// tune streaming parameters for optimal performance across different data patterns.
 #[derive(Debug, Clone)]
-pub struct NeuralAdaptiveStreaming<F: Float + std::fmt::Debug> {
+pub struct NeuralAdaptiveStreaming<F: Float + std::fmt::Debug + Send + Sync> {
     /// Neural parameter optimizer
     parameter_optimizer: NeuralParameterOptimizer<F>,
     /// Reinforcement learning agent for adaptive control
@@ -2465,7 +2478,7 @@ pub struct AdamOptimizer<F: Float + std::fmt::Debug> {
     t: usize,
 }
 
-impl<F: Float> NeuralOptimizer<F> for AdamOptimizer<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> NeuralOptimizer<F> for AdamOptimizer<F> {
     fn update_parameters(
         &mut self,
         gradients: &[Array2<F>],
@@ -2695,7 +2708,7 @@ pub struct RLTrainingMetrics<F: Float + std::fmt::Debug> {
 
 /// Online learning system for pattern recognition and adaptation
 #[derive(Debug, Clone)]
-pub struct OnlineLearningSystem<F: Float + std::fmt::Debug> {
+pub struct OnlineLearningSystem<F: Float + std::fmt::Debug + Send + Sync> {
     /// Current model parameters
     model_parameters: Array1<F>,
     /// Feature buffer for online learning
@@ -2789,7 +2802,7 @@ pub enum AdaptationEventType {
 
 /// Online performance tracker
 #[derive(Debug, Clone)]
-pub struct OnlinePerformanceTracker<F: Float + std::fmt::Debug> {
+pub struct OnlinePerformanceTracker<F: Float + std::fmt::Debug + Send + Sync> {
     /// Performance history
     performance_history: VecDeque<PerformanceSnapshot<F>>,
     /// Current performance metrics
@@ -3188,7 +3201,7 @@ pub struct SchedulerAdaptationParams<F: Float + std::fmt::Debug> {
 
 // Implementation methods for NeuralAdaptiveStreaming
 
-impl<F: Float + std::fmt::Debug> NeuralAdaptiveStreaming<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync> NeuralAdaptiveStreaming<F> {
     /// Create a new neural-adaptive streaming system
     pub fn new(config: NeuralAdaptiveConfig) -> Result<Self> {
         let parameter_optimizer = NeuralParameterOptimizer::new(

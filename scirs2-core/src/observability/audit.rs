@@ -933,8 +933,7 @@ impl LogFileManager {
         // Create archive directory if it doesn't exist
         std::fs::create_dir_all(&archive_path).map_err(|e| {
             CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                "Failed to create archive directory: {}",
-                e
+                "Failed to create archive directory: {e}"
             )))
         })?;
 
@@ -955,10 +954,7 @@ impl LogFileManager {
 
                                     // Simple archive: copy to archive directory
                                     if let Err(e) = std::fs::copy(&source_path, &dest_path) {
-                                        eprintln!(
-                                            "Failed to archive file {:?}: {}",
-                                            source_path, e
-                                        );
+                                        eprintln!("Failed to archive file {source_path:?}: {e}");
                                         continue;
                                     }
 
@@ -976,13 +972,11 @@ impl LogFileManager {
                                     // Remove original file after successful archival
                                     if let Err(e) = std::fs::remove_file(&source_path) {
                                         eprintln!(
-                                            "Failed to remove original file {:?}: {}",
-                                            source_path, e
+                                            "Failed to remove original file {source_path:?}: {e}"
                                         );
                                     } else {
                                         println!(
-                                            "Archived log file: {:?} -> {:?}",
-                                            source_path, dest_path
+                                            "Archived log file: {source_path:?} -> {dest_path:?}"
                                         );
                                     }
                                 }
@@ -1033,14 +1027,10 @@ impl LogFileManager {
                                         let file_path = entry.path();
                                         if let Err(e) = std::fs::remove_file(&file_path) {
                                             eprintln!(
-                                                "Failed to delete expired archive file {:?}: {}",
-                                                file_path, e
+                                                "Failed to delete expired archive file {file_path:?}: {e}"
                                             );
                                         } else {
-                                            println!(
-                                                "Deleted expired archive file: {:?}",
-                                                file_path
-                                            );
+                                            println!("Deleted expired archive file: {file_path:?}");
                                         }
                                     }
                                 }
@@ -1083,12 +1073,9 @@ impl LogFileManager {
                 // Remove oldest files until we have enough space
                 for (file_path, _) in log_files {
                     if let Err(e) = std::fs::remove_file(&file_path) {
-                        eprintln!(
-                            "Failed to remove file for disk space: {:?}: {}",
-                            file_path, e
-                        );
+                        eprintln!("Failed to remove file for disk space: {file_path:?}: {e}");
                     } else {
-                        println!("Removed file to free disk space: {:?}", file_path);
+                        println!("Removed file to free disk space: {file_path:?}");
 
                         // Check if we have enough space now
                         if let Ok(new_available) =
@@ -1431,9 +1418,9 @@ impl AlertManager {
         // For security, if no SMTP config is available, just log the alert
         if smtp_server == "localhost" && env::var("SMTP_SERVER").is_err() {
             eprintln!("AUDIT EMAIL ALERT (SMTP not configured):");
-            eprintln!("  To: {}", email);
+            eprintln!("  To: {email}");
             eprintln!("  Subject: Security Alert");
-            eprintln!("  Message: {}", message);
+            eprintln!("  Message: {message}");
             return Ok(());
         }
 
@@ -1441,8 +1428,7 @@ impl AlertManager {
         match TcpStream::connect_timeout(
             &format!("{smtp_server}:{smtp_port}").parse().map_err(|e| {
                 CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                    "Invalid SMTP address: {}",
-                    e
+                    "Invalid SMTP address: {e}"
                 )))
             })?,
             Duration::from_secs(10),
@@ -1460,9 +1446,9 @@ impl AlertManager {
 
                 for command in commands {
                     if let Err(e) = stream.write_all(command.as_bytes()) {
-                        eprintln!("SMTP write error: {}. Logging alert instead:", e);
-                        eprintln!("  To: {}", email);
-                        eprintln!("  Message: {}", message);
+                        eprintln!("SMTP write error: {e}. Logging alert instead:");
+                        eprintln!("  To: {email}");
+                        eprintln!("  Message: {message}");
                         return Ok(());
                     }
 
@@ -1470,16 +1456,15 @@ impl AlertManager {
                     std::thread::sleep(Duration::from_millis(100));
                 }
 
-                eprintln!("Email alert sent to: {}", email);
+                eprintln!("Email alert sent to: {email}");
             }
             Err(e) => {
                 eprintln!(
-                    "Failed to connect to SMTP server {}: {}. Logging alert instead:",
-                    smtp_server, e
+                    "Failed to connect to SMTP server {smtp_server}: {e}. Logging alert instead:"
                 );
-                eprintln!("  To: {}", email);
+                eprintln!("  To: {email}");
                 eprintln!("  Subject: Security Alert");
-                eprintln!("  Message: {}", message);
+                eprintln!("  Message: {message}");
             }
         }
 
@@ -1839,8 +1824,7 @@ impl AuditLogger {
         let timestamp = DateTime::parse_from_str(timestamp_str, "%Y-%m-%d %H:%M:%S UTC")
             .map_err(|e| {
                 CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                    "Failed to parse timestamp: {}",
-                    e
+                    "Failed to parse timestamp: {e}"
                 )))
             })?
             .with_timezone(&Utc);

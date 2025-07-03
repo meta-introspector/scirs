@@ -595,8 +595,7 @@ impl QuantumSpikingClusterer {
             Ok(spike)
         } else {
             Err(SpatialError::InvalidInput(format!(
-                "Neuron index {} out of range",
-                neuron_idx
+                "Neuron index {neuron_idx} out of range"
             )))
         }
     }

@@ -616,8 +616,7 @@ where
 
     if n < min_size_needed {
         return Err(LinalgError::InvalidInputError(format!(
-            "Matrix size too small for {} levels. Need at least size {}",
-            levels, min_size_needed
+            "Matrix size too small for {levels} levels. Need at least size {min_size_needed}"
         )));
     }
 

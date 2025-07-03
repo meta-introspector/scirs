@@ -98,7 +98,7 @@ impl SimdUnifiedOps for f32 {
 
     #[cfg(not(feature = "simd"))]
     fn simd_add(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
-        a + b
+        (a + b).to_owned()
     }
 
     #[cfg(feature = "simd")]
@@ -108,7 +108,7 @@ impl SimdUnifiedOps for f32 {
 
     #[cfg(not(feature = "simd"))]
     fn simd_sub(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
-        a - b
+        (a - b).to_owned()
     }
 
     #[cfg(feature = "simd")]
@@ -118,7 +118,7 @@ impl SimdUnifiedOps for f32 {
 
     #[cfg(not(feature = "simd"))]
     fn simd_mul(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
-        a * b
+        (a * b).to_owned()
     }
 
     #[cfg(feature = "simd")]
@@ -128,7 +128,7 @@ impl SimdUnifiedOps for f32 {
 
     #[cfg(not(feature = "simd"))]
     fn simd_div(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
-        a / b
+        (a / b).to_owned()
     }
 
     #[cfg(feature = "simd")]
@@ -349,7 +349,7 @@ impl SimdUnifiedOps for f64 {
 
     #[cfg(not(feature = "simd"))]
     fn simd_add(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
-        a + b
+        (a + b).to_owned()
     }
 
     #[cfg(feature = "simd")]
@@ -359,7 +359,7 @@ impl SimdUnifiedOps for f64 {
 
     #[cfg(not(feature = "simd"))]
     fn simd_sub(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
-        a - b
+        (a - b).to_owned()
     }
 
     #[cfg(feature = "simd")]
@@ -369,7 +369,7 @@ impl SimdUnifiedOps for f64 {
 
     #[cfg(not(feature = "simd"))]
     fn simd_mul(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
-        a * b
+        (a * b).to_owned()
     }
 
     #[cfg(feature = "simd")]
@@ -379,7 +379,7 @@ impl SimdUnifiedOps for f64 {
 
     #[cfg(not(feature = "simd"))]
     fn simd_div(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
-        a / b
+        (a / b).to_owned()
     }
 
     #[cfg(feature = "simd")]
@@ -808,10 +808,7 @@ impl AutoOptimizer {
         };
 
         if self.has_unified_memory() && recommendation == "Metal" {
-            format!(
-                "{recommendation} (Unified Memory)",
-                recommendation = recommendation
-            )
+            format!("{recommendation} (Unified Memory)")
         } else {
             recommendation.to_string()
         }

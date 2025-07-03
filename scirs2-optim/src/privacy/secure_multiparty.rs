@@ -665,9 +665,7 @@ impl<T: Float> HomomorphicParameters<T> {
     /// Create new homomorphic parameters
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
-        let noise_params: Vec<T> = (0..8)
-            .map(|_| T::from(rng.gen::<f64>()).unwrap())
-            .collect();
+        let noise_params: Vec<T> = (0..8).map(|_| T::from(rng.gen::<f64>()).unwrap()).collect();
 
         Self {
             security_level: 128,

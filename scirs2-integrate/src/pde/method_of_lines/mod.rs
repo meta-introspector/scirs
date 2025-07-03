@@ -494,7 +494,7 @@ impl MOLParabolicSolver1D {
         // Create a single 2D array with dimensions [time, space]
         let u_2d =
             Array2::from_shape_vec((t.len(), nx), ode_result.y.into_iter().flatten().collect())
-                .map_err(|e| PDEError::Other(format!("Error reshaping result: {}", e)))?;
+                .map_err(|e| PDEError::Other(format!("Error reshaping result: {e}")))?;
 
         u.push(u_2d);
 

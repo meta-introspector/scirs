@@ -15,8 +15,7 @@ fn check_array_finite(array: &ArrayView2<'_, f64>, name: &str) -> SpatialResult<
     for value in array.iter() {
         if !value.is_finite() {
             return Err(SpatialError::ValueError(format!(
-                "Array '{}' contains non-finite values",
-                name
+                "Array '{name}' contains non-finite values"
             )));
         }
     }

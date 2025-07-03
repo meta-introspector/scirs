@@ -559,8 +559,7 @@ where
         }
         _ => {
             return Err(IntegrateError::ValueError(format!(
-                "Unsupported boundary condition type: {}. Use 'dirichlet', 'neumann', or 'mixed'.",
-                bc_type
+                "Unsupported boundary condition type: {bc_type}. Use 'dirichlet', 'neumann', or 'mixed'."
             )));
         }
     };

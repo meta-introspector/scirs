@@ -104,7 +104,7 @@ where
         for (i, (row_data, row_indices)) in data.iter().zip(indices.iter()).enumerate() {
             if row_data.len() != row_indices.len() {
                 return Err(SparseError::InconsistentData {
-                    reason: format!("Row {}: data and indices have different lengths", i),
+                    reason: format!("Row {i}: data and indices have different lengths"),
                 });
             }
 

@@ -95,8 +95,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
 
         if dimension > 50 {
             return Err(SpatialError::ValueError(format!(
-                "Dimension too high: {}. KD-Tree is not efficient for dimensions > 50",
-                dimension
+                "Dimension too high: {dimension}. KD-Tree is not efficient for dimensions > 50"
             )));
         }
 
@@ -218,8 +217,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
 
         if k > 1000 {
             return Err(SpatialError::ValueError(format!(
-                "k ({}) is too large. Consider using radius search for k > 1000",
-                k
+                "k ({k}) is too large. Consider using radius search for k > 1000"
             )));
         }
 
@@ -1431,7 +1429,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
                     // Limit maximum number of clusters for memory safety
                     if cluster_id > 10000 {
                         return Err(SpatialError::ValueError(
-                            format!("Too many clusters found: {}. Consider adjusting eps or min_samples parameters", cluster_id)
+                            format!("Too many clusters found: {cluster_id}. Consider adjusting eps or min_samples parameters")
                         ));
                     }
                 }

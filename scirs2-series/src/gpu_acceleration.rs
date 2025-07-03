@@ -251,6 +251,7 @@ pub struct GpuArray<F: Float + Debug> {
     #[allow(dead_code)]
     gpu_handle: Option<usize>,
     /// Configuration
+    #[allow(dead_code)]
     config: GpuConfig,
     /// Whether data is currently on GPU
     on_gpu: bool,
@@ -632,22 +633,26 @@ impl GpuDeviceManager {
 
     /// Check if running on Apple Silicon
     #[cfg(target_os = "macos")]
+    #[allow(dead_code)]
     fn is_apple_silicon() -> bool {
         std::env::consts::ARCH == "aarch64"
     }
 
     #[cfg(not(target_os = "macos"))]
+    #[allow(dead_code)]
     fn is_apple_silicon() -> bool {
         false
     }
 
     /// Check for Metal GPU
     #[cfg(target_os = "macos")]
+    #[allow(dead_code)]
     fn has_metal_gpu() -> bool {
         std::path::Path::new("/System/Library/Frameworks/Metal.framework").exists()
     }
 
     #[cfg(not(target_os = "macos"))]
+    #[allow(dead_code)]
     fn has_metal_gpu() -> bool {
         false
     }
@@ -875,6 +880,7 @@ pub mod fft {
     /// GPU-accelerated FFT processor
     #[derive(Debug)]
     pub struct GpuFFT<F: Float + Debug> {
+        #[allow(dead_code)]
         config: GpuConfig,
         /// FFT cache for repeated operations
         #[allow(dead_code)]
@@ -1111,6 +1117,7 @@ pub mod convolution {
     /// GPU-accelerated convolution processor
     #[derive(Debug)]
     pub struct GpuConvolution<F: Float + Debug> {
+        #[allow(dead_code)]
         config: GpuConfig,
         _phantom: std::marker::PhantomData<F>,
     }
@@ -1303,6 +1310,7 @@ pub mod blas {
     /// GPU-accelerated BLAS operations
     #[derive(Debug)]
     pub struct GpuBLAS<F: Float + Debug> {
+        #[allow(dead_code)]
         config: GpuConfig,
         _phantom: std::marker::PhantomData<F>,
     }
@@ -1915,6 +1923,7 @@ pub mod algorithms {
     /// GPU-accelerated parallel time series processing
     #[derive(Debug)]
     pub struct GpuTimeSeriesProcessor<F: Float + Debug> {
+        #[allow(dead_code)]
         config: GpuConfig,
         device_manager: GpuDeviceManager,
         #[allow(dead_code)]
@@ -2306,6 +2315,7 @@ pub mod algorithms {
         }
 
         /// Optimized parallel batch forecasting (fallback)
+        #[allow(dead_code)]
         fn optimized_batch_forecast(
             &self,
             series_batch: &[Array1<F>],
@@ -2665,6 +2675,7 @@ pub mod algorithms {
     /// GPU-accelerated feature extraction for time series
     #[derive(Debug)]
     pub struct GpuFeatureExtractor<F: Float + Debug> {
+        #[allow(dead_code)]
         processor: GpuTimeSeriesProcessor<F>,
         feature_config: FeatureConfig,
     }

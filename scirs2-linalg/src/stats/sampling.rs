@@ -461,8 +461,7 @@ where
     let acceptance_rate = accepted as f64 / total_samples as f64;
     if !(0.2..=0.7).contains(&acceptance_rate) {
         eprintln!(
-            "Warning: MCMC acceptance rate is {:.3}, consider adjusting proposal covariance",
-            acceptance_rate
+            "Warning: MCMC acceptance rate is {acceptance_rate:.3}, consider adjusting proposal covariance"
         );
     }
 

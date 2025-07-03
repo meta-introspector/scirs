@@ -3,6 +3,7 @@
 //! This module provides differential privacy mechanisms for machine learning
 //! optimization, including DP-SGD with moment accountant for privacy budget tracking.
 
+use crate::error::{OptimError, Result};
 use ndarray::{Array, ArrayBase, Data, DataMut, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::collections::VecDeque;

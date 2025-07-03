@@ -366,8 +366,7 @@ pub mod data_science {
         for (i, (&pi, &qi)) in p.iter().zip(q.iter()).enumerate() {
             if pi < 0.0 || qi < 0.0 {
                 return Err(crate::SpecialError::ValueError(format!(
-                    "Negative probability at index {}",
-                    i
+                    "Negative probability at index {i}"
                 )));
             }
 

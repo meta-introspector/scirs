@@ -127,22 +127,31 @@ impl<F: Float + FromPrimitive> Default for NeuronState<F> {
 #[derive(Debug)]
 pub struct SpikingNeuralNetwork<F: Float + Debug> {
     /// Number of neurons in each layer
+    #[allow(dead_code)]
     layer_sizes: Vec<usize>,
     /// Neuron models for each layer
+    #[allow(dead_code)]
     neuron_models: Vec<NeuronModel>,
     /// Current neuron states
+    #[allow(dead_code)]
     neuron_states: Vec<Vec<NeuronState<F>>>,
     /// Synaptic weight matrices between layers
+    #[allow(dead_code)]
     weights: Vec<Array2<F>>,
     /// Synaptic delays between neurons
+    #[allow(dead_code)]
     delays: Vec<Array2<f64>>,
     /// Plasticity rules for each layer
+    #[allow(dead_code)]
     plasticity_rules: Vec<PlasticityRule>,
     /// Spike history for STDP
+    #[allow(dead_code)]
     spike_history: VecDeque<Spike>,
     /// Time step for simulation
+    #[allow(dead_code)]
     dt: f64,
     /// Current simulation time
+    #[allow(dead_code)]
     current_time: f64,
 }
 
@@ -738,29 +747,36 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
 #[derive(Debug)]
 pub struct LiquidStateMachine<F: Float + Debug> {
     /// Reservoir of randomly connected neurons
+    #[allow(dead_code)]
     reservoir: SpikingNeuralNetwork<F>,
     /// Readout layer weights
+    #[allow(dead_code)]
     readout_weights: Array2<F>,
     /// Reservoir size
+    #[allow(dead_code)]
     reservoir_size: usize,
     /// Input dimension
+    #[allow(dead_code)]
     input_dim: usize,
     /// Output dimension
+    #[allow(dead_code)]
     output_dim: usize,
     /// Spectral radius for stability
+    #[allow(dead_code)]
     spectral_radius: f64,
     /// Connection probability
+    #[allow(dead_code)]
     connection_prob: f64,
 }
 
 impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> LiquidStateMachine<F> {
     /// Create new Liquid State Machine
     pub fn new(
-        reservoir_size: usize,
-        input_dim: usize,
-        output_dim: usize,
-        spectral_radius: f64,
-        connection_prob: f64,
+        #[allow(dead_code)] reservoir_size: usize,
+        #[allow(dead_code)] input_dim: usize,
+        #[allow(dead_code)] output_dim: usize,
+        #[allow(dead_code)] spectral_radius: f64,
+        #[allow(dead_code)] connection_prob: f64,
     ) -> Result<Self> {
         // Create reservoir with random connectivity
         let layer_sizes = vec![input_dim, reservoir_size];

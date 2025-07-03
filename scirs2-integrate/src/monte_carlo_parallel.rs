@@ -143,11 +143,11 @@ where
             .num_threads(n_threads)
             .build()
             .map_err(|e| {
-                IntegrateError::ComputationError(format!("Failed to create thread pool: {}", e))
+                IntegrateError::ComputationError(format!("Failed to create thread pool: {e}"))
             })?
     } else {
         ThreadPoolBuilder::new().build().map_err(|e| {
-            IntegrateError::ComputationError(format!("Failed to create thread pool: {}", e))
+            IntegrateError::ComputationError(format!("Failed to create thread pool: {e}"))
         })?
     };
 

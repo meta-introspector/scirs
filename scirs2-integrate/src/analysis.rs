@@ -2979,7 +2979,7 @@ impl StabilityAnalyzer {
             }
             Err(e) => {
                 // If Lyapunov computation fails, it's not critical - return None
-                eprintln!("Warning: Lyapunov exponent computation failed: {:?}", e);
+                eprintln!("Warning: Lyapunov exponent computation failed: {e:?}");
                 Ok(None)
             }
         }
@@ -6803,7 +6803,7 @@ pub mod ml_bifurcation_prediction {
             );
 
             // Log alert (placeholder implementation)
-            println!("ALERT: {}", alert_message);
+            println!("ALERT: {alert_message}");
 
             // Update performance tracking
             self.performance_tracker.alert_metrics.alerts_generated += 1;

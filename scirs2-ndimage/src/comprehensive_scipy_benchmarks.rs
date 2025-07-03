@@ -10,14 +10,14 @@ use std::io::Write;
 use std::process::Command;
 use std::time::{Duration, Instant};
 
-use ndarray::{Array, Array1, Array2, Array3, ArrayView2, Ix2};
+use ndarray::{Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{gaussian_filter, median_filter, uniform_filter};
 use crate::interpolation::BoundaryMode;
 use crate::measurements::center_of_mass;
-use crate::morphology::{binary_dilation, binary_erosion, distance_transform_edt};
+use crate::morphology::{binary_dilation, binary_erosion};
 use crate::performance_profiler::{PerformanceProfiler, ProfilerConfig};
 
 /// Comprehensive benchmark suite for comparing with SciPy

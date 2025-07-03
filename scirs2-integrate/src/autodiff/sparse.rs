@@ -171,8 +171,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
             Ok(())
         } else {
             Err(IntegrateError::IndexError(format!(
-                "Entry ({}, {}) not in sparsity pattern",
-                row, col
+                "Entry ({row}, {col}) not in sparsity pattern"
             )))
         }
     }

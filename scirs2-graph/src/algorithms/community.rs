@@ -2078,6 +2078,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_modularity_optimization() -> GraphResult<()> {
         // Create a graph with community structure
         let mut graph = create_graph::<&str, f64>();
@@ -2110,6 +2111,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_greedy_modularity_optimization() -> GraphResult<()> {
         // Create a simple graph
         let mut graph = create_graph::<i32, f64>();
@@ -2132,6 +2134,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_empty_graph_modularity() {
         let graph = create_graph::<i32, f64>();
         let communities = HashMap::new();
@@ -2415,6 +2418,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_hierarchical_communities() -> GraphResult<()> {
         // Create a simple graph with clear structure
         let mut graph = create_graph::<i32, f64>();
@@ -2462,6 +2466,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_hierarchical_communities_single_linkage() -> GraphResult<()> {
         let mut graph = create_graph::<&str, f64>();
 
@@ -2491,6 +2496,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_hierarchical_communities_complete_linkage() -> GraphResult<()> {
         let mut graph = create_graph::<i32, f64>();
 
@@ -2518,6 +2524,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_hierarchical_communities_empty_graph() {
         let graph = create_graph::<i32, f64>();
         let hierarchy = hierarchical_communities(&graph, "average");

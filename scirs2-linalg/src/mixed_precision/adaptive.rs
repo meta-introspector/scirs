@@ -60,8 +60,7 @@ where
     let a_shape = a.shape();
     if a_shape[0] != a_shape[1] {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix must be square, got shape {:?}",
-            a_shape
+            "Matrix must be square, got shape {a_shape:?}"
         )));
     }
 

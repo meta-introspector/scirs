@@ -79,6 +79,8 @@ pub struct GRU<F: Float + Debug> {
     hidden_states_cache: RwLock<Option<Array<F, IxDyn>>>,
     /// Gate values cache for backward pass
     gate_cache: GruGateCache<F>,
+}
+
 impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
     /// Create a new GRU layer
     ///
@@ -306,7 +308,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for GRU<
             // Process one step - converting views to dynamic dimension
             let x_t_view = x_t.view().into_dyn();
             let h_view = h.view().into_dyn();
-            let (new_h, gates) = self.step(&x_t_view, &h_view)?;
+            let step_result = self.step(&x_t_view, &h_view)?;
+            let new_h = step_result.hidden_state;
+            let gates = step_result.gates;
             // Convert back from dynamic dimension
             h = new_h.into_dimensionality::<Ix2>().unwrap();
             all_gates.push(gates);
@@ -324,6 +328,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for GRU<
     }
 
     fn backward(
+        &self,
         input: &Array<F, IxDyn>,
         _grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
@@ -453,32 +458,31 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use ndarray::Array3;
-//     use rand::rngs::SmallRng;
-//     use rand::SeedableRng;
-//
-//     #[test]
-// //     fn test_gru_shape() {
-// //         // Create a GRU layer
-// //         let mut rng = rand::rng();
-// //         let gru = GRU::<f64>::new(
-// //             10, // input_size
-// //             20, // hidden_size
-// //             &mut rng,
-// //         )
-// //         .unwrap();
-// //
-// //         // Create a batch of input data
-// //         let batch_size = 2;
-// //         let seq_len = 5;
-// //         let input_size = 10;
-// //         let input = Array3::<f64>::from_elem((batch_size, seq_len, input_size), 0.1).into_dyn();
-// //         // Forward pass
-// //         let output = gru.forward(&input).unwrap();
-// //         // Check output shape
-// //         assert_eq!(output.shape(), &[batch_size, seq_len, 20]);
-// //     }
-// // }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ndarray::Array3;
+    use rand::rng;
+
+    #[test]
+    fn test_gru_shape() {
+        // Create a GRU layer
+        let mut rng = rng();
+        let gru = GRU::<f64>::new(
+            10, // input_size
+            20, // hidden_size
+            &mut rng,
+        )
+        .unwrap();
+
+        // Create a batch of input data
+        let batch_size = 2;
+        let seq_len = 5;
+        let input_size = 10;
+        let input = Array3::<f64>::from_elem((batch_size, seq_len, input_size), 0.1).into_dyn();
+        // Forward pass
+        let output = gru.forward(&input).unwrap();
+        // Check output shape
+        assert_eq!(output.shape(), &[batch_size, seq_len, 20]);
+    }
+}

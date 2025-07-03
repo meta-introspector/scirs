@@ -992,7 +992,7 @@ pub mod thread_pool {
             let thread_prefix = self.thread_name_prefix.clone();
             let mut pool_builder = ThreadPoolBuilder::new()
                 .num_threads(num_threads)
-                .thread_name(move |idx| format!("{}-{}", thread_prefix, idx));
+                .thread_name(move |idx| format!("{thread_prefix}-{idx}"));
 
             if let Some(stack_size) = self.stack_size {
                 pool_builder = pool_builder.stack_size(stack_size);
@@ -1000,7 +1000,7 @@ pub mod thread_pool {
 
             pool_builder
                 .build_global()
-                .map_err(|e| format!("Failed to initialize thread pool: {}", e))?;
+                .map_err(|e| format!("Failed to initialize thread pool: {e}"))?;
 
             // Set OpenMP threads for BLAS/LAPACK operations
             std::env::set_var("OMP_NUM_THREADS", num_threads.to_string());
@@ -1135,7 +1135,7 @@ pub mod thread_pool {
             for &profile in profiles {
                 // Initialize thread pool with profile
                 if let Err(e) = initialize_global_pool(profile) {
-                    eprintln!("Failed to initialize pool for {:?}: {}", profile, e);
+                    eprintln!("Failed to initialize pool for {profile:?}: {e}");
                     continue;
                 }
 
@@ -1619,8 +1619,7 @@ pub mod numa {
 
         if k != k2 {
             return Err(LinalgError::ShapeError(format!(
-                "Matrix dimensions incompatible: {}x{} * {}x{}",
-                m, k, k2, n
+                "Matrix dimensions incompatible: {m}x{k} * {k2}x{n}"
             )));
         }
 
@@ -2315,7 +2314,7 @@ pub mod affinity {
                     .join(",");
 
                 std::env::set_var("GOMP_CPU_AFFINITY", &core_list);
-                std::env::set_var("KMP_AFFINITY", format!("explicit,proclist=[{}]", core_list));
+                std::env::set_var("KMP_AFFINITY", format!("explicit,proclist=[{core_list}]"));
             }
 
             if let Some(numa_node) = affinity.numa_node {
@@ -2436,7 +2435,7 @@ pub mod affinity {
                     .affinity_manager
                     .apply_current_thread_affinity(affinity)
                 {
-                    eprintln!("Warning: Failed to set thread affinity: {}", e);
+                    eprintln!("Warning: Failed to set thread affinity: {e}");
                 }
             }
 
@@ -2481,7 +2480,7 @@ pub mod affinity {
             println!("NUMA nodes: {}", self.topology.num_nodes);
 
             for (node_id, cores) in self.topology.cpus_per_node.iter().enumerate() {
-                println!("  Node {}: CPUs {:?}", node_id, cores);
+                println!("  Node {node_id}: CPUs {cores:?}");
             }
 
             println!("Thread assignments:");
@@ -2975,8 +2974,7 @@ pub mod algorithms {
 
         if k != k2 {
             return Err(LinalgError::ShapeError(format!(
-                "Matrix dimensions incompatible for multiplication: {}x{} * {}x{}",
-                m, k, k2, n
+                "Matrix dimensions incompatible for multiplication: {m}x{k} * {k2}x{n}"
             )));
         }
 

@@ -1535,7 +1535,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         padded.extend(vec![Complex::zero(); padding_size]);
 
         ArrayD::from_shape_vec(vec![target_size], padded)
-            .map_err(|e| FFTError::DimensionError(format!("Shape error: {}", e)))
+            .map_err(|e| FFTError::DimensionError(format!("Shape error: {e}")))
     }
 
     fn apply_windowing(

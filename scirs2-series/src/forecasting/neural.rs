@@ -1567,8 +1567,10 @@ pub mod advanced {
         /// Maximum buffer size
         max_buffer_size: usize,
         /// Incremental learning rate
+        #[allow(dead_code)]
         incremental_lr: F,
         /// Update frequency (retrain every n observations)
+        #[allow(dead_code)]
         update_frequency: usize,
         /// Observation counter
         observation_count: usize,

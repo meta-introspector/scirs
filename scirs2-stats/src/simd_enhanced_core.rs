@@ -52,7 +52,7 @@ where
     let sum = if n < 16 {
         // Small arrays: use simple scalar summation
         x.iter().fold(F::zero(), |acc, &val| acc + val)
-    } else if n < 1024 || !capabilities.has_avx2() {
+    } else if n < 1024 || !capabilities.avx2_available {
         // Medium arrays or limited SIMD: standard SIMD summation
         F::simd_sum(&x.view())
     } else {

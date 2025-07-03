@@ -92,7 +92,7 @@ fn test_gamma_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
         let passed = error < config.tolerance;
 
         results.push(EdgeCaseResult {
-            test_name: format!("gamma_special_{}", input),
+            test_name: format!("gamma_special_{input}"),
             function: "gamma".to_string(),
             input,
             output,
@@ -100,8 +100,8 @@ fn test_gamma_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
             passed,
             error_message: if !passed {
                 Some(format!(
-                    "Error: {:.2e}, tolerance: {:.2e}",
-                    error, config.tolerance
+                    "Error: {error:.2e}, tolerance: {tolerance:.2e}",
+                    tolerance = config.tolerance
                 ))
             } else {
                 None
@@ -177,7 +177,7 @@ fn test_gamma_boundary_conditions(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResul
         let expected_finite = input.fract() != 0.0; // Should be finite unless exactly negative integer
 
         results.push(EdgeCaseResult {
-            test_name: format!("gamma_negative_{}", input.abs()),
+            test_name: format!("gamma_negative_{abs_input}", abs_input = input.abs()),
             function: "gamma".to_string(),
             input,
             output,
@@ -255,7 +255,7 @@ fn test_bessel_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
         expected_behavior: "J0(0) = 1".to_string(),
         passed: error < config.tolerance,
         error_message: if error >= config.tolerance {
-            Some(format!("Error: {:.2e}", error))
+            Some(format!("Error: {error:.2e}"))
         } else {
             None
         },
@@ -274,7 +274,7 @@ fn test_bessel_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
         expected_behavior: "J1(0) = 0".to_string(),
         passed: error < config.tolerance,
         error_message: if error >= config.tolerance {
-            Some(format!("Error: {:.2e}", error))
+            Some(format!("Error: {error:.2e}"))
         } else {
             None
         },
@@ -328,7 +328,7 @@ fn test_bessel_boundary_conditions(config: &EdgeCaseConfig) -> Vec<EdgeCaseResul
         expected_behavior: "J0(x) ≈ 1 for small x".to_string(),
         passed: error < config.tolerance,
         error_message: if error >= config.tolerance {
-            Some(format!("Error: {:.2e}", error))
+            Some(format!("Error: {error:.2e}"))
         } else {
             None
         },
@@ -377,14 +377,14 @@ fn test_erf_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
         };
 
         results.push(EdgeCaseResult {
-            test_name: format!("erf_special_{}", input),
+            test_name: format!("erf_special_{input}"),
             function: "erf".to_string(),
             input,
             output,
             expected_behavior: description.to_string(),
             passed,
             error_message: if !passed {
-                Some(format!("Error: {:.2e}", error))
+                Some(format!("Error: {error:.2e}"))
             } else {
                 None
             },
@@ -410,7 +410,7 @@ fn test_erf_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
         expected_behavior: "erf(large) should approach 1".to_string(),
         passed: (output - 1.0).abs() < 1e-10,
         error_message: if (output - 1.0).abs() >= 1e-10 {
-            Some(format!("erf({}) = {}, expected ≈ 1", large_input, output))
+            Some(format!("erf({large_input}) = {output}, expected ≈ 1"))
         } else {
             None
         },
@@ -428,10 +428,7 @@ fn test_erf_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
         expected_behavior: "erf(-large) should approach -1".to_string(),
         passed: (output + 1.0).abs() < 1e-10,
         error_message: if (output + 1.0).abs() >= 1e-10 {
-            Some(format!(
-                "erf({}) = {}, expected ≈ -1",
-                large_neg_input, output
-            ))
+            Some(format!("erf({large_neg_input}) = {output}, expected ≈ -1"))
         } else {
             None
         },

@@ -132,33 +132,32 @@ where
         let chunk_size = self.config.get_optimal_chunk_size(n);
 
         // Parallel reduction for statistics
-        let results: Vec<(F, F, F, F, usize)> =
-            parallel_chunks(data.as_slice().unwrap(), chunk_size)
-                .map(|chunk| {
-                    let len = chunk.len();
-                    let sum = chunk.iter().fold(F::zero(), |acc, &x| acc + x);
-                    let min = chunk.iter().fold(
-                        chunk[0],
-                        |min_val, &x| if x < min_val { x } else { min_val },
-                    );
-                    let max = chunk.iter().fold(
-                        chunk[0],
-                        |max_val, &x| if x > max_val { x } else { max_val },
-                    );
+        let results: Vec<(F, F, F, F, usize)> = par_chunks(data.as_slice().unwrap(), chunk_size)
+            .map(|chunk| {
+                let len = chunk.len();
+                let sum = chunk.iter().fold(F::zero(), |acc, &x| acc + x);
+                let min = chunk.iter().fold(
+                    chunk[0],
+                    |min_val, &x| if x < min_val { x } else { min_val },
+                );
+                let max = chunk.iter().fold(
+                    chunk[0],
+                    |max_val, &x| if x > max_val { x } else { max_val },
+                );
 
-                    // Local mean for variance calculation
-                    let local_mean = sum / F::from(len).unwrap();
-                    let sum_sq_dev = chunk
-                        .iter()
-                        .map(|&x| {
-                            let diff = x - local_mean;
-                            diff * diff
-                        })
-                        .fold(F::zero(), |acc, x| acc + x);
+                // Local mean for variance calculation
+                let local_mean = sum / F::from(len).unwrap();
+                let sum_sq_dev = chunk
+                    .iter()
+                    .map(|&x| {
+                        let diff = x - local_mean;
+                        diff * diff
+                    })
+                    .fold(F::zero(), |acc, x| acc + x);
 
-                    (sum, sum_sq_dev, min, max, len)
-                })
-                .collect();
+                (sum, sum_sq_dev, min, max, len)
+            })
+            .collect();
 
         // Combine results
         let total_sum = results
@@ -186,7 +185,7 @@ where
                 );
 
         // Recalculate variance with global mean (more accurate)
-        let global_variance = parallel_chunks(data.as_slice().unwrap(), chunk_size)
+        let global_variance = par_chunks(data.as_slice().unwrap(), chunk_size)
             .map(|chunk| {
                 chunk
                     .iter()

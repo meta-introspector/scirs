@@ -137,16 +137,14 @@ pub fn spherical_to_cart(spherical: &ArrayView1<f64>) -> SpatialResult<Array1<f6
     // Check that r is non-negative
     if r < 0.0 {
         return Err(SpatialError::ValueError(format!(
-            "Radius r must be non-negative, got {}",
-            r
+            "Radius r must be non-negative, got {r}"
         )));
     }
 
     // Check that theta is within valid range
     if !(0.0..=PI).contains(&theta) {
         return Err(SpatialError::ValueError(format!(
-            "Polar angle theta must be in [0, π], got {}",
-            theta
+            "Polar angle theta must be in [0, π], got {theta}"
         )));
     }
 

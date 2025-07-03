@@ -99,21 +99,21 @@ impl ScientificTextProcessor {
         // Scientific citation patterns
         let citation_regex = Regex::new(
             r"\(([A-Za-z]+(?:\s+et\s+al\.?)?\s*,?\s*\d{4}[a-z]?(?:;\s*[A-Za-z]+(?:\s+et\s+al\.?)?\s*,?\s*\d{4}[a-z]?)*)\)"
-        ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Mathematical formulas and equations
         let formula_regex =
             Regex::new(r"\$[^$]+\$|\\\([^)]+\\\)|\\\[[^\]]+\\\]|\\begin\{[^}]+\}.*?\\end\{[^}]+\}")
-                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Chemical formulas
         let chemical_regex = Regex::new(r"\b[A-Z][a-z]?(?:\d+)?(?:[A-Z][a-z]?(?:\d+)?)*\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Scientific measurements
         let measurement_regex = Regex::new(
             r"\b\d+(?:\.\d+)?\s*(?:nm|μm|mm|cm|m|km|mg|g|kg|ml|l|°C|°F|K|Pa|kPa|MPa|Hz|kHz|MHz|GHz|V|mV|A|mA|Ω|W|kW|MW)\b"
-        ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Common scientific abbreviations
         let mut abbreviation_map = HashMap::new();
@@ -170,7 +170,7 @@ impl ScientificTextProcessor {
         // Extract and preserve formulas
         let formulas = self.extract_formulas(&processed_text)?;
         for (i, formula) in formulas.iter().enumerate() {
-            let placeholder = format!("[FORMULA_{}]", i);
+            let placeholder = format!("[FORMULA_{i}]");
             processed_text = processed_text.replace(formula, &placeholder);
         }
         metadata.insert("formulas".to_string(), formulas.join("|"));
@@ -304,13 +304,13 @@ impl ScientificTextProcessor {
 
         // Remove excessive whitespace
         cleaned = Regex::new(r"\s+")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?
             .replace_all(&cleaned, " ")
             .to_string();
 
         // Normalize section headers
         cleaned = Regex::new(r"(?i)\b(abstract|introduction|methods?|results?|discussion|conclusion|references?)\s*:?\s*")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?
             .replace_all(&cleaned, |caps: &regex::Captures| {
                 format!("[SECTION_{}] ", caps[1].to_uppercase())
             })
@@ -336,12 +336,12 @@ impl LegalTextProcessor {
         // Legal case citations
         let case_citation_regex = Regex::new(
             r"\b[A-Z][a-zA-Z\s&,]+v\.?\s+[A-Z][a-zA-Z\s&,]+,?\s*\d+\s+[A-Z][a-z]*\.?\s*\d+(?:\s*\(\d+\))?"
-        ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Statute references
         let statute_regex =
             Regex::new(r"\b\d+\s+U\.?S\.?C\.?\s+§?\s*\d+|\b\d+\s+C\.?F\.?R\.?\s+§?\s*\d+")
-                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Legal terminology
         let legal_terms = [
@@ -490,13 +490,13 @@ impl LegalTextProcessor {
 
         // Normalize section numbering
         normalized = Regex::new(r"\b(\d+)\.(\d+)\.(\d+)\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?
             .replace_all(&normalized, "Section $1.$2.$3")
             .to_string();
 
         // Normalize "whereas" clauses
         normalized = Regex::new(r"(?i)\bwhereas\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?
             .replace_all(&normalized, "WHEREAS")
             .to_string();
 
@@ -521,18 +521,18 @@ impl MedicalTextProcessor {
         // Drug name patterns
         let drug_regex =
             Regex::new(r"\b[A-Z][a-z]+(?:mab|nib|tin|pine|pril|sartan|olol|azole|mycin|cillin)\b")
-                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Dosage patterns
         let dosage_regex =
             Regex::new(r"\b\d+(?:\.\d+)?\s*(?:mg|g|ml|l|units?|tablets?|capsules?|cc)\b")
-                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Symptom patterns (simplified)
         let symptom_regex = Regex::new(
             r"\b(?:pain|fever|nausea|headache|fatigue|cough|shortness of breath|chest pain)\b",
         )
-        .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Medical terminology
         let medical_terms = [
@@ -601,7 +601,7 @@ impl MedicalTextProcessor {
             for (abbrev, expansion) in &self.abbreviations {
                 let pattern = format!(r"\b{}\b", regex::escape(abbrev));
                 processed_text = Regex::new(&pattern)
-                    .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?
+                    .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?
                     .replace_all(&processed_text, expansion)
                     .to_string();
             }
@@ -684,7 +684,7 @@ impl MedicalTextProcessor {
 
         // Normalize medical record formatting
         cleaned = Regex::new(r"(?i)\b(chief complaint|history of present illness|past medical history|medications|allergies|review of systems|physical examination|assessment|plan)\s*:?\s*")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?
             .replace_all(&cleaned, |caps: &regex::Captures| {
                 format!("[{}] ", caps[1].to_uppercase().replace(" ", "_"))
             })
@@ -713,22 +713,22 @@ impl FinancialTextProcessor {
         // Currency patterns
         let currency_regex = Regex::new(
             r"\$\d+(?:,\d{3})*(?:\.\d{2})?|€\d+(?:,\d{3})*(?:\.\d{2})?|£\d+(?:,\d{3})*(?:\.\d{2})?|USD\s*\d+|EUR\s*\d+|GBP\s*\d+"
-        ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Financial instruments
         let financial_instrument_regex = Regex::new(
             r"\b(?:bond|stock|share|equity|derivative|option|future|swap|ETF|mutual fund|hedge fund|REIT)\b"
-        ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Percentage patterns
         let percentage_regex =
             Regex::new(r"\b\d+(?:\.\d+)?%|percentage|percent|basis points?|bps\b")
-                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Date patterns (financial context)
         let date_regex = Regex::new(
             r"\b(?:Q[1-4]|quarter)\s*\d{4}|\b\d{1,2}/\d{1,2}/\d{4}|\b\d{4}-\d{2}-\d{2}|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}\b"
-        ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
 
         // Financial terminology
         let financial_terms = [
@@ -893,7 +893,7 @@ impl FinancialTextProcessor {
 
         // Normalize financial section headers
         cleaned = Regex::new(r"(?i)\b(executive summary|financial highlights|income statement|balance sheet|cash flow|notes to financial statements)\s*:?\s*")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?
             .replace_all(&cleaned, |caps: &regex::Captures| {
                 format!("[{}] ", caps[1].to_uppercase().replace(" ", "_"))
             })
@@ -964,21 +964,21 @@ impl PatentTextProcessor {
 
         // US patent pattern (e.g., US1234567A1, US1234567B2)
         let us_pattern = Regex::new(r"\bUS\d{7,10}[AB]\d?\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in us_pattern.find_iter(text) {
             patent_numbers.push(mat.as_str().to_string());
         }
 
         // European patent pattern (e.g., EP1234567A1)
         let ep_pattern = Regex::new(r"\bEP\d{7}[AB]\d?\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in ep_pattern.find_iter(text) {
             patent_numbers.push(mat.as_str().to_string());
         }
 
         // International application numbers (e.g., WO2021/123456)
         let wo_pattern = Regex::new(r"\bWO\d{4}/\d{6}\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in wo_pattern.find_iter(text) {
             patent_numbers.push(mat.as_str().to_string());
         }
@@ -991,7 +991,7 @@ impl PatentTextProcessor {
 
         // US patent pattern (e.g., US1234567A1, US1234567B2)
         let us_pattern = Regex::new(r"\bUS\d{7,10}[AB]\d?\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in us_pattern.find_iter(text) {
             entities.push(Entity {
                 text: mat.as_str().to_string(),
@@ -1004,7 +1004,7 @@ impl PatentTextProcessor {
 
         // European patent pattern (e.g., EP1234567A1)
         let ep_pattern = Regex::new(r"\bEP\d{7}[AB]\d?\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in ep_pattern.find_iter(text) {
             entities.push(Entity {
                 text: mat.as_str().to_string(),
@@ -1017,7 +1017,7 @@ impl PatentTextProcessor {
 
         // International application numbers (e.g., WO2021/123456)
         let wo_pattern = Regex::new(r"\bWO\d{4}/\d{6}\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in wo_pattern.find_iter(text) {
             entities.push(Entity {
                 text: mat.as_str().to_string(),
@@ -1037,7 +1037,7 @@ impl PatentTextProcessor {
 
         // Claim references (e.g., "claim 1", "claims 1-5", "dependent claim 3")
         let claim_pattern = Regex::new(r"\b(?:claim|claims)\s+\d+(?:-\d+)?\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in claim_pattern.find_iter(text) {
             claims.push(mat.as_str().to_string());
         }
@@ -1050,7 +1050,7 @@ impl PatentTextProcessor {
 
         // Claim references (e.g., "claim 1", "claims 1-5", "dependent claim 3")
         let claim_pattern = Regex::new(r"\b(?:claim|claims)\s+\d+(?:-\d+)?\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in claim_pattern.find_iter(text) {
             entities.push(Entity {
                 text: mat.as_str().to_string(),
@@ -1070,14 +1070,14 @@ impl PatentTextProcessor {
 
         // IPC classifications (e.g., H04L29/06, A61B5/00)
         let ipc_pattern = Regex::new(r"\b[A-H]\d{2}[A-Z]\d{1,3}/\d{2,6}\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in ipc_pattern.find_iter(text) {
             classifications.push(mat.as_str().to_string());
         }
 
         // CPC classifications
         let cpc_pattern = Regex::new(r"\b[A-H]\d{2}[A-Z]\d{1,3}/\d{2,6}[A-Z]\d*\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in cpc_pattern.find_iter(text) {
             classifications.push(mat.as_str().to_string());
         }
@@ -1090,7 +1090,7 @@ impl PatentTextProcessor {
 
         // IPC classifications (e.g., H04L29/06, A61B5/00)
         let ipc_pattern = Regex::new(r"\b[A-H]\d{2}[A-Z]\d{1,3}/\d{2,6}\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in ipc_pattern.find_iter(text) {
             entities.push(Entity {
                 text: mat.as_str().to_string(),
@@ -1103,7 +1103,7 @@ impl PatentTextProcessor {
 
         // CPC classifications
         let cpc_pattern = Regex::new(r"\b[A-H]\d{2}[A-Z]\d{1,3}/\d{2,6}[A-Z]\d*\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in cpc_pattern.find_iter(text) {
             entities.push(Entity {
                 text: mat.as_str().to_string(),
@@ -1189,7 +1189,7 @@ impl NewsTextProcessor {
 
         // Simple pattern for person names (Title + Name pattern)
         let name_pattern = Regex::new(r"\b(?:Mr\.|Ms\.|Mrs\.|Dr\.|Prof\.|President|Senator|Rep\.|Gov\.)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in name_pattern.find_iter(text) {
             names.push(mat.as_str().to_string());
         }
@@ -1198,7 +1198,7 @@ impl NewsTextProcessor {
         let speaker_pattern = Regex::new(
             r"[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:said|stated|reported|announced|declared)",
         )
-        .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in speaker_pattern.find_iter(text) {
             let speaker = mat
                 .as_str()
@@ -1219,7 +1219,7 @@ impl NewsTextProcessor {
 
         // Simple pattern for person names (Title + Name pattern)
         let name_pattern = Regex::new(r"\b(?:Mr\.|Ms\.|Mrs\.|Dr\.|Prof\.|President|Senator|Rep\.|Gov\.)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in name_pattern.find_iter(text) {
             entities.push(Entity {
                 text: mat.as_str().to_string(),
@@ -1234,7 +1234,7 @@ impl NewsTextProcessor {
         let speaker_pattern = Regex::new(
             r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:said|stated|reported|announced|declared)",
         )
-        .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+        .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for cap in speaker_pattern.captures_iter(text) {
             if let Some(name_match) = cap.get(1) {
                 entities.push(Entity {
@@ -1268,9 +1268,9 @@ impl NewsTextProcessor {
             "Agency",
         ];
         for suffix in org_suffixes {
-            let pattern = format!(r"\b[A-Z][A-Za-z\s&]+{}", suffix);
+            let pattern = format!(r"\b[A-Z][A-Za-z\s&]+{suffix}");
             let regex = Regex::new(&pattern)
-                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
             for mat in regex.find_iter(text) {
                 orgs.push(mat.as_str().to_string());
             }
@@ -1278,7 +1278,7 @@ impl NewsTextProcessor {
 
         // Government agencies and departments
         let gov_pattern = Regex::new(r"\b(?:FBI|CIA|NASA|FDA|EPA|IRS|Pentagon|White House|Congress|Senate|House of Representatives)\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in gov_pattern.find_iter(text) {
             orgs.push(mat.as_str().to_string());
         }
@@ -1303,9 +1303,9 @@ impl NewsTextProcessor {
             "Agency",
         ];
         for suffix in org_suffixes {
-            let pattern = format!(r"\b[A-Z][A-Za-z\s&]+{}", suffix);
+            let pattern = format!(r"\b[A-Z][A-Za-z\s&]+{suffix}");
             let regex = Regex::new(&pattern)
-                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
             for mat in regex.find_iter(text) {
                 entities.push(Entity {
                     text: mat.as_str().to_string(),
@@ -1319,7 +1319,7 @@ impl NewsTextProcessor {
 
         // Government agencies and departments
         let gov_pattern = Regex::new(r"\b(?:FBI|CIA|NASA|FDA|EPA|IRS|Pentagon|White House|Congress|Senate|House of Representatives)\b")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in gov_pattern.find_iter(text) {
             entities.push(Entity {
                 text: mat.as_str().to_string(),
@@ -1349,7 +1349,7 @@ impl NewsTextProcessor {
 
         for pattern in date_patterns {
             let regex = Regex::new(pattern)
-                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
             for mat in regex.find_iter(text) {
                 dates.push(mat.as_str().to_string());
             }
@@ -1373,7 +1373,7 @@ impl NewsTextProcessor {
 
         for pattern in date_patterns {
             let regex = Regex::new(pattern)
-                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
             for mat in regex.find_iter(text) {
                 entities.push(Entity {
                     text: mat.as_str().to_string(),
@@ -1394,7 +1394,7 @@ impl NewsTextProcessor {
 
         // Direct quotes in quotation marks
         let quote_pattern = Regex::new(r#""([^"]{10,200})""#)
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for cap in quote_pattern.captures_iter(text) {
             if let Some(quote) = cap.get(1) {
                 quotes.push(quote.as_str().to_string());
@@ -1409,7 +1409,7 @@ impl NewsTextProcessor {
 
         // Direct quotes in quotation marks
         let quote_pattern = Regex::new(r#""([^"]{10,200})""#)
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for cap in quote_pattern.captures_iter(text) {
             if let Some(quote_match) = cap.get(1) {
                 entities.push(Entity {
@@ -1430,12 +1430,12 @@ impl NewsTextProcessor {
 
         // Remove bylines and datelines
         let byline_pattern = Regex::new(r"^By\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s*\n")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         cleaned = byline_pattern.replace_all(&cleaned, "").to_string();
 
         // Remove wire service tags (AP, Reuters, etc.)
         let wire_pattern = Regex::new(r"\b(?:AP|Reuters|Bloomberg|CNN|BBC)\s*[-–]?\s*")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         cleaned = wire_pattern.replace_all(&cleaned, "").to_string();
 
         Ok(cleaned)
@@ -1500,7 +1500,7 @@ impl SocialMediaTextProcessor {
         let mut hashtags = Vec::new();
 
         let hashtag_pattern = Regex::new(r"#\w+")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in hashtag_pattern.find_iter(text) {
             hashtags.push(mat.as_str().to_string());
         }
@@ -1512,7 +1512,7 @@ impl SocialMediaTextProcessor {
         let mut entities = Vec::new();
 
         let hashtag_pattern = Regex::new(r"#\w+")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in hashtag_pattern.find_iter(text) {
             entities.push(Entity {
                 text: mat.as_str().to_string(),
@@ -1531,7 +1531,7 @@ impl SocialMediaTextProcessor {
         let mut mentions = Vec::new();
 
         let mention_pattern = Regex::new(r"@\w+")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in mention_pattern.find_iter(text) {
             mentions.push(mat.as_str().to_string());
         }
@@ -1543,7 +1543,7 @@ impl SocialMediaTextProcessor {
         let mut entities = Vec::new();
 
         let mention_pattern = Regex::new(r"@\w+")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in mention_pattern.find_iter(text) {
             entities.push(Entity {
                 text: mat.as_str().to_string(),
@@ -1562,14 +1562,14 @@ impl SocialMediaTextProcessor {
         let mut urls = Vec::new();
 
         let url_pattern = Regex::new(r"https?://\S+")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in url_pattern.find_iter(text) {
             urls.push(mat.as_str().to_string());
         }
 
         // Also extract shortened URLs
         let short_url_pattern = Regex::new(r"\b(?:bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly)/\S+")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in short_url_pattern.find_iter(text) {
             urls.push(mat.as_str().to_string());
         }
@@ -1581,7 +1581,7 @@ impl SocialMediaTextProcessor {
         let mut entities = Vec::new();
 
         let url_pattern = Regex::new(r"https?://\S+")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in url_pattern.find_iter(text) {
             entities.push(Entity {
                 text: mat.as_str().to_string(),
@@ -1594,7 +1594,7 @@ impl SocialMediaTextProcessor {
 
         // Also extract shortened URLs
         let short_url_pattern = Regex::new(r"\b(?:bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly)/\S+")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         for mat in short_url_pattern.find_iter(text) {
             entities.push(Entity {
                 text: mat.as_str().to_string(),
@@ -1630,7 +1630,7 @@ impl SocialMediaTextProcessor {
 
         for pattern in emoticon_patterns {
             let regex = Regex::new(pattern)
-                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
             for mat in regex.find_iter(text) {
                 emojis.push(mat.as_str().to_string());
             }
@@ -1663,7 +1663,7 @@ impl SocialMediaTextProcessor {
 
         for pattern in emoticon_patterns {
             let regex = Regex::new(pattern)
-                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+                .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
             for mat in regex.find_iter(text) {
                 entities.push(Entity {
                     text: mat.as_str().to_string(),
@@ -1686,7 +1686,7 @@ impl SocialMediaTextProcessor {
 
         // Convert multiple spaces to single space
         let space_pattern = Regex::new(r"\s+")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?;
         normalized = space_pattern.replace_all(&normalized, " ").to_string();
 
         // Convert common social media abbreviations

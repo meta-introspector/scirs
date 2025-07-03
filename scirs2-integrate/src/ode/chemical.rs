@@ -877,7 +877,7 @@ pub mod systems {
         let properties = ChemicalProperties {
             num_species: initial_concentrations.len(),
             species_names: (0..initial_concentrations.len())
-                .map(|i| format!("Species_{}", i))
+                .map(|i| format!("Species_{i}"))
                 .collect(),
             initial_concentrations: initial_conc_array.clone(),
             reactions,

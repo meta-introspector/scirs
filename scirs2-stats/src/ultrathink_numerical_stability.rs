@@ -4,10 +4,8 @@
 //! featuring comprehensive precision analysis, catastrophic cancellation detection,
 //! overflow/underflow handling, and extreme value testing.
 
-use crate::error::{StatsError, StatsResult};
-use crate::ultrathink_error_enhancements::{UltrathinkContextBuilder, UltrathinkErrorMessages};
 use crate::{kurtosis, mean, pearson_r, quantile, skew, std, var, QuantileInterpolation};
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast, One, Zero};
 use std::collections::HashMap;
 

@@ -445,9 +445,16 @@ pub fn learning_curve<T, S1, S2>(
     scoring: impl Into<String>,
 ) -> Result<LearningCurveVisualizer>
 where
-    T: Clone + 'static + num_traits::Float + Send + Sync + std::fmt::Debug,
+    T: Clone
+        + 'static
+        + num_traits::Float
+        + Send
+        + Sync
+        + std::fmt::Debug
+        + std::ops::Sub<Output = T>,
     S1: Data<Elem = T>,
     S2: Data<Elem = T>,
+    for<'a> &'a T: std::ops::Sub<&'a T, Output = T>,
 {
     let scoring_str = scoring.into();
 
@@ -584,7 +591,8 @@ where
 /// Evaluate predictions using the specified scoring metric
 fn evaluate_predictions<T>(y_true: &Array1<T>, y_pred: &Array1<T>, scoring: &str) -> Result<f64>
 where
-    T: Clone + num_traits::Float + Send + Sync + std::fmt::Debug,
+    T: Clone + num_traits::Float + Send + Sync + std::fmt::Debug + std::ops::Sub<Output = T>,
+    for<'a> &'a T: std::ops::Sub<&'a T, Output = T>,
 {
     match scoring.to_lowercase().as_str() {
         "accuracy" => {

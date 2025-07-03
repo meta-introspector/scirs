@@ -7,7 +7,7 @@
 //! 2. **Parallel**: Apply different optimizers to different parameter groups
 //! 3. **Chained**: Wrap an optimizer with another (similar to Lookahead wrapping other optimizers)
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;

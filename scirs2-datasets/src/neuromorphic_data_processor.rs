@@ -351,7 +351,7 @@ impl NeuromorphicProcessor {
                 if rng.random::<f64>() < self.network_config.connection_probability {
                     let weight =
                         (rng.random::<f64>() - 0.5) * 2.0 * self.plasticity_config.max_weight;
-                    let delay = Duration::from_millis(rng.random_range(1..=5));
+                    let delay = Duration::from_millis(rng.gen_range(1..=5));
 
                     network[pre_idx].push(Synapse {
                         weight,
@@ -666,7 +666,7 @@ impl NeuromorphicProcessor {
                 {
                     let weight =
                         (rng.random::<f64>() - 0.5) * self.plasticity_config.max_weight * 0.5;
-                    let delay = Duration::from_millis(rng.random_range(2..=10));
+                    let delay = Duration::from_millis(rng.gen_range(2..=10));
 
                     network[pre_idx].push(Synapse {
                         weight,

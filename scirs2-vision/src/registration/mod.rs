@@ -270,7 +270,7 @@ pub fn invert_transform(transform: &TransformMatrix) -> Result<TransformMatrix> 
     // Uses optimized 3x3 matrix inversion for transformation matrices
     // This implementation is sufficient for homogeneous transformation matrices
     invert_3x3_matrix(transform)
-        .map_err(|e| VisionError::OperationError(format!("Failed to invert transformation: {}", e)))
+        .map_err(|e| VisionError::OperationError(format!("Failed to invert transformation: {e}")))
 }
 
 /// Compose two transformations (T2 * T1)
@@ -336,8 +336,7 @@ pub fn ransac_estimate_transform(
 
     if matches.len() < min_samples {
         return Err(VisionError::InvalidParameter(format!(
-            "Need at least {} matches for {:?} transformation",
-            min_samples, transform_type
+            "Need at least {min_samples} matches for {transform_type:?} transformation"
         )));
     }
 
@@ -346,8 +345,8 @@ pub fn ransac_estimate_transform(
     let mut best_cost = f64::INFINITY;
 
     use rand::prelude::*;
-    use rand::rngs::StdRng;
     use rand::rng;
+    use rand::rngs::StdRng;
     let mut base_rng = rng();
     let mut rng = StdRng::from_rng(&mut base_rng);
 
@@ -576,9 +575,8 @@ fn estimate_affine_transform(matches: &[PointMatch]) -> Result<TransformMatrix> 
     }
 
     // Use scirs2-linalg's least squares solver
-    let result = lstsq(&a.view(), &b.view(), None).map_err(|e| {
-        VisionError::OperationError(format!("Failed to solve affine system: {}", e))
-    })?;
+    let result = lstsq(&a.view(), &b.view(), None)
+        .map_err(|e| VisionError::OperationError(format!("Failed to solve affine system: {e}")))?;
 
     let params = result.x;
 

@@ -124,14 +124,14 @@ pub trait ErrorContext<T> {
 
 impl<T> ErrorContext<T> for Result<T> {
     fn context(self, msg: &str) -> Result<T> {
-        self.map_err(|e| TransformError::Other(format!("{}: {}", msg, e)))
+        self.map_err(|e| TransformError::Other(format!("{msg}: {e}")))
     }
 
     fn with_context<F>(self, f: F) -> Result<T>
     where
         F: FnOnce() -> String,
     {
-        self.map_err(|e| TransformError::Other(format!("{}: {}", f(), e)))
+        self.map_err(|e| TransformError::Other(format!("{}: {e}", f())))
     }
 }
 

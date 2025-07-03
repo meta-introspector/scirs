@@ -434,8 +434,7 @@ impl RBFInterpolator {
             match weights {
                 Ok(weights) => Ok((weights, None)),
                 Err(e) => Err(SpatialError::ComputationError(format!(
-                    "Failed to solve RBF system: {}",
-                    e
+                    "Failed to solve RBF system: {e}"
                 ))),
             }
         } else {
@@ -492,8 +491,7 @@ impl RBFInterpolator {
                     Ok((weights, Some(poly_coefs)))
                 }
                 Err(e) => Err(SpatialError::ComputationError(format!(
-                    "Failed to solve augmented RBF system: {}",
-                    e
+                    "Failed to solve augmented RBF system: {e}"
                 ))),
             }
         }

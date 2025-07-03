@@ -353,8 +353,7 @@ where
             "Raw QR mode not yet supported".to_string(),
         )),
         _ => Err(LinalgError::InvalidInputError(format!(
-            "Invalid QR mode: {}",
-            mode
+            "Invalid QR mode: {mode}"
         ))),
     }
 }
@@ -725,8 +724,7 @@ where
             Ok(norm_a * norm_inv_a)
         }
         _ => Err(LinalgError::InvalidInput(format!(
-            "Unsupported norm type for condition number: {:?}",
-            p
+            "Unsupported norm type for condition number: {p:?}"
         ))),
     }
 }
@@ -942,8 +940,7 @@ where
 
     if mode != "full" && mode != "economic" {
         return Err(LinalgError::InvalidInput(format!(
-            "Invalid RQ mode: {}",
-            mode
+            "Invalid RQ mode: {mode}"
         )));
     }
 
@@ -992,8 +989,7 @@ where
             Ok((positive, unitary))
         }
         _ => Err(LinalgError::InvalidInput(format!(
-            "Invalid polar decomposition side: {}",
-            side
+            "Invalid polar decomposition side: {side}"
         ))),
     }
 }
@@ -1019,8 +1015,7 @@ where
         "sin" => sinm(a),
         "tan" => tanm(a),
         _ => Err(LinalgError::NotImplementedError(format!(
-            "Matrix function '{}' not yet implemented",
-            func
+            "Matrix function '{func}' not yet implemented"
         ))),
     }
 }
@@ -1089,8 +1084,7 @@ where
             decomposition::schur(a)
         }
         _ => Err(LinalgError::InvalidInput(format!(
-            "Invalid Schur output type: {}",
-            output
+            "Invalid Schur output type: {output}"
         ))),
     }
 }

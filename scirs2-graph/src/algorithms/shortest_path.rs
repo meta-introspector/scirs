@@ -870,6 +870,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[allow(deprecated)]
     fn test_shortest_path() {
         let mut graph: Graph<i32, f64> = Graph::new();
 

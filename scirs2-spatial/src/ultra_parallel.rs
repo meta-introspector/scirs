@@ -550,8 +550,7 @@ impl WorkStealingPool {
                 {
                     if let Err(e) = Self::set_cpu_affinity_linux(thread_id) {
                         eprintln!(
-                            "Warning: Failed to set CPU affinity for thread {}: {}",
-                            thread_id, e
+                            "Warning: Failed to set CPU affinity for thread {thread_id}: {e}"
                         );
                     }
                 }
@@ -571,8 +570,7 @@ impl WorkStealingPool {
                 {
                     if let Err(e) = Self::set_numa_affinity_linux(numa_node) {
                         eprintln!(
-                            "Warning: Failed to set NUMA affinity for node {}: {}",
-                            numa_node, e
+                            "Warning: Failed to set NUMA affinity for node {numa_node}: {e}"
                         );
                     }
                 }
@@ -592,8 +590,7 @@ impl WorkStealingPool {
                     {
                         if let Err(e) = Self::set_custom_cpu_affinity_linux(cpu) {
                             eprintln!(
-                                "Warning: Failed to set custom CPU affinity to core {}: {}",
-                                cpu, e
+                                "Warning: Failed to set custom CPU affinity to core {cpu}: {e}"
                             );
                         }
                     }
@@ -641,9 +638,9 @@ impl WorkStealingPool {
         use std::fs;
 
         // Read the CPU list for this NUMA node
-        let cpulist_path = format!("/sys/devices/system/node/node{}/cpulist", numa_node);
+        let cpulist_path = format!("/sys/devices/system/node/node{numa_node}/cpulist");
         let cpulist = fs::read_to_string(&cpulist_path)
-            .map_err(|_| format!("Failed to read NUMA node {} CPU list", numa_node))?;
+            .map_err(|_| format!("Failed to read NUMA node {numa_node} CPU list"))?;
 
         unsafe {
             let mut cpu_set: libc::cpu_set_t = std::mem::zeroed();
@@ -1229,14 +1226,13 @@ pub fn report_ultra_parallel_capabilities() {
     let total_cores: usize = topology.cores_per_node.iter().sum();
 
     println!("Ultra-Parallel Processing Capabilities:");
-    println!("  Total CPU cores: {}", total_cores);
+    println!("  Total CPU cores: {total_cores}");
     println!("  NUMA nodes: {}", topology.num_nodes);
 
     for (node, &cores) in topology.cores_per_node.iter().enumerate() {
         let memory_gb = topology.memory_per_node[node] as f64 / (1024.0 * 1024.0 * 1024.0);
         println!(
-            "    Node {}: {} cores, {:.1} GB memory",
-            node, cores, memory_gb
+            "    Node {node}: {cores} cores, {memory_gb:.1} GB memory"
         );
     }
 

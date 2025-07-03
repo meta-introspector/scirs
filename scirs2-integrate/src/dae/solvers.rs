@@ -58,8 +58,7 @@ where
 
     if constraint_error > tol {
         return Err(IntegrateError::ValueError(format!(
-            "Initial condition does not satisfy constraints. Error: {}",
-            constraint_error
+            "Initial condition does not satisfy constraints. Error: {constraint_error}"
         )));
     }
 
@@ -264,7 +263,7 @@ where
 
     // Use our custom solver to solve the system
     solve_linear_system(&matrix.view(), &b.view()).map_err(|err| {
-        IntegrateError::ComputationError(format!("Failed to solve linear system: {}", err))
+        IntegrateError::ComputationError(format!("Failed to solve linear system: {err}"))
     })
 }
 
@@ -311,8 +310,7 @@ where
 
     if residual_norm > tol {
         return Err(IntegrateError::ValueError(format!(
-            "Initial conditions are not consistent with the DAE. Residual norm: {}",
-            residual_norm
+            "Initial conditions are not consistent with the DAE. Residual norm: {residual_norm}"
         )));
     }
 
@@ -583,8 +581,7 @@ where
                 Ok(sol) => sol,
                 Err(e) => {
                     return Err(IntegrateError::ComputationError(format!(
-                        "Failed to solve Newton system at t = {}: {}",
-                        t_new, e
+                        "Failed to solve Newton system at t = {t_new}: {e}"
                     )));
                 }
             };
@@ -710,7 +707,7 @@ where
             // If step size got too small, the problem might be too stiff
             if h <= min_step {
                 return Err(IntegrateError::ComputationError(
-                    format!("Integration failed at t = {}. Step size got too small. The DAE might be too stiff or have index greater than 1.", t_current)
+                    format!("Integration failed at t = {t_current}. Step size got too small. The DAE might be too stiff or have index greater than 1.")
                 ));
             }
         }
@@ -720,12 +717,10 @@ where
     let success = t_current >= t_span[1];
     let message = if success {
         Some(format!(
-            "Integration successful. {} steps taken, {} accepted, {} rejected.",
-            n_steps, n_accepted, n_rejected
+            "Integration successful. {n_steps} steps taken, {n_accepted} accepted, {n_rejected} rejected."
         ))
     } else {
-        Some(format!("Integration did not reach the end of the interval. {} steps taken, {} accepted, {} rejected.",
-                     n_steps, n_accepted, n_rejected))
+        Some(format!("Integration did not reach the end of the interval. {n_steps} steps taken, {n_accepted} accepted, {n_rejected} rejected."))
     };
 
     // Split the combined solution into differential and algebraic components
@@ -838,8 +833,7 @@ where
                     projection.make_consistent(t_span[0], &mut x0_copy, &mut y0_copy, &g)
                 {
                     return Err(IntegrateError::ComputationError(format!(
-                        "Failed to find consistent initial conditions for higher-index DAE: {}",
-                        e
+                        "Failed to find consistent initial conditions for higher-index DAE: {e}"
                     )));
                 }
 

@@ -309,7 +309,7 @@ impl NeuromorphicAdaptationNetwork {
         let mut transformations = Vec::new();
         let threshold = 0.3; // Spike rate threshold for recommendation
 
-        let transformation_types = vec![
+        let transformation_types = [
             TransformationType::StandardScaler,
             TransformationType::MinMaxScaler,
             TransformationType::RobustScaler,
@@ -748,7 +748,7 @@ impl NeuromorphicMemorySystem {
         context2: &DatasetMetaFeatures,
     ) -> f64 {
         // Simplified similarity based on key features
-        let features1 = vec![
+        let features1 = [
             context1.sparsity,
             context1.mean_correlation,
             context1.mean_skewness,
@@ -756,7 +756,7 @@ impl NeuromorphicMemorySystem {
             context1.outlier_ratio,
         ];
 
-        let features2 = vec![
+        let features2 = [
             context2.sparsity,
             context2.mean_correlation,
             context2.mean_skewness,
@@ -980,7 +980,7 @@ impl NeuromorphicTransformationSystem {
             self.system_state.adaptation_rate *= 1.05; // Increase exploration
         }
 
-        self.system_state.adaptation_rate = self.system_state.adaptation_rate.max(0.001).min(0.1);
+        self.system_state.adaptation_rate = self.system_state.adaptation_rate.clamp(0.001, 0.1);
     }
 
     /// Get current system state for monitoring
@@ -1188,7 +1188,7 @@ impl UltraThinkNeuromorphicProcessor {
         for i in 0..self.adaptive_thresholds.len().min(output_spikes.len()) {
             let activity_error = output_spikes[i] - target_activity;
             self.adaptive_thresholds[i] += adaptation_rate * activity_error;
-            self.adaptive_thresholds[i] = self.adaptive_thresholds[i].max(0.1).min(2.0);
+            self.adaptive_thresholds[i] = self.adaptive_thresholds[i].clamp(0.1, 2.0);
         }
 
         // ✅ ULTRATHINK OPTIMIZATION: Update network utilization metric
@@ -1368,7 +1368,7 @@ impl UltraThinkNeuromorphicProcessor {
         // ✅ ULTRATHINK OPTIMIZATION: Update global adaptation rate
         let feedback_strength = (performance_score - 0.5).abs() * 2.0; // [0, 1]
         self.network.adaptation_rate *= 1.0 + feedback_strength * 0.1;
-        self.network.adaptation_rate = self.network.adaptation_rate.max(0.001).min(0.1);
+        self.network.adaptation_rate = self.network.adaptation_rate.clamp(0.001, 0.1);
 
         Ok(())
     }

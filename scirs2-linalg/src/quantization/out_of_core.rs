@@ -150,24 +150,22 @@ where
             .write(true)
             .truncate(true)
             .open(file_path)
-            .map_err(|e| LinalgError::ComputationError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| LinalgError::ComputationError(format!("Failed to open file: {e}")))?;
 
         let mut writer = BufWriter::new(file);
 
         // First write the matrix shape and quantization parameters
         writer
             .write_all(&(rows as u64).to_le_bytes())
-            .map_err(|e| LinalgError::ComputationError(format!("Failed to write rows: {}", e)))?;
+            .map_err(|e| LinalgError::ComputationError(format!("Failed to write rows: {e}")))?;
         writer
             .write_all(&(cols as u64).to_le_bytes())
-            .map_err(|e| {
-                LinalgError::ComputationError(format!("Failed to write columns: {}", e))
-            })?;
+            .map_err(|e| LinalgError::ComputationError(format!("Failed to write columns: {e}")))?;
         writer
             .write_all(&scale.to_le_bytes())
-            .map_err(|e| LinalgError::ComputationError(format!("Failed to write scale: {}", e)))?;
+            .map_err(|e| LinalgError::ComputationError(format!("Failed to write scale: {e}")))?;
         writer.write_all(&zero_point.to_le_bytes()).map_err(|e| {
-            LinalgError::ComputationError(format!("Failed to write zero_point: {}", e))
+            LinalgError::ComputationError(format!("Failed to write zero_point: {e}"))
         })?;
 
         // Then write the quantized matrix data in chunks
@@ -183,13 +181,13 @@ where
             // rather than a numeric cast to preserve the bit pattern
             let u8_data: Vec<u8> = quantized_data.iter().map(|&x| x.cast_unsigned()).collect();
             writer.write_all(&u8_data).map_err(|e| {
-                LinalgError::ComputationError(format!("Failed to write chunk: {}", e))
+                LinalgError::ComputationError(format!("Failed to write chunk: {e}"))
             })?;
         }
 
         writer
             .flush()
-            .map_err(|e| LinalgError::ComputationError(format!("Failed to flush buffer: {}", e)))?;
+            .map_err(|e| LinalgError::ComputationError(format!("Failed to flush buffer: {e}")))?;
 
         // Determine if the matrix is symmetric
         let symmetric =
@@ -263,14 +261,14 @@ where
 
         // Open the file for reading
         let file = File::open(&self.file_path)
-            .map_err(|e| LinalgError::ComputationError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| LinalgError::ComputationError(format!("Failed to open file: {e}")))?;
 
         let mut reader = BufReader::new(file);
 
         // Skip header information (2 u64 values for dimensions, f32 for scale, i32 for zero_point)
         reader
             .seek(SeekFrom::Start(24))
-            .map_err(|e| LinalgError::ComputationError(format!("Failed to seek: {}", e)))?;
+            .map_err(|e| LinalgError::ComputationError(format!("Failed to seek: {e}")))?;
 
         // Prepare result vector
         let rows = self.shape.0;
@@ -286,9 +284,9 @@ where
             let chunk_size = chunk_rows * cols;
             let mut u8_data = vec![0u8; chunk_size];
 
-            reader.read_exact(&mut u8_data).map_err(|e| {
-                LinalgError::ComputationError(format!("Failed to read chunk: {}", e))
-            })?;
+            reader
+                .read_exact(&mut u8_data)
+                .map_err(|e| LinalgError::ComputationError(format!("Failed to read chunk: {e}")))?;
 
             // Convert back to i8 for processing using a bit pattern conversion
             // rather than a numeric cast to preserve the sign bit
@@ -348,16 +346,15 @@ where
             let x_f32: Vec<f32> = x.iter().map(|&val| val.as_()).collect();
 
             // Open the file for reading
-            let file = File::open(&file_path).map_err(|e| {
-                LinalgError::ComputationError(format!("Failed to open file: {}", e))
-            })?;
+            let file = File::open(&file_path)
+                .map_err(|e| LinalgError::ComputationError(format!("Failed to open file: {e}")))?;
 
             let mut reader = BufReader::new(file);
 
             // Skip header information
             reader
                 .seek(SeekFrom::Start(24))
-                .map_err(|e| LinalgError::ComputationError(format!("Failed to seek: {}", e)))?;
+                .map_err(|e| LinalgError::ComputationError(format!("Failed to seek: {e}")))?;
 
             // Prepare result vector
             let mut result = Array1::zeros(rows);
@@ -372,7 +369,7 @@ where
                 let mut u8_data = vec![0u8; chunk_size];
 
                 reader.read_exact(&mut u8_data).map_err(|e| {
-                    LinalgError::ComputationError(format!("Failed to read chunk: {}", e))
+                    LinalgError::ComputationError(format!("Failed to read chunk: {e}"))
                 })?;
 
                 // Convert back to i8 for processing using a bit pattern conversion
@@ -458,8 +455,7 @@ where
 
         if rows != cols {
             return Err(LinalgError::ShapeError(format!(
-                "Expected square matrix, got shape {}x{}",
-                rows, cols
+                "Expected square matrix, got shape {rows}x{cols}"
             )));
         }
 
@@ -586,7 +582,7 @@ where
     pub fn from_file(file_path: &str) -> LinalgResult<Self> {
         // Open the file for reading
         let file = File::open(file_path)
-            .map_err(|e| LinalgError::ComputationError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| LinalgError::ComputationError(format!("Failed to open file: {e}")))?;
 
         let mut reader = BufReader::new(file);
 
@@ -598,15 +594,15 @@ where
 
         reader
             .read_exact(&mut rows_bytes)
-            .map_err(|e| LinalgError::ComputationError(format!("Failed to read rows: {}", e)))?;
+            .map_err(|e| LinalgError::ComputationError(format!("Failed to read rows: {e}")))?;
         reader
             .read_exact(&mut cols_bytes)
-            .map_err(|e| LinalgError::ComputationError(format!("Failed to read columns: {}", e)))?;
+            .map_err(|e| LinalgError::ComputationError(format!("Failed to read columns: {e}")))?;
         reader
             .read_exact(&mut scale_bytes)
-            .map_err(|e| LinalgError::ComputationError(format!("Failed to read scale: {}", e)))?;
+            .map_err(|e| LinalgError::ComputationError(format!("Failed to read scale: {e}")))?;
         reader.read_exact(&mut zero_point_bytes).map_err(|e| {
-            LinalgError::ComputationError(format!("Failed to read zero_point: {}", e))
+            LinalgError::ComputationError(format!("Failed to read zero_point: {e}"))
         })?;
 
         let rows = u64::from_le_bytes(rows_bytes) as usize;

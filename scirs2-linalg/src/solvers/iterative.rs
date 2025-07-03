@@ -421,10 +421,7 @@ where
         let residual_norm = r_final.dot(&r_final).sqrt();
 
         if options.verbose {
-            println!(
-                "GMRES outer iteration {}: residual = {}",
-                _outer, residual_norm
-            );
+            println!("GMRES outer iteration {_outer}: residual = {residual_norm}");
         }
 
         if residual_norm < options.tolerance {
@@ -569,7 +566,7 @@ where
         let r_norm = r.dot(&r).sqrt();
 
         if options.verbose && iteration % 10 == 0 {
-            println!("BiCGSTAB iteration {}: residual = {}", iteration, r_norm);
+            println!("BiCGSTAB iteration {iteration}: residual = {r_norm}");
         }
 
         if r_norm < options.tolerance {

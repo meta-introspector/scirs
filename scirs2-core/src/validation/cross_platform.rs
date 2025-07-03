@@ -373,7 +373,7 @@ impl CrossPlatformValidator {
                 result.is_valid = false;
                 result.errors.push(ValidationError {
                     code: "INVALID_WINDOWS_CHAR".to_string(),
-                    message: format!("Character '{}' is invalid in Windows paths", ch),
+                    message: format!("Character '{ch}' is invalid in Windows paths"),
                     field: Some("path".to_string()),
                     suggestion: Some("Remove or replace invalid characters".to_string()),
                     severity: ValidationSeverity::Error,
@@ -390,11 +390,11 @@ impl CrossPlatformValidator {
 
         let path_upper = path.to_uppercase();
         for &reserved in &reserved_names {
-            if path_upper == reserved || path_upper.starts_with(&format!("{}.", reserved)) {
+            if path_upper == reserved || path_upper.starts_with(&format!("{reserved}.")) {
                 result.is_valid = false;
                 result.errors.push(ValidationError {
                     code: "RESERVED_WINDOWS_NAME".to_string(),
-                    message: format!("'{}' is a reserved name on Windows", reserved),
+                    message: format!("'{reserved}' is a reserved name on Windows"),
                     field: Some("path".to_string()),
                     suggestion: Some("Use a different filename".to_string()),
                     severity: ValidationSeverity::Error,
@@ -432,8 +432,7 @@ impl CrossPlatformValidator {
         for &prefix in &system_prefixes {
             if path.starts_with(prefix) {
                 result.warnings.push(format!(
-                    "Path accesses system directory '{}' - ensure this is intended",
-                    prefix
+                    "Path accesses system directory '{prefix}' - ensure this is intended"
                 ));
                 break;
             }
@@ -479,8 +478,7 @@ impl CrossPlatformValidator {
         for &prefix in &special_prefixes {
             if path.starts_with(prefix) {
                 result.warnings.push(format!(
-                    "Protocol '{}' may not be accessible in WebAssembly environment",
-                    prefix
+                    "Protocol '{prefix}' may not be accessible in WebAssembly environment"
                 ));
                 break;
             }
@@ -559,10 +557,7 @@ impl CrossPlatformValidator {
             result.is_valid = false;
             result.errors.push(ValidationError {
                 code: "INFINITY_NOT_SUPPORTED".to_string(),
-                message: format!(
-                    "Infinity values not supported on this platform for {}",
-                    field_name
-                ),
+                message: format!("Infinity values not supported on this platform for {field_name}"),
                 field: Some(field_name.to_string()),
                 suggestion: Some("Use finite values only".to_string()),
                 severity: ValidationSeverity::Error,
@@ -571,8 +566,7 @@ impl CrossPlatformValidator {
 
         if value_str.contains("nan") && !self.platform_info.fp_behavior.nan_propagation {
             result.warnings.push(format!(
-                "NaN value in {} - platform may not handle NaN propagation correctly",
-                field_name
+                "NaN value in {field_name} - platform may not handle NaN propagation correctly"
             ));
         }
     }
@@ -668,8 +662,7 @@ impl CrossPlatformValidator {
             result.errors.push(ValidationError {
                 code: "ALLOCATION_TOO_LARGE".to_string(),
                 message: format!(
-                    "Allocation size {} exceeds platform maximum of {} for {}",
-                    size, max_alloc_size, purpose
+                    "Allocation size {size} exceeds platform maximum of {max_alloc_size} for {purpose}"
                 ),
                 field: Some("size".to_string()),
                 suggestion: Some("Reduce allocation size or use memory mapping".to_string()),
@@ -680,8 +673,7 @@ impl CrossPlatformValidator {
         // Check if memory mapping is needed but not supported
         if size > 100_000_000 && !self.platform_info.memory_mapping_support {
             result.warnings.push(format!(
-                "Large allocation ({} bytes) for {} but memory mapping not supported",
-                size, purpose
+                "Large allocation ({size} bytes) for {purpose} but memory mapping not supported"
             ));
         }
 

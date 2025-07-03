@@ -206,11 +206,10 @@ async fn test_hybrid_algorithms(
     // Test hybrid spatial optimizer
     let mut hybrid_optimizer = HybridSpatialOptimizer::new()
         .with_quantum_classical_coupling(0.7)
-        .with_classical_refinement(true)
-        .with_adaptive_switching(0.5);
+        .with_adaptive_switching(true);
 
     let optimization_result = hybrid_optimizer
-        .optimize_spatial_problem(&points.view())
+        .optimize_spatial_function(&points.view())
         .await?;
 
     if optimization_result.iterations == 0 {
@@ -226,7 +225,7 @@ async fn test_hybrid_algorithms(
         .with_quantum_exploration_ratio(0.7)
         .with_classical_refinement(true);
 
-    let (centers, labels, _metrics) = hybrid_clusterer.fit(&points.view())?;
+    let (centers, labels, _metrics) = hybrid_clusterer.fit(&points.view()).await?;
 
     if labels.len() != points.nrows() {
         return Err("Hybrid clustering returned wrong number of labels".into());
@@ -277,7 +276,7 @@ async fn test_advanced_optimization() -> Result<(), Box<dyn std::error::Error>> 
     let _extreme_optimizer = ExtremeOptimizer::new()
         .with_numa_optimization(true)
         .with_cache_oblivious_algorithms(true)
-        .with_parallel_optimization(true);
+        .with_lock_free_structures(true);
 
     // Test AI algorithm selector creation
     let _ai_selector = AIAlgorithmSelector::new()

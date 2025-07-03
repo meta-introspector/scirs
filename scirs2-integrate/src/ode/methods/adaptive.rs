@@ -220,8 +220,7 @@ where
             // If step size is too small, return error
             if h < min_step {
                 return Err(crate::error::IntegrateError::StepSizeTooSmall(format!(
-                    "Step size {} too small at t {}",
-                    h, t
+                    "Step size {h} too small at t {t}"
                 )));
             }
         }

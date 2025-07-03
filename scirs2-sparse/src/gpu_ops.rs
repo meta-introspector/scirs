@@ -2403,16 +2403,16 @@ impl AdvancedGpuOps {
         let device = GpuDevice::get_default(options.backend)?;
 
         let (a_rows, a_cols) = a.shape();
-        let (b_rows, b_cols) = b.shape();
+        let (_b_rows, b_cols) = b.shape();
 
         // Convert matrices to GPU buffers
-        let a_indptr_buffer = device.create_buffer(a.get_indptr())?;
-        let a_indices_buffer = device.create_buffer(a.get_indices())?;
-        let a_data_buffer = device.create_buffer(a.get_data())?;
+        let a_indptr_buffer = device.create_buffer(a.get_indptr().as_slice().unwrap())?;
+        let a_indices_buffer = device.create_buffer(a.get_indices().as_slice().unwrap())?;
+        let a_data_buffer = device.create_buffer(a.get_data().as_slice().unwrap())?;
 
-        let b_indptr_buffer = device.create_buffer(b.get_indptr())?;
-        let b_indices_buffer = device.create_buffer(b.get_indices())?;
-        let b_data_buffer = device.create_buffer(b.get_data())?;
+        let b_indptr_buffer = device.create_buffer(b.get_indptr().as_slice().unwrap())?;
+        let b_indices_buffer = device.create_buffer(b.get_indices().as_slice().unwrap())?;
+        let b_data_buffer = device.create_buffer(b.get_data().as_slice().unwrap())?;
 
         // Estimate result size (upper bound)
         let max_result_nnz = (a.nnz() * b.nnz()) / a_cols.max(1);
@@ -2577,10 +2577,10 @@ impl AdvancedGpuOps {
         let n = l.shape().0;
 
         // Create GPU buffers
-        let indptr_buffer = device.create_buffer(l.get_indptr())?;
-        let indices_buffer = device.create_buffer(l.get_indices())?;
-        let data_buffer = device.create_buffer(l.get_data())?;
-        let b_buffer = device.create_buffer(&b)?;
+        let indptr_buffer = device.create_buffer(l.get_indptr().as_slice().unwrap())?;
+        let indices_buffer = device.create_buffer(l.get_indices().as_slice().unwrap())?;
+        let data_buffer = device.create_buffer(l.get_data().as_slice().unwrap())?;
+        let b_buffer = device.create_buffer(b.as_slice().unwrap())?;
         let mut x_buffer = device.create_buffer_zeros::<T>(n)?;
 
         // Create triangular solve kernel

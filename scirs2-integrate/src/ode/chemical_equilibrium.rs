@@ -206,7 +206,7 @@ impl EquilibriumCalculator {
             thermo_data: (0..num_species)
                 .map(|i| {
                     ThermoData::new(
-                        format!("Species_{}", i),
+                        format!("Species_{i}"),
                         0.0, // Default values
                         0.0,
                         [0.0, 0.0, 0.0, 0.0],

@@ -251,8 +251,7 @@ impl TriangularMesh {
         let area = self.triangle_area(element);
         if area < 1e-10 {
             return Err(PDEError::FiniteElementError(format!(
-                "Element has nearly zero area: {}",
-                area
+                "Element has nearly zero area: {area}"
             )));
         }
 
@@ -857,6 +856,6 @@ impl From<FEMResult> for PDESolution<f64> {
 impl PDEError {
     /// Create a finite element error
     pub fn finite_element_error(msg: String) -> Self {
-        PDEError::Other(format!("Finite element error: {}", msg))
+        PDEError::Other(format!("Finite element error: {msg}"))
     }
 }

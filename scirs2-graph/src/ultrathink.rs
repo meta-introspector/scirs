@@ -698,12 +698,10 @@ impl NeuromorphicProcessor {
     }
 
     /// Map graph structure to neuromorphic representation
-    fn map_graph_to_neurons<N: Node, E: EdgeWeight, Ix>(
-        &mut self,
-        graph: &Graph<N, E, Ix>,
-    ) -> HashMap<N, usize>
+    fn map_graph_to_neurons<N, E, Ix>(&mut self, graph: &Graph<N, E, Ix>) -> HashMap<N, usize>
     where
-        N: Clone + std::hash::Hash + Eq,
+        N: Node + Clone + std::hash::Hash + Eq,
+        E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
         let mut node_mapping = HashMap::new();

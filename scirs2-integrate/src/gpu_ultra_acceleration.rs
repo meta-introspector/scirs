@@ -238,8 +238,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
         let context = Arc::new(Mutex::new(gpu::GpuContext::new(GpuBackend::Cpu).map_err(
             |e| {
                 IntegrateError::ComputationError(format!(
-                    "CPU fallback context creation failed: {:?}",
-                    e
+                    "CPU fallback context creation failed: {e:?}"
                 ))
             },
         )?));
@@ -386,7 +385,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
                 ],
             )
             .map_err(|e| {
-                IntegrateError::ComputationError(format!("Kernel launch failed: {:?}", e))
+                IntegrateError::ComputationError(format!("Kernel launch failed: {e:?}"))
             })?;
 
         Ok(())
@@ -419,7 +418,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
                 ],
             )
             .map_err(|e| {
-                IntegrateError::ComputationError(format!("Kernel launch failed: {:?}", e))
+                IntegrateError::ComputationError(format!("Kernel launch failed: {e:?}"))
             })?;
 
         Ok(())
@@ -452,7 +451,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
                 ],
             )
             .map_err(|e| {
-                IntegrateError::ComputationError(format!("Kernel launch failed: {:?}", e))
+                IntegrateError::ComputationError(format!("Kernel launch failed: {e:?}"))
             })?;
 
         Ok(())
@@ -485,7 +484,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
                 ],
             )
             .map_err(|e| {
-                IntegrateError::ComputationError(format!("Kernel launch failed: {:?}", e))
+                IntegrateError::ComputationError(format!("Kernel launch failed: {e:?}"))
             })?;
 
         Ok(())
@@ -522,7 +521,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
                 ],
             )
             .map_err(|e| {
-                IntegrateError::ComputationError(format!("Kernel launch failed: {:?}", e))
+                IntegrateError::ComputationError(format!("Kernel launch failed: {e:?}"))
             })?;
 
         Ok(())
@@ -542,14 +541,14 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
             context
                 .transfer_async_host_to_device(&gpu_block.gpu_ptr, data.as_slice().unwrap())
                 .map_err(|e| {
-                    IntegrateError::ComputationError(format!("GPU transfer failed: {:?}", e))
+                    IntegrateError::ComputationError(format!("GPU transfer failed: {e:?}"))
                 })?;
         } else {
             // Use synchronous transfer for small data
             context
                 .transfer_host_to_device(&gpu_block.gpu_ptr, data.as_slice().unwrap())
                 .map_err(|e| {
-                    IntegrateError::ComputationError(format!("GPU transfer failed: {:?}", e))
+                    IntegrateError::ComputationError(format!("GPU transfer failed: {e:?}"))
                 })?;
         }
 
@@ -571,14 +570,14 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
             context
                 .transfer_async_device_to_host(&gpu_block.gpu_ptr, &mut result)
                 .map_err(|e| {
-                    IntegrateError::ComputationError(format!("GPU transfer failed: {:?}", e))
+                    IntegrateError::ComputationError(format!("GPU transfer failed: {e:?}"))
                 })?;
         } else {
             // Use synchronous transfer for small data
             context
                 .transfer_device_to_host(&gpu_block.gpu_ptr, &mut result)
                 .map_err(|e| {
-                    IntegrateError::ComputationError(format!("GPU transfer failed: {:?}", e))
+                    IntegrateError::ComputationError(format!("GPU transfer failed: {e:?}"))
                 })?;
         }
 
@@ -699,7 +698,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
                 ],
             )
             .map_err(|e| {
-                IntegrateError::ComputationError(format!("Kernel launch failed: {:?}", e))
+                IntegrateError::ComputationError(format!("Kernel launch failed: {e:?}"))
             })?;
         drop(context);
 
@@ -826,7 +825,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUMemoryPool<F> {
 
         // Allocate new block if none suitable found
         let gpu_ptr = gpu::GpuPtr::allocate(size).map_err(|e| {
-            IntegrateError::ComputationError(format!("GPU allocation failed: {:?}", e))
+            IntegrateError::ComputationError(format!("GPU allocation failed: {e:?}"))
         })?;
         let allocated_time = Instant::now();
         let block = MemoryBlock {
@@ -875,8 +874,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUMemoryPool<F> {
             Ok(())
         } else {
             Err(IntegrateError::ValueError(format!(
-                "Block {} not found",
-                block_id
+                "Block {block_id} not found"
             )))
         }
     }

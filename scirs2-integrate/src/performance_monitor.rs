@@ -394,8 +394,7 @@ impl PerformanceAnalyzer {
                     bottlenecks.push(PerformanceBottleneck {
                         category: BottleneckCategory::ComputationPhase,
                         description: format!(
-                            "Phase '{}' takes {:.1}% of computation time",
-                            phase, percentage
+                            "Phase '{phase}' takes {percentage:.1}% of computation time"
                         ),
                         severity: if percentage > 50.0 {
                             Severity::High
@@ -437,10 +436,7 @@ impl PerformanceAnalyzer {
                 // Less than 100 evaluations per second
                 bottlenecks.push(PerformanceBottleneck {
                     category: BottleneckCategory::FunctionEvaluation,
-                    description: format!(
-                        "Low function evaluation rate: {:.1} evals/sec",
-                        eval_rate
-                    ),
+                    description: format!("Low function evaluation rate: {eval_rate:.1} evals/sec"),
                     severity: Severity::Low,
                     suggested_improvements: vec![
                         "Optimize function implementation".to_string(),
@@ -575,7 +571,7 @@ impl PerformanceReport {
         );
 
         if let Some(rate) = self.metrics.algorithm_metrics.get("evaluations_per_second") {
-            println!("Evaluation rate: {:.1} evals/sec", rate);
+            println!("Evaluation rate: {rate:.1} evals/sec");
         }
 
         println!(

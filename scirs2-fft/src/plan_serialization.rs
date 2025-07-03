@@ -136,20 +136,16 @@ impl PlanSerializationManager {
     fn load_or_create_database(path: &Path) -> FFTResult<Arc<Mutex<PlanDatabase>>> {
         if path.exists() {
             let file = File::open(path)
-                .map_err(|e| FFTError::IOError(format!("Failed to open plan database: {}", e)))?;
+                .map_err(|e| FFTError::IOError(format!("Failed to open plan database: {e}")))?;
             let reader = BufReader::new(file);
-            let database: PlanDatabase = serde_json::from_reader(reader).map_err(|e| {
-                FFTError::ValueError(format!("Failed to parse plan database: {}", e))
-            })?;
+            let database: PlanDatabase = serde_json::from_reader(reader)
+                .map_err(|e| FFTError::ValueError(format!("Failed to parse plan database: {e}")))?;
             Ok(Arc::new(Mutex::new(database)))
         } else {
             // Create parent directories if they don't exist
             if let Some(parent) = path.parent() {
                 fs::create_dir_all(parent).map_err(|e| {
-                    FFTError::IOError(format!(
-                        "Failed to create directory for plan database: {}",
-                        e
-                    ))
+                    FFTError::IOError(format!("Failed to create directory for plan database: {e}"))
                 })?;
             }
 
@@ -275,13 +271,12 @@ impl PlanSerializationManager {
         }
 
         let db = self.database.lock().unwrap();
-        let file = File::create(&self.db_path).map_err(|e| {
-            FFTError::IOError(format!("Failed to create plan database file: {}", e))
-        })?;
+        let file = File::create(&self.db_path)
+            .map_err(|e| FFTError::IOError(format!("Failed to create plan database file: {e}")))?;
 
         let writer = BufWriter::new(file);
         serde_json::to_writer_pretty(writer, &*db)
-            .map_err(|e| FFTError::IOError(format!("Failed to serialize plan database: {}", e)))?;
+            .map_err(|e| FFTError::IOError(format!("Failed to serialize plan database: {e}")))?;
 
         Ok(())
     }

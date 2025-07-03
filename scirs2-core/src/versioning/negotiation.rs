@@ -221,8 +221,7 @@ impl VersionNegotiator {
                 compatible.push((*server_version).clone());
             } else {
                 metadata.warnings.push(format!(
-                    "Version {} not in client's supported list",
-                    server_version
+                    "Version {server_version} not in client's supported list"
                 ));
             }
         }

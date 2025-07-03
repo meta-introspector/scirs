@@ -321,8 +321,7 @@ impl DeprecationManager {
     ) -> Result<DeprecationAnnouncement, CoreError> {
         let status = self.deprecations.get_mut(version).ok_or_else(|| {
             CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                "Version {} not registered",
-                version
+                "Version {version} not registered"
             )))
         })?;
 
@@ -399,7 +398,7 @@ impl DeprecationManager {
     ) -> Result<(), CoreError> {
         if !self.deprecations.contains_key(version) {
             return Err(CoreError::ComputationError(
-                crate::error::ErrorContext::new(format!("Version {} not registered", version)),
+                crate::error::ErrorContext::new(format!("Version {version} not registered")),
             ));
         }
 
@@ -513,8 +512,7 @@ impl DeprecationManager {
                                 actions.push(MaintenanceAction::AutoDeprecation {
                                     version: version.clone(),
                                     rule: format!(
-                                        "Major version superseded (keep {})",
-                                        versions_to_keep
+                                        "Major version superseded (keep {versions_to_keep})"
                                     ),
                                 });
                             }
@@ -548,7 +546,7 @@ impl DeprecationManager {
 
                     actions.push(MaintenanceAction::AutoDeprecation {
                         version: version.clone(),
-                        rule: format!("Age-based deprecation (max {} days)", max_age_days),
+                        rule: format!("Age-based deprecation (max {max_age_days} days)"),
                     });
                 }
             }
@@ -592,15 +590,11 @@ impl DeprecationManager {
             DeprecationReason::VendorEndOfSupport => "vendor end of support".to_string(),
         };
 
-        let mut message = format!(
-            "Version {} has been deprecated due to {}. ",
-            version, reason_str
-        );
+        let mut message = format!("Version {version} has been deprecated due to {reason_str}. ");
 
         if let Some(replacement) = replacement {
             message.push_str(&format!(
-                "Please migrate to version {} as soon as possible. ",
-                replacement
+                "Please migrate to version {replacement} as soon as possible. "
             ));
         }
 
@@ -623,13 +617,12 @@ impl DeprecationManager {
     ) -> Option<String> {
         replacement.map(|replacement| {
             format!(
-                "To migrate to version {}:\n\
-                1. Update your dependency to version {}\n\
+                "To migrate to version {replacement}:\n\
+                1. Update your dependency to version {replacement}\n\
                 2. Review the changelog for breaking changes\n\
                 3. Update your code as necessary\n\
                 4. Test thoroughly before deploying\n\
-                5. Contact support if you need assistance",
-                replacement, replacement
+                5. Contact support if you need assistance"
             )
         })
     }

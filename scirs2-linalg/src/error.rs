@@ -75,7 +75,7 @@ impl LinalgError {
         matrix_shape: (usize, usize),
         condition_number: Option<f64>,
     ) -> Self {
-        let base_msg = format!("Matrix is singular during {} operation", operation);
+        let base_msg = format!("Matrix is singular during {operation} operation");
         let shape_info = format!("Matrix shape: {}×{}", matrix_shape.0, matrix_shape.1);
 
         let mut suggestions = vec![
@@ -88,8 +88,7 @@ impl LinalgError {
 
         if let Some(cond) = condition_number {
             suggestions.push(format!(
-                "4. Condition number: {:.2e} (>1e12 indicates ill-conditioning)",
-                cond
+                "4. Condition number: {cond:.2e} (>1e12 indicates ill-conditioning)"
             ));
             if cond > 1e12 {
                 suggestions.push(
@@ -114,10 +113,7 @@ impl LinalgError {
         matrix_shape: (usize, usize),
         negative_eigenvalues: Option<usize>,
     ) -> Self {
-        let base_msg = format!(
-            "Matrix is not positive definite during {} operation",
-            operation
-        );
+        let base_msg = format!("Matrix is not positive definite during {operation} operation");
         let shape_info = format!("Matrix shape: {}×{}", matrix_shape.0, matrix_shape.1);
 
         let mut suggestions = vec![
@@ -131,8 +127,7 @@ impl LinalgError {
 
         if let Some(neg_count) = negative_eigenvalues {
             suggestions.push(format!(
-                "5. Found {} negative eigenvalue(s) - consider spectral regularization",
-                neg_count
+                "5. Found {neg_count} negative eigenvalue(s) - consider spectral regularization"
             ));
         }
 
@@ -153,11 +148,8 @@ impl LinalgError {
         tolerance: f64,
         current_residual: Option<f64>,
     ) -> Self {
-        let base_msg = format!(
-            "{} failed to converge after {} iterations",
-            algorithm, iterations
-        );
-        let tolerance_info = format!("Target tolerance: {:.2e}", tolerance);
+        let base_msg = format!("{algorithm} failed to converge after {iterations} iterations");
+        let tolerance_info = format!("Target tolerance: {tolerance:.2e}");
 
         let mut suggestions = vec![
             "Consider the following approaches to improve convergence:".to_string(),
@@ -169,8 +161,7 @@ impl LinalgError {
 
         if let Some(residual) = current_residual {
             suggestions.push(format!(
-                "5. Current residual: {:.2e} (target: {:.2e})",
-                residual, tolerance
+                "5. Current residual: {residual:.2e} (target: {tolerance:.2e})"
             ));
             if residual / tolerance < 10.0 {
                 suggestions.push(

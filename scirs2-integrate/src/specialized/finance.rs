@@ -3186,7 +3186,7 @@ pub mod advanced_exotic_derivatives {
                 standard_error,
                 confidence_interval: (price - 1.96 * standard_error, price + 1.96 * standard_error),
                 number_of_simulations: payoffs.len(),
-                exotic_type: format!("{:?} Lookback", lookback_type),
+                exotic_type: format!("{lookback_type:?} Lookback"),
             })
         }
 
@@ -3255,7 +3255,7 @@ pub mod advanced_exotic_derivatives {
                 standard_error,
                 confidence_interval: (price - 1.96 * standard_error, price + 1.96 * standard_error),
                 number_of_simulations: payoffs.len(),
-                exotic_type: format!("{:?} Asian", averaging_method),
+                exotic_type: format!("{averaging_method:?} Asian"),
             })
         }
 
@@ -3333,7 +3333,7 @@ pub mod advanced_exotic_derivatives {
                 standard_error,
                 confidence_interval: (price - 1.96 * standard_error, price + 1.96 * standard_error),
                 number_of_simulations: payoffs.len(),
-                exotic_type: format!("{:?} Barrier", barrier_type),
+                exotic_type: format!("{barrier_type:?} Barrier"),
             })
         }
 
@@ -3390,7 +3390,7 @@ pub mod advanced_exotic_derivatives {
                 standard_error,
                 confidence_interval: (price - 1.96 * standard_error, price + 1.96 * standard_error),
                 number_of_simulations: payoffs.len(),
-                exotic_type: format!("{:?} Digital", digital_type),
+                exotic_type: format!("{digital_type:?} Digital"),
             })
         }
 
@@ -5668,8 +5668,7 @@ pub mod financial_optimizations {
                 Some(model) => model.price_instrument(params)?,
                 None => {
                     return Err(IntegrateError::NotImplementedError(format!(
-                        "No pricing model for instrument type: {}",
-                        instrument_key
+                        "No pricing model for instrument type: {instrument_key}"
                     )))
                 }
             };
@@ -8092,7 +8091,7 @@ pub mod ultra_performance_extensions {
                 self.loss_history.push(avg_loss);
 
                 if epoch % 100 == 0 {
-                    println!("Epoch {}: Loss = {:.6}", epoch, avg_loss);
+                    println!("Epoch {epoch}: Loss = {avg_loss:.6}");
                 }
             }
 

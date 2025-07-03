@@ -185,8 +185,7 @@ impl BackendManager {
         let mut backends = self.backends.lock().unwrap();
         if backends.contains_key(&name) {
             return Err(FFTError::ValueError(format!(
-                "Backend '{}' already exists",
-                name
+                "Backend '{name}' already exists"
             )));
         }
         backends.insert(name, backend);
@@ -203,18 +202,14 @@ impl BackendManager {
     pub fn set_backend(&self, name: &str) -> FFTResult<()> {
         let backends = self.backends.lock().unwrap();
         if !backends.contains_key(name) {
-            return Err(FFTError::ValueError(format!(
-                "Backend '{}' not found",
-                name
-            )));
+            return Err(FFTError::ValueError(format!("Backend '{name}' not found")));
         }
 
         // Check if backend is available
         if let Some(backend) = backends.get(name) {
             if !backend.is_available() {
                 return Err(FFTError::ValueError(format!(
-                    "Backend '{}' is not available",
-                    name
+                    "Backend '{name}' is not available"
                 )));
             }
         }

@@ -1215,8 +1215,8 @@ where
     /// Quantum-inspired quasi-random number generation
     fn quantum_quasi_random(&self, t: F, dim: usize) -> F {
         // Simplified van der Corput sequence with quantum enhancement
-        let phi = F::from((1.0 + 5.0_f64.sqrt()) / 2.0).unwrap(); // Golden ratio
-        let base = F::from(2.0 + dim as f64).unwrap();
+        let _phi = F::from((1.0 + 5.0_f64.sqrt()) / 2.0).unwrap(); // Golden ratio
+        let _base = F::from(2.0 + dim as f64).unwrap();
 
         // Quantum-inspired modification using Hadamard-like transformation
         let quantum_phase = (t * F::from(std::f64::consts::PI).unwrap()).sin();

@@ -804,8 +804,7 @@ impl UltrathinkEcosystemCoordinator {
         {
             let mut modules = self.modules.write().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire modules lock: {}",
-                    e
+                    "Failed to acquire modules lock: {e}"
                 )))
             })?;
             modules.insert(module_name.clone(), module);
@@ -815,8 +814,7 @@ impl UltrathinkEcosystemCoordinator {
         {
             let mut status = self.status.write().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire status lock: {}",
-                    e
+                    "Failed to acquire status lock: {e}"
                 )))
             })?;
             status.active_modules += 1;
@@ -827,14 +825,13 @@ impl UltrathinkEcosystemCoordinator {
         {
             let mut resource_manager = self.resource_manager.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire resource manager lock: {}",
-                    e
+                    "Failed to acquire resource manager lock: {e}"
                 )))
             })?;
             resource_manager.allocate_resources_for_module(&module_name)?;
         }
 
-        println!("✅ Registered ultrathink module: {}", module_name);
+        println!("✅ Registered ultrathink module: {module_name}");
         Ok(())
     }
 
@@ -980,8 +977,7 @@ impl UltrathinkEcosystemCoordinator {
     pub fn get_status(&self) -> CoreResult<EcosystemStatus> {
         let status = self.status.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire status lock: {}",
-                e
+                "Failed to acquire status lock: {e}"
             )))
         })?;
         Ok(status.clone())
@@ -991,8 +987,7 @@ impl UltrathinkEcosystemCoordinator {
     pub fn get_performance_report(&self) -> CoreResult<EcosystemPerformanceReport> {
         let performance_monitor = self.performance_monitor.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire performance monitor lock: {}",
-                e
+                "Failed to acquire performance monitor lock: {e}"
             )))
         })?;
 
@@ -1042,14 +1037,13 @@ impl UltrathinkEcosystemCoordinator {
         {
             let mut modules = self.modules.write().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire modules lock: {}",
-                    e
+                    "Failed to acquire modules lock: {e}"
                 )))
             })?;
 
             for (name, module) in modules.iter_mut() {
                 if let Err(e) = module.shutdown() {
-                    println!("⚠️  Error shutting down module {}: {}", name, e);
+                    println!("⚠️  Error shutting down module {name}: {e}");
                 }
             }
         }
@@ -1058,8 +1052,7 @@ impl UltrathinkEcosystemCoordinator {
         {
             let mut status = self.status.write().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire status lock: {}",
-                    e
+                    "Failed to acquire status lock: {e}"
                 )))
             })?;
             status.health = EcosystemHealth::Offline;
@@ -1076,8 +1069,7 @@ impl UltrathinkEcosystemCoordinator {
     fn select_optimal_module(&self, input: &UltrathinkInput) -> CoreResult<String> {
         let modules = self.modules.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire modules lock: {}",
-                e
+                "Failed to acquire modules lock: {e}"
             )))
         })?;
 
@@ -1280,8 +1272,7 @@ impl UltrathinkEcosystemCoordinator {
     fn update_performance_metrics(&self, module_name: &str, duration: Duration) -> CoreResult<()> {
         let mut performance_monitor = self.performance_monitor.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire performance monitor lock: {}",
-                e
+                "Failed to acquire performance monitor lock: {e}"
             )))
         })?;
 
@@ -1294,8 +1285,7 @@ impl UltrathinkEcosystemCoordinator {
 
         let modules = self.modules.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire modules lock: {}",
-                e
+                "Failed to acquire modules lock: {e}"
             )))
         })?;
 
@@ -1304,7 +1294,7 @@ impl UltrathinkEcosystemCoordinator {
 
         // Optimize each module for ecosystem coordination
         for (module_name, module) in modules.iter() {
-            println!("🔧 Optimizing module: {}", module_name);
+            println!("🔧 Optimizing module: {module_name}");
 
             // Get module's current performance and resource usage
             let performance = module.get_performance_metrics();
@@ -1494,8 +1484,7 @@ impl UltrathinkEcosystemCoordinator {
     fn optimize_inter_module_communication(&self) -> CoreResult<()> {
         let mut communication_hub = self.communication_hub.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire communication hub lock: {}",
-                e
+                "Failed to acquire communication hub lock: {e}"
             )))
         })?;
 
@@ -1514,8 +1503,7 @@ impl UltrathinkEcosystemCoordinator {
     fn optimize_global_resource_allocation(&self) -> CoreResult<()> {
         let mut resource_manager = self.resource_manager.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire resource manager lock: {}",
-                e
+                "Failed to acquire resource manager lock: {e}"
             )))
         })?;
 
@@ -1585,8 +1573,7 @@ impl UltrathinkEcosystemCoordinator {
     ) -> CoreResult<(String, Vec<String>, Vec<String>)> {
         let modules = self.modules.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire modules lock: {}",
-                e
+                "Failed to acquire modules lock: {e}"
             )))
         })?;
 
@@ -1822,8 +1809,7 @@ impl UltrathinkEcosystemCoordinator {
     ) -> CoreResult<UltrathinkOutput> {
         let mut modules = self.modules.write().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire modules lock: {}",
-                e
+                "Failed to acquire modules lock: {e}"
             )))
         })?;
 
@@ -2773,8 +2759,9 @@ impl ModuleCommunicationHub {
         // Set up inter-stage communication
         for i in 0..plan.stages.len() {
             if i > 0 {
-                let inter_stage_channel =
-                    format!("{}-{}", plan.stages[i - 1].name, plan.stages[i].name);
+                let prev_stage_name = &plan.stages[i - 1].name;
+                let curr_stage_name = &plan.stages[i].name;
+                let inter_stage_channel = format!("{prev_stage_name}-{curr_stage_name}");
                 channels.push(inter_stage_channel);
             }
         }

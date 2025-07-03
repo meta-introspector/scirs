@@ -88,8 +88,8 @@ impl<F: Float + NumCast> NegativeBinomial<F> {
             return zero;
         }
 
-        let k_usize = k.to_usize().unwrap();
-        let k_f = F::from(k_usize).unwrap();
+        let k_usize = k.to_usize().unwrap_or(0);
+        let k_f = F::from(k_usize).unwrap_or_else(|| F::zero());
 
         // Handle special cases
         if self.p == one {
@@ -99,7 +99,7 @@ impl<F: Float + NumCast> NegativeBinomial<F> {
         // For integer r, we can use the binomial coefficient formula:
         // PMF(k) = C(k+r-1, k) * p^r * (1-p)^k
         if Self::is_integer(self.r) {
-            let r_usize = self.r.to_usize().unwrap();
+            let r_usize = self.r.to_usize().unwrap_or(1);
             if r_usize > 0 {
                 return self.binomial_pmf(k_usize);
             }
@@ -113,10 +113,10 @@ impl<F: Float + NumCast> NegativeBinomial<F> {
     // Helper method for PMF calculation for integer r using binomial coefficient
     fn binomial_pmf(&self, k: usize) -> F {
         let one = F::one();
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).unwrap_or_else(|| F::zero());
 
-        let r_usize = self.r.to_usize().unwrap();
-        let r_f = F::from(r_usize).unwrap();
+        let r_usize = self.r.to_usize().unwrap_or(1);
+        let r_f = F::from(r_usize).unwrap_or_else(|| F::one());
 
         // Calculate binomial coefficient C(k+r-1, k)
         let binom_coef = self.binom_coef(k + r_usize - 1, k);
@@ -133,18 +133,18 @@ impl<F: Float + NumCast> NegativeBinomial<F> {
         // Use F::one() directly in the code
 
         // Convert k to f64 for gamma function
-        let k_f64 = <f64 as num_traits::NumCast>::from(k).unwrap();
-        let r_f64 = <f64 as num_traits::NumCast>::from(self.r).unwrap();
+        let k_f64 = <f64 as num_traits::NumCast>::from(k).unwrap_or(0.0);
+        let r_f64 = <f64 as num_traits::NumCast>::from(self.r).unwrap_or(1.0);
 
         // Calculate ln(Gamma(r+k)/(Gamma(r)*k!))
         let ln_coef = ln_gamma(r_f64 + k_f64) - ln_gamma(r_f64) - ln_gamma(k_f64 + 1.0);
 
         // Calculate ln(p^r * (1-p)^k)
-        let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap();
+        let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap_or(0.5);
         let ln_prob = r_f64 * p_f64.ln() + k_f64 * (1.0 - p_f64).ln();
 
         // Combine and convert back to F
-        F::from((ln_coef + ln_prob).exp()).unwrap()
+        F::from((ln_coef + ln_prob).exp()).unwrap_or_else(|| F::zero())
     }
 
     /// Calculate the log of the probability mass function (log-PMF) at a given point
@@ -219,14 +219,14 @@ impl<F: Float + NumCast> NegativeBinomial<F> {
         // Use F::one() directly in the code
 
         // Convert k to f64 for gamma function
-        let k_f64 = <f64 as num_traits::NumCast>::from(k).unwrap();
-        let r_f64 = <f64 as num_traits::NumCast>::from(self.r).unwrap();
+        let k_f64 = <f64 as num_traits::NumCast>::from(k).unwrap_or(0.0);
+        let r_f64 = <f64 as num_traits::NumCast>::from(self.r).unwrap_or(1.0);
 
         // Calculate ln(Gamma(r+k)/(Gamma(r)*k!))
         let ln_coef = ln_gamma(r_f64 + k_f64) - ln_gamma(r_f64) - ln_gamma(k_f64 + 1.0);
 
         // Calculate ln(p^r * (1-p)^k)
-        let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap();
+        let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap_or(0.5);
         let ln_prob = r_f64 * p_f64.ln() + k_f64 * (1.0 - p_f64).ln();
 
         // Convert back to F
@@ -376,7 +376,7 @@ impl<F: Float + NumCast> NegativeBinomial<F> {
                 for _ in 0..r_usize {
                     // Generate geometric random variable (# failures before first success)
                     let u: f64 = rng.random_range(0.0..1.0);
-                    let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap();
+                    let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap_or(0.5);
                     let geom_sample = (u.ln() / (1.0 - p_f64).ln()).floor() as usize;
                     sum += geom_sample;
                 }
@@ -384,8 +384,8 @@ impl<F: Float + NumCast> NegativeBinomial<F> {
             }
         } else {
             // For non-integer r, use gamma-Poisson mixture
-            let r_f64 = <f64 as num_traits::NumCast>::from(self.r).unwrap();
-            let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap();
+            let r_f64 = <f64 as num_traits::NumCast>::from(self.r).unwrap_or(1.0);
+            let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap_or(0.5);
 
             for _ in 0..size {
                 // Generate gamma random variable with shape r and scale (1-p)/p

@@ -89,8 +89,7 @@ impl<F: IntegrateFloat> DenseSolution<F> {
 
         if t < *t_min || t > *t_max {
             return Err(IntegrateError::ValueError(format!(
-                "Evaluation time {} is outside the solution range [{}, {}]",
-                t, t_min, t_max
+                "Evaluation time {t} is outside the solution range [{t_min}, {t_max}]"
             )));
         }
 

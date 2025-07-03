@@ -5,7 +5,7 @@
 
 pub mod kfac;
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use ndarray::{Array, Array1, Array2, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::collections::VecDeque;

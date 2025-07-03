@@ -662,7 +662,7 @@ impl JitCompiler {
         // Get backend
         let backend = self.backends.get(&self.config.backend).ok_or_else(|| {
             JitError::BackendNotSupported {
-                backend: format!(":?{self.config.backend}"),
+                backend: format!("{:?}", self.config.backend),
             }
         })?;
 
@@ -687,7 +687,7 @@ impl JitCompiler {
     ) -> Result<(), JitError> {
         // Get compiled kernel from cache
         let kernel = {
-            let cache = self.cache.read().unwrap();
+            let mut cache = self.cache.write().unwrap();
             cache
                 .get(kernel_id)
                 .ok_or_else(|| JitError::CacheError(format!("{kernel_id}")))?
@@ -699,7 +699,7 @@ impl JitCompiler {
             self.backends
                 .get(&kernel.backend)
                 .ok_or_else(|| JitError::BackendNotSupported {
-                    backend: format!(":?{kernel.backend}"),
+                    backend: format!("{:?}", kernel.backend),
                 })?;
 
         // Execute kernel
@@ -722,7 +722,7 @@ impl JitCompiler {
 
     /// Get kernel performance statistics
     pub fn get_kernel_stats(&self, kernel_id: &str) -> Option<KernelPerformance> {
-        let cache = self.cache.read().unwrap();
+        let mut cache = self.cache.write().unwrap();
         cache.get(kernel_id).map(|k| k.performance.clone())
     }
 

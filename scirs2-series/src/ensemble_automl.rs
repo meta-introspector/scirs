@@ -116,12 +116,14 @@ pub struct EnsembleForecaster<F: Float + Debug + Clone + FromPrimitive + std::it
     /// Ensemble strategy
     strategy: EnsembleStrategy,
     /// Model performance history
+    #[allow(dead_code)]
     performance_history: VecDeque<Vec<ModelPerformance<F>>>,
     /// Training data buffer
     training_buffer: VecDeque<F>,
     /// Maximum buffer size
     max_buffer_size: usize,
     /// Validation window size
+    #[allow(dead_code)]
     validation_window: usize,
     /// Current ensemble weights
     ensemble_weights: Array1<F>,
@@ -137,6 +139,7 @@ pub struct BaseModelWrapper<F: Float + Debug> {
     /// Model state/parameters
     model_state: ModelState<F>,
     /// Recent predictions
+    #[allow(dead_code)]
     recent_predictions: VecDeque<F>,
     /// Performance metrics
     performance: ModelPerformance<F>,
@@ -152,6 +155,7 @@ pub struct ModelState<F: Float> {
     /// Internal state variables
     state_variables: HashMap<String, Array1<F>>,
     /// Model specific data
+    #[allow(dead_code)]
     model_data: Option<Array2<F>>,
 }
 
@@ -566,6 +570,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Train ARIMA model (simplified)
+    #[allow(dead_code)]
     fn train_arima_model(
         &self,
         model_wrapper: &mut BaseModelWrapper<F>,
@@ -639,6 +644,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Compute autocorrelations
+    #[allow(dead_code)]
     fn compute_autocorrelations(&self, data: &[F], max_lag: usize) -> Result<Vec<F>> {
         let n = data.len();
         let mut autocorrs = vec![F::zero(); max_lag + 1];
@@ -662,6 +668,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Train exponential smoothing model
+    #[allow(dead_code)]
     fn train_exponential_smoothing(
         &self,
         model_wrapper: &mut BaseModelWrapper<F>,
@@ -715,6 +722,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Train linear trend model
+    #[allow(dead_code)]
     fn train_linear_trend(
         &self,
         model_wrapper: &mut BaseModelWrapper<F>,
@@ -759,6 +767,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Train seasonal naive model
+    #[allow(dead_code)]
     fn train_seasonal_naive(
         &self,
         model_wrapper: &mut BaseModelWrapper<F>,
@@ -786,6 +795,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Train moving average model
+    #[allow(dead_code)]
     fn train_moving_average(
         &self,
         model_wrapper: &mut BaseModelWrapper<F>,
@@ -813,6 +823,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Train LSTM model (placeholder)
+    #[allow(dead_code)]
     fn train_lstm_model(&self, model_wrapper: &mut BaseModelWrapper<F>, data: &[F]) -> Result<()> {
         // Placeholder for LSTM training
         // In practice, would use neural network framework
@@ -837,6 +848,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Train Prophet model (placeholder)
+    #[allow(dead_code)]
     fn train_prophet_model(
         &self,
         model_wrapper: &mut BaseModelWrapper<F>,

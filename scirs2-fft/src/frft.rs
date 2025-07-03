@@ -133,8 +133,7 @@ where
 
             // If all conversions fail
             Err(FFTError::ValueError(format!(
-                "Could not convert {:?} to numeric type",
-                val
+                "Could not convert {val:?} to numeric type"
             )))
         })
         .collect::<Result<Vec<_>, _>>()?;

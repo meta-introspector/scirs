@@ -734,7 +734,7 @@ impl UltrathinkCoordinator {
                     .len()
                     .min(quantum_opt.quantum_state.basis_states.ncols())
                 {
-                    let noise = (rand::rng().gen::<f64>() - 0.5) * 0.1;
+                    let noise = (rand::rng().random::<f64>() - 0.5) * 0.1;
                     quantum_opt.quantum_state.basis_states[[i, j]] = best_solution[j] + noise;
                 }
             }

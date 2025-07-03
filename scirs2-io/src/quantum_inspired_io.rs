@@ -8,10 +8,9 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::error::{IoError, Result};
-use ndarray::{Array1, Array2, Array3};
+use ndarray::{Array1, Array2};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::f32::consts::PI;
 use std::sync::{Arc, RwLock};
 

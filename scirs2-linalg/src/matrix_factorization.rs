@@ -255,8 +255,7 @@ where
 
     if k > n || k == 0 {
         return Err(LinalgError::InvalidInputError(format!(
-            "k must be between 1 and n (number of columns) = {}",
-            n
+            "k must be between 1 and n (number of columns) = {n}"
         )));
     }
 
@@ -457,8 +456,7 @@ where
             Ok((c, z))
         }
         _ => Err(LinalgError::InvalidInputError(format!(
-            "Unknown method: {}. Expected 'qr' or 'svd'",
-            method
+            "Unknown method: {method}. Expected 'qr' or 'svd'"
         ))),
     }
 }
@@ -798,8 +796,7 @@ where
             Ok((c, u, r))
         }
         _ => Err(LinalgError::InvalidInputError(format!(
-            "Unknown method: {}. Expected 'uniform' or 'leverage'",
-            method
+            "Unknown method: {method}. Expected 'uniform' or 'leverage'"
         ))),
     }
 }
@@ -1194,8 +1191,7 @@ where
             Ok((u, t, v))
         }
         _ => Err(LinalgError::InvalidInputError(format!(
-            "Unknown variant: {}. Expected 'urv' or 'utv'",
-            variant
+            "Unknown variant: {variant}. Expected 'urv' or 'utv'"
         ))),
     }
 }

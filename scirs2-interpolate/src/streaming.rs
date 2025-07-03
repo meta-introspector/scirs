@@ -986,7 +986,7 @@ mod tests {
         ];
 
         for point in points {
-            interpolator.add_point(point).unwrap();
+            interpolator.add_point(point.x, point.y).unwrap();
         }
 
         interpolator.update_model().unwrap();
@@ -1022,7 +1022,7 @@ mod tests {
         ];
 
         for point in points {
-            interpolator.add_point(point).unwrap();
+            interpolator.add_point(point.x, point.y).unwrap();
         }
 
         interpolator.update_model().unwrap();

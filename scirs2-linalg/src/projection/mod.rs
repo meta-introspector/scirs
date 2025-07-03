@@ -54,8 +54,7 @@ pub fn gaussian_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>
 ) -> LinalgResult<Array2<F>> {
     if n_components >= n_features {
         return Err(LinalgError::DimensionError(format!(
-            "n_components must be less than n_features, got {} >= {}",
-            n_components, n_features
+            "n_components must be less than n_features, got {n_components} >= {n_features}"
         )));
     }
 
@@ -116,15 +115,13 @@ pub fn sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
 ) -> LinalgResult<Array2<F>> {
     if n_components >= n_features {
         return Err(LinalgError::DimensionError(format!(
-            "n_components must be less than n_features, got {} >= {}",
-            n_components, n_features
+            "n_components must be less than n_features, got {n_components} >= {n_features}"
         )));
     }
 
     if density <= 0.0 || density > 1.0 {
         return Err(LinalgError::ValueError(format!(
-            "density must be in (0, 1], got {}",
-            density
+            "density must be in (0, 1], got {density}"
         )));
     }
 
@@ -188,8 +185,7 @@ pub fn very_sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOpera
 ) -> LinalgResult<Array2<F>> {
     if n_components >= n_features {
         return Err(LinalgError::DimensionError(format!(
-            "n_components must be less than n_features, got {} >= {}",
-            n_components, n_features
+            "n_components must be less than n_features, got {n_components} >= {n_features}"
         )));
     }
 
@@ -265,8 +261,7 @@ pub fn project<F: Float + NumAssign + Sum + ScalarOperand>(
 
     if n_features != n_components_features {
         return Err(LinalgError::DimensionError(format!(
-            "Incompatible dimensions: x has {} features but components has {} features",
-            n_features, n_components_features
+            "Incompatible dimensions: x has {n_features} features but components has {n_components_features} features"
         )));
     }
 
@@ -315,8 +310,7 @@ pub fn johnson_lindenstrauss_transform<F: Float + NumAssign + Zero + Sum + Scala
 ) -> LinalgResult<(Array2<F>, Array2<F>)> {
     if eps <= 0.0 || eps >= 1.0 {
         return Err(LinalgError::ValueError(format!(
-            "eps must be in (0, 1), got {}",
-            eps
+            "eps must be in (0, 1), got {eps}"
         )));
     }
 
@@ -363,8 +357,7 @@ pub fn johnson_lindenstrauss_transform<F: Float + NumAssign + Zero + Sum + Scala
 pub fn johnson_lindenstrauss_min_dim(n_samples: usize, eps: f64) -> LinalgResult<usize> {
     if eps <= 0.0 || eps >= 1.0 {
         return Err(LinalgError::ValueError(format!(
-            "eps must be in (0, 1), got {}",
-            eps
+            "eps must be in (0, 1), got {eps}"
         )));
     }
 

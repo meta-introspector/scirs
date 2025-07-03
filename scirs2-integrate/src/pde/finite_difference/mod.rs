@@ -50,8 +50,7 @@ pub fn first_derivative(
 
     if i >= n {
         return Err(PDEError::FiniteDifferenceError(format!(
-            "Index {} out of bounds for array of length {}",
-            i, n
+            "Index {i} out of bounds for array of length {n}"
         )));
     }
 
@@ -112,8 +111,7 @@ pub fn upwind_first_derivative(
 
     if i >= n {
         return Err(PDEError::FiniteDifferenceError(format!(
-            "Index {} out of bounds for array of length {}",
-            i, n
+            "Index {i} out of bounds for array of length {n}"
         )));
     }
 
@@ -150,8 +148,7 @@ pub fn second_derivative(
 
     if i >= n {
         return Err(PDEError::FiniteDifferenceError(format!(
-            "Index {} out of bounds for array of length {}",
-            i, n
+            "Index {i} out of bounds for array of length {n}"
         )));
     }
 

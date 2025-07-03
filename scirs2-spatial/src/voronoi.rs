@@ -160,8 +160,7 @@ impl Voronoi {
                             match Delaunay::new(&perturbed_points) {
                                 Ok(delaunay) => Self::from_delaunay(delaunay, furthest_site),
                                 Err(e) => Err(SpatialError::ComputationError(format!(
-                                    "Voronoi computation failed: {}",
-                                    e
+                                    "Voronoi computation failed: {e}"
                                 ))),
                             }
                         }

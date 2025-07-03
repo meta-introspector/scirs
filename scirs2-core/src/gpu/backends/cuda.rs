@@ -785,7 +785,7 @@ impl CudaKernelHandle {
     }
 
     /// Simulate optimization algorithm effects on parameters
-    fn simulate_optimization_effects(&self, params: &HashMap<String, KernelParam>) {
+    fn simulate_optimization_effects(&self, _params: &HashMap<String, KernelParam>) {
         // For optimization kernels, simulate parameter updates
         if self.kernel_name.contains("adam") || self.kernel_name.contains("lamb") {
             use std::collections::HashMap;

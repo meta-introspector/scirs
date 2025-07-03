@@ -1461,8 +1461,7 @@ where
         // Perform QR decomposition
         let (q, r) = qr(&work_matrix.view(), None).map_err(|_| {
             LinalgError::ConvergenceError(format!(
-                "QR decomposition failed in symmetric eigenvalue computation at iteration {}",
-                iter
+                "QR decomposition failed in symmetric eigenvalue computation at iteration {iter}"
             ))
         })?;
 

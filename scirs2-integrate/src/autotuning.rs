@@ -308,7 +308,7 @@ impl AutoTuner {
 
     /// Tune parameters for specific problem size
     pub fn tune_for_problem_size(&self, problem_size: usize) -> TuningProfile {
-        let cache_key = format!("size_{}", problem_size);
+        let cache_key = format!("size_{problem_size}");
 
         if let Some(cached) = self.cache.get(&cache_key) {
             return cached.clone();
@@ -459,7 +459,7 @@ impl AutoTuner {
         }
 
         // Cache the result
-        let cache_key = format!("{}_{}", algorithm_name, problem_size);
+        let cache_key = format!("{algorithm_name}_{problem_size}");
         self.cache.insert(cache_key, best_profile.clone());
 
         best_profile

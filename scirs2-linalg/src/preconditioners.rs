@@ -962,10 +962,7 @@ where
         let r_norm = (r.iter().map(|&val| val * val).sum::<F>()).sqrt();
 
         if r_norm < tolerance {
-            println!(
-                "Preconditioned GMRES converged in {} outer iterations",
-                outer_iter
-            );
+            println!("Preconditioned GMRES converged in {outer_iter} outer iterations");
             return Ok(x);
         }
 

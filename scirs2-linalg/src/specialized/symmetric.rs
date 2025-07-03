@@ -121,8 +121,7 @@ where
             for j in i + 1..n {
                 if (a[[i, j]] - a[[j, i]]).abs() > A::epsilon() {
                     return Err(LinalgError::InvalidInputError(format!(
-                        "Matrix is not symmetric, a[{}, {}] != a[{}, {}]",
-                        i, j, j, i
+                        "Matrix is not symmetric, a[{i}, {j}] != a[{j}, {i}]"
                     )));
                 }
             }

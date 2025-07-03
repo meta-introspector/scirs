@@ -7,7 +7,7 @@ use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::fmt::Debug;
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 
 /// Gradient clipping configuration
 #[derive(Debug, Clone)]

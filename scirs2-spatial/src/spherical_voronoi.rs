@@ -143,8 +143,7 @@ impl SphericalVoronoi {
         let rank = Self::compute_rank(points, threshold * radius)?;
         if rank < dim {
             return Err(SpatialError::ValueError(format!(
-                "Rank of input points must be at least {}",
-                dim
+                "Rank of input points must be at least {dim}"
             )));
         }
 

@@ -6,7 +6,7 @@
 //! efficiency in large-scale statistical computing operations.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayBase, Data, Ix1};
+use ndarray::{Array2, ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use std::alloc::{alloc, dealloc, Layout};

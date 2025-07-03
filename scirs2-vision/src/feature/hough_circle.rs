@@ -153,20 +153,20 @@ fn compute_edges(img: &GrayImage) -> Result<(Array2<f32>, Array2<f32>, Array2<f3
             let (x_u32, y_u32) = (x as u32, y as u32);
 
             // Sobel X
-            let gx = -1.0 * img.get_pixel(x_u32 - 1, y_u32 - 1).0[0] as f32
+            let gx = -(img.get_pixel(x_u32 - 1, y_u32 - 1).0[0] as f32)
                 + 0.0 * img.get_pixel(x_u32, y_u32 - 1).0[0] as f32
-                + 1.0 * img.get_pixel(x_u32 + 1, y_u32 - 1).0[0] as f32
+                + img.get_pixel(x_u32 + 1, y_u32 - 1).0[0] as f32
                 + -2.0 * img.get_pixel(x_u32 - 1, y_u32).0[0] as f32
                 + 0.0 * img.get_pixel(x_u32, y_u32).0[0] as f32
                 + 2.0 * img.get_pixel(x_u32 + 1, y_u32).0[0] as f32
-                + -1.0 * img.get_pixel(x_u32 - 1, y_u32 + 1).0[0] as f32
+                + -(img.get_pixel(x_u32 - 1, y_u32 + 1).0[0] as f32)
                 + 0.0 * img.get_pixel(x_u32, y_u32 + 1).0[0] as f32
-                + 1.0 * img.get_pixel(x_u32 + 1, y_u32 + 1).0[0] as f32;
+                + img.get_pixel(x_u32 + 1, y_u32 + 1).0[0] as f32;
 
             // Sobel Y
-            let gy = -1.0 * img.get_pixel(x_u32 - 1, y_u32 - 1).0[0] as f32
+            let gy = -(img.get_pixel(x_u32 - 1, y_u32 - 1).0[0] as f32)
                 + -2.0 * img.get_pixel(x_u32, y_u32 - 1).0[0] as f32
-                + -1.0 * img.get_pixel(x_u32 + 1, y_u32 - 1).0[0] as f32
+                + -(img.get_pixel(x_u32 + 1, y_u32 - 1).0[0] as f32)
                 + 0.0 * img.get_pixel(x_u32 - 1, y_u32).0[0] as f32
                 + 0.0 * img.get_pixel(x_u32, y_u32).0[0] as f32
                 + 0.0 * img.get_pixel(x_u32 + 1, y_u32).0[0] as f32

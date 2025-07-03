@@ -101,15 +101,13 @@ impl Domain {
         for (i, range) in ranges.iter().enumerate() {
             if range.start >= range.end {
                 return Err(PDEError::DomainError(format!(
-                    "Invalid range for dimension {}: start must be less than end",
-                    i
+                    "Invalid range for dimension {i}: start must be less than end"
                 )));
             }
 
             if grid_points[i] < 3 {
                 return Err(PDEError::DomainError(format!(
-                    "At least 3 grid points required for dimension {}",
-                    i
+                    "At least 3 grid points required for dimension {i}"
                 )));
             }
         }
@@ -129,8 +127,7 @@ impl Domain {
     pub fn grid_spacing(&self, dimension: usize) -> PDEResult<f64> {
         if dimension >= self.dimensions() {
             return Err(PDEError::DomainError(format!(
-                "Invalid dimension: {}",
-                dimension
+                "Invalid dimension: {dimension}"
             )));
         }
 
@@ -144,8 +141,7 @@ impl Domain {
     pub fn grid(&self, dimension: usize) -> PDEResult<Array1<f64>> {
         if dimension >= self.dimensions() {
             return Err(PDEError::DomainError(format!(
-                "Invalid dimension: {}",
-                dimension
+                "Invalid dimension: {dimension}"
             )));
         }
 

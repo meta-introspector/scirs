@@ -378,22 +378,34 @@ impl MetricProvider for Histogram {
 
         // Count metric
         points.push(MetricPoint {
-            name: format!("{}_count", self.name),
+            name: {
+                let name = &self.name;
+                format!("{name}_count")
+            },
             metric_type: MetricType::Counter,
             value: MetricValue::Integer(stats.count as i64),
             timestamp: SystemTime::now(),
             labels: self.labels.clone(),
-            help: Some(format!("name: {}", self.name)),
+            help: Some({
+                let name = &self.name;
+                format!("name: {name}")
+            }),
         });
 
         // Sum metric
         points.push(MetricPoint {
-            name: format!("{}_sum", self.name),
+            name: {
+                let name = &self.name;
+                format!("{name}_sum")
+            },
             metric_type: MetricType::Counter,
             value: MetricValue::Float(stats.sum),
             timestamp: SystemTime::now(),
             labels: self.labels.clone(),
-            help: Some(format!("name: {}", self.name)),
+            help: Some({
+                let name = &self.name;
+                format!("name: {name}")
+            }),
         });
 
         // Bucket metrics
@@ -402,12 +414,18 @@ impl MetricProvider for Histogram {
             bucket_labels.insert("le".to_string(), bucket.to_string());
 
             points.push(MetricPoint {
-                name: format!("{}_bucket", self.name),
+                name: {
+                    let name = &self.name;
+                    format!("{name}_bucket")
+                },
                 metric_type: MetricType::Counter,
                 value: MetricValue::Integer(count as i64),
                 timestamp: SystemTime::now(),
                 labels: bucket_labels,
-                help: Some(format!("name: {}", self.name)),
+                help: Some({
+                    let name = &self.name;
+                    format!("name: {name}")
+                }),
             });
         }
 

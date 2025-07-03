@@ -177,8 +177,7 @@ impl RotationSpline {
                 Ok(())
             }
             _ => Err(SpatialError::ValueError(format!(
-                "Invalid interpolation type: {}. Must be 'slerp' or 'cubic'",
-                interp_type
+                "Invalid interpolation type: {interp_type}. Must be 'slerp' or 'cubic'"
             ))),
         }
     }

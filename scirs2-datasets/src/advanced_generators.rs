@@ -655,14 +655,14 @@ impl AdvancedGenerator {
                 let mut anomalies: Array2<f64> = Array2::zeros((n_anomalies, n_features));
                 for i in 0..n_anomalies {
                     // Pick a random normal sample and permute some features
-                    let base_idx = rng.random_range(0..normal_data.nrows());
+                    let base_idx = rng.gen_range(0..normal_data.nrows());
                     let mut anomaly = normal_data.row(base_idx).to_owned();
 
                     // Permute random features
                     let n_permute = (n_features as f64 * 0.3) as usize;
                     for _ in 0..n_permute {
-                        let j = rng.random_range(0..n_features);
-                        let k = rng.random_range(0..n_features);
+                        let j = rng.gen_range(0..n_features);
+                        let k = rng.gen_range(0..n_features);
                         let temp = anomaly[j];
                         anomaly[j] = anomaly[k];
                         anomaly[k] = temp;
@@ -694,7 +694,7 @@ impl AdvancedGenerator {
 
         // Simple shuffle using Fisher-Yates
         for i in (1..n_samples).rev() {
-            let j = rng.random_range(0..=i);
+            let j = rng.gen_range(0..=i);
             indices.swap(i, j);
         }
 

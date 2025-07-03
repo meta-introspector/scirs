@@ -690,229 +690,6 @@ pub fn return_temp_buffer(buffer: Vec<f32>) {
     SIMD_MEMORY_POOL.with(|pool| pool.borrow_mut().return_buffer(buffer));
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ndarray::arr2;
-
-    #[test]
-    fn test_simd_convolve_2d() {
-        let image = arr2(&[
-            [1.0, 2.0, 3.0, 4.0],
-            [5.0, 6.0, 7.0, 8.0],
-            [9.0, 10.0, 11.0, 12.0],
-            [13.0, 14.0, 15.0, 16.0],
-        ]);
-
-        let kernel = arr2(&[[0.0, -1.0, 0.0], [-1.0, 4.0, -1.0], [0.0, -1.0, 0.0]]);
-
-        let result = simd_convolve_2d(&image.view(), &kernel.view());
-        assert!(result.is_ok());
-
-        let output = result.unwrap();
-        assert_eq!(output.dim(), (4, 4));
-    }
-
-    #[test]
-    fn test_simd_sobel_gradients() {
-        let image = arr2(&[
-            [0.0, 0.0, 1.0, 1.0],
-            [0.0, 0.0, 1.0, 1.0],
-            [0.0, 0.0, 1.0, 1.0],
-            [0.0, 0.0, 1.0, 1.0],
-        ]);
-
-        let result = simd_sobel_gradients(&image.view());
-        assert!(result.is_ok());
-
-        let (grad_x, grad_y, magnitude) = result.unwrap();
-        assert_eq!(grad_x.dim(), (4, 4));
-        assert_eq!(grad_y.dim(), (4, 4));
-        assert_eq!(magnitude.dim(), (4, 4));
-
-        // Should detect vertical edge
-        assert!(magnitude[[2, 2]] > 0.0);
-    }
-
-    #[test]
-    fn test_simd_gaussian_blur() {
-        let image = arr2(&[
-            [1.0, 1.0, 1.0, 1.0],
-            [1.0, 5.0, 5.0, 1.0],
-            [1.0, 5.0, 5.0, 1.0],
-            [1.0, 1.0, 1.0, 1.0],
-        ]);
-
-        let result = simd_gaussian_blur(&image.view(), 1.0);
-        assert!(result.is_ok());
-
-        let blurred = result.unwrap();
-        assert_eq!(blurred.dim(), (4, 4));
-
-        // Center should be smoothed (values should be between original values)
-        assert!(blurred[[1, 1]] < 5.0);
-        assert!(blurred[[1, 1]] > 1.0);
-        assert!(blurred[[2, 2]] < 5.0);
-        assert!(blurred[[2, 2]] > 1.0);
-
-        // Test with small sigma (should return original)
-        let small_sigma_result = simd_gaussian_blur(&image.view(), 0.05);
-        assert!(small_sigma_result.is_ok());
-        let small_sigma_blurred = small_sigma_result.unwrap();
-        assert_eq!(small_sigma_blurred, image);
-
-        // Test with very large image to test normal path
-        let large_image = Array2::from_shape_fn((100, 100), |(y, x)| {
-            if y > 45 && y < 55 && x > 45 && x < 55 {
-                5.0
-            } else {
-                1.0
-            }
-        });
-        let large_result = simd_gaussian_blur(&large_image.view(), 2.0);
-        assert!(large_result.is_ok());
-        let large_blurred = large_result.unwrap();
-        assert_eq!(large_blurred.dim(), (100, 100));
-
-        // Center area should be smoothed
-        assert!(large_blurred[[50, 50]] < 5.0);
-        assert!(large_blurred[[50, 50]] > 1.0);
-    }
-
-    #[test]
-    fn test_simd_normalize_image() {
-        let image = arr2(&[[0.0, 50.0, 100.0], [25.0, 75.0, 100.0], [0.0, 50.0, 100.0]]);
-
-        let result = simd_normalize_image(&image.view());
-        assert!(result.is_ok());
-
-        let normalized = result.unwrap();
-        assert_eq!(normalized.dim(), (3, 3));
-
-        // Check range [0, 1]
-        assert_eq!(normalized[[0, 0]], 0.0);
-        assert_eq!(normalized[[0, 2]], 1.0);
-        assert!((normalized[[0, 1]] - 0.5).abs() < 1e-6);
-    }
-
-    #[test]
-    fn test_simd_availability() {
-        let caps = check_simd_support();
-        println!("SIMD support: {}", caps.summary());
-
-        let stats = SimdPerformanceStats::estimate();
-        println!(
-            "Expected convolution speedup: {}x",
-            stats.expected_speedup_convolution
-        );
-    }
-
-    #[test]
-    fn test_simd_convolve_2d_blocked() {
-        let image = arr2(&[
-            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0, 10.0, 11.0, 12.0],
-            [13.0, 14.0, 15.0, 16.0, 17.0, 18.0],
-            [19.0, 20.0, 21.0, 22.0, 23.0, 24.0],
-            [25.0, 26.0, 27.0, 28.0, 29.0, 30.0],
-            [31.0, 32.0, 33.0, 34.0, 35.0, 36.0],
-        ]);
-
-        let kernel = arr2(&[[0.0, -1.0, 0.0], [-1.0, 4.0, -1.0], [0.0, -1.0, 0.0]]);
-
-        let result = simd_convolve_2d_blocked(&image.view(), &kernel.view(), 2);
-        assert!(result.is_ok());
-
-        let output = result.unwrap();
-        assert_eq!(output.dim(), (6, 6));
-
-        // Compare with regular convolution
-        let regular_result = simd_convolve_2d(&image.view(), &kernel.view()).unwrap();
-
-        // Results should be identical within floating point precision
-        for ((y, x), &expected) in regular_result.indexed_iter() {
-            let actual = output[[y, x]];
-            assert!(
-                (actual - expected).abs() < 1e-6,
-                "Mismatch at ({}, {}): expected {}, got {}",
-                y,
-                x,
-                expected,
-                actual
-            );
-        }
-    }
-
-    #[test]
-    fn test_simd_convolve_2d_parallel() {
-        let image = arr2(&[
-            [1.0, 2.0, 3.0, 4.0, 5.0],
-            [6.0, 7.0, 8.0, 9.0, 10.0],
-            [11.0, 12.0, 13.0, 14.0, 15.0],
-            [16.0, 17.0, 18.0, 19.0, 20.0],
-            [21.0, 22.0, 23.0, 24.0, 25.0],
-        ]);
-
-        let kernel = arr2(&[[1.0, 0.0, -1.0], [2.0, 0.0, -2.0], [1.0, 0.0, -1.0]]);
-
-        let result = simd_convolve_2d_parallel(&image.view(), &kernel.view());
-        assert!(result.is_ok());
-
-        let output = result.unwrap();
-        assert_eq!(output.dim(), (5, 5));
-
-        // Compare with regular convolution
-        let regular_result = simd_convolve_2d(&image.view(), &kernel.view()).unwrap();
-
-        // Results should be identical within floating point precision
-        for ((y, x), &expected) in regular_result.indexed_iter() {
-            let actual = output[[y, x]];
-            assert!(
-                (actual - expected).abs() < 1e-6,
-                "Mismatch at ({}, {}): expected {}, got {}",
-                y,
-                x,
-                expected,
-                actual
-            );
-        }
-    }
-
-    #[test]
-    fn test_simd_image_statistics() {
-        let image = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]);
-
-        let (min_val, max_val, mean, std_dev) = simd_image_statistics(&image.view());
-
-        assert_eq!(min_val, 1.0);
-        assert_eq!(max_val, 9.0);
-        assert!((mean - 5.0).abs() < 1e-6);
-
-        // Expected standard deviation for values 1-9
-        let expected_std = (60.0f32 / 9.0).sqrt(); // Variance = sum((x - mean)^2) / n
-        assert!((std_dev - expected_std).abs() < 1e-5);
-    }
-
-    #[test]
-    fn test_simd_memory_pool() {
-        // Test memory pool functionality
-        let buffer1 = get_temp_buffer(100);
-        assert_eq!(buffer1.len(), 100);
-
-        let buffer2 = get_temp_buffer(50);
-        assert_eq!(buffer2.len(), 50);
-
-        return_temp_buffer(buffer1);
-        return_temp_buffer(buffer2);
-
-        // Should reuse the larger buffer
-        let buffer3 = get_temp_buffer(75);
-        assert_eq!(buffer3.len(), 75);
-
-        return_temp_buffer(buffer3);
-    }
-}
-
 // ============================================================================
 // Ultra-Performance SIMD Enhancements for Vision Operations
 // ============================================================================
@@ -1521,4 +1298,219 @@ pub fn simd_feature_matching_ultra(
     }
 
     Ok(matches)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ndarray::arr2;
+
+    #[test]
+    fn test_simd_convolve_2d() {
+        let image = arr2(&[
+            [1.0, 2.0, 3.0, 4.0],
+            [5.0, 6.0, 7.0, 8.0],
+            [9.0, 10.0, 11.0, 12.0],
+            [13.0, 14.0, 15.0, 16.0],
+        ]);
+
+        let kernel = arr2(&[[0.0, -1.0, 0.0], [-1.0, 4.0, -1.0], [0.0, -1.0, 0.0]]);
+
+        let result = simd_convolve_2d(&image.view(), &kernel.view());
+        assert!(result.is_ok());
+
+        let output = result.unwrap();
+        assert_eq!(output.dim(), (4, 4));
+    }
+
+    #[test]
+    fn test_simd_sobel_gradients() {
+        let image = arr2(&[
+            [0.0, 0.0, 1.0, 1.0],
+            [0.0, 0.0, 1.0, 1.0],
+            [0.0, 0.0, 1.0, 1.0],
+            [0.0, 0.0, 1.0, 1.0],
+        ]);
+
+        let result = simd_sobel_gradients(&image.view());
+        assert!(result.is_ok());
+
+        let (grad_x, grad_y, magnitude) = result.unwrap();
+        assert_eq!(grad_x.dim(), (4, 4));
+        assert_eq!(grad_y.dim(), (4, 4));
+        assert_eq!(magnitude.dim(), (4, 4));
+
+        // Should detect vertical edge
+        assert!(magnitude[[2, 2]] > 0.0);
+    }
+
+    #[test]
+    fn test_simd_gaussian_blur() {
+        let image = arr2(&[
+            [1.0, 1.0, 1.0, 1.0],
+            [1.0, 5.0, 5.0, 1.0],
+            [1.0, 5.0, 5.0, 1.0],
+            [1.0, 1.0, 1.0, 1.0],
+        ]);
+
+        let result = simd_gaussian_blur(&image.view(), 1.0);
+        assert!(result.is_ok());
+
+        let blurred = result.unwrap();
+        assert_eq!(blurred.dim(), (4, 4));
+
+        // Center should be smoothed (values should be between original values)
+        assert!(blurred[[1, 1]] < 5.0);
+        assert!(blurred[[1, 1]] > 1.0);
+        assert!(blurred[[2, 2]] < 5.0);
+        assert!(blurred[[2, 2]] > 1.0);
+
+        // Test with small sigma (should return original)
+        let small_sigma_result = simd_gaussian_blur(&image.view(), 0.05);
+        assert!(small_sigma_result.is_ok());
+        let small_sigma_blurred = small_sigma_result.unwrap();
+        assert_eq!(small_sigma_blurred, image);
+
+        // Test with very large image to test normal path
+        let large_image = Array2::from_shape_fn((100, 100), |(y, x)| {
+            if y > 45 && y < 55 && x > 45 && x < 55 {
+                5.0
+            } else {
+                1.0
+            }
+        });
+        let large_result = simd_gaussian_blur(&large_image.view(), 2.0);
+        assert!(large_result.is_ok());
+        let large_blurred = large_result.unwrap();
+        assert_eq!(large_blurred.dim(), (100, 100));
+
+        // Center area should be smoothed
+        assert!(large_blurred[[50, 50]] < 5.0);
+        assert!(large_blurred[[50, 50]] > 1.0);
+    }
+
+    #[test]
+    fn test_simd_normalize_image() {
+        let image = arr2(&[[0.0, 50.0, 100.0], [25.0, 75.0, 100.0], [0.0, 50.0, 100.0]]);
+
+        let result = simd_normalize_image(&image.view());
+        assert!(result.is_ok());
+
+        let normalized = result.unwrap();
+        assert_eq!(normalized.dim(), (3, 3));
+
+        // Check range [0, 1]
+        assert_eq!(normalized[[0, 0]], 0.0);
+        assert_eq!(normalized[[0, 2]], 1.0);
+        assert!((normalized[[0, 1]] - 0.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_simd_availability() {
+        let caps = check_simd_support();
+        println!("SIMD support: {}", caps.summary());
+
+        let stats = SimdPerformanceStats::estimate();
+        println!(
+            "Expected convolution speedup: {}x",
+            stats.expected_speedup_convolution
+        );
+    }
+
+    #[test]
+    fn test_simd_convolve_2d_blocked() {
+        let image = arr2(&[
+            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            [7.0, 8.0, 9.0, 10.0, 11.0, 12.0],
+            [13.0, 14.0, 15.0, 16.0, 17.0, 18.0],
+            [19.0, 20.0, 21.0, 22.0, 23.0, 24.0],
+            [25.0, 26.0, 27.0, 28.0, 29.0, 30.0],
+            [31.0, 32.0, 33.0, 34.0, 35.0, 36.0],
+        ]);
+
+        let kernel = arr2(&[[0.0, -1.0, 0.0], [-1.0, 4.0, -1.0], [0.0, -1.0, 0.0]]);
+
+        let result = simd_convolve_2d_blocked(&image.view(), &kernel.view(), 2);
+        assert!(result.is_ok());
+
+        let output = result.unwrap();
+        assert_eq!(output.dim(), (6, 6));
+
+        // Compare with regular convolution
+        let regular_result = simd_convolve_2d(&image.view(), &kernel.view()).unwrap();
+
+        // Results should be identical within floating point precision
+        for ((y, x), &expected) in regular_result.indexed_iter() {
+            let actual = output[[y, x]];
+            assert!(
+                (actual - expected).abs() < 1e-6,
+                "Mismatch at ({y}, {x}): expected {expected}, got {actual}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_simd_convolve_2d_parallel() {
+        let image = arr2(&[
+            [1.0, 2.0, 3.0, 4.0, 5.0],
+            [6.0, 7.0, 8.0, 9.0, 10.0],
+            [11.0, 12.0, 13.0, 14.0, 15.0],
+            [16.0, 17.0, 18.0, 19.0, 20.0],
+            [21.0, 22.0, 23.0, 24.0, 25.0],
+        ]);
+
+        let kernel = arr2(&[[1.0, 0.0, -1.0], [2.0, 0.0, -2.0], [1.0, 0.0, -1.0]]);
+
+        let result = simd_convolve_2d_parallel(&image.view(), &kernel.view());
+        assert!(result.is_ok());
+
+        let output = result.unwrap();
+        assert_eq!(output.dim(), (5, 5));
+
+        // Compare with regular convolution
+        let regular_result = simd_convolve_2d(&image.view(), &kernel.view()).unwrap();
+
+        // Results should be identical within floating point precision
+        for ((y, x), &expected) in regular_result.indexed_iter() {
+            let actual = output[[y, x]];
+            assert!(
+                (actual - expected).abs() < 1e-6,
+                "Mismatch at ({y}, {x}): expected {expected}, got {actual}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_simd_image_statistics() {
+        let image = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]);
+
+        let (min_val, max_val, mean, std_dev) = simd_image_statistics(&image.view());
+
+        assert_eq!(min_val, 1.0);
+        assert_eq!(max_val, 9.0);
+        assert!((mean - 5.0).abs() < 1e-6);
+
+        // Expected standard deviation for values 1-9
+        let expected_std = (60.0f32 / 9.0).sqrt(); // Variance = sum((x - mean)^2) / n
+        assert!((std_dev - expected_std).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_simd_memory_pool() {
+        // Test memory pool functionality
+        let buffer1 = get_temp_buffer(100);
+        assert_eq!(buffer1.len(), 100);
+
+        let buffer2 = get_temp_buffer(50);
+        assert_eq!(buffer2.len(), 50);
+
+        return_temp_buffer(buffer1);
+        return_temp_buffer(buffer2);
+
+        // Should reuse the larger buffer
+        let buffer3 = get_temp_buffer(75);
+        assert_eq!(buffer3.len(), 75);
+
+        return_temp_buffer(buffer3);
+    }
 }

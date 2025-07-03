@@ -1968,8 +1968,7 @@ pub mod matrix_ops {
             "2" | "spectral" => parallel_spectral_norm(a, workers),
             "inf" | "infinity" => parallel_matrix_inf_norm(a, workers),
             _ => Err(LinalgError::InvalidInputError(format!(
-                "Unknown norm type: {}",
-                norm_type
+                "Unknown norm type: {norm_type}"
             ))),
         }
     }
@@ -2360,8 +2359,7 @@ where
 
     if k != k2 {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix dimensions incompatible: {}x{} * {}x{}",
-            m, k, k2, n
+            "Matrix dimensions incompatible: {m}x{k} * {k2}x{n}"
         )));
     }
 

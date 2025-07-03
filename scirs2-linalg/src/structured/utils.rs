@@ -50,8 +50,7 @@ where
         }
         _ => {
             return Err(crate::error::LinalgError::InvalidInputError(format!(
-                "Invalid convolution mode: {}",
-                mode
+                "Invalid convolution mode: {mode}"
             )));
         }
     };
@@ -67,7 +66,7 @@ where
             // Full convolution: output length is na + nb - 1
             let mut result = Array1::zeros(out_size);
             for i in 0..out_size {
-                let k_min = if i >= nb - 1 { i - (nb - 1) } else { 0 };
+                let k_min = i.saturating_sub(nb - 1);
                 let k_max = if i < na { i } else { na - 1 };
 
                 for k in k_min..=k_max {

@@ -46,11 +46,11 @@ impl Default for UltraSimdConfig {
     fn default() -> Self {
         let platform = PlatformCapabilities::detect();
 
-        let vector_width = if platform.avx512 {
+        let vector_width = if platform.avx512_available {
             16 // 512-bit vectors
-        } else if platform.avx2 {
+        } else if platform.avx2_available {
             8 // 256-bit vectors
-        } else if platform.sse4_1 {
+        } else if platform.simd_available {
             4 // 128-bit vectors
         } else {
             1 // Scalar fallback
@@ -163,9 +163,9 @@ where
 
     /// Select optimal vector strategy based on platform capabilities
     fn select_optimal_vector_strategy(config: &UltraSimdConfig) -> VectorStrategy {
-        if config.platform.avx512 && config.enable_pipelining {
+        if config.platform.avx512_available && config.enable_pipelining {
             VectorStrategy::MultiVector { num_registers: 4 }
-        } else if config.platform.avx2 {
+        } else if config.platform.avx2_available {
             VectorStrategy::UnrolledVector { unroll_factor: 4 }
         } else if config.enable_cache_blocking {
             VectorStrategy::CacheBlockedVector {
@@ -755,11 +755,25 @@ where
     }
 
     /// Prefetch data for future processing
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because it performs pointer arithmetic and calls
+    /// platform-specific intrinsics. The caller must ensure that:
+    /// - The ArrayView1 is valid and properly aligned
+    /// - The offset is within bounds (checked at runtime)
+    /// - The data pointer remains valid for the duration of the prefetch operation
     unsafe fn prefetch_data(&self, data: &ArrayView1<F>, offset: usize) {
         if offset < data.len() {
             let ptr = data.as_ptr().add(offset);
             // Prefetch into L1 cache
+            #[cfg(target_arch = "x86_64")]
             std::arch::x86_64::_mm_prefetch(ptr as *const i8, std::arch::x86_64::_MM_HINT_T0);
+            #[cfg(not(target_arch = "x86_64"))]
+            {
+                // No-op on non-x86_64 platforms
+                let _ = ptr;
+            }
         }
     }
 
@@ -825,6 +839,35 @@ pub fn ultra_mean_f64(data: &ArrayView1<f64>) -> StatsResult<UltraStatsResult<f6
     processor.compute_ultra_statistics(data)
 }
 
+/// Computes ultra-high-performance statistics for single-precision floating-point data.
+///
+/// This function provides a streamlined interface for computing comprehensive statistics
+/// using SIMD-accelerated algorithms optimized for f32 data.
+///
+/// # Arguments
+///
+/// * `data` - Input array view containing f32 values
+///
+/// # Returns
+///
+/// Returns `StatsResult<UltraStatsResult<f32>>` containing computed statistics
+/// or an error if the computation fails.
+///
+/// # Performance
+///
+/// - Uses SIMD acceleration when available
+/// - Implements adaptive algorithms based on data characteristics
+/// - Provides scalar fallback for small datasets
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::Array1;
+/// use scirs2_stats::ultra_simd_advanced::ultra_mean_f32;
+///
+/// let data = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
+/// let result = ultra_mean_f32(&data.view()).unwrap();
+/// ```
 pub fn ultra_mean_f32(data: &ArrayView1<f32>) -> StatsResult<UltraStatsResult<f32>> {
     let processor = UltraSimdProcessor::<f32>::new();
     processor.compute_ultra_statistics(data)

@@ -178,7 +178,7 @@ where
 
         // Debug output for last iteration
         if _iter == max_iterations - 1 {
-            println!("EMA calibration reached max iterations with MSE: {}", mse);
+            println!("EMA calibration reached max iterations with MSE: {mse}");
         }
     }
 

@@ -159,8 +159,7 @@ impl GpuRandomGenerator {
             _ => {
                 return Err(CoreError::ComputationError(
                     crate::error::ErrorContext::new(format!(
-                        "Generator type {:?} not yet implemented",
-                        generator_type
+                        "Generator type {generator_type:?} not yet implemented"
                     )),
                 ));
             }
@@ -202,8 +201,7 @@ impl GpuRandomGenerator {
             .execute(|compiler| compiler.compile(uniform_kernel_source))
             .map_err(|e| {
                 CoreError::ComputationError(ErrorContext::new(format!(
-                    "GPU kernel compilation failed: {}",
-                    e
+                    "GPU kernel compilation failed: {e}"
                 )))
             })?;
         self.kernels.insert("uniform".to_string(), Arc::new(kernel));
@@ -255,8 +253,7 @@ impl GpuRandomGenerator {
             .execute(|compiler| compiler.compile(normal_kernel_source))
             .map_err(|e| {
                 CoreError::ComputationError(ErrorContext::new(format!(
-                    "GPU kernel compilation failed: {}",
-                    e
+                    "GPU kernel compilation failed: {e}"
                 )))
             })?;
         self.kernels
@@ -298,8 +295,7 @@ impl GpuRandomGenerator {
             .execute(|compiler| compiler.compile(uniform_kernel_source))
             .map_err(|e| {
                 CoreError::ComputationError(ErrorContext::new(format!(
-                    "GPU kernel compilation failed: {}",
-                    e
+                    "GPU kernel compilation failed: {e}"
                 )))
             })?;
         self.kernels.insert("uniform".to_string(), Arc::new(kernel));
@@ -360,8 +356,7 @@ impl GpuRandomGenerator {
             .execute(|compiler| compiler.compile(uniform_kernel_source))
             .map_err(|e| {
                 CoreError::ComputationError(ErrorContext::new(format!(
-                    "GPU kernel compilation failed: {}",
-                    e
+                    "GPU kernel compilation failed: {e}"
                 )))
             })?;
         self.kernels.insert("uniform".to_string(), Arc::new(kernel));
@@ -383,8 +378,7 @@ impl GpuRandomGenerator {
             GpuDistribution::Exponential { lambda } => self.generate_exponential(count, *lambda),
             _ => Err(CoreError::ComputationError(
                 crate::error::ErrorContext::new(format!(
-                    "Distribution {:?} not yet implemented",
-                    distribution
+                    "Distribution {distribution:?} not yet implemented"
                 )),
             )),
         }
@@ -402,8 +396,7 @@ impl GpuRandomGenerator {
             })
             .map_err(|e| {
                 CoreError::ComputationError(ErrorContext::new(format!(
-                    "GPU kernel compilation failed: {}",
-                    e
+                    "GPU kernel compilation failed: {e}"
                 )))
             })?;
 
@@ -443,8 +436,7 @@ impl GpuRandomGenerator {
 
         Array::from_shape_vec(IxDyn(&[count]), results).map_err(|e| {
             CoreError::ShapeError(ErrorContext::new(format!(
-                "Failed to create array from shape: {}",
-                e
+                "Failed to create array from shape: {e}"
             )))
         })
     }
@@ -494,8 +486,7 @@ impl GpuRandomGenerator {
             Ok(
                 Array::from_shape_vec(IxDyn(&[count]), results).map_err(|e| {
                     CoreError::ShapeError(ErrorContext::new(format!(
-                        "Failed to create array from shape: {}",
-                        e
+                        "Failed to create array from shape: {e}"
                     )))
                 })?,
             )
@@ -567,7 +558,7 @@ impl GpuRandomGenerator {
         // Reshape to desired dimensions
         let reshaped = flat_result
             .to_shape(shape)
-            .map_err(|e| CoreError::ShapeError(ErrorContext::new(format!("{e}"))))?;
+            .map_err(|e| CoreError::ShapeError(ErrorContext::new(e.to_string())))?;
         Ok(reshaped.to_owned())
     }
 
@@ -665,8 +656,7 @@ impl GpuRngManager {
             })
             .map_err(|e| {
                 CoreError::ComputationError(ErrorContext::new(format!(
-                    "GPU kernel compilation failed: {}",
-                    e
+                    "GPU kernel compilation failed: {e}"
                 )))
             })?;
 

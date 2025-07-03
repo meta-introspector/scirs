@@ -32,8 +32,8 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
-use crate::filters::{gaussian_filter, median_filter, uniform_filter, BorderMode};
-use crate::interpolation::{rotate, zoom, InterpolationOrder};
+use crate::filters::{gaussian_filter, median_filter, uniform_filter};
+use crate::interpolation::{zoom, InterpolationOrder};
 use crate::measurements::{center_of_mass, moments};
 use crate::morphology::label;
 use crate::morphology::{

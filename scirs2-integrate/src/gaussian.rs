@@ -25,8 +25,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     fn safe_from_f64(value: f64) -> IntegrateResult<F> {
         F::from_f64(value).ok_or_else(|| {
             IntegrateError::ComputationError(format!(
-                "Failed to convert f64 constant {} to target type",
-                value
+                "Failed to convert f64 constant {value} to target type"
             ))
         })
     }
@@ -212,8 +211,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
             let beta_k = k_plus_1 / (4.0 * k_plus_1 * k_plus_1 - 1.0).sqrt();
             beta.push(F::from_f64(beta_k).ok_or_else(|| {
                 IntegrateError::ComputationError(format!(
-                    "Failed to convert beta coefficient {} to target type",
-                    beta_k
+                    "Failed to convert beta coefficient {beta_k} to target type"
                 ))
             })?);
         }

@@ -1307,7 +1307,6 @@ pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ultrathink::create_large_graph_ultrathink_processor;
 
     #[test]
     fn test_memory_profiler_creation() {
@@ -1343,7 +1342,7 @@ mod tests {
         let mut profiler = create_memory_profiler();
 
         // Create some allocation patterns
-        for i in 0..15 {
+        for _i in 0..15 {
             profiler.record_allocation("test_component", 1024, "frequent_pattern", false);
         }
 

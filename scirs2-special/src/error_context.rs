@@ -51,13 +51,13 @@ impl ErrorContext {
             let params: Vec<String> = self
                 .parameters
                 .iter()
-                .map(|(name, value)| format!("{}={}", name, value))
+                .map(|(name, value)| format!("{name}={value}"))
                 .collect();
             msg.push_str(&params.join(", "));
         }
 
         if let Some(ref info) = self.additional_info {
-            msg.push_str(&format!(". {}", info));
+            msg.push_str(&format!(". {info}"));
         }
 
         msg
@@ -94,7 +94,7 @@ impl<T> ErrorContextExt<T> for SpecialResult<T> {
     {
         self.map_err(|e| {
             let ctx = f();
-            SpecialError::ComputationError(format!("{}: {}", ctx.to_error_message(), e))
+            SpecialError::ComputationError(format!("{}: {e}", ctx.to_error_message()))
         })
     }
 }

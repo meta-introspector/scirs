@@ -189,8 +189,7 @@ where
 
     if a_cols != b_rows {
         return Err(LinalgError::DimensionError(format!(
-            "Matrix dimensions don't match for multiplication: (..., {}) x ({}, ...)",
-            a_cols, b_rows
+            "Matrix dimensions don't match for multiplication: (..., {a_cols}) x ({b_rows}, ...)"
         )));
     }
 
@@ -321,8 +320,7 @@ where
 
     if a_cols != x_len {
         return Err(LinalgError::DimensionError(format!(
-            "Matrix and vector dimensions don't match: (..., {}) x ({})",
-            a_cols, x_len
+            "Matrix and vector dimensions don't match: (..., {a_cols}) x ({x_len})"
         )));
     }
 

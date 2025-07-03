@@ -6,6 +6,7 @@
 use crate::error::{StatsError, StatsResult};
 
 /// Standard error messages for common validation failures
+#[allow(dead_code)]
 pub mod messages {
     /// Domain errors
     pub const POSITIVE_REQUIRED: &str = "Value must be positive (> 0)";
@@ -32,6 +33,7 @@ pub mod messages {
 }
 
 /// Helper functions for creating standardized errors
+#[allow(dead_code)]
 pub mod helpers {
     use super::*;
 
@@ -87,6 +89,7 @@ pub mod helpers {
 }
 
 /// Validation helpers that return standardized errors
+#[allow(dead_code)]
 pub mod validation {
     use super::*;
     use num_traits::Float;

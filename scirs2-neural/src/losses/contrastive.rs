@@ -49,9 +49,14 @@ impl ContrastiveLoss {
     pub fn new(margin: f64) -> Self {
         Self { margin }
     }
+}
+
 impl Default for ContrastiveLoss {
     fn default() -> Self {
         Self::new(1.0)
+    }
+}
+
 impl<F: Float + Debug> Loss<F> for ContrastiveLoss {
     fn forward(
         &self,
@@ -109,12 +114,43 @@ impl<F: Float + Debug> Loss<F> for ContrastiveLoss {
         // Average loss over the batch
         let loss = total_loss / n;
         Ok(loss)
+    }
+
     fn backward(
+        &self,
+        predictions: &Array<F, ndarray::IxDyn>,
+        targets: &Array<F, ndarray::IxDyn>,
     ) -> Result<Array<F, ndarray::IxDyn>> {
+        // Get dimensions
+        let batch_size = predictions.shape()[0];
+        let embedding_dim = predictions.shape()[2];
+        let n = F::from(batch_size).ok_or_else(|| {
+            NeuralError::ComputationError("Failed to convert batch size".to_string())
+        })?;
+        let margin = F::from(self.margin).ok_or_else(|| {
+            NeuralError::ComputationError("Failed to convert margin".to_string())
+        })?;
+
         // Initialize gradients with zeros
         let mut gradients = Array::zeros(predictions.raw_dim());
+
+        // Compute gradients for each sample in the batch
+        for i in 0..batch_size {
+            let x1 = predictions.slice(ndarray::s![i, 0, ..]);
+            let x2 = predictions.slice(ndarray::s![i, 1, ..]);
+            let y = targets[[i, 0]];
+
+            // Compute distance between embeddings
+            let mut distance_sq = F::zero();
+            for j in 0..embedding_dim {
+                let diff = x1[j] - x2[j];
+                distance_sq = distance_sq + diff * diff;
+            }
+            let distance = distance_sq.sqrt();
+
             // To avoid division by zero
             let distance_safe = distance.max(F::from(1e-10).unwrap());
+
             // Calculate gradients for this pair
             if y > F::zero() {
                 // Similar pair: d(loss)/d(x1) = 2 * (x1 - x2) / n
@@ -123,6 +159,7 @@ impl<F: Float + Debug> Loss<F> for ContrastiveLoss {
                     gradients[[i, 0, j]] = F::from(2.0).unwrap() * (x1[j] - x2[j]) / n;
                     gradients[[i, 1, j]] = F::from(2.0).unwrap() * (x2[j] - x1[j]) / n;
                 }
+            } else {
                 // Dissimilar pair: only contribute to gradient if within margin
                 if distance < margin {
                     // d(loss)/d(x1) = -2 * (margin - d) * (x1 - x2) / d / n
@@ -132,4 +169,9 @@ impl<F: Float + Debug> Loss<F> for ContrastiveLoss {
                         gradients[[i, 0, j]] = factor * (x1[j] - x2[j]);
                         gradients[[i, 1, j]] = factor * (x2[j] - x1[j]);
                     }
+                }
+            }
+        }
         Ok(gradients)
+    }
+}

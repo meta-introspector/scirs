@@ -921,7 +921,7 @@ mod tests {
 
         assert_eq!(result.len(), 4);
         for &val in result.iter() {
-            assert!(val.is_finite());
+            assert!((val as f64).is_finite());
         }
     }
 

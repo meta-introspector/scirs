@@ -229,8 +229,7 @@ where
         let row_sum = softmax_output.slice(s![i, ..]).sum();
         if (row_sum - F::one()).abs() > F::from(1e-5).unwrap() {
             return Err(LinalgError::InvalidInputError(format!(
-                "softmax_output row {} does not sum to 1: sum is {}",
-                i, row_sum
+                "softmax_output row {i} does not sum to 1: sum is {row_sum}"
             )));
         }
     }
@@ -240,8 +239,7 @@ where
         let row_sum = targets.slice(s![i, ..]).sum();
         if (row_sum - F::one()).abs() > F::from(1e-6).unwrap() {
             return Err(LinalgError::InvalidInputError(format!(
-                "targets row {} is not a valid one-hot vector: sum is {}",
-                i, row_sum
+                "targets row {i} is not a valid one-hot vector: sum is {row_sum}"
             )));
         }
 
@@ -252,24 +250,21 @@ where
                 if has_one {
                     // More than one value close to 1
                     return Err(LinalgError::InvalidInputError(format!(
-                        "targets row {} is not a valid one-hot vector: multiple entries close to 1",
-                        i
+                        "targets row {i} is not a valid one-hot vector: multiple entries close to 1"
                     )));
                 }
                 has_one = true;
             } else if val > F::from(1e-6).unwrap() {
                 // Value is not close to 0 or 1
                 return Err(LinalgError::InvalidInputError(format!(
-                    "targets row {} is not a valid one-hot vector: contains value {} not close to 0 or 1",
-                    i, val
+                    "targets row {i} is not a valid one-hot vector: contains value {val} not close to 0 or 1"
                 )));
             }
         }
 
         if !has_one {
             return Err(LinalgError::InvalidInputError(format!(
-                "targets row {} is not a valid one-hot vector: no entry close to 1",
-                i
+                "targets row {i} is not a valid one-hot vector: no entry close to 1"
             )));
         }
     }

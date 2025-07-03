@@ -60,8 +60,7 @@ where
 
     if k1 != k2 {
         return Err(LinalgError::ShapeError(format!(
-            "Inner dimensions mismatch for matmul: {} vs {}",
-            k1, k2
+            "Inner dimensions mismatch for matmul: {k1} vs {k2}"
         )));
     }
 
@@ -165,8 +164,7 @@ where
 
     if k1 != k2 {
         return Err(LinalgError::ShapeError(format!(
-            "Inner dimensions mismatch for matmul: {} vs {}",
-            k1, k2
+            "Inner dimensions mismatch for matmul: {k1} vs {k2}"
         )));
     }
 
@@ -277,8 +275,7 @@ where
 
     if k1 != k2 {
         return Err(LinalgError::ShapeError(format!(
-            "Inner dimensions mismatch for matmul: {} vs {}",
-            k1, k2
+            "Inner dimensions mismatch for matmul: {k1} vs {k2}"
         )));
     }
 
@@ -346,8 +343,7 @@ where
 
     if k1 != k2 {
         return Err(LinalgError::ShapeError(format!(
-            "Inner dimensions mismatch for matmul: {} vs {}",
-            k1, k2
+            "Inner dimensions mismatch for matmul: {k1} vs {k2}"
         )));
     }
 

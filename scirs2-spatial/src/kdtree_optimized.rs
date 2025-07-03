@@ -75,8 +75,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
 
         if tree_dims != points_dims {
             return Err(crate::error::SpatialError::DimensionError(format!(
-                "Point dimensions ({}) do not match tree dimensions ({})",
-                points_dims, tree_dims
+                "Point dimensions ({points_dims}) do not match tree dimensions ({tree_dims})"
             )));
         }
 
@@ -148,8 +147,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
 
         if tree_dims != points_dims {
             return Err(crate::error::SpatialError::DimensionError(format!(
-                "Point dimensions ({}) do not match tree dimensions ({})",
-                points_dims, tree_dims
+                "Point dimensions ({points_dims}) do not match tree dimensions ({tree_dims})"
             )));
         }
 

@@ -141,9 +141,8 @@ impl Delaunay {
         // Check if we have enough points for triangulation
         if npoints <= ndim {
             return Err(SpatialError::ValueError(format!(
-                "Need at least {} points in {} dimensions for triangulation",
-                ndim + 1,
-                ndim
+                "Need at least {ndim_plus_1} points in {ndim} dimensions for triangulation",
+                ndim_plus_1 = ndim + 1
             )));
         }
 
@@ -210,8 +209,7 @@ impl Delaunay {
                     Ok(qh2) => qh2,
                     Err(_) => {
                         return Err(SpatialError::ComputationError(format!(
-                            "Qhull error (even with perturbation): {}",
-                            e
+                            "Qhull error (even with perturbation): {e}"
                         )));
                     }
                 }
@@ -291,14 +289,12 @@ impl Delaunay {
         for &(i, j) in &constraints {
             if i >= npoints || j >= npoints {
                 return Err(SpatialError::ValueError(format!(
-                    "Constraint edge ({}, {}) contains invalid point indices",
-                    i, j
+                    "Constraint edge ({i}, {j}) contains invalid point indices"
                 )));
             }
             if i == j {
                 return Err(SpatialError::ValueError(format!(
-                    "Constraint edge ({}, {}) connects a point to itself",
-                    i, j
+                    "Constraint edge ({i}, {j}) connects a point to itself"
                 )));
             }
         }

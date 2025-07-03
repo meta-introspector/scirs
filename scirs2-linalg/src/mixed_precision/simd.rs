@@ -187,8 +187,7 @@ where
 
     if k1 != k2 {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix dimensions mismatch: a({}, {}) * b({}, {})",
-            m, k1, k2, n
+            "Matrix dimensions mismatch: a({m}, {k1}) * b({k2}, {n})"
         )));
     }
 

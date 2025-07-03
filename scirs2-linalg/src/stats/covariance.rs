@@ -37,8 +37,7 @@ where
     let ddof = ddof.unwrap_or(1);
     if ddof >= n_samples {
         return Err(LinalgError::InvalidInputError(format!(
-            "Delta degrees of freedom ({}) must be less than sample count ({})",
-            ddof, n_samples
+            "Delta degrees of freedom ({ddof}) must be less than sample count ({n_samples})"
         )));
     }
 

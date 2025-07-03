@@ -31,11 +31,11 @@ pub struct AdvancedSimdConfig {
 impl Default for AdvancedSimdConfig {
     fn default() -> Self {
         let capabilities = PlatformCapabilities::detect();
-        let chunk_size = if capabilities.avx512 {
+        let chunk_size = if capabilities.avx512_available {
             16 // 512-bit / 32-bit = 16 elements for f32
-        } else if capabilities.avx2 {
+        } else if capabilities.avx2_available {
             8 // 256-bit / 32-bit = 8 elements for f32
-        } else if capabilities.sse4_1 {
+        } else if capabilities.simd_available {
             4 // 128-bit / 32-bit = 4 elements for f32
         } else {
             1 // Scalar fallback

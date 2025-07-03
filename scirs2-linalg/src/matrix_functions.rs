@@ -1951,8 +1951,7 @@ where
             pade_fractional_power(a, p)
         }
         _ => Err(LinalgError::InvalidInputError(format!(
-            "Unknown method '{}'. Use 'eigen', 'schur', or 'pade'",
-            method
+            "Unknown method '{method}'. Use 'eigen', 'schur', or 'pade'"
         ))),
     }
 }
@@ -2046,8 +2045,7 @@ where
                 fractional_matrix_power(a, p, "eigen")
             }
             _ => Err(LinalgError::InvalidInputError(format!(
-                "Unknown SPD function '{}'. Use 'log', 'sqrt', 'inv_sqrt', 'exp', or 'power'",
-                func
+                "Unknown SPD function '{func}'. Use 'log', 'sqrt', 'inv_sqrt', 'exp', or 'power'"
             ))),
         }
     } else {
@@ -2078,8 +2076,7 @@ where
             }
             _ => {
                 return Err(LinalgError::InvalidInputError(format!(
-                    "Unknown SPD function '{}'",
-                    func
+                    "Unknown SPD function '{func}'"
                 )));
             }
         };

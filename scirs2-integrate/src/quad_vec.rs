@@ -33,12 +33,12 @@ impl<T: fmt::Display> fmt::Display for QuadVecResult<T> {
             "QuadVecResult(\n  integral=[{:}],\n  error=[{:}],\n  nfev={},\n  nintervals={},\n  success={}\n)",
             self.integral
                 .iter()
-                .map(|v| format!("{}", v))
+                .map(|v| format!("{v}"))
                 .collect::<Vec<_>>()
                 .join(", "),
             self.error
                 .iter()
-                .map(|v| format!("{}", v))
+                .map(|v| format!("{v}"))
                 .collect::<Vec<_>>()
                 .join(", "),
             self.nfev,

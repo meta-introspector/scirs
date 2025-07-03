@@ -75,8 +75,7 @@ where
     // Check for valid dimensions
     if output_h == 0 || output_w == 0 {
         return Err(LinalgError::ShapeError(format!(
-            "Invalid output dimensions: ({}, {})",
-            output_h, output_w
+            "Invalid output dimensions: ({output_h}, {output_w})"
         )));
     }
 
@@ -211,8 +210,7 @@ where
     // Check for valid dimensions
     if output_h == 0 || output_w == 0 {
         return Err(LinalgError::ShapeError(format!(
-            "Invalid output dimensions: ({}, {})",
-            output_h, output_w
+            "Invalid output dimensions: ({output_h}, {output_w})"
         )));
     }
 
@@ -351,8 +349,7 @@ where
     // Check for valid dimensions
     if output_h == 0 || output_w == 0 {
         return Err(LinalgError::ShapeError(format!(
-            "Invalid output dimensions: ({}, {})",
-            output_h, output_w
+            "Invalid output dimensions: ({output_h}, {output_w})"
         )));
     }
 
@@ -471,15 +468,7 @@ where
         || out_width != idx_width
     {
         return Err(LinalgError::ShapeError(format!(
-            "Shape mismatch between grad_output ({}, {}, {}, {}) and indices ({}, {}, {}, {})",
-            out_batch,
-            out_channels,
-            out_height,
-            out_width,
-            idx_batch,
-            idx_channels,
-            idx_height,
-            idx_width
+            "Shape mismatch between grad_output ({out_batch}, {out_channels}, {out_height}, {out_width}) and indices ({idx_batch}, {idx_channels}, {idx_height}, {idx_width})"
         )));
     }
 
@@ -559,8 +548,7 @@ pub fn compute_conv_indices(
     // Check for valid dimensions
     if output_h == 0 || output_w == 0 {
         return Err(LinalgError::ShapeError(format!(
-            "Invalid output dimensions: ({}, {})",
-            output_h, output_w
+            "Invalid output dimensions: ({output_h}, {output_w})"
         )));
     }
 
@@ -697,8 +685,7 @@ where
     // Check that input and kernel channels match
     if in_channels != k_in_channels {
         return Err(LinalgError::ShapeError(format!(
-            "Input channels ({}) must match kernel in_channels ({})",
-            in_channels, k_in_channels
+            "Input channels ({in_channels}) must match kernel in_channels ({k_in_channels})"
         )));
     }
 
@@ -724,8 +711,7 @@ where
     // Check for valid dimensions
     if output_h == 0 || output_w == 0 {
         return Err(LinalgError::ShapeError(format!(
-            "Invalid output dimensions: ({}, {})",
-            output_h, output_w
+            "Invalid output dimensions: ({output_h}, {output_w})"
         )));
     }
 
@@ -833,22 +819,19 @@ where
     // Check that shapes match
     if batch_size != i_batch_size {
         return Err(LinalgError::ShapeError(format!(
-            "Batch size mismatch: grad_output ({}) vs input_shape ({})",
-            batch_size, i_batch_size
+            "Batch size mismatch: grad_output ({batch_size}) vs input_shape ({i_batch_size})"
         )));
     }
 
     if out_channels != k_out_channels {
         return Err(LinalgError::ShapeError(format!(
-            "Output channels mismatch: grad_output ({}) vs kernel ({})",
-            out_channels, k_out_channels
+            "Output channels mismatch: grad_output ({out_channels}) vs kernel ({k_out_channels})"
         )));
     }
 
     if in_channels != i_in_channels {
         return Err(LinalgError::ShapeError(format!(
-            "Input channels mismatch: kernel ({}) vs input_shape ({})",
-            in_channels, i_in_channels
+            "Input channels mismatch: kernel ({in_channels}) vs input_shape ({i_in_channels})"
         )));
     }
 
@@ -959,22 +942,19 @@ where
     // Check that shapes match
     if batch_size != go_batch_size {
         return Err(LinalgError::ShapeError(format!(
-            "Batch size mismatch: input ({}) vs grad_output ({})",
-            batch_size, go_batch_size
+            "Batch size mismatch: input ({batch_size}) vs grad_output ({go_batch_size})"
         )));
     }
 
     if out_channels != k_out_channels {
         return Err(LinalgError::ShapeError(format!(
-            "Output channels mismatch: grad_output ({}) vs kernel_shape ({})",
-            out_channels, k_out_channels
+            "Output channels mismatch: grad_output ({out_channels}) vs kernel_shape ({k_out_channels})"
         )));
     }
 
     if in_channels != k_in_channels {
         return Err(LinalgError::ShapeError(format!(
-            "Input channels mismatch: input ({}) vs kernel_shape ({})",
-            in_channels, k_in_channels
+            "Input channels mismatch: input ({in_channels}) vs kernel_shape ({k_in_channels})"
         )));
     }
 
@@ -1112,8 +1092,7 @@ where
     // Check that channels match
     if in_channels != k_in_channels {
         return Err(LinalgError::ShapeError(format!(
-            "Input channels mismatch: input ({}) vs kernel ({})",
-            in_channels, k_in_channels
+            "Input channels mismatch: input ({in_channels}) vs kernel ({k_in_channels})"
         )));
     }
 

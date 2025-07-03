@@ -91,8 +91,7 @@ where
             // In a full implementation, we would apply the projection method here
             // For the purposes of this example, we'll just make a note:
             result.message = Some(format!(
-                "Constraint violation detected at t={}. Projection would be applied here.",
-                t
+                "Constraint violation detected at t={t}. Projection would be applied here."
             ));
         }
     }

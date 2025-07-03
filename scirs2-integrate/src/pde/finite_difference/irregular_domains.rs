@@ -39,13 +39,12 @@ pub enum BoundaryCondition {
 impl std::fmt::Debug for BoundaryCondition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            BoundaryCondition::Dirichlet(value) => write!(f, "Dirichlet({})", value),
-            BoundaryCondition::Neumann(value) => write!(f, "Neumann({})", value),
+            BoundaryCondition::Dirichlet(value) => write!(f, "Dirichlet({value})"),
+            BoundaryCondition::Neumann(value) => write!(f, "Neumann({value})"),
             BoundaryCondition::Robin { alpha, beta, value } => {
                 write!(
                     f,
-                    "Robin {{ alpha: {}, beta: {}, value: {} }}",
-                    alpha, beta, value
+                    "Robin {{ alpha: {alpha}, beta: {beta}, value: {value} }}"
                 )
             }
             BoundaryCondition::Custom(_) => write!(f, "Custom(<function>)"),
@@ -554,14 +553,13 @@ impl IrregularGrid {
 
             // Prevent infinite loops with debug output
             if iteration % 10 == 0 {
-                eprintln!("Iteration {}: residual = {:.2e}", iteration, residual);
+                eprintln!("Iteration {iteration}: residual = {residual:.2e}");
             }
         }
 
         if !converged {
             return Err(PDEError::ComputationError(format!(
-                "Failed to converge after {} iterations",
-                max_iterations
+                "Failed to converge after {max_iterations} iterations"
             )));
         }
 
@@ -665,8 +663,7 @@ impl IrregularStencils {
 
             _ => {
                 return Err(PDEError::InvalidParameter(format!(
-                    "Unsupported derivative order: {}",
-                    derivative_order
+                    "Unsupported derivative order: {derivative_order}"
                 )));
             }
         }

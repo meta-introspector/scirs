@@ -463,8 +463,7 @@ where
         let nearest_int = x_f64.round() as i32;
         if nearest_int <= 0 && (x_f64 - nearest_int as f64).abs() < 1e-14 {
             return Err(SpecialError::DomainError(format!(
-                "Gamma function is undefined at negative integer x = {}",
-                x
+                "Gamma function is undefined at negative integer x = {x}"
             )));
         }
     }

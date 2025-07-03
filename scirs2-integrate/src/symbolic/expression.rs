@@ -273,7 +273,7 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
         match self {
             Constant(c) => Ok(*c),
             Var(v) => values.get(v).copied().ok_or_else(|| {
-                IntegrateError::ComputationError(format!("Variable {} not found in values", v))
+                IntegrateError::ComputationError(format!("Variable {v} not found in values"))
             }),
             Add(a, b) => Ok(a.evaluate(values)? + b.evaluate(values)?),
             Sub(a, b) => Ok(a.evaluate(values)? - b.evaluate(values)?),
@@ -660,25 +660,25 @@ impl<F: IntegrateFloat> fmt::Display for SymbolicExpression<F> {
         use SymbolicExpression::*;
 
         match self {
-            Constant(c) => write!(f, "{}", c),
-            Var(v) => write!(f, "{}", v),
-            Add(a, b) => write!(f, "({} + {})", a, b),
-            Sub(a, b) => write!(f, "({} - {})", a, b),
-            Mul(a, b) => write!(f, "({} * {})", a, b),
-            Div(a, b) => write!(f, "({} / {})", a, b),
-            Pow(a, b) => write!(f, "({} ^ {})", a, b),
-            Neg(a) => write!(f, "(-{})", a),
-            Sin(a) => write!(f, "sin({})", a),
-            Cos(a) => write!(f, "cos({})", a),
-            Exp(a) => write!(f, "exp({})", a),
-            Ln(a) => write!(f, "ln({})", a),
-            Sqrt(a) => write!(f, "sqrt({})", a),
-            Tan(a) => write!(f, "tan({})", a),
-            Atan(a) => write!(f, "atan({})", a),
-            Sinh(a) => write!(f, "sinh({})", a),
-            Cosh(a) => write!(f, "cosh({})", a),
-            Tanh(a) => write!(f, "tanh({})", a),
-            Abs(a) => write!(f, "|{}|", a),
+            Constant(c) => write!(f, "{c}"),
+            Var(v) => write!(f, "{v}"),
+            Add(a, b) => write!(f, "({a} + {b})"),
+            Sub(a, b) => write!(f, "({a} - {b})"),
+            Mul(a, b) => write!(f, "({a} * {b})"),
+            Div(a, b) => write!(f, "({a} / {b})"),
+            Pow(a, b) => write!(f, "({a} ^ {b})"),
+            Neg(a) => write!(f, "(-{a})"),
+            Sin(a) => write!(f, "sin({a})"),
+            Cos(a) => write!(f, "cos({a})"),
+            Exp(a) => write!(f, "exp({a})"),
+            Ln(a) => write!(f, "ln({a})"),
+            Sqrt(a) => write!(f, "sqrt({a})"),
+            Tan(a) => write!(f, "tan({a})"),
+            Atan(a) => write!(f, "atan({a})"),
+            Sinh(a) => write!(f, "sinh({a})"),
+            Cosh(a) => write!(f, "cosh({a})"),
+            Tanh(a) => write!(f, "tanh({a})"),
+            Abs(a) => write!(f, "|{a}|"),
         }
     }
 }

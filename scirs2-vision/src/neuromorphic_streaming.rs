@@ -1284,7 +1284,7 @@ mod tests {
         assert!(result2.is_ok());
 
         let stats = processor.get_event_stats();
-        println!("Event stats: {:?}", stats);
+        println!("Event stats: {stats:?}");
     }
 
     #[test]

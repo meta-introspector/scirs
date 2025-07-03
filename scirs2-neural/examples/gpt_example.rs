@@ -18,6 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = Array::from_shape_fn(
         IxDyn(&[2, 16]),
         |_| rand::random::<f32>() * 100.0, // Random token IDs between 0 and 100
+    );
     println!("Input shape: {:?}", input.shape());
     // Forward pass to get hidden states
     let hidden_states = model.forward(&input)?;

@@ -163,7 +163,10 @@ impl BatchConverter {
 
         if !errors.is_empty() {
             return Err(CoreError::InvalidArgument(crate::error::ErrorContext::new(
-                format!("Batch conversion failed for {} elements", errors.len()),
+                {
+                    let num_errors = errors.len();
+                    format!("Batch conversion failed for {num_errors} elements")
+                },
             )));
         }
 

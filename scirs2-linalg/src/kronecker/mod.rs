@@ -284,8 +284,7 @@ where
     // Check if the matrix can be factorized with the given dimensions
     if m_rows * p_rows != total_rows || n_cols * q_cols != total_cols {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix of shape ({}, {}) cannot be factorized into ({}, {}) and ({}, {})",
-            total_rows, total_cols, m_rows, n_cols, p_rows, q_cols
+            "Matrix of shape ({total_rows}, {total_cols}) cannot be factorized into ({m_rows}, {n_cols}) and ({p_rows}, {q_cols})"
         )));
     }
 
@@ -421,8 +420,7 @@ where
     // Check dimensions
     if batch_size1 != batch_size2 {
         return Err(LinalgError::ShapeError(format!(
-            "Batch sizes must match: {} vs {}",
-            batch_size1, batch_size2
+            "Batch sizes must match: {batch_size1} vs {batch_size2}"
         )));
     }
 
@@ -548,8 +546,7 @@ where
     // Check dimensions
     if input_dim != grad_rows || output_dim != grad_cols {
         return Err(LinalgError::ShapeError(format!(
-            "Weights ({}, {}) and gradients ({}, {}) must have the same shape",
-            input_dim, output_dim, grad_rows, grad_cols
+            "Weights ({input_dim}, {output_dim}) and gradients ({grad_rows}, {grad_cols}) must have the same shape"
         )));
     }
 
@@ -984,8 +981,7 @@ where
             let (batch_size, grad_output_dim) = grads.dim();
             if grad_output_dim != output_dim {
                 return Err(LinalgError::ShapeError(format!(
-                    "Gradient output dimension mismatch: expected {}, got {}",
-                    output_dim, grad_output_dim
+                    "Gradient output dimension mismatch: expected {output_dim}, got {grad_output_dim}"
                 )));
             }
 

@@ -580,7 +580,7 @@ impl<F: IntegrateFloat> fmt::Display for ConvergenceAnalysis<F> {
         writeln!(f, "─────────────────────")?;
 
         for (h, e) in self.grid_sizes.iter().zip(self.errors.iter()) {
-            writeln!(f, "{:9.2e}  {:9.2e}", h, e)?;
+            writeln!(f, "{h:9.2e}  {e:9.2e}")?;
         }
 
         writeln!(f, "─────────────────────")?;
@@ -949,9 +949,7 @@ pub struct SystemVerification<F: IntegrateFloat> {
 impl<F: IntegrateFloat> SystemVerification<F> {
     /// Create new system verification
     pub fn new(system_size: usize) -> Self {
-        let component_names = (0..system_size)
-            .map(|i| format!("Component {}", i))
-            .collect();
+        let component_names = (0..system_size).map(|i| format!("Component {i}")).collect();
         Self {
             system_size,
             component_names,
@@ -1072,7 +1070,7 @@ impl<F: IntegrateFloat> VerificationWorkflow<F> {
                             test_name: test_case.name.clone(),
                             passed: false,
                             computed_order: None,
-                            error_message: Some(format!("Convergence analysis failed: {}", e)),
+                            error_message: Some(format!("Convergence analysis failed: {e}")),
                         });
                     }
                 }

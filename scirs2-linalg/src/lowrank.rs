@@ -100,8 +100,7 @@ where
 
     if l > n {
         return Err(LinalgError::ShapeError(format!(
-            "Oversampled dimension l ({}) cannot exceed n = {}",
-            l, n
+            "Oversampled dimension l ({l}) cannot exceed n = {n}"
         )));
     }
 

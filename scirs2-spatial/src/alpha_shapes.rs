@@ -843,8 +843,7 @@ impl AlphaShape {
             }
             _ => {
                 return Err(SpatialError::ValueError(format!(
-                    "Unknown optimization criterion: {}",
-                    criterion
+                    "Unknown optimization criterion: {criterion}"
                 )));
             }
         };

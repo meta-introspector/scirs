@@ -212,10 +212,7 @@ impl VersionManager {
         // Validate version is not already registered
         if self.versions.contains_key(&version) {
             return Err(CoreError::ComputationError(
-                crate::error::ErrorContext::new(format!(
-                    "Version {} is already registered",
-                    version
-                )),
+                crate::error::ErrorContext::new(format!("Version {version} is already registered")),
             ));
         }
 
@@ -240,7 +237,7 @@ impl VersionManager {
     pub fn set_current_version(&mut self, version: Version) -> Result<(), CoreError> {
         if !self.versions.contains_key(&version) {
             return Err(CoreError::ComputationError(
-                crate::error::ErrorContext::new(format!("Version {} is not registered", version)),
+                crate::error::ErrorContext::new(format!("Version {version} is not registered")),
             ));
         }
 

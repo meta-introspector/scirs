@@ -194,6 +194,7 @@ pub struct RiskMetrics<F: Float + Debug + std::iter::Sum + num_traits::FromPrimi
     /// Returns data
     returns: Array1<F>,
     /// Confidence levels for VaR/CVaR
+    #[allow(dead_code)]
     confidence_levels: Vec<F>,
 }
 

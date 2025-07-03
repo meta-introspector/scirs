@@ -152,8 +152,7 @@ pub fn validate_fft_axes(ndim: usize, axes: Option<&[usize]>) -> FFTResult<Vec<u
             for &axis in axes {
                 if axis >= ndim {
                     return Err(FFTError::ValueError(format!(
-                        "Axis {} out of bounds for array of dimension {}",
-                        axis, ndim
+                        "Axis {axis} out of bounds for array of dimension {ndim}"
                     )));
                 }
             }

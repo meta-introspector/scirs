@@ -11,7 +11,7 @@
 //! - **Flexible Configuration**: Easy-to-use builder patterns
 //! - **Scheduler Integration**: Seamless integration with learning rate schedulers
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::schedulers::LearningRateScheduler;
 use ndarray::{Array, Array1, Dimension, ScalarOperand};
 use num_traits::Float;

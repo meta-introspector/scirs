@@ -205,14 +205,12 @@ impl CompatibilityChecker {
     ) -> Result<CompatibilityReport, CoreError> {
         let from_api = self.versions.get(from_version).ok_or_else(|| {
             CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                "Version {} not registered",
-                from_version
+                "Version {from_version} not registered"
             )))
         })?;
         let to_api = self.versions.get(to_version).ok_or_else(|| {
             CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                "Version {} not registered",
-                to_version
+                "Version {to_version} not registered"
             )))
         })?;
 
@@ -486,7 +484,7 @@ impl CompatibilityRule {
             report.issues.push(CompatibilityIssue {
                 severity: IssueSeverity::Error,
                 component: "api".to_string(),
-                description: format!("{breaking_change}"),
+                description: breaking_change.to_string(),
                 resolution: Some("Update code to handle the breaking change".to_string()),
                 impact: ImpactLevel::High,
             });
@@ -508,7 +506,7 @@ impl CompatibilityRule {
                 report.breaking_changes.push(BreakingChange {
                     change_type: ChangeType::FeatureRemoval,
                     component: feature.clone(),
-                    description: format!("Feature '{}' has been removed", feature),
+                    description: format!("Feature '{feature}' has been removed"),
                     migration_path: Some("Remove usage of this feature".to_string()),
                     introduced_in: to_api.version.clone(),
                 });
@@ -516,7 +514,7 @@ impl CompatibilityRule {
                 report.issues.push(CompatibilityIssue {
                     severity: IssueSeverity::Error,
                     component: feature.clone(),
-                    description: format!("Feature '{}' no longer available", feature),
+                    description: format!("Feature '{feature}' no longer available"),
                     resolution: Some("Remove or replace feature usage".to_string()),
                     impact: ImpactLevel::High,
                 });

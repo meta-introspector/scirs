@@ -128,7 +128,7 @@ where
         .iter()
         .map(|&val| {
             num_traits::cast::<T, f64>(val).ok_or_else(|| {
-                FFTError::ValueError(format!("Could not convert value to f64: {:?}", val))
+                FFTError::ValueError(format!("Could not convert value to f64: {val:?}"))
             })
         })
         .collect::<Result<Vec<_>, _>>()?;
@@ -351,8 +351,7 @@ where
         "spectrum" => 1.0 / win_sum_sq,
         _ => {
             return Err(FFTError::ValueError(format!(
-                "Unknown scaling mode: {}. Use 'density' or 'spectrum'.",
-                scaling
+                "Unknown scaling mode: {scaling}. Use 'density' or 'spectrum'."
             )));
         }
     };
@@ -396,8 +395,7 @@ where
         }
         _ => {
             return Err(FFTError::ValueError(format!(
-                "Unknown mode: {}. Use 'psd', 'magnitude', 'angle', or 'phase'.",
-                mode
+                "Unknown mode: {mode}. Use 'psd', 'magnitude', 'angle', or 'phase'."
             )));
         }
     };

@@ -767,11 +767,14 @@ pub mod advanced {
             let current_stack = if prefix.is_empty() {
                 self.name.clone()
             } else {
-                format!("{};{}", prefix, self.name)
+                format!("{prefix};{}", self.name)
             };
 
             if self.self_time.as_nanos() > 0 {
-                lines.push(format!("{current_stack} {}", self.self_time.as_nanos()));
+                {
+                    let nanos = self.self_time.as_nanos();
+                    lines.push(format!("{current_stack} {nanos}"));
+                }
             }
 
             for child in self.children.values() {

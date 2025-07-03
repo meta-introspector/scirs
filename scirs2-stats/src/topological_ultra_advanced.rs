@@ -892,7 +892,7 @@ where
             .unwrap_or(0);
 
         let mut points = Array2::zeros((num_features, 2));
-        let mut multiplicities = Array1::ones(num_features);
+        let multiplicities = Array1::ones(num_features);
 
         // Generate dummy birth-death pairs (would use actual persistence algorithm)
         for i in 0..num_features {

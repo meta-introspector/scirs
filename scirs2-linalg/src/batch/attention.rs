@@ -45,18 +45,12 @@ where
 
     check_dimensions(
         d_model_q == d_model_k,
-        format!(
-            "Query and key dimensions must match: {} vs {}",
-            d_model_q, d_model_k
-        ),
+        format!("Query and key dimensions must match: {d_model_q} vs {d_model_k}"),
     )?;
 
     check_dimensions(
         seq_len_k == seq_len_v,
-        format!(
-            "Key and value sequence lengths must match: {} vs {}",
-            seq_len_k, seq_len_v
-        ),
+        format!("Key and value sequence lengths must match: {seq_len_k} vs {seq_len_v}"),
     )?;
 
     // Initialize output
@@ -183,26 +177,17 @@ where
     // Validate dimensions
     check_dimensions(
         batch_size == batch_size_k && batch_size == batch_size_v,
-        format!(
-            "Batch sizes must match: {}, {}, {}",
-            batch_size, batch_size_k, batch_size_v
-        ),
+        format!("Batch sizes must match: {batch_size}, {batch_size_k}, {batch_size_v}"),
     )?;
 
     check_dimensions(
         d_model == d_model_k && d_model == d_model_v,
-        format!(
-            "Model dimensions must match: {}, {}, {}",
-            d_model, d_model_k, d_model_v
-        ),
+        format!("Model dimensions must match: {d_model}, {d_model_k}, {d_model_v}"),
     )?;
 
     check_dimensions(
         seq_len_k == seq_len_v,
-        format!(
-            "Key and value sequence lengths must match: {} vs {}",
-            seq_len_k, seq_len_v
-        ),
+        format!("Key and value sequence lengths must match: {seq_len_k} vs {seq_len_v}"),
     )?;
 
     // Check weight matrix dimensions
@@ -237,8 +222,7 @@ where
     // Verify that d_model is compatible with num_heads and head_dim
     if d_model != num_heads * head_dim {
         return Err(LinalgError::ValueError(format!(
-            "Model dimension ({}) must equal num_heads ({}) * head_dim ({})",
-            d_model, num_heads, head_dim
+            "Model dimension ({d_model}) must equal num_heads ({num_heads}) * head_dim ({head_dim})"
         )));
     }
 
@@ -438,26 +422,17 @@ where
 
     check_dimensions(
         batch_size == batch_size_k && batch_size == batch_size_v,
-        format!(
-            "Batch sizes must match: {}, {}, {}",
-            batch_size, batch_size_k, batch_size_v
-        ),
+        format!("Batch sizes must match: {batch_size}, {batch_size_k}, {batch_size_v}"),
     )?;
 
     check_dimensions(
         d_model == d_model_k,
-        format!(
-            "Query and key dimensions must match: {} vs {}",
-            d_model, d_model_k
-        ),
+        format!("Query and key dimensions must match: {d_model} vs {d_model_k}"),
     )?;
 
     check_dimensions(
         seq_len_k == seq_len_v,
-        format!(
-            "Key and value sequence lengths must match: {} vs {}",
-            seq_len_k, seq_len_v
-        ),
+        format!("Key and value sequence lengths must match: {seq_len_k} vs {seq_len_v}"),
     )?;
 
     // Determine block sizes

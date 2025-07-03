@@ -64,8 +64,7 @@ impl MemoryInfo {
     fn detect_linux() -> CoreResult<Self> {
         let meminfo = fs::read_to_string("/proc/meminfo").map_err(|e| {
             CoreError::IoError(crate::error::ErrorContext::new(format!(
-                "Failed to read /proc/meminfo: {}",
-                e
+                "Failed to read /proc/meminfo: {e}"
             )))
         })?;
 

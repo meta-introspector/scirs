@@ -15,7 +15,7 @@
 use scirs2_text::error::Result;
 use scirs2_text::simd_ops::{SimdStringOps, UltraSIMDTextProcessor};
 use scirs2_text::streaming::UltrathinkStreamingProcessor;
-use scirs2_text::tokenize::{Tokenizer, WordTokenizer};
+use scirs2_text::tokenize::WordTokenizer;
 use scirs2_text::ultrathink_performance::{PerformanceThresholds, UltrathinkPerformanceMonitor};
 use scirs2_text::ultrathink_text_coordinator::{UltrathinkTextConfig, UltrathinkTextCoordinator};
 use std::time::Instant;
@@ -195,7 +195,7 @@ impl UltrathinkSystem {
         let start_time = Instant::now();
 
         // Ultra-fast text processing
-        let processed_results = self.simd_processor.ultra_batch_process(&test_texts);
+        let processed_results = UltraSIMDTextProcessor::ultra_batch_process(&test_texts);
 
         // SIMD string operations
         let char_counts: Vec<usize> = test_texts
@@ -204,7 +204,7 @@ impl UltrathinkSystem {
             .collect();
 
         // Ultra-fast similarity matrix
-        let similarity_matrix = self.simd_processor.ultra_similarity_matrix(&test_texts);
+        let similarity_matrix = UltraSIMDTextProcessor::ultra_similarity_matrix(&test_texts);
 
         let processing_time = start_time.elapsed();
 
@@ -300,15 +300,21 @@ impl UltrathinkSystem {
         );
 
         println!("\n🚀 Streaming Performance Metrics:");
-        println!("  • Cache Size: {} entries", streaming_metrics.cache_size);
+        println!(
+            "  • Throughput: {:.2} docs/sec",
+            streaming_metrics.throughput
+        );
         println!(
             "  • Cache Hit Rate: {:.1}%",
             streaming_metrics.cache_hit_rate * 100.0
         );
-        println!("  • Memory Usage: {} bytes", streaming_metrics.memory_usage);
         println!(
-            "  • Optimal Chunk Size: {}",
-            streaming_metrics.optimal_chunk_size
+            "  • Peak Memory Usage: {} bytes",
+            streaming_metrics.peak_memory_usage
+        );
+        println!(
+            "  • Memory Efficiency: {:.2}%",
+            streaming_metrics.memory_efficiency * 100.0
         );
 
         println!("\n🔄 Adaptive Features:");
@@ -316,8 +322,8 @@ impl UltrathinkSystem {
         println!("  • Dynamic Load Balancing: Active");
         println!("  • Memory Pressure Detection: Monitoring");
         println!(
-            "  • Performance History: {} entries",
-            streaming_metrics.performance_history.len()
+            "  • Documents Processed: {}",
+            streaming_metrics.documents_processed
         );
 
         println!();

@@ -30,6 +30,7 @@ impl ActivationFunction {
     }
     /// Compute the derivative of the activation function
     fn derivative(&self, x: &Array2<f32>) -> Array2<f32> {
+        match self {
             ActivationFunction::ReLU => x.mapv(|v| if v > 0.0 { 1.0 } else { 0.0 }),
             ActivationFunction::Sigmoid => {
                 let sigmoid = x.mapv(|v| 1.0 / (1.0 + (-v).exp()));
@@ -38,25 +39,38 @@ impl ActivationFunction {
             ActivationFunction::Tanh => {
                 let tanh = x.mapv(|v| v.tanh());
                 tanh.mapv(|t| 1.0 - t * t)
+            }
             ActivationFunction::Linear => Array2::ones(x.dim()),
+        }
+    }
     /// Get a string representation of the activation function
     fn as_str(&self) -> &str {
+        match self {
             ActivationFunction::ReLU => "ReLU",
             ActivationFunction::Sigmoid => "Sigmoid",
             ActivationFunction::Tanh => "Tanh",
             ActivationFunction::Linear => "Linear",
+        }
+    }
+}
+
 /// Loss function type
 #[allow(clippy::upper_case_acronyms)]
+#[derive(Debug, Clone, Copy)]
 enum LossFunction {
     MSE,
     BinaryCrossEntropy,
+}
+
 impl LossFunction {
     /// Compute the loss between predictions and targets
     fn compute(&self, predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
+        match self {
             LossFunction::MSE => {
                 let diff = predictions - targets;
                 let squared = diff.mapv(|v| v * v);
                 squared.sum() / (predictions.len() as f32)
+            }
             LossFunction::BinaryCrossEntropy => {
                 let epsilon = 1e-15; // To avoid log(0)
                 let mut sum = 0.0;
@@ -65,21 +79,37 @@ impl LossFunction {
                     sum += y_true * y_pred_safe.ln() + (1.0 - y_true) * (1.0 - y_pred_safe).ln();
                 }
                 -sum / (predictions.len() as f32)
+            }
+        }
+    }
     /// Compute the derivative of the loss function with respect to predictions
     fn derivative(&self, predictions: &Array2<f32>, targets: &Array2<f32>) -> Array2<f32> {
+        match self {
+            LossFunction::MSE => {
                 // d(MSE)/dŷ = 2(ŷ - y)/n
                 let n = predictions.len() as f32;
                 (predictions - targets) * (2.0 / n)
+            }
+            LossFunction::BinaryCrossEntropy => {
                 // d(BCE)/dŷ = ((1-y)/(1-ŷ) - y/ŷ)/n
                 let epsilon = 1e-15;
+                let n = predictions.len() as f32;
                 Array2::from_shape_fn(predictions.dim(), |(i, j)| {
                     let y_pred = predictions[(i, j)].max(epsilon).min(1.0 - epsilon);
                     let y_true = targets[(i, j)];
                     ((1.0 - y_true) / (1.0 - y_pred) - y_true / y_pred) / n
                 })
+            }
+        }
+    }
     /// Get a string representation of the loss function
+    fn as_str(&self) -> &str {
+        match self {
             LossFunction::MSE => "Mean Squared Error",
             LossFunction::BinaryCrossEntropy => "Binary Cross Entropy",
+        }
+    }
+}
 /// A layer in the neural network
 struct Layer {
     weights: Array2<f32>,
@@ -88,6 +118,7 @@ struct Layer {
     // Cached values for backpropagation
     z: Option<Array2<f32>>,
     a: Option<Array2<f32>>,
+}
 impl Layer {
     /// Create a new layer with random weights and biases
     fn new(
@@ -109,6 +140,8 @@ impl Layer {
             activation,
             z: None,
             a: None,
+        }
+    }
     /// Forward pass through the layer
     fn forward(&mut self, x: &Array2<f32>) -> Array2<f32> {
         // z = x @ w + b
@@ -119,6 +152,7 @@ impl Layer {
         self.z = Some(z);
         self.a = Some(a.clone());
         a
+    }
     /// Backward pass through the layer
     fn backward(
         &mut self,
@@ -139,16 +173,23 @@ impl Layer {
         self.weights = &self.weights - dw * learning_rate;
         self.biases = &self.biases - db * learning_rate;
         dx
+    }
+}
+
 /// A neural network composed of multiple layers
 struct NeuralNetwork {
     layers: Vec<Layer>,
     loss_fn: LossFunction,
+}
+
 impl NeuralNetwork {
     /// Create a new neural network with the given layer sizes and activations
+    fn new(
         layer_sizes: &[usize],
         activations: &[ActivationFunction],
         loss_fn: LossFunction,
         seed: u64,
+    ) -> Self {
         assert!(
             layer_sizes.len() >= 2,
             "Network must have at least input and output layers"
@@ -157,6 +198,7 @@ impl NeuralNetwork {
             layer_sizes.len() - 1,
             activations.len(),
             "Number of activations must match number of layers - 1"
+        );
         let mut rng = SmallRng::seed_from_u64(seed);
         let mut layers = Vec::with_capacity(layer_sizes.len() - 1);
         // Create layers
@@ -165,15 +207,21 @@ impl NeuralNetwork {
             let output_size = layer_sizes[i + 1];
             let activation = activations[i];
             layers.push(Layer::new(input_size, output_size, activation, &mut rng));
+        }
         Self { layers, loss_fn }
+    }
     /// Forward pass through the network
+    fn forward(&mut self, x: &Array2<f32>) -> Array2<f32> {
         let mut output = x.clone();
         for layer in &mut self.layers {
             output = layer.forward(&output);
+        }
         output
+    }
     /// Compute the loss for given predictions and targets
     fn loss(&self, predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
         self.loss_fn.compute(predictions, targets)
+    }
     /// Backward pass and update parameters
     fn backward(&mut self, x: &Array2<f32>, y: &Array2<f32>, learning_rate: f32) {
         // Get the output from the last forward pass
@@ -228,6 +276,7 @@ impl NeuralNetwork {
                 layer.activation.as_str(),
                 num_params
             );
+        }
         // Total parameters
         let total_params: usize = self
             .layers
@@ -238,6 +287,9 @@ impl NeuralNetwork {
             })
             .sum();
         println!("Total parameters: {}", total_params);
+    }
+}
+
 /// Train a neural network for the XOR problem
 fn train_xor_network() -> Result<()> {
     // XOR dataset
@@ -284,34 +336,56 @@ fn train_xor_network() -> Result<()> {
                 1.0
             } else {
                 0.0
+            }
+        );
+    }
     // Try different activation functions
     println!("\nTrying different activation functions for hidden layer:");
     let activations = [
         ActivationFunction::ReLU,
         ActivationFunction::Sigmoid,
         ActivationFunction::Tanh,
+    ];
     for activation in &activations {
+        println!(
             "\nTraining with hidden layer activation: {}",
             activation.as_str()
+        );
         let mut network = NeuralNetwork::new(
             &[2, 4, 1],
             &[*activation, ActivationFunction::Sigmoid],
             LossFunction::MSE,
             42, // Same seed for comparison
+        );
         network.train(&x, &y, 0.1, 5000);
         let predictions = network.predict(&x);
+        println!(
             "Final predictions with {}:\n{:.3?}",
             activation.as_str(),
             predictions
+        );
+    }
     // Try different loss functions
     println!("\nTrying different loss functions:");
     let loss_functions = [LossFunction::MSE, LossFunction::BinaryCrossEntropy];
     for loss_fn in &loss_functions {
         println!("\nTraining with loss function: {}", loss_fn.as_str());
+        let mut network = NeuralNetwork::new(
+            &[2, 4, 1],
             &[ActivationFunction::ReLU, ActivationFunction::Sigmoid],
             *loss_fn,
+            42,
+        );
+        network.train(&x, &y, 0.1, 5000);
+        let predictions = network.predict(&x);
+        println!(
+            "Final predictions with {}:\n{:.3?}",
             loss_fn.as_str(),
+            predictions
+        );
+    }
     Ok(())
+}
 /// Train a neural network for a simple regression problem
 fn train_regression_network() -> Result<()> {
     // Create a simple regression dataset: y = sin(x)
@@ -326,23 +400,38 @@ fn train_regression_network() -> Result<()> {
     println!("\nRegression Problem: y = sin(x)");
     println!("Number of samples: {}", n_samples);
     // Create a network with 3 hidden layers
+    let mut network = NeuralNetwork::new(
         &[1, 10, 10, 5, 1],
         &[
             ActivationFunction::Tanh,
+            ActivationFunction::Tanh,
+            ActivationFunction::Tanh,
             ActivationFunction::Linear,
         ],
+        LossFunction::MSE,
         42,
+    );
+    network.summary();
     println!("\nTraining the regression network...");
     let losses = network.train(&x, &y, 0.01, 5000);
     // Plot the loss curve
+    print_loss_curve(&losses, 50);
     // Evaluate on a few samples
     println!("\nEvaluation on selected samples:");
     let test_points = [0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0];
     for &x_val in &test_points {
         let input = Array2::from_shape_vec((1, 1), vec![x_val])?;
+        let prediction = network.predict(&input);
+        println!(
             "x = {:.2}, Predicted: {:.4}, Expected: {:.4}",
             x_val,
+            prediction[[0, 0]],
             x_val.sin()
+        );
+    }
+    Ok(())
+}
+
 /// Print a simple ASCII loss curve
 fn print_loss_curve(losses: &[f32], width: usize) {
     // Skip the first few values which might be very high
@@ -351,6 +440,7 @@ fn print_loss_curve(losses: &[f32], width: usize) {
     if relevant_losses.is_empty() {
         println!("Not enough data points for loss curve");
         return;
+    }
     // Find min and max for scaling
     let min_loss = relevant_losses.iter().fold(f32::INFINITY, |a, &b| a.min(b));
     let max_loss = relevant_losses.iter().fold(0.0f32, |a, &b| a.max(b));
@@ -370,6 +460,9 @@ fn print_loss_curve(losses: &[f32], width: usize) {
         print!("{:5}: ", idx + start_idx);
         print!("{:.6} ", loss);
         println!("{}", "#".repeat(bar_len));
+    }
+}
+
 fn main() -> Result<()> {
     println!("General-Purpose Neural Network Example");
     println!("======================================\n");
@@ -377,3 +470,6 @@ fn main() -> Result<()> {
     train_xor_network()?;
     // Train a network for regression
     train_regression_network()?;
+    
+    Ok(())
+}

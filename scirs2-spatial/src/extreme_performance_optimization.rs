@@ -804,7 +804,7 @@ impl JitCompiler {
         algorithm: &str,
         parameters: &HashMap<String, f64>,
     ) -> SpatialResult<CompiledCode> {
-        let cache_key = format!("{}_{:?}", algorithm, parameters);
+        let cache_key = format!("{algorithm}_{parameters:?}");
 
         if let Some(cached_code) = self.code_cache.get(&cache_key) {
             self.generation_stats.cache_hits += 1;

@@ -38,7 +38,6 @@ use crate::cache::BSplineCache;
 use crate::error::{InterpolateError, InterpolateResult};
 use crate::traits::InterpolationFloat;
 use ndarray::{Array1, Array2, ArrayView1};
-use num_traits::Zero;
 use std::cell::RefCell;
 use std::sync::Arc;
 

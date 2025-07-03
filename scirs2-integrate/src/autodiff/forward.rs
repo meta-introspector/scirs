@@ -170,7 +170,7 @@ pub fn example_rosenbrock_gradient<F: IntegrateFloat>() -> IntegrateResult<()> {
     let x = Array1::from_vec(vec![F::from(1.0).unwrap(), F::from(2.0).unwrap()]);
     let grad = forward_gradient(rosenbrock, x.view())?;
 
-    println!("Gradient at (1,2): {:?}", grad);
+    println!("Gradient at (1,2): {grad:?}");
     Ok(())
 }
 

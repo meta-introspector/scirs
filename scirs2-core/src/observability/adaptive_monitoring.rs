@@ -58,7 +58,7 @@ impl AdaptiveMonitoringSystem {
 
         thread::spawn(move || loop {
             if let Err(e) = Self::monitoring_loop(&monitor, &config, &metrics_collector) {
-                eprintln!("Monitoring error: {:?}", e);
+                eprintln!("Monitoring error: {e:?}");
             }
             thread::sleep(Duration::from_secs(1));
         });
@@ -70,7 +70,7 @@ impl AdaptiveMonitoringSystem {
 
         thread::spawn(move || loop {
             if let Err(e) = Self::optimization_loop(&optimization, &monitor_clone, &prediction) {
-                eprintln!("Optimization error: {:?}", e);
+                eprintln!("Optimization error: {e:?}");
             }
             thread::sleep(Duration::from_secs(10));
         });
@@ -81,7 +81,7 @@ impl AdaptiveMonitoringSystem {
 
         thread::spawn(move || loop {
             if let Err(e) = Self::prediction_loop(&prediction_clone, &monitor_clone2) {
-                eprintln!("Prediction error: {:?}", e);
+                eprintln!("Prediction error: {e:?}");
             }
             thread::sleep(Duration::from_secs(30));
         });
@@ -92,7 +92,7 @@ impl AdaptiveMonitoringSystem {
 
         thread::spawn(move || loop {
             if let Err(e) = Self::alerting_loop(&alerting, &monitor_clone3) {
-                eprintln!("Alerting error: {:?}", e);
+                eprintln!("Alerting error: {e:?}");
             }
             thread::sleep(Duration::from_secs(5));
         });
@@ -648,7 +648,7 @@ impl OptimizationEngine {
                 if count >= 5 {
                     recommendations.push(OptimizationRecommendation {
                         category: RecommendationCategory::Optimization,
-                        title: format!("Frequent {:?} actions detected", action_type),
+                        title: format!("Frequent {action_type:?} actions detected"),
                         description: "Consider investigating root cause of performance issues"
                             .to_string(),
                         priority: RecommendationPriority::High,
@@ -3120,15 +3120,15 @@ impl NotificationChannel {
         match &self.channel_type {
             NotificationChannelType::Email => {
                 // Send email notification
-                println!("EMAIL ALERT: {} - {:?}", alert_name, severity);
+                println!("EMAIL ALERT: {alert_name} - {severity:?}");
             }
             NotificationChannelType::Slack => {
                 // Send Slack notification
-                println!("SLACK ALERT: {} - {:?}", alert_name, severity);
+                println!("SLACK ALERT: {alert_name} - {severity:?}");
             }
             NotificationChannelType::Webhook => {
                 // Send webhook notification
-                println!("WEBHOOK ALERT: {} - {:?}", alert_name, severity);
+                println!("WEBHOOK ALERT: {alert_name} - {severity:?}");
             }
         }
 

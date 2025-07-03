@@ -67,8 +67,7 @@ where
     }
     if e.shape() != [m, n] {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix E must have shape [{}, {}]",
-            m, n
+            "Matrix E must have shape [{m}, {n}]"
         )));
     }
 
@@ -109,7 +108,7 @@ where
     // Vectorize E
     let e_vec: Vec<A> = e.t().iter().cloned().collect();
     let e_vec = Array2::from_shape_vec((m * n, 1), e_vec)
-        .map_err(|e| LinalgError::ShapeError(format!("Failed to reshape vector: {}", e)))?;
+        .map_err(|e| LinalgError::ShapeError(format!("Failed to reshape vector: {e}")))?;
 
     // Solve the linear system (use column vector view)
     let e_vec_1d = e_vec.column(0);
@@ -118,7 +117,7 @@ where
     // Reshape solution back to matrix form
     let x_data: Vec<A> = x_vec.iter().cloned().collect();
     Ok(Array2::from_shape_vec((n, m), x_data)
-        .map_err(|e| LinalgError::ShapeError(format!("Failed to reshape solution: {}", e)))?
+        .map_err(|e| LinalgError::ShapeError(format!("Failed to reshape solution: {e}")))?
         .t()
         .to_owned())
 }
@@ -175,8 +174,7 @@ where
     }
     if c.shape() != [m, n] {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix C must have shape [{}, {}]",
-            m, n
+            "Matrix C must have shape [{m}, {n}]"
         )));
     }
 
@@ -216,7 +214,7 @@ where
     // Vectorize C (column-major order)
     let c_vec: Vec<A> = c.t().iter().cloned().collect();
     let c_vec = Array2::from_shape_vec((m * n, 1), c_vec)
-        .map_err(|e| LinalgError::ShapeError(format!("Failed to reshape vector: {}", e)))?;
+        .map_err(|e| LinalgError::ShapeError(format!("Failed to reshape vector: {e}")))?;
 
     // Solve the linear system
     let c_vec_1d = c_vec.column(0);
@@ -225,7 +223,7 @@ where
     // Reshape solution back to matrix form (column-major order)
     let x_data: Vec<A> = x_vec.iter().cloned().collect();
     Ok(Array2::from_shape_vec((n, m), x_data)
-        .map_err(|e| LinalgError::ShapeError(format!("Failed to reshape solution: {}", e)))?
+        .map_err(|e| LinalgError::ShapeError(format!("Failed to reshape solution: {e}")))?
         .t()
         .to_owned())
 }
@@ -282,8 +280,7 @@ where
     }
     if b.shape() != [n, m] {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix B must have shape [{}, m]",
-            n
+            "Matrix B must have shape [{n}, m]"
         )));
     }
     if q.shape() != [n, n] {
@@ -396,8 +393,7 @@ where
     }
     if b.shape() != [n, m] {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix B must have shape [{}, m]",
-            n
+            "Matrix B must have shape [{n}, m]"
         )));
     }
     if q.shape() != [n, n] {
@@ -515,7 +511,7 @@ where
     // Vectorize -Q
     let q_vec: Vec<A> = q.t().iter().map(|&x| -x).collect();
     let q_vec = Array2::from_shape_vec((n * n, 1), q_vec)
-        .map_err(|e| LinalgError::ShapeError(format!("Failed to reshape vector: {}", e)))?;
+        .map_err(|e| LinalgError::ShapeError(format!("Failed to reshape vector: {e}")))?;
 
     // Solve the linear system
     let q_vec_1d = q_vec.column(0);
@@ -524,7 +520,7 @@ where
     // Reshape solution back to matrix form
     let x_data: Vec<A> = x_vec.iter().cloned().collect();
     Ok(Array2::from_shape_vec((n, n), x_data)
-        .map_err(|e| LinalgError::ShapeError(format!("Failed to reshape solution: {}", e)))?
+        .map_err(|e| LinalgError::ShapeError(format!("Failed to reshape solution: {e}")))?
         .t()
         .to_owned())
 }

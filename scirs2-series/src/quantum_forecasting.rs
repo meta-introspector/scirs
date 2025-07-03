@@ -23,8 +23,10 @@ use crate::error::{Result, TimeSeriesError};
 #[derive(Debug, Clone)]
 pub struct QuantumState<F: Float + Debug> {
     /// Complex amplitudes for quantum state
+    #[allow(dead_code)]
     amplitudes: Array1<Complex<F>>,
     /// Number of qubits
+    #[allow(dead_code)]
     num_qubits: usize,
 }
 
@@ -122,18 +124,26 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumState<F> {
 #[derive(Debug)]
 pub struct QuantumAttention<F: Float + Debug> {
     /// Model dimension
+    #[allow(dead_code)]
     model_dim: usize,
     /// Number of attention heads
     num_heads: usize,
     /// Number of qubits per head
+    #[allow(dead_code)]
     qubits_per_head: usize,
     /// Quantum parameters
+    #[allow(dead_code)]
     theta_params: Array2<F>,
+    #[allow(dead_code)]
     phi_params: Array2<F>,
     /// Classical projection layers
+    #[allow(dead_code)]
     w_query: Array2<F>,
+    #[allow(dead_code)]
     w_key: Array2<F>,
+    #[allow(dead_code)]
     w_value: Array2<F>,
+    #[allow(dead_code)]
     w_output: Array2<F>,
 }
 
@@ -323,8 +333,10 @@ pub struct VariationalQuantumCircuit<F: Float + Debug> {
     /// Number of qubits
     num_qubits: usize,
     /// Circuit depth (number of layers)
+    #[allow(dead_code)]
     depth: usize,
     /// Variational parameters
+    #[allow(dead_code)]
     parameters: Array3<F>, // [layer, qubit, parameter_type]
     /// Input encoding dimension
     input_dim: usize,

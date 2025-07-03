@@ -67,19 +67,19 @@ impl Default for UltraAdvancedSimdConfig {
 
 impl VectorWidth {
     fn from_capabilities(capabilities: &PlatformCapabilities) -> Self {
-        if capabilities.avx512 {
+        if capabilities.avx512_available {
             Self {
                 f64_lanes: 8,  // 512-bit / 64-bit = 8 f64 elements
                 f32_lanes: 16, // 512-bit / 32-bit = 16 f32 elements
                 optimal_chunk: 64,
             }
-        } else if capabilities.avx2 {
+        } else if capabilities.avx2_available {
             Self {
                 f64_lanes: 4,  // 256-bit / 64-bit = 4 f64 elements
                 f32_lanes: 8,  // 256-bit / 32-bit = 8 f32 elements
                 optimal_chunk: 32,
             }
-        } else if capabilities.sse4_1 {
+        } else if capabilities.simd_available {
             Self {
                 f64_lanes: 2,  // 128-bit / 64-bit = 2 f64 elements
                 f32_lanes: 4,  // 128-bit / 32-bit = 4 f32 elements

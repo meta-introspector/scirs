@@ -300,8 +300,10 @@ pub struct ODESolverConfig<F: Float + Debug> {
     /// Integration method
     method: IntegrationMethod,
     /// Step size
+    #[allow(dead_code)]
     step_size: F,
     /// Tolerance for adaptive methods
+    #[allow(dead_code)]
     tolerance: F,
 }
 
@@ -2427,7 +2429,9 @@ pub struct MANN<F: Float + Debug + ndarray::ScalarOperand> {
     controller_hidden_dim: usize,
     controller_output_dim: usize,
     /// Read/write head parameters
+    #[allow(dead_code)]
     read_head_params: Array2<F>,
+    #[allow(dead_code)]
     write_head_params: Array2<F>,
 }
 
@@ -2666,6 +2670,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MANN<F> 
 #[derive(Debug)]
 pub struct MetaOptimizer<F: Float + Debug + ndarray::ScalarOperand> {
     /// LSTM parameters for the optimizer
+    #[allow(dead_code)]
     lstm_params: Array2<F>,
     /// Hidden state size
     hidden_size: usize,

@@ -377,7 +377,7 @@ impl DistancePool {
             let mut cpu_set: libc::cpu_set_t = unsafe { std::mem::zeroed() };
 
             // Read the CPU list for this NUMA node
-            let cpulist_path = format!("/sys/devices/system/node/node{}/cpulist", node);
+            let cpulist_path = format!("/sys/devices/system/node/node{node}/cpulist");
             if let Ok(cpulist) = fs::read_to_string(&cpulist_path) {
                 for range in cpulist.trim().split(',') {
                     if let Some((start, end)) = range.split_once('-') {
@@ -540,7 +540,7 @@ impl DistancePool {
                         if let Ok(node_id) = stripped.parse::<u32>() {
                             // Read memory info for this node
                             let meminfo_path =
-                                format!("/sys/devices/system/node/{}/meminfo", name_str);
+                                format!("/sys/devices/system/node/{name_str}/meminfo");
                             if let Ok(meminfo) = fs::read_to_string(&meminfo_path) {
                                 if let Some(total_kb) = Self::parse_meminfo_total(&meminfo) {
                                     topology.nodes.push(NumaNode {
@@ -587,7 +587,7 @@ impl DistancePool {
 
     #[cfg(target_os = "linux")]
     fn get_node_cpu_count(node_id: u32) -> Option<u32> {
-        let cpulist_path = format!("/sys/devices/system/node/node{}/cpulist", node_id);
+        let cpulist_path = format!("/sys/devices/system/node/node{node_id}/cpulist");
         if let Ok(cpulist) = fs::read_to_string(&cpulist_path) {
             // Parse CPU list (e.g., "0-3,8-11" -> 8 CPUs)
             let mut count = 0;
@@ -1395,7 +1395,7 @@ impl NumaCapabilities {
             num_nodes,
             memory_binding_supported: numa_available,
             thread_affinity_supported: true, // Generally available on Linux
-            platform_details: format!("Linux with {} NUMA nodes", num_nodes),
+            platform_details: format!("Linux with {num_nodes} NUMA nodes"),
         }
     }
 

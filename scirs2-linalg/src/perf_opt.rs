@@ -88,8 +88,7 @@ where
 
     if k != k2 {
         return Err(LinalgError::DimensionError(format!(
-            "Matrix dimensions don't match: ({}, {}) x ({}, {})",
-            m, k, k2, n
+            "Matrix dimensions don't match: ({m}, {k}) x ({k2}, {n})"
         )));
     }
 

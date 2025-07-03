@@ -13,7 +13,7 @@ use crate::interpolation::*;
 use crate::measurements::*;
 use crate::morphology::*;
 use approx::{assert_abs_diff_eq, AbsDiffEq};
-use ndarray::{Array1, Array2, Array3, ArrayD, ArrayView2};
+use ndarray::{Array2, ArrayView2};
 use std::collections::HashMap;
 
 /// Numerical validation result for a single test case

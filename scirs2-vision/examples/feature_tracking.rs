@@ -30,7 +30,7 @@ fn main() -> Result<()> {
     println!("Processing {} frames...", frames.len());
 
     for (i, frame) in frames.iter().enumerate() {
-        println!("\nFrame {}", i);
+        println!("\nFrame {i}");
 
         if i == 0 {
             // Detect initial features using Harris corner detector
@@ -68,22 +68,22 @@ fn main() -> Result<()> {
                 vel_mag / features.len() as f32
             };
 
-            println!("  Average confidence: {:.3}", avg_confidence);
-            println!("  Maximum age: {} frames", max_age);
-            println!("  Average velocity: {:.2} pixels/frame", avg_velocity);
+            println!("  Average confidence: {avg_confidence:.3}");
+            println!("  Maximum age: {max_age} frames");
+            println!("  Average velocity: {avg_velocity:.2} pixels/frame");
         }
 
         // Save visualization for the first few frames
         if i < 5 {
             let visualization = visualize_tracking(frame, tracker.get_features())?;
-            let output_path = format!("output/tracking_frame_{:02}.png", i);
+            let output_path = format!("output/tracking_frame_{i:02}.png");
 
             // Create output directory if it doesn't exist
             std::fs::create_dir_all("output").ok();
 
             match visualization.save(&output_path) {
-                Ok(_) => println!("  Saved visualization: {}", output_path),
-                Err(e) => println!("  Warning: Could not save {}: {}", output_path, e),
+                Ok(_) => println!("  Saved visualization: {output_path}"),
+                Err(e) => println!("  Warning: Could not save {output_path}: {e}"),
             }
         }
     }
@@ -99,12 +99,12 @@ fn main() -> Result<()> {
         .iter()
         .filter(|(_, positions)| positions.len() > 3)
         .count();
-    println!("Long tracks (>3 frames): {}", long_tracks);
+    println!("Long tracks (>3 frames): {long_tracks}");
 
     if !trajectories.is_empty() {
         let avg_length = trajectories.values().map(|v| v.len()).sum::<usize>() as f32
             / trajectories.len() as f32;
-        println!("Average trajectory length: {:.1} frames", avg_length);
+        println!("Average trajectory length: {avg_length:.1} frames");
     }
 
     println!("\nExample completed successfully!");

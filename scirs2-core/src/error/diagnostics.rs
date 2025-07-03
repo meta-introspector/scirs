@@ -101,6 +101,7 @@ impl EnvironmentInfo {
 
     /// Get list of enabled features
     fn get_enabled_features() -> Vec<String> {
+        #[allow(unused_mut)]
         let mut features = Vec::with_capacity(5);
 
         #[cfg(feature = "parallel")]
@@ -1006,7 +1007,9 @@ pub fn diagnose_error_with_context(error: &CoreError, context: String) -> ErrorD
 macro_rules! diagnostic_error {
     ($error_type:ident, $message:expr) => {{
         let error = $crate::error::CoreError::$error_type($crate::error_context!($message));
-        let context = format!("line {}, file = {}", line!(), file!());
+        let line_num = line!();
+        let file_name = file!();
+        let context = format!("line {line_num}, file = {file_name}");
         $crate::error::diagnostics::diagnose_error_with_context(&error, context);
         error
     }};

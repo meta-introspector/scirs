@@ -122,7 +122,8 @@ where
     /// Create a new GPU array from a host array.
     #[must_use]
     pub fn new(host_data: Array<T, D>, config: GPUConfig) -> Self {
-        let id = format!("uuid{}", uuid::Uuid::new_v4());
+        let uuid = uuid::Uuid::new_v4();
+        let id = format!("uuid{uuid}");
         let mut array = Self {
             host_data,
             config,

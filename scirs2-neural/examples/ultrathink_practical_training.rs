@@ -137,10 +137,13 @@ fn build_sota_model() -> CoreResult<NeuralNetwork> {
         .add_layer(DropoutAdaptive::new(
             0.5,
             AdaptiveStrategy::ScheduledIncrease,
+        )?)
         .add_layer(Dense::new(2048, Activation::Swish)?)
         .add_layer(BatchNorm1D::new(2048)?)
+        .add_layer(DropoutAdaptive::new(
             0.3,
             AdaptiveStrategy::ScheduledDecrease,
+        )?)
         .add_layer(Dense::new(1000, Activation::Linear)?)
         .add_output_layer(OutputLayer::Classification {
             num_classes: 1000,
@@ -178,12 +181,15 @@ fn configure_advanced_training() -> CoreResult<AdvancedTrainingConfig> {
                     eta_min: 1e-6,
                 },
                 adaptive_adjustment: true,
+            },
             weight_decay: WeightDecayConfig::Adaptive {
                 initial: 1e-2,
                 factor: 0.1,
                 patience: 5,
+            },
             betas: (0.9, 0.999),
             eps: 1e-8,
+        },
         // Advanced loss configuration
         loss: LossConfig::Composite {
             primary: Loss::CrossEntropyWithLabelSmoothing { smoothing: 0.1 },
@@ -192,12 +198,16 @@ fn configure_advanced_training() -> CoreResult<AdvancedTrainingConfig> {
                     Loss::FocalLoss {
                         alpha: 1.0,
                         gamma: 2.0,
+                    },
                     0.2,
                 ),
+                (
                     Loss::KnowledgeDistillation {
                         teacher_model: TeacherModel::EfficientNetB7,
                         temperature: 4.0,
+                    },
                     0.3,
+                ),
             ],
             adaptive_weighting: true,
         // Training dynamics
@@ -512,12 +522,15 @@ fn setup_continuous_learning(evaluation_results: EvaluationResults) -> CoreResul
             RetrainingTrigger::PerformanceDrop { threshold: 0.05 },
             RetrainingTrigger::DataDrift {
                 severity: DriftSeverity::High,
+            },
             RetrainingTrigger::Schedule {
                 interval: Duration::from_days(30),
+            },
         ],
         data_selection: DataSelectionStrategy::ActiveLearning {
             uncertainty_threshold: 0.8,
             diversity_sampling: true,
+        },
         training_config: IncrementalTrainingConfig {
             learning_rate: 1e-5,
             epochs: 10,

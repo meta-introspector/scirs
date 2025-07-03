@@ -445,8 +445,7 @@ where
             // If step size gets too small, the problem might be too stiff
             if h < min_step {
                 return Err(IntegrateError::ComputationError(format!(
-                    "Failed to converge at t = {}. Step size too small.",
-                    t_current
+                    "Failed to converge at t = {t_current}. Step size too small."
                 )));
             }
 
@@ -532,13 +531,11 @@ where
         success,
         message: if success {
             Some(format!(
-                "Successful integration. {} steps taken, {} GMRES iterations.",
-                n_steps, n_krylov_iters
+                "Successful integration. {n_steps} steps taken, {n_krylov_iters} GMRES iterations."
             ))
         } else {
             Some(format!(
-                "Integration did not reach end time. {} steps taken, {} GMRES iterations.",
-                n_steps, n_krylov_iters
+                "Integration did not reach end time. {n_steps} steps taken, {n_krylov_iters} GMRES iterations."
             ))
         },
         n_eval: n_f_evals,
@@ -913,8 +910,7 @@ where
             // If step size gets too small, the problem might be too stiff
             if h < min_step {
                 return Err(IntegrateError::ComputationError(format!(
-                    "Failed to converge at t = {}. Step size too small.",
-                    t_current
+                    "Failed to converge at t = {t_current}. Step size too small."
                 )));
             }
 
@@ -994,13 +990,11 @@ where
         success,
         message: if success {
             Some(format!(
-                "Successful integration. {} steps taken, {} GMRES iterations.",
-                n_steps, n_krylov_iters
+                "Successful integration. {n_steps} steps taken, {n_krylov_iters} GMRES iterations."
             ))
         } else {
             Some(format!(
-                "Integration did not reach end time. {} steps taken, {} GMRES iterations.",
-                n_steps, n_krylov_iters
+                "Integration did not reach end time. {n_steps} steps taken, {n_krylov_iters} GMRES iterations."
             ))
         },
         n_eval: n_f_evals,

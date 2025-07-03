@@ -134,7 +134,7 @@ impl ParallelPlanner {
             let mut planner = planner_clone.lock().unwrap();
             planner
                 .plan_fft(&shape_clone, forward, backend_clone)
-                .map_err(|e| format!("FFT planning error: {}", e))
+                .map_err(|e| format!("FFT planning error: {e}"))
         });
 
         match result {
@@ -194,7 +194,7 @@ impl ParallelPlanner {
                             let mut planner_guard = planner.lock().unwrap();
                             planner_guard
                                 .plan_fft(&shape_clone, forward_val, backend_clone)
-                                .map_err(|e| format!("FFT planning error: {}", e))?
+                                .map_err(|e| format!("FFT planning error: {e}"))?
                         };
 
                         Ok((
@@ -297,7 +297,7 @@ impl ParallelExecutor {
 
             executor
                 .execute(&input_vec, &mut output_vec)
-                .map_err(|e| format!("FFT execution error: {}", e))?;
+                .map_err(|e| format!("FFT execution error: {e}"))?;
 
             Ok(output_vec)
         });
@@ -380,7 +380,7 @@ impl ParallelExecutor {
                     let start = Instant::now();
                     executor
                         .execute(&input_vec, &mut local_output)
-                        .map_err(|e| format!("FFT execution error for batch {}: {}", idx, e))?;
+                        .map_err(|e| format!("FFT execution error for batch {idx}: {e}"))?;
                     let elapsed = start.elapsed();
 
                     Ok((idx, local_output, elapsed))

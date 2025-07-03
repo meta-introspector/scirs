@@ -10,8 +10,7 @@ use num_traits::Float;
 pub fn safe_from<T: Float>(value: f64, context: &str) -> SpatialResult<T> {
     T::from(value).ok_or_else(|| {
         SpatialError::ComputationError(format!(
-            "Failed to convert {} to numeric type in {}",
-            value, context
+            "Failed to convert {value} to numeric type in {context}"
         ))
     })
 }
@@ -20,8 +19,7 @@ pub fn safe_from<T: Float>(value: f64, context: &str) -> SpatialResult<T> {
 pub fn safe_from_usize<T: Float>(value: usize, context: &str) -> SpatialResult<T> {
     T::from(value).ok_or_else(|| {
         SpatialError::ComputationError(format!(
-            "Failed to convert usize {} to numeric type in {}",
-            value, context
+            "Failed to convert usize {value} to numeric type in {context}"
         ))
     })
 }
@@ -34,8 +32,7 @@ pub fn safe_partial_cmp<T: PartialOrd>(
 ) -> SpatialResult<std::cmp::Ordering> {
     a.partial_cmp(b).ok_or_else(|| {
         SpatialError::ComputationError(format!(
-            "Failed to compare values in {} (possibly NaN or incomparable values)",
-            context
+            "Failed to compare values in {context} (possibly NaN or incomparable values)"
         ))
     })
 }
@@ -50,8 +47,7 @@ where
     iter.min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
         .ok_or_else(|| {
             SpatialError::ComputationError(format!(
-                "Failed to find minimum value in {} (empty iterator or all NaN)",
-                context
+                "Failed to find minimum value in {context} (empty iterator or all NaN)"
             ))
         })
 }
@@ -66,8 +62,7 @@ where
     iter.max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
         .ok_or_else(|| {
             SpatialError::ComputationError(format!(
-                "Failed to find maximum value in {} (empty iterator or all NaN)",
-                context
+                "Failed to find maximum value in {context} (empty iterator or all NaN)"
             ))
         })
 }
@@ -80,8 +75,7 @@ pub fn safe_as_slice<'a, T>(
 ) -> SpatialResult<&'a [T]> {
     array.as_slice().ok_or_else(|| {
         SpatialError::ComputationError(format!(
-            "Failed to convert array to slice in {} (non-contiguous memory layout)",
-            context
+            "Failed to convert array to slice in {context} (non-contiguous memory layout)"
         ))
     })
 }
@@ -91,8 +85,7 @@ pub fn safe_as_slice<'a, T>(
 pub fn safe_first<'a, T>(slice: &'a [T], context: &str) -> SpatialResult<&'a T> {
     slice.first().ok_or_else(|| {
         SpatialError::ComputationError(format!(
-            "Failed to get first element in {} (empty slice)",
-            context
+            "Failed to get first element in {context} (empty slice)"
         ))
     })
 }
@@ -102,8 +95,7 @@ pub fn safe_first<'a, T>(slice: &'a [T], context: &str) -> SpatialResult<&'a T> 
 pub fn safe_last<'a, T>(slice: &'a [T], context: &str) -> SpatialResult<&'a T> {
     slice.last().ok_or_else(|| {
         SpatialError::ComputationError(format!(
-            "Failed to get last element in {} (empty slice)",
-            context
+            "Failed to get last element in {context} (empty slice)"
         ))
     })
 }
@@ -113,10 +105,8 @@ pub fn safe_last<'a, T>(slice: &'a [T], context: &str) -> SpatialResult<&'a T> {
 pub fn safe_index<T: Clone>(array: &[T], index: usize, context: &str) -> SpatialResult<T> {
     array.get(index).cloned().ok_or_else(|| {
         SpatialError::ComputationError(format!(
-            "Index {} out of bounds for array of length {} in {}",
-            index,
-            array.len(),
-            context
+            "Index {index} out of bounds for array of length {} in {context}",
+            array.len()
         ))
     })
 }

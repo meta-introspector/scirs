@@ -799,8 +799,7 @@ where
 
     if mode.to_lowercase() != "constant" {
         return Err(format!(
-            "Padding mode '{}' is not yet implemented for arrays with more than 1 dimension",
-            mode
+            "Padding mode '{mode}' is not yet implemented for arrays with more than 1 dimension"
         ));
     }
 

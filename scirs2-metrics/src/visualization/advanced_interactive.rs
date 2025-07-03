@@ -19,7 +19,6 @@ use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
 /// Advanced interactive dashboard for real-time metrics visualization
-#[derive(Debug)]
 pub struct InteractiveDashboard {
     /// Dashboard configuration
     config: DashboardConfig,
@@ -39,6 +38,28 @@ pub struct InteractiveDashboard {
     collaboration: Arc<Mutex<CollaborationManager>>,
     /// Dashboard state
     state: Arc<RwLock<DashboardState>>,
+}
+
+impl std::fmt::Debug for InteractiveDashboard {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("InteractiveDashboard")
+            .field("config", &self.config)
+            .field(
+                "widgets",
+                &format!("{} widgets", self.widgets.read().unwrap().len()),
+            )
+            .field(
+                "data_sources",
+                &format!("{} data sources", self.data_sources.read().unwrap().len()),
+            )
+            .field("event_system", &"<event_system>")
+            .field("layout_manager", &"<layout_manager>")
+            .field("renderer", &"<renderer>")
+            .field("update_manager", &"<update_manager>")
+            .field("collaboration", &"<collaboration>")
+            .field("state", &"<state>")
+            .finish()
+    }
 }
 
 /// Dashboard configuration
@@ -700,6 +721,16 @@ pub enum EventType {
     SelectionChange,
     /// Filter change event
     FilterChange,
+    /// Hover event
+    Hover,
+    /// Select event
+    Select,
+    /// Filter event
+    Filter,
+    /// Zoom event
+    Zoom,
+    /// Pan event
+    Pan,
     /// Custom event
     Custom(String),
 }
@@ -796,7 +827,7 @@ pub struct WidgetPosition {
 }
 
 /// Widget data
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct WidgetData {
     /// Data fields
     pub fields: HashMap<String, DataField>,
@@ -807,7 +838,7 @@ pub struct WidgetData {
 }
 
 /// Data field
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub enum DataField {
     /// Numeric data
     Numeric(Vec<f64>),
@@ -1147,6 +1178,7 @@ pub trait EventHandler {
 }
 
 /// Layout manager for organizing widgets
+#[derive(Debug)]
 pub struct LayoutManager {
     /// Current layout configuration
     layout_config: LayoutConfig,
@@ -1380,6 +1412,7 @@ pub struct RenderingCapabilities {
 }
 
 /// Update manager for real-time updates
+#[derive(Debug)]
 pub struct UpdateManager {
     /// Update configuration
     config: RealtimeConfig,
@@ -1392,7 +1425,6 @@ pub struct UpdateManager {
 }
 
 /// Update subscription
-#[derive(Debug)]
 pub struct UpdateSubscription {
     /// Subscription ID
     pub id: String,
@@ -1406,6 +1438,19 @@ pub struct UpdateSubscription {
     pub last_update: Instant,
     /// Callback function
     pub callback: Box<dyn Fn(WidgetData) + Send + Sync>,
+}
+
+impl std::fmt::Debug for UpdateSubscription {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("UpdateSubscription")
+            .field("id", &self.id)
+            .field("widget_id", &self.widget_id)
+            .field("data_source_id", &self.data_source_id)
+            .field("frequency", &self.frequency)
+            .field("last_update", &self.last_update)
+            .field("callback", &"<callback>")
+            .finish()
+    }
 }
 
 /// Update event
@@ -1439,6 +1484,7 @@ pub struct UpdateStatistics {
 }
 
 /// Collaboration manager for shared dashboards
+#[derive(Debug)]
 pub struct CollaborationManager {
     /// Collaboration configuration
     config: CollaborationConfig,
@@ -1468,7 +1514,7 @@ pub struct Collaborator {
 }
 
 /// Selection information
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct Selection {
     /// Selected widget IDs
     pub widget_ids: Vec<String>,
@@ -1479,7 +1525,7 @@ pub struct Selection {
 }
 
 /// Selection types
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub enum SelectionType {
     Single,
     Multiple,
@@ -1590,7 +1636,7 @@ pub enum ChangeType {
 }
 
 /// Dashboard state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct DashboardState {
     /// Dashboard configuration
     pub config: DashboardConfig,
@@ -1607,7 +1653,7 @@ pub struct DashboardState {
 }
 
 /// Widget state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct WidgetState {
     /// Widget configuration
     pub config: WidgetConfig,
@@ -1620,7 +1666,7 @@ pub struct WidgetState {
 }
 
 /// Filter state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct FilterState {
     /// Filter configuration
     pub config: FilterConfig,
@@ -1631,7 +1677,7 @@ pub struct FilterState {
 }
 
 /// Filter configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct FilterConfig {
     /// Filter ID
     pub id: String,
@@ -1646,7 +1692,7 @@ pub struct FilterConfig {
 }
 
 /// Filter types
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub enum FilterType {
     /// Text filter
     Text,
@@ -1663,7 +1709,7 @@ pub enum FilterType {
 }
 
 /// View state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct ViewState {
     /// Current zoom level
     pub zoom_level: f64,
@@ -1678,7 +1724,7 @@ pub struct ViewState {
 }
 
 /// View bounds
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct ViewBounds {
     /// Left boundary
     pub left: f64,
@@ -1981,7 +2027,7 @@ impl EventSystem {
         // Add data point highlighting action
         response.actions.push(WidgetAction {
             action_type: ActionType::Highlight,
-            target_widget: event.widget_id.clone(),
+            target_widget: event.source_widget.clone(),
             parameters: event.data.clone(),
         });
 
@@ -2003,7 +2049,7 @@ impl EventSystem {
         // Show tooltip action
         response.actions.push(WidgetAction {
             action_type: ActionType::ShowTooltip,
-            target_widget: event.widget_id.clone(),
+            target_widget: event.source_widget.clone(),
             parameters: event.data.clone(),
         });
 
@@ -2065,7 +2111,7 @@ impl EventSystem {
         // Update zoom level
         response.actions.push(WidgetAction {
             action_type: ActionType::Zoom,
-            target_widget: event.widget_id.clone(),
+            target_widget: event.source_widget.clone(),
             parameters: event.data.clone(),
         });
 
@@ -2088,7 +2134,7 @@ impl EventSystem {
         // Update pan position
         response.actions.push(WidgetAction {
             action_type: ActionType::Pan,
-            target_widget: event.widget_id.clone(),
+            target_widget: event.source_widget.clone(),
             parameters: event.data.clone(),
         });
 
@@ -2108,7 +2154,7 @@ impl EventSystem {
         widget_id: String,
         handler: Box<dyn EventHandler + Send + Sync>,
     ) {
-        self.handlers.insert(widget_id, handler);
+        self.handlers.insert(widget_id, vec![handler]);
     }
 
     /// Get event history
@@ -2191,20 +2237,32 @@ impl LayoutManager {
         let mut positions = HashMap::new();
 
         if let Some(grid_config) = &self.layout_config.grid_config {
-            let cell_width = (viewport.width - (grid_config.columns + 1) * grid_config.gap)
-                / grid_config.columns;
-            let cell_height =
-                (viewport.height - (grid_config.rows + 1) * grid_config.gap) / grid_config.rows;
+            let cell_width = (viewport.width
+                - (grid_config.columns + 1) as f64 * grid_config.gap as f64)
+                / grid_config.columns as f64;
+            let cell_height = (viewport.height
+                - (grid_config.rows + 1) as f64 * grid_config.gap as f64)
+                / grid_config.rows as f64;
 
             let mut current_row = 0;
             let mut current_col = 0;
 
             for (widget_id, widget_layout) in &self.widget_layouts {
-                let x = current_col * (cell_width + grid_config.gap) + grid_config.gap;
-                let y = current_row * (cell_height + grid_config.gap) + grid_config.gap;
+                let x = current_col as f64 * (cell_width + grid_config.gap as f64)
+                    + grid_config.gap as f64;
+                let y = current_row as f64 * (cell_height + grid_config.gap as f64)
+                    + grid_config.gap as f64;
 
-                let width = cell_width * widget_layout.span.columns;
-                let height = cell_height * widget_layout.span.rows;
+                let (span_cols, span_rows) = if let Some(grid_pos) = &widget_layout.grid_position {
+                    (
+                        grid_pos.column_end - grid_pos.column_start,
+                        grid_pos.row_end - grid_pos.row_start,
+                    )
+                } else {
+                    (1, 1) // Default span
+                };
+                let width = cell_width * span_cols as f64;
+                let height = cell_height * span_rows as f64;
 
                 positions.insert(
                     widget_id.clone(),
@@ -2213,12 +2271,12 @@ impl LayoutManager {
                         y: y as f32,
                         width: width as f32,
                         height: height as f32,
-                        z_index: widget_layout.z_index.unwrap_or(0),
+                        z_index: widget_layout.z_index,
                     },
                 );
 
                 // Move to next position
-                current_col += widget_layout.span.columns;
+                current_col += span_cols;
                 if current_col >= grid_config.columns {
                     current_col = 0;
                     current_row += 1;
@@ -2238,11 +2296,19 @@ impl LayoutManager {
         let mut row_height = 0u32;
 
         for (widget_id, widget_layout) in &self.widget_layouts {
-            let width = widget_layout.size.width.unwrap_or(200) as u32;
-            let height = widget_layout.size.height.unwrap_or(150) as u32;
+            let width = if widget_layout.size.width > 0.0 {
+                widget_layout.size.width
+            } else {
+                200.0
+            } as u32;
+            let height = if widget_layout.size.height > 0.0 {
+                widget_layout.size.height
+            } else {
+                150.0
+            } as u32;
 
             // Check if widget fits in current row
-            if current_x + width > viewport.width {
+            if current_x + width > viewport.width as u32 {
                 current_x = 0;
                 current_y += row_height + self.layout_config.spacing.widget_spacing;
                 row_height = 0;
@@ -2255,7 +2321,7 @@ impl LayoutManager {
                     y: current_y as f32,
                     width: width as f32,
                     height: height as f32,
-                    z_index: widget_layout.z_index.unwrap_or(0),
+                    z_index: widget_layout.z_index,
                 },
             );
 
@@ -2274,9 +2340,14 @@ impl LayoutManager {
         let mut positions = HashMap::new();
 
         for (widget_id, widget_layout) in &self.widget_layouts {
-            if let Some(position) = &widget_layout.absolute_position {
-                positions.insert(widget_id.clone(), position.clone());
-            }
+            let widget_position = WidgetPosition {
+                x: widget_layout.position.x as f32,
+                y: widget_layout.position.y as f32,
+                width: widget_layout.size.width as f32,
+                height: widget_layout.size.height as f32,
+                z_index: widget_layout.z_index,
+            };
+            positions.insert(widget_id.clone(), widget_position);
         }
 
         Ok(positions)
@@ -2287,8 +2358,9 @@ impl LayoutManager {
         let mut positions = HashMap::new();
 
         if let Some(grid_config) = &self.layout_config.grid_config {
-            let column_width = (viewport.width - (grid_config.columns + 1) * grid_config.gap)
-                / grid_config.columns;
+            let column_width = (viewport.width
+                - (grid_config.columns + 1) as f64 * grid_config.gap as f64)
+                / grid_config.columns as f64;
             let mut column_heights = vec![0u32; grid_config.columns as usize];
 
             for (widget_id, widget_layout) in &self.widget_layouts {
@@ -2300,11 +2372,16 @@ impl LayoutManager {
                     .map(|(idx, _)| idx)
                     .unwrap_or(0);
 
-                let x = shortest_column as u32 * (column_width + grid_config.gap) + grid_config.gap;
+                let x = shortest_column as f64 * (column_width + grid_config.gap as f64)
+                    + grid_config.gap as f64;
                 let y = column_heights[shortest_column];
 
                 let width = column_width;
-                let height = widget_layout.size.height.unwrap_or(150) as u32;
+                let height = if widget_layout.size.height > 0.0 {
+                    widget_layout.size.height
+                } else {
+                    150.0
+                } as u32;
 
                 positions.insert(
                     widget_id.clone(),
@@ -2313,7 +2390,7 @@ impl LayoutManager {
                         y: y as f32,
                         width: width as f32,
                         height: height as f32,
-                        z_index: widget_layout.z_index.unwrap_or(0),
+                        z_index: widget_layout.z_index,
                     },
                 );
 
@@ -2333,20 +2410,16 @@ impl LayoutManager {
     /// Validate layout configuration
     fn validate_layout(&self, layout: &WidgetLayout) -> Result<()> {
         // Check minimum dimensions
-        if let Some(width) = layout.size.width {
-            if width <= 0.0 {
-                return Err(MetricsError::InvalidInput(
-                    "Widget width must be positive".to_string(),
-                ));
-            }
+        if layout.size.width <= 0.0 {
+            return Err(MetricsError::InvalidInput(
+                "Widget width must be positive".to_string(),
+            ));
         }
 
-        if let Some(height) = layout.size.height {
-            if height <= 0.0 {
-                return Err(MetricsError::InvalidInput(
-                    "Widget height must be positive".to_string(),
-                ));
-            }
+        if layout.size.height <= 0.0 {
+            return Err(MetricsError::InvalidInput(
+                "Widget height must be positive".to_string(),
+            ));
         }
 
         Ok(())
@@ -2354,14 +2427,17 @@ impl LayoutManager {
 
     /// Apply layout constraints
     fn apply_constraints(&mut self, widget_id: &str, layout: &WidgetLayout) -> Result<()> {
-        // Add alignment constraints
-        if let Some(alignment) = &layout.alignment {
+        // Add basic constraint based on position and size
+        if layout.position.x >= 0.0 && layout.position.y >= 0.0 {
             self.constraints.push(LayoutConstraint {
-                constraint_type: ConstraintType::Alignment,
-                widget_id: widget_id.to_string(),
+                id: format!("layout_{}", widget_id),
+                constraint_type: ConstraintType::Check,
+                target_widgets: vec![widget_id.to_string()],
                 parameters: HashMap::from([
-                    ("horizontal".to_string(), alignment.horizontal.to_string()),
-                    ("vertical".to_string(), alignment.vertical.to_string()),
+                    ("x".to_string(), layout.position.x),
+                    ("y".to_string(), layout.position.y),
+                    ("width".to_string(), layout.size.width),
+                    ("height".to_string(), layout.size.height),
                 ]),
             });
         }
@@ -2372,7 +2448,7 @@ impl LayoutManager {
     /// Remove widget constraints
     fn remove_widget_constraints(&mut self, widget_id: &str) {
         self.constraints
-            .retain(|constraint| constraint.widget_id != widget_id);
+            .retain(|constraint| !constraint.target_widgets.contains(&widget_id.to_string()));
     }
 
     /// Add default responsive rules
@@ -2382,8 +2458,13 @@ impl LayoutManager {
             breakpoint: 768,
             layout_changes: vec![LayoutChange {
                 widget_selector: "*".to_string(),
-                property: "columns".to_string(),
-                value: "1".to_string(),
+                position: None,
+                size: None,
+                visible: None,
+                property_changes: HashMap::from([(
+                    "columns".to_string(),
+                    serde_json::Value::String("1".to_string()),
+                )]),
             }],
         });
 
@@ -2392,8 +2473,13 @@ impl LayoutManager {
             breakpoint: 1024,
             layout_changes: vec![LayoutChange {
                 widget_selector: "*".to_string(),
-                property: "columns".to_string(),
-                value: "2".to_string(),
+                position: None,
+                size: None,
+                visible: None,
+                property_changes: HashMap::from([(
+                    "columns".to_string(),
+                    serde_json::Value::String("2".to_string()),
+                )]),
             }],
         });
     }
@@ -2405,7 +2491,7 @@ impl LayoutManager {
         viewport: &Size,
     ) -> Result<()> {
         for rule in &self.responsive_rules {
-            if viewport.width <= rule.breakpoint {
+            if viewport.width <= rule.breakpoint as f64 {
                 // Apply layout changes
                 for change in &rule.layout_changes {
                     if change.widget_selector == "*" {

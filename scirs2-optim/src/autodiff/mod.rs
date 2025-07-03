@@ -4,7 +4,7 @@
 //! higher-order gradients, Hessians, and meta-gradients used in advanced
 //! optimization algorithms.
 
-use crate::error::OptimError;
+use crate::error::{OptimError, Result};
 use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::Float;
 use std::collections::HashMap;
@@ -13,8 +13,6 @@ pub mod forward_mode;
 pub mod higher_order;
 pub mod meta_gradients;
 pub mod reverse_mode;
-
-use crate::error::{OptimError, Result};
 
 /// Automatic differentiation configuration
 #[derive(Debug, Clone)]

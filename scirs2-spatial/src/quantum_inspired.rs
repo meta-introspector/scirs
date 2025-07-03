@@ -186,8 +186,7 @@ impl QuantumState {
     pub fn hadamard(&mut self, qubit: usize) -> SpatialResult<()> {
         if qubit >= self.num_qubits {
             return Err(SpatialError::InvalidInput(format!(
-                "Qubit index {} out of range",
-                qubit
+                "Qubit index {qubit} out of range"
             )));
         }
 
@@ -213,8 +212,7 @@ impl QuantumState {
     pub fn phase_rotation(&mut self, qubit: usize, angle: f64) -> SpatialResult<()> {
         if qubit >= self.num_qubits {
             return Err(SpatialError::InvalidInput(format!(
-                "Qubit index {} out of range",
-                qubit
+                "Qubit index {qubit} out of range"
             )));
         }
 

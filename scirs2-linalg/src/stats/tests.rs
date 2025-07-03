@@ -103,8 +103,7 @@ where
         let n_i = group.nrows();
         if n_i <= p {
             return Err(LinalgError::InvalidInputError(format!(
-                "Each group must have more samples than variables: {} <= {}",
-                n_i, p
+                "Each group must have more samples than variables: {n_i} <= {p}"
             )));
         }
 
@@ -153,8 +152,7 @@ where
     // Check for positive determinant before taking log
     if det_pooled <= F::zero() {
         return Err(LinalgError::InvalidInputError(format!(
-            "Pooled covariance matrix has non-positive determinant: {:?}. Consider increasing sample sizes or regularization.",
-            det_pooled
+            "Pooled covariance matrix has non-positive determinant: {det_pooled:?}. Consider increasing sample sizes or regularization."
         )));
     }
 
@@ -228,8 +226,7 @@ where
 
     if n <= p {
         return Err(LinalgError::InvalidInputError(format!(
-            "Need more samples than variables: {} <= {}",
-            n, p
+            "Need more samples than variables: {n} <= {p}"
         )));
     }
 
@@ -302,8 +299,7 @@ where
 
     if n <= p {
         return Err(LinalgError::InvalidInputError(format!(
-            "Need more samples than variables: {} <= {}",
-            n, p
+            "Need more samples than variables: {n} <= {p}"
         )));
     }
 
@@ -415,8 +411,7 @@ where
 
     if n <= p {
         return Err(LinalgError::InvalidInputError(format!(
-            "Need more samples than variables: {} <= {}",
-            n, p
+            "Need more samples than variables: {n} <= {p}"
         )));
     }
 

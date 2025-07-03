@@ -1057,15 +1057,15 @@ mod tests {
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
 
         // Test sum reduction
-        let result = reduction::sum(&a.view(), None);
+        let result = reduction::sum(&a.view(), None).unwrap();
         assert_eq!(result, array![21.0]);
 
         // Test sum along axis 0
-        let result = reduction::sum(&a.view(), Some(0));
+        let result = reduction::sum(&a.view(), Some(0)).unwrap();
         assert_eq!(result, array![5.0, 7.0, 9.0]);
 
         // Test sum along axis 1
-        let result = reduction::sum(&a.view(), Some(1));
+        let result = reduction::sum(&a.view(), Some(1)).unwrap();
         assert_eq!(result, array![6.0, 15.0]);
 
         // Test mean reduction

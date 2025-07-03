@@ -69,8 +69,7 @@ where
 
     if k1 != k2 {
         return Err(LinalgError::ShapeError(format!(
-            "Inner dimensions mismatch for batch_matmul: {} vs {}",
-            k1, k2
+            "Inner dimensions mismatch for batch_matmul: {k1} vs {k2}"
         )));
     }
 
@@ -146,8 +145,7 @@ where
 
     if n != x_len {
         return Err(LinalgError::ShapeError(format!(
-            "Dimension mismatch for batch_matvec: matrix width {} does not match vector length {}",
-            n, x_len
+            "Dimension mismatch for batch_matvec: matrix width {n} does not match vector length {x_len}"
         )));
     }
 
@@ -250,8 +248,7 @@ where
         }
         _ => {
             return Err(LinalgError::InvalidInputError(format!(
-                "Invalid axis {}: must be 0 (column-wise) or 1 (row-wise)",
-                axis
+                "Invalid axis {axis}: must be 0 (column-wise) or 1 (row-wise)"
             )));
         }
     }

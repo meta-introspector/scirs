@@ -19,7 +19,7 @@
 use ndarray::Array1;
 use num_complex::Complex;
 use num_traits::{Float, FromPrimitive};
-use rand::{rng, random_range};
+use rand::random_range;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 
@@ -3452,7 +3452,7 @@ impl<
         analysis_type: UltraAnalysisType,
     ) -> Result<UltraFusionResult<F>> {
         // Step 1: Consciousness-driven attention selection
-        let attention_weights = self
+        let _attention_weights = self
             .consciousness_simulator
             .compute_attention_weights(data)?;
 
@@ -4899,7 +4899,7 @@ macro_rules! impl_placeholder_subsystem {
 }
 
 // Advanced implementation for MetaLearningController
-impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
+impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> MetaLearningController<F> {
     /// Creates a new MetaLearningController with advanced meta-learning capabilities
     #[allow(dead_code)]
     pub fn new() -> Result<Self> {
@@ -4989,7 +4989,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
                 TransferMechanism::FeatureExtraction,
             ],
             transfer_weights: vec![F::from_f64(0.9).unwrap(), F::from_f64(0.8).unwrap()],
-            source_tasks: vec!["timeseries_forecast".to_string(), "anomaly_detection".to_string()],
+            source_tasks: vec![
+                "timeseries_forecast".to_string(),
+                "anomaly_detection".to_string(),
+            ],
         };
 
         Ok(MetaLearningController {
@@ -5087,13 +5090,17 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
         // Convert LearningStrategy to OptimalLearningStrategy
         let optimal_strategy = OptimalLearningStrategy {
             strategy_name: best_strategy.name.clone(),
-            parameters: best_strategy.parameters.iter().enumerate()
+            parameters: best_strategy
+                .parameters
+                .iter()
+                .enumerate()
                 .map(|(i, &param)| (format!("param_{}", i), param))
                 .collect(),
             insights: MetaLearningInsights {
                 learning_efficiency: best_score,
                 adaptation_rate: complexity,
-                knowledge_transfer_score: characteristics.iter().copied().sum::<F>() / F::from_usize(characteristics.len()).unwrap_or(F::one()),
+                knowledge_transfer_score: characteristics.iter().copied().sum::<F>()
+                    / F::from_usize(characteristics.len()).unwrap_or(F::one()),
             },
         };
         Ok(optimal_strategy)
@@ -5342,10 +5349,19 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
             .insert(strategy_name.to_string(), feedback);
 
         // Check trigger conditions for adaptation
-        for condition in &self.adaptation_mechanism.trigger_conditions {
-            if self.should_trigger_adaptation(&condition, feedback)? {
-                self.execute_adaptation_rule(&condition.metric, feedback)?;
-            }
+        let conditions_to_execute: Vec<String> = self
+            .adaptation_mechanism
+            .trigger_conditions
+            .iter()
+            .filter(|condition| {
+                self.should_trigger_adaptation(condition, feedback)
+                    .unwrap_or(false)
+            })
+            .map(|condition| condition.metric.clone())
+            .collect();
+
+        for metric in conditions_to_execute {
+            self.execute_adaptation_rule(&metric, feedback)?;
         }
 
         // Update meta-model parameters based on feedback
@@ -5370,7 +5386,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
 
     /// Executes adaptation rule based on trigger
     #[allow(dead_code)]
-    fn execute_adaptation_rule(&mut self, metric: &str, feedback: F) -> Result<()> {
+    fn execute_adaptation_rule(&mut self, metric: &str, _feedback: F) -> Result<()> {
         for rule in &self.adaptation_mechanism.adaptation_rules {
             if rule.condition.contains(metric) {
                 match rule.action.as_str() {
@@ -5682,8 +5698,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     /// Evaluates the fitness of all individuals in the population
     #[allow(dead_code)]
     fn evaluate_population(&mut self) -> Result<()> {
-        for individual in &mut self.evolution_engine.population {
-            individual.fitness_score = self.evaluate_individual_fitness(individual)?;
+        let population_len = self.evolution_engine.population.len();
+        for i in 0..population_len {
+            let fitness_score = {
+                let individual = &self.evolution_engine.population[i];
+                self.evaluate_individual_fitness(individual)?
+            };
+            self.evolution_engine.population[i].fitness_score = fitness_score;
         }
         Ok(())
     }
@@ -5879,6 +5900,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
                 LayerType::Convolutional => GeneType::Convolutional,
                 LayerType::LSTM => GeneType::LSTM,
                 LayerType::Dropout => GeneType::Dropout,
+                LayerType::Recurrent => GeneType::LSTM,
+                LayerType::Attention => GeneType::AttentionMechanism,
+                LayerType::Quantum => GeneType::QuantumLayer,
             };
 
             let mut parameters = HashMap::new();
@@ -5942,7 +5966,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
 
             // Select random individuals for tournament
             for _ in 0..tournament_size {
-                let idx = random_range(0, self.evolution_engine.population.len());
+                let idx = random_range(0..self.evolution_engine.population.len());
                 tournament.push(&self.evolution_engine.population[idx]);
             }
 
@@ -5995,7 +6019,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         // Higher ranked individuals have higher probability
         for i in 0..selection_count {
             let rank_weight = (selection_count - i) as f64;
-            if random_range(0.0, 1.0) < rank_weight / (selection_count as f64) {
+            if random_range(0.0..1.0) < rank_weight / (selection_count as f64) {
                 selected.push(indexed_population[i].1.clone());
             }
         }
@@ -6028,7 +6052,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         let mut selected = Vec::new();
 
         for _ in 0..selection_count {
-            let target = F::from_f64(random_range(0.0, 1.0)).unwrap() * total_fitness;
+            let target = F::from_f64(random_range(0.0..1.0)).unwrap() * total_fitness;
             let mut current_sum = F::zero();
 
             for individual in &self.evolution_engine.population {
@@ -6051,10 +6075,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         for i in (0..parents.len()).step_by(2) {
             if i + 1 < parents.len() {
                 // Select crossover operator
-                let crossover_op = &self.crossover_operators
-                    [random_range(0, self.crossover_operators.len())];
+                let crossover_op =
+                    &self.crossover_operators[random_range(0..self.crossover_operators.len())];
 
-                if random_range(0.0, 1.0) < crossover_op.probability {
+                if random_range(0.0..1.0) < crossover_op.probability {
                     let (child1, child2) =
                         self.perform_crossover(&parents[i], &parents[i + 1], crossover_op)?;
                     offspring.push(child1);
@@ -6102,7 +6126,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
             return Ok((parent1.clone(), parent2.clone()));
         }
 
-        let crossover_point = random_range(0, min_len);
+        let crossover_point = random_range(0..min_len);
 
         let mut child1_layers = parent1.layers[..crossover_point].to_vec();
         child1_layers.extend_from_slice(
@@ -6141,9 +6165,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
             return self.single_point_crossover(parent1, parent2);
         }
 
-        let point1 = random_range(0, min_len);
-        let point2 =
-            (point1 + 1 + random_range(0, min_len - point1 - 1)).min(min_len - 1);
+        let point1 = random_range(0..min_len);
+        let point2 = (point1 + 1 + random_range(0..(min_len - point1 - 1))).min(min_len - 1);
 
         let mut child1_layers = parent1.layers[..point1].to_vec();
         child1_layers.extend_from_slice(&parent2.layers[point1..=point2]);
@@ -6184,7 +6207,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         let mut child2_layers = Vec::new();
 
         for i in 0..min_len {
-            if random_range(0.0, 1.0) < 0.5 {
+            if random_range(0.0..1.0) < 0.5 {
                 child1_layers.push(parent1.layers[i].clone());
                 child2_layers.push(parent2.layers[i].clone());
             } else {
@@ -6298,7 +6321,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
 
             // Apply each mutation operator with its probability
             for mutation_op in &self.mutation_operators {
-                if random_range(0.0, 1.0) < mutation_op.probability {
+                if random_range(0.0..1.0) < mutation_op.probability {
                     mutated_individual = self.apply_mutation(&mutated_individual, mutation_op)?;
                 }
             }
@@ -6346,9 +6369,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
 
         for layer in &mut mutated.layers {
             for param in &mut layer.parameters {
-                if random_range(0.0, 1.0) < 0.1 {
+                if random_range(0.0..1.0) < 0.1 {
                     // 10% chance to mutate each parameter
-                    let noise = F::from_f64((random_range(0.0, 1.0) - 0.5) * intensity).unwrap();
+                    let noise = F::from_f64((random_range(0.0..1.0) - 0.5) * intensity).unwrap();
                     *param = *param + noise;
                 }
             }
@@ -6367,11 +6390,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     ) -> Result<Architecture<F>> {
         let mut mutated = individual.clone();
 
-        if !mutated.layers.is_empty() && random_range(0.0, 1.0) < 0.3 {
-            let layer_idx = random_range(0, mutated.layers.len());
+        if !mutated.layers.is_empty() && random_range(0.0..1.0) < 0.3 {
+            let layer_idx = random_range(0..mutated.layers.len());
 
             // Randomly change layer size
-            let size_multiplier = 0.5 + random_range(0.0, 1.0) * 1.0; // 0.5 to 1.5
+            let size_multiplier = 0.5 + random_range(0.0..1.0) * 1.0; // 0.5 to 1.5
             mutated.layers[layer_idx].size =
                 ((mutated.layers[layer_idx].size as f64) * size_multiplier) as usize;
             mutated.layers[layer_idx].size = mutated.layers[layer_idx].size.max(8).min(1024);
@@ -6395,8 +6418,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
             // Don't add too many layers
             let new_layer = LayerConfig {
                 layer_type: LayerType::Dense, // For simplicity, always add dense layers
-                size: 32 + random_range(0, 256), // Random size between 32-288
-                activation: match random_range(0, 4) {
+                size: 32 + random_range(0..256), // Random size between 32-288
+                activation: match random_range(0..4) {
                     0 => ActivationFunction::ReLU,
                     1 => ActivationFunction::Sigmoid,
                     2 => ActivationFunction::Tanh,
@@ -6405,7 +6428,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
                 parameters: vec![F::from_f64(0.1).unwrap(), F::from_f64(0.01).unwrap()],
             };
 
-            let insert_pos = random_range(0, mutated.layers.len() + 1);
+            let insert_pos = random_range(0..(mutated.layers.len() + 1));
             mutated.layers.insert(insert_pos, new_layer);
         }
 
@@ -6424,7 +6447,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
 
         if mutated.layers.len() > 2 {
             // Keep at least 2 layers
-            let remove_idx = random_range(0, mutated.layers.len());
+            let remove_idx = random_range(0..mutated.layers.len());
             mutated.layers.remove(remove_idx);
         }
 
@@ -6442,9 +6465,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         let mut mutated = individual.clone();
 
         for connection in &mut mutated.connections {
-            if random_range(0.0, 1.0) < 0.2 {
+            if random_range(0.0..1.0) < 0.2 {
                 // 20% chance to mutate each connection
-                let noise = F::from_f64((random_range(0.0, 1.0) - 0.5) * intensity).unwrap();
+                let noise = F::from_f64((random_range(0.0..1.0) - 0.5) * intensity).unwrap();
                 connection.strength = connection.strength + noise;
             }
         }

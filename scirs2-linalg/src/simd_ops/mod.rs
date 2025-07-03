@@ -122,8 +122,7 @@ pub fn simd_matmul_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgResult
 
     if k1 != k2 {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix dimensions mismatch: a({}, {}) * b({}, {})",
-            m, k1, k2, n
+            "Matrix dimensions mismatch: a({m}, {k1}) * b({k2}, {n})"
         )));
     }
 
@@ -155,8 +154,7 @@ pub fn simd_matmul_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgResult
 
     if k1 != k2 {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix dimensions mismatch: a({}, {}) * b({}, {})",
-            m, k1, k2, n
+            "Matrix dimensions mismatch: a({m}, {k1}) * b({k2}, {n})"
         )));
     }
 

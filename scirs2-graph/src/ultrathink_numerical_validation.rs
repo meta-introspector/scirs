@@ -18,7 +18,6 @@ use crate::measures::pagerank_centrality;
 // };
 use crate::ultrathink::create_ultrathink_processor as create_enhanced_ultrathink_processor;
 use crate::ultrathink::execute_with_ultrathink as execute_with_enhanced_ultrathink;
-use rand;
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant, SystemTime};
 

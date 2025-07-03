@@ -105,8 +105,7 @@ pub fn find_homography_from_matches(
     for &(idx1, idx2, _) in matches {
         if idx1 >= keypoints1.len() || idx2 >= keypoints2.len() {
             return Err(crate::error::VisionError::InvalidParameter(format!(
-                "Invalid keypoint indices: ({}, {})",
-                idx1, idx2
+                "Invalid keypoint indices: ({idx1}, {idx2})"
             )));
         }
 

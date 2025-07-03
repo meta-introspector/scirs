@@ -143,7 +143,8 @@ where
         shape: Vec<usize>,
         config: DistributedConfig,
     ) -> Self {
-        let id = format!("uuid_{}", uuid::Uuid::new_v4());
+        let uuid = uuid::Uuid::new_v4();
+        let id = format!("uuid_{uuid}");
         Self {
             config,
             chunks,
@@ -571,7 +572,10 @@ where
             config,
             chunks: self.chunks.clone(),
             shape: self.shape.clone(),
-            id: format!("uuid_{}", uuid::Uuid::new_v4()),
+            id: {
+                let uuid = uuid::Uuid::new_v4();
+                format!("uuid_{uuid}")
+            },
         };
 
         Ok(Box::new(new_dist_array))
