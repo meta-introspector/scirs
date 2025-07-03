@@ -192,7 +192,7 @@ impl MemoryProfiler {
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_default()
                 .as_secs();
-            format!("session_{}", timestamp)
+            format!("{timestamp}")
         });
 
         let now = SystemTime::now();

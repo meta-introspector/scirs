@@ -560,7 +560,7 @@ impl UltrathinkNumericalValidator {
                     let mut component_map = HashMap::new();
                     for (component_id, component) in components.iter().enumerate() {
                         for node in component {
-                            component_map.insert(*node, component_id);
+                            component_map.insert(node.clone(), component_id);
                         }
                     }
                     component_map
@@ -580,7 +580,7 @@ impl UltrathinkNumericalValidator {
                     let mut component_map = HashMap::new();
                     for (component_id, component) in components.iter().enumerate() {
                         for node in component {
-                            component_map.insert(*node, component_id);
+                            component_map.insert(node.clone(), component_id);
                         }
                     }
                     component_map

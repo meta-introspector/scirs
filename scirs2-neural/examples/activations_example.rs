@@ -32,8 +32,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "| {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} |",
         "x", "-2.0", "-1.0", "0.0", "1.0", "2.0"
     );
-        "|{:-<12}|{:-<12}|{:-<12}|{:-<12}|{:-<12}|{:-<12}|",
+    println!(
+        "|{:-<12}|{:-<12}|{:-<12}|{:-<12}|{:-<12}|{:-<12}|",,
         "", "", "", "", "", ""
+    );
+    println!(
         "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "ReLU",
         relu_output[[indices[0]]],
@@ -41,48 +44,70 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         relu_output[[indices[2]]],
         relu_output[[indices[3]]],
         relu_output[[indices[4]]]
+    );
+    println!(
+        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "LeakyReLU",
         leaky_relu_output[[indices[0]]],
         leaky_relu_output[[indices[1]]],
         leaky_relu_output[[indices[2]]],
         leaky_relu_output[[indices[3]]],
         leaky_relu_output[[indices[4]]]
+    );
+    println!(
+        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "Sigmoid",
         sigmoid_output[[indices[0]]],
         sigmoid_output[[indices[1]]],
         sigmoid_output[[indices[2]]],
         sigmoid_output[[indices[3]]],
         sigmoid_output[[indices[4]]]
+    );
+    println!(
+        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "Tanh",
         tanh_output[[indices[0]]],
         tanh_output[[indices[1]]],
         tanh_output[[indices[2]]],
         tanh_output[[indices[3]]],
         tanh_output[[indices[4]]]
+    );
+    println!(
+        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "GELU",
         gelu_output[[indices[0]]],
         gelu_output[[indices[1]]],
         gelu_output[[indices[2]]],
         gelu_output[[indices[3]]],
         gelu_output[[indices[4]]]
+    );
+    println!(
+        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "GELU Fast",
         gelu_fast_output[[indices[0]]],
         gelu_fast_output[[indices[1]]],
         gelu_fast_output[[indices[2]]],
         gelu_fast_output[[indices[3]]],
         gelu_fast_output[[indices[4]]]
+    );
+    println!(
+        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "Swish",
         swish_output[[indices[0]]],
         swish_output[[indices[1]]],
         swish_output[[indices[2]]],
         swish_output[[indices[3]]],
         swish_output[[indices[4]]]
+    );
+    println!(
+        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
         "Mish",
         mish_output[[indices[0]]],
         mish_output[[indices[1]]],
         mish_output[[indices[2]]],
         mish_output[[indices[3]]],
         mish_output[[indices[4]]]
+    );
     // Now test the backward pass with some dummy gradient output
     println!("\nTesting backward pass...");
     // Create a dummy gradient output
@@ -108,14 +133,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     // Print input matrix
     println!("Input matrix:");
+    for i in 0..3 {
         print!("[ ");
+        for j in 0..4 {
             print!("{:6.2} ", matrix[[i, j]]);
+        }
         println!("]");
+    }
     // Apply GELU activation to the matrix
     let gelu_matrix_output = gelu.forward(&matrix.into_dyn())?;
     // Print output matrix
     println!("\nAfter GELU activation:");
+    for i in 0..3 {
+        print!("[ ");
+        for j in 0..4 {
             print!("{:6.2} ", gelu_matrix_output[[i, j]]);
+        }
+        println!("]");
+    }
     println!("\nActivation functions demonstration completed successfully!");
     // Note about visualization
     println!("\nFor visualization of activation functions:");
@@ -139,3 +174,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 fn convert_to_vec<F: Clone>(array: &Array<F, ndarray::IxDyn>) -> Vec<F> {
     array.iter().cloned().collect()
+}

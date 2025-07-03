@@ -9,8 +9,8 @@
 //! - Topological data analysis
 //! - Deep learning based dimensionality reduction
 
-use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2, ArrayView3, Axis};
+use crate::error::StatsResult;
+use ndarray::{Array1, Array2, Array3, ArrayView2, Axis};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
@@ -271,7 +271,7 @@ pub enum ClusterValidationMetric {
     DaviesBouldin,
     AdjustedRandIndex,
     NormalizedMutualInfo,
-    V_Measure,
+    VMeasure,
 }
 
 /// Multi-view learning configuration

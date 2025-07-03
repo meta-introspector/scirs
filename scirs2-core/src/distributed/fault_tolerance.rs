@@ -144,8 +144,7 @@ impl FaultToleranceManager {
             node.update_health(health);
         } else {
             return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "Unknown node: {}",
-                node_id
+                "Unknown node: {node_id}",
             ))));
         }
         Ok(())
@@ -227,7 +226,7 @@ impl FaultToleranceManager {
                     self.replace_node(node_id, *standby_address)?;
                 }
                 RecoveryStrategy::Manual => {
-                    println!("Manual intervention required for node: {}", node_id);
+                    println!("Manual intervention required for node: {node_id}");
                 }
             }
         }
@@ -237,22 +236,19 @@ impl FaultToleranceManager {
 
     fn restart_node(&self, node_id: &str) -> CoreResult<()> {
         // In a real implementation, this would trigger node restart
-        println!("Restarting node: {}", node_id);
+        println!("Restarting node: {node_id}");
         Ok(())
     }
 
     fn migrate_tasks(&self, node_id: &str) -> CoreResult<()> {
         // In a real implementation, this would migrate tasks to healthy nodes
-        println!("Migrating tasks from failed node: {}", node_id);
+        println!("Migrating tasks from failed node: {node_id}");
         Ok(())
     }
 
     fn replace_node(&self, node_id: &str, standby_address: SocketAddr) -> CoreResult<()> {
         // In a real implementation, this would activate standby node
-        println!(
-            "Replacing node {} with standby at {}",
-            node_id, standby_address
-        );
+        println!("Replacing node {node_id} with standby at {standby_address}");
         Ok(())
     }
 

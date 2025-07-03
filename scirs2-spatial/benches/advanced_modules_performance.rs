@@ -137,11 +137,11 @@ fn benchmark_clustering(c: &mut Criterion) {
                     let mut clusterer = HybridClusterer::new(*n_clusters)
                         .with_quantum_exploration_ratio(0.7)
                         .with_classical_refinement(false); // Disable async refinement for benchmark
-                    // For benchmarking, we'll just use the quantum part for simplicity
-                    // since the full hybrid approach is async
-                    tokio::runtime::Runtime::new().unwrap().block_on(async {
-                        clusterer.fit(&data.view()).await.unwrap()
-                    })
+                                                           // For benchmarking, we'll just use the quantum part for simplicity
+                                                           // since the full hybrid approach is async
+                    tokio::runtime::Runtime::new()
+                        .unwrap()
+                        .block_on(async { clusterer.fit(&data.view()).await.unwrap() })
                 });
             },
         );
@@ -187,13 +187,12 @@ fn benchmark_nearest_neighbor(c: &mut Criterion) {
             &(data, &query_point, k),
             |b, (data, query_point, k)| {
                 b.iter(|| {
-                    let quantum_nn = QuantumNearestNeighbor::new(&data.view()).unwrap()
+                    let quantum_nn = QuantumNearestNeighbor::new(&data.view())
+                        .unwrap()
                         .with_quantum_encoding(true)
                         .with_amplitude_amplification(true);
                     let query_array = Array1::from_vec(query_point.to_vec());
-                    quantum_nn
-                        .query_quantum(&query_array.view(), *k)
-                        .unwrap()
+                    quantum_nn.query_quantum(&query_array.view(), *k).unwrap()
                 });
             },
         );
@@ -290,7 +289,6 @@ fn benchmark_memory_optimization(c: &mut Criterion) {
 
 /// Benchmark scalability across different problem sizes
 fn benchmark_scalability(c: &mut Criterion) {
-
     let mut group = c.benchmark_group("Scalability");
     group.measurement_time(Duration::from_secs(25));
 
@@ -314,13 +312,12 @@ fn benchmark_scalability(c: &mut Criterion) {
         // Quantum approach
         group.bench_with_input(BenchmarkId::new("quantum", size), &data, |b, data| {
             b.iter(|| {
-                let quantum_nn = QuantumNearestNeighbor::new(&data.view()).unwrap()
+                let quantum_nn = QuantumNearestNeighbor::new(&data.view())
+                    .unwrap()
                     .with_quantum_encoding(true)
                     .with_amplitude_amplification(true);
                 let query = Array1::from_vec(vec![0.0, 0.0]);
-                quantum_nn
-                    .query_quantum(&query.view(), 5)
-                    .unwrap()
+                quantum_nn.query_quantum(&query.view(), 5).unwrap()
             });
         });
 

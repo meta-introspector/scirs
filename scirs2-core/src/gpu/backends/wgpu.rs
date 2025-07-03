@@ -157,7 +157,7 @@ impl WebGPUContext {
                 },
                 None,
             ))
-            .map_err(|e| GpuError::Other(format!("Failed to create WebGPU device: {}", e)))?;
+            .map_err(|e| GpuError::Other(format!("{e}")))?;
 
             Ok(Self {
                 device,
@@ -562,9 +562,9 @@ struct WebGPUKernelHandle {
     compiled_shaders: Arc<Mutex<HashMap<String, WebGPUShader>>>,
     params: Arc<Mutex<HashMap<String, KernelParam>>>,
     #[cfg(feature = "wgpu_backend")]
-    device: Device,
+    device: Arc<Device>,
     #[cfg(feature = "wgpu_backend")]
-    queue: Queue,
+    queue: Arc<Queue>,
     #[cfg(not(feature = "wgpu_backend"))]
     device: WgpuDevice,
     #[cfg(not(feature = "wgpu_backend"))]
@@ -694,7 +694,7 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                     // Create a placeholder buffer for now - in real implementation,
                     // this would extract the actual buffer from the buffer_impl
                     let placeholder_buffer = self.device.create_buffer(&BufferDescriptor {
-                        label: Some(&format!("param_{}", param_name)),
+                        label: Some(&format!("{param_name}")),
                         size: 1024, // Placeholder size
                         usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
                         mapped_at_creation: false,
@@ -715,7 +715,7 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                     let uniform_buffer =
                         self.device
                             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                                label: Some(&format!("uniform_{}", param_name)),
+                                label: Some(&format!("{param_name}")),
                                 contents: bytemuck::cast_slice(&uniform_data),
                                 usage: BufferUsages::UNIFORM,
                             });
@@ -735,7 +735,7 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                     let uniform_buffer =
                         self.device
                             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                                label: Some(&format!("uniform_{}", param_name)),
+                                label: Some(&format!("{param_name}")),
                                 contents: bytemuck::cast_slice(&uniform_data),
                                 usage: BufferUsages::UNIFORM,
                             });
@@ -755,7 +755,7 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                     let uniform_buffer =
                         self.device
                             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                                label: Some(&format!("uniform_{}", param_name)),
+                                label: Some(&format!("{param_name}")),
                                 contents: bytemuck::cast_slice(&uniform_data),
                                 usage: BufferUsages::UNIFORM,
                             });
@@ -789,7 +789,7 @@ struct WebGPUBuffer {
     #[cfg(feature = "wgpu_backend")]
     device_buffer: Option<Buffer>,
     #[cfg(feature = "wgpu_backend")]
-    queue: Queue,
+    queue: Arc<Queue>,
     #[cfg(not(feature = "wgpu_backend"))]
     device_buffer: Option<WgpuBuffer>,
     #[cfg(not(feature = "wgpu_backend"))]
@@ -826,7 +826,9 @@ impl GpuBufferImpl for WebGPUBuffer {
             let data_slice = std::slice::from_raw_parts(data, size);
 
             // Real WebGPU implementation - write data to buffer
-            self.queue.write_buffer(&self.device_buffer, 0, data_slice);
+            if let Some(ref buffer) = self.device_buffer {
+                self.queue.write_buffer(buffer, 0, data_slice);
+            }
         }
         #[cfg(not(feature = "wgpu_backend"))]
         {

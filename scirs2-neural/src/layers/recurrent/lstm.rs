@@ -91,6 +91,8 @@ pub struct LSTM<F: Float + Debug + Send + Sync> {
     cell_states_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
     /// Gate values cache for backward pass
     gate_cache: LstmGateCache<F>,
+}
+
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
     /// Create a new LSTM layer
     ///
@@ -116,6 +118,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
             NeuralError::InvalidArchitecture("Failed to convert scale factor".to_string())
         })?;
         let scale_hh = F::from(1.0 / (hidden_size as f64).sqrt()).ok_or_else(|| {
+            NeuralError::InvalidArchitecture("Failed to convert scale factor".to_string())
+        })?;
+        
         // Helper function to create weight matrices
         let mut create_weight_matrix = |rows: usize,
                                         cols: usize,
@@ -148,6 +153,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
         for i in 0..hidden_size {
             bias_if[i] = one;
             bias_hf[i] = one;
+        }
+        
         let weight_ig = create_weight_matrix(hidden_size, input_size, scale_ih)?;
         let weight_hg = create_weight_matrix(hidden_size, hidden_size, scale_hh)?;
         let bias_ig: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
@@ -225,12 +232,19 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
                 "Input feature dimension mismatch: expected {}, got {}",
                 self.input_size, x_shape[1]
             )));
+        }
         if h_shape[1] != self.hidden_size || c_shape[1] != self.hidden_size {
+            return Err(NeuralError::InferenceError(format!(
                 "Hidden/cell state dimension mismatch: expected {}, got {}/{}",
                 self.hidden_size, h_shape[1], c_shape[1]
+            )));
+        }
         if x_shape[0] != h_shape[0] || x_shape[0] != c_shape[0] {
+            return Err(NeuralError::InferenceError(format!(
                 "Batch size mismatch: input has {}, hidden state has {}, cell state has {}",
                 x_shape[0], h_shape[0], c_shape[0]
+            )));
+        }
         // Initialize gates
         let mut i_gate: Array<F, _> = Array::zeros((batch_size, self.hidden_size));
         let mut f_gate: Array<F, _> = Array::zeros((batch_size, self.hidden_size));
@@ -249,26 +263,45 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
                 }
                 for j in 0..self.hidden_size {
                     i_sum = i_sum + self.weight_hi[[i, j]] * h[[b, j]];
+                }
                 i_gate[[b, i]] = F::one() / (F::one() + (-i_sum).exp()); // sigmoid
+                
                 // Forget gate (f_t)
                 let mut f_sum = self.bias_if[i] + self.bias_hf[i];
+                for j in 0..self.input_size {
                     f_sum = f_sum + self.weight_if[[i, j]] * x[[b, j]];
+                }
+                for j in 0..self.hidden_size {
                     f_sum = f_sum + self.weight_hf[[i, j]] * h[[b, j]];
+                }
                 f_gate[[b, i]] = F::one() / (F::one() + (-f_sum).exp()); // sigmoid
+                
                 // Cell gate (g_t)
                 let mut g_sum = self.bias_ig[i] + self.bias_hg[i];
+                for j in 0..self.input_size {
                     g_sum = g_sum + self.weight_ig[[i, j]] * x[[b, j]];
+                }
+                for j in 0..self.hidden_size {
                     g_sum = g_sum + self.weight_hg[[i, j]] * h[[b, j]];
+                }
                 g_gate[[b, i]] = g_sum.tanh(); // tanh
+                
                 // Output gate (o_t)
                 let mut o_sum = self.bias_io[i] + self.bias_ho[i];
+                for j in 0..self.input_size {
                     o_sum = o_sum + self.weight_io[[i, j]] * x[[b, j]];
+                }
+                for j in 0..self.hidden_size {
                     o_sum = o_sum + self.weight_ho[[i, j]] * h[[b, j]];
+                }
                 o_gate[[b, i]] = F::one() / (F::one() + (-o_sum).exp()); // sigmoid
                 // New cell state (c_t)
                 new_c[[b, i]] = f_gate[[b, i]] * c[[b, i]] + i_gate[[b, i]] * g_gate[[b, i]];
                 // New hidden state (h_t)
                 new_h[[b, i]] = o_gate[[b, i]] * new_c[[b, i]].tanh();
+            }
+        }
+        
         // Convert all to dynamic dimension
         let new_h_dyn = new_h.into_dyn();
         let new_c_dyn = new_c.into_dyn();
@@ -281,24 +314,39 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
             new_c_dyn,
             (i_gate_dyn, f_gate_dyn, g_gate_dyn, o_gate_dyn),
         ))
+    }
+}
+
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM<F> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
+    }
+    
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+    
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Cache input for backward pass
         *self.input_cache.write().unwrap() = Some(input.clone());
         // Validate input shape
         let input_shape = input.shape();
         if input_shape.len() != 3 {
+            return Err(NeuralError::InferenceError(format!(
                 "Expected 3D input [batch_size, seq_len, features], got {:?}",
                 input_shape
+            )));
+        }
+        
         let batch_size = input_shape[0];
         let seq_len = input_shape[1];
         let features = input_shape[2];
         if features != self.input_size {
+            return Err(NeuralError::InferenceError(format!(
                 "Input features dimension mismatch: expected {}, got {}",
                 self.input_size, features
+            )));
+        }
         // Initialize hidden and cell states to zeros
         let mut h = Array::zeros((batch_size, self.hidden_size));
         let mut c = Array::zeros((batch_size, self.hidden_size));
@@ -324,33 +372,50 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
                 for i in 0..self.hidden_size {
                     all_hidden_states[[b, t, i]] = h[[b, i]];
                     all_cell_states[[b, t, i]] = c[[b, i]];
+                }
+            }
+        }
+        
         // Cache states and gates for backward pass
         *self.hidden_states_cache.write().unwrap() = Some(all_hidden_states.clone().into_dyn());
         *self.cell_states_cache.write().unwrap() = Some(all_cell_states.into_dyn());
         // Return with correct dynamic dimension
         Ok(all_hidden_states.into_dyn())
+    }
+    
     fn backward(
+        &self,
         input: &Array<F, IxDyn>,
         _grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         // Retrieve cached values
         let input_ref = self.input_cache.read().map_err(|_| {
             NeuralError::InferenceError("Failed to acquire read lock on input cache".to_string())
+        })?;
         let hidden_states_ref = self.hidden_states_cache.read().map_err(|_| {
             NeuralError::InferenceError(
                 "Failed to acquire read lock on hidden states cache".to_string(),
             )
+        })?;
         let cell_states_ref = self.cell_states_cache.read().map_err(|_| {
+            NeuralError::InferenceError(
                 "Failed to acquire read lock on cell states cache".to_string(),
+            )
+        })?;
         if input_ref.is_none() || hidden_states_ref.is_none() || cell_states_ref.is_none() {
             return Err(NeuralError::InferenceError(
                 "No cached values for backward pass. Call forward() first.".to_string(),
+            ));
+        }
+        
         // In a real implementation, we would compute gradients for all parameters
         // and return the gradient with respect to the input
         // Here we're providing a simplified version that returns a gradient of zeros
         // with the correct shape
         let grad_input = Array::zeros(input.dim());
         Ok(grad_input)
+    }
+    
     fn update(&mut self, learning_rate: F) -> Result<()> {
         // Apply a small update to parameters (placeholder)
         let small_change = F::from(0.001).unwrap();
@@ -359,6 +424,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
         let update_param = |param: &mut Array<F, IxDyn>| {
             for w in param.iter_mut() {
                 *w = *w - lr;
+            }
+        };
+        
         // Update all parameters
         update_param(&mut self.weight_ii);
         update_param(&mut self.weight_hi);
@@ -377,6 +445,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
         update_param(&mut self.bias_io);
         update_param(&mut self.bias_ho);
         Ok(())
+    }
+}
+
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for LSTM<F> {
     fn get_parameters(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
         vec![
@@ -397,16 +468,23 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
             &self.bias_io,
             &self.bias_ho,
         ]
+    }
+    
     fn get_gradients(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
         // This is a placeholder implementation until proper gradient access is implemented
         // Return an empty vector as we can't get references to the gradients inside the RwLock
         // The actual gradient update logic is handled in the backward method
         Vec::new()
+    }
+    
     fn set_parameters(&mut self, params: Vec<Array<F, ndarray::IxDyn>>) -> Result<()> {
         if params.len() != 16 {
             return Err(NeuralError::InvalidArchitecture(format!(
                 "Expected 16 parameters, got {}",
                 params.len()
+            )));
+        }
+        
         let expected_shapes = vec![
             self.weight_ii.shape(),
             self.weight_hi.shape(),
@@ -424,6 +502,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
             self.weight_ho.shape(),
             self.bias_io.shape(),
             self.bias_ho.shape(),
+        ];
+        
         for (i, (param, expected)) in params.iter().zip(expected_shapes.iter()).enumerate() {
             if param.shape() != *expected {
                 return Err(NeuralError::InvalidArchitecture(format!(
@@ -432,6 +512,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
                     expected,
                     param.shape()
                 )));
+            }
+        }
+        
         // Set parameters
         self.weight_ii = params[0].clone();
         self.weight_hi = params[1].clone();
@@ -449,6 +532,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
         self.weight_ho = params[13].clone();
         self.bias_io = params[14].clone();
         self.bias_ho = params[15].clone();
+        
+        Ok(())
+    }
+}
 // #[cfg(test)]
 // mod tests {
 //     use super::*;

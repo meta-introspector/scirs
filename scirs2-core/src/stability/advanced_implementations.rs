@@ -25,7 +25,7 @@ impl FormalVerificationEngine {
 
     /// Start formal verification for an API contract
     pub fn verify_contract(&self, contract: &ApiContract) -> CoreResult<()> {
-        let task_id = format!("{}::{}", contract.module, contract.api_name);
+        let task_id = format!("{}-{}", contract.module, contract.api_name);
 
         let properties = self.extract_verification_properties(contract);
 
@@ -218,7 +218,7 @@ impl RuntimeContractValidator {
 
     /// Register a contract for runtime validation
     pub fn register_contract(&self, contract: ApiContract) {
-        let key = format!("{}::{}", contract.module, contract.api_name);
+        let key = format!("{}-{}", contract.module, contract.api_name);
 
         if let Ok(mut contracts) = self.contracts.write() {
             contracts.insert(key, contract);
@@ -233,7 +233,7 @@ impl RuntimeContractValidator {
         call_context: &ApiCallContext,
     ) -> CoreResult<()> {
         let start_time = Instant::now();
-        let key = format!("{}::{}", module, api_name);
+        let key = format!("{}-{}", module, api_name);
 
         // Update statistics
         {
@@ -271,7 +271,7 @@ impl RuntimeContractValidator {
                     module,
                     ContractViolation {
                         violation_type: ViolationType::Performance,
-                        expected: format!("{:?}", max_time),
+                        expected: format!("{max_time:?}"),
                         actual: format!("{:?}", call_context.execution_time),
                         severity: ViolationSeverity::High,
                     },
@@ -764,7 +764,7 @@ impl ImmutableAuditTrail {
         record.record_hash = self.calculate_record_hash(&record);
 
         // Add digital signature (simplified)
-        record.signature = format!("sig_{}", record.record_hash);
+        record.signature = format!("{}", record.record_hash);
 
         // Add to chain
         {

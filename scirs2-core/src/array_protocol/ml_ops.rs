@@ -170,8 +170,7 @@ array_function_dispatch!(
                 // Check dimensions
                 if input_channels != filter_in_channels {
                     return Err(OperationError::ShapeMismatch(format!(
-                        "Input channels ({}) doesn't match filter input channels ({})",
-                        input_channels, filter_in_channels
+                        "Input channels ({input_channels}) doesn't match filter input channels ({filter_in_channels})"
                     )));
                 }
 
@@ -515,9 +514,9 @@ array_function_dispatch!(
                 // Check shapes
                 if logits.shape() != labels.shape() {
                     return Err(OperationError::ShapeMismatch(format!(
-                        "Logits shape {:?} doesn't match labels shape {:?}",
-                        logits.shape(),
-                        labels.shape()
+                        "Logits shape {logits_shape:?} doesn't match labels shape {labels_shape:?}",
+                        logits_shape = logits.shape(),
+                        labels_shape = labels.shape()
                     )));
                 }
 
@@ -563,8 +562,7 @@ array_function_dispatch!(
                     }
                     _ => {
                         return Err(OperationError::ShapeMismatch(format!(
-                            "Unknown reduction method: {}",
-                            reduction
+                            "Unknown reduction method: {reduction}"
                         )))
                     }
                 };

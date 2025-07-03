@@ -1602,11 +1602,15 @@ impl CoverageAnalyzer {
         let mut lcov_content = String::new();
 
         for (path, cov) in &report.file_coverage {
-            lcov_content.push_str(&format!("SF:{}\n", path.display()));
+            lcov_content.push_str(&format!("SF:{path}\n", path = path.display()));
 
             // Function data
             for func in &cov.functions {
-                lcov_content.push_str(&format!("FN:{},{}\n", func.start_line, func.function_name));
+                lcov_content.push_str(&format!(
+                    "FN:{start_line},{function_name}\n",
+                    start_line = func.start_line,
+                    function_name = func.function_name
+                ));
             }
 
             for func in &cov.functions {
@@ -1616,7 +1620,7 @@ impl CoverageAnalyzer {
                 ));
             }
 
-            lcov_content.push_str(&format!("FNF:{}\n", cov.functions.len()));
+            lcov_content.push_str(&format!("FNF:{count}\n", count = cov.functions.len()));
             lcov_content.push_str(&format!(
                 "FNH:{}\n",
                 cov.functions
@@ -1723,7 +1727,7 @@ impl CoverageAnalyzer {
                 content.push_str(&format!(
                     "  {}. [{}] {}\n",
                     i + 1,
-                    format!("{:?}", rec.priority).to_uppercase(),
+                    format!("{0:?}", rec.priority).to_uppercase(),
                     rec.description
                 ));
             }

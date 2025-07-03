@@ -559,9 +559,9 @@ impl EnhancedFlameGraph {
             let chart_y = y + height - (cpu / max_cpu) * height;
 
             if i == 0 {
-                points.push_str(&format!("M {:.1} {:.1}", chart_x, chart_y));
+                points.push_str(&format!("{:.1},{:.1}", chart_x, chart_y));
             } else {
-                points.push_str(&format!(" L {:.1} {:.1}", chart_x, chart_y));
+                points.push_str(&format!("{:.1},{:.1}", chart_x, chart_y));
             }
         }
 
@@ -604,9 +604,9 @@ impl EnhancedFlameGraph {
             let chart_y = y + height - ((*memory as f64) / (max_memory as f64)) * height;
 
             if i == 0 {
-                points.push_str(&format!("M {:.1} {:.1}", chart_x, chart_y));
+                points.push_str(&format!("{:.1},{:.1}", chart_x, chart_y));
             } else {
-                points.push_str(&format!(" L {:.1} {:.1}", chart_x, chart_y));
+                points.push_str(&format!("{:.1},{:.1}", chart_x, chart_y));
             }
         }
 

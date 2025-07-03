@@ -612,9 +612,9 @@ pub enum ProcessingStrategy {
     /// Parallel processing across multiple cores
     Parallel,
     /// Out-of-core processing for large datasets
-    OutOfCore { 
+    OutOfCore {
         /// Size of data chunks for processing
-        chunk_size: usize 
+        chunk_size: usize,
     },
 }
 

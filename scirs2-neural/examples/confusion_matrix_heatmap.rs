@@ -35,6 +35,7 @@ fn main() {
             }
             y_pred.push(pred);
         }
+    }
     // Convert to ndarray arrays
     let y_true_array = Array1::from(y_true);
     let y_pred_array = Array1::from(y_pred);
@@ -76,11 +77,14 @@ fn main() {
     let heatmap_output = cm.to_heatmap_with_options(
         Some("Animal Classification Heatmap (normalized)"),
         true, // normalized
+    );
     println!("{}", heatmap_output);
+
     // Example 4: Raw counts heatmap
     println!("\n\nExample 4: Raw Counts Confusion Matrix Heatmap\n");
     let raw_heatmap = cm.to_heatmap_with_options(
         Some("Animal Classification Heatmap (raw counts)"),
         false, // not normalized
+    );
     println!("{}", raw_heatmap);
 }

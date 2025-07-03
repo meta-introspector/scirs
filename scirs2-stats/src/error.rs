@@ -100,21 +100,18 @@ impl StatsError {
             StatsError::DomainError(msg) => {
                 if msg.contains("must be positive") {
                     format!(
-                        "{}
-Suggestion: Ensure the value is greater than 0",
-                        msg
+                        "{msg}
+Suggestion: Ensure the value is greater than 0"
                     )
                 } else if msg.contains("probability") {
                     format!(
-                        "{}
-Suggestion: Probability values must be between 0 and 1 (inclusive)",
-                        msg
+                        "{msg}
+Suggestion: Probability values must be between 0 and 1 (inclusive)"
                     )
                 } else if msg.contains("degrees of freedom") {
                     format!(
-                        "{}
-Suggestion: Degrees of freedom must be a positive value",
-                        msg
+                        "{msg}
+Suggestion: Degrees of freedom must be a positive value"
                     )
                 } else {
                     msg.clone()
@@ -123,103 +120,91 @@ Suggestion: Degrees of freedom must be a positive value",
             StatsError::DimensionMismatch(msg) => {
                 if msg.contains("same length") {
                     format!(
-                        "{}
-Suggestion: Ensure both arrays have the same number of elements",
-                        msg
+                        "{msg}
+Suggestion: Ensure both arrays have the same number of elements"
                     )
                 } else if msg.contains("square matrix") {
                     format!(
-                        "{}
-Suggestion: The input matrix must have equal number of rows and columns",
-                        msg
+                        "{msg}
+Suggestion: The input matrix must have equal number of rows and columns"
                     )
                 } else {
                     format!(
-                        "{}
-Suggestion: Check that input dimensions match the function requirements",
-                        msg
+                        "{msg}
+Suggestion: Check that input dimensions match the function requirements"
                     )
                 }
             }
             StatsError::InvalidArgument(msg) => {
                 if msg.contains("empty") {
                     format!(
-                        "{}
-Suggestion: Provide a non-empty array or collection",
-                        msg
+                        "{msg}
+Suggestion: Provide a non-empty array or collection"
                     )
                 } else if msg.contains("NaN") || msg.contains("nan") {
                     format!(
-                        "{}
-Suggestion: Remove or handle NaN values before computation",
-                        msg
+                        "{msg}
+Suggestion: Remove or handle NaN values before computation"
                     )
                 } else if msg.contains("infinite") || msg.contains("inf") {
                     format!(
-                        "{}
-Suggestion: Check for and handle infinite values in your data",
-                        msg
+                        "{msg}
+Suggestion: Check for and handle infinite values in your data"
                     )
                 } else {
                     format!(
-                        "{}
-Suggestion: Verify that all input arguments meet the function requirements",
-                        msg
+                        "{msg}
+Suggestion: Verify that all input arguments meet the function requirements"
                     )
                 }
             }
             StatsError::NotImplementedError(msg) => {
-                format!("{}
-Suggestion: This feature is not yet available. Consider using an alternative method or check for updates", msg)
+                format!("{msg}
+Suggestion: This feature is not yet available. Consider using an alternative method or check for updates")
             }
             StatsError::ComputationError(msg) => {
                 if msg.contains("overflow") {
                     format!(
-                        "{}
-Suggestion: Try scaling your input data or using a more numerically stable algorithm",
-                        msg
+                        "{msg}
+Suggestion: Try scaling your input data or using a more numerically stable algorithm"
                     )
                 } else if msg.contains("convergence") {
                     format!(
-                        "{}
-Suggestion: Try adjusting convergence parameters or using different initial values",
-                        msg
+                        "{msg}
+Suggestion: Try adjusting convergence parameters or using different initial values"
                     )
                 } else {
                     format!(
-                        "{}
-Suggestion: Check input data for numerical issues or extreme values",
-                        msg
+                        "{msg}
+Suggestion: Check input data for numerical issues or extreme values"
                     )
                 }
             }
             StatsError::ConvergenceError(msg) => {
-                format!("{}
-Suggestion: Try adjusting convergence parameters, using different initial values, or increasing the maximum number of iterations", msg)
+                format!("{msg}
+Suggestion: Try adjusting convergence parameters, using different initial values, or increasing the maximum number of iterations")
             }
             StatsError::InsufficientData(msg) => {
                 format!(
-                    "{}
-Suggestion: Increase sample size or use methods designed for small datasets",
-                    msg
+                    "{msg}
+Suggestion: Increase sample size or use methods designed for small datasets"
                 )
             }
             StatsError::InvalidInput(msg) => {
                 format!(
-                    "{}
-Suggestion: Check input format and ensure data meets function requirements",
-                    msg
+                    "{msg}
+Suggestion: Check input format and ensure data meets function requirements"
                 )
             }
             StatsError::NotImplemented(msg) => {
-                format!("{}
-Suggestion: This feature is not yet available. Consider using an alternative method or check for updates", msg)
+                format!("{msg}
+Suggestion: This feature is not yet available. Consider using an alternative method or check for updates")
             }
             StatsError::CoreError(err) => {
                 format!(
-                    "{}
+                    "{err}
 Suggestion: {}",
-                    err, "Refer to the core error for more details"
+                    "Refer to the core error for more details"
                 )
             }
         }
@@ -237,7 +222,7 @@ pub fn convert_to_validation_error<T, S: Into<String>>(
     match result {
         Ok(val) => Ok(val),
         Err(err) => Err(CoreError::ValidationError(
-            ErrorContext::new(format!("{}: {}", message.into(), err))
+            ErrorContext::new(format!("{}: {err}", message.into()))
                 .with_location(ErrorLocation::new(file!(), line!())),
         )),
     }

@@ -54,7 +54,7 @@ where
         None => {
             // Get a seed from the system RNG
             let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
+            let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
     };
@@ -201,7 +201,7 @@ pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
         None => {
             // Get a seed from the system RNG
             let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
+            let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
     };
@@ -281,7 +281,7 @@ where
         None => {
             // Get a seed from the system RNG
             let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
+            let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
     };
@@ -321,7 +321,7 @@ where
         if replace {
             // Weighted sampling with replacement
             for _ in 0..size {
-                let r: f64 = rng.random();
+                let r: f64 = rng.gen();
 
                 // Binary search for the index
                 let mut low = 0;
@@ -367,7 +367,7 @@ where
                 }
 
                 // Select an index based on weights
-                let r: f64 = rng.random();
+                let r: f64 = rng.gen();
                 let mut selected = 0;
 
                 for (j, &weight) in cum_weights.iter().enumerate().take(n - i) {
@@ -454,7 +454,7 @@ where
         None => {
             // Get a seed from the system RNG
             let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
+            let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
     };
@@ -510,7 +510,7 @@ pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>
         None => {
             // Get a seed from the system RNG
             let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
+            let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
     };
@@ -579,7 +579,7 @@ pub fn random_binary_matrix(
         None => {
             // Get a seed from the system RNG
             let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
+            let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
     };
@@ -651,7 +651,7 @@ where
         None => {
             // Get a seed from the system RNG
             let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
+            let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
     };

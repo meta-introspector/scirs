@@ -25,7 +25,7 @@ use crate::error::{GraphError, Result};
 /// O(V) for the visited set and queue.
 pub fn breadth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
-    N: Node + std::fmt::Debug,
+    N: Node + std::fmt::Debug + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -85,7 +85,7 @@ pub fn breadth_first_search_digraph<N, E, Ix>(
     source: &N,
 ) -> Result<Vec<N>>
 where
-    N: Node + std::fmt::Debug,
+    N: Node + std::fmt::Debug + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -146,7 +146,7 @@ where
 /// can contain all vertices (e.g., in a linear graph).
 pub fn depth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
-    N: Node + std::fmt::Debug,
+    N: Node + std::fmt::Debug + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -199,7 +199,7 @@ where
 /// * `Result<Vec<N>>` - The nodes visited in DFS order
 pub fn depth_first_search_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
-    N: Node + std::fmt::Debug,
+    N: Node + std::fmt::Debug + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -247,26 +247,26 @@ where
 
 /// Priority-first search state for priority queue
 #[derive(Clone)]
-struct PriorityState<N: Node, P: PartialOrd> {
+struct PriorityState<N: Node + std::fmt::Debug, P: PartialOrd> {
     node: N,
     priority: P,
 }
 
-impl<N: Node, P: PartialOrd> PartialEq for PriorityState<N, P> {
+impl<N: Node + std::fmt::Debug, P: PartialOrd> PartialEq for PriorityState<N, P> {
     fn eq(&self, other: &Self) -> bool {
         self.node == other.node
     }
 }
 
-impl<N: Node, P: PartialOrd> Eq for PriorityState<N, P> {}
+impl<N: Node + std::fmt::Debug, P: PartialOrd> Eq for PriorityState<N, P> {}
 
-impl<N: Node, P: PartialOrd> PartialOrd for PriorityState<N, P> {
+impl<N: Node + std::fmt::Debug, P: PartialOrd> PartialOrd for PriorityState<N, P> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<N: Node, P: PartialOrd> Ord for PriorityState<N, P> {
+impl<N: Node + std::fmt::Debug, P: PartialOrd> Ord for PriorityState<N, P> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         // Reverse order for min-heap behavior
         other
@@ -296,7 +296,7 @@ pub fn priority_first_search<N, E, Ix, P, F>(
     priority_fn: F,
 ) -> Result<Vec<N>>
 where
-    N: Node + std::fmt::Debug + Clone,
+    N: Node + std::fmt::Debug + std::fmt::Debug + Clone,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
     P: PartialOrd + Clone + Copy,
@@ -372,7 +372,7 @@ pub fn priority_first_search_digraph<N, E, Ix, P, F>(
     priority_fn: F,
 ) -> Result<Vec<N>>
 where
-    N: Node + std::fmt::Debug + Clone,
+    N: Node + std::fmt::Debug + std::fmt::Debug + Clone,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
     P: PartialOrd + Clone + Copy,
@@ -448,7 +448,7 @@ pub fn bidirectional_search<N, E, Ix>(
     goal: &N,
 ) -> Result<Option<Vec<N>>>
 where
-    N: Node + std::fmt::Debug + Clone + std::hash::Hash + Eq,
+    N: Node + std::fmt::Debug + std::fmt::Debug + Clone + std::hash::Hash + Eq,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -554,7 +554,7 @@ pub fn bidirectional_search_digraph<N, E, Ix>(
     goal: &N,
 ) -> Result<Option<Vec<N>>>
 where
-    N: Node + std::fmt::Debug + Clone + std::hash::Hash + Eq,
+    N: Node + std::fmt::Debug + std::fmt::Debug + Clone + std::hash::Hash + Eq,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -675,7 +675,7 @@ fn reconstruct_bidirectional_path<N, E, Ix>(
     >,
 ) -> Vec<N>
 where
-    N: Node + Clone,
+    N: Node + std::fmt::Debug + Clone,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -724,7 +724,7 @@ fn reconstruct_bidirectional_path_digraph<N, E, Ix>(
     >,
 ) -> Vec<N>
 where
-    N: Node + Clone,
+    N: Node + std::fmt::Debug + Clone,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {

@@ -6,7 +6,7 @@
 
 use super::core::*;
 use super::template_generator::*;
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use ndarray::{Array1, Array2, Axis};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};

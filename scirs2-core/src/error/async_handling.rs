@@ -296,11 +296,11 @@ impl AsyncProgressTracker {
         );
 
         if let Some(remaining) = self.estimated_remaining_time() {
-            report.push_str(&format!(" | ETA: {:?}", remaining));
+            report.push_str(&format!(" | Remaining: {:?}", remaining));
         }
 
         if error_count > 0 {
-            report.push_str(&format!(" | Errors: {error_count}"));
+            report.push_str(&format!(" | Errors: {}", error_count));
         }
 
         report

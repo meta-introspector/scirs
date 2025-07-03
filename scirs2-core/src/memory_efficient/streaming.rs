@@ -641,7 +641,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                             // Other error, update stats and continue
                             let mut stats_guard = stats.write().unwrap();
                             stats_guard.error_count += 1;
-                            stats_guard.last_error = Some(format!("{err}"));
+                            stats_guard.last_error = Some(err.to_string());
                             continue;
                         }
                     }
@@ -734,7 +734,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                                 // Error sending output, update stats
                                 let mut stats_guard = stats.write().unwrap();
                                 stats_guard.error_count += 1;
-                                stats_guard.last_error = Some(format!("{err}"));
+                                stats_guard.last_error = Some(err.to_string());
                             }
                         }
                     }
@@ -743,7 +743,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                     // Processing error, update stats
                     let mut stats_guard = stats.write().unwrap();
                     stats_guard.error_count += 1;
-                    stats_guard.last_error = Some(format!("{err}"));
+                    stats_guard.last_error = Some(err.to_string());
                 }
             }
 
@@ -1545,12 +1545,12 @@ where
 
         let parallel_fn = move |arrays: Vec<ArrayBase<OwnedRepr<A>, D>>| -> Result<Vec<ArrayBase<OwnedRepr<A>, D>>, CoreError> {
             // Process arrays in parallel using rayon
-            use rayon::prelude::*;
-            let pool = rayon::ThreadPoolBuilder::new()
+            use crate::parallel_ops::*;
+            let pool = ThreadPoolBuilder::new()
                 .num_threads(workers)
                 .build()
                 .map_err(|e| CoreError::StreamError(
-                    ErrorContext::new(format!("Failed to create thread pool: {}", e))
+                    ErrorContext::new(format!("{e}"))
                         .with_location(ErrorLocation::new(file!(), line!()))
                 ))?;
 
@@ -1595,11 +1595,11 @@ impl<T> StreamError for std::result::Result<T, CoreError> {
     fn to_stream_error(self, message: &str) -> CoreError {
         match self {
             Ok(_) => CoreError::StreamError(
-                ErrorContext::new(format!("Unexpected success: {}", message))
+                ErrorContext::new(format!("{message}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             Err(e) => CoreError::StreamError(
-                ErrorContext::new(format!("{}: {}", message, e))
+                ErrorContext::new(format!("{}, {}", message, e))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
         }

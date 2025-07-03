@@ -57,7 +57,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             p,
             alpha_range: (neg_one, one),
             beta_range: (zero, one),
-            rng: rand::rng(),
+            rng: rand::thread_rng(),
         }
     }
 
@@ -77,7 +77,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             p,
             alpha_range,
             beta_range,
-            rng: rand::rng(),
+            rng: rand::thread_rng(),
         }
     }
 
@@ -92,7 +92,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             return min;
         }
 
-        let random_val = self.rng.random_range(min_f..max_f);
+        let random_val = self.rng.gen_range(min_f..max_f);
         A::from_f64(random_val).unwrap()
     }
 
@@ -109,7 +109,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
         let one = A::one();
 
         // Determine if the gate is active
-        let u: f64 = self.rng.random();
+        let u: f64 = self.rng.gen();
         let b = if u < self.p.to_f64().unwrap() {
             one
         } else {

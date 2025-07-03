@@ -3,7 +3,7 @@
 //! This module provides specialized optimizers for reinforcement learning,
 //! including policy gradient methods, actor-critic algorithms, and trust region methods.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
 use std::collections::HashMap;

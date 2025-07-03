@@ -436,7 +436,7 @@ where
 /// Uses the power iteration method.
 fn eigenvector_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -506,7 +506,7 @@ where
 /// Uses the power iteration method.
 fn eigenvector_centrality_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -699,7 +699,7 @@ pub fn katz_centrality<N, E, Ix>(
     beta: f64,
 ) -> Result<HashMap<N, f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + num_traits::Zero + num_traits::One + Into<f64> + Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -778,7 +778,7 @@ pub fn katz_centrality_digraph<N, E, Ix>(
     beta: f64,
 ) -> Result<HashMap<N, f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + num_traits::Zero + num_traits::One + Into<f64> + Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -1259,7 +1259,7 @@ where
 /// Weighted degree centrality is the sum of the weights of all edges incident to a node.
 fn weighted_degree_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone,
     Ix: IndexType,
 {
@@ -1287,7 +1287,7 @@ fn weighted_degree_centrality_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
 ) -> Result<HashMap<N, f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone,
     Ix: IndexType,
 {

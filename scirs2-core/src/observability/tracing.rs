@@ -268,7 +268,7 @@ impl TraceContext {
 
         // For span ID, we need to pad the 16-char ID to create a valid UUID
         let span_id_str = if parts[2].len() == 16 {
-            format!("0000000000000000{}", parts[2])
+            format!("{:0>32}", parts[2]) // Pad to 32 characters with leading zeros
         } else {
             return Err(CoreError::ComputationError(
                 crate::error::ErrorContext::new(

@@ -644,8 +644,8 @@ where
             let data: Vec<f64> = (0..n)
                 .map(|_| {
                     // Box-Muller transform for normal distribution
-                    let u1: f64 = self.rng.random();
-                    let u2: f64 = self.rng.random();
+                    let u1: f64 = self.rng.gen();
+                    let u2: f64 = self.rng.gen();
                     (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
                 })
                 .collect();

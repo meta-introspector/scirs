@@ -11,7 +11,7 @@
 //! - Machine learning enhanced spectral methods
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2};
 use num_traits::{Float, FloatConst, NumCast, One, Zero};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use scirs2_linalg::parallel_dispatch::ParallelConfig;

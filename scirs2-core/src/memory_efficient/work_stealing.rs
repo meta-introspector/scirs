@@ -671,13 +671,13 @@ impl WorkStealingScheduler {
             let result_sender = self.result_sender.clone();
 
             let handle = thread::Builder::new()
-                .name(format!("worker-{}", worker_id))
+                .name(format!("{worker_id}"))
                 .spawn(move || {
                     worker.run(result_sender);
                 })
                 .map_err(|e| {
                     CoreError::StreamError(
-                        ErrorContext::new(format!("Failed to start worker thread: {}", e))
+                        ErrorContext::new(format!("{e}"))
                             .with_location(ErrorLocation::new(file!(), line!())),
                     )
                 })?;

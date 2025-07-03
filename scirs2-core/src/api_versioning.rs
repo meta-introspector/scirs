@@ -40,15 +40,9 @@ impl Version {
             return Err(format!("Invalid version format: {version_str}"));
         }
 
-        let major = parts[0]
-            .parse::<u32>()
-            .map_err(|_| format!("Invalid major version: {}", parts[0]))?;
-        let minor = parts[1]
-            .parse::<u32>()
-            .map_err(|_| format!("Invalid minor version: {}", parts[1]))?;
-        let patch = parts[2]
-            .parse::<u32>()
-            .map_err(|_| format!("Invalid patch version: {}", parts[2]))?;
+        let major = parts[0].parse::<u32>().map_err(|_| parts[0].to_string())?;
+        let minor = parts[1].parse::<u32>().map_err(|_| parts[1].to_string())?;
+        let patch = parts[2].parse::<u32>().map_err(|_| parts[2].to_string())?;
 
         Ok(Self::new(major, minor, patch))
     }
@@ -802,7 +796,7 @@ impl ApiCompatibilityChecker {
                             && old_param.type_name != new_param.type_name
                         {
                             violations.push(CompatibilityViolation {
-                                api_name: format!("{module}::{name}", module = current_api.module, name = current_api.name),
+                                api_name: format!("{}::{}", current_api.module, current_api.name),
                                 violation_type: CompatibilityRuleType::ParameterTypeChange,
                                 severity: CompatibilitySeverity::Breaking,
                                 description: format!(

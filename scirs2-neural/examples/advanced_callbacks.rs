@@ -43,6 +43,7 @@ fn create_regression_model(input_dim: usize, rng: &mut SmallRng) -> Result<Seque
     let dense3 = Dense::new(8, 1, None, rng)?;
     model.add_layer(dense3);
     Ok(model)
+}
 // Calculate mean squared error
 fn calculate_mse<F: Float + Debug + ScalarOperand>(
     model: &Sequential<F>,
@@ -54,7 +55,9 @@ fn calculate_mse<F: Float + Debug + ScalarOperand>(
     for i in 0..x.nrows() {
         let diff = predictions[[i, 0]] - y[[i, 0]];
         sum_squared_error = sum_squared_error + diff * diff;
+    }
     Ok(sum_squared_error / F::from(x.nrows()).unwrap())
+}
 fn main() -> Result<()> {
     println!("Advanced Learning Rate Scheduling and Early Stopping Example");
     println!("==========================================================\n");
@@ -72,12 +75,16 @@ fn main() -> Result<()> {
     let (x_train, y_train) = (
         x.slice(ndarray::s![0..train_size, ..]).to_owned(),
         y.slice(ndarray::s![0..train_size, ..]).to_owned(),
+    );
     let (x_val, y_val) = (
         x.slice(ndarray::s![train_size.., ..]).to_owned(),
         y.slice(ndarray::s![train_size.., ..]).to_owned(),
+    );
+    println!(
         "Split into {} training and {} validation samples",
         x_train.nrows(),
         x_val.nrows()
+    );
     // Train with early stopping
     println!("\nTraining with early stopping...");
     let model = train_with_early_stopping(&mut rng, &x_train, &y_train, &x_val, &y_val)?;
@@ -96,7 +103,7 @@ fn train_with_early_stopping(
     x_val: &Array2<f32>,
     y_val: &Array2<f32>,
 ) -> Result<Sequential<f32>> {
-    let mut model = create_regression_model(x_train.ncols(), rng)?
+    let mut model = create_regression_model(x_train.ncols(), rng)?;
     println!("Created model with {} layers", model.num_layers());
     // Setup loss function and optimizer
     let loss_fn = MeanSquaredError::new();
@@ -136,6 +143,7 @@ fn train_with_early_stopping(
         // Track best validation loss
         if val_loss < best_val_loss {
             best_val_loss = val_loss;
+        }
         // Print progress
         if epoch % 50 == 0 || epoch == max_epochs - 1 || stop_training {
             println!(
@@ -145,6 +153,7 @@ fn train_with_early_stopping(
                 train_loss,
                 val_loss
             );
+        }
         if stop_training {
             break;
         }

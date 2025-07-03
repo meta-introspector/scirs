@@ -976,7 +976,10 @@ impl AdaptiveOptimizer {
 
         Err(CoreError::from(std::io::Error::new(
             std::io::ErrorKind::NotFound,
-            format!("Workload '{}' not found", workload_name),
+            format!(
+                "Workload '{workload_name}' not found",
+                workload_name = workload_name
+            ),
         )))
     }
 
@@ -1108,7 +1111,7 @@ impl AdaptiveOptimizer {
                                 benefit_score: 0.8,
                             },
                             confidence: 0.85,
-                            rationale: format!("Workload '{}' shows degrading execution time. Increasing thread count may improve parallelization.", workload),
+                            rationale: format!("Workload '{workload}' shows degrading execution time. Increasing thread count may improve parallelization.", workload = workload),
                             risk_level: RiskLevel::Low,
                         });
                     }

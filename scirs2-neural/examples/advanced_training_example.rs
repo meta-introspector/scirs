@@ -47,8 +47,12 @@ fn create_regression_model<
 // Generate synthetic regression dataset
 fn generate_regression_dataset<
     F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync + 'static,
+>(
     n_samples: usize,
+    input_dim: usize,
+    output_dim: usize,
 ) -> Result<InMemoryDataset<F>> {
+    let mut rng = SmallRng::seed_from_u64(42);
     // Create arrays for features and labels
     let mut features_vec = Vec::with_capacity(n_samples * input_dim);
     let mut labels_vec = Vec::with_capacity(n_samples * output_dim);
@@ -57,7 +61,7 @@ fn generate_regression_dataset<
         // Generate input features
         let mut input_features = Vec::with_capacity(input_dim);
         for _ in 0..input_dim {
-            input_features.push(F::from(rng.random_range(0.0..1.0)).unwrap());
+            input_features.push(F::from(rng.gen_range(0.0..1.0)).unwrap());
         }
         features_vec.extend(input_features.iter());
         // Generate target values (simple linear relationship plus noise)
@@ -69,9 +73,10 @@ fn generate_regression_dataset<
                 val = val + input_features[j] * weight;
             }
             // Add noise
-            let noise = F::from(rng.random_range(-0.1..0.1)).unwrap();
+            let noise = F::from(rng.gen_range(-0.1..0.1)).unwrap();
             val = val + noise;
             target_values.push(val);
+        }
         labels_vec.extend(target_values.iter());
     }
     // Create feature and label arrays
@@ -79,18 +84,27 @@ fn generate_regression_dataset<
     let labels = Array::from_shape_vec([n_samples, output_dim], labels_vec.to_vec())?;
     // Create dataset
     InMemoryDataset::new(features.into_dyn(), labels.into_dyn())
+}
 // Cosine annealing learning rate scheduler
 struct CosineAnnealingScheduler<F: Float + Debug + ScalarOperand> {
     initial_lr: F,
     min_lr: F,
+}
+
 impl<F: Float + Debug + ScalarOperand> CosineAnnealingScheduler<F> {
     fn new(initial_lr: F, min_lr: F) -> Self {
         Self { initial_lr, min_lr }
+    }
+}
+
 impl<F: Float + Debug + ScalarOperand> LearningRateScheduler<F> for CosineAnnealingScheduler<F> {
     fn get_learning_rate(&mut self, progress: f64) -> Result<F> {
         let cosine = (1.0 + (std::f64::consts::PI * progress).cos()) / 2.0;
         let lr = self.min_lr + (self.initial_lr - self.min_lr) * F::from(cosine).unwrap();
         Ok(lr)
+    }
+}
+
 fn main() -> Result<()> {
     println!("Advanced Training Examples");
     println!("-------------------------");
@@ -128,6 +142,7 @@ fn main() -> Result<()> {
         }),
         gradient_accumulation: Some(ga_config),
         mixed_precision: None,
+    };
     // Create trainer
     let _trainer = Trainer::new(model, optimizer, loss_fn, training_config);
     // Note: To properly use callbacks, we would need to implement the appropriate trait interfaces
@@ -153,6 +168,9 @@ fn main() -> Result<()> {
     let _loss_fn = MSELoss::new();
     // Create gradient accumulator
     let mut accumulator = GradientAccumulator::new(GradientAccumulationConfig {
+        accumulation_steps: 4,
+        average_gradients: true,
+        zero_gradients_after_update: true,
         clip_gradients: false,
         max_gradient_norm: None,
         log_gradient_stats: false,
@@ -192,11 +210,15 @@ fn main() -> Result<()> {
             );
             // In a real implementation we would apply gradients:
             // accumulator.apply_gradients(&mut model, &mut optimizer)?;
+        }
         // Early stopping for example
         if batch_idx >= 10 {
             break;
+        }
+    }
     if processed_batches > 0 {
         println!("Average loss: {:.4}", total_loss / processed_batches as f32);
+    }
     // 3. Mixed Precision (not fully implemented, pseudocode)
     println!("\n3. Mixed Precision Training (Pseudocode):");
     println!(
@@ -235,9 +257,28 @@ mixed_model.train_epoch(
     println!("\n4. Gradient Clipping:");
     // Create training config - we need two separate instances
     let gradient_clipping_config = TrainingConfig {
+        batch_size: 32,
+        shuffle: true,
+        num_workers: 0,
+        learning_rate: 0.001,
+        epochs: 5,
+        verbose: 1,
+        validation: None,
         gradient_accumulation: None,
+        mixed_precision: None,
+    };
     // Create a separate configuration for the value clipping example
     let value_clipping_config = TrainingConfig {
+        batch_size: 32,
+        shuffle: true,
+        num_workers: 0,
+        learning_rate: 0.001,
+        epochs: 5,
+        verbose: 1,
+        validation: None,
+        gradient_accumulation: None,
+        mixed_precision: None,
+    };
     let _trainer = Trainer::new(model, optimizer, loss_fn, gradient_clipping_config);
     // Instead of adding callbacks directly, we'll just demonstrate the concept
     println!("If callbacks were fully implemented, we would add gradient clipping:");
@@ -264,3 +305,4 @@ mixed_model.train_epoch(
     // Demonstrate the training utilities
     println!("\nAdvanced Training Examples Completed Successfully!");
     Ok(())
+}

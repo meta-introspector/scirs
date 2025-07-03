@@ -979,8 +979,8 @@ pub mod units {
         pub fn multiply(&self, other: &Quantity) -> Quantity {
             let new_dimensions = self.unit.dimensions.multiply(&other.unit.dimensions);
             let new_unit = Unit::new(
-                format!("{a}⋅{b}", a = self.unit.symbol, b = other.unit.symbol),
-                format!("{a}⋅{b}", a = self.unit.symbol, b = other.unit.symbol),
+                format!("{}.{}", self.unit.symbol, other.unit.symbol),
+                format!("{}.{}", self.unit.symbol, other.unit.symbol),
                 new_dimensions,
                 self.unit.scale_factor * other.unit.scale_factor,
             );
@@ -992,8 +992,8 @@ pub mod units {
         pub fn divide(&self, other: &Quantity) -> Quantity {
             let new_dimensions = self.unit.dimensions.divide(&other.unit.dimensions);
             let new_unit = Unit::new(
-                format!("{a}/{b}", a = self.unit.symbol, b = other.unit.symbol),
-                format!("{a}/{b}", a = self.unit.symbol, b = other.unit.symbol),
+                format!("{}/{}", self.unit.symbol, other.unit.symbol),
+                format!("{}/{}", self.unit.symbol, other.unit.symbol),
                 new_dimensions,
                 self.unit.scale_factor / other.unit.scale_factor,
             );

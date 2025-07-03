@@ -633,7 +633,7 @@ where
         + std::ops::RemAssign
         + 'static,
 {
-    /// Build a universal fast kriging model 
+    /// Build a universal fast kriging model
     pub fn build_universal(self) -> InterpolateResult<FastKriging<F>> {
         FastKriging::from_builder(self)
     }

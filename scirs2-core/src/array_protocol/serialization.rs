@@ -352,15 +352,15 @@ impl ModelSerializer {
         for (i, layer) in model.layers().iter().enumerate() {
             for (j, param) in layer.parameters().iter().enumerate() {
                 // Generate parameter file name
-                let param_name = format!("layer_{}_param_{}", i, j);
-                let param_file = format!("{}.npz", param_name);
+                let param_name = format!("layer_{i}_param_{j}");
+                let param_file = format!("{param_name}.npz");
                 let param_path = params_dir.join(&param_file);
 
                 // Save parameter
                 self.save_parameter(param.as_ref(), &param_path)?;
 
                 // Add to parameter files map
-                parameter_files.insert(param_name, format!("parameters/{}", param_file));
+                parameter_files.insert(param_name, format!("parameters/{param_file}"));
             }
         }
 
@@ -543,8 +543,8 @@ impl ModelSerializer {
                 Ok(Box::new(Dropout::new(&config.name, rate, seed)))
             }
             _ => Err(CoreError::NotImplementedError(ErrorContext::new(format!(
-                "Deserialization not implemented for layer type: {}",
-                config.layer_type
+                "Deserialization not implemented for layer type: {layer_type}",
+                layer_type = config.layer_type
             )))),
         }
     }
@@ -561,7 +561,7 @@ impl ModelSerializer {
             let params = layer.parameters();
             for (j, param) in params.iter().enumerate() {
                 // Get parameter file
-                let param_name = format!("layer_{}_param_{}", i, j);
+                let param_name = format!("layer_{i}_param_{j}");
                 if let Some(param_file) = parameter_files.get(&param_name) {
                     let param_path = model_dir.join(param_file);
 
@@ -589,8 +589,8 @@ impl ModelSerializer {
                         }
                     } else {
                         return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                            "Parameter file not found: {}",
-                            param_path.display()
+                            "Parameter file not found: {path}",
+                            path = param_path.display()
                         ))));
                     }
                 }
@@ -605,8 +605,8 @@ impl ModelSerializer {
         // Check if optimizer file exists
         if !optimizer_path.exists() {
             return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "Optimizer file not found: {}",
-                optimizer_path.display()
+                "Optimizer file not found: {path}",
+                path = optimizer_path.display()
             ))));
         }
 
@@ -683,7 +683,7 @@ pub fn save_checkpoint(
 
     // Save model and optimizer
     let model_name = "checkpoint";
-    let model_version = format!("epoch_{}", epoch);
+    let model_version = format!("epoch_{epoch}");
     serializer.save_model(model, model_name, &model_version, Some(optimizer))?;
 
     Ok(())
@@ -714,7 +714,7 @@ pub fn load_checkpoint(path: impl AsRef<Path>) -> CoreResult<ModelCheckpoint> {
 
     // Load model and optimizer
     let model_name = "checkpoint";
-    let model_version = format!("epoch_{}", epoch);
+    let model_version = format!("epoch_{epoch}");
     let (model, optimizer) = serializer.load_model(model_name, &model_version)?;
 
     Ok((model, optimizer.unwrap(), epoch, metrics))

@@ -273,7 +273,7 @@ where
         // Metropolis acceptance
         let log_alpha = -(final_hamiltonian - initial_hamiltonian);
         let alpha = log_alpha.exp().min(F::one());
-        let u: f64 = rng.random();
+        let u: f64 = rng.gen();
 
         self.stats.n_proposals += 1;
 

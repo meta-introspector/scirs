@@ -18,6 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = Array::from_shape_fn(
         IxDyn(&[2, 16]),
         |_| rand::random::<f32>() * 100.0, // Random token IDs between 0 and 100
+    );
     println!("Input shape: {:?}", input.shape());
     // Get sequence output (hidden states)
     let sequence_output = model.forward(&input)?;
@@ -32,14 +33,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let base_input = Array::from_shape_fn(
         IxDyn(&[1, 64]),
         |_| rand::random::<f32>() * 1000.0, // Random token IDs
+    );
     println!("BERT-Base input shape: {:?}", base_input.shape());
     // Forward pass to get pooled output
     let base_pooled_output = bert_base.get_pooled_output(&base_input)?;
     println!(
         "BERT-Base pooled output shape: {:?}",
         base_pooled_output.shape()
+    );
+    println!(
         "BERT-Base hidden dimension: {}",
         base_pooled_output.shape()[1]
+    );
     println!("\nBERT example completed successfully!");
     Ok(())
 }

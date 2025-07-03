@@ -125,23 +125,23 @@ where
 
     match laplacian_type {
         LaplacianType::Standard => compute_standard_laplacian(
-            row_indices.as_slice().unwrap(),
-            col_indices.as_slice().unwrap(),
-            values.as_slice().unwrap(),
+            &row_indices,
+            &col_indices,
+            &values,
             &degrees,
             n,
         ),
         LaplacianType::Normalized => compute_normalized_laplacian(
-            row_indices.as_slice().unwrap(),
-            col_indices.as_slice().unwrap(),
-            values.as_slice().unwrap(),
+            &row_indices,
+            &col_indices,
+            &values,
             &degrees,
             n,
         ),
         LaplacianType::RandomWalk => compute_random_walk_laplacian(
-            row_indices.as_slice().unwrap(),
-            col_indices.as_slice().unwrap(),
-            values.as_slice().unwrap(),
+            &row_indices,
+            &col_indices,
+            &values,
             &degrees,
             n,
         ),
@@ -748,5 +748,4 @@ mod tests {
         assert_relative_eq!(in_degrees[1], 1.0);
         assert_relative_eq!(in_degrees[2], 1.0);
     }
-
 }

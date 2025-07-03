@@ -19,7 +19,7 @@ use crate::streaming::FrameMetadata;
 use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2, ArrayView2};
 use rand::prelude::*;
-use rand::thread_rng;
+use rand::rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -270,7 +270,7 @@ impl SpikingNeuralNetwork {
         let mut neurons = Vec::with_capacity(num_neurons);
         let mut synapses = Vec::new();
         let mut connectivity = HashMap::new();
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
         // Initialize neurons
         for _ in 0..num_neurons {
@@ -281,11 +281,11 @@ impl SpikingNeuralNetwork {
         for i in 0..num_neurons {
             let mut connections = Vec::new();
             for j in 0..num_neurons {
-                if i != j && rng.gen::<f64>() < connectivity_probability {
+                if i != j && rng.random::<f64>() < connectivity_probability {
                     connections.push(j);
 
                     // Create synapse
-                    let weight = rng.gen_range(0.1..0.8);
+                    let weight = rng.random_range(0.1..0.8);
                     synapses.push(PlasticSynapse::new(i, j, weight));
                 }
             }

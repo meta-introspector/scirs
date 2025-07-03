@@ -741,7 +741,7 @@ impl PatternRecognizer {
                     let pattern = RecognizedPattern::new(pattern, confidence)
                         .with_metadata("unique_indices", &unique_indices.to_string())
                         .with_metadata("max_index", &max_idx.to_string())
-                        .with_metadata("density", &format!("{:.6}", density));
+                        .with_metadata("density", &format!(":.6{density}"));
                     self.patterns.push(pattern);
                 }
             }

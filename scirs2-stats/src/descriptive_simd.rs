@@ -4,7 +4,7 @@
 //! statistical functions using scirs2-core's unified SIMD operations.
 
 use crate::error::StatsResult;
-use crate::error_standardization::{ErrorMessages, ErrorValidator};
+use crate::error_standardization::ErrorMessages;
 use ndarray::{ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};

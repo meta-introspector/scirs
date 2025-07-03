@@ -238,9 +238,9 @@ where
             let cols = read_array::<_, usize>(&mut reader)?;
             // For DOK, indices is row indices
             DokArray::from_triplets(
-                indices.as_slice().unwrap(),
-                cols.as_slice().unwrap(),
-                data.as_slice().unwrap(),
+                &indices,
+                &cols,
+                &data,
                 shape,
             )
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>)

@@ -4106,6 +4106,7 @@ pub struct CompressibleState {
 
 impl CompressibleFlowSolver {
     /// Create new compressible flow solver
+    #[allow(clippy::too_many_arguments)]
     pub fn new(nx: usize, ny: usize, nz: usize, dx: f64, dy: f64, dz: f64) -> Self {
         Self {
             nx,

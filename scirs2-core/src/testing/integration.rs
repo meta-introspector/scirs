@@ -1110,9 +1110,7 @@ impl EcosystemIntegrationTester {
         // Test API compatibility
         result.api_compatible = self.test_api_compatibility_for_module(module_name)?;
         if !result.api_compatible {
-            result
-                .issues
-                .push(format!("API incompatibility detected in {}", module_name));
+            result.issues.push(format!("{module_name}"));
         }
 
         // Test feature compatibility

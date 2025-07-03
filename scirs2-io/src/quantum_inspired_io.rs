@@ -15,6 +15,48 @@ use std::collections::HashMap;
 use std::f32::consts::PI;
 use std::sync::{Arc, RwLock};
 
+/// Quantum error correction implementation
+#[derive(Debug, Clone)]
+pub struct QuantumErrorCorrection {
+    /// Error correction code type
+    pub code_type: String,
+    /// Syndrome measurement results
+    pub syndromes: Vec<bool>,
+    /// Error threshold
+    pub threshold: f32,
+}
+
+impl Default for QuantumErrorCorrection {
+    fn default() -> Self {
+        Self {
+            code_type: "stabilizer".to_string(),
+            syndromes: Vec::new(),
+            threshold: 0.001,
+        }
+    }
+}
+
+/// Quantum gate operations
+#[derive(Debug, Clone)]
+pub enum QuantumGate {
+    /// Pauli X gate (bit flip)
+    PauliX(usize),
+    /// Pauli Y gate
+    PauliY(usize),
+    /// Pauli Z gate (phase flip)
+    PauliZ(usize),
+    /// Hadamard gate (superposition)
+    Hadamard(usize),
+    /// CNOT gate (controlled NOT)
+    CNOT(usize, usize),
+    /// Phase gate
+    Phase(usize, f32),
+    /// Rotation gates
+    RotationX(usize, f32),
+    RotationY(usize, f32),
+    RotationZ(usize, f32),
+}
+
 /// Quantum state representation for I/O optimization
 #[derive(Debug, Clone)]
 pub struct QuantumState {
@@ -42,6 +84,9 @@ impl QuantumState {
             amplitudes,
             phases: Array1::zeros(dimensions),
             entanglement: Array2::eye(dimensions),
+            error_correction: QuantumErrorCorrection::default(),
+            decoherence_rate: 0.001,
+            gate_history: Vec::new(),
         }
     }
 

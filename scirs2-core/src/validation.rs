@@ -227,12 +227,8 @@ where
 {
     if array.ndim() != 1 {
         return Err(CoreError::ShapeError(
-            ErrorContext::new(format!(
-                "{name} must be 1D, got {ndim}D",
-                name = name.into(),
-                ndim = array.ndim()
-            ))
-            .with_location(ErrorLocation::new(file!(), line!())),
+            ErrorContext::new(format!("{} must be 1D, got {}D", name.into(), array.ndim()))
+                .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
     Ok(())
@@ -261,12 +257,8 @@ where
 {
     if array.ndim() != 2 {
         return Err(CoreError::ShapeError(
-            ErrorContext::new(format!(
-                "{name} must be 2D, got {ndim}D",
-                name = name.into(),
-                ndim = array.ndim()
-            ))
-            .with_location(ErrorLocation::new(file!(), line!())),
+            ErrorContext::new(format!("{} must be 2D, got {}D", name.into(), array.ndim()))
+                .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
     Ok(())
@@ -464,11 +456,8 @@ where
 
     if (sum - one).abs() > tol {
         return Err(CoreError::ValueError(
-            ErrorContext::new(format!(
-                "{name} must sum to 1, got sum = {sum}",
-                name = name.into()
-            ))
-            .with_location(ErrorLocation::new(file!(), line!())),
+            ErrorContext::new(format!("{} must sum to 1, got sum = {sum}", name.into()))
+                .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
 
@@ -494,7 +483,7 @@ where
 {
     if array.is_empty() {
         return Err(CoreError::ValueError(
-            ErrorContext::new(format!("{name} cannot be empty", name = name.into()))
+            ErrorContext::new(format!("{} cannot be empty", name.into()))
                 .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
@@ -1025,10 +1014,7 @@ pub mod custom {
         }
 
         fn description(&self) -> String {
-            format!(
-                "IF condition THEN {desc}",
-                desc = self.validator.description()
-            )
+            format!("IF condition THEN {}", self.validator.description())
         }
     }
 
@@ -1262,14 +1248,11 @@ pub mod custom {
             }
 
             if let Some(ref size_validator) = self.size_validator {
-                parts.push(format!("size {desc}", desc = size_validator.description()));
+                parts.push(format!("size {}", size_validator.description()));
             }
 
             if let Some(ref element_validator) = self.element_validator {
-                parts.push(format!(
-                    "elements {desc}",
-                    desc = element_validator.description()
-                ));
+                parts.push(format!("elements {}", element_validator.description()));
             }
 
             if parts.is_empty() {

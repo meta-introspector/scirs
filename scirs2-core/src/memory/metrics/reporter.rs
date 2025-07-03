@@ -221,7 +221,7 @@ impl MemoryReport {
             output.push_str(&format!(
                 "{:<20} [{:<50}] {}\n",
                 component,
-                format!("{}{}", current_bar, peak_bar),
+                format!("{current_bar, peak_bar}"),
                 format_bytes(stats.peak_usage)
             ));
         }

@@ -10,17 +10,16 @@
 //! - Real-time performance monitoring and optimization
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use ndarray::ArrayView2;
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
     parallel_ops::*,
     simd_ops::{PlatformCapabilities, SimdUnifiedOps},
-    validation::*,
 };
 use std::collections::{HashMap, VecDeque};
 use std::marker::PhantomData;
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
-use std::sync::{Arc, Barrier, Mutex, RwLock};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant};
 

@@ -40,7 +40,7 @@
 //!
 //!     // Log intermediate results at low frequency to avoid flooding logs
 //!     if i % 100 == 0 {
-//!         logger.debug(&format!("Completed {}/{} iterations", i + 1, 1000));
+//!         logger.debug(&format!("Completed {}/1000 iterations", i + 1));
 //!     }
 //! }
 //!
@@ -400,7 +400,7 @@ impl Logger {
         let mut tracker = builder.build();
 
         // Log the start of progress tracking
-        self.info(&format!("Starting progress tracking: {}", description));
+        self.info(&format!("Starting progress tracking: {description}"));
 
         tracker.start();
         tracker
@@ -429,9 +429,8 @@ impl Logger {
         // Log completion
         let stats = progress.stats();
         self.info(&format!(
-            "Completed progress tracking: {} - {:.1}s elapsed",
-            description,
-            stats.elapsed.as_secs_f64()
+            "Completed progress tracking: {description} - {elapsed:.1}s elapsed",
+            elapsed = stats.elapsed.as_secs_f64()
         ));
 
         result
@@ -462,7 +461,7 @@ impl ProgressTracker {
         let now = Instant::now();
         let logger = Logger::new("progress").with_field("operation", name);
 
-        logger.info(&format!("Starting operation: {}", name));
+        logger.info(&format!("Starting operation: {name}"));
 
         Self {
             name: name.to_string(),
@@ -502,13 +501,11 @@ impl ProgressTracker {
             };
 
             self.logger.debug(&format!(
-                "{}: {}/{} ({:.1}%) - Elapsed: {:.1}s - {}",
-                self.name,
-                self.current,
-                self.total,
-                percent,
-                elapsed.as_secs_f64(),
-                eta
+                "{name}: {current}/{total} ({percent:.1}%) - Elapsed: {elapsed:.1}s - {eta}",
+                name = self.name,
+                current = self.current,
+                total = self.total,
+                elapsed = elapsed.as_secs_f64()
             ));
         }
     }
@@ -519,11 +516,10 @@ impl ProgressTracker {
         self.current = self.total;
 
         self.logger.info(&format!(
-            "{} completed: {}/{} (100%) - Total time: {:.1}s",
-            self.name,
-            self.total,
-            self.total,
-            elapsed.as_secs_f64()
+            "{name} completed: {total}/{total} (100%) - Total time: {elapsed:.1}s",
+            name = self.name,
+            total = self.total,
+            elapsed = elapsed.as_secs_f64()
         ));
     }
 
@@ -1056,7 +1052,7 @@ pub mod distributed {
                     "id": entry.id,
                     "node_id": entry.node_id.to_string(),
                     "timestamp": entry.timestamp,
-                    "level": format!("{level:?}", level = entry.level),
+                    "level": format!("{0:?}", entry.level),
                     "logger": entry.logger,
                     "message": entry.message,
                     "context": entry.context,
@@ -1183,7 +1179,7 @@ pub mod distributed {
                     "id": entry.id,
                     "node_id": entry.node_id.to_string(),
                     "timestamp": entry.timestamp,
-                    "level": format!("{level:?}", level = entry.level),
+                    "level": format!("{0:?}", entry.level),
                     "logger": entry.logger,
                     "message": entry.message,
                     "context": entry.context,

@@ -1794,7 +1794,7 @@ mod tests {
 
     #[test]
     fn test_geometric_analysis() {
-        let n = 3;
+        let _n = 3;
         let geometry = create_default_set_geometry();
 
         assert!(geometry.volume > 0.0);

@@ -937,16 +937,14 @@ impl UltrathinkJitCompiler {
     pub fn get_analytics(&self) -> CoreResult<JitAnalytics> {
         let stats = self.stats.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire stats lock: {}",
-                e
+                "Failed to acquire stats lock: {e}"
             )))
         })?;
 
         let cache_stats = {
             let cache = self.kernel_cache.read().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire cache lock: {}",
-                    e
+                    "Failed to acquire cache lock: {e}"
                 )))
             })?;
             cache.get_statistics()
@@ -955,8 +953,7 @@ impl UltrathinkJitCompiler {
         let profiler_stats = {
             let profiler = self.profiler.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire profiler lock: {}",
-                    e
+                    "Failed to acquire profiler lock: {e}"
                 )))
             })?;
             profiler.get_analytics()
@@ -1006,8 +1003,7 @@ impl UltrathinkJitCompiler {
     fn check_cache(&self, name: &str, source_code: &str) -> CoreResult<Option<CompiledKernel>> {
         let cache = self.kernel_cache.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire cache lock: {}",
-                e
+                "Failed to acquire cache lock: {e}"
             )))
         })?;
 
@@ -1023,8 +1019,7 @@ impl UltrathinkJitCompiler {
     fn generate_optimized_code(&self, source: &str, hints: &[String]) -> CoreResult<String> {
         let mut generator = self.code_generator.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire generator lock: {}",
-                e
+                "Failed to acquire generator lock: {e}"
             )))
         })?;
 
@@ -1034,8 +1029,7 @@ impl UltrathinkJitCompiler {
     fn compile_with_llvm(&self, name: &str, code: &str) -> CoreResult<CompiledModule> {
         let mut engine = self.llvm_engine.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire LLVM engine lock: {}",
-                e
+                "Failed to acquire LLVM engine lock: {e}"
             )))
         })?;
 
@@ -1066,8 +1060,7 @@ impl UltrathinkJitCompiler {
     fn cache_kernel(&self, kernel: &CompiledKernel) -> CoreResult<()> {
         let mut cache = self.kernel_cache.write().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire cache lock: {}",
-                e
+                "Failed to acquire cache lock: {e}"
             )))
         })?;
 
@@ -1097,8 +1090,7 @@ impl UltrathinkJitCompiler {
     fn start_kernel_profiling(&self, kernel: &CompiledKernel) -> CoreResult<()> {
         let mut profiler = self.profiler.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire profiler lock: {}",
-                e
+                "Failed to acquire profiler lock: {e}"
             )))
         })?;
 
@@ -1145,8 +1137,7 @@ impl UltrathinkJitCompiler {
     ) -> CoreResult<()> {
         let mut profiler = self.profiler.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire profiler lock: {}",
-                e
+                "Failed to acquire profiler lock: {e}"
             )))
         })?;
 
@@ -1160,8 +1151,7 @@ impl UltrathinkJitCompiler {
     ) -> CoreResult<()> {
         let mut optimizer = self.runtime_optimizer.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire optimizer lock: {}",
-                e
+                "Failed to acquire optimizer lock: {e}"
             )))
         })?;
 
@@ -2341,7 +2331,7 @@ impl NeuromorphicJitCompiler {
         let mut code = String::new();
 
         code.push_str("// Optimized spike processing code\n");
-        code.push_str(&format!("// Pattern ID: {}\n", pattern.id));
+        code.push_str(&format!("// Pattern ID: {id}\n", id = pattern.id));
         code.push_str(&format!(
             "// Mean frequency: {:.2} Hz\n",
             characteristics.frequency_spectrum.mean_frequency
@@ -2521,7 +2511,7 @@ impl EventDrivenOptimizer {
     }
 
     fn optimize_event_processing(&self, code: &str) -> CoreResult<String> {
-        Ok(format!("// Event-optimized code\n{}", code))
+        Ok(format!("// Event-optimized code\n{code}"))
     }
 }
 
@@ -2541,7 +2531,7 @@ impl TemporalDynamicsCompiler {
     }
 
     fn compile_dynamics(&self, code: &str) -> CoreResult<String> {
-        Ok(format!("// Temporal dynamics optimized code\n{}", code))
+        Ok(format!("// Temporal dynamics optimized code\n{code}"))
     }
 }
 

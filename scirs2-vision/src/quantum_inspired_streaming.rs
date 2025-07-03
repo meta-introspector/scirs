@@ -20,7 +20,7 @@ use crate::streaming::FrameMetadata;
 use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2};
 use rand::seq::IteratorRandom;
-use scirs2_core::random::{Random, Rng};
+use rand::{rng, Rng};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
@@ -97,9 +97,10 @@ impl QuantumProcessingState {
 
         // Store original amplitudes for entanglement calculations
         let original_amplitudes: HashMap<String, QuantumAmplitude> = self.stage_amplitudes.clone();
-        
+
         // Create stage name to index mapping to avoid borrow conflicts
-        let stage_indices: HashMap<String, usize> = self.stage_amplitudes
+        let stage_indices: HashMap<String, usize> = self
+            .stage_amplitudes
             .keys()
             .enumerate()
             .map(|(idx, name)| (name.clone(), idx))
@@ -319,7 +320,7 @@ impl QuantumHamiltonian {
         let mut external_fields = HashMap::new();
 
         // Initialize with random energies representing computational costs
-        let mut rng = Random::default();
+        let mut rng = rand::rng();
         for stage_name in stage_names {
             stage_energies.insert(stage_name.clone(), rng.random_range(0.1..2.0));
             external_fields.insert(stage_name.clone(), 0.0);
@@ -533,7 +534,7 @@ impl QuantumAnnealingStage {
 
         // Generate neighbor solution
         let mut neighbor_params = self.parameters.clone();
-        let mut rng = Random::default();
+        let mut rng = rand::rng();
 
         if let Some((_param_name, param_value)) = neighbor_params.iter_mut().choose(&mut rng) {
             let perturbation = rng.random_range(-0.1..0.1) * self.temperature / 100.0;
@@ -834,7 +835,7 @@ impl QuantumSuperpositionStage {
     pub fn new(num_variants: usize) -> Self {
         let mut processing_variants = Vec::new();
         let mut superposition_weights = Vec::new();
-        let mut rng = Random::default();
+        let mut rng = rand::rng();
 
         // Create multiple processing variants
         for i in 0..num_variants {

@@ -63,10 +63,12 @@ enum LossFunction {
 impl LossFunction {
     /// Compute the loss between predictions and targets
     fn compute(&self, predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
+        match self {
             LossFunction::MSE => {
                 let diff = predictions - targets;
                 let squared = diff.mapv(|v| v * v);
                 squared.sum() / (predictions.len() as f32)
+            }
             LossFunction::CategoricalCrossEntropy => {
                 let epsilon = 1e-15; // To avoid log(0)
                 let mut sum = 0.0;
@@ -82,11 +84,18 @@ impl LossFunction {
                     sum += row_sum;
                 }
                 -sum / (predictions.shape()[0] as f32)
+            }
+        }
+    }
     /// Compute the derivative of the loss function with respect to predictions
     fn derivative(&self, predictions: &Array2<f32>, targets: &Array2<f32>) -> Array2<f32> {
+        match self {
+            LossFunction::MSE => {
                 // d(MSE)/dŷ = 2(ŷ - y)/n
                 let n = predictions.len() as f32;
                 (predictions - targets) * (2.0 / n)
+            }
+            LossFunction::CategoricalCrossEntropy => {
                 // d(CCE)/dŷ = -y/ŷ / n
                 let epsilon = 1e-15;
                 let n = predictions.shape()[0] as f32;
@@ -97,10 +106,19 @@ impl LossFunction {
                         -y_true / y_pred / n
                     } else {
                         0.0
+                    }
                 })
+            }
+        }
+    }
     /// Get a string representation of the loss function
+    fn as_str(&self) -> &str {
+        match self {
             LossFunction::MSE => "Mean Squared Error",
             LossFunction::CategoricalCrossEntropy => "Categorical Cross Entropy",
+        }
+    }
+}
 /// Base trait for network layers
 trait Layer {
     /// Forward pass through the layer

@@ -122,7 +122,7 @@ where
     /// Create a new GPU array from a host array.
     #[must_use]
     pub fn new(host_data: Array<T, D>, config: GPUConfig) -> Self {
-        let id = format!("gpu_array_{}", uuid::Uuid::new_v4());
+        let id = format!("uuid{}", uuid::Uuid::new_v4());
         let mut array = Self {
             host_data,
             config,
@@ -407,10 +407,7 @@ where
 
     fn device_info(&self) -> HashMap<String, String> {
         let mut info = HashMap::new();
-        info.insert(
-            "backend".to_string(),
-            format!("{backend:?}", backend = self.config.backend),
-        );
+        info.insert("backend".to_string(), format!("{:?}", self.config.backend));
         info.insert("device_id".to_string(), self.config.device_id.to_string());
         info.insert("on_gpu".to_string(), self.on_gpu.to_string());
         info.insert("id".to_string(), self.id.clone());
@@ -526,9 +523,9 @@ pub mod kernels {
         // Check that the shapes match
         if a.shape() != b.shape() {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(
-                "Shape mismatch: {:?} vs {:?}",
-                a.shape(),
-                b.shape()
+                "Shape mismatch: {a_shape:?} vs {b_shape:?}",
+                a_shape = a.shape(),
+                b_shape = b.shape()
             ))));
         }
 
@@ -563,9 +560,9 @@ pub mod kernels {
         // Check that the shapes match
         if a.shape() != b.shape() {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(
-                "Shape mismatch: {:?} vs {:?}",
-                a.shape(),
-                b.shape()
+                "Shape mismatch: {a_shape:?} vs {b_shape:?}",
+                a_shape = a.shape(),
+                b_shape = b.shape()
             ))));
         }
 
@@ -604,8 +601,7 @@ pub mod kernels {
 
         if a_shape.len() != 2 || b_shape.len() != 2 || a_shape[1] != b_shape[0] {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(
-                "Incompatible shapes for matmul: {:?} vs {:?}",
-                a_shape, b_shape
+                "Incompatible shapes for matmul: {a_shape:?} vs {b_shape:?}"
             ))));
         }
 

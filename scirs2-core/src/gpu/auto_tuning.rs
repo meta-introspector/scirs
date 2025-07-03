@@ -107,7 +107,7 @@ impl ParameterValue {
             ParameterValue::Int(val) => val.to_string(),
             ParameterValue::Float(val) => val.to_string(),
             ParameterValue::Bool(val) => val.to_string(),
-            _ => format!("{:?}", self),
+            _ => format!("{self:?}"),
         }
     }
 }
@@ -367,7 +367,7 @@ impl AutoTuner {
                 }
                 Err(e) => {
                     // Log benchmark failure but continue
-                    eprintln!("Benchmark failed for configuration {:?}: {}", params, e);
+                    eprintln!("Benchmark failed for configuration {params:?}: {e}");
                 }
             }
         }

@@ -185,10 +185,7 @@ impl Layer for Linear {
                 self.bias = Some(new_value);
                 Ok(())
             }
-            _ => Err(OperationError::Other(format!(
-                "Unknown parameter: {}",
-                name
-            ))),
+            _ => Err(OperationError::Other(format!("Unknown parameter: {name}"))),
         }
     }
 
@@ -364,10 +361,7 @@ impl Layer for Conv2D {
                 self.bias = Some(new_value);
                 Ok(())
             }
-            _ => Err(OperationError::Other(format!(
-                "Unknown parameter: {}",
-                name
-            ))),
+            _ => Err(OperationError::Other(format!("Unknown parameter: {name}"))),
         }
     }
 
@@ -550,8 +544,7 @@ impl Layer for MaxPool2D {
         _new_value: Box<dyn ArrayProtocol>,
     ) -> Result<(), OperationError> {
         Err(OperationError::Other(format!(
-            "MaxPool2D has no parameter: {}",
-            name
+            "MaxPool2D has no parameter: {name}"
         )))
     }
 
@@ -689,10 +682,7 @@ impl Layer for BatchNorm {
                 self.offset = new_value;
                 Ok(())
             }
-            _ => Err(OperationError::Other(format!(
-                "Unknown parameter: {}",
-                name
-            ))),
+            _ => Err(OperationError::Other(format!("Unknown parameter: {name}"))),
         }
     }
 
@@ -772,8 +762,7 @@ impl Layer for Dropout {
         _new_value: Box<dyn ArrayProtocol>,
     ) -> Result<(), OperationError> {
         Err(OperationError::Other(format!(
-            "Dropout has no parameter: {}",
-            name
+            "Dropout has no parameter: {name}"
         )))
     }
 
@@ -960,10 +949,7 @@ impl Layer for MultiHeadAttention {
                 self.wo = new_value;
                 Ok(())
             }
-            _ => Err(OperationError::Other(format!(
-                "Unknown parameter: {}",
-                name
-            ))),
+            _ => Err(OperationError::Other(format!("Unknown parameter: {name}"))),
         }
     }
 
@@ -1104,16 +1090,15 @@ impl Sequential {
         if parts.len() != 2 {
             return Err(crate::error::CoreError::ValueError(
                 crate::error::ErrorContext::new(format!(
-                    "Invalid parameter name format. Expected 'layer_index.param_name', got: {}",
-                    param_name
+                    "Invalid parameter name format. Expected 'layer_index.param_name', got: {param_name}"
                 )),
             ));
         }
 
         let layer_index: usize = parts[0].parse().map_err(|_| {
             crate::error::CoreError::ValueError(crate::error::ErrorContext::new(format!(
-                "Invalid layer index: {}",
-                parts[0]
+                "Invalid layer index: {layer_idx}",
+                layer_idx = parts[0]
             )))
         })?;
 
@@ -1122,9 +1107,8 @@ impl Sequential {
         if layer_index >= self.layers.len() {
             return Err(crate::error::CoreError::ValueError(
                 crate::error::ErrorContext::new(format!(
-                    "Layer index {} out of bounds (model has {} layers)",
-                    layer_index,
-                    self.layers.len()
+                    "Layer index {layer_index} out of bounds (model has {num_layers} layers)",
+                    num_layers = self.layers.len()
                 )),
             ));
         }
@@ -1140,8 +1124,7 @@ impl Sequential {
             .position(|name| name == param_name)
             .ok_or_else(|| {
                 crate::error::CoreError::ValueError(crate::error::ErrorContext::new(format!(
-                    "Parameter '{}' not found in layer {}",
-                    param_name, layer_index
+                    "Parameter '{param_name}' not found in layer {layer_index}"
                 )))
             })?;
 
@@ -1164,8 +1147,7 @@ impl Sequential {
         )
         .map_err(|e| {
             crate::error::CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                "Failed to update parameter: {}",
-                e
+                "Failed to update parameter: {e}"
             )))
         })?;
 
@@ -1174,8 +1156,7 @@ impl Sequential {
             .update_parameter(param_name, updated_param)
             .map_err(|e| {
                 crate::error::CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                    "Failed to set parameter in layer: {}",
-                    e
+                    "Failed to set parameter in layer: {e}"
                 )))
             })?;
 

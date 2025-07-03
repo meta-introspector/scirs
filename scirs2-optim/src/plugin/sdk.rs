@@ -5,7 +5,7 @@
 
 use super::core::*;
 use crate::benchmarking::cross_platform_tester::{PerformanceBaseline, PlatformTarget};
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use ndarray::Array1;
 use num_traits::Float;
 use std::collections::HashMap;

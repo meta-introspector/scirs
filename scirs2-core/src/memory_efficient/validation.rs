@@ -46,7 +46,7 @@ where
 
     if s1 != s2 {
         return Err(CoreError::ValidationError(
-            ErrorContext::new(format!("Shapes don't match: {:?} vs {:?}", s1, s2))
+            ErrorContext::new(format!("{:?}, {:?}", s1, s2))
                 .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
@@ -82,7 +82,7 @@ where
 
     if shape[0] != shape[1] {
         return Err(CoreError::ValidationError(
-            ErrorContext::new(format!("Matrix is not square: {:?}", shape))
+            ErrorContext::new(format!("{:?}", shape))
                 .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }

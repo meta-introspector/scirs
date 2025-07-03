@@ -6,7 +6,7 @@
 
 use ndarray::{Array, Array2, Dimension};
 use num_traits::Float;
-use rand::{rng, Rng};
+use rand::{thread_rng, Rng};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::Arc;
 use std::thread;
@@ -14,7 +14,7 @@ use std::time::{Duration, Instant};
 
 use super::tpu_backend::DeviceId;
 use super::PodTopology;
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 
 // Additional type aliases and error definitions
 type TopologyStatistics = HashMap<String, f64>;
@@ -1975,7 +1975,7 @@ impl SynchronizationManager {
 
     pub async fn global_barrier(&mut self) -> Result<()> {
         // Simplified barrier implementation
-        let barrier_id = BarrierId(rng().random());
+        let barrier_id = BarrierId(thread_rng().gen());
         let barrier_state = BarrierState {
             participants: HashSet::new(),
             arrived: HashSet::new(),
@@ -2072,7 +2072,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
     }
 
     pub async fn create_batch(&mut self, batch_data: BatchData<T>) -> Result<BatchId> {
-        let batch_id = BatchId(rng().random());
+        let batch_id = BatchId(thread_rng().gen());
         let batch_execution = BatchExecution {
             id: batch_id,
             data: batch_data,

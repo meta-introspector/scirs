@@ -265,10 +265,7 @@ where
         let mut b_by_row: std::collections::HashMap<usize, Vec<(usize, T)>> =
             std::collections::HashMap::new();
         for (k, (&row, &col)) in b_row_indices.iter().zip(b_col_indices.iter()).enumerate() {
-            b_by_row
-                .entry(row)
-                .or_default()
-                .push((col, b_values[k]));
+            b_by_row.entry(row).or_default().push((col, b_values[k]));
         }
 
         // For each row in the chunk

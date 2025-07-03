@@ -77,7 +77,7 @@ pub enum MemoryStrategy {
 
 impl Default for UltraParallelConfig {
     fn default() -> Self {
-        let num_cpus = num_threads();
+        let num_cpus = num_cpus::get();
         
         Self {
             num_threads: Some(num_cpus),
@@ -132,8 +132,8 @@ struct WorkStealingQueue<T> {
 }
 
 impl<T: Clone + Send> WorkStealingQueue<T> {
-    fn new(num_threads: usize) -> Self {
-        let thread_queues = (0..num_threads)
+    fn new(num_cpus::get: usize) -> Self {
+        let thread_queues = (0..num_cpus::get)
             .map(|_| Arc::new(Mutex::new(Vec::new())))
             .collect();
 
@@ -202,7 +202,10 @@ where
         &mut self,
         a: &ArrayView2<F>,
         b: &ArrayView2<F>,
-    ) -> StatsResult<Array2<F>> {
+    ) -> StatsResult<Array2<F>>
+    where
+        F: std::fmt::Display,
+    {
         let start_time = Instant::now();
         
         check_array_finite(a, "a")?;
@@ -223,7 +226,7 @@ where
             return self.sequential_matrix_multiply(a, b);
         }
 
-        let num_threads = self.config.num_threads.unwrap_or_else(num_threads);
+        let num_threads = self.config.num_threads.unwrap_or_else(|| num_cpus::get());
         let result = match self.config.load_balancing {
             LoadBalancingStrategy::Static => {
                 self.static_parallel_matrix_multiply(a, b, num_threads)?
@@ -263,7 +266,10 @@ where
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,
         n_bootstrap: usize,
         sampling_strategy: BootstrapSamplingStrategy,
-    ) -> StatsResult<Array1<F>> {
+    ) -> StatsResult<Array1<F>>
+    where
+        F: std::fmt::Display,
+    {
         let start_time = Instant::now();
         
         check_array_finite(data, "data")?;
@@ -274,7 +280,7 @@ where
             ));
         }
 
-        let num_threads = self.config.num_threads.unwrap_or_else(num_threads);
+        let num_threads = self.config.num_threads.unwrap_or_else(|| num_cpus::get());
         let chunk_size = (n_bootstrap + num_threads - 1) / num_threads;
 
         let results = match sampling_strategy {
@@ -332,7 +338,7 @@ where
             ));
         }
 
-        let num_threads = self.config.num_threads.unwrap_or_else(num_threads);
+        let num_threads = self.config.num_threads.unwrap_or_else(|| num_cpus::get());
         
         let result = if adaptive_refinement {
             self.adaptive_monte_carlo_integration(integrand, bounds, n_samples, num_threads)?
@@ -363,7 +369,10 @@ where
         labels: &ArrayView1<F>,
         model_fn: impl Fn(&ArrayView2<F>, &ArrayView1<F>, &ArrayView2<F>) -> StatsResult<Array1<F>> + Send + Sync + Copy,
         cv_strategy: CrossValidationStrategy,
-    ) -> StatsResult<CrossValidationResult<F>> {
+    ) -> StatsResult<CrossValidationResult<F>>
+    where
+        F: std::fmt::Display,
+    {
         let start_time = Instant::now();
         
         check_array_finite(data, "data")?;
@@ -483,15 +492,15 @@ where
         &self,
         a: &ArrayView2<F>,
         b: &ArrayView2<F>,
-        num_threads: usize,
+        num_cpus::get: usize,
     ) -> StatsResult<Array2<F>> {
         let (m, k) = a.dim();
         let n = b.ncols();
         let mut result = Array2::zeros((m, n));
         
-        let chunk_size = (m + num_threads - 1) / num_threads;
+        let chunk_size = (m + num_cpus::get - 1) / num_cpus::get;
         
-        parallel_for(0..num_threads, |thread_id| {
+        parallel_for(0..num_cpus::get, |thread_id| {
             let start_row = thread_id * chunk_size;
             let end_row = ((thread_id + 1) * chunk_size).min(m);
             
@@ -513,7 +522,7 @@ where
         &self,
         a: &ArrayView2<F>,
         b: &ArrayView2<F>,
-        num_threads: usize,
+        num_cpus::get: usize,
     ) -> StatsResult<Array2<F>> {
         // Dynamic load balancing - distribute work based on completion time
         let (m, k) = a.dim();
@@ -521,7 +530,7 @@ where
         let mut result = Array2::zeros((m, n));
         
         // Use smaller chunks for dynamic distribution
-        let chunk_size = self.config.task_granularity.preferred_chunk_size.min(m / (num_threads * 2));
+        let chunk_size = self.config.task_granularity.preferred_chunk_size.min(m / (num_cpus::get * 2));
         let chunk_size = chunk_size.max(1);
         
         let chunks: Vec<_> = (0..m).step_by(chunk_size).collect();
@@ -547,7 +556,7 @@ where
         &self,
         a: &ArrayView2<F>,
         b: &ArrayView2<F>,
-        num_threads: usize,
+        num_cpus::get: usize,
     ) -> StatsResult<Array2<F>> {
         let (m, k) = a.dim();
         let n = b.ncols();
@@ -566,13 +575,13 @@ where
             })
             .collect();
 
-        let work_queue = WorkStealingQueue::new(num_threads);
+        let work_queue = WorkStealingQueue::new(num_cpus::get);
         for item in work_items {
             work_queue.add_work(item);
         }
 
         // Process work with stealing
-        parallel_for(0..num_threads, |thread_id| {
+        parallel_for(0..num_cpus::get, |thread_id| {
             while let Some(work_item) = work_queue.steal_work(thread_id) {
                 let (start_row, end_row) = work_item.data;
                 
@@ -595,7 +604,7 @@ where
         &self,
         a: &ArrayView2<F>,
         b: &ArrayView2<F>,
-        num_threads: usize,
+        num_cpus::get: usize,
     ) -> StatsResult<Array2<F>> {
         let (m, k) = a.dim();
         let n = b.ncols();
@@ -606,13 +615,13 @@ where
         
         if total_elements < 1_000_000 {
             // Small matrices - use static partitioning
-            self.static_parallel_matrix_multiply(a, b, num_threads)
+            self.static_parallel_matrix_multiply(a, b, num_cpus::get)
         } else if memory_required > 100_000_000 {
             // Large memory requirement - use work stealing for better cache usage
-            self.work_stealing_matrix_multiply(a, b, num_threads)
+            self.work_stealing_matrix_multiply(a, b, num_cpus::get)
         } else {
             // Medium size - use dynamic load balancing
-            self.dynamic_parallel_matrix_multiply(a, b, num_threads)
+            self.dynamic_parallel_matrix_multiply(a, b, num_cpus::get)
         }
     }
 
@@ -785,16 +794,16 @@ where
         integrand: impl Fn(F) -> F + Send + Sync + Copy,
         bounds: (F, F),
         n_samples: usize,
-        num_threads: usize,
+        num_cpus::get: usize,
     ) -> StatsResult<MonteCarloResult<F>> {
         let (a, b) = bounds;
         let range = b - a;
-        let samples_per_thread = n_samples / num_threads;
-        let remainder = n_samples % num_threads;
+        let samples_per_thread = n_samples / num_cpus::get;
+        let remainder = n_samples % num_cpus::get;
         
         let results = Arc::new(Mutex::new(Vec::new()));
         
-        parallel_for(0..num_threads, |thread_id| {
+        parallel_for(0..num_cpus::get, |thread_id| {
             let thread_samples = if thread_id < remainder {
                 samples_per_thread + 1
             } else {
@@ -843,18 +852,18 @@ where
         integrand: impl Fn(F) -> F + Send + Sync + Copy,
         bounds: (F, F),
         n_samples: usize,
-        num_threads: usize,
+        num_cpus::get: usize,
     ) -> StatsResult<MonteCarloResult<F>> {
         // Adaptive refinement based on variance - simplified implementation
         let initial_samples = n_samples / 4;
         let initial_result = self.static_monte_carlo_integration(
-            integrand, bounds, initial_samples, num_threads
+            integrand, bounds, initial_samples, num_cpus::get
         )?;
         
         // Use remaining samples for refinement in high-variance regions
         let remaining_samples = n_samples - initial_samples;
         let refinement_result = self.static_monte_carlo_integration(
-            integrand, bounds, remaining_samples, num_threads
+            integrand, bounds, remaining_samples, num_cpus::get
         )?;
         
         // Combine results
@@ -1009,10 +1018,10 @@ where
     ) -> StatsResult<OptimizationResult<F>> {
         let results = Arc::new(Mutex::new(Vec::new()));
         let n_params = parameter_bounds.len();
-        let num_threads = self.config.num_threads.unwrap_or_else(num_threads);
-        let evals_per_thread = max_evaluations / num_threads;
+        let num_threads = self.config.num_threads.unwrap_or_else(|| num_cpus::get());
+        let evals_per_thread = max_evaluations / num_cpus::get;
         
-        parallel_for(0..num_threads, |thread_id| {
+        parallel_for(0..num_cpus::get, |thread_id| {
             use rand::{rngs::StdRng, SeedableRng, Rng};
             let mut rng = StdRng::seed_from_u64((thread_id as u64).wrapping_mul(24681));
             
@@ -1234,7 +1243,7 @@ mod tests {
     #[test]
     fn test_ultra_parallel_config() {
         let config = UltraParallelConfig::default();
-        assert!(config.num_threads.unwrap() > 0);
+        assert!(config.num_cpus::get.unwrap() > 0);
         assert!(config.work_stealing);
         assert!(config.task_granularity.min_parallel_size > 0);
     }

@@ -100,10 +100,8 @@ impl EnvironmentInfo {
     }
 
     /// Get list of enabled features
-    #[allow(clippy::vec_init_then_push)]
     fn get_enabled_features() -> Vec<String> {
-        #[allow(unused_mut)]
-        let mut features = Vec::new();
+        let mut features = Vec::with_capacity(5);
 
         #[cfg(feature = "parallel")]
         features.push("parallel".to_string());
@@ -144,7 +142,7 @@ pub struct ErrorOccurrence {
 impl ErrorOccurrence {
     /// Create a new error occurrence
     pub fn new(error: &CoreError, context: String) -> Self {
-        let error_type = format!("{:?}", error)
+        let error_type = format!("{error:?}")
             .split('(')
             .next()
             .unwrap_or("Unknown")
@@ -263,7 +261,7 @@ impl ErrorDiagnostics {
 
     /// Find patterns matching the given error
     fn find_matching_patterns(&self, error: &CoreError) -> Vec<ErrorPattern> {
-        let error_type = format!("{:?}", error)
+        let error_type = format!("{error:?}")
             .split('(')
             .next()
             .unwrap_or("Unknown")
@@ -282,7 +280,7 @@ impl ErrorDiagnostics {
         error: &CoreError,
         window: Duration,
     ) -> Vec<ErrorOccurrence> {
-        let error_type = format!("{:?}", error)
+        let error_type = format!("{error:?}")
             .split('(')
             .next()
             .unwrap_or("Unknown")
@@ -494,6 +492,7 @@ impl ErrorDiagnostics {
     }
 
     /// Perform predictive error analysis based on historical patterns (Alpha 6 feature)
+    #[allow(dead_code)]
     pub fn predict_potential_errors(&self, context: &str) -> Vec<String> {
         let mut predictions = Vec::new();
         let history = self.error_history.lock().unwrap();
@@ -514,8 +513,7 @@ impl ErrorDiagnostics {
         for (error_type, count) in error_counts {
             if count >= 3 {
                 predictions.push(format!(
-                    "High risk of {} based on recent frequency ({}x in last hour)",
-                    error_type, count
+                    "High risk of {error_type} based on recent frequency ({count}x in last hour)"
                 ));
             }
         }
@@ -545,6 +543,7 @@ impl ErrorDiagnostics {
     }
 
     /// Generate domain-specific recovery strategies (Alpha 6 feature)
+    #[allow(dead_code)]
     pub fn suggest_domain_recovery(&self, error: &CoreError, domain: &str) -> Vec<String> {
         let mut strategies = Vec::new();
 
@@ -962,7 +961,7 @@ impl ErrorDiagnosticReport {
         if !self.domain_strategies.is_empty() {
             report.push_str("🎯 Domain-Specific Recovery Strategies:\n");
             for (i, strategy) in self.domain_strategies.iter().enumerate() {
-                report.push_str(&format!("   {}. {strategy}\n", i + 1));
+                report.push_str(&format!("   {num}. {strategy}\n", num = i + 1));
             }
             report.push('\n');
         }
@@ -971,7 +970,7 @@ impl ErrorDiagnosticReport {
         if !self.contextual_suggestions.is_empty() {
             report.push_str("💡 Contextual Suggestions:\n");
             for (i, suggestion) in self.contextual_suggestions.iter().enumerate() {
-                report.push_str(&format!("   {}. {suggestion}\n", i + 1));
+                report.push_str(&format!("   {num}. {suggestion}\n", num = i + 1));
             }
             report.push('\n');
         }
@@ -1007,7 +1006,7 @@ pub fn diagnose_error_with_context(error: &CoreError, context: String) -> ErrorD
 macro_rules! diagnostic_error {
     ($error_type:ident, $message:expr) => {{
         let error = $crate::error::CoreError::$error_type($crate::error_context!($message));
-        let context = format!("{}:{}", file!(), line!());
+        let context = format!("line {}, file = {}", line!(), file!());
         $crate::error::diagnostics::diagnose_error_with_context(&error, context);
         error
     }};

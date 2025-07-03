@@ -3,7 +3,7 @@
 //! This module provides optimization strategies for continuous learning scenarios,
 //! including online learning, continual learning, and lifelong optimization systems.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use ndarray::{Array, Array1, Dimension, ScalarOperand};
 use num_traits::Float;
 use rand::Rng;

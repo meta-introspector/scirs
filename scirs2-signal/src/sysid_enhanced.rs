@@ -1985,7 +1985,7 @@ mod tests {
     #[test]
     fn test_robust_identification() {
         let n = 100;
-        let mut input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
+        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
         let mut output = Array1::zeros(n);
 
         // Generate system with outliers
@@ -2099,7 +2099,7 @@ mod tests {
         // Update with second half
         let input2 = input.slice(ndarray::s![50..]).to_owned();
         let output2 = output.slice(ndarray::s![50..]).to_owned();
-        let adapted2 = identifier.update_model(&input2, &output2).unwrap();
+        let _adapted2 = identifier.update_model(&input2, &output2).unwrap();
 
         assert!(identifier.get_current_model().is_some());
     }

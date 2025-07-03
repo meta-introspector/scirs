@@ -582,7 +582,7 @@ impl DeprecationManager {
         replacement: Option<&Version>,
     ) -> String {
         let reason_str = match reason {
-            DeprecationReason::SupersededBy(v) => format!("superseded by version {}", v),
+            DeprecationReason::SupersededBy(v) => format!("{v}"),
             DeprecationReason::SecurityConcerns => "security concerns".to_string(),
             DeprecationReason::PerformanceIssues => "performance issues".to_string(),
             DeprecationReason::MaintenanceBurden => "maintenance burden".to_string(),

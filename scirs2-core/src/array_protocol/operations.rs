@@ -130,8 +130,7 @@ array_function_dispatch!(
                 let b_dim = b_array_owned.shape();
                 if a_dim.len() != 2 || b_dim.len() != 2 || a_dim[1] != b_dim[0] {
                     return Err(OperationError::ShapeMismatch(format!(
-                        "Invalid shapes for matmul: {:?} and {:?}",
-                        a_dim, b_dim
+                        "Invalid shapes for matmul: {a_dim:?} and {b_dim:?}"
                     )));
                 }
                 let (m, k) = (a_dim[0], a_dim[1]);
@@ -182,8 +181,7 @@ array_function_dispatch!(
                 let b_dim = b_array_owned.shape();
                 if a_dim.len() != 2 || b_dim.len() != 2 || a_dim[1] != b_dim[0] {
                     return Err(OperationError::ShapeMismatch(format!(
-                        "Invalid shapes for matmul: {:?} and {:?}",
-                        a_dim, b_dim
+                        "Invalid shapes for matmul: {a_dim:?} and {b_dim:?}"
                     )));
                 }
                 let (m, k) = (a_dim[0], a_dim[1]);
@@ -703,8 +701,7 @@ array_function_dispatch!(
                 let a_dim = a_array.as_array().shape();
                 if a_dim.len() != 2 {
                     return Err(OperationError::ShapeMismatch(format!(
-                        "Transpose requires a 2D array, got shape: {:?}",
-                        a_dim
+                        "Transpose requires a 2D array, got shape: {a_dim:?}"
                     )));
                 }
 
@@ -818,12 +815,7 @@ array_function_dispatch!(
 
             let result = match ndarray::stack(ndarray::Axis(axis), &ndarray_arrays) {
                 Ok(arr) => arr,
-                Err(e) => {
-                    return Err(OperationError::Other(format!(
-                        "Concatenation failed: {}",
-                        e
-                    )))
-                }
+                Err(e) => return Err(OperationError::Other(format!("Concatenation failed: {e}"))),
             };
 
             return Ok(Box::new(NdarrayWrapper::new(result)));
@@ -876,8 +868,7 @@ array_function_dispatch!(
                     Ok(arr) => arr,
                     Err(e) => {
                         return Err(OperationError::ShapeMismatch(format!(
-                            "Reshape failed: {}",
-                            e
+                            "Reshape failed: {e}"
                         )))
                     }
                 };
@@ -889,8 +880,7 @@ array_function_dispatch!(
                     Ok(arr) => arr,
                     Err(e) => {
                         return Err(OperationError::ShapeMismatch(format!(
-                            "Reshape failed: {}",
-                            e
+                            "Reshape failed: {e}"
                         )))
                     }
                 };

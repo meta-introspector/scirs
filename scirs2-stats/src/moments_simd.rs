@@ -4,8 +4,8 @@
 //! including skewness and kurtosis, using scirs2-core's unified SIMD operations.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::{ErrorMessages, ErrorValidator};
-use ndarray::{Array1, ArrayBase, ArrayView1, Data, Ix1};
+use crate::error_standardization::ErrorMessages;
+use ndarray::{Array1, ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
     simd_ops::{AutoOptimizer, SimdUnifiedOps},

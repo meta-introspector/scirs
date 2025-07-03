@@ -2428,7 +2428,9 @@ fn test_cross_validation(
     let f_true = 8.0;
     let signal: Vec<f64> = t
         .iter()
-        .map(|&ti| (2.0 * PI * f_true * ti).sin() + 0.1 * rand::thread_rng().random_range(-1.0..1.0))
+        .map(|&ti| {
+            (2.0 * PI * f_true * ti).sin() + 0.1 * rand::thread_rng().random_range(-1.0..1.0)
+        })
         .collect();
 
     // K-fold cross-validation (k=5)

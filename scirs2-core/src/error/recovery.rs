@@ -385,11 +385,7 @@ impl RecoverableError {
     pub fn recovery_report(&self) -> String {
         let mut report = String::new();
 
-        report.push_str(&format!(
-            "🚨 {severity} Error: {error}\n\n",
-            severity = self.severity,
-            error = self.error
-        ));
+        report.push_str(&format!("🚨 {} Error: {}\n\n", self.severity, self.error));
 
         if self.retryable {
             report.push_str("✅ This error may be retryable\n");
@@ -402,7 +398,7 @@ impl RecoverableError {
         if !self.hints.is_empty() {
             report.push_str("🔍 Recovery suggestions:\n");
             for (i, hint) in self.hints.iter().enumerate() {
-                report.push_str(&format!("{}. {hint}\n", i + 1));
+                report.push_str(&format!("{}. {}\n", i + 1, hint));
             }
         }
 
@@ -553,8 +549,10 @@ impl fmt::Display for CircuitBreakerStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Circuit breaker: {:?} ({}/{} failures)",
-            self.state, self.failure_count, self.failure_threshold
+            "Circuit breaker: {state:?} ({failure_count}/{failure_threshold} failures)",
+            state = self.state,
+            failure_count = self.failure_count,
+            failure_threshold = self.failure_threshold
         )
     }
 }
@@ -724,12 +722,12 @@ impl ErrorAggregator {
             return "No errors".to_string();
         }
 
-        let mut summary = format!("Collected {} error(s):\n", self.errors.len());
+        let mut summary = format!("Collected {count} error(s):\n", count = self.errors.len());
 
         for (i, error) in self.errors.iter().enumerate() {
             summary.push_str(&format!(
-                "{}. [{severity}] {error}\n",
-                i + 1,
+                "{num}. [{severity}] {error}\n",
+                num = i + 1,
                 severity = error.severity,
                 error = error.error
             ));
@@ -746,9 +744,9 @@ impl ErrorAggregator {
     }
 
     /// Convert to a single error if there are any errors
-    pub fn into_result<T>(self, success_value: T) -> Result<T, RecoverableError> {
+    pub fn into_result<T>(self, success_value: T) -> Result<T, Box<RecoverableError>> {
         if let Some(most_severe) = self.errors.into_iter().max_by_key(|err| err.severity) {
-            Err(most_severe)
+            Err(Box::new(most_severe))
         } else {
             Ok(success_value)
         }

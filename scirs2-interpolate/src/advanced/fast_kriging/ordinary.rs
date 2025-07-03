@@ -110,7 +110,7 @@ where
             #[cfg(feature = "linalg")]
             {
                 use ndarray_linalg::Solve;
-                
+
                 // Assess local covariance matrix condition before solving
                 let condition_report = assess_matrix_condition(&cov_matrix.view());
                 if let Ok(report) = condition_report {
@@ -122,11 +122,11 @@ where
                             for j in 0..regularized_cov.nrows() {
                                 regularized_cov[[j, j]] += regularization;
                             }
-                            
+
                             // Try regularized solve, otherwise fallback to mean
                             let cov_matrix_f64 = regularized_cov.mapv(|x| x.to_f64().unwrap());
                             let local_values_f64 = local_values.mapv(|x| x.to_f64().unwrap());
-                            
+
                             #[cfg(feature = "linalg")]
                             {
                                 use ndarray_linalg::Solve;
@@ -137,11 +137,12 @@ where
                                         prediction += weights[j] * local_values[j];
                                     }
                                     values[i] = prediction;
-                                    variances[i] = self.anisotropic_cov.sigma_sq * F::from_f64(0.1).unwrap();
+                                    variances[i] =
+                                        self.anisotropic_cov.sigma_sq * F::from_f64(0.1).unwrap();
                                     continue;
                                 }
                             }
-                            
+
                             // Final fallback to mean
                             values[i] = local_values.mean().unwrap_or(F::zero());
                             variances[i] = self.anisotropic_cov.sigma_sq;
@@ -157,7 +158,7 @@ where
                         _ => {}
                     }
                 }
-                
+
                 // Convert to f64 for linear algebra
                 let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().unwrap());
                 let local_values_f64 = local_values.mapv(|x| x.to_f64().unwrap());
@@ -170,10 +171,10 @@ where
                         for j in 0..regularized_cov.nrows() {
                             regularized_cov[[j, j]] += regularization;
                         }
-                        
+
                         let cov_matrix_f64 = regularized_cov.mapv(|x| x.to_f64().unwrap());
                         let local_values_f64 = local_values.mapv(|x| x.to_f64().unwrap());
-                        
+
                         #[cfg(feature = "linalg")]
                         {
                             use ndarray_linalg::Solve;
@@ -184,11 +185,12 @@ where
                                     prediction += weights[j] * local_values[j];
                                 }
                                 values[i] = prediction;
-                                variances[i] = self.anisotropic_cov.sigma_sq * F::from_f64(1.5).unwrap();
+                                variances[i] =
+                                    self.anisotropic_cov.sigma_sq * F::from_f64(1.5).unwrap();
                                 continue;
                             }
                         }
-                        
+
                         // Final fallback to mean
                         values[i] = local_values.mean().unwrap_or(F::zero());
                         variances[i] = self.anisotropic_cov.sigma_sq;
@@ -201,7 +203,7 @@ where
                 for j in 0..n_neighbors {
                     prediction += weights[j] * local_values[j];
                 }
-                
+
                 // Store prediction
                 values[i] = prediction;
 
@@ -272,7 +274,7 @@ where
         for i in 0..n_query {
             // Compute residual using low-rank approximation
             let query_feature = query_features.slice(ndarray::s![i, ..]);
-            
+
             // Create safe reciprocal array for singular values
             let mut s_inv = Array1::zeros(s.len());
             for (j, &sv) in s.iter().enumerate() {
@@ -284,7 +286,7 @@ where
                     }
                 }
             }
-            
+
             let projected = u.dot(&(s_inv * v.t().dot(&self.values)));
             values[i] = query_feature.dot(&projected);
 
@@ -551,7 +553,8 @@ where
         for j in 0..n_block {
             for k in 0..n_block {
                 if j == k {
-                    cov_matrix[[j, k]] = self.anisotropic_cov.sigma_sq + self.anisotropic_cov.nugget;
+                    cov_matrix[[j, k]] =
+                        self.anisotropic_cov.sigma_sq + self.anisotropic_cov.nugget;
                 } else {
                     let dist = compute_anisotropic_distance(
                         &block_points.slice(ndarray::s![j, ..]),

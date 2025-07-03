@@ -424,7 +424,7 @@ impl CrossDeviceMemoryManager {
     pub fn set_default_device(&self, device_type: DeviceType) -> CoreResult<()> {
         let devices = self.devices.read().unwrap();
         if !devices.contains_key(&device_type) {
-            return Err(CrossDeviceError::DeviceNotFound(format!("{:?}", device_type)).into());
+            return Err(CrossDeviceError::DeviceNotFound(format!("{device_type:?}")).into());
         }
 
         let mut default_device = self.default_device.write().unwrap();
@@ -447,7 +447,7 @@ impl CrossDeviceMemoryManager {
         let devices = self.devices.read().unwrap();
         let device = devices
             .get(device_type)
-            .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{:?}", device_type)))?;
+            .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{device_type:?}")))?;
 
         let size = count * std::mem::size_of::<T>();
         let address = device.allocate(size)?;
@@ -493,11 +493,11 @@ impl CrossDeviceMemoryManager {
     ) -> CoreResult<CrossDeviceBuffer<T>> {
         let devices = self.devices.read().unwrap();
         let src_device = devices.get(&src_buffer.device_type).ok_or_else(|| {
-            CrossDeviceError::DeviceNotFound(format!("{:?}", src_buffer.device_type))
+            CrossDeviceError::DeviceNotFound(format!("{0:?}", src_buffer.device_type))
         })?;
         let dst_device_obj = devices
             .get(dst_device)
-            .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{:?}", dst_device)))?;
+            .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{dst_device:?}")))?;
 
         // Allocate memory on destination device
         let dst_buffer = self.allocate::<T>(dst_device, src_buffer.count)?;
@@ -625,7 +625,7 @@ impl CrossDeviceMemoryManager {
             *counter
         };
 
-        format!("alloc_{:016x}", counter)
+        format!(":016x{counter}")
     }
 
     /// Internal method to remove allocation (called by CrossDeviceBuffer on drop)
@@ -733,7 +733,7 @@ impl<T> CrossDeviceBuffer<T> {
         let devices = self.manager.devices.read().unwrap();
         let device = devices
             .get(&self.device_type)
-            .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{:?}", self.device_type)))?;
+            .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{0:?}", self.device_type)))?;
 
         unsafe {
             device.copy_from_host(data.as_ptr() as *const u8, self.address, self.size_bytes())?;
@@ -753,7 +753,7 @@ impl<T> CrossDeviceBuffer<T> {
         let devices = self.manager.devices.read().unwrap();
         let device = devices
             .get(&self.device_type)
-            .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{:?}", self.device_type)))?;
+            .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{0:?}", self.device_type)))?;
 
         unsafe {
             device.copy_to_host(

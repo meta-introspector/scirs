@@ -3,10 +3,10 @@
 //! This example shows how to use the ultrathink mode coordinator
 //! for enhanced ODE solving performance.
 
-use ndarray::{array, ArrayView1};
+use ndarray::{array, Array1, ArrayView1};
 use scirs2_integrate::{
     ultrathink_mode_coordinator::{UltrathinkModeConfig, UltrathinkModeCoordinator},
-    Array1, IntegrateResult,
+    IntegrateResult,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

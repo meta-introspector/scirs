@@ -373,7 +373,7 @@ mod tests {
     #[test]
     fn test_global_config() {
         // Use a unique test key to avoid conflicts with other tests
-        let test_key = format!("test_global_config_{}", std::process::id());
+        let test_key = format!("{}", std::process::id());
 
         // Store original value if it exists
         let original_value = GLOBAL_CONFIG.read().unwrap().values.get(&test_key).cloned();

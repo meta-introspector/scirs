@@ -66,7 +66,7 @@ where
         // A real implementation would write chunks to save memory.
         let serialized = serialize(&data.to_owned()).map_err(|e| {
             CoreError::ValidationError(
-                ErrorContext::new(format!("Failed to serialize data: {}", e))
+                ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
@@ -118,7 +118,7 @@ where
 
         let array: Array<A, D> = deserialize(&buffer).map_err(|e| {
             CoreError::ValidationError(
-                ErrorContext::new(format!("Failed to deserialize data: {}", e))
+                ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
@@ -165,7 +165,7 @@ where
         // 3. Keep track of chunk offsets in the file
         let full_array: Array<A, D> = deserialize(&header_buf).map_err(|e| {
             CoreError::ValidationError(
-                ErrorContext::new(format!("Failed to deserialize data: {}", e))
+                ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
@@ -189,7 +189,7 @@ where
         let cloned_array = full_array.clone();
         let chunk_dynamic = cloned_array.to_shape(chunk_shape).map_err(|e| {
             CoreError::DimensionError(
-                ErrorContext::new(format!("Failed to reshape chunk: {}", e))
+                ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
@@ -198,7 +198,7 @@ where
         let chunk = Self::safe_dimensionality_conversion(chunk_dynamic.to_owned(), "chunk")
             .map_err(|e| {
                 CoreError::DimensionError(
-                    ErrorContext::new(format!("Failed to convert chunk dimension: {}", e))
+                    ErrorContext::new(format!("{e}"))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;

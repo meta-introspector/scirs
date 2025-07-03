@@ -137,33 +137,34 @@ pub struct FalseAlarmAnalysisMetrics {
 }
 
 /// Run comprehensive ultra-enhanced Lomb-Scargle validation
-pub fn run_ultra_enhanced_lombscargle_validation() -> SignalResult<UltraEnhancedLombScargleValidationResult> {
+pub fn run_ultra_enhanced_lombscargle_validation(
+) -> SignalResult<UltraEnhancedLombScargleValidationResult> {
     println!("Running ultra-enhanced Lomb-Scargle validation in ultrathink mode...");
-    
+
     let mut critical_issues = Vec::new();
     let mut recommendations = Vec::new();
-    
+
     // 1. Basic accuracy validation
     let basic_validation = validate_basic_accuracy()?;
-    
+
     // 2. Statistical robustness assessment
     let statistical_robustness = validate_statistical_robustness()?;
-    
+
     // 3. Edge case validation
     let edge_case_validation = validate_edge_cases()?;
-    
+
     // 4. Numerical consistency testing
     let numerical_consistency = validate_numerical_consistency()?;
-    
+
     // 5. Performance scaling analysis
     let performance_scaling = analyze_performance_scaling()?;
-    
+
     // 6. Signal detection capabilities
     let signal_detection = validate_signal_detection()?;
-    
+
     // 7. False alarm rate analysis
     let false_alarm_analysis = validate_false_alarm_rates()?;
-    
+
     // Calculate enhanced overall score
     let enhanced_overall_score = calculate_enhanced_overall_score(
         &basic_validation,
@@ -174,26 +175,30 @@ pub fn run_ultra_enhanced_lombscargle_validation() -> SignalResult<UltraEnhanced
         &signal_detection,
         &false_alarm_analysis,
     );
-    
+
     // Generate critical issues and recommendations
     if basic_validation.frequency_accuracy < 0.95 {
-        critical_issues.push("Frequency estimation accuracy below acceptable threshold".to_string());
-        recommendations.push("Review frequency grid generation and interpolation methods".to_string());
+        critical_issues
+            .push("Frequency estimation accuracy below acceptable threshold".to_string());
+        recommendations
+            .push("Review frequency grid generation and interpolation methods".to_string());
     }
-    
+
     if statistical_robustness.chi_squared_pvalue < 0.05 {
         critical_issues.push("Statistical distribution inconsistency detected".to_string());
         recommendations.push("Validate normalization and statistical assumptions".to_string());
     }
-    
+
     if edge_case_validation.irregular_sampling_score < 0.8 {
-        recommendations.push("Improve robustness for highly irregular sampling patterns".to_string());
+        recommendations
+            .push("Improve robustness for highly irregular sampling patterns".to_string());
     }
-    
+
     if performance_scaling.time_complexity_factor > 2.0 {
-        recommendations.push("Consider algorithmic optimizations for better time complexity".to_string());
+        recommendations
+            .push("Consider algorithmic optimizations for better time complexity".to_string());
     }
-    
+
     Ok(UltraEnhancedLombScargleValidationResult {
         basic_validation,
         statistical_robustness,
@@ -213,12 +218,12 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
     let mut frequency_errors = Vec::new();
     let mut power_errors = Vec::new();
     let mut phase_errors = Vec::new();
-    
+
     // Test 1: Single frequency sinusoid with irregular sampling
     for &freq in &[0.1, 1.0, 5.0, 10.0] {
         let n = 200;
         let mut rng = rand::thread_rng();
-        
+
         // Generate irregular time samples
         let mut t = Vec::new();
         let mut current_time = 0.0;
@@ -226,14 +231,15 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
             t.push(current_time);
             current_time += 0.1 + 0.05 * rng.random_range(-1.0..1.0); // Irregular sampling
         }
-        
+
         // Generate signal with known frequency
         let amplitude = 2.0;
         let phase = PI / 4.0;
-        let y: Vec<f64> = t.iter()
+        let y: Vec<f64> = t
+            .iter()
             .map(|&ti| amplitude * (2.0 * PI * freq * ti + phase).sin())
             .collect();
-        
+
         // Compute Lomb-Scargle periodogram
         let freq_grid = Array1::linspace(0.01, 20.0, 1000);
         let (freqs, power) = lombscargle(
@@ -246,36 +252,41 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
             None,
             None,
         )?;
-        
+
         // Find peak frequency
-        let max_idx = power.iter()
+        let max_idx = power
+            .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
             .map(|(i, _)| i)
             .unwrap();
-        
+
         let detected_freq = freqs[max_idx];
         let detected_power = power[max_idx];
-        
+
         // Calculate errors
         let freq_error = (detected_freq - freq).abs() / freq;
-        let power_error = (detected_power - amplitude.powi(2) / 2.0).abs() / (amplitude.powi(2) / 2.0);
-        
+        let power_error =
+            (detected_power - amplitude.powi(2) / 2.0).abs() / (amplitude.powi(2) / 2.0);
+
         frequency_errors.push(freq_error);
         power_errors.push(power_error);
-        
+
         // Phase estimation (simplified - would need more complex analysis for actual phase)
         phase_errors.push(0.1); // Placeholder for now
     }
-    
+
     // Test 2: Multiple frequency resolution
-    let t: Vec<f64> = (0..500).map(|i| i as f64 * 0.01 + 0.001 * (i as f64).sin()).collect();
+    let t: Vec<f64> = (0..500)
+        .map(|i| i as f64 * 0.01 + 0.001 * (i as f64).sin())
+        .collect();
     let freq1 = 2.0;
     let freq2 = 2.2; // Close frequencies
-    let y: Vec<f64> = t.iter()
+    let y: Vec<f64> = t
+        .iter()
         .map(|&ti| (2.0 * PI * freq1 * ti).sin() + 0.8 * (2.0 * PI * freq2 * ti).sin())
         .collect();
-    
+
     let freq_grid = Array1::linspace(1.5, 2.5, 2000);
     let (freqs, power) = lombscargle(
         &t,
@@ -287,7 +298,7 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
         None,
         None,
     )?;
-    
+
     // Check if both peaks are resolved
     let peaks = find_peaks(&power, 0.5); // Find peaks above 50% of max
     let frequency_resolution = if peaks.len() >= 2 {
@@ -295,9 +306,10 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
     } else {
         0.6 // Poor resolution
     };
-    
+
     Ok(LombScargleAccuracyValidation {
-        frequency_accuracy: 1.0 - frequency_errors.iter().sum::<f64>() / frequency_errors.len() as f64,
+        frequency_accuracy: 1.0
+            - frequency_errors.iter().sum::<f64>() / frequency_errors.len() as f64,
         power_accuracy: 1.0 - power_errors.iter().sum::<f64>() / power_errors.len() as f64,
         phase_accuracy: 1.0 - phase_errors.iter().sum::<f64>() / phase_errors.len() as f64,
         frequency_resolution,
@@ -309,13 +321,13 @@ fn validate_statistical_robustness() -> SignalResult<StatisticalRobustnessMetric
     // Test with white noise to validate statistical properties
     let n_trials = 100;
     let mut periodogram_distributions = Vec::new();
-    
+
     for _ in 0..n_trials {
         let n = 200;
         let t: Vec<f64> = (0..n).map(|i| i as f64 * 0.01).collect();
         let mut rng = rand::thread_rng();
         let y: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
-        
+
         let freq_grid = Array1::linspace(0.1, 10.0, 100);
         let (freqs, power) = lombscargle(
             &t,
@@ -327,17 +339,17 @@ fn validate_statistical_robustness() -> SignalResult<StatisticalRobustnessMetric
             None,
             None,
         )?;
-        
+
         periodogram_distributions.extend(power);
     }
-    
+
     // Statistical tests (simplified implementations)
     let chi_squared_pvalue = test_chi_squared_goodness_of_fit(&periodogram_distributions);
     let ks_test_pvalue = test_kolmogorov_smirnov(&periodogram_distributions);
     let bootstrap_consistency = test_bootstrap_consistency()?;
     let fdr_control_score = test_false_discovery_rate_control()?;
     let psd_normalization_accuracy = test_psd_normalization()?;
-    
+
     Ok(StatisticalRobustnessMetrics {
         chi_squared_pvalue,
         ks_test_pvalue,
@@ -350,27 +362,27 @@ fn validate_statistical_robustness() -> SignalResult<StatisticalRobustnessMetric
 /// Validate edge cases
 fn validate_edge_cases() -> SignalResult<EdgeCaseValidationMetrics> {
     let mut edge_case_scores = Vec::new();
-    
+
     // Test 1: Very irregular sampling
     let irregular_sampling_score = test_irregular_sampling()?;
     edge_case_scores.push(irregular_sampling_score);
-    
+
     // Test 2: Large time gaps
     let large_gaps_score = test_large_time_gaps()?;
     edge_case_scores.push(large_gaps_score);
-    
+
     // Test 3: Extreme frequency ranges
     let extreme_frequencies_score = test_extreme_frequencies()?;
     edge_case_scores.push(extreme_frequencies_score);
-    
+
     // Test 4: Length extremes
     let length_extremes_score = test_length_extremes()?;
     edge_case_scores.push(length_extremes_score);
-    
+
     // Test 5: High noise conditions
     let high_noise_robustness = test_high_noise_robustness()?;
     edge_case_scores.push(high_noise_robustness);
-    
+
     Ok(EdgeCaseValidationMetrics {
         irregular_sampling_score,
         large_gaps_score,
@@ -384,16 +396,16 @@ fn validate_edge_cases() -> SignalResult<EdgeCaseValidationMetrics> {
 fn validate_numerical_consistency() -> SignalResult<NumericalConsistencyMetrics> {
     // Test floating point precision consistency
     let precision_consistency = test_precision_consistency()?;
-    
+
     // Test stability under small perturbations
     let perturbation_stability = test_perturbation_stability()?;
-    
+
     // Test reproducibility
     let reproducibility_score = test_reproducibility()?;
-    
+
     // Test accuracy degradation with problem size
     let accuracy_degradation = test_accuracy_degradation()?;
-    
+
     Ok(NumericalConsistencyMetrics {
         precision_consistency,
         perturbation_stability,
@@ -406,12 +418,12 @@ fn validate_numerical_consistency() -> SignalResult<NumericalConsistencyMetrics>
 fn analyze_performance_scaling() -> SignalResult<PerformanceScalingMetrics> {
     let sizes = vec![100, 500, 1000, 2000];
     let mut times = Vec::new();
-    
+
     for &n in &sizes {
         let t: Vec<f64> = (0..n).map(|i| i as f64 * 0.01).collect();
         let y: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * 1.0 * ti).sin()).collect();
         let freq_grid = Array1::linspace(0.1, 10.0, 1000);
-        
+
         let start = Instant::now();
         let _ = lombscargle(
             &t,
@@ -426,13 +438,13 @@ fn analyze_performance_scaling() -> SignalResult<PerformanceScalingMetrics> {
         let elapsed = start.elapsed().as_millis() as f64;
         times.push(elapsed);
     }
-    
+
     // Analyze scaling (should be approximately O(N*Nf))
     let time_complexity_factor = analyze_complexity_scaling(&sizes, &times);
-    
+
     Ok(PerformanceScalingMetrics {
         time_complexity_factor,
-        memory_complexity_factor: 1.0, // Placeholder
+        memory_complexity_factor: 1.0,  // Placeholder
         frequency_grid_efficiency: 0.9, // Placeholder
         large_dataset_capability: 0.85, // Placeholder
     })
@@ -442,19 +454,19 @@ fn analyze_performance_scaling() -> SignalResult<PerformanceScalingMetrics> {
 fn validate_signal_detection() -> SignalResult<SignalDetectionMetrics> {
     // Test weak signal detection
     let weak_signal_threshold = test_weak_signal_detection()?;
-    
+
     // Test SNR effectiveness
     let snr_effectiveness = test_snr_effectiveness()?;
-    
+
     // Test harmonic detection
     let harmonic_detection_score = test_harmonic_detection()?;
-    
+
     // Test amplitude modulation detection
     let am_detection_capability = test_amplitude_modulation_detection()?;
-    
+
     // Test frequency modulation handling
     let fm_handling_capability = test_frequency_modulation_handling()?;
-    
+
     Ok(SignalDetectionMetrics {
         weak_signal_threshold,
         snr_effectiveness,
@@ -468,16 +480,16 @@ fn validate_signal_detection() -> SignalResult<SignalDetectionMetrics> {
 fn validate_false_alarm_rates() -> SignalResult<FalseAlarmAnalysisMetrics> {
     // Test theoretical false alarm rate accuracy
     let theoretical_far_accuracy = test_theoretical_false_alarm_rate()?;
-    
+
     // Test empirical false alarm rate consistency
     let empirical_far_consistency = test_empirical_false_alarm_rate()?;
-    
+
     // Test multiple testing correction
     let multiple_testing_correction = test_multiple_testing_correction()?;
-    
+
     // Test statistical significance reliability
     let significance_reliability = test_statistical_significance()?;
-    
+
     Ok(FalseAlarmAnalysisMetrics {
         theoretical_far_accuracy,
         empirical_far_consistency,
@@ -491,10 +503,10 @@ fn validate_false_alarm_rates() -> SignalResult<FalseAlarmAnalysisMetrics> {
 fn find_peaks(data: &[f64], threshold_ratio: f64) -> Vec<usize> {
     let max_val = data.iter().cloned().fold(0.0, f64::max);
     let threshold = max_val * threshold_ratio;
-    
+
     let mut peaks = Vec::new();
     for i in 1..(data.len() - 1) {
-        if data[i] > threshold && data[i] > data[i-1] && data[i] > data[i+1] {
+        if data[i] > threshold && data[i] > data[i - 1] && data[i] > data[i + 1] {
             peaks.push(i);
         }
     }
@@ -630,14 +642,15 @@ fn calculate_enhanced_overall_score(
     detection: &SignalDetectionMetrics,
     false_alarm: &FalseAlarmAnalysisMetrics,
 ) -> f64 {
-    let score = (basic.frequency_accuracy * 0.2 +
-                 statistical.chi_squared_pvalue * 0.15 +
-                 edge_cases.irregular_sampling_score * 0.15 +
-                 numerical.precision_consistency * 0.15 +
-                 (2.0 / performance.time_complexity_factor).min(1.0) * 0.1 +
-                 detection.weak_signal_threshold * 0.15 +
-                 false_alarm.theoretical_far_accuracy * 0.1) * 100.0;
-    
+    let score = (basic.frequency_accuracy * 0.2
+        + statistical.chi_squared_pvalue * 0.15
+        + edge_cases.irregular_sampling_score * 0.15
+        + numerical.precision_consistency * 0.15
+        + (2.0 / performance.time_complexity_factor).min(1.0) * 0.1
+        + detection.weak_signal_threshold * 0.15
+        + false_alarm.theoretical_far_accuracy * 0.1)
+        * 100.0;
+
     score.min(100.0).max(0.0)
 }
 
@@ -646,30 +659,63 @@ pub fn generate_ultra_enhanced_validation_report(
     result: &UltraEnhancedLombScargleValidationResult,
 ) -> String {
     let mut report = String::new();
-    
+
     report.push_str("=== Ultra-Enhanced Lomb-Scargle Validation Report ===\n\n");
-    
-    report.push_str(&format!("Enhanced Overall Score: {:.1}/100\n\n", result.enhanced_overall_score));
-    
+
+    report.push_str(&format!(
+        "Enhanced Overall Score: {:.1}/100\n\n",
+        result.enhanced_overall_score
+    ));
+
     // Basic validation
     report.push_str("--- Basic Accuracy Validation ---\n");
-    report.push_str(&format!("Frequency Accuracy: {:.3}\n", result.basic_validation.frequency_accuracy));
-    report.push_str(&format!("Power Accuracy: {:.3}\n", result.basic_validation.power_accuracy));
-    report.push_str(&format!("Phase Accuracy: {:.3}\n", result.basic_validation.phase_accuracy));
-    report.push_str(&format!("Frequency Resolution: {:.3}\n", result.basic_validation.frequency_resolution));
-    
+    report.push_str(&format!(
+        "Frequency Accuracy: {:.3}\n",
+        result.basic_validation.frequency_accuracy
+    ));
+    report.push_str(&format!(
+        "Power Accuracy: {:.3}\n",
+        result.basic_validation.power_accuracy
+    ));
+    report.push_str(&format!(
+        "Phase Accuracy: {:.3}\n",
+        result.basic_validation.phase_accuracy
+    ));
+    report.push_str(&format!(
+        "Frequency Resolution: {:.3}\n",
+        result.basic_validation.frequency_resolution
+    ));
+
     // Statistical robustness
     report.push_str("\n--- Statistical Robustness ---\n");
-    report.push_str(&format!("Chi-squared p-value: {:.4}\n", result.statistical_robustness.chi_squared_pvalue));
-    report.push_str(&format!("KS test p-value: {:.4}\n", result.statistical_robustness.ks_test_pvalue));
-    report.push_str(&format!("Bootstrap consistency: {:.3}\n", result.statistical_robustness.bootstrap_consistency));
-    
+    report.push_str(&format!(
+        "Chi-squared p-value: {:.4}\n",
+        result.statistical_robustness.chi_squared_pvalue
+    ));
+    report.push_str(&format!(
+        "KS test p-value: {:.4}\n",
+        result.statistical_robustness.ks_test_pvalue
+    ));
+    report.push_str(&format!(
+        "Bootstrap consistency: {:.3}\n",
+        result.statistical_robustness.bootstrap_consistency
+    ));
+
     // Edge case validation
     report.push_str("\n--- Edge Case Validation ---\n");
-    report.push_str(&format!("Irregular sampling: {:.3}\n", result.edge_case_validation.irregular_sampling_score));
-    report.push_str(&format!("Large gaps handling: {:.3}\n", result.edge_case_validation.large_gaps_score));
-    report.push_str(&format!("Extreme frequencies: {:.3}\n", result.edge_case_validation.extreme_frequencies_score));
-    
+    report.push_str(&format!(
+        "Irregular sampling: {:.3}\n",
+        result.edge_case_validation.irregular_sampling_score
+    ));
+    report.push_str(&format!(
+        "Large gaps handling: {:.3}\n",
+        result.edge_case_validation.large_gaps_score
+    ));
+    report.push_str(&format!(
+        "Extreme frequencies: {:.3}\n",
+        result.edge_case_validation.extreme_frequencies_score
+    ));
+
     // Issues and recommendations
     if !result.critical_issues.is_empty() {
         report.push_str("\n--- Critical Issues ---\n");
@@ -677,13 +723,13 @@ pub fn generate_ultra_enhanced_validation_report(
             report.push_str(&format!("⚠️  {}\n", issue));
         }
     }
-    
+
     if !result.recommendations.is_empty() {
         report.push_str("\n--- Recommendations ---\n");
         for recommendation in &result.recommendations {
             report.push_str(&format!("💡 {}\n", recommendation));
         }
     }
-    
+
     report
 }

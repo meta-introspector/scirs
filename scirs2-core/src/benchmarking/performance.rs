@@ -490,12 +490,12 @@ impl StandardBenchmarks {
                 |temp_file| {
                     use std::io::Write;
                     let data = vec![42u8; 10000];
-                    temp_file.write_all(&data).map_err(|e| {
-                        CoreError::IoError(ErrorContext::new(format!("Failed to write: {}", e)))
-                    })?;
-                    temp_file.flush().map_err(|e| {
-                        CoreError::IoError(ErrorContext::new(format!("Failed to flush: {}", e)))
-                    })?;
+                    temp_file
+                        .write_all(&data)
+                        .map_err(|e| CoreError::IoError(ErrorContext::new(format!("{e}"))))?;
+                    temp_file
+                        .flush()
+                        .map_err(|e| CoreError::IoError(ErrorContext::new(format!("{e}"))))?;
                     Ok(data.len())
                 },
                 |temp_file| {

@@ -82,19 +82,19 @@ impl From<CloudError> for CoreError {
     fn from(err: CloudError) -> Self {
         match err {
             CloudError::AuthenticationError(msg) => CoreError::SecurityError(
-                ErrorContext::new(format!("Cloud authentication failed: {}", msg))
+                ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             CloudError::PermissionDenied(msg) => CoreError::SecurityError(
-                ErrorContext::new(format!("Cloud permission denied: {}", msg))
+                ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             CloudError::NetworkError(msg) => CoreError::IoError(
-                ErrorContext::new(format!("Cloud network error: {}", msg))
+                ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             _ => CoreError::IoError(
-                ErrorContext::new(format!("Cloud storage error: {}", err))
+                ErrorContext::new(format!("{err}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
         }
@@ -746,7 +746,7 @@ impl CloudStorageBackend for S3Backend {
 
         // For now, simulate the operation
         let file_size = std::fs::metadata(local_path)
-            .map_err(|e| CloudError::UploadError(format!("Failed to read file metadata: {}", e)))?
+            .map_err(|e| CloudError::UploadError(format!("{e}")))?
             .len();
 
         Ok(CloudObjectMetadata {
@@ -768,7 +768,7 @@ impl CloudStorageBackend for S3Backend {
     ) -> Result<CloudObjectMetadata, CloudError> {
         // Simulate download operation
         std::fs::write(local_path, b"mock file content")
-            .map_err(|e| CloudError::DownloadError(format!("Failed to write file: {}", e)))?;
+            .map_err(|e| CloudError::DownloadError(format!("{e}")))?;
 
         Ok(CloudObjectMetadata {
             key: remote_key.to_string(),
@@ -801,7 +801,7 @@ impl CloudStorageBackend for S3Backend {
 
     async fn download_data(&self, remote_key: &str) -> Result<Vec<u8>, CloudError> {
         // Simulate download operation
-        Ok(format!("Mock data for {}", remote_key).into_bytes())
+        Ok(format!("{remote_key}").into_bytes())
     }
 
     async fn get_metadata(&self, remote_key: &str) -> Result<CloudObjectMetadata, CloudError> {
@@ -839,9 +839,9 @@ impl CloudStorageBackend for S3Backend {
 
         for i in 0..max {
             let key = if let Some(prefix) = prefix {
-                format!("{}/object-{}", prefix, i)
+                format!("{prefix, i}")
             } else {
-                format!("object-{}", i)
+                format!("{i}")
             };
 
             objects.push(CloudObjectMetadata {
@@ -936,7 +936,7 @@ impl CloudStorageBackend for GoogleCloudBackend {
     ) -> Result<CloudObjectMetadata, CloudError> {
         // Similar to S3 but with GCS-specific implementation
         let file_size = std::fs::metadata(local_path)
-            .map_err(|e| CloudError::UploadError(format!("Failed to read file metadata: {}", e)))?
+            .map_err(|e| CloudError::UploadError(format!("{e}")))?
             .len();
 
         Ok(CloudObjectMetadata {
@@ -957,7 +957,7 @@ impl CloudStorageBackend for GoogleCloudBackend {
         _options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         std::fs::write(local_path, b"mock gcs content")
-            .map_err(|e| CloudError::DownloadError(format!("Failed to write file: {}", e)))?;
+            .map_err(|e| CloudError::DownloadError(format!("{e}")))?;
 
         Ok(CloudObjectMetadata {
             key: remote_key.to_string(),
@@ -988,7 +988,7 @@ impl CloudStorageBackend for GoogleCloudBackend {
     }
 
     async fn download_data(&self, remote_key: &str) -> Result<Vec<u8>, CloudError> {
-        Ok(format!("GCS Mock data for {}", remote_key).into_bytes())
+        Ok(format!("{remote_key}").into_bytes())
     }
 
     async fn get_metadata(&self, remote_key: &str) -> Result<CloudObjectMetadata, CloudError> {
@@ -1022,16 +1022,16 @@ impl CloudStorageBackend for GoogleCloudBackend {
 
         for i in 0..max {
             let key = if let Some(prefix) = prefix {
-                format!("{}/gcs-object-{}", prefix, i)
+                format!("{prefix, i}")
             } else {
-                format!("gcs-object-{}", i)
+                format!("{i}")
             };
 
             objects.push(CloudObjectMetadata {
                 key,
                 size: 1024 * (i + 1) as u64,
                 last_modified: SystemTime::now(),
-                etag: Some(format!("gcs-etag-{}", i)),
+                etag: Some(format!("{i}")),
                 content_type: Some("application/octet-stream".to_string()),
                 metadata: HashMap::new(),
                 storage_class: Some("STANDARD".to_string()),
@@ -1116,7 +1116,7 @@ impl CloudStorageBackend for AzureBackend {
         _options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         let file_size = std::fs::metadata(local_path)
-            .map_err(|e| CloudError::UploadError(format!("Failed to read file metadata: {}", e)))?
+            .map_err(|e| CloudError::UploadError(format!("{e}")))?
             .len();
 
         Ok(CloudObjectMetadata {
@@ -1137,7 +1137,7 @@ impl CloudStorageBackend for AzureBackend {
         _options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         std::fs::write(local_path, b"mock azure content")
-            .map_err(|e| CloudError::DownloadError(format!("Failed to write file: {}", e)))?;
+            .map_err(|e| CloudError::DownloadError(format!("{e}")))?;
 
         Ok(CloudObjectMetadata {
             key: remote_key.to_string(),
@@ -1168,7 +1168,7 @@ impl CloudStorageBackend for AzureBackend {
     }
 
     async fn download_data(&self, remote_key: &str) -> Result<Vec<u8>, CloudError> {
-        Ok(format!("Azure Mock data for {}", remote_key).into_bytes())
+        Ok(format!("{remote_key}").into_bytes())
     }
 
     async fn get_metadata(&self, remote_key: &str) -> Result<CloudObjectMetadata, CloudError> {
@@ -1202,16 +1202,16 @@ impl CloudStorageBackend for AzureBackend {
 
         for i in 0..max {
             let key = if let Some(prefix) = prefix {
-                format!("{}/azure-blob-{}", prefix, i)
+                format!("{prefix, i}")
             } else {
-                format!("azure-blob-{}", i)
+                format!("{i}")
             };
 
             objects.push(CloudObjectMetadata {
                 key,
                 size: 1024 * (i + 1) as u64,
                 last_modified: SystemTime::now(),
-                etag: Some(format!("azure-etag-{}", i)),
+                etag: Some(format!("{i}")),
                 content_type: Some("application/octet-stream".to_string()),
                 metadata: HashMap::new(),
                 storage_class: Some("Hot".to_string()),

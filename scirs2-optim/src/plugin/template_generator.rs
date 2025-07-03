@@ -5,7 +5,7 @@
 //! and CI/CD integration.
 
 use super::core::*;
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

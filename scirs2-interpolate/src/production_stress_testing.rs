@@ -1340,9 +1340,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             category: StressTestCategory::NumericalStability,
             input_characteristics: "Ill-conditioned clustered data".to_string(),
             status: if both_stable {
-                StressTestStatus::Passed
+                TestStatus::Passed
             } else {
-                StressTestStatus::Failed
+                TestStatus::Failed
             },
             execution_time: duration,
             memory_usage: self.estimate_memory_usage(n),
@@ -1381,9 +1381,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                 category: StressTestCategory::NumericalStability,
                 input_characteristics: "Machine precision challenging data".to_string(),
                 status: if precision_stable && !has_artifacts {
-                    StressTestStatus::Passed
+                    TestStatus::Passed
                 } else {
-                    StressTestStatus::Failed
+                    TestStatus::Failed
                 },
                 execution_time: duration,
                 memory_usage: self.estimate_memory_usage(n),
@@ -1403,7 +1403,7 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                 test_name: "precision_limits".to_string(),
                 category: StressTestCategory::NumericalStability,
                 input_characteristics: "Machine precision challenging data".to_string(),
-                status: StressTestStatus::Failed,
+                status: TestStatus::Failed,
                 execution_time: duration,
                 memory_usage: self.estimate_memory_usage(n),
                 error_messages: vec!["Interpolation failed due to precision limits".to_string()],
@@ -1458,9 +1458,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             category: StressTestCategory::NumericalStability,
             input_characteristics: "Step discontinuity with extreme gradients".to_string(),
             status: if gradient_stable {
-                StressTestStatus::Passed
+                TestStatus::Passed
             } else {
-                StressTestStatus::Failed
+                TestStatus::Failed
             },
             execution_time: duration,
             memory_usage: self.estimate_memory_usage(n),
@@ -1509,9 +1509,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             category: StressTestCategory::NumericalStability,
             input_characteristics: "High-frequency oscillatory data".to_string(),
             status: if oscillatory_stable {
-                StressTestStatus::Passed
+                TestStatus::Passed
             } else {
-                StressTestStatus::Failed
+                TestStatus::Failed
             },
             execution_time: duration,
             memory_usage: self.estimate_memory_usage(n),
@@ -1552,9 +1552,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             category: StressTestCategory::NumericalStability,
             input_characteristics: "Large scale differences".to_string(),
             status: if scaling_stable {
-                StressTestStatus::Passed
+                TestStatus::Passed
             } else {
-                StressTestStatus::Failed
+                TestStatus::Failed
             },
             execution_time: duration,
             memory_usage: self.estimate_memory_usage(n),
@@ -1630,9 +1630,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             category: StressTestCategory::ErrorHandling,
             input_characteristics: "Empty input arrays".to_string(),
             status: if clear_error {
-                StressTestStatus::Passed
+                TestStatus::Passed
             } else {
-                StressTestStatus::Failed
+                TestStatus::Failed
             },
             execution_time: duration,
             memory_usage: 0,
@@ -1673,9 +1673,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             category: StressTestCategory::ErrorHandling,
             input_characteristics: "Mismatched array dimensions".to_string(),
             status: if clear_error {
-                StressTestStatus::Passed
+                TestStatus::Passed
             } else {
-                StressTestStatus::Failed
+                TestStatus::Failed
             },
             execution_time: duration,
             memory_usage: self.estimate_memory_usage(10),
@@ -1698,7 +1698,7 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             test_name: "parameter_validation_errors".to_string(),
             category: StressTestCategory::ErrorHandling,
             input_characteristics: "Invalid parameter values".to_string(),
-            status: StressTestStatus::Passed,
+            status: TestStatus::Passed,
             execution_time: Duration::from_millis(1),
             memory_usage: 0,
             error_messages: Vec::new(),
@@ -1716,7 +1716,7 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             test_name: "numerical_error_messages".to_string(),
             category: StressTestCategory::ErrorHandling,
             input_characteristics: "Numerical computation failures".to_string(),
-            status: StressTestStatus::Passed,
+            status: TestStatus::Passed,
             execution_time: Duration::from_millis(1),
             memory_usage: 0,
             error_messages: Vec::new(),
@@ -1788,9 +1788,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             category: StressTestCategory::ResourceExhaustion,
             input_characteristics: "Very large data size".to_string(),
             status: if graceful_handling {
-                StressTestStatus::Passed
+                TestStatus::Passed
             } else {
-                StressTestStatus::Failed
+                TestStatus::Failed
             },
             execution_time: duration,
             memory_usage: if result.is_ok() {
@@ -1818,7 +1818,7 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             test_name: "computation_timeout_recovery".to_string(),
             category: StressTestCategory::ResourceExhaustion,
             input_characteristics: "Long-running computation".to_string(),
-            status: StressTestStatus::Passed,
+            status: TestStatus::Passed,
             execution_time: Duration::from_millis(100),
             memory_usage: 1024,
             error_messages: Vec::new(),

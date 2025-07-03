@@ -211,7 +211,10 @@ impl std::fmt::Debug for GpuEvent {
             .field("dependencies", &self.dependencies)
             .field(
                 "callbacks",
-                &format!("{} callbacks", self.callbacks.lock().unwrap().len()),
+                &format!(
+                    "{count} callbacks",
+                    count = self.callbacks.lock().unwrap().len()
+                ),
             )
             .finish()
     }

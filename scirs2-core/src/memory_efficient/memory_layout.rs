@@ -731,13 +731,13 @@ impl ArrayCreation {
         match order {
             LayoutOrder::C => Array::from_shape_vec(shape, data).map_err(|e| {
                 CoreError::ShapeError(
-                    ErrorContext::new(format!("Shape error: {}", e))
+                    ErrorContext::new(format!("error: {}", e))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 )
             }),
             LayoutOrder::Fortran => Array::from_shape_vec(shape.f(), data).map_err(|e| {
                 CoreError::ShapeError(
-                    ErrorContext::new(format!("Shape error: {}", e))
+                    ErrorContext::new(format!("error: {}", e))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 )
             }),

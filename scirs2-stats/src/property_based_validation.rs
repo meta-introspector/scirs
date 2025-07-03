@@ -12,10 +12,9 @@
 //! - Numerical stability analysis
 
 use crate::error::{StatsError, StatsResult};
-use chrono::{DateTime, Utc};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::Array1;
 use num_traits::Float;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -545,7 +544,10 @@ impl ComprehensivePropertyTestSuite {
             }
             "standard_deviation" => {
                 results.push(self.validator.test_property(StandardDeviationScale)?);
-                results.push(self.validator.test_property(StandardDeviationNonNegativity)?);
+                results.push(
+                    self.validator
+                        .test_property(StandardDeviationNonNegativity)?,
+                );
             }
             "quantile" => {
                 results.push(self.validator.test_property(QuantileMonotonicity)?);
@@ -568,14 +570,16 @@ impl ComprehensivePropertyTestSuite {
         self.validator.test_property(MeanTranslationInvariance)?;
 
         // Test variance properties
-        self.validator.test_property(VarianceTranslationInvariance)?;
+        self.validator
+            .test_property(VarianceTranslationInvariance)?;
 
         // Test correlation properties
         self.validator.test_property(CorrelationBounds)?;
 
         // Test standard deviation properties
         self.validator.test_property(StandardDeviationScale)?;
-        self.validator.test_property(StandardDeviationNonNegativity)?;
+        self.validator
+            .test_property(StandardDeviationNonNegativity)?;
 
         // Test quantile properties
         self.validator.test_property(QuantileMonotonicity)?;
@@ -721,14 +725,24 @@ impl MathematicalProperty<Array1<f64>> for QuantileMonotonicity {
             };
         }
 
-        let q25 = quantile(&input.view(), 0.25, crate::quantile::QuantileInterpolation::Linear);
-        let q50 = quantile(&input.view(), 0.50, crate::quantile::QuantileInterpolation::Linear);
-        let q75 = quantile(&input.view(), 0.75, crate::quantile::QuantileInterpolation::Linear);
+        let q25 = quantile(
+            &input.view(),
+            0.25,
+            crate::quantile::QuantileInterpolation::Linear,
+        );
+        let q50 = quantile(
+            &input.view(),
+            0.50,
+            crate::quantile::QuantileInterpolation::Linear,
+        );
+        let q75 = quantile(
+            &input.view(),
+            0.75,
+            crate::quantile::QuantileInterpolation::Linear,
+        );
 
         let property_holds = match (q25, q50, q75) {
-            (Ok(q25_val), Ok(q50_val), Ok(q75_val)) => {
-                q25_val <= q50_val && q50_val <= q75_val
-            }
+            (Ok(q25_val), Ok(q50_val), Ok(q75_val)) => q25_val <= q50_val && q50_val <= q75_val,
             _ => false,
         };
 
@@ -790,14 +804,21 @@ impl MathematicalProperty<Array1<f64>> for QuantileBounds {
 
         let min_val = input.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max_val = input.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        
-        let q25 = quantile(&input.view(), 0.25, crate::quantile::QuantileInterpolation::Linear);
-        let q75 = quantile(&input.view(), 0.75, crate::quantile::QuantileInterpolation::Linear);
+
+        let q25 = quantile(
+            &input.view(),
+            0.25,
+            crate::quantile::QuantileInterpolation::Linear,
+        );
+        let q75 = quantile(
+            &input.view(),
+            0.75,
+            crate::quantile::QuantileInterpolation::Linear,
+        );
 
         let property_holds = match (q25, q75) {
             (Ok(q25_val), Ok(q75_val)) => {
-                q25_val >= min_val && q25_val <= max_val &&
-                q75_val >= min_val && q75_val <= max_val
+                q25_val >= min_val && q25_val <= max_val && q75_val >= min_val && q75_val <= max_val
             }
             _ => false,
         };
@@ -814,7 +835,10 @@ impl MathematicalProperty<Array1<f64>> for QuantileBounds {
                 vec![PropertyTestFailure {
                     test_case: "bounds_test".to_string(),
                     expected: "min <= quantile <= max".to_string(),
-                    actual: format!("min={}, max={}, Q25={:?}, Q75={:?}", min_val, max_val, q25, q75),
+                    actual: format!(
+                        "min={}, max={}, Q25={:?}, Q75={:?}",
+                        min_val, max_val, q25, q75
+                    ),
                     error_magnitude: 0.0,
                     input_data: input.to_vec(),
                 }]
@@ -846,7 +870,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for MeanLinearity {
         use crate::descriptive::mean;
 
         let (x, y) = input;
-        
+
         if x.len() != y.len() {
             return PropertyTestResult {
                 property_name: self.name().to_string(),
@@ -977,14 +1001,14 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationSymmetry {
 /// Convenience function to run comprehensive property-based validation
 pub fn run_comprehensive_property_validation() -> StatsResult<ValidationReport> {
     let config = PropertyTestConfig {
-        test_cases_per_property: 500,  // Balanced for thoroughness and speed
+        test_cases_per_property: 500, // Balanced for thoroughness and speed
         seed: 42,
         tolerance: 1e-12,
         test_edge_cases: true,
         test_cross_platform: true,
         test_numerical_stability: true,
     };
-    
+
     let mut suite = ComprehensivePropertyTestSuite::new(config);
     suite.run_enhanced_tests()
 }
@@ -992,14 +1016,14 @@ pub fn run_comprehensive_property_validation() -> StatsResult<ValidationReport> 
 /// Convenience function to run quick property-based validation
 pub fn run_quick_property_validation() -> StatsResult<ValidationReport> {
     let config = PropertyTestConfig {
-        test_cases_per_property: 100,  // Faster for CI/CD
+        test_cases_per_property: 100, // Faster for CI/CD
         seed: 42,
         tolerance: 1e-10,
         test_edge_cases: true,
         test_cross_platform: false,
         test_numerical_stability: false,
     };
-    
+
     let mut suite = ComprehensivePropertyTestSuite::new(config);
     suite.run_enhanced_tests()
 }

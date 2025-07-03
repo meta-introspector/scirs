@@ -655,7 +655,7 @@ impl SystemAlerter {
                 AlertType::HighLoadAverage,
                 metrics.load_average,
                 self.config.load_threshold,
-                format!("High load average: {:.2}", metrics.load_average),
+                format!("Load average: {:.2}", metrics.load_average),
             ));
         }
 

@@ -79,10 +79,10 @@ impl fmt::Display for ErrorLocation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}:{}", self.file, self.line)?;
         if let Some(column) = self.column {
-            write!(f, ":{}", column)?;
+            write!(f, ":{column}")?;
         }
         if let Some(function) = self.function {
-            write!(f, " in {}", function)?;
+            write!(f, " in {function}")?;
         }
         Ok(())
     }
@@ -129,10 +129,10 @@ impl fmt::Display for ErrorContext {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.message)?;
         if let Some(location) = &self.location {
-            write!(f, " at {}", location)?;
+            write!(f, " at {location}")?;
         }
         if let Some(cause) = &self.cause {
-            write!(f, "\nCaused by: {}", cause)?;
+            write!(f, "\nCaused by: {cause}")?;
         }
         Ok(())
     }

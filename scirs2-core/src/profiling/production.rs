@@ -385,7 +385,7 @@ impl WorkloadAnalysisReport {
         if !self.recommendations.is_empty() {
             summary.push_str("💡 Optimization Recommendations:\n");
             for (i, rec) in self.recommendations.iter().take(5).enumerate() {
-                summary.push_str(&format!("  {}. {}\n", i + 1, rec));
+                summary.push_str(&format!("  {num}. {rec}\n", num = i + 1, rec = rec));
             }
         }
 
@@ -956,13 +956,16 @@ impl ProductionProfiler {
             serde_json::to_string_pretty(&summary).map_err(|e| {
                 CoreError::from(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Failed to serialize data: {}", e),
+                    format!("error: {}", e),
                 ))
             })
         }
         #[cfg(not(feature = "serde"))]
         {
-            Ok(format!("Profiling data for workload: {}", workload_id))
+            Ok(format!(
+                "Profiling data for workload: {workload_id}",
+                workload_id = workload_id
+            ))
         }
     }
 }

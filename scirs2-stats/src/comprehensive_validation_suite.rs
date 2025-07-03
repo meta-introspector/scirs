@@ -19,9 +19,7 @@ use crate::numerical_stability_analyzer::{
 use crate::property_based_validation::{
     ComprehensivePropertyTestSuite, PropertyTestConfig, PropertyTestResult,
 };
-use crate::scipy_benchmark_framework::{
-    BenchmarkConfig, BenchmarkResult, ScipyBenchmarkFramework,
-};
+use crate::scipy_benchmark_framework::{BenchmarkConfig, BenchmarkResult, ScipyBenchmarkFramework};
 use ndarray::{Array1, ArrayView1};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

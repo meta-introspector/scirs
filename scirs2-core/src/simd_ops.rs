@@ -650,7 +650,10 @@ impl PlatformCapabilities {
         if features.is_empty() {
             "No acceleration features available".to_string()
         } else {
-            format!("Available acceleration: {}", features.join(", "))
+            format!(
+                "Available acceleration: {features}",
+                features = features.join(", ")
+            )
         }
     }
 }
@@ -805,7 +808,10 @@ impl AutoOptimizer {
         };
 
         if self.has_unified_memory() && recommendation == "Metal" {
-            format!("{} (Unified Memory)", recommendation)
+            format!(
+                "{recommendation} (Unified Memory)",
+                recommendation = recommendation
+            )
         } else {
             recommendation.to_string()
         }

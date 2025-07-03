@@ -4,10 +4,10 @@
 //! to available memory constraints and optimize data layout for cache efficiency.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
+use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix2};
 use num_traits::{Float, NumCast, One, Zero};
 use rand;
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};

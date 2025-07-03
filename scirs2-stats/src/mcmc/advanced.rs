@@ -84,7 +84,7 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
             return Ok(self.current.clone());
         }
 
-        let u: f64 = rng.random();
+        let u: f64 = rng.gen();
         let mut cumsum = 0.0;
         let mut selected_idx = 0;
 
@@ -118,7 +118,7 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
             - total_weight.ln();
 
         // Accept or reject
-        let accept_u: f64 = rng.random();
+        let accept_u: f64 = rng.gen();
         self.n_steps += 1;
 
         if accept_u.ln() < log_ratio {
@@ -256,7 +256,7 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
                 + self.proposal.log_ratio(current_state, &proposal);
 
             self.move_attempts[i] += 1;
-            let u: f64 = rng.random();
+            let u: f64 = rng.gen();
 
             if u.ln() < log_ratio {
                 self.states[i] = proposal;
@@ -282,7 +282,7 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
                 - (log_density1 * temp1 - log_density2 * temp2) / temp1;
 
             self.exchange_attempts[i] += 1;
-            let u: f64 = rng.random();
+            let u: f64 = rng.gen();
 
             if u.ln() < log_ratio {
                 // Exchange states
@@ -435,7 +435,7 @@ impl<T: TargetDistribution> SliceSampler<T> {
         let current_log_density = self.target.log_density(state);
 
         // Sample auxiliary variable (slice level)
-        let u: f64 = rng.random();
+        let u: f64 = rng.gen();
         let slice_level = current_log_density + u.ln();
 
         // Find initial interval
@@ -614,7 +614,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
                 (self.dim as f64 - 1.0) * z.ln() + proposal_log_density - self.log_densities[i];
 
             // Accept or reject
-            let u: f64 = rng.random();
+            let u: f64 = rng.gen();
             self.n_proposed[i] += 1;
 
             if u.ln() < log_ratio {

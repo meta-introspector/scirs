@@ -245,7 +245,7 @@ fn main() {
 
     // Print additional information about Newton iterations if available
     if let Some(msg) = &result_bdf.message {
-        println!("  {}", msg);
+        println!("  {msg}");
     }
 
     println!("\nComparison of efficiency for stiff problem:");
@@ -307,7 +307,7 @@ fn main() {
     );
 
     if let Some(msg) = &result_bdf_rob.message {
-        println!("  {}", msg);
+        println!("  {msg}");
     }
 
     // For comparison, try to solve with an explicit method (unlikely to succeed or very inefficient)
@@ -326,7 +326,7 @@ fn main() {
             }),
         )
         .unwrap_or_else(|e| {
-            println!("  Error: {}", e);
+            println!("  Error: {e}");
             // Return a dummy result
             scirs2_integrate::ODEResult {
                 t: vec![0.0],

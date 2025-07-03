@@ -13,6 +13,40 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
 use std::path::Path;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
+
+/// Ultra-advanced streaming metrics for performance monitoring
+#[derive(Debug, Clone, Default)]
+pub struct UltraStreamingMetrics {
+    /// Total documents processed
+    pub documents_processed: usize,
+    /// Total processing time
+    pub total_processing_time: Duration,
+    /// Peak memory usage in bytes
+    pub peak_memory_usage: usize,
+    /// Current throughput (documents per second)
+    pub throughput: f64,
+    /// Cache hit rate
+    pub cache_hit_rate: f64,
+    /// Memory efficiency score
+    pub memory_efficiency: f64,
+}
+
+/// Memory usage tracking for streaming operations
+#[derive(Debug, Default)]
+struct MemoryUsageTracker {
+    current_usage: usize,
+    peak_usage: usize,
+}
+
+impl MemoryUsageTracker {
+    fn update_usage(&mut self, current: usize) {
+        self.current_usage = current;
+        if current > self.peak_usage {
+            self.peak_usage = current;
+        }
+    }
+}
 
 /// Memory-mapped corpus for efficient large file processing
 pub struct MemoryMappedCorpus {
@@ -1121,21 +1155,6 @@ impl<T: Tokenizer + Send + Sync> UltrathinkStreamingProcessor<T> {
             cache_hits as f64 / total_accesses as f64
         }
     }
-}
-
-/// Ultra-streaming performance metrics
-#[derive(Debug)]
-pub struct UltraStreamingMetrics {
-    /// Current size of the cache
-    pub cache_size: usize,
-    /// Rate of cache hits (0.0 to 1.0)
-    pub cache_hit_rate: f64,
-    /// Current memory usage in bytes
-    pub memory_usage: usize,
-    /// Optimal chunk size for processing
-    pub optimal_chunk_size: usize,
-    /// Historical performance metrics
-    pub performance_history: Vec<StreamingPerformanceMetric>,
 }
 
 impl StreamingMemoryOptimizer {

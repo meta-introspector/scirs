@@ -33,14 +33,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let small_input = Array::from_shape_fn(
         IxDyn(&[1, 32]),
         |_| rand::random::<f32>() * 1000.0, // Random token IDs
+    )?;
     println!("GPT-2 Small input shape: {:?}", small_input.shape());
     // Forward pass
     let small_hidden_states = gpt2_small.forward(&small_input)?;
     println!(
         "GPT-2 Small hidden states shape: {:?}",
         small_hidden_states.shape()
+    );
+    println!(
         "GPT-2 Small hidden dimension: {}",
         small_hidden_states.shape()[2]
+    );
     // For text generation (logits for next token prediction)
     let small_logits = gpt2_small.logits(&small_input)?;
     println!("GPT-2 Small logits shape: {:?}", small_logits.shape());

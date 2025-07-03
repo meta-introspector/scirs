@@ -5,7 +5,7 @@
 //! strategies and platform-specific optimizations.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
 use rand::Rng;
 use scirs2_core::{
@@ -58,7 +58,16 @@ pub struct UltraSimdStatistics<F> {
 
 impl<F> UltraSimdStatistics<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
 {
     /// Create new ultra-optimized SIMD statistics computer
     pub fn new() -> Self {
@@ -486,7 +495,16 @@ impl AdvancedSimdOps<f64> for f64 {}
 /// High-level convenience functions
 pub fn ultra_mean_simd<F>(data: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
 {
     let computer = UltraSimdStatistics::<F>::new();
     let stats = computer.comprehensive_stats_ultra(data)?;
@@ -495,7 +513,16 @@ where
 
 pub fn ultra_std_simd<F>(data: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
 {
     let computer = UltraSimdStatistics::<F>::new();
     let stats = computer.comprehensive_stats_ultra(data)?;
@@ -504,7 +531,16 @@ where
 
 pub fn ultra_comprehensive_simd<F>(data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
 {
     let computer = UltraSimdStatistics::<F>::new();
     computer.comprehensive_stats_ultra(data)

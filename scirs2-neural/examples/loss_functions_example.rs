@@ -72,22 +72,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let triplet = TripletLoss::new(0.5);
     // Create sample data for triplet learning
     // Embedding triplets (batch_size x 3 x embedding_dim)
+    let triplet_embeddings = Array3::from_shape_vec(
         IxDyn(&[2, 3, 3]),
+        vec![
             0.1, 0.2, 0.3, // First triplet, anchor
             0.1, 0.3, 0.3, // First triplet, positive
             0.5, 0.5, 0.5, // First triplet, negative
             0.6, 0.6, 0.6, // Second triplet, anchor
             0.5, 0.6, 0.6, // Second triplet, positive
             0.1, 0.1, 0.1, // Second triplet, negative
+        ],
+    )?
+    .into_dyn();
     // Dummy labels (not used by triplet loss)
     let dummy_labels = Array::zeros(IxDyn(&[2, 1]));
-    let loss = triplet.forward(&embeddings, &dummy_labels)?;
+    let loss = triplet.forward(&triplet_embeddings, &dummy_labels)?;
     println!("Embeddings (batch_size x 3 x embedding_dim):");
     println!("  - First dimension: batch size");
     println!("  - Second dimension: [anchor, positive, negative]");
     println!("  - Third dimension: embedding components");
     println!("Triplet Loss (margin=0.5): {:.4}", loss);
-    let gradients = triplet.backward(&embeddings, &dummy_labels)?;
+    let gradients = triplet.backward(&triplet_embeddings, &dummy_labels)?;
     println!("Triplet Loss Gradients (first few):");
     Ok(())
 }

@@ -213,9 +213,9 @@ pub fn format_bytes(bytes: u64) -> String {
     }
 
     if unit_index == 0 {
-        format!("{bytes} {unit}", unit = UNITS[unit_index])
+        format!("{:.0} {}", size, UNITS[unit_index])
     } else {
-        format!("{size:.1} {unit}", unit = UNITS[unit_index])
+        format!("{:.1} {}", size, UNITS[unit_index])
     }
 }
 

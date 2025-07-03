@@ -1036,10 +1036,11 @@ impl<A: Float> AdvancedNeuralOptimizerFactory<A> {
     }
 
     /// Auto-select optimal optimizer
+    #[allow(dead_code)]
     pub fn auto_select_optimizer(
         &self,
-        task_context: &TaskContext<A>,
-        criteria: &AutoSelectionCriteria<A>,
+        _task_context: &TaskContext<A>,
+        _criteria: &AutoSelectionCriteria<A>,
     ) -> Result<String> {
         // Implementation would use ML-based selection
         // This is a simplified placeholder

@@ -75,15 +75,15 @@ impl From<MLPipelineError> for CoreError {
     fn from(err: MLPipelineError) -> Self {
         match err {
             MLPipelineError::ValidationError(msg) => CoreError::ValidationError(
-                ErrorContext::new(format!("ML Pipeline validation error: {}", msg))
+                ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             MLPipelineError::ResourceExhausted(msg) => CoreError::ComputationError(
-                ErrorContext::new(format!("ML Pipeline resource exhausted: {}", msg))
+                ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             _ => CoreError::ComputationError(
-                ErrorContext::new(format!("ML Pipeline error: {}", err))
+                ErrorContext::new(format!("{err}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
         }
@@ -181,7 +181,7 @@ impl FeatureValue {
             FeatureValue::Int64(v) => v.to_string(),
             FeatureValue::Boolean(v) => v.to_string(),
             FeatureValue::Null => "null".to_string(),
-            _ => format!("{:?}", self),
+            _ => format!("{self:?}"),
         }
     }
 
@@ -1327,7 +1327,7 @@ pub mod utils {
             }
 
             let sample = DataSample {
-                id: format!("sample_{}", i),
+                id: format!("{i}"),
                 features,
                 target: Some(FeatureValue::Float64((i as f64) % 2.0)), // Binary target
                 timestamp: SystemTime::now(),

@@ -36,11 +36,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Add positional information
     let output = pos_embedding.forward(&token_embeddings)?;
     println!("Token embeddings shape: {:?}", token_embeddings.shape());
+    println!(
         "Output with positional encoding shape: {:?}",
         output.shape()
+    );
+    println!(
         "First token before positional encoding: {:?}",
         token_embeddings.slice(ndarray::s![0, 0, ..]).to_owned()
+    );
+    println!(
         "First token after positional encoding: {:?}",
+        output.slice(ndarray::s![0, 0, ..]).to_owned()
+    );
     // Example 3: Patch Embedding (for Vision Transformers)
     println!("\n--- Patch Embedding Example ---");
     // Create patch embedding for a vision transformer
@@ -54,8 +61,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Number of patches: {}", patch_embedding.num_patches());
     println!("Embedding dimension: {}", patch_embedding.embedding_dim);
     // Print first patch embedding
+    println!(
         "First patch embedding (first 5 values): {:?}",
         output.slice(ndarray::s![0, 0, ..5]).to_owned()
+    );
     println!("\nAll embedding examples completed successfully!");
     Ok(())
 }

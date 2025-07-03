@@ -31,8 +31,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Output after dropout (p=0.5): {} elements dropped",
         dropped_count
     );
+    println!(
         "Dropout rate: {:.2}%",
         (dropped_count as f32 / n_features as f32) * 100.0
+    );
     // 2. Example: Using dropout in a neural network to prevent overfitting
     println!("\nExample 2: Using dropout in a simple neural network");
     // Create a simple neural network with dropout
@@ -51,6 +53,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for i in 0..batch_size {
         for j in 0..input_dim {
             input_data[[i, j]] = rng.random_range(-1.0..1.0);
+        }
+    }
     // Forward pass through the network with dropout
     println!("Running forward pass with dropout...");
     let hidden_output = dense1.forward(&input_data.clone().into_dyn())?;
@@ -91,6 +95,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     image_input[[n, c, h, w]] = rng.random_range(-1.0..1.0);
                 }
             }
+        }
+    }
     // Forward pass through CNN with dropout
     println!("Running forward pass through CNN with dropout...");
     let conv_output = conv1.forward(&image_input.clone().into_dyn())?;
@@ -98,11 +104,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dropout_output = dropout_conv.forward(&bn_output)?;
     // Reshape for dense layer (flatten spatial and channel dimensions)
     let mut flattened = Array2::<f32>::zeros((batch_size, flattened_size));
+    for n in 0..batch_size {
         let mut idx = 0;
         for c in 0..out_channels {
+            for h in 0..height {
+                for w in 0..width {
                     flattened[[n, idx]] =
                         *dropout_output.slice(ndarray::s![n, c, h, w]).into_scalar();
                     idx += 1;
+                }
+            }
+        }
+    }
     let cnn_output = dense3.forward(&flattened.into_dyn())?;
     println!("CNN output shape: {:?}", cnn_output.shape());
     // 4. Example: Switching between training and inference modes

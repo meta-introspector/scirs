@@ -486,7 +486,10 @@ impl NeuralRLAgent {
     }
 
     /// Select action using epsilon-greedy policy
-    pub fn select_algorithm<N: Node, E: EdgeWeight, Ix>(&mut self, graph: &Graph<N, E, Ix>) -> usize
+    pub fn select_algorithm<N: Node + std::fmt::Debug, E: EdgeWeight, Ix>(
+        &mut self,
+        graph: &Graph<N, E, Ix>,
+    ) -> usize
     where
         Ix: petgraph::graph::IndexType,
     {
@@ -1383,7 +1386,7 @@ pub fn execute_with_ultrathink<N, E, Ix, T>(
     algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
 ) -> Result<T>
 where
-    N: Node + Clone + std::hash::Hash + Eq,
+    N: Node + Clone + std::hash::Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -1398,7 +1401,7 @@ pub fn execute_with_enhanced_ultrathink<N, E, Ix, T>(
     algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
 ) -> Result<T>
 where
-    N: Node + Clone + std::hash::Hash + Eq,
+    N: Node + Clone + std::hash::Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {

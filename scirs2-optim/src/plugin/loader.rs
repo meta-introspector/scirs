@@ -5,7 +5,7 @@
 
 use super::core::*;
 use super::registry::*;
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;

@@ -29,3 +29,9 @@ pub type GruGateCache<F> = Arc<RwLock<Option<(Array<F, IxDyn>, Array<F, IxDyn>, 
 
 /// Type alias for RNN state cache
 pub type RnnStateCache<F> = Arc<RwLock<Option<Array<F, IxDyn>>>>;
+
+/// Type alias for LSTM step output (new_h, new_c, (input_gate, forget_gate, cell_gate, output_gate))
+pub type LstmStepOutput<F> = (Array<F, IxDyn>, Array<F, IxDyn>, (Array<F, IxDyn>, Array<F, IxDyn>, Array<F, IxDyn>, Array<F, IxDyn>));
+
+/// Type alias for GRU forward output (new_h, (reset_gate, update_gate, new_gate))
+pub type GruForwardOutput<F> = (Array<F, IxDyn>, (Array<F, IxDyn>, Array<F, IxDyn>, Array<F, IxDyn>));

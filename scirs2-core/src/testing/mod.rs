@@ -189,7 +189,7 @@ impl TestRunner {
                 if self.config.verbose {
                     println!("Test {} failed: {:?}", test_name, e);
                 }
-                Ok(TestResult::failure(duration, 1, format!("{:?}", e)))
+                Ok(TestResult::failure(duration, 1, format!("{e:?}")))
             }
             Err(panic) => {
                 let error_msg = if let Some(s) = panic.downcast_ref::<String>() {
@@ -203,11 +203,7 @@ impl TestRunner {
                 if self.config.verbose {
                     println!("Test {} panicked: {}", test_name, error_msg);
                 }
-                Ok(TestResult::failure(
-                    duration,
-                    1,
-                    format!("Panic: {}", error_msg),
-                ))
+                Ok(TestResult::failure(duration, 1, format!("{error_msg}")))
             }
         }
     }
@@ -267,7 +263,7 @@ impl TestRunner {
                     return Ok(TestResult::failure(
                         start_time.elapsed(),
                         cases_executed,
-                        format!("Test failed at iteration {}: {:?}", i, e),
+                        format!(":?{i, e}"),
                     )
                     .with_memory_usage(max_memory));
                 }
@@ -376,7 +372,7 @@ impl TestSuite {
                     results.push(TestResult::failure(
                         Duration::from_secs(0),
                         0,
-                        format!("Test setup failed: {:?}", e),
+                        format!(":?{e}"),
                     ));
                 }
             }

@@ -2152,8 +2152,7 @@ impl UltrathinkDistributedComputer {
         // Submit to scheduler with placement hints
         let mut scheduler = self.task_scheduler.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire scheduler lock: {}",
-                e
+                "Failed to acquire scheduler lock: {e}"
             )))
         })?;
 
@@ -2227,8 +2226,7 @@ impl UltrathinkDistributedComputer {
     pub fn get_task_status(&self, task_id: &TaskId) -> CoreResult<Option<TaskStatus>> {
         let scheduler = self.task_scheduler.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire scheduler lock: {}",
-                e
+                "Failed to acquire scheduler lock: {e}"
             )))
         })?;
 
@@ -2239,8 +2237,7 @@ impl UltrathinkDistributedComputer {
     pub fn cancel_task(&self, task_id: &TaskId) -> CoreResult<()> {
         let mut scheduler = self.task_scheduler.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire scheduler lock: {}",
-                e
+                "Failed to acquire scheduler lock: {e}"
             )))
         })?;
 
@@ -2251,8 +2248,7 @@ impl UltrathinkDistributedComputer {
     pub fn get_cluster_status(&self) -> CoreResult<ClusterStatistics> {
         let stats = self.statistics.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire statistics lock: {}",
-                e
+                "Failed to acquire statistics lock: {e}"
             )))
         })?;
 
@@ -2263,8 +2259,7 @@ impl UltrathinkDistributedComputer {
     pub fn scale_cluster(&self, target_nodes: usize) -> CoreResult<()> {
         let mut cluster_manager = self.cluster_manager.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire cluster manager lock: {}",
-                e
+                "Failed to acquire cluster manager lock: {e}"
             )))
         })?;
 
@@ -2279,8 +2274,7 @@ impl UltrathinkDistributedComputer {
         {
             let mut cluster_manager = self.cluster_manager.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire cluster manager lock: {}",
-                    e
+                    "Failed to acquire cluster manager lock: {e}"
                 )))
             })?;
             cluster_manager.start()?;
@@ -2290,8 +2284,7 @@ impl UltrathinkDistributedComputer {
         {
             let mut scheduler = self.task_scheduler.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire scheduler lock: {}",
-                    e
+                    "Failed to acquire scheduler lock: {e}"
                 )))
             })?;
             scheduler.start()?;
@@ -2301,8 +2294,7 @@ impl UltrathinkDistributedComputer {
         {
             let mut communication = self.communication.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire communication lock: {}",
-                    e
+                    "Failed to acquire communication lock: {e}"
                 )))
             })?;
             communication.start()?;
@@ -2391,8 +2383,7 @@ impl UltrathinkDistributedComputer {
     fn find_suitable_nodes(&self, requirements: &TaskRequirements) -> CoreResult<Vec<NodeId>> {
         let cluster_manager = self.cluster_manager.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire cluster manager lock: {}",
-                e
+                "Failed to acquire cluster manager lock: {e}"
             )))
         })?;
 
@@ -2636,8 +2627,7 @@ impl UltrathinkDistributedComputer {
     fn update_submission_stats(&self, duration: Duration) -> CoreResult<()> {
         let mut stats = self.statistics.write().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire statistics lock: {}",
-                e
+                "Failed to acquire statistics lock: {e}"
             )))
         })?;
 
@@ -2651,8 +2641,7 @@ impl UltrathinkDistributedComputer {
     fn setup_task_monitoring(&self, task_id: &TaskId) -> CoreResult<()> {
         let mut fault_tolerance = self.fault_tolerance.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire fault tolerance lock: {}",
-                e
+                "Failed to acquire fault tolerance lock: {e}"
             )))
         })?;
 
@@ -2663,8 +2652,7 @@ impl UltrathinkDistributedComputer {
     fn setup_advanced_fault_monitoring(&self, task_id: &TaskId) -> CoreResult<()> {
         let mut fault_tolerance = self.fault_tolerance.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire fault tolerance lock: {}",
-                e
+                "Failed to acquire fault tolerance lock: {e}"
             )))
         })?;
 
@@ -2728,7 +2716,7 @@ impl ClusterManager {
                             .tags
                             .iter()
                             .enumerate()
-                            .map(|(i, tag)| (format!("tag_{}", i), tag.clone()))
+                            .map(|(i, tag)| (format!("tag_{i}"), tag.clone()))
                             .collect(),
                     },
                 };

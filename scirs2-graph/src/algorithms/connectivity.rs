@@ -84,7 +84,7 @@ where
         state: &mut TarjanState<Ix>,
         components: &mut Vec<Component<N>>,
     ) where
-        N: Node,
+        N: Node + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -225,7 +225,7 @@ where
         state: &mut DfsState<Ix>,
         articulation_points: &mut HashSet<N>,
     ) where
-        N: Node,
+        N: Node + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -385,7 +385,7 @@ where
         state: &mut DfsState<Ix>,
         bridges: &mut Vec<(N, N)>,
     ) where
-        N: Node,
+        N: Node + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {

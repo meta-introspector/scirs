@@ -17,7 +17,7 @@ use crate::error::{GraphError, Result};
 
 /// Path between two nodes in a graph
 #[derive(Debug, Clone)]
-pub struct Path<N: Node, E: EdgeWeight> {
+pub struct Path<N: Node + std::fmt::Debug, E: EdgeWeight> {
     /// The nodes in the path, in order
     pub nodes: Vec<N>,
     /// The total weight of the path
@@ -26,7 +26,7 @@ pub struct Path<N: Node, E: EdgeWeight> {
 
 /// Result of A* search algorithm
 #[derive(Debug, Clone)]
-pub struct AStarResult<N: Node, E: EdgeWeight> {
+pub struct AStarResult<N: Node + std::fmt::Debug, E: EdgeWeight> {
     /// The path from source to target
     pub path: Vec<N>,
     /// The total cost of the path
@@ -35,22 +35,22 @@ pub struct AStarResult<N: Node, E: EdgeWeight> {
 
 /// State for A* priority queue
 #[derive(Clone)]
-struct AStarState<N: Node, E: EdgeWeight> {
+struct AStarState<N: Node + std::fmt::Debug, E: EdgeWeight> {
     node: N,
     cost: E,
     heuristic: E,
     path: Vec<N>,
 }
 
-impl<N: Node, E: EdgeWeight> PartialEq for AStarState<N, E> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight> PartialEq for AStarState<N, E> {
     fn eq(&self, other: &Self) -> bool {
         self.node == other.node
     }
 }
 
-impl<N: Node, E: EdgeWeight> Eq for AStarState<N, E> {}
+impl<N: Node + std::fmt::Debug, E: EdgeWeight> Eq for AStarState<N, E> {}
 
-impl<N: Node, E: EdgeWeight + std::ops::Add<Output = E> + Copy + PartialOrd> Ord
+impl<N: Node + std::fmt::Debug, E: EdgeWeight + std::ops::Add<Output = E> + Copy + PartialOrd> Ord
     for AStarState<N, E>
 {
     fn cmp(&self, other: &Self) -> Ordering {
@@ -69,8 +69,8 @@ impl<N: Node, E: EdgeWeight + std::ops::Add<Output = E> + Copy + PartialOrd> Ord
     }
 }
 
-impl<N: Node, E: EdgeWeight + std::ops::Add<Output = E> + Copy + PartialOrd> PartialOrd
-    for AStarState<N, E>
+impl<N: Node + std::fmt::Debug, E: EdgeWeight + std::ops::Add<Output = E> + Copy + PartialOrd>
+    PartialOrd for AStarState<N, E>
 {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -110,7 +110,7 @@ pub fn shortest_path<N, E, Ix>(
     target: &N,
 ) -> Result<Option<Path<N, E>>>
 where
-    N: Node + std::fmt::Debug,
+    N: Node + std::fmt::Debug + std::fmt::Debug,
     E: EdgeWeight
         + num_traits::Zero
         + num_traits::One
@@ -242,7 +242,7 @@ pub fn dijkstra_path<N, E, Ix>(
     target: &N,
 ) -> Result<Option<Path<N, E>>>
 where
-    N: Node + std::fmt::Debug,
+    N: Node + std::fmt::Debug + std::fmt::Debug,
     E: EdgeWeight
         + num_traits::Zero
         + num_traits::One
@@ -273,7 +273,7 @@ pub fn shortest_path_digraph<N, E, Ix>(
     target: &N,
 ) -> Result<Option<Path<N, E>>>
 where
-    N: Node + std::fmt::Debug,
+    N: Node + std::fmt::Debug + std::fmt::Debug,
     E: EdgeWeight
         + num_traits::Zero
         + num_traits::One
@@ -392,7 +392,7 @@ pub fn dijkstra_path_digraph<N, E, Ix>(
     target: &N,
 ) -> Result<Option<Path<N, E>>>
 where
-    N: Node + std::fmt::Debug,
+    N: Node + std::fmt::Debug + std::fmt::Debug,
     E: EdgeWeight
         + num_traits::Zero
         + num_traits::One
@@ -431,7 +431,7 @@ where
 /// negative cycles.
 pub fn floyd_warshall<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<ndarray::Array2<f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -478,7 +478,7 @@ where
 /// Computes all-pairs shortest paths for a directed graph using Floyd-Warshall
 pub fn floyd_warshall_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<ndarray::Array2<f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -551,7 +551,7 @@ pub fn astar_search<N, E, Ix, H>(
     heuristic: H,
 ) -> Result<AStarResult<N, E>>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + std::fmt::Debug + Clone + Hash + Eq,
     E: EdgeWeight + Clone + std::ops::Add<Output = E> + num_traits::Zero + PartialOrd + Copy,
     Ix: petgraph::graph::IndexType,
     H: Fn(&N) -> E,
@@ -621,7 +621,7 @@ pub fn astar_search_digraph<N, E, Ix, H>(
     heuristic: H,
 ) -> Result<AStarResult<N, E>>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + std::fmt::Debug + Clone + Hash + Eq,
     E: EdgeWeight + Clone + std::ops::Add<Output = E> + num_traits::Zero + PartialOrd + Copy,
     Ix: petgraph::graph::IndexType,
     H: Fn(&N) -> E,
@@ -694,7 +694,7 @@ pub fn k_shortest_paths<N, E, Ix>(
     k: usize,
 ) -> Result<Vec<(f64, Vec<N>)>>
 where
-    N: Node + Clone + Hash + Eq + Ord + std::fmt::Debug,
+    N: Node + std::fmt::Debug + Clone + Hash + Eq + Ord + std::fmt::Debug,
     E: EdgeWeight
         + Into<f64>
         + Clone
@@ -803,7 +803,7 @@ fn shortest_path_avoiding_edges<N, E, Ix>(
     excluded_nodes: &[N],
 ) -> Result<(f64, Vec<N>)>
 where
-    N: Node + Clone + Hash + Eq + Ord,
+    N: Node + std::fmt::Debug + Clone + Hash + Eq + Ord,
     E: EdgeWeight + Into<f64>,
     Ix: petgraph::graph::IndexType,
 {

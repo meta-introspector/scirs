@@ -92,7 +92,7 @@ impl DistributedLogEntry {
             .as_millis();
         let counter = COUNTER.fetch_add(1, Ordering::SeqCst);
 
-        format!("{:x}_{:x}", timestamp, counter)
+        format!(":x{timestamp, counter}")
     }
 
     /// Convert to JSON string
@@ -102,7 +102,7 @@ impl DistributedLogEntry {
             r#"{{"id":"{}","node_id":"{}","level":"{}","message":"{}","service":"{}","timestamp":"{}"}}"#,
             self.id,
             self.node_id,
-            format!("{:?}", self.level),
+            format!("{self.level:?}"),
             self.message.replace('"', "\\\""),
             self.service,
             self.timestamp
@@ -176,7 +176,7 @@ pub struct DistributedConfig {
 impl Default for DistributedConfig {
     fn default() -> Self {
         Self {
-            node_id: format!("node-{}", uuid::Uuid::new_v4()),
+            node_id: format!("{uuid::Uuid::new_v4(}")),
             node_role: NodeRole::Producer,
             aggregators: Vec::new(),
             buffer_size: 1000,
@@ -233,7 +233,7 @@ impl DistributedLogger {
         // Initialize aggregator nodes
         for aggregator_addr in &self.config.aggregators {
             let node = LogNode {
-                id: format!("aggregator-{}", aggregator_addr),
+                id: format!("{aggregator_addr}"),
                 address: aggregator_addr.clone(),
                 role: NodeRole::Aggregator,
                 last_heartbeat: SystemTime::now(),
@@ -538,7 +538,7 @@ impl LogAggregator {
         for entry in logs.iter() {
             *service_counts.entry(entry.service.clone()).or_insert(0) += 1;
             *level_counts
-                .entry(format!("{:?}", entry.level))
+                .entry(format!("{entry.level:?}"))
                 .or_insert(0) += 1;
         }
 
@@ -585,7 +585,7 @@ pub mod utils {
         // Create aggregators
         for addr in &aggregator_addresses {
             let config = DistributedConfig {
-                node_id: format!("aggregator-{}", addr),
+                node_id: format!("{addr}"),
                 node_role: NodeRole::Aggregator,
                 ..Default::default()
             };

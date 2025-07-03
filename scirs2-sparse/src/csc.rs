@@ -612,7 +612,7 @@ mod tests {
 
         // Test GPU-accelerated SpMV
         let gpu_result = matrix.gpu_dot(&vec);
-        
+
         // GPU operations may be temporarily disabled, handle both cases
         match gpu_result {
             Ok(result) => {

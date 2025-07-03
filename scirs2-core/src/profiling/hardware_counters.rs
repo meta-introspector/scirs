@@ -306,7 +306,7 @@ impl PerformanceCounter for LinuxPerfCounter {
 
             Ok(())
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{:?}", counter_type)).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
         }
     }
 
@@ -317,7 +317,7 @@ impl PerformanceCounter for LinuxPerfCounter {
             let _ = fd;
             Ok(())
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{:?}", counter_type)).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
         }
     }
 
@@ -336,7 +336,7 @@ impl PerformanceCounter for LinuxPerfCounter {
 
             Ok(CounterValue::new(counter_type.clone(), mock_value))
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{:?}", counter_type)).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
         }
     }
 
@@ -354,7 +354,7 @@ impl PerformanceCounter for LinuxPerfCounter {
             // In real implementation: ioctl(fd, PERF_EVENT_IOC_RESET, 0)
             Ok(())
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{:?}", counter_type)).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
         }
     }
 
@@ -364,7 +364,7 @@ impl PerformanceCounter for LinuxPerfCounter {
             // In real implementation: check counter overflow flag
             Ok(false)
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{:?}", counter_type)).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
         }
     }
 }
@@ -425,7 +425,7 @@ impl PerformanceCounter for WindowsPdhCounter {
             counters.insert(counter_type.clone(), path);
             Ok(())
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{:?}", counter_type)).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
         }
     }
 
@@ -434,7 +434,7 @@ impl PerformanceCounter for WindowsPdhCounter {
         if counters.remove(counter_type).is_some() {
             Ok(())
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{:?}", counter_type)).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
         }
     }
 
@@ -451,7 +451,7 @@ impl PerformanceCounter for WindowsPdhCounter {
 
             Ok(CounterValue::new(counter_type.clone(), mock_value))
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{:?}", counter_type)).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
         }
     }
 
@@ -527,7 +527,7 @@ impl PerformanceCounter for MacOSCounter {
             counters.insert(counter_type.clone(), true);
             Ok(())
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{:?}", counter_type)).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
         }
     }
 
@@ -536,7 +536,7 @@ impl PerformanceCounter for MacOSCounter {
         if counters.remove(counter_type).is_some() {
             Ok(())
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{:?}", counter_type)).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
         }
     }
 
@@ -554,7 +554,7 @@ impl PerformanceCounter for MacOSCounter {
 
             Ok(CounterValue::new(counter_type.clone(), mock_value))
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{:?}", counter_type)).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
         }
     }
 
@@ -851,7 +851,10 @@ impl PerformanceReport {
     pub fn format_text(&self) -> String {
         let mut output = String::new();
 
-        output.push_str(&format!("Performance Report: {}\n", self.session_name));
+        output.push_str(&format!(
+            "Performance Report: {session_name}\n",
+            session_name = self.session_name
+        ));
         output.push_str(&format!("Timestamp: {:?}\n\n", self.timestamp));
 
         output.push_str("Raw Counters:\n");

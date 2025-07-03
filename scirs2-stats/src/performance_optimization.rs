@@ -45,15 +45,9 @@ impl Default for PerformanceConfig {
         let capabilities = scirs2_core::simd_ops::PlatformCapabilities::detect();
 
         Self {
-            enable_simd: capabilities.simd_available
-                || capabilities.avx2_available
-                || capabilities.avx512_available,
-            enable_parallel: num_threads() > 1,
-            simd_threshold: if capabilities.avx512_available {
-                32
-            } else {
-                64
-            },
+            enable_simd: capabilities.avx2 || capabilities.avx512 || capabilities.sse4_1,
+            enable_parallel: num_cpus::get() > 1,
+            simd_threshold: if capabilities.avx512 { 32 } else { 64 },
             parallel_threshold: 1000,
             max_threads: None,
             auto_tune: true,
@@ -101,7 +95,11 @@ impl OptimizedLinearDiscriminantAnalysis {
     }
 
     /// Validate data with performance-aware checks
-    fn validate_data_optimized(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<()> {
+    fn validate_data_optimized(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<()>
+    where
+        f64: std::fmt::Display,
+        i32: std::fmt::Display,
+    {
         let handler = global_error_handler();
 
         // Basic shape validation
@@ -163,7 +161,7 @@ impl OptimizedLinearDiscriminantAnalysis {
                 ops_per_second: (n_samples * n_features) as f64 / (execution_time / 1000.0),
                 used_simd: use_simd,
                 used_parallel: use_parallel,
-                threads_used: if use_parallel { num_threads() } else { 1 },
+                threads_used: if use_parallel { num_cpus::get() } else { 1 },
             });
         }
 
@@ -266,7 +264,11 @@ impl OptimizedLinearDiscriminantAnalysis {
                 for &idx in &class_indices {
                     let row = x.row(idx);
                     if n_features > 16 {
-                        sum = f64::simd_add(&sum.view(), &row);
+                        if let Some(simd_result) = f64::simd_add(&sum.view(), &row) {
+                            sum = simd_result;
+                        } else {
+                            sum += &row;
+                        }
                     } else {
                         sum += &row;
                     }
@@ -302,7 +304,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
         // Parallel computation of class means
         let class_means: Vec<Array1<f64>> = classes
-            .par_iter()
+            .iter()
             .map(|&class_label| {
                 let class_indices: Vec<_> = y
                     .iter()
@@ -356,7 +358,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
                     // SIMD-optimized difference computation
                     let diff = if n_features >= self.config.simd_threshold {
-                        f64::simd_sub(&sample, &class_mean)
+                        f64::simd_sub(&sample, &class_mean).unwrap_or_else(|| &sample - &class_mean)
                     } else {
                         &sample - &class_mean
                     };
@@ -378,6 +380,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
             let diff = if n_features >= self.config.simd_threshold {
                 f64::simd_sub(&class_mean, &overall_mean.view())
+                    .unwrap_or_else(|| &class_mean - &overall_mean)
             } else {
                 &class_mean - &overall_mean
             };
@@ -405,7 +408,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
         // Parallel computation of within-class scatter contributions
         let sw_contributions: Vec<Array2<f64>> = (0..classes.len())
-            .into_par_iter()
+            .into_iter()
             .map(|class_idx| {
                 let class_label = classes[class_idx];
                 let mut sw_contrib = Array2::zeros((n_features, n_features));
@@ -479,7 +482,10 @@ impl OptimizedLinearDiscriminantAnalysis {
                 let row = x.row(i);
                 for j in 0..n_components {
                     let column = result.scalings.column(j);
-                    transformed[[i, j]] = f64::simd_dot(&row, &column.view());
+                    transformed[[i, j]] =
+                        f64::simd_dot(&row, &column.view()).unwrap_or_else(|| {
+                            row.iter().zip(column.iter()).map(|(&a, &b)| a * b).sum()
+                        });
                 }
             }
 
@@ -509,7 +515,10 @@ impl OptimizedCanonicalCorrelationAnalysis {
     }
 
     /// Fit CCA with performance optimizations
-    pub fn fit(&mut self, x: ArrayView2<f64>, y: ArrayView2<f64>) -> Result<CCAResult> {
+    pub fn fit(&mut self, x: ArrayView2<f64>, y: ArrayView2<f64>) -> Result<CCAResult>
+    where
+        f64: std::fmt::Display,
+    {
         let start_time = if self.config.benchmark {
             Some(Instant::now())
         } else {
@@ -539,7 +548,7 @@ impl OptimizedCanonicalCorrelationAnalysis {
                 ops_per_second: data_size as f64 / (execution_time / 1000.0),
                 used_simd: false, // CCA eigenvalue ops don't benefit much from SIMD
                 used_parallel: use_parallel,
-                threads_used: if use_parallel { num_threads() } else { 1 },
+                threads_used: if use_parallel { num_cpus::get() } else { 1 },
             });
         }
 
@@ -567,13 +576,13 @@ impl OptimizedCanonicalCorrelationAnalysis {
         // Parallel mean computation
         let x_mean = x
             .axis_iter(Axis(1))
-            .into_par_iter()
+            .into_iter()
             .map(|col| col.mean().unwrap())
             .collect::<Vec<_>>();
 
         let y_mean = y
             .axis_iter(Axis(1))
-            .into_par_iter()
+            .into_iter()
             .map(|col| col.mean().unwrap())
             .collect::<Vec<_>>();
 
@@ -583,7 +592,7 @@ impl OptimizedCanonicalCorrelationAnalysis {
 
         x_centered
             .axis_iter_mut(Axis(0))
-            .into_par_iter()
+            .into_iter()
             .for_each(|mut row| {
                 for (i, &mean) in x_mean.iter().enumerate() {
                     row[i] -= mean;
@@ -592,7 +601,7 @@ impl OptimizedCanonicalCorrelationAnalysis {
 
         y_centered
             .axis_iter_mut(Axis(0))
-            .into_par_iter()
+            .into_iter()
             .for_each(|mut row| {
                 for (i, &mean) in y_mean.iter().enumerate() {
                     row[i] -= mean;

@@ -4,7 +4,7 @@
 //! operations, building upon v4 with additional functionality and improved algorithms.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
 use rand::Rng;
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
@@ -19,7 +19,16 @@ pub fn rolling_statistics_simd<F>(
     statistics: &[RollingStatistic],
 ) -> StatsResult<RollingStatsResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
     check_positive(window_size, "window_size")?;
@@ -283,7 +292,16 @@ pub fn matrix_statistics_simd<F>(
     operations: &[MatrixOperation],
 ) -> StatsResult<MatrixStatsResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
 
@@ -344,7 +362,16 @@ fn compute_column_wise_stats<F>(
     operations: &[MatrixOperation],
 ) -> StatsResult<MatrixStatsResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
 {
     let (n_rows, n_cols) = data.dim();
     let mut results = MatrixStatsResult::new_column_wise(n_cols, operations);
@@ -372,7 +399,16 @@ fn compute_row_wise_stats<F>(
     operations: &[MatrixOperation],
 ) -> StatsResult<MatrixStatsResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
 {
     let (n_rows, n_cols) = data.dim();
     let mut results = MatrixStatsResult::new_row_wise(n_rows, operations);
@@ -400,7 +436,16 @@ fn compute_global_matrix_stats<F>(
     operations: &[MatrixOperation],
 ) -> StatsResult<MatrixStatsResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
 {
     let mut results = MatrixStatsResult::new_global(operations);
 
@@ -723,7 +768,16 @@ pub fn bootstrap_confidence_interval_simd<F>(
     random_seed: Option<u64>,
 ) -> StatsResult<BootstrapResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
     check_positive(n_bootstrap, "n_bootstrap")?;
@@ -748,7 +802,7 @@ where
 
     // Parallel bootstrap sampling for large numbers of bootstrap samples
     if n_bootstrap > 1000 {
-        let seeds: Vec<u64> = (0..n_bootstrap).map(|_| rng.random()).collect();
+        let seeds: Vec<u64> = (0..n_bootstrap).map(|_| rng.gen()).collect();
 
         parallel_for_indexed(0..n_bootstrap, |chunk, chunk_start| {
             let mut local_rng = StdRng::seed_from_u64(seeds[chunk_start]);
@@ -1065,7 +1119,16 @@ pub fn kernel_density_estimation_simd<F>(
     kernel: KernelType,
 ) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
     check_array_finite(eval_points, "eval_points")?;

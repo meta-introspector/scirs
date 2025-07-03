@@ -81,7 +81,7 @@ impl ValidationError {
 
     /// Get formatted error message
     pub fn formatted_message(&self) -> String {
-        let mut message = format!("{}: {}", self.field_path, self.message);
+        let mut message = format!("{self.field_path, self.message}");
 
         if let Some(expected) = &self.expected {
             message.push_str(&format!(" (expected: {expected})"));
@@ -356,14 +356,14 @@ impl ValidationResult {
         if !self.errors.is_empty() {
             report.push_str("\n\nErrors:");
             for (i, error) in self.errors.iter().enumerate() {
-                report.push_str(&format!("\n  {}. {}", i + 1, error.formatted_message()));
+                report.push_str(&format!("{}. {}", i + 1, error.formatted_message()));
             }
         }
 
         if !self.warnings.is_empty() {
             report.push_str("\n\nWarnings:");
             for (i, warning) in self.warnings.iter().enumerate() {
-                report.push_str(&format!("\n  {}. {}", i + 1, warning.formatted_message()));
+                report.push_str(&format!("{}. {}", i + 1, warning.formatted_message()));
             }
         }
 
@@ -380,7 +380,7 @@ impl ValidationResult {
             "\n  Elements processed: {}",
             self.stats.elements_processed
         ));
-        report.push_str(&format!("\n  Processing time: {:?}", self.duration));
+        report.push_str(&format!("\n  Duration: {:?}", self.duration));
 
         if self.stats.cache_hit_rate > 0.0 {
             report.push_str(&format!(

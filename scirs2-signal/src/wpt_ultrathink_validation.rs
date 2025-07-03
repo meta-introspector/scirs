@@ -8,6 +8,7 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::prelude::*;
 use scirs2_core::validation::check_finite;
+use std::collections::HashMap;
 use std::time::Instant;
 
 /// Ultra-comprehensive wavelet packet validation configuration
@@ -446,7 +447,7 @@ pub fn run_wpt_ultrathink_validation(
             );
         }
     } else {
-        let best_basis_validation = BestBasisValidationResult {
+        let _best_basis_validation = BestBasisValidationResult {
             selection_accuracy: 0.0,
             entropy_reduction: 0.0,
             selection_consistency: 0.0,
@@ -470,7 +471,7 @@ pub fn run_wpt_ultrathink_validation(
                 .push("Optimize threshold selection and rate-distortion algorithms".to_string());
         }
     } else {
-        let compression_validation = CompressionValidationResult {
+        let _compression_validation = CompressionValidationResult {
             compression_ratios: HashMap::new(),
             rate_distortion_curves: Vec::new(),
             quality_metrics: QualityMetrics {
@@ -492,7 +493,7 @@ pub fn run_wpt_ultrathink_validation(
         total_score += denoising_score;
         score_count += 1;
     } else {
-        let denoising_validation = DenoisingValidationResult {
+        let _denoising_validation = DenoisingValidationResult {
             snr_improvement: HashMap::new(),
             psnr_improvement: 0.0,
             ssim_improvement: 0.0,

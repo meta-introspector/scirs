@@ -257,7 +257,10 @@ impl LargeDatasetGenerator {
                 )
             };
             file.write_all(bytes).map_err(|e| {
-                CoreError::IoError(ErrorContext::new(format!("Failed to write chunk: {}", e)))
+                CoreError::IoError(ErrorContext::new(format!(
+                    "Failed to write chunk: {error}",
+                    error = e
+                )))
             })?;
 
             bytes_written += current_chunk_size;
@@ -433,7 +436,10 @@ impl LargeScaleProcessor {
             // Read chunk
             let mut buffer = vec![0u8; current_chunk_size];
             file.read_exact(&mut buffer).map_err(|e| {
-                CoreError::IoError(ErrorContext::new(format!("Failed to read chunk: {}", e)))
+                CoreError::IoError(ErrorContext::new(format!(
+                    "Failed to read chunk: {error}",
+                    error = e
+                )))
             })?;
 
             // Convert bytes to f64 slice

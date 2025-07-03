@@ -37,60 +37,52 @@ pub mod helpers {
 
     /// Create a domain error for a parameter that must be positive
     pub fn positive_required(param_name: &str, value: impl std::fmt::Display) -> StatsError {
-        StatsError::domain(format!(
-            "{} must be positive (> 0), got {}",
-            param_name, value
-        ))
+        StatsError::domain(format!("{param_name} must be positive (> 0), got {value}"))
     }
 
     /// Create a domain error for a parameter that must be non-negative
     pub fn non_negative_required(param_name: &str, value: impl std::fmt::Display) -> StatsError {
         StatsError::domain(format!(
-            "{} must be non-negative (>= 0), got {}",
-            param_name, value
+            "{param_name} must be non-negative (>= 0), got {value}"
         ))
     }
 
     /// Create a domain error for a probability parameter
     pub fn probability_range(param_name: &str, value: impl std::fmt::Display) -> StatsError {
         StatsError::domain(format!(
-            "{} must be between 0 and 1 (inclusive), got {}",
-            param_name, value
+            "{param_name} must be between 0 and 1 (inclusive), got {value}"
         ))
     }
 
     /// Create a dimension mismatch error for arrays that should have the same length
     pub fn arrays_length_mismatch(len1: usize, len2: usize) -> StatsError {
         StatsError::dimension_mismatch(format!(
-            "Arrays must have the same length, got {} and {}",
-            len1, len2
+            "Arrays must have the same length, got {len1} and {len2}"
         ))
     }
 
     /// Create an invalid argument error for empty arrays
     pub fn array_empty(array_name: &str) -> StatsError {
-        StatsError::invalid_argument(format!("{} cannot be empty", array_name))
+        StatsError::invalid_argument(format!("{array_name} cannot be empty"))
     }
 
     /// Create an invalid argument error for insufficient data
     pub fn insufficient_data(required: usize, actual: usize, context: &str) -> StatsError {
         StatsError::invalid_argument(format!(
-            "Insufficient data for {}: requires at least {} samples, got {}",
-            context, required, actual
+            "Insufficient data for {context}: requires at least {required} samples, got {actual}"
         ))
     }
 
     /// Create a computation error for numerical issues
     pub fn numerical_error(context: &str) -> StatsError {
         StatsError::computation(format!(
-            "Numerical error in {}: check for extreme values or scaling issues",
-            context
+            "Numerical error in {context}: check for extreme values or scaling issues"
         ))
     }
 
     /// Create a not implemented error with feature name
     pub fn not_implemented(feature: &str) -> StatsError {
-        StatsError::not_implemented(format!("{} is not yet implemented", feature))
+        StatsError::not_implemented(format!("{feature} is not yet implemented"))
     }
 }
 

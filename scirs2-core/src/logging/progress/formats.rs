@@ -94,7 +94,7 @@ struct FormatSpec {
 
 /// Extract format specification from a placeholder
 fn extract_format_spec(text: &str, field: &str) -> Option<FormatSpec> {
-    let pattern = format!("{{{}", field);
+    let pattern = format!("{field}");
     if let Some(start) = text.find(&pattern) {
         if let Some(end) = text[start..].find('}') {
             let spec_str = &text[start..start + end + 1];

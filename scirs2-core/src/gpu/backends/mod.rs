@@ -498,8 +498,7 @@ pub fn get_device_info(backend: GpuBackend, device_id: usize) -> Result<GpuInfo,
         .nth(device_id)
         .ok_or_else(|| {
             GpuError::InvalidParameter(format!(
-                "Device {} not found for backend {}",
-                device_id, backend
+                "Device {device_id} not found for backend {backend}"
             ))
         })
 }

@@ -155,7 +155,7 @@ impl ZeroCopyBuffer {
     pub fn new(size: usize, numa_node: Option<usize>, alignment: usize) -> CoreResult<Self> {
         let layout = Layout::from_size_align(size, alignment).map_err(|e| {
             CoreError::MemoryError(
-                ErrorContext::new(format!("Invalid memory layout: {}", e))
+                ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;

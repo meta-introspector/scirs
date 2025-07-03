@@ -135,7 +135,7 @@ pub fn minimum_spanning_tree<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
 ) -> Result<Vec<crate::base::Edge<N, E>>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + std::cmp::PartialOrd,
     Ix: petgraph::graph::IndexType,
 {
@@ -216,7 +216,7 @@ where
 /// otherwise returns an error indicating a cycle was found.
 pub fn topological_sort<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<Vec<N>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -243,7 +243,7 @@ pub fn pagerank<N, E, Ix>(
     max_iterations: usize,
 ) -> HashMap<N, f64>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -323,7 +323,7 @@ pub fn betweenness_centrality<N, E, Ix>(
     normalized: bool,
 ) -> HashMap<N, f64>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -429,7 +429,7 @@ where
         // Calculate shortest paths to all other nodes
         for other in &nodes {
             if node != other {
-                if let Ok(Some(path)) = shortest_path(graph, node, other) {
+                if let Ok(Some(path)) = dijkstra_path(graph, node, other) {
                     let distance: f64 = path.total_weight.into();
                     total_distance += distance;
                     reachable_count += 1;
@@ -462,7 +462,7 @@ pub fn eigenvector_centrality<N, E, Ix>(
     tolerance: f64,
 ) -> Result<HashMap<N, f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64>,
     Ix: IndexType,
 {

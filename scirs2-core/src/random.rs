@@ -963,6 +963,7 @@ pub mod parallel {
             D: Distribution<T> + Copy + Send + Sync,
             T: Send,
         {
+            #[cfg(feature = "parallel")]
             use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
             (0..count)

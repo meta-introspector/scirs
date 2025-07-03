@@ -136,8 +136,7 @@ impl LoadBalancer {
             node.update_metrics(cpu, memory, connections, latency);
         } else {
             return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "Unknown node: {}",
-                node_id
+                "Unknown node: {node_id}"
             ))));
         }
         Ok(())

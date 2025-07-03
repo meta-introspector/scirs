@@ -482,15 +482,15 @@ fn validate_colored_noise_estimation() -> SignalResult<TestResult> {
 /// Enhanced DPSS validation
 fn validate_dpss_implementation_enhanced() -> SignalResult<TestResult> {
     use crate::multitaper::windows::dpss;
-    
+
     let n = 512;
     let nw = 4.0;
     let k = 7;
-    
+
     let (tapers, eigenvalues) = dpss(n, nw, k, true)?;
-    let eigenvalues = eigenvalues.ok_or_else(|| 
-        SignalError::ComputationError("Eigenvalues not returned".to_string()))?;
-    
+    let eigenvalues = eigenvalues
+        .ok_or_else(|| SignalError::ComputationError("Eigenvalues not returned".to_string()))?;
+
     // Test orthogonality
     let mut max_orthogonality_error = 0.0;
     for i in 0..k {
@@ -501,7 +501,7 @@ fn validate_dpss_implementation_enhanced() -> SignalResult<TestResult> {
             max_orthogonality_error = max_orthogonality_error.max(error);
         }
     }
-    
+
     // Test eigenvalue ordering
     let mut eigenvalue_ordering_valid = true;
     for w in eigenvalues.windows(2) {
@@ -510,17 +510,21 @@ fn validate_dpss_implementation_enhanced() -> SignalResult<TestResult> {
             break;
         }
     }
-    
+
     // Test concentration ratio
     let concentration_ratio = eigenvalues[0];
-    
+
     let mut additional_metrics = HashMap::new();
     additional_metrics.insert("orthogonality_error".to_string(), max_orthogonality_error);
     additional_metrics.insert("concentration_ratio".to_string(), concentration_ratio);
-    additional_metrics.insert("eigenvalue_ordering_valid".to_string(), if eigenvalue_ordering_valid { 1.0 } else { 0.0 });
-    
-    let passed = max_orthogonality_error < 1e-10 && eigenvalue_ordering_valid && concentration_ratio > 0.9;
-    
+    additional_metrics.insert(
+        "eigenvalue_ordering_valid".to_string(),
+        if eigenvalue_ordering_valid { 1.0 } else { 0.0 },
+    );
+
+    let passed =
+        max_orthogonality_error < 1e-10 && eigenvalue_ordering_valid && concentration_ratio > 0.9;
+
     Ok(TestResult {
         passed,
         error_metric: max_orthogonality_error,
@@ -907,7 +911,7 @@ fn validate_convergence_properties() -> SignalResult<TestResult> {
     // Test adaptive algorithm convergence with different signals
     let mut convergence_times = Vec::new();
     let mut convergence_failures = 0;
-    
+
     for &nw in &[2.0, 3.0, 4.0, 5.0] {
         let k = ((2.0 * nw).floor() - 1.0) as usize;
         let signal: Vec<f64> = (0..1024)
@@ -916,7 +920,7 @@ fn validate_convergence_properties() -> SignalResult<TestResult> {
                 (2.0 * PI * 10.0 * t).sin() + 0.5 * (2.0 * PI * 25.0 * t).sin()
             })
             .collect();
-        
+
         let config = MultitaperConfig {
             fs: 100.0,
             nw,
@@ -924,7 +928,7 @@ fn validate_convergence_properties() -> SignalResult<TestResult> {
             adaptive: true,
             ..Default::default()
         };
-        
+
         let start = Instant::now();
         match enhanced_pmtm(&signal, &config) {
             Ok(_) => {
@@ -935,17 +939,20 @@ fn validate_convergence_properties() -> SignalResult<TestResult> {
             }
         }
     }
-    
+
     let avg_time = if !convergence_times.is_empty() {
         convergence_times.iter().sum::<f64>() / convergence_times.len() as f64
     } else {
         1000.0 // High penalty for no convergence
     };
-    
+
     let mut additional_metrics = HashMap::new();
     additional_metrics.insert("avg_convergence_time_ms".to_string(), avg_time);
-    additional_metrics.insert("convergence_failures".to_string(), convergence_failures as f64);
-    
+    additional_metrics.insert(
+        "convergence_failures".to_string(),
+        convergence_failures as f64,
+    );
+
     Ok(TestResult {
         passed: convergence_failures == 0 && avg_time < 100.0,
         error_metric: avg_time / 100.0 + convergence_failures as f64,
@@ -960,10 +967,10 @@ fn validate_memory_efficiency() -> SignalResult<TestResult> {
     // Test memory efficiency with different signal sizes
     let sizes = vec![1024, 4096, 16384];
     let mut efficiency_scores = Vec::new();
-    
+
     for &size in &sizes {
         let signal: Vec<f64> = (0..size).map(|i| (i as f64).sin()).collect();
-        
+
         let config_normal = MultitaperConfig {
             fs: 100.0,
             nw: 4.0,
@@ -971,7 +978,7 @@ fn validate_memory_efficiency() -> SignalResult<TestResult> {
             memory_optimized: false,
             ..Default::default()
         };
-        
+
         let config_optimized = MultitaperConfig {
             fs: 100.0,
             nw: 4.0,
@@ -979,35 +986,35 @@ fn validate_memory_efficiency() -> SignalResult<TestResult> {
             memory_optimized: true,
             ..Default::default()
         };
-        
+
         let normal_time = {
             let start = Instant::now();
             let _ = enhanced_pmtm(&signal, &config_normal);
             start.elapsed().as_millis() as f64
         };
-        
+
         let optimized_time = {
             let start = Instant::now();
             let _ = enhanced_pmtm(&signal, &config_optimized);
             start.elapsed().as_millis() as f64
         };
-        
+
         // Memory efficiency score based on time improvement and successful processing
         let efficiency = if optimized_time > 0.0 {
             normal_time / optimized_time
         } else {
             0.0
         };
-        
+
         efficiency_scores.push(efficiency);
     }
-    
+
     let avg_efficiency = efficiency_scores.iter().sum::<f64>() / efficiency_scores.len() as f64;
-    
+
     let mut additional_metrics = HashMap::new();
     additional_metrics.insert("avg_memory_efficiency".to_string(), avg_efficiency);
     additional_metrics.insert("test_sizes_count".to_string(), sizes.len() as f64);
-    
+
     Ok(TestResult {
         passed: avg_efficiency >= 0.8, // Should be at least comparable efficiency
         error_metric: 1.0 / avg_efficiency.max(0.1),
@@ -1015,57 +1022,4 @@ fn validate_memory_efficiency() -> SignalResult<TestResult> {
         description: "Memory efficiency across different signal sizes".to_string(),
         additional_metrics,
     })
-}
-
-/// Generate a comprehensive validation report
-pub fn generate_multitaper_validation_report(result: &MultitaperScipyValidationResult) -> String {
-    let mut report = String::new();
-    
-    report.push_str("=== Multitaper Spectral Estimation Validation Report ===\n\n");
-    
-    // Summary
-    report.push_str(&format!("Overall Score: {:.1}/100\n", result.overall_score));
-    report.push_str(&format!("Tests Passed: {}/{}\n", 
-        result.test_results.values().filter(|t| t.passed).count(),
-        result.test_results.len()
-    ));
-    
-    // Performance summary
-    report.push_str("\n--- Performance Summary ---\n");
-    report.push_str(&format!("Speed Ratio: {:.2}x\n", result.performance_comparison.speed_ratio));
-    report.push_str(&format!("Memory Ratio: {:.2}x\n", result.performance_comparison.memory_ratio));
-    report.push_str(&format!("SIMD Speedup: {:.2}x\n", result.performance_comparison.simd_speedup));
-    report.push_str(&format!("Parallel Efficiency: {:.1}%\n", 
-        result.performance_comparison.parallel_efficiency * 100.0));
-    
-    // Statistical validation
-    report.push_str("\n--- Statistical Validation ---\n");
-    report.push_str(&format!("Cross-correlation: {:.4}\n", result.statistical_metrics.cross_correlation));
-    report.push_str(&format!("Spectral coherence: {:.4}\n", result.statistical_metrics.spectral_coherence));
-    report.push_str(&format!("KS test p-value: {:.4}\n", result.statistical_metrics.ks_test_pvalue));
-    
-    // Test details
-    report.push_str("\n--- Test Results ---\n");
-    for (test_name, test_result) in &result.test_results {
-        let status = if test_result.passed { "PASS" } else { "FAIL" };
-        report.push_str(&format!("{}: {} (error: {:.6}, threshold: {:.6})\n",
-            test_name, status, test_result.error_metric, test_result.threshold));
-    }
-    
-    // Issues and recommendations
-    if !result.critical_issues.is_empty() {
-        report.push_str("\n--- Critical Issues ---\n");
-        for issue in &result.critical_issues {
-            report.push_str(&format!("⚠️  {}\n", issue));
-        }
-    }
-    
-    if !result.recommendations.is_empty() {
-        report.push_str("\n--- Recommendations ---\n");
-        for recommendation in &result.recommendations {
-            report.push_str(&format!("💡 {}\n", recommendation));
-        }
-    }
-    
-    report
 }

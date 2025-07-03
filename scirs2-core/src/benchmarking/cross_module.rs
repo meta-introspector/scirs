@@ -372,11 +372,10 @@ impl CrossModuleBenchmarkRunner {
         );
 
         for &data_size in &self.config.data_sizes {
-            let timing_data =
-                self.time_operation(&format!("linalg_stats_{}", data_size), || {
-                    // Simulate linear algebra + statistics operations
-                    self.simulate_linalg_stats_workflow(data_size)
-                })?;
+            let timing_data = self.time_operation(&format!("{data_size}"), || {
+                // Simulate linear algebra + statistics operations
+                self.simulate_linalg_stats_workflow(data_size)
+            })?;
 
             // Update measurement with largest data size results
             if data_size == *self.config.data_sizes.last().unwrap() {
@@ -423,7 +422,7 @@ impl CrossModuleBenchmarkRunner {
         );
 
         for &data_size in &self.config.data_sizes {
-            let timing_data = self.time_operation(&format!("signal_fft_{}", data_size), || {
+            let timing_data = self.time_operation(&format!("{data_size}"), || {
                 self.simulate_signal_fft_workflow(data_size)
             })?;
 
@@ -467,10 +466,9 @@ impl CrossModuleBenchmarkRunner {
         );
 
         for &data_size in &self.config.data_sizes {
-            let timing_data = self
-                .time_operation(&format!("io_processing_{}", data_size), || {
-                    self.simulate_io_processing_workflow(data_size)
-                })?;
+            let timing_data = self.time_operation(&format!("{data_size}"), || {
+                self.simulate_io_processing_workflow(data_size)
+            })?;
 
             if data_size == *self.config.data_sizes.last().unwrap() {
                 measurement.data_size = data_size;
@@ -523,7 +521,7 @@ impl CrossModuleBenchmarkRunner {
         );
 
         for &data_size in &self.config.data_sizes {
-            let timing_data = self.time_operation(&format!("ml_pipeline_{}", data_size), || {
+            let timing_data = self.time_operation(&format!("{data_size}"), || {
                 self.simulate_ml_workflow(data_size)
             })?;
 
@@ -580,7 +578,7 @@ impl CrossModuleBenchmarkRunner {
         );
 
         for &data_size in &self.config.data_sizes {
-            let timing_data = self.time_operation(&format!("zero_copy_{}", data_size), || {
+            let timing_data = self.time_operation(&format!("{data_size}"), || {
                 self.simulate_zero_copy_operations(data_size)
             })?;
 
@@ -636,7 +634,7 @@ impl CrossModuleBenchmarkRunner {
 
         // Simulate memory-mapped file operations
         for &data_size in &self.config.data_sizes {
-            let timing_data = self.time_operation(&format!("mmap_{}", data_size), || {
+            let timing_data = self.time_operation(&format!("{data_size}"), || {
                 self.simulate_memory_mapped_workflow(data_size)
             })?;
 
@@ -687,7 +685,7 @@ impl CrossModuleBenchmarkRunner {
 
         // Simulate out-of-core processing with chunked data access
         for &data_size in &self.config.data_sizes {
-            let timing_data = self.time_operation(&format!("out_of_core_{}", data_size), || {
+            let timing_data = self.time_operation(&format!("{data_size}"), || {
                 self.simulate_out_of_core_workflow(data_size)
             })?;
 
@@ -758,10 +756,9 @@ impl CrossModuleBenchmarkRunner {
         #[cfg(feature = "parallel")]
         {
             for &thread_count in &self.config.thread_counts {
-                let timing_data = self
-                    .time_operation(&format!("threads_{}", thread_count), || {
-                        self.simulate_parallel_operations(thread_count)
-                    })?;
+                let timing_data = self.time_operation(&format!("{thread_count}"), || {
+                    self.simulate_parallel_operations(thread_count)
+                })?;
 
                 if thread_count == *self.config.thread_counts.last().unwrap() {
                     measurement.thread_count = thread_count;
@@ -793,9 +790,7 @@ impl CrossModuleBenchmarkRunner {
         rayon::ThreadPoolBuilder::new()
             .num_threads(thread_count)
             .build()
-            .map_err(|e| {
-                CoreError::ComputationError(ErrorContext::new(format!("Thread pool error: {}", e)))
-            })?
+            .map_err(|e| CoreError::ComputationError(ErrorContext::new(format!("{e}"))))?
             .install(|| {
                 (0..thread_count).into_par_iter().try_for_each(|_| {
                     for _ in 0..items_per_thread {
@@ -831,7 +826,7 @@ impl CrossModuleBenchmarkRunner {
         let mut scalability_scores = Vec::new();
 
         for &data_size in &self.config.data_sizes {
-            let timing_data = self.time_operation(&format!("scale_data_{}", data_size), || {
+            let timing_data = self.time_operation(&format!("{data_size}"), || {
                 self.simulate_scalable_operation(data_size)
             })?;
 
@@ -875,10 +870,9 @@ impl CrossModuleBenchmarkRunner {
 
         // Test performance with different memory limits
         for &memory_limit in &self.config.memory_limits {
-            let timing_data = self
-                .time_operation(&format!("mem_scale_{}", memory_limit), || {
-                    self.simulate_memory_constrained_operation(memory_limit)
-                })?;
+            let timing_data = self.time_operation(&format!("{memory_limit}"), || {
+                self.simulate_memory_constrained_operation(memory_limit)
+            })?;
 
             if memory_limit == *self.config.memory_limits.last().unwrap() {
                 measurement.memory_usage = memory_limit;
@@ -937,10 +931,9 @@ impl CrossModuleBenchmarkRunner {
 
         // Simulate a complete scientific simulation workflow
         for &data_size in &self.config.data_sizes {
-            let timing_data = self
-                .time_operation(&format!("scientific_sim_{}", data_size), || {
-                    self.simulate_scientific_simulation_workflow(data_size)
-                })?;
+            let timing_data = self.time_operation(&format!("{data_size}"), || {
+                self.simulate_scientific_simulation_workflow(data_size)
+            })?;
 
             if data_size == *self.config.data_sizes.last().unwrap() {
                 measurement.data_size = data_size;
@@ -1005,10 +998,9 @@ impl CrossModuleBenchmarkRunner {
 
         // Simulate a complete data analysis workflow
         for &data_size in &self.config.data_sizes {
-            let timing_data = self
-                .time_operation(&format!("data_analysis_{}", data_size), || {
-                    self.simulate_data_analysis_workflow(data_size)
-                })?;
+            let timing_data = self.time_operation(&format!("{data_size}"), || {
+                self.simulate_data_analysis_workflow(data_size)
+            })?;
 
             if data_size == *self.config.data_sizes.last().unwrap() {
                 measurement.data_size = data_size;
@@ -1078,7 +1070,7 @@ impl CrossModuleBenchmarkRunner {
 
         // Simulate a complete ML training workflow
         for &data_size in &self.config.data_sizes {
-            let timing_data = self.time_operation(&format!("ml_training_{}", data_size), || {
+            let timing_data = self.time_operation(&format!("{data_size}"), || {
                 self.simulate_ml_training_workflow(data_size)
             })?;
 

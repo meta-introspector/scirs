@@ -7,101 +7,79 @@ use std::fmt::Display;
 
 /// Generate an error message for dimension mismatch
 pub fn dimension_mismatch(operation: &str, expected: impl Display, actual: impl Display) -> String {
-    format!(
-        "{}: dimension mismatch (expected: {}, actual: {})",
-        operation, expected, actual
-    )
+    format!("{operation}: dimension mismatch (expected: {expected}, actual: {actual})")
 }
 
 /// Generate an error message for shape mismatch in array operations
 pub fn shape_mismatch(operation: &str, shape1: &[usize], shape2: &[usize]) -> String {
-    format!(
-        "{}: incompatible shapes ({:?} vs {:?})",
-        operation, shape1, shape2
-    )
+    format!("{operation}: incompatible shapes ({shape1:?} vs {shape2:?})")
 }
 
 /// Generate an error message for invalid parameter values
 pub fn invalid_parameter(param_name: &str, constraint: &str, actual_value: impl Display) -> String {
-    format!(
-        "Parameter '{}': {} (got: {})",
-        param_name, constraint, actual_value
-    )
+    format!("Parameter '{param_name}': {constraint} (got: {actual_value})")
 }
 
 /// Generate an error message for out of bounds access
 pub fn index_out_of_bounds(index: usize, length: usize) -> String {
-    format!(
-        "Index out of bounds: index {} is invalid for length {}",
-        index, length
-    )
+    format!("Index out of bounds: index {index} is invalid for length {length}")
 }
 
 /// Generate an error message for empty input
 pub fn empty_input(operation: &str) -> String {
-    format!("{}: input array/collection is empty", operation)
+    format!("{operation}: input array/collection is empty")
 }
 
 /// Generate an error message for numerical computation errors
 pub fn numerical_error(operation: &str, issue: &str) -> String {
-    format!(
-        "{}: {} - check input values for numerical issues",
-        operation, issue
-    )
+    format!("{operation}: {issue} - check input values for numerical issues")
 }
 
 /// Generate an error message for convergence failures
 pub fn convergence_failed(algorithm: &str, iterations: usize, tolerance: impl Display) -> String {
     format!(
-        "{}: failed to converge after {} iterations (tolerance: {})",
-        algorithm, iterations, tolerance
+        "{algorithm}: failed to converge after {iterations} iterations (tolerance: {tolerance})"
     )
 }
 
 /// Generate an error message for not implemented features
 pub fn not_implemented(feature: &str) -> String {
-    format!("Feature not implemented: {}", feature)
+    format!("Feature not implemented: {feature}")
 }
 
 /// Generate an error message for invalid array dimensions
 pub fn invalid_dimensions(operation: &str, requirement: &str, actual_dims: &[usize]) -> String {
-    format!("{}: {} (got: {:?})", operation, requirement, actual_dims)
+    format!("{operation}: {requirement} (got: {actual_dims:?})")
 }
 
 /// Generate an error message for domain errors
 pub fn domain_error(value_desc: &str, constraint: &str, value: impl Display) -> String {
-    format!("{} must be {} (got: {})", value_desc, constraint, value)
+    format!("{value_desc} must be {constraint} (got: {value})")
 }
 
 /// Generate an error message for allocation failures
 pub fn allocation_failed(size: usize, element_type: &str) -> String {
-    format!(
-        "Failed to allocate memory for {} elements of type {}",
-        size, element_type
-    )
+    format!("Failed to allocate memory for {size} elements of type {element_type}")
 }
 
 /// Generate an error message for file I/O errors
 pub fn io_error(operation: &str, path: &str, details: &str) -> String {
-    format!("{} failed for '{}': {}", operation, path, details)
+    format!("{operation} failed for '{path}': {details}")
 }
 
 /// Generate an error message for parse errors
 pub fn parse_error(type_name: &str, input: &str, reason: &str) -> String {
-    format!("Failed to parse '{}' as {}: {}", input, type_name, reason)
+    format!("Failed to parse '{input}' as {type_name}: {reason}")
 }
 
 /// Generate an error message for invalid state
 pub fn invalid_state(object: &str, expected_state: &str, actual_state: &str) -> String {
-    format!(
-        "{} is in invalid state: expected {}, but was {}",
-        object, expected_state, actual_state
-    )
+    format!("{object} is in invalid state: expected {expected_state}, but was {actual_state}")
 }
 
 /// Generate an error message with recovery suggestion
 pub fn with_suggestion(error_msg: &str, suggestion: &str) -> String {
-    format!("{}\nSuggestion: {}", error_msg, suggestion)
+    format!("{error_msg}\nSuggestion: {suggestion}")
 }
 
 /// Common parameter constraints

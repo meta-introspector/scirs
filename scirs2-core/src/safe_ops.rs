@@ -17,8 +17,7 @@ where
     // Check for exact zero
     if denominator == T::zero() {
         return Err(CoreError::DomainError(ErrorContext::new(format!(
-            "Division by zero: {} / 0",
-            numerator
+            "Division by zero: {numerator} / 0"
         ))));
     }
 
@@ -26,8 +25,7 @@ where
     let epsilon = T::epsilon();
     if denominator.abs() < epsilon {
         return Err(CoreError::DomainError(ErrorContext::new(format!(
-            "Division by near-zero value: {} / {} (threshold: {})",
-            numerator, denominator, epsilon
+            "Division by near-zero value: {numerator} / {denominator} (threshold: {epsilon})"
         ))));
     }
 
@@ -36,8 +34,7 @@ where
     // Validate the result
     check_finite(result, "division result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
-            "Division produced non-finite result: {} / {} = {:?}",
-            numerator, denominator, result
+            "Division produced non-finite result: {numerator} / {denominator} = {result:?}"
         )))
     })?;
 
@@ -52,8 +49,7 @@ where
 {
     if value < T::zero() {
         return Err(CoreError::DomainError(ErrorContext::new(format!(
-            "Cannot compute sqrt of negative value: {}",
-            value
+            "Cannot compute sqrt of negative value: {value}"
         ))));
     }
 
@@ -62,8 +58,7 @@ where
     // Even for valid inputs, check the result
     check_finite(result, "sqrt result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
-            "Square root produced non-finite result: sqrt({}) = {:?}",
-            value, result
+            "Square root produced non-finite result: sqrt({value}) = {result:?}"
         )))
     })?;
 
@@ -78,8 +73,7 @@ where
 {
     if value <= T::zero() {
         return Err(CoreError::DomainError(ErrorContext::new(format!(
-            "Cannot compute log of non-positive value: {}",
-            value
+            "Cannot compute log of non-positive value: {value}"
         ))));
     }
 
@@ -87,8 +81,7 @@ where
 
     check_finite(result, "log result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
-            "Logarithm produced non-finite result: ln({}) = {:?}",
-            value, result
+            "Logarithm produced non-finite result: ln({value}) = {result:?}"
         )))
     })?;
 
@@ -103,8 +96,7 @@ where
 {
     if value <= T::zero() {
         return Err(CoreError::DomainError(ErrorContext::new(format!(
-            "Cannot compute log10 of non-positive value: {}",
-            value
+            "Cannot compute log10 of non-positive value: {value}"
         ))));
     }
 
@@ -112,8 +104,7 @@ where
 
     check_finite(result, "log10 result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
-            "Base-10 logarithm produced non-finite result: log10({}) = {:?}",
-            value, result
+            "Base-10 logarithm produced non-finite result: log10({value}) = {result:?}"
         )))
     })?;
 
@@ -129,15 +120,13 @@ where
     // Special cases that could produce NaN or Inf
     if base < T::zero() && exponent.fract() != T::zero() {
         return Err(CoreError::DomainError(ErrorContext::new(format!(
-            "Cannot compute fractional power of negative number: {}^{}",
-            base, exponent
+            "Cannot compute fractional power of negative number: {base}^{exponent}"
         ))));
     }
 
     if base == T::zero() && exponent < T::zero() {
         return Err(CoreError::DomainError(ErrorContext::new(format!(
-            "Cannot compute negative power of zero: 0^{}",
-            exponent
+            "Cannot compute negative power of zero: 0^{exponent}"
         ))));
     }
 
@@ -145,8 +134,7 @@ where
 
     check_finite(result, "power result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
-            "Power operation produced non-finite result: {}^{} = {:?}",
-            base, exponent, result
+            "Power operation produced non-finite result: {base}^{exponent} = {result:?}"
         )))
     })?;
 
@@ -164,8 +152,7 @@ where
     let max_exp = T::from(700.0).unwrap_or(T::infinity());
     if value > max_exp {
         return Err(CoreError::ComputationError(ErrorContext::new(format!(
-            "Exponential would overflow: exp({}) > exp({})",
-            value, max_exp
+            "Exponential would overflow: exp({value}) > exp({max_exp})"
         ))));
     }
 
@@ -173,8 +160,7 @@ where
 
     check_finite(result, "exp result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
-            "Exponential produced non-finite result: exp({}) = {:?}",
-            value, result
+            "Exponential produced non-finite result: exp({value}) = {result:?}"
         )))
     })?;
 
@@ -207,10 +193,10 @@ where
     }
 
     let sum: T = values.iter().copied().sum();
-    let count = T::from(values.len()).ok_or_else(|| {
+    let len = values.len();
+    let count = T::from(len).ok_or_else(|| {
         CoreError::ComputationError(ErrorContext::new(format!(
-            "Failed to convert array length {} to numeric type",
-            values.len()
+            "Failed to convert array length {len} to numeric type"
         )))
     })?;
 
@@ -222,10 +208,10 @@ pub fn safe_variance<T>(values: &[T], mean: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug + std::iter::Sum,
 {
-    if values.len() < 2 {
+    let len = values.len();
+    if len < 2 {
         return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-            "Cannot compute variance with {} values (need at least 2)",
-            values.len()
+            "Cannot compute variance with {len} values (need at least 2)"
         ))));
     }
 
@@ -237,10 +223,10 @@ where
         })
         .sum();
 
-    let n_minus_1 = T::from(values.len() - 1).ok_or_else(|| {
+    let count = values.len() - 1;
+    let n_minus_1 = T::from(count).ok_or_else(|| {
         CoreError::ComputationError(ErrorContext::new(format!(
-            "Failed to convert count {} to numeric type",
-            values.len() - 1
+            "Failed to convert count {count} to numeric type"
         )))
     })?;
 

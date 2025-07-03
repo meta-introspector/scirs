@@ -7,7 +7,7 @@
 use num_traits::Float;
 use std::collections::HashMap;
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 
 /// Moment accountant for tracking privacy loss
 #[derive(Debug, Clone)]

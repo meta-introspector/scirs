@@ -782,7 +782,11 @@ impl StabilityGuaranteeManager {
 
     /// Register an API contract
     pub fn register_contract(&mut self, contract: ApiContract) -> CoreResult<()> {
-        let key = format!("{}::{}", contract.module, contract.api_name);
+        let key = format!(
+            "{module}::{api_name}",
+            module = contract.module,
+            api_name = contract.api_name
+        );
 
         // Check for existing contract
         if let Some(existing) = self.contracts.get(&key) {
@@ -936,10 +940,22 @@ impl StabilityGuaranteeManager {
             "- Total APIs with contracts: {}\n",
             total_contracts
         ));
-        report.push_str(&format!("- Stable APIs: {}\n", stable_count));
-        report.push_str(&format!("- Evolving APIs: {}\n", evolving_count));
-        report.push_str(&format!("- Experimental APIs: {}\n", experimental_count));
-        report.push_str(&format!("- Deprecated APIs: {}\n", deprecated_count));
+        report.push_str(&format!(
+            "- Stable APIs: {stable_count}\n",
+            stable_count = stable_count
+        ));
+        report.push_str(&format!(
+            "- Evolving APIs: {evolving_count}\n",
+            evolving_count = evolving_count
+        ));
+        report.push_str(&format!(
+            "- Experimental APIs: {experimental_count}\n",
+            experimental_count = experimental_count
+        ));
+        report.push_str(&format!(
+            "- Deprecated APIs: {deprecated_count}\n",
+            deprecated_count = deprecated_count
+        ));
 
         // Stability coverage
         let coverage = if total_contracts > 0 {
@@ -975,7 +991,7 @@ impl StabilityGuaranteeManager {
 
         report.push_str("## Contracts by Module\n\n");
         for (module, contracts) in modules {
-            report.push_str(&format!("### Module: {}\n\n", module));
+            report.push_str(&format!("### Module: {module}\n\n", module = module));
             for contract in contracts {
                 report.push_str(&format!(
                     "- **{}** ({:?})\n",
@@ -1128,7 +1144,7 @@ impl StabilityGuaranteeManager {
         system_state: SystemState,
     ) {
         // Clone performance metrics for audit trail before moving to record_measurement
-        let metrics_for_audit = format!("{:?}", performance);
+        let metrics_for_audit = format!("{performance:?}");
 
         self.performance_modeler.record_measurement(
             api_name,

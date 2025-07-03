@@ -363,7 +363,7 @@ impl BenchmarkSuite {
                 match self.run_gpu_benchmark(operation, problem_size, data_type, backend) {
                     Ok(gpu_result) => self.results.push(gpu_result),
                     Err(e) => {
-                        eprintln!("GPU benchmark failed for {}: {}", backend, e);
+                        eprintln!("GPU benchmark failed for {backend}: {e}");
                     }
                 }
             }
@@ -609,7 +609,7 @@ impl BenchmarkSuite {
             if let Some(backend) = best_backend {
                 PlatformRecommendation::Gpu {
                     backend,
-                    reason: format!("GPU shows {:.1}x speedup over CPU", best_speedup),
+                    reason: format!("GPU shows {best_speedup:.1}x speedup over CPU"),
                 }
             } else {
                 PlatformRecommendation::Cpu {

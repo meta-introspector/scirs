@@ -368,7 +368,11 @@ impl HeterogeneousScheduler {
         let execution_time = start_time.elapsed();
 
         // Store performance history for future optimization
-        let key = format!("{:?}_{}", workload.workload_type, workload.problem_size);
+        let key = format!(
+            "{workload_type:?}_{problem_size}",
+            workload_type = workload.workload_type,
+            problem_size = workload.problem_size
+        );
         self.performance_history
             .lock()
             .unwrap()
@@ -414,7 +418,11 @@ impl HeterogeneousScheduler {
         workload: &WorkloadCharacteristics,
         current_strategy: ExecutionStrategy,
     ) -> ExecutionStrategy {
-        let key = format!("{:?}_{}", workload.workload_type, workload.problem_size);
+        let key = format!(
+            "{workload_type:?}_{problem_size}",
+            workload_type = workload.workload_type,
+            problem_size = workload.problem_size
+        );
         let history = self.performance_history.lock().unwrap();
 
         // If we have historical data, use it to refine the strategy

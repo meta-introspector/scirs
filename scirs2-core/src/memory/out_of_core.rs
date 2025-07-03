@@ -707,7 +707,7 @@ where
             chunk_map
                 .get(chunk_coords)
                 .ok_or_else(|| {
-                    OutOfCoreError::ChunkNotFound(format!("Chunk at {:?}", chunk_coords))
+                    OutOfCoreError::ChunkNotFound(format!("Chunk not found: {:?}", chunk_coords))
                 })?
                 .clone()
         };

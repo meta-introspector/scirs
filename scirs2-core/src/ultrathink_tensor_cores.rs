@@ -2104,8 +2104,7 @@ mod gpu_implementation {
             // Initialize tensor core manager
             let tensor_manager = TensorCoreManager::new(backend).map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to initialize tensor core manager: {}",
-                    e
+                    "Failed to initialize tensor core manager: {e}"
                 )))
             })?;
 
@@ -2113,8 +2112,7 @@ mod gpu_implementation {
             let tuning_strategy = TuningStrategy::default();
             let auto_tuner = AutoTuner::new(backend, tuning_strategy).map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to initialize auto-tuner: {}",
-                    e
+                    "Failed to initialize auto-tuner: {e}"
                 )))
             })?;
 
@@ -2123,8 +2121,7 @@ mod gpu_implementation {
                 .write()
                 .map_err(|e| {
                     CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                        "Failed to acquire tensor managers lock: {}",
-                        e
+                        "Failed to acquire tensor managers lock: {e}"
                     )))
                 })?
                 .insert(backend, tensor_manager);
@@ -2133,8 +2130,7 @@ mod gpu_implementation {
                 .write()
                 .map_err(|e| {
                     CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                        "Failed to acquire auto-tuners lock: {}",
-                        e
+                        "Failed to acquire auto-tuners lock: {e}"
                     )))
                 })?
                 .insert(backend, auto_tuner);
@@ -2142,10 +2138,7 @@ mod gpu_implementation {
             // Initialize monitoring for this backend
             self.initialize_monitoring(backend)?;
 
-            println!(
-                "🚀 Initialized ultrathink tensor cores for backend: {:?}",
-                backend
-            );
+            println!("🚀 Initialized ultrathink tensor cores for backend: {backend:?}");
             Ok(())
         }
 
@@ -2159,15 +2152,13 @@ mod gpu_implementation {
             // Get tensor core manager
             let tensor_managers = self.tensor_managers.read().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire tensor managers lock: {}",
-                    e
+                    "Failed to acquire tensor managers lock: {e}"
                 )))
             })?;
 
             let tensor_manager = tensor_managers.get(&backend).ok_or_else(|| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Tensor core manager not found for backend: {:?}",
-                    backend
+                    "Tensor core manager not found for backend: {backend:?}"
                 )))
             })?;
 
@@ -2206,15 +2197,13 @@ mod gpu_implementation {
             // Get auto-tuner
             let auto_tuners = self.auto_tuners.read().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire auto-tuners lock: {}",
-                    e
+                    "Failed to acquire auto-tuners lock: {e}"
                 )))
             })?;
 
             let auto_tuner = auto_tuners.get(&backend).ok_or_else(|| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Auto-tuner not found for backend: {:?}",
-                    backend
+                    "Auto-tuner not found for backend: {backend:?}"
                 )))
             })?;
 
@@ -2227,8 +2216,7 @@ mod gpu_implementation {
                 .tune_kernel(kernel_name, kernel, problem_size, tuning_space)
                 .map_err(|e| {
                     CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                        "Auto-tuning failed: {}",
-                        e
+                        "Auto-tuning failed: {e}"
                     )))
                 })?;
 

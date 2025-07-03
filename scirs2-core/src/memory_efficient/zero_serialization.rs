@@ -591,7 +591,7 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
             .transpose()
             .map_err(|e| {
                 CoreError::ValidationError(
-                    ErrorContext::new(format!("Failed to serialize metadata: {}", e))
+                    ErrorContext::new(format!("{e}"))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;
@@ -608,7 +608,7 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
         // Serialize header
         let header_bytes = bincode::serialize(&header).map_err(|e| {
             CoreError::ValidationError(
-                ErrorContext::new(format!("Failed to serialize header: {}", e))
+                ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
@@ -672,7 +672,7 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
         // Deserialize header
         let header: ZeroCopyHeader = bincode::deserialize(&header_bytes).map_err(|e| {
             CoreError::ValidationError(
-                ErrorContext::new(format!("Failed to deserialize header: {}", e))
+                ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
@@ -933,7 +933,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         // Deserialize header
         let header: ZeroCopyHeader = bincode::deserialize(&header_bytes).map_err(|e| {
             CoreError::ValidationError(
-                ErrorContext::new(format!("Failed to deserialize header: {}", e))
+                ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
@@ -942,7 +942,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         match header.metadata_json {
             Some(json_str) => serde_json::from_str(&json_str).map_err(|e| {
                 CoreError::ValidationError(
-                    ErrorContext::new(format!("Failed to parse metadata JSON: {}", e))
+                    ErrorContext::new(format!("{e}"))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 )
             }),
@@ -1049,7 +1049,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         // Deserialize header
         let mut header: ZeroCopyHeader = bincode::deserialize(&header_bytes).map_err(|e| {
             CoreError::ValidationError(
-                ErrorContext::new(format!("Failed to deserialize header: {}", e))
+                ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
@@ -1057,7 +1057,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         // Update metadata
         header.metadata_json = Some(serde_json::to_string(&metadata).map_err(|e| {
             CoreError::ValidationError(
-                ErrorContext::new(format!("Failed to serialize metadata: {}", e))
+                ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?);
@@ -1065,7 +1065,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         // Serialize updated header
         let new_header_bytes = bincode::serialize(&header).map_err(|e| {
             CoreError::ValidationError(
-                ErrorContext::new(format!("Failed to serialize header: {}", e))
+                ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;

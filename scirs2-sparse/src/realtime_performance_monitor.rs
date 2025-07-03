@@ -118,11 +118,10 @@ impl Default for ExecutionTimer {
 }
 
 impl ExecutionTimer {
-    
     pub fn elapsed_ms(&self) -> f64 {
         self.start_time.elapsed().as_millis() as f64
     }
-    
+
     pub fn restart(&mut self) {
         self.start_time = Instant::now();
     }
@@ -666,21 +665,22 @@ impl RealTimePerformanceMonitor {
             // Collect quantum processor samples
             for (id, processor) in &registry.quantum_processors {
                 let stats = processor.get_stats();
-                
+
                 // Estimate execution time based on operations and coherence
                 let base_time = 1.0 / (stats.operations_count.max(1) as f64);
                 let coherence_factor = stats.average_logical_fidelity;
                 let estimated_exec_time = base_time * (2.0 - coherence_factor) * 1000.0;
-                
+
                 // Estimate cache efficiency from quantum metrics
                 let cache_efficiency = (stats.average_logical_fidelity * 0.8 + 0.2).min(1.0);
-                
+
                 samples.push(PerformanceSample {
                     timestamp,
                     processor_type: ProcessorType::QuantumInspired,
                     processor_id: id.clone(),
                     execution_time_ms: estimated_exec_time,
-                    throughput_ops_per_sec: stats.operations_count as f64 / estimated_exec_time * 1000.0,
+                    throughput_ops_per_sec: stats.operations_count as f64 / estimated_exec_time
+                        * 1000.0,
                     memory_usage_mb: stats.cache_efficiency * current_memory * 100.0,
                     cache_hit_ratio: cache_efficiency,
                     error_rate: 1.0 - stats.average_logical_fidelity,
@@ -695,30 +695,33 @@ impl RealTimePerformanceMonitor {
             // Collect neural processor samples
             for (id, processor) in &registry.neural_processors {
                 let stats = processor.get_stats();
-                
+
                 // Estimate execution time based on neural complexity
-                let neural_complexity = stats.pattern_memory_size as f64 + stats.experience_buffer_size as f64;
+                let neural_complexity =
+                    stats.pattern_memory_size as f64 + stats.experience_buffer_size as f64;
                 let base_time = neural_complexity / 10000.0; // Scale factor
                 let learning_overhead = if stats.rl_enabled { 1.5 } else { 1.0 };
                 let estimated_exec_time = base_time * learning_overhead * 1000.0;
-                
+
                 // Neural processors typically have good cache locality
                 let neural_cache_ratio = 0.85 + (1.0 - stats.current_exploration_rate) * 0.1;
-                
+
                 // Error rate based on exploration vs exploitation balance
                 let neural_error_rate = if stats.rl_enabled {
                     stats.current_exploration_rate * 0.1 + 0.01
                 } else {
                     0.05
                 };
-                
+
                 samples.push(PerformanceSample {
                     timestamp,
                     processor_type: ProcessorType::NeuralAdaptive,
                     processor_id: id.clone(),
                     execution_time_ms: estimated_exec_time,
-                    throughput_ops_per_sec: stats.adaptations_count as f64 / estimated_exec_time * 1000.0,
-                    memory_usage_mb: stats.pattern_memory_size as f64 / 1024.0 + current_memory * 50.0,
+                    throughput_ops_per_sec: stats.adaptations_count as f64 / estimated_exec_time
+                        * 1000.0,
+                    memory_usage_mb: stats.pattern_memory_size as f64 / 1024.0
+                        + current_memory * 50.0,
                     cache_hit_ratio: neural_cache_ratio,
                     error_rate: neural_error_rate,
                     cpu_utilization: current_cpu * 0.8, // Neural networks are CPU intensive
@@ -732,28 +735,32 @@ impl RealTimePerformanceMonitor {
             // Collect hybrid processor samples
             for (id, processor) in &registry.hybrid_processors {
                 let stats = processor.get_stats();
-                
+
                 // Hybrid execution time depends on synchronization and strategy balance
                 let complexity_factor = 1.0 + (1.0 - stats.hybrid_synchronization) * 0.5;
                 let quantum_weight_factor = stats.quantum_weight * 1.2; // Quantum is slower
-                let neural_weight_factor = stats.neural_weight * 0.8;   // Neural is faster
+                let neural_weight_factor = stats.neural_weight * 0.8; // Neural is faster
                 let base_time = (quantum_weight_factor + neural_weight_factor) * complexity_factor;
                 let estimated_exec_time = base_time * 1000.0;
-                
+
                 // Cache efficiency combines both quantum and neural characteristics
-                let hybrid_cache_ratio = stats.quantum_coherence * 0.9 + stats.neural_confidence * 0.85;
-                
+                let hybrid_cache_ratio =
+                    stats.quantum_coherence * 0.9 + stats.neural_confidence * 0.85;
+
                 samples.push(PerformanceSample {
                     timestamp,
                     processor_type: ProcessorType::QuantumNeuralHybrid,
                     processor_id: id.clone(),
                     execution_time_ms: estimated_exec_time,
-                    throughput_ops_per_sec: stats.total_operations as f64 / estimated_exec_time * 1000.0,
+                    throughput_ops_per_sec: stats.total_operations as f64 / estimated_exec_time
+                        * 1000.0,
                     memory_usage_mb: stats.memory_utilization * current_memory * 200.0,
                     cache_hit_ratio: hybrid_cache_ratio.min(1.0),
                     error_rate: 1.0 - stats.hybrid_synchronization,
-                    cpu_utilization: current_cpu * (0.6 * stats.quantum_weight + 0.8 * stats.neural_weight),
-                    gpu_utilization: current_gpu * (0.1 * stats.quantum_weight + 0.4 * stats.neural_weight),
+                    cpu_utilization: current_cpu
+                        * (0.6 * stats.quantum_weight + 0.8 * stats.neural_weight),
+                    gpu_utilization: current_gpu
+                        * (0.1 * stats.quantum_weight + 0.4 * stats.neural_weight),
                     quantum_coherence: Some(stats.quantum_coherence),
                     neural_confidence: Some(stats.neural_confidence),
                     compression_ratio: None,
@@ -763,31 +770,31 @@ impl RealTimePerformanceMonitor {
             // Collect memory compressor samples
             for (id, compressor) in &registry.memory_compressors {
                 let stats = compressor.get_stats();
-                
+
                 // Real execution time from compression stats
                 let compression_exec_time = if stats.compression_stats.compression_time > 0.0 {
                     stats.compression_stats.compression_time * 1000.0
                 } else {
                     1.0 // Minimum 1ms
                 };
-                
+
                 // Throughput based on blocks processed per time
                 let throughput = if compression_exec_time > 0.0 {
                     stats.compression_stats.total_blocks as f64 / compression_exec_time * 1000.0
                 } else {
                     stats.compression_stats.total_blocks as f64
                 };
-                
+
                 // Error rate based on compression efficiency
                 let compression_error_rate = if stats.compression_stats.compression_ratio > 1.0 {
                     0.01 / stats.compression_stats.compression_ratio // Better compression = fewer errors
                 } else {
                     0.05 // Higher error rate for poor compression
                 };
-                
+
                 // CPU utilization for compression is typically high
                 let compression_cpu_util = current_cpu * 0.9;
-                
+
                 samples.push(PerformanceSample {
                     timestamp,
                     processor_type: ProcessorType::MemoryCompression,
@@ -1007,14 +1014,22 @@ impl RealTimePerformanceMonitor {
                     continue;
                 }
 
-                let metric_value = Self::get_metric_value(&rule.metric_name, metrics, &system_metrics);
-                let should_alert = Self::evaluate_alert_condition(&rule.condition, metric_value, rule.threshold, &history);
+                let metric_value =
+                    Self::get_metric_value(&rule.metric_name, metrics, &system_metrics);
+                let should_alert = Self::evaluate_alert_condition(
+                    &rule.condition,
+                    metric_value,
+                    rule.threshold,
+                    &history,
+                );
 
                 if should_alert {
                     let alert_id = format!("{}_{}", rule.id, timestamp);
-                    
+
                     // Check if similar alert already exists using entry API
-                    if let std::collections::hash_map::Entry::Vacant(e) = alert_manager.active_alerts.entry(alert_id) {
+                    if let std::collections::hash_map::Entry::Vacant(e) =
+                        alert_manager.active_alerts.entry(alert_id)
+                    {
                         let alert = Alert {
                             id: e.key().clone(),
                             timestamp,
@@ -1029,12 +1044,15 @@ impl RealTimePerformanceMonitor {
                         };
 
                         e.insert(alert.clone());
-                        
+
                         // Send notifications before moving alert
-                        Self::send_alert_notifications(&alert, &alert_manager.notification_channels);
-                        
+                        Self::send_alert_notifications(
+                            &alert,
+                            &alert_manager.notification_channels,
+                        );
+
                         alert_manager.alert_history.push_back(alert);
-                        
+
                         // Limit alert history size
                         if alert_manager.alert_history.len() > 1000 {
                             alert_manager.alert_history.pop_front();
@@ -1180,8 +1198,10 @@ impl RealTimePerformanceMonitor {
             AlertCondition::PercentageIncrease => {
                 if let Some(previous) = history.samples.back() {
                     // Calculate efficiency score from PerformanceSample fields
-                    let previous_efficiency = (previous.throughput_ops_per_sec * previous.cache_hit_ratio) 
-                        / (previous.execution_time_ms + 1.0) * (1.0 - previous.error_rate);
+                    let previous_efficiency = (previous.throughput_ops_per_sec
+                        * previous.cache_hit_ratio)
+                        / (previous.execution_time_ms + 1.0)
+                        * (1.0 - previous.error_rate);
                     let increase = (value - previous_efficiency) / previous_efficiency;
                     increase > threshold / 100.0
                 } else {
@@ -1191,8 +1211,10 @@ impl RealTimePerformanceMonitor {
             AlertCondition::PercentageDecrease => {
                 if let Some(previous) = history.samples.back() {
                     // Calculate efficiency score from PerformanceSample fields
-                    let previous_efficiency = (previous.throughput_ops_per_sec * previous.cache_hit_ratio) 
-                        / (previous.execution_time_ms + 1.0) * (1.0 - previous.error_rate);
+                    let previous_efficiency = (previous.throughput_ops_per_sec
+                        * previous.cache_hit_ratio)
+                        / (previous.execution_time_ms + 1.0)
+                        * (1.0 - previous.error_rate);
                     let decrease = (previous_efficiency - value) / previous_efficiency;
                     decrease > threshold / 100.0
                 } else {
@@ -1276,9 +1298,9 @@ impl RealTimePerformanceMonitor {
             cpu_usage: Self::get_cpu_usage(),
             memory_usage: Self::get_memory_usage(),
             gpu_usage: Self::get_gpu_usage(),
-            network_io: 0.0, // Could be implemented
-            disk_io: 0.0,    // Could be implemented
-            temperature: 0.0, // Could be implemented
+            network_io: 0.0,        // Could be implemented
+            disk_io: 0.0,           // Could be implemented
+            temperature: 0.0,       // Could be implemented
             power_consumption: 0.0, // Could be implemented
             system_load: Self::get_system_load(),
         }
@@ -1300,11 +1322,16 @@ impl RealTimePerformanceMonitor {
                 prediction_engine.prediction_models = Self::create_prediction_models();
             }
 
-            let metrics = ["efficiency_score", "processing_latency", "error_rate", "cache_hit_rate"];
-            
+            let metrics = [
+                "efficiency_score",
+                "processing_latency",
+                "error_rate",
+                "cache_hit_rate",
+            ];
+
             for metric_name in metrics {
                 let values: Vec<f64> = Self::extract_metric_values(metric_name, &history.samples);
-                
+
                 if values.len() < 5 {
                     continue;
                 }
@@ -1315,7 +1342,11 @@ impl RealTimePerformanceMonitor {
 
                 for (model_name, model) in &prediction_engine.prediction_models {
                     if let Some(predictions) = Self::generate_model_predictions(model, &values) {
-                        let accuracy = prediction_engine.model_accuracy.get(model_name).copied().unwrap_or(0.5);
+                        let accuracy = prediction_engine
+                            .model_accuracy
+                            .get(model_name)
+                            .copied()
+                            .unwrap_or(0.5);
                         all_predictions.push((predictions, accuracy));
                         model_accuracies.push(accuracy);
                     }
@@ -1324,10 +1355,14 @@ impl RealTimePerformanceMonitor {
                 if !all_predictions.is_empty() {
                     // Ensemble prediction - weighted average based on model accuracy
                     let ensemble_predictions = Self::ensemble_predictions(&all_predictions);
-                    let ensemble_accuracy = model_accuracies.iter().sum::<f64>() / model_accuracies.len() as f64;
+                    let ensemble_accuracy =
+                        model_accuracies.iter().sum::<f64>() / model_accuracies.len() as f64;
 
-                    let forecast = Self::create_forecast(metric_name, ensemble_predictions, ensemble_accuracy);
-                    prediction_engine.forecast_cache.insert(metric_name.to_string(), forecast);
+                    let forecast =
+                        Self::create_forecast(metric_name, ensemble_predictions, ensemble_accuracy);
+                    prediction_engine
+                        .forecast_cache
+                        .insert(metric_name.to_string(), forecast);
 
                     // Update model accuracy based on recent performance
                     Self::update_model_accuracies(&mut prediction_engine.model_accuracy, &values);
@@ -1338,64 +1373,85 @@ impl RealTimePerformanceMonitor {
 
     fn create_prediction_models() -> HashMap<String, PredictionModel> {
         let mut models = HashMap::new();
-        let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let current_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
 
         // Moving Average Model
-        models.insert("moving_average".to_string(), PredictionModel {
-            model_type: ModelType::MovingAverage,
-            parameters: vec![10.0], // window size
-            training_data: VecDeque::new(),
-            last_updated: current_time,
-            accuracy: 0.75,
-            trained: true,
-            last_update: current_time,
-        });
+        models.insert(
+            "moving_average".to_string(),
+            PredictionModel {
+                model_type: ModelType::MovingAverage,
+                parameters: vec![10.0], // window size
+                training_data: VecDeque::new(),
+                last_updated: current_time,
+                accuracy: 0.75,
+                trained: true,
+                last_update: current_time,
+            },
+        );
 
         // Linear Regression Model
-        models.insert("linear_regression".to_string(), PredictionModel {
-            model_type: ModelType::LinearRegression,
-            parameters: vec![0.0, 0.0, 0.0], // slope, intercept, r_squared
-            training_data: VecDeque::new(),
-            last_updated: 0,
-            accuracy: 0.8,
-            trained: false,
-            last_update: 0,
-        });
+        models.insert(
+            "linear_regression".to_string(),
+            PredictionModel {
+                model_type: ModelType::LinearRegression,
+                parameters: vec![0.0, 0.0, 0.0], // slope, intercept, r_squared
+                training_data: VecDeque::new(),
+                last_updated: 0,
+                accuracy: 0.8,
+                trained: false,
+                last_update: 0,
+            },
+        );
 
         // ARIMA Model (simplified)
-        models.insert("arima".to_string(), PredictionModel {
-            model_type: ModelType::Arima,
-            parameters: vec![1.0, 1.0, 1.0, 0.0, 0.0], // p, d, q, phi, theta
-            training_data: VecDeque::new(),
-            last_updated: 0,
-            accuracy: 0.85,
-            trained: false,
-            last_update: 0,
-        });
+        models.insert(
+            "arima".to_string(),
+            PredictionModel {
+                model_type: ModelType::Arima,
+                parameters: vec![1.0, 1.0, 1.0, 0.0, 0.0], // p, d, q, phi, theta
+                training_data: VecDeque::new(),
+                last_updated: 0,
+                accuracy: 0.85,
+                trained: false,
+                last_update: 0,
+            },
+        );
 
         // Neural Network Model (simplified)
-        models.insert("neural_network".to_string(), PredictionModel {
-            model_type: ModelType::NeuralNetwork,
-            parameters: vec![0.001, 32.0, 3.0], // learning_rate, hidden_size, layers
-            training_data: VecDeque::new(),
-            last_updated: 0,
-            accuracy: 0.9,
-            trained: false,
-            last_update: 0,
-        });
+        models.insert(
+            "neural_network".to_string(),
+            PredictionModel {
+                model_type: ModelType::NeuralNetwork,
+                parameters: vec![0.001, 32.0, 3.0], // learning_rate, hidden_size, layers
+                training_data: VecDeque::new(),
+                last_updated: 0,
+                accuracy: 0.9,
+                trained: false,
+                last_update: 0,
+            },
+        );
 
         models
     }
 
     fn extract_metric_values(metric_name: &str, samples: &VecDeque<PerformanceSample>) -> Vec<f64> {
-        samples.iter().map(|s| match metric_name {
-            "efficiency_score" => (s.throughput_ops_per_sec * s.cache_hit_ratio) / (s.execution_time_ms + 1.0) * (1.0 - s.error_rate),
-            "processing_latency" => s.execution_time_ms,
-            "error_rate" => s.error_rate,
-            "cache_hit_rate" => s.cache_hit_ratio,
-            "throughput" => s.throughput_ops_per_sec,
-            _ => s.execution_time_ms,
-        }).collect()
+        samples
+            .iter()
+            .map(|s| match metric_name {
+                "efficiency_score" => {
+                    (s.throughput_ops_per_sec * s.cache_hit_ratio) / (s.execution_time_ms + 1.0)
+                        * (1.0 - s.error_rate)
+                }
+                "processing_latency" => s.execution_time_ms,
+                "error_rate" => s.error_rate,
+                "cache_hit_rate" => s.cache_hit_ratio,
+                "throughput" => s.throughput_ops_per_sec,
+                _ => s.execution_time_ms,
+            })
+            .collect()
     }
 
     fn generate_model_predictions(model: &PredictionModel, values: &[f64]) -> Option<Vec<f64>> {
@@ -1411,14 +1467,14 @@ impl RealTimePerformanceMonitor {
     fn moving_average_prediction(model: &PredictionModel, values: &[f64]) -> Option<Vec<f64>> {
         let window_size = model.parameters.first().copied().unwrap_or(10.0) as usize;
         let window_size = window_size.min(values.len());
-        
+
         if window_size == 0 {
             return None;
         }
 
         let recent_values = &values[values.len() - window_size..];
         let avg = recent_values.iter().sum::<f64>() / recent_values.len() as f64;
-        
+
         // Generate predictions with slight trend adjustment
         let trend = if values.len() >= 2 {
             values[values.len() - 1] - values[values.len() - 2]
@@ -1442,7 +1498,7 @@ impl RealTimePerformanceMonitor {
         // Calculate linear regression parameters
         let n = values.len() as f64;
         let x_values: Vec<f64> = (0..values.len()).map(|i| i as f64).collect();
-        
+
         let sum_x = x_values.iter().sum::<f64>();
         let sum_y = values.iter().sum::<f64>();
         let sum_xy = x_values.iter().zip(values).map(|(x, y)| x * y).sum::<f64>();
@@ -1469,7 +1525,7 @@ impl RealTimePerformanceMonitor {
         // Simplified ARIMA implementation
         let p = model.parameters.first().copied().unwrap_or(1.0) as usize;
         let d = model.parameters.get(1).copied().unwrap_or(1.0) as usize;
-        
+
         // Apply differencing
         let mut diff_values = values.to_vec();
         for _ in 0..d {
@@ -1486,14 +1542,14 @@ impl RealTimePerformanceMonitor {
         // Simple autoregressive prediction
         let mut predictions = Vec::new();
         let mut last_values = diff_values.clone();
-        
+
         for _ in 1..=10 {
             let prediction = if last_values.len() >= p {
                 last_values[last_values.len() - p..].iter().sum::<f64>() / p as f64
             } else {
                 last_values.iter().sum::<f64>() / last_values.len() as f64
             };
-            
+
             predictions.push(prediction);
             last_values.push(prediction);
         }
@@ -1519,23 +1575,25 @@ impl RealTimePerformanceMonitor {
         // Simplified neural network prediction using a basic feed-forward approach
         let input_size = 3.min(values.len());
         let _hidden_size = model.parameters.get(1).copied().unwrap_or(32.0) as usize;
-        
+
         // Use recent values as input
         let inputs = &values[values.len() - input_size..];
-        
+
         // Simple neural network computation (placeholder)
         let mut predictions = Vec::new();
         for i in 1..=10 {
             // Basic pattern recognition - weighted average with non-linear activation
-            let weighted_sum = inputs.iter().enumerate()
+            let weighted_sum = inputs
+                .iter()
+                .enumerate()
                 .map(|(j, &val)| val * (1.0 + j as f64 * 0.1))
                 .sum::<f64>();
-            
+
             let activation = weighted_sum / inputs.len() as f64;
             let prediction = activation * (1.0 + i as f64 * 0.05); // Slight growth trend
             predictions.push(prediction);
         }
-        
+
         Some(predictions)
     }
 
@@ -1546,9 +1604,9 @@ impl RealTimePerformanceMonitor {
 
         let horizon = predictions[0].0.len();
         let total_weight: f64 = predictions.iter().map(|(_, weight)| weight).sum();
-        
+
         let mut ensemble = vec![0.0; horizon];
-        
+
         for (pred_vec, weight) in predictions {
             for (i, &value) in pred_vec.iter().enumerate() {
                 if i < ensemble.len() {
@@ -1556,21 +1614,25 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         ensemble
     }
 
     fn create_forecast(metric_name: &str, predictions: Vec<f64>, accuracy: f64) -> Forecast {
         let avg = predictions.iter().sum::<f64>() / predictions.len() as f64;
-        let variance = predictions.iter().map(|x| (x - avg).powi(2)).sum::<f64>() / predictions.len() as f64;
+        let variance =
+            predictions.iter().map(|x| (x - avg).powi(2)).sum::<f64>() / predictions.len() as f64;
         let std_dev = variance.sqrt();
 
-        let prediction_points: Vec<PredictionPoint> = predictions.into_iter().enumerate()
+        let prediction_points: Vec<PredictionPoint> = predictions
+            .into_iter()
+            .enumerate()
             .map(|(i, value)| PredictionPoint {
                 timestamp: SystemTime::now()
                     .duration_since(UNIX_EPOCH)
                     .unwrap()
-                    .as_secs() + (i + 1) as u64 * 60,
+                    .as_secs()
+                    + (i + 1) as u64 * 60,
                 predicted_value: value,
                 confidence: accuracy * (1.0 / (1.0 + std_dev * 0.1)),
             })
@@ -1653,7 +1715,6 @@ impl RealTimePerformanceMonitor {
         }
     }
 
-
     fn create_default_strategies() -> Vec<OptimizationStrategy> {
         vec![
             OptimizationStrategy {
@@ -1689,7 +1750,7 @@ impl RealTimePerformanceMonitor {
                         .skip(1)
                         .filter_map(|s| s.parse().ok())
                         .collect();
-                    
+
                     if values.len() >= 4 {
                         let idle = values[3];
                         let total: u64 = values.iter().sum();
@@ -1700,7 +1761,7 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         #[cfg(target_os = "macos")]
         {
             // Use system_profiler on macOS for CPU usage
@@ -1716,8 +1777,11 @@ impl RealTimePerformanceMonitor {
                                 let parts: Vec<&str> = line.split(',').collect();
                                 if parts.len() >= 3 {
                                     if let Some(idle_part) = parts.get(2) {
-                                        if let Some(idle_str) = idle_part.split_whitespace().next() {
-                                            if let Ok(idle_pct) = idle_str.trim_end_matches('%').parse::<f64>() {
+                                        if let Some(idle_str) = idle_part.split_whitespace().next()
+                                        {
+                                            if let Ok(idle_pct) =
+                                                idle_str.trim_end_matches('%').parse::<f64>()
+                                            {
                                                 return (100.0 - idle_pct) / 100.0;
                                             }
                                         }
@@ -1729,7 +1793,7 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         #[cfg(target_os = "windows")]
         {
             // Use wmic on Windows for CPU usage
@@ -1752,13 +1816,15 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         // Fallback: estimate based on system load
         let load = Self::get_system_load();
-        let cpu_cores = std::thread::available_parallelism().map(|p| p.get()).unwrap_or(4);
+        let cpu_cores = std::thread::available_parallelism()
+            .map(|p| p.get())
+            .unwrap_or(4);
         (load / cpu_cores as f64).min(1.0)
     }
-    
+
     fn get_memory_usage() -> f64 {
         // Cross-platform memory usage detection
         #[cfg(target_os = "linux")]
@@ -1766,7 +1832,7 @@ impl RealTimePerformanceMonitor {
             if let Ok(content) = std::fs::read_to_string("/proc/meminfo") {
                 let mut total_mem = 0u64;
                 let mut avail_mem = 0u64;
-                
+
                 for line in content.lines() {
                     if line.starts_with("MemTotal:") {
                         if let Some(value) = line.split_whitespace().nth(1) {
@@ -1778,20 +1844,18 @@ impl RealTimePerformanceMonitor {
                         }
                     }
                 }
-                
+
                 if total_mem > 0 && avail_mem <= total_mem {
                     let used_mem = total_mem - avail_mem;
                     return used_mem as f64 / total_mem as f64;
                 }
             }
         }
-        
+
         #[cfg(target_os = "macos")]
         {
             // Use vm_stat on macOS for memory usage
-            if let Ok(output) = std::process::Command::new("vm_stat")
-                .output()
-            {
+            if let Ok(output) = std::process::Command::new("vm_stat").output() {
                 if output.status.success() {
                     if let Ok(output_str) = String::from_utf8(output.stdout) {
                         let mut page_size = 4096u64; // Default page size
@@ -1800,7 +1864,7 @@ impl RealTimePerformanceMonitor {
                         let mut speculative_pages = 0u64;
                         let mut wired_pages = 0u64;
                         let mut active_pages = 0u64;
-                        
+
                         for line in output_str.lines() {
                             if line.contains("page size of") {
                                 if let Some(size_str) = line.split_whitespace().nth(7) {
@@ -1808,30 +1872,40 @@ impl RealTimePerformanceMonitor {
                                 }
                             } else if line.starts_with("Pages free:") {
                                 if let Some(pages_str) = line.split_whitespace().nth(2) {
-                                    free_pages = pages_str.trim_end_matches('.').parse().unwrap_or(0);
+                                    free_pages =
+                                        pages_str.trim_end_matches('.').parse().unwrap_or(0);
                                 }
                             } else if line.starts_with("Pages inactive:") {
                                 if let Some(pages_str) = line.split_whitespace().nth(2) {
-                                    inactive_pages = pages_str.trim_end_matches('.').parse().unwrap_or(0);
+                                    inactive_pages =
+                                        pages_str.trim_end_matches('.').parse().unwrap_or(0);
                                 }
                             } else if line.starts_with("Pages speculative:") {
                                 if let Some(pages_str) = line.split_whitespace().nth(2) {
-                                    speculative_pages = pages_str.trim_end_matches('.').parse().unwrap_or(0);
+                                    speculative_pages =
+                                        pages_str.trim_end_matches('.').parse().unwrap_or(0);
                                 }
                             } else if line.starts_with("Pages wired down:") {
                                 if let Some(pages_str) = line.split_whitespace().nth(3) {
-                                    wired_pages = pages_str.trim_end_matches('.').parse().unwrap_or(0);
+                                    wired_pages =
+                                        pages_str.trim_end_matches('.').parse().unwrap_or(0);
                                 }
                             } else if line.starts_with("Pages active:") {
                                 if let Some(pages_str) = line.split_whitespace().nth(2) {
-                                    active_pages = pages_str.trim_end_matches('.').parse().unwrap_or(0);
+                                    active_pages =
+                                        pages_str.trim_end_matches('.').parse().unwrap_or(0);
                                 }
                             }
                         }
-                        
-                        let total_pages = free_pages + inactive_pages + speculative_pages + wired_pages + active_pages;
-                        let used_pages = total_pages - free_pages - inactive_pages - speculative_pages;
-                        
+
+                        let total_pages = free_pages
+                            + inactive_pages
+                            + speculative_pages
+                            + wired_pages
+                            + active_pages;
+                        let used_pages =
+                            total_pages - free_pages - inactive_pages - speculative_pages;
+
                         if total_pages > 0 {
                             return used_pages as f64 / total_pages as f64;
                         }
@@ -1839,19 +1913,24 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         #[cfg(target_os = "windows")]
         {
             // Use wmic on Windows for memory usage
             if let Ok(output) = std::process::Command::new("wmic")
-                .args(["OS", "get", "TotalVisibleMemorySize,FreePhysicalMemory", "/value"])
+                .args([
+                    "OS",
+                    "get",
+                    "TotalVisibleMemorySize,FreePhysicalMemory",
+                    "/value",
+                ])
                 .output()
             {
                 if output.status.success() {
                     if let Ok(output_str) = String::from_utf8(output.stdout) {
                         let mut total_mem = 0u64;
                         let mut free_mem = 0u64;
-                        
+
                         for line in output_str.lines() {
                             if line.starts_with("TotalVisibleMemorySize=") {
                                 if let Some(value_str) = line.split('=').nth(1) {
@@ -1863,7 +1942,7 @@ impl RealTimePerformanceMonitor {
                                 }
                             }
                         }
-                        
+
                         if total_mem > 0 && free_mem <= total_mem {
                             let used_mem = total_mem - free_mem;
                             return used_mem as f64 / total_mem as f64;
@@ -1872,19 +1951,22 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         // Intelligent fallback using available system information
         let cpu_usage = Self::get_cpu_usage();
         // Estimate memory usage based on CPU usage and typical correlation
         (0.3 + cpu_usage * 0.5).min(0.95) // Conservative estimate between 30-95%
     }
-    
+
     fn get_gpu_usage() -> f64 {
         // Multi-vendor GPU usage detection
-        
+
         // Try NVIDIA GPUs first (nvidia-smi available on all platforms)
         if let Ok(output) = std::process::Command::new("nvidia-smi")
-            .args(["--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"])
+            .args([
+                "--query-gpu=utilization.gpu",
+                "--format=csv,noheader,nounits",
+            ])
             .output()
         {
             if output.status.success() {
@@ -1902,7 +1984,7 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         // Try AMD GPUs (rocm-smi for Linux, different approaches for other platforms)
         #[cfg(target_os = "linux")]
         {
@@ -1925,7 +2007,7 @@ impl RealTimePerformanceMonitor {
                     }
                 }
             }
-            
+
             // Try reading AMD GPU usage from sysfs
             if let Ok(entries) = std::fs::read_dir("/sys/class/drm") {
                 for entry in entries.flatten() {
@@ -1943,7 +2025,7 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         // Try Intel GPUs
         #[cfg(target_os = "linux")]
         {
@@ -1971,20 +2053,26 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         // Windows-specific GPU detection
         #[cfg(target_os = "windows")]
         {
             // Try Windows Performance Toolkit or WMI
             if let Ok(output) = std::process::Command::new("wmic")
-                .args(["path", "win32_perfformatteddata_counters_gpuprocessmemory", "get", "DedicatedUsage,SharedUsage", "/value"])
+                .args([
+                    "path",
+                    "win32_perfformatteddata_counters_gpuprocessmemory",
+                    "get",
+                    "DedicatedUsage,SharedUsage",
+                    "/value",
+                ])
                 .output()
             {
                 if output.status.success() {
                     if let Ok(output_str) = String::from_utf8(output.stdout) {
                         let mut dedicated = 0u64;
                         let mut shared = 0u64;
-                        
+
                         for line in output_str.lines() {
                             if line.starts_with("DedicatedUsage=") {
                                 if let Some(value_str) = line.split('=').nth(1) {
@@ -1996,19 +2084,20 @@ impl RealTimePerformanceMonitor {
                                 }
                             }
                         }
-                        
+
                         // Rough estimation based on memory usage
                         let total_mem_usage = dedicated + shared;
                         if total_mem_usage > 0 {
                             // Estimate GPU utilization based on memory usage
                             // This is a heuristic - actual GPU compute usage would require different methods
-                            return (total_mem_usage as f64 / (8 * 1024 * 1024 * 1024) as f64).min(1.0); // Assume 8GB max
+                            return (total_mem_usage as f64 / (8 * 1024 * 1024 * 1024) as f64)
+                                .min(1.0); // Assume 8GB max
                         }
                     }
                 }
             }
         }
-        
+
         // macOS GPU detection
         #[cfg(target_os = "macos")]
         {
@@ -2028,11 +2117,11 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         // Ultimate fallback: estimate based on system load and CPU usage
         let cpu_usage = Self::get_cpu_usage();
         let system_load = Self::get_system_load();
-        
+
         // Heuristic: if system is under heavy load, GPU might be utilized
         if cpu_usage > 0.7 || system_load > 2.0 {
             (cpu_usage * 0.4).min(0.6) // Conservative GPU usage estimate
@@ -2040,7 +2129,7 @@ impl RealTimePerformanceMonitor {
             0.0
         }
     }
-    
+
     fn get_system_load() -> f64 {
         // Cross-platform system load detection
         #[cfg(target_os = "linux")]
@@ -2053,7 +2142,7 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         #[cfg(target_os = "macos")]
         {
             // Use sysctl for load average on macOS
@@ -2064,7 +2153,8 @@ impl RealTimePerformanceMonitor {
                 if output.status.success() {
                     if let Ok(output_str) = String::from_utf8(output.stdout) {
                         // Parse output like "{ 1.50 1.25 1.10 }"
-                        let load_str = output_str.trim()
+                        let load_str = output_str
+                            .trim()
                             .trim_start_matches('{')
                             .trim_end_matches('}')
                             .trim();
@@ -2077,12 +2167,18 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         #[cfg(target_os = "windows")]
         {
             // Windows doesn't have direct load average, estimate from processor queue length
             if let Ok(output) = std::process::Command::new("wmic")
-                .args(["path", "Win32_PerfRawData_PerfOS_System", "get", "ProcessorQueueLength", "/value"])
+                .args([
+                    "path",
+                    "Win32_PerfRawData_PerfOS_System",
+                    "get",
+                    "ProcessorQueueLength",
+                    "/value",
+                ])
                 .output()
             {
                 if output.status.success() {
@@ -2093,7 +2189,9 @@ impl RealTimePerformanceMonitor {
                                     if let Ok(queue_length) = value_str.trim().parse::<f64>() {
                                         // Convert queue length to load average approximation
                                         let cpu_cores = std::thread::available_parallelism()
-                                            .map(|p| p.get()).unwrap_or(4) as f64;
+                                            .map(|p| p.get())
+                                            .unwrap_or(4)
+                                            as f64;
                                         return queue_length / cpu_cores;
                                     }
                                 }
@@ -2103,10 +2201,12 @@ impl RealTimePerformanceMonitor {
                 }
             }
         }
-        
+
         // Cross-platform fallback using CPU usage as proxy
         let cpu_usage = Self::get_cpu_usage();
-        let cpu_cores = std::thread::available_parallelism().map(|p| p.get()).unwrap_or(4) as f64;
+        let cpu_cores = std::thread::available_parallelism()
+            .map(|p| p.get())
+            .unwrap_or(4) as f64;
         cpu_usage * cpu_cores // Estimate load based on CPU utilization
     }
 }

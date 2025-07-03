@@ -558,7 +558,7 @@ pub trait ModelPredictor<T> {
 /// Extract specific rows from a 2D array
 fn extract_rows<T, S>(arr: &ArrayBase<S, Ix2>, indices: &[usize]) -> Array2<T>
 where
-    T: Clone,
+    T: Clone + num_traits::Zero,
     S: Data<Elem = T>,
 {
     let mut result = Array2::zeros((indices.len(), arr.ncols()));
@@ -571,7 +571,7 @@ where
 /// Extract specific elements from a 1D array
 fn extract_elements<T, S>(arr: &ArrayBase<S, Ix1>, indices: &[usize]) -> Array1<T>
 where
-    T: Clone,
+    T: Clone + num_traits::Zero,
     S: Data<Elem = T>,
 {
     let mut result = Array1::zeros(indices.len());
@@ -592,7 +592,7 @@ where
             let correct = y_true
                 .iter()
                 .zip(y_pred.iter())
-                .filter(|(t, p)| (*t - **p).abs() < T::from(0.5).unwrap())
+                .filter(|(t, p)| (*t - *p).abs() < T::from(0.5).unwrap())
                 .count();
             Ok(correct as f64 / y_true.len() as f64)
         }

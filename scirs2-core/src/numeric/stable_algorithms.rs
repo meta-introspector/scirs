@@ -95,8 +95,7 @@ pub fn gaussian_elimination_stable<T: Float + StableComputation>(
         // Check for singular matrix
         if max_val.is_effectively_zero() {
             return Err(CoreError::ComputationError(ErrorContext::new(format!(
-                "Singular matrix detected in gaussian elimination at pivot {}",
-                k
+                "Singular matrix detected in gaussian elimination at pivot {k}"
             ))));
         }
 
@@ -129,8 +128,7 @@ pub fn gaussian_elimination_stable<T: Float + StableComputation>(
 
         if aug[[i, i]].is_effectively_zero() {
             return Err(CoreError::ComputationError(ErrorContext::new(format!(
-                "Singular matrix detected in back substitution at row {}",
-                i
+                "Singular matrix detected in back substitution at row {i}"
             ))));
         }
 
@@ -234,8 +232,7 @@ pub fn cholesky_stable<T: Float + StableComputation>(a: &ArrayView2<T>) -> CoreR
 
         if sum <= T::zero() {
             return Err(CoreError::ValidationError(ErrorContext::new(format!(
-                "Matrix is not positive definite: Failed at row {}",
-                i
+                "Matrix is not positive definite: Failed at row {i}"
             ))));
         }
 

@@ -3,7 +3,7 @@
 //! This module provides meta-learning capabilities for optimization, including learnable optimizers,
 //! hyperparameter optimization, and neural optimization approaches.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use ndarray::{Array, Array1, Array2, Dimension, ScalarOperand, Zip};
 use num_traits::Float;
 use std::collections::HashMap;

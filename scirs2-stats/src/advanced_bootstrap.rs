@@ -252,7 +252,16 @@ pub struct AdvancedBootstrapProcessor<F> {
 
 impl<F> AdvancedBootstrapProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + FromPrimitive
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
 {
     /// Create new advanced bootstrap processor
     pub fn new(config: AdvancedBootstrapConfig) -> Self {
@@ -1155,7 +1164,16 @@ pub fn stratified_bootstrap<F, T>(
     config: Option<AdvancedBootstrapConfig>,
 ) -> StatsResult<AdvancedBootstrapResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + FromPrimitive
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
     T: Into<F> + Copy + Send + Sync,
 {
     let mut config = config.unwrap_or_default();
@@ -1175,7 +1193,16 @@ pub fn block_bootstrap<F, T>(
     config: Option<AdvancedBootstrapConfig>,
 ) -> StatsResult<AdvancedBootstrapResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + FromPrimitive
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
     T: Into<F> + Copy + Send + Sync,
 {
     let mut config = config.unwrap_or_default();
@@ -1193,7 +1220,16 @@ pub fn moving_block_bootstrap<F, T>(
     n_bootstrap: Option<usize>,
 ) -> StatsResult<AdvancedBootstrapResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + FromPrimitive
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
     T: Into<F> + Copy + Send + Sync,
 {
     let mut config = AdvancedBootstrapConfig::default();
@@ -1215,7 +1251,16 @@ pub fn circular_block_bootstrap<F, T>(
     n_bootstrap: Option<usize>,
 ) -> StatsResult<AdvancedBootstrapResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + FromPrimitive
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
     T: Into<F> + Copy + Send + Sync,
 {
     let mut config = AdvancedBootstrapConfig::default();
@@ -1237,7 +1282,16 @@ pub fn stationary_bootstrap<F, T>(
     n_bootstrap: Option<usize>,
 ) -> StatsResult<AdvancedBootstrapResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + FromPrimitive
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display,
     T: Into<F> + Copy + Send + Sync,
 {
     let mut config = AdvancedBootstrapConfig::default();

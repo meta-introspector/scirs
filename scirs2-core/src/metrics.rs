@@ -383,7 +383,7 @@ impl MetricProvider for Histogram {
             value: MetricValue::Integer(stats.count as i64),
             timestamp: SystemTime::now(),
             labels: self.labels.clone(),
-            help: Some(format!("Total count for {}", self.name)),
+            help: Some(format!("name: {}", self.name)),
         });
 
         // Sum metric
@@ -393,7 +393,7 @@ impl MetricProvider for Histogram {
             value: MetricValue::Float(stats.sum),
             timestamp: SystemTime::now(),
             labels: self.labels.clone(),
-            help: Some(format!("Total sum for {}", self.name)),
+            help: Some(format!("name: {}", self.name)),
         });
 
         // Bucket metrics
@@ -407,7 +407,7 @@ impl MetricProvider for Histogram {
                 value: MetricValue::Integer(count as i64),
                 timestamp: SystemTime::now(),
                 labels: bucket_labels,
-                help: Some(format!("Histogram bucket for {}", self.name)),
+                help: Some(format!("name: {}", self.name)),
             });
         }
 
@@ -458,7 +458,11 @@ impl MetricsRegistry {
         for metric in metrics {
             // Add help text if available
             if let Some(help) = &metric.help {
-                output.push_str(&format!("# HELP {} {}\n", metric.name, help));
+                output.push_str(&format!(
+                    "# HELP {name} {help}\n",
+                    name = metric.name,
+                    help = help
+                ));
             }
 
             // Add type information
@@ -469,7 +473,11 @@ impl MetricsRegistry {
                 MetricType::Timer => "histogram",
                 MetricType::Summary => "summary",
             };
-            output.push_str(&format!("# TYPE {} {}\n", metric.name, type_str));
+            output.push_str(&format!(
+                "# TYPE {name} {type_str}\n",
+                name = metric.name,
+                type_str = type_str
+            ));
 
             // Format labels
             let labels_str = if metric.labels.is_empty() {
@@ -478,7 +486,7 @@ impl MetricsRegistry {
                 let label_pairs: Vec<String> = metric
                     .labels
                     .iter()
-                    .map(|(k, v)| format!("{}=\"{}\"", k, v))
+                    .map(|(k, v)| format!("{k}=\"{v}\""))
                     .collect();
                 format!("{{{}}}", label_pairs.join(","))
             };
@@ -596,7 +604,7 @@ impl HealthMonitor {
                     results.push(HealthCheck {
                         name: checker.name().to_string(),
                         status: HealthStatus::Unhealthy,
-                        message: format!("Health check failed: {}", error),
+                        message: format!("error: {error}"),
                         timestamp: SystemTime::now(),
                         duration: Duration::ZERO,
                     });

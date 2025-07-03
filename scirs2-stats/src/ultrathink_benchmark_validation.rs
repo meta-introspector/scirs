@@ -10,7 +10,7 @@ use crate::ultrathink_unified_processor::{
     OptimizationMode, UltrathinkProcessorConfig, UltrathinkUnifiedProcessor,
 };
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use num_traits::{Float, NumCast};
+use num_traits::Float;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 

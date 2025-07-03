@@ -10,7 +10,7 @@
 //! - Advanced MCMC diagnostics
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
@@ -1024,7 +1024,7 @@ where
 
         let mut activations = x.to_owned();
 
-        for (layer_idx, (&activation_type)) in self.activations.iter().enumerate() {
+        for (layer_idx, &activation_type) in self.activations.iter().enumerate() {
             // Linear transformation: z = x * W + b
             let z = self.linear_transform(
                 &activations.view(),

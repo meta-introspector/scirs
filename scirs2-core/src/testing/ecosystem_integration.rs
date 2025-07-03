@@ -1019,7 +1019,7 @@ impl EcosystemTestRunner {
                 tests_pass: false,
                 warnings: 0,
                 build_time,
-                errors: vec![format!("Failed to run cargo check: {}", e)],
+                errors: vec![format!("{e}")],
             }),
         }
     }
@@ -1675,7 +1675,7 @@ impl EcosystemTestRunner {
 
         let failed_builds = modules.iter().filter(|m| !m.build_status.builds).count();
         if failed_builds > 0 {
-            warning_issues.push(format!("Modules with build failures: {}", failed_builds));
+            warning_issues.push(format!("{failed_builds}"));
         }
 
         if !api_stability.breaking_changes.is_empty() {

@@ -11,7 +11,7 @@ use std::collections::{HashMap, VecDeque};
 
 use super::moment_accountant::MomentsAccountant;
 use super::{DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use crate::optimizers::Optimizer;
 
 /// DP-SGD optimizer with privacy guarantees

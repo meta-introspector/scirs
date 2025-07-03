@@ -588,7 +588,7 @@ impl NeuralArchitectureSearch {
             (rng.random::<f64>() * self.search_space.optimizers.len() as f64) as usize;
 
         Ok(Architecture {
-            id: format!("arch_{}", hasher.finish()),
+            id: format!("{}", hasher.finish()),
             layers,
             global_config: GlobalConfig {
                 input_shape: vec![224, 224, 3], // Default image size

@@ -244,12 +244,18 @@ impl From<GpuError> for CoreError {
     fn from(err: GpuError) -> Self {
         match err {
             GpuError::BackendNotAvailable(backend) => CoreError::ComputationError(
-                ErrorContext::new(format!("GPU backend {} is not available", backend))
-                    .with_location(ErrorLocation::new(file!(), line!())),
+                ErrorContext::new(format!(
+                    "GPU backend {backend} is not available",
+                    backend = backend
+                ))
+                .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::UnsupportedBackend(backend) => CoreError::NotImplementedError(
-                ErrorContext::new(format!("GPU backend {} is not supported", backend))
-                    .with_location(ErrorLocation::new(file!(), line!())),
+                ErrorContext::new(format!(
+                    "GPU backend {backend} is not supported",
+                    backend = backend
+                ))
+                .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::BackendNotSupported(backend) => CoreError::NotImplementedError(
                 ErrorContext::new(format!(
@@ -259,27 +265,30 @@ impl From<GpuError> for CoreError {
                 .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::BackendNotImplemented(backend) => CoreError::NotImplementedError(
-                ErrorContext::new(format!("GPU backend {} is not implemented yet", backend))
-                    .with_location(ErrorLocation::new(file!(), line!())),
+                ErrorContext::new(format!(
+                    "GPU backend {backend} is not implemented yet",
+                    backend = backend
+                ))
+                .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::OutOfMemory(details) => CoreError::MemoryError(
-                ErrorContext::new(format!("GPU out of memory: {}", details))
+                ErrorContext::new(format!("{details}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::KernelCompilationError(msg) => CoreError::ComputationError(
-                ErrorContext::new(format!("Kernel compilation failed: {}", msg))
+                ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::KernelExecutionError(msg) => CoreError::ComputationError(
-                ErrorContext::new(format!("Kernel execution failed: {}", msg))
+                ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::InvalidParameter(msg) => CoreError::InvalidArgument(
-                ErrorContext::new(format!("Invalid GPU parameter: {}", msg))
+                ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::KernelNotFound(name) => CoreError::ComputationError(
-                ErrorContext::new(format!("GPU kernel not found: {}", name))
+                ErrorContext::new(format!("{name}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::SpecializationNotSupported => CoreError::NotImplementedError(
@@ -287,7 +296,7 @@ impl From<GpuError> for CoreError {
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::UnsupportedDataType(dtype) => CoreError::TypeError(
-                ErrorContext::new(format!("Unsupported GPU data type: {:?}", dtype))
+                ErrorContext::new(format!(":?{dtype}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::Other(msg) => CoreError::ComputationError(

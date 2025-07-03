@@ -349,8 +349,7 @@ impl JITManager {
             factory.create(expression, array_type_id)
         } else {
             Err(CoreError::JITError(ErrorContext::new(format!(
-                "No JIT factory supports array type: {:?}",
-                array_type_id
+                "No JIT factory supports array type: {array_type_id:?}"
             ))))
         }
     }

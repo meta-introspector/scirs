@@ -289,7 +289,7 @@ impl UltraThinkNumericalStabilityTester {
     /// Test edge case stability
     fn test_edge_case_stability<F, D, R>(
         &self,
-        function_name: &str,
+        _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<EdgeCaseStabilityResult>
@@ -315,7 +315,7 @@ impl UltraThinkNumericalStabilityTester {
     /// Analyze precision stability
     fn analyze_precision_stability<F, D, R>(
         &self,
-        function_name: &str,
+        _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<PrecisionStabilityResult>
@@ -347,7 +347,7 @@ impl UltraThinkNumericalStabilityTester {
     /// Detect catastrophic cancellation
     fn detect_catastrophic_cancellation<F, D, R>(
         &self,
-        function_name: &str,
+        _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<CancellationDetectionResult>
@@ -363,7 +363,7 @@ impl UltraThinkNumericalStabilityTester {
     /// Monitor overflow and underflow
     fn monitor_overflow_underflow<F, D, R>(
         &self,
-        function_name: &str,
+        _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<OverflowMonitoringResult>
@@ -379,7 +379,7 @@ impl UltraThinkNumericalStabilityTester {
     /// Analyze condition numbers
     fn analyze_condition_numbers<F, D, R>(
         &self,
-        function_name: &str,
+        _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<ConditionAnalysisResult>
@@ -395,7 +395,7 @@ impl UltraThinkNumericalStabilityTester {
     /// Test convergence stability
     fn test_convergence_stability<F, D, R>(
         &self,
-        function_name: &str,
+        _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<ConvergenceStabilityResult>
@@ -411,7 +411,7 @@ impl UltraThinkNumericalStabilityTester {
     /// Test Monte Carlo stability
     fn test_monte_carlo_stability<F, D, R>(
         &self,
-        function_name: &str,
+        _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<MonteCarloStabilityResult>
@@ -953,7 +953,7 @@ impl InvariantValidator {
 
     fn validate_basic_properties<F, D, R>(
         &self,
-        function_name: &str,
+        _function_name: &str,
         test_function: &F,
         test_data: &ArrayBase<D, Ix1>,
         result: &mut InvariantValidationResult,
@@ -996,10 +996,10 @@ impl InvariantValidator {
 
     fn validate_statistical_properties<F, D, R>(
         &self,
-        function_name: &str,
-        test_function: &F,
-        test_data: &ArrayBase<D, Ix1>,
-        result: &mut InvariantValidationResult,
+        _function_name: &str,
+        _test_function: &F,
+        _test_data: &ArrayBase<D, Ix1>,
+        _result: &mut InvariantValidationResult,
     ) -> StatsResult<()>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -1633,7 +1633,7 @@ impl EdgeCaseStabilityResult {
         }
     }
 
-    pub fn add_test_result<R>(&mut self, edge_case: EdgeCase<R>, result: EdgeCaseTestResult) {
+    pub fn add_test_result<R>(&mut self, _edge_case: EdgeCase<R>, result: EdgeCaseTestResult) {
         self.total_cases += 1;
         match result.result_status {
             EdgeCaseResultStatus::Success => self.passed_cases += 1,
@@ -2173,21 +2173,21 @@ where
 {
     let config = UltraThinkNumericalStabilityConfig::default();
     let tester = UltraThinkNumericalStabilityTester::new(config);
-    
+
     // Generate test data across multiple ranges
     let mut comprehensive_result = ComprehensiveStabilityResult::new(function_name.to_string());
-    
+
     for (min_val, max_val) in input_ranges {
         // Generate test data for this range
         let test_data = generate_stability_test_data(min_val, max_val, 1000);
-        
+
         // Run comprehensive stability testing
         let range_result = tester.comprehensive_stability_testing(
             function_name,
             test_function.clone(),
             &test_data,
         )?;
-        
+
         // Combine results (simplified - in practice would merge more intelligently)
         if comprehensive_result.edge_case_results.is_none() {
             comprehensive_result.edge_case_results = range_result.edge_case_results;
@@ -2196,71 +2196,73 @@ where
             comprehensive_result.precision_results = range_result.precision_results;
         }
     }
-    
+
     Ok(comprehensive_result)
 }
 
 /// Generate test data for numerical stability testing
 fn generate_stability_test_data(min_val: f64, max_val: f64, size: usize) -> Array1<f64> {
     use rand::{rngs::StdRng, Rng, SeedableRng};
-    
+
     let mut rng = StdRng::seed_from_u64(42);
     let mut data = Array1::zeros(size);
-    
+
     for i in 0..size {
         // Mix of different value types for comprehensive testing
         match i % 5 {
-            0 => data[i] = rng.gen_range(min_val..max_val), // Random in range
-            1 => data[i] = min_val,                         // Minimum value
-            2 => data[i] = max_val,                         // Maximum value
-            3 => data[i] = (min_val + max_val) / 2.0,      // Midpoint
-            4 => data[i] = rng.gen_range(min_val..max_val) * 1e-10, // Very small values
+            0 => data[i] = rng.random_range(min_val..max_val), // Random in range
+            1 => data[i] = min_val,                            // Minimum value
+            2 => data[i] = max_val,                            // Maximum value
+            3 => data[i] = (min_val + max_val) / 2.0,          // Midpoint
+            4 => data[i] = rng.random_range(min_val..max_val) * 1e-10, // Very small values
             _ => unreachable!(),
         }
     }
-    
+
     data
 }
 
 /// Test numerical stability of mean function specifically
 pub fn test_mean_stability() -> StatsResult<ComprehensiveStabilityResult> {
     use crate::descriptive::mean;
-    
+
     let mean_function = |data: &ArrayView1<f64>| mean(data);
-    
+
     let input_ranges = vec![
-        (-1e6, 1e6),        // Large numbers
-        (-1.0, 1.0),        // Normal range
-        (-1e-10, 1e-10),    // Very small numbers
-        (1e10, 1e11),       // Very large positive numbers
-        (-1e11, -1e10),     // Very large negative numbers
+        (-1e6, 1e6),     // Large numbers
+        (-1.0, 1.0),     // Normal range
+        (-1e-10, 1e-10), // Very small numbers
+        (1e10, 1e11),    // Very large positive numbers
+        (-1e11, -1e10),  // Very large negative numbers
     ];
-    
+
     test_statistical_function_stability("mean", mean_function, input_ranges)
 }
 
 /// Test numerical stability of variance function specifically
 pub fn test_variance_stability() -> StatsResult<ComprehensiveStabilityResult> {
     use crate::descriptive::var;
-    
+
     let variance_function = |data: &ArrayView1<f64>| var(data, 1);
-    
+
     let input_ranges = vec![
-        (-1e6, 1e6),        // Large numbers
-        (-1.0, 1.0),        // Normal range
-        (-1e-10, 1e-10),    // Very small numbers
-        (0.0, 1e-6),        // Small positive numbers
-        (1e6, 1e7),         // Large positive numbers
+        (-1e6, 1e6),     // Large numbers
+        (-1.0, 1.0),     // Normal range
+        (-1e-10, 1e-10), // Very small numbers
+        (0.0, 1e-6),     // Small positive numbers
+        (1e6, 1e7),      // Large positive numbers
     ];
-    
+
     test_statistical_function_stability("variance", variance_function, input_ranges)
 }
 
 /// Test numerical stability of correlation function specifically
 pub fn test_correlation_stability() -> StatsResult<ValidationReport> {
     use crate::correlation::pearson_r;
-    use crate::property_based_validation::{PropertyTestConfig, PropertyBasedValidator, CorrelationBounds};
-    
+    use crate::property_based_validation::{
+        CorrelationBounds, PropertyBasedValidator, PropertyTestConfig,
+    };
+
     // Use property-based testing for correlation stability
     let config = PropertyTestConfig {
         test_cases_per_property: 1000,
@@ -2270,46 +2272,49 @@ pub fn test_correlation_stability() -> StatsResult<ValidationReport> {
         test_cross_platform: true,
         test_numerical_stability: true,
     };
-    
+
     let mut validator = PropertyBasedValidator::new(config);
-    
+
     // Test correlation bounds property with various edge cases
     validator.test_property(CorrelationBounds)?;
-    
+
     Ok(validator.generate_validation_report())
 }
 
 /// Run comprehensive numerical stability tests for all core statistical functions
-pub fn run_comprehensive_statistical_stability_tests() -> StatsResult<HashMap<String, ComprehensiveStabilityResult>> {
+pub fn run_comprehensive_statistical_stability_tests(
+) -> StatsResult<HashMap<String, ComprehensiveStabilityResult>> {
     let mut results = HashMap::new();
-    
+
     // Test mean stability
     if let Ok(mean_result) = test_mean_stability() {
         results.insert("mean".to_string(), mean_result);
     }
-    
+
     // Test variance stability
     if let Ok(var_result) = test_variance_stability() {
         results.insert("variance".to_string(), var_result);
     }
-    
+
     // Additional statistical functions can be added here
-    
+
     Ok(results)
 }
 
 /// Quick numerical stability validation for CI/CD pipelines
 pub fn run_quick_stability_validation() -> StatsResult<bool> {
     let results = run_comprehensive_statistical_stability_tests()?;
-    
+
     // Check if all tests passed basic stability requirements
     let all_stable = results.values().all(|result| {
         // Simplified stability check - in practice would be more sophisticated
-        result.edge_case_results.as_ref()
+        result
+            .edge_case_results
+            .as_ref()
             .map(|edge_results| edge_results.critical_issues.is_empty())
             .unwrap_or(true)
     });
-    
+
     Ok(all_stable)
 }
 

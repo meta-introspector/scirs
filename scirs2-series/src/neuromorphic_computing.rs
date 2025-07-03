@@ -934,7 +934,7 @@ impl<F: Float + num_traits::FromPrimitive> Default for MemristorState<F> {
         Self {
             resistance,
             conductance: F::from(1.0).unwrap() / resistance, // 1/R
-            state: F::from(0.0).unwrap(),                     // Neutral state
+            state: F::from(0.0).unwrap(),                    // Neutral state
             params: MemristorParams::default(),
         }
     }
@@ -956,10 +956,10 @@ pub struct MemristorParams<F: Float> {
 impl<F: Float + num_traits::FromPrimitive> Default for MemristorParams<F> {
     fn default() -> Self {
         Self {
-            r_min: F::from(100.0).unwrap(),    // 100Ω minimum
-            r_max: F::from(10000.0).unwrap(),  // 10kΩ maximum  
-            alpha: F::from(0.1).unwrap(),      // Default state change rate
-            beta: F::from(1.0).unwrap(),       // Default nonlinearity
+            r_min: F::from(100.0).unwrap(),   // 100Ω minimum
+            r_max: F::from(10000.0).unwrap(), // 10kΩ maximum
+            alpha: F::from(0.1).unwrap(),     // Default state change rate
+            beta: F::from(1.0).unwrap(),      // Default nonlinearity
         }
     }
 }

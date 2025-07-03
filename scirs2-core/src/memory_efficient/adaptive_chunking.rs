@@ -431,7 +431,10 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                 }
             }
             n => {
-                decision_factors.push(format!("{}D array: Using default chunking strategy", n));
+                decision_factors.push(format!(
+                    "{n}D array: Using default chunking strategy",
+                    n = n
+                ));
             }
         }
 

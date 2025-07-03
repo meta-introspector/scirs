@@ -4,13 +4,10 @@
 //! following SciPy's stats module.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::{ErrorMessages, ErrorValidator};
+use crate::error_standardization::ErrorMessages;
 use ndarray::ArrayView1;
 use num_traits::{Float, NumCast, Signed};
-use scirs2_core::{
-    simd_ops::{AutoOptimizer, SimdUnifiedOps},
-    validation::{check_finite, check_not_empty, check_same_shape},
-};
+use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 
 /// Compute the arithmetic mean of a data set.
 ///

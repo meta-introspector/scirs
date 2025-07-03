@@ -416,8 +416,7 @@ where
                 Ok(Box::new(new_array))
             }
             _ => Err(CoreError::NotImplementedError(ErrorContext::new(format!(
-                "Conversion to {} precision not implemented",
-                precision
+                "Conversion to {precision} precision not implemented"
             )))),
         }
     }
@@ -456,8 +455,7 @@ where
         }
 
         Err(CoreError::NotImplementedError(ErrorContext::new(format!(
-            "Conversion to {} precision not implemented for GPU arrays",
-            precision
+            "Conversion to {precision} precision not implemented for GPU arrays"
         ))))
     }
 
@@ -496,8 +494,7 @@ where
     for array in arrays {
         if !array.supports_precision(precision) {
             return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "One or more arrays do not support {} precision",
-                precision
+                "One or more arrays do not support {precision} precision"
             ))));
         }
     }

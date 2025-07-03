@@ -10,7 +10,7 @@ use num_traits::Float;
 use rand::Rng;
 use std::marker::PhantomData;
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 
 /// Trait for differential privacy noise mechanisms
 pub trait NoiseMechanism<T: Float> {

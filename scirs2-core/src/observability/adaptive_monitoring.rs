@@ -962,7 +962,7 @@ impl AlertingSystem {
             ),
             rule_name: rule.name.clone(),
             severity: rule.severity,
-            message: format!("Alert triggered: {name}", name = rule.name),
+            message: format!("name: {}", rule.name),
             triggered_at: Instant::now(),
             acknowledged: false,
             resolved: false,
@@ -1699,12 +1699,7 @@ impl MetricsCollector {
             use std::process::Command;
             // Use tasklist to get memory usage of current process
             if let Ok(output) = Command::new("tasklist")
-                .args(&[
-                    "/fi",
-                    &format!("PID eq {pid}", pid = std::process::id()),
-                    "/fo",
-                    "CSV",
-                ])
+                .args(&["/fi", &format!("pid={}", std::process::id()), "/fo", "CSV"])
                 .output()
             {
                 if output.status.success() {
@@ -1731,7 +1726,7 @@ impl MetricsCollector {
                 .args(&[
                     "process",
                     "where",
-                    &format!("ProcessId={pid}", pid = std::process::id()),
+                    &format!("pid={}", std::process::id()),
                     "get",
                     "WorkingSetSize",
                     "/value",

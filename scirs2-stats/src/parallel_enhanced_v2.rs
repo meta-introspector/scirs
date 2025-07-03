@@ -10,9 +10,8 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::{num_threads, par_chunks, IntoParallelIterator, ParallelIterator};
-use scirs2_core::validation::{check_finite, check_not_empty};
+use scirs2_core::validation::check_not_empty;
 use std::sync::Arc;
-use std::time::Instant;
 
 /// Configuration for parallel operations
 #[derive(Debug, Clone)]

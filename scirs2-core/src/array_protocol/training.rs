@@ -350,8 +350,8 @@ impl Loss for MSELoss {
                 }
             }
             _ => Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "Unknown reduction: {}",
-                self.reduction
+                "Unknown reduction: {reduction}",
+                reduction = self.reduction
             )))),
         }
     }
@@ -389,8 +389,8 @@ impl Loss for MSELoss {
             }
             "sum" => Ok(grad),
             _ => Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "Unknown reduction: {}",
-                self.reduction
+                "Unknown reduction: {reduction}",
+                reduction = self.reduction
             )))),
         }
     }
@@ -461,8 +461,8 @@ impl Loss for CrossEntropyLoss {
                     Ok(Box::new(NdarrayWrapper::new(result)))
                 }
                 _ => Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                    "Unknown reduction: {}",
-                    self.reduction
+                    "Unknown reduction: {reduction}",
+                    reduction = self.reduction
                 )))),
             }
         } else {
@@ -501,8 +501,8 @@ impl Loss for CrossEntropyLoss {
             }
             "sum" => Ok(grad),
             _ => Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "Unknown reduction: {}",
-                self.reduction
+                "Unknown reduction: {reduction}",
+                reduction = self.reduction
             )))),
         }
     }
@@ -598,7 +598,7 @@ impl fmt::Display for Metrics {
         )?;
 
         if let Some(acc) = self.mean_accuracy() {
-            write!(f, ", accuracy = {:.4}", acc)?;
+            write!(f, ", accuracy = {acc:.4}")?;
         }
 
         Ok(())
@@ -664,7 +664,7 @@ impl TrainingCallback for ProgressCallback {
                 let duration = start.elapsed();
                 println!("{} - {}ms", metrics, duration.as_millis());
             } else {
-                println!("{}", metrics);
+                println!("{metrics}");
             }
         }
     }
@@ -684,7 +684,7 @@ impl TrainingCallback for ProgressCallback {
 
     fn on_train_start(&mut self, num_epochs: usize) {
         if self.verbose {
-            println!("Starting training for {} epochs", num_epochs);
+            println!("Starting training for {num_epochs} epochs");
         }
 
         self.train_start = Some(Instant::now());
@@ -700,7 +700,7 @@ impl TrainingCallback for ProgressCallback {
             }
 
             if let Some(acc) = metrics.mean_accuracy() {
-                println!("Final accuracy: {:.4}", acc);
+                println!("Final accuracy: {acc:.4}");
             }
         }
     }

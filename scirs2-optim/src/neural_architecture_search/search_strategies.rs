@@ -813,7 +813,7 @@ impl<T: Float + Default + Clone> ReinforcementLearningSearch<T> {
 
         Ok(OptimizerArchitecture {
             components: vec![OptimizerComponent {
-                component_type: component_config.component_type,
+                component_type: component_config.component_type.clone(),
                 hyperparameters,
                 connections: Vec::new(),
             }],

@@ -559,7 +559,11 @@ impl SnapshotDiff {
                     peak_prefix,
                     format_bytes(diff.peak_usage_delta.unsigned_abs())
                 ),
-                format!("{alloc_prefix}{delta}", delta = diff.allocation_count_delta)
+                format!(
+                    "{}{}",
+                    alloc_prefix,
+                    diff.allocation_count_delta.unsigned_abs()
+                )
             ));
         }
 

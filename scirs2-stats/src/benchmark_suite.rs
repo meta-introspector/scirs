@@ -309,12 +309,12 @@ impl BenchmarkSuite {
 
             // Benchmark variance calculation
             metrics.push(self.benchmark_function("variance", size, || {
-                crate::descriptive::var(&data.view(), 1)
+                crate::descriptive::var(&data.view(), 1, None)
             })?);
 
             // Benchmark standard deviation
             metrics.push(self.benchmark_function("std_dev", size, || {
-                crate::descriptive::std(&data.view(), 1)
+                crate::descriptive::std(&data.view(), 1, None)
             })?);
 
             // Benchmark SIMD variants if enabled

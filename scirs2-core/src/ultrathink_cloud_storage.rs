@@ -1407,16 +1407,12 @@ impl UltrathinkCloudStorageCoordinator {
     ) -> CoreResult<()> {
         let mut providers = self.providers.write().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire providers lock: {}",
-                e
+                "Failed to acquire providers lock: {e}"
             )))
         })?;
 
         providers.insert(id.clone(), provider);
-        println!(
-            "✅ Registered cloud storage provider: {provider}",
-            provider = id.0
-        );
+        println!("✅ Registered cloud storage provider: {}", id.0);
         Ok(())
     }
 
@@ -1443,15 +1439,14 @@ impl UltrathinkCloudStorageCoordinator {
         let response = {
             let providers = self.providers.read().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire providers lock: {}",
-                    e
+                    "Failed to acquire providers lock: {e}"
                 )))
             })?;
 
             let provider = providers.get(provider_id).ok_or_else(|| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Provider {} not found",
-                    provider_id.0
+                    "Provider {provider_id} not found",
+                    provider_id = provider_id.0
                 )))
             })?;
 
@@ -1511,15 +1506,14 @@ impl UltrathinkCloudStorageCoordinator {
     ) -> CoreResult<Box<dyn DataStream>> {
         let providers = self.providers.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire providers lock: {}",
-                e
+                "Failed to acquire providers lock: {e}"
             )))
         })?;
 
         let provider = providers.get(provider_id).ok_or_else(|| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Provider {} not found",
-                provider_id.0
+                "Provider {provider_id} not found",
+                provider_id = provider_id.0
             )))
         })?;
 
@@ -1538,8 +1532,7 @@ impl UltrathinkCloudStorageCoordinator {
     pub fn get_analytics(&self) -> CoreResult<CloudPerformanceAnalytics> {
         let analytics = self.analytics.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire analytics lock: {}",
-                e
+                "Failed to acquire analytics lock: {e}"
             )))
         })?;
 
@@ -1589,8 +1582,7 @@ impl UltrathinkCloudStorageCoordinator {
 
         let mut optimization_engine = self.optimization_engine.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire optimization engine lock: {}",
-                e
+                "Failed to acquire optimization engine lock: {e}"
             )))
         })?;
 
@@ -1600,8 +1592,7 @@ impl UltrathinkCloudStorageCoordinator {
     fn check_cache(&self, key: &str) -> CoreResult<Option<Vec<u8>>> {
         let cache_system = self.cache_system.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire cache system lock: {}",
-                e
+                "Failed to acquire cache system lock: {e}"
             )))
         })?;
 
@@ -1646,15 +1637,14 @@ impl UltrathinkCloudStorageCoordinator {
     ) -> CoreResult<DownloadResponse> {
         let providers = self.providers.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire providers lock: {}",
-                e
+                "Failed to acquire providers lock: {e}"
             )))
         })?;
 
         let provider = providers.get(provider_id).ok_or_else(|| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Provider {} not found",
-                provider_id.0
+                "Provider {provider_id} not found",
+                provider_id = provider_id.0
             )))
         })?;
 
@@ -3003,7 +2993,7 @@ impl DataOptimizationEngine {
             // Record performance metrics
             let compression_time = start_time.elapsed();
             self.performance_history.push(OptimizationPerformance {
-                strategy: format!("{:?}", selected_algo),
+                strategy: format!("{selected_algo:?}"),
                 original_size: data.len(),
                 optimized_size: compressed_data.len(),
                 processing_time: compression_time,

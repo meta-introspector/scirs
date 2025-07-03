@@ -265,7 +265,7 @@ impl PerformanceHints {
                 // ARMv8 data cache clean and invalidate
                 std::arch::asm!(
                     "dc civac, {}",
-                    in(reg) ptr,
+                    in(reg) _ptr,
                     options(nostack)
                 );
             }
@@ -498,17 +498,17 @@ impl StrategySelector {
 
     /// Detect if running on ARM Neoverse or newer server architectures
     fn is_neoverse_or_newer() -> bool {
-        is_neoverse_or_newer()
+        crate::performance_optimization::is_neoverse_or_newer()
     }
 
     /// Detect if running on AMD Zen4 or newer architectures
     fn is_zen4_or_newer() -> bool {
-        is_zen4_or_newer()
+        crate::performance_optimization::is_zen4_or_newer()
     }
 
     /// Detect if running on Intel Golden Cove (12th gen) or newer
     fn is_intel_golden_cove_or_newer() -> bool {
-        is_intel_golden_cove_or_newer()
+        crate::performance_optimization::is_intel_golden_cove_or_newer()
     }
 }
 
@@ -601,14 +601,8 @@ impl AdaptiveOptimizer {
     fn detect_cache_line_size() -> usize {
         #[cfg(target_arch = "x86_64")]
         {
-            // Advanced x86_64 detection with modern architectures
-            if is_zen4_or_newer() {
-                64 // AMD Zen4+ optimized
-            } else if is_intel_golden_cove_or_newer() {
-                64 // Intel 12th gen+ optimized
-            } else {
-                64 // Standard x86_64
-            }
+            // All modern x86_64 architectures use 64-byte cache lines
+            64
         }
         #[cfg(target_arch = "aarch64")]
         {
@@ -803,12 +797,12 @@ impl AdaptiveOptimizer {
 
     /// Detect if running on AMD Zen4 or newer architectures
     fn is_zen4_or_newer() -> bool {
-        is_zen4_or_newer()
+        crate::performance_optimization::is_zen4_or_newer()
     }
 
     /// Detect if running on Intel Golden Cove (12th gen) or newer
     fn is_intel_golden_cove_or_newer() -> bool {
-        is_intel_golden_cove_or_newer()
+        crate::performance_optimization::is_intel_golden_cove_or_newer()
     }
 }
 
@@ -1511,7 +1505,7 @@ pub mod benchmarking {
                 .map(|(strategy, _)| *strategy);
 
             if let Some(strategy) = best_strategy {
-                recommendations.push(format!("Best overall strategy: {:?}", strategy));
+                recommendations.push(format!("{strategy:?}"));
             }
 
             // Analyze size-dependent recommendations
@@ -1529,8 +1523,7 @@ pub mod benchmarking {
 
                 if let Some(strategy) = best_large_strategy {
                     recommendations.push(format!(
-                        "For large datasets (>{}): Use {:?}",
-                        large_size_threshold, strategy
+                        "For large datasets (>{large_size_threshold}): Use {strategy:?}"
                     ));
                 }
             }
@@ -1546,8 +1539,7 @@ pub mod benchmarking {
             if let Some((strategy, score)) = most_efficient {
                 if score > 0.8 {
                     recommendations.push(format!(
-                        "Most memory-efficient strategy: {:?} (efficiency: {:.2})",
-                        strategy, score
+                        "Most memory-efficient strategy: {strategy:?} (efficiency: {score:.2})"
                     ));
                 }
             }
@@ -3033,24 +3025,23 @@ pub mod ultrathink_optimization {
         fn from(err: OptimizationError) -> Self {
             use crate::error::{CoreError, ErrorContext};
             match err {
-                OptimizationError::InsufficientData(msg) => CoreError::ComputationError(
-                    ErrorContext::new(format!("Insufficient optimization data: {}", msg)),
-                ),
-                OptimizationError::PredictionFailed(msg) => CoreError::ComputationError(
-                    ErrorContext::new(format!("Optimization prediction failed: {}", msg)),
-                ),
-                OptimizationError::ClassificationFailed(msg) => CoreError::ComputationError(
-                    ErrorContext::new(format!("Strategy classification failed: {}", msg)),
-                ),
+                OptimizationError::InsufficientData(msg) => {
+                    CoreError::ComputationError(ErrorContext::new(msg.to_string()))
+                }
+                OptimizationError::PredictionFailed(msg) => {
+                    CoreError::ComputationError(ErrorContext::new(msg.to_string()))
+                }
+                OptimizationError::ClassificationFailed(msg) => {
+                    CoreError::ComputationError(ErrorContext::new(msg.to_string()))
+                }
                 OptimizationError::HyperparameterOptimizationFailed(msg) => {
                     CoreError::ComputationError(ErrorContext::new(format!(
-                        "Hyperparameter optimization failed: {}",
-                        msg
+                        "Hyperparameter optimization failed: {msg}"
                     )))
                 }
-                OptimizationError::ContextAnalysisFailed(msg) => CoreError::ComputationError(
-                    ErrorContext::new(format!("Context analysis failed: {}", msg)),
-                ),
+                OptimizationError::ContextAnalysisFailed(msg) => {
+                    CoreError::ComputationError(ErrorContext::new(msg.to_string()))
+                }
             }
         }
     }
@@ -3804,6 +3795,15 @@ mod tests {
             OptimizationStrategy::Parallel
                 | OptimizationStrategy::Simd
                 | OptimizationStrategy::Scalar
+                | OptimizationStrategy::Gpu
+                | OptimizationStrategy::Hybrid
+                | OptimizationStrategy::CacheOptimized
+                | OptimizationStrategy::MemoryBound
+                | OptimizationStrategy::ComputeBound
+                | OptimizationStrategy::ModernArchOptimized
+                | OptimizationStrategy::VectorOptimized
+                | OptimizationStrategy::EnergyEfficient
+                | OptimizationStrategy::HighThroughput
         ));
 
         // Test performance recording
@@ -3816,6 +3816,15 @@ mod tests {
             OptimizationStrategy::Parallel
                 | OptimizationStrategy::Simd
                 | OptimizationStrategy::Scalar
+                | OptimizationStrategy::Gpu
+                | OptimizationStrategy::Hybrid
+                | OptimizationStrategy::CacheOptimized
+                | OptimizationStrategy::MemoryBound
+                | OptimizationStrategy::ComputeBound
+                | OptimizationStrategy::ModernArchOptimized
+                | OptimizationStrategy::VectorOptimized
+                | OptimizationStrategy::EnergyEfficient
+                | OptimizationStrategy::HighThroughput
         ));
 
         // Test metrics retrieval
@@ -3839,7 +3848,7 @@ mod tests {
 
         for strategy in &strategies {
             // Test Debug formatting
-            assert!(!format!("{:?}", strategy).is_empty());
+            assert!(!format!("{strategy:?}").is_empty());
 
             // Test equality
             assert_eq!(*strategy, *strategy);
@@ -3890,7 +3899,7 @@ mod tests {
         assert!(advice.memory_allocation_hint.is_some());
 
         // Test Debug formatting
-        assert!(!format!("{:?}", advice).is_empty());
+        assert!(!format!("{advice:?}").is_empty());
     }
 
     #[test]
@@ -4053,7 +4062,7 @@ mod tests {
 
         for bottleneck_type in &bottleneck_types {
             // Test Debug formatting
-            assert!(!format!("{:?}", bottleneck_type).is_empty());
+            assert!(!format!("{bottleneck_type:?}").is_empty());
 
             // Test equality
             assert_eq!(*bottleneck_type, *bottleneck_type);

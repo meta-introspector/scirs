@@ -130,7 +130,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
 
         // Metropolis acceptance step
         let log_alpha = -(final_hamiltonian - initial_hamiltonian);
-        let u: f64 = rng.random();
+        let u: f64 = rng.gen();
 
         self.n_proposed += 1;
 

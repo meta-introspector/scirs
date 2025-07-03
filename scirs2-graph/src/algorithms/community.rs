@@ -151,7 +151,7 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
 /// ```
 pub fn louvain_communities_result<N, E, Ix>(graph: &Graph<N, E, Ix>) -> CommunityResult<N>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -169,7 +169,7 @@ where
 )]
 pub fn louvain_communities<N, E, Ix>(graph: &Graph<N, E, Ix>) -> CommunityStructure<N>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -179,7 +179,7 @@ where
 /// Internal implementation of Louvain method
 fn louvain_communities_legacy<N, E, Ix>(graph: &Graph<N, E, Ix>) -> CommunityStructure<N>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -312,7 +312,7 @@ fn calculate_modularity<N, E, Ix>(
     m: f64,
 ) -> f64
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -546,7 +546,7 @@ where
 /// O(n) for storing degree information and community assignments.
 pub fn modularity<N, E, Ix>(graph: &Graph<N, E, Ix>, communities: &HashMap<N, usize>) -> f64
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -1045,7 +1045,7 @@ fn build_transition_matrix<N, E, Ix>(
     nodes: &[N],
 ) -> (Vec<Vec<f64>>, Vec<f64>)
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -1155,7 +1155,7 @@ fn calculate_map_equation<N, E, Ix>(
     nodes: &[N],
 ) -> f64
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -1542,7 +1542,7 @@ fn are_communities_connected<N, E, Ix>(
     comm2: usize,
 ) -> bool
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -1570,7 +1570,7 @@ fn calculate_single_linkage<N, E, Ix>(
     comm2: usize,
 ) -> f64
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -1604,7 +1604,7 @@ fn calculate_complete_linkage<N, E, Ix>(
     comm2: usize,
 ) -> f64
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -1640,7 +1640,7 @@ fn calculate_average_linkage<N, E, Ix>(
     comm2: usize,
 ) -> f64
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {

@@ -299,7 +299,7 @@ impl TfidfVectorizer {
     /// Transform documents to TF-IDF vectors
     pub fn transform(&self, documents: &[String]) -> Result<Array2<f64>> {
         // Get count vectors
-        let mut x = self.count_vectorizer.transform(documents)?
+        let mut x = self.count_vectorizer.transform(documents)?;
 
         // Apply sublinear TF scaling
         if self.sublinear_tf {

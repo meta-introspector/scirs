@@ -197,7 +197,7 @@ pub fn memoize_example() {
     // Retrieve a value
     let value = cache.get(&"key".to_string());
 
-    println!("Value from cache: {:?}", value);
+    println!("Value from cache: {value:?}");
 }
 
 /// Compute Fibonacci numbers with memoization

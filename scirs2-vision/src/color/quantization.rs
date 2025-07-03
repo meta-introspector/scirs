@@ -6,7 +6,7 @@
 use crate::error::Result;
 use image::{DynamicImage, Rgb, RgbImage};
 use rand::prelude::*;
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 
@@ -167,7 +167,7 @@ fn initialize_centers(colors: &[[f32; 3]], params: &KMeansParams) -> Vec<[f32; 3
 
 /// Random initialization
 fn initialize_random(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let mut centers = Vec::new();
     let mut indices: Vec<_> = (0..colors.len()).collect();
     indices.shuffle(&mut rng);
@@ -179,11 +179,11 @@ fn initialize_random(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
 
 /// K-means++ initialization
 fn initialize_kmeans_plus_plus(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let mut centers = Vec::new();
 
     // Choose first center randomly
-    centers.push(colors[rng.gen_range(0..colors.len())]);
+    centers.push(colors[rng.random_range(0..colors.len())]);
 
     // Choose remaining centers
     for _ in 1..k {
@@ -204,7 +204,7 @@ fn initialize_kmeans_plus_plus(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
         }
 
         // Choose next center with probability proportional to squared distance
-        let mut threshold = rng.gen::<f32>() * sum;
+        let mut threshold = rng.random::<f32>() * sum;
         let mut chosen = 0;
 
         for (i, &dist) in distances.iter().enumerate() {
@@ -242,9 +242,9 @@ fn initialize_frequency(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
     }
 
     // Fill remaining with random if needed
-    let mut rng = thread_rng();
+    let mut rng = rng();
     while centers.len() < k {
-        centers.push(colors[rng.gen_range(0..colors.len())]);
+        centers.push(colors[rng.random_range(0..colors.len())]);
     }
 
     centers

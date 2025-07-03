@@ -17,7 +17,7 @@
 
 use crate::error::Result;
 use ndarray::{Array1, Array2};
-use rand::Rng;
+use rand::{rng, Rng};
 
 /// Configuration for RANSAC algorithm
 #[derive(Debug, Clone)]
@@ -106,7 +106,7 @@ pub fn run_ransac<M: RansacModel>(
     }
 
     // Create RNG (using default generator since we don't need precise control for this application)
-    let mut rng = rand::rng();
+    let mut rng = rng();
 
     let n_points = data.len();
     let min_samples = M::min_samples();
@@ -456,7 +456,7 @@ impl Homography {
             let norm = v.iter().map(|&x| x * x).sum::<f64>().sqrt();
             if norm < 1e-10 {
                 // If we get a zero vector, restart with random
-                let mut rng = rand::rng();
+                let mut rng = rng();
                 for i in 0..n {
                     v[i] = rng.random::<f64>();
                 }

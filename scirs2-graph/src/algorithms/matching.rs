@@ -33,7 +33,7 @@ pub fn maximum_bipartite_matching<N, E, Ix>(
     coloring: &HashMap<N, u8>,
 ) -> BipartiteMatching<N>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -90,7 +90,7 @@ fn augment_path<N, E, Ix>(
     coloring: &HashMap<N, u8>,
 ) -> bool
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {

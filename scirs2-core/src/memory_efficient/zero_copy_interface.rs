@@ -566,7 +566,7 @@ impl ZeroCopyInterface {
         } else {
             self.update_exchange_stats(false);
             Err(CoreError::ValidationError(
-                ErrorContext::new(format!("No data found with ID {}", id))
+                ErrorContext::new(format!("{id}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ))
         }

@@ -13,7 +13,7 @@
 //! - Detailed reporting and visualization
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

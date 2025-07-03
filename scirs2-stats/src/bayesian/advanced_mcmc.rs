@@ -423,8 +423,8 @@ impl NoUTurnSampler {
         let mut momentum = Array1::zeros(ndim);
         for i in 0..ndim {
             // Simplified normal sampling using Box-Muller
-            let u1: f64 = rng.random();
-            let u2: f64 = rng.random();
+            let u1: f64 = rng.gen();
+            let u2: f64 = rng.gen();
             momentum[i] = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
         }
         momentum
@@ -623,8 +623,8 @@ impl AdaptiveMetropolis {
         // Sample from N(0, I)
         let mut z = Array1::zeros(ndim);
         for i in 0..ndim {
-            let u1: f64 = rng.random();
-            let u2: f64 = rng.random();
+            let u1: f64 = rng.gen();
+            let u2: f64 = rng.gen();
             z[i] = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
         }
 
@@ -818,8 +818,8 @@ impl ParallelTempering {
         let mut proposal = current.clone();
 
         for i in 0..ndim {
-            let u1: f64 = rng.random();
-            let u2: f64 = rng.random();
+            let u1: f64 = rng.gen();
+            let u2: f64 = rng.gen();
             let normal_sample = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             proposal[i] += self.step_size * normal_sample;
         }

@@ -355,7 +355,7 @@ impl UltrathinkMemoryProfiler {
         algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
     ) -> Result<(T, MemoryExecutionProfile)>
     where
-        N: Node + Clone + std::hash::Hash + Eq,
+        N: Node + Clone + std::hash::Hash + Eq + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -424,7 +424,7 @@ impl UltrathinkMemoryProfiler {
     /// Estimate memory usage of a graph
     fn estimate_graph_memory_usage<N, E, Ix>(&self, graph: &Graph<N, E, Ix>) -> usize
     where
-        N: Node,
+        N: Node + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {

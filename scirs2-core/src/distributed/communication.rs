@@ -52,10 +52,7 @@ impl CommunicationEndpoint {
     /// Send a message to another node
     pub fn send_message(&self, message: DistributedMessage) -> CoreResult<()> {
         self.sender.send(message).map_err(|e| {
-            CoreError::CommunicationError(ErrorContext::new(format!(
-                "Failed to send message: {}",
-                e
-            )))
+            CoreError::CommunicationError(ErrorContext::new(format!("Failed to send message: {e}")))
         })?;
         Ok(())
     }
@@ -160,7 +157,7 @@ impl HeartbeatHandler {
 impl MessageHandler for HeartbeatHandler {
     fn handle(&self, message: &DistributedMessage) -> CoreResult<()> {
         if let DistributedMessage::Heartbeat { node_id, timestamp } = message {
-            println!("Received heartbeat from {} at {}", node_id, timestamp);
+            println!("Received heartbeat from {node_id} at {timestamp}");
         }
         Ok(())
     }
@@ -201,8 +198,7 @@ impl CommunicationManager {
             endpoint.send_message(message)?;
         } else {
             return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "Unknown node: {}",
-                node_id
+                "Unknown node: {node_id}"
             ))));
         }
         Ok(())

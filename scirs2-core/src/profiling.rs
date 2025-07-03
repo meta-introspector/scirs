@@ -771,7 +771,7 @@ pub mod advanced {
             };
 
             if self.self_time.as_nanos() > 0 {
-                lines.push(format!("{} {}", current_stack, self.self_time.as_nanos()));
+                lines.push(format!("{current_stack} {}", self.self_time.as_nanos()));
             }
 
             for child in self.children.values() {
@@ -2015,19 +2015,16 @@ pub mod comprehensive {
             let report = self.generate_report();
 
             // Export text report
-            std::fs::write(format!("{}_report.txt", base_path), report.to_text_format())?;
+            std::fs::write(format!("{base_path}_report.txt"), report.to_text_format())?;
 
             // Export JSON report
-            std::fs::write(
-                format!("{}_report.json", base_path),
-                report.to_json_format(),
-            )?;
+            std::fs::write(format!("{base_path}_report.json"), report.to_json_format())?;
 
             // Export flame graph if available
             if let Some(ref flame_graph) = report.flame_graph {
                 let svg_generator = SvgFlameGraphGenerator::new(self.config.svg_config.clone());
                 svg_generator
-                    .export_to_file(flame_graph, &format!("{}_flamegraph.svg", base_path))?;
+                    .export_to_file(flame_graph, &format!("{base_path}_flamegraph.svg"))?;
 
                 // Export enhanced flame graph with system metrics
                 let enhanced = EnhancedFlameGraph {
@@ -2050,7 +2047,7 @@ pub mod comprehensive {
                         .collect(),
                     total_duration: self.session_start.elapsed(),
                 };
-                enhanced.export_enhanced_svg(&format!("{}_enhanced_flamegraph.svg", base_path))?;
+                enhanced.export_enhanced_svg(&format!("{base_path}_enhanced_flamegraph.svg"))?;
             }
 
             Ok(())

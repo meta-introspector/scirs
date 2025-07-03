@@ -8,8 +8,7 @@
 use crate::{
     corrcoef,
     correlation_parallel_enhanced::{
-        batch_correlations_parallel, corrcoef_parallel_enhanced, pearson_r_simd_enhanced,
-        ParallelCorrelationConfig,
+        batch_correlations_parallel, corrcoef_parallel_enhanced, ParallelCorrelationConfig,
     },
     // Standard functions for comparison
     descriptive::{kurtosis, mean, moment, skew, var},
@@ -18,10 +17,10 @@ use crate::{
         corrcoef_memory_aware, AdaptiveMemoryManager as AdvancedMemoryManager, MemoryConstraints,
     },
     // SIMD functions
-    moments_simd::{kurtosis_simd, moment_simd, moments_batch_simd, skewness_simd},
+    moments_simd::{kurtosis_simd, moments_batch_simd, skewness_simd},
     pearson_r,
 };
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{Array1, Array2};
 
 /// Test data generator for property-based tests
 #[derive(Clone, Debug)]

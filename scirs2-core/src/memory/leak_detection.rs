@@ -770,7 +770,7 @@ impl LeakDetector {
 
         let mut leaks_by_type = HashMap::new();
         for leak in leaks {
-            let type_name = format!("{:?}", leak.leak_type);
+            let type_name = format!("{0:?}", leak.leak_type);
             *leaks_by_type.entry(type_name).or_insert(0) += 1;
         }
 

@@ -55,7 +55,7 @@ impl ResourceManager {
 
         thread::spawn(move || loop {
             if let Err(e) = Self::monitoring_loop(&monitor, &policies, &tuner) {
-                eprintln!("Resource monitoring error: {:?}", e);
+                eprintln!("Resource monitoring error: {e:?}");
             }
             thread::sleep(Duration::from_secs(10));
         });
@@ -66,7 +66,7 @@ impl ResourceManager {
 
         thread::spawn(move || loop {
             if let Err(e) = Self::tuning_loop(&tuner_clone, &monitor_clone) {
-                eprintln!("Auto-tuning error: {:?}", e);
+                eprintln!("Auto-tuning error: {e:?}");
             }
             thread::sleep(Duration::from_secs(30));
         });

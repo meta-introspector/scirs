@@ -116,6 +116,7 @@ pub mod lombscargle_scipy_validation;
 pub mod lombscargle_simd;
 pub mod lombscargle_ultra_validation;
 pub mod lombscargle_ultrathink_enhanced;
+pub mod lombscargle_ultrathink_enhanced_validation;
 pub mod lombscargle_validation;
 pub mod lti;
 pub mod lti_analysis_enhanced;
@@ -298,9 +299,9 @@ pub use lombscargle_ultrathink_enhanced::{
 
 // Ultra-enhanced Lomb-Scargle validation
 pub use lombscargle_ultrathink_enhanced_validation::{
-    run_ultra_enhanced_lombscargle_validation, generate_ultra_enhanced_validation_report,
-    UltraEnhancedLombScargleValidationResult, LombScargleAccuracyValidation,
-    StatisticalRobustnessMetrics, EdgeCaseValidationMetrics,
+    generate_ultra_enhanced_validation_report, run_ultra_enhanced_lombscargle_validation,
+    EdgeCaseValidationMetrics, LombScargleAccuracyValidation, StatisticalRobustnessMetrics,
+    UltraEnhancedLombScargleValidationResult,
 };
 
 // Advanced Edge Case Validation for Lomb-Scargle

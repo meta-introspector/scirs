@@ -44,7 +44,7 @@ impl DeviceType {
     pub fn name(&self) -> String {
         match self {
             DeviceType::Cpu => "CPU".to_string(),
-            DeviceType::Gpu(backend) => format!("GPU ({})", backend),
+            DeviceType::Gpu(backend) => format!("GPU ({backend})", backend = backend),
             DeviceType::Tpu => "TPU".to_string(),
         }
     }
@@ -333,7 +333,7 @@ impl DeviceMemoryManager {
         // Check if the device is available
         if !self.is_device_available(device) {
             return Err(CoreError::DeviceError(
-                ErrorContext::new(format!("Device {} is not available", device))
+                ErrorContext::new(format!("Device {device} is not available", device = device))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
@@ -428,7 +428,7 @@ impl DeviceMemoryManager {
         }
 
         Err(CoreError::DeviceError(
-            ErrorContext::new(format!("Unsupported device type: {}", device))
+            ErrorContext::new(format!("{device}"))
                 .with_location(ErrorLocation::new(file!(), line!())),
         ))
     }
@@ -469,7 +469,7 @@ impl DeviceMemoryManager {
                 // Reshape the data to match the original array shape
                 return Array::from_shape_vec(device_array.shape.clone(), data).map_err(|e| {
                     CoreError::DeviceError(
-                        ErrorContext::new(format!("Failed to reshape array: {}", e))
+                        ErrorContext::new(format!("{e}"))
                             .with_location(ErrorLocation::new(file!(), line!())),
                     )
                 });
@@ -1094,7 +1094,7 @@ impl CrossDeviceManager {
         // Check if the device is available
         if !self.is_device_available(device) {
             return Err(CoreError::DeviceError(
-                ErrorContext::new(format!("Device {} is not available", device))
+                ErrorContext::new(format!("Device {device} is not available", device = device))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
@@ -1195,7 +1195,7 @@ impl CrossDeviceManager {
         // Check if the device is available
         if !self.is_device_available(device) {
             return Err(CoreError::DeviceError(
-                ErrorContext::new(format!("Device {} is not available", device))
+                ErrorContext::new(format!("Device {device} is not available", device = device))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }

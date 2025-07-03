@@ -198,9 +198,11 @@ where
             // For undirected graphs, add the reverse edge only if it doesn't already exist
             if !directed && row != col {
                 // Check if the reverse edge already exists in the matrix
-                let reverse_exists = row_indices.iter().zip(col_indices.iter())
+                let reverse_exists = row_indices
+                    .iter()
+                    .zip(col_indices.iter())
                     .any(|(r, c)| *r == col && *c == row);
-                
+
                 if !reverse_exists {
                     adj_list[col].push((row, weight));
                 }

@@ -339,7 +339,7 @@ pub fn make_hodlr_kriging<
 ///
 /// This function selects an appropriate approximation method based on
 /// the size of the dataset, balancing accuracy and computational efficiency.
-/// 
+///
 /// The selection strategy is:
 /// - < 500 points: Local kriging (most accurate for small datasets)
 /// - 500-5,000 points: Fixed rank with moderate rank (good balance)
@@ -393,16 +393,16 @@ pub fn select_approximation_method(n_points: usize) -> FastKrigingMethod {
 pub struct KrigingPerformanceStats {
     /// Total time taken for fitting (milliseconds)
     pub fit_time_ms: f64,
-    
+
     /// Average time per prediction (milliseconds)
     pub predict_time_ms: f64,
-    
+
     /// Number of data points
     pub n_points: usize,
-    
+
     /// Number of dimensions
     pub n_dims: usize,
-    
+
     /// Approximation method used
     pub method: FastKrigingMethod,
 }
@@ -473,10 +473,10 @@ pub fn benchmark_methods<
     length_scale: F,
 ) -> Vec<KrigingPerformanceStats> {
     use std::time::Instant;
-    
+
     let n_points = points.shape()[0];
     let n_dims = points.shape()[1];
-    
+
     // Methods to benchmark
     let methods = vec![
         FastKrigingMethod::Local,
@@ -484,28 +484,30 @@ pub fn benchmark_methods<
         FastKrigingMethod::Tapering(3.0),
         FastKrigingMethod::HODLR(32),
     ];
-    
+
     // Create length scales array with isotropic value
     let length_scales = Array1::from_elem(n_dims, length_scale);
-    
+
     // Create a sample of query points for prediction
     let n_query = std::cmp::min(100, n_points / 10);
     let mut query_points = Array2::zeros((n_query, n_dims));
-    
+
     // Use a simple strategy to sample query points from the original dataset
     let stride = n_points / n_query;
     for i in 0..n_query {
         let idx = i * stride;
-        query_points.slice_mut(ndarray::s![i, ..]).assign(&points.slice(ndarray::s![idx, ..]));
+        query_points
+            .slice_mut(ndarray::s![i, ..])
+            .assign(&points.slice(ndarray::s![idx, ..]));
     }
-    
+
     // Track performance
     let mut stats = Vec::new();
-    
+
     for method in methods {
         // Build model and track time
         let start = Instant::now();
-        
+
         let model_result = FastKrigingBuilder::<F>::new()
             .points(points.to_owned())
             .values(values.to_owned())
@@ -513,17 +515,17 @@ pub fn benchmark_methods<
             .length_scales(length_scales.clone())
             .approximation_method(method)
             .build();
-            
+
         let fit_time = start.elapsed().as_secs_f64() * 1000.0;
-        
+
         if let Ok(model) = model_result {
             // Predict and track time
             let start = Instant::now();
-            
+
             let _ = model.predict(&query_points.view());
-            
+
             let predict_time = start.elapsed().as_secs_f64() * 1000.0 / n_query as f64;
-            
+
             stats.push(KrigingPerformanceStats {
                 fit_time_ms: fit_time,
                 predict_time_ms: predict_time,
@@ -533,6 +535,6 @@ pub fn benchmark_methods<
             });
         }
     }
-    
+
     stats
 }

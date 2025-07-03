@@ -75,7 +75,7 @@ where
 /// * The chromatic number if found within max_colors, None otherwise
 pub fn chromatic_number<N, E, Ix>(graph: &Graph<N, E, Ix>, max_colors: usize) -> Option<usize>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -90,7 +90,7 @@ where
 /// Helper function to check if a graph can be colored with k colors
 fn can_color_with_k_colors<N, E, Ix>(graph: &Graph<N, E, Ix>, k: usize) -> bool
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -105,7 +105,7 @@ where
         k: usize,
     ) -> bool
     where
-        N: Node,
+        N: Node + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {

@@ -290,7 +290,7 @@ impl TaskHandle {
 
             if result.1.timed_out() {
                 return Err(CoreError::TimeoutError(
-                    ErrorContext::new(format!("Timeout waiting for task {}", self.id))
+                    ErrorContext::new(format!("{}", self.id))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 ));
             }
@@ -1360,7 +1360,7 @@ where
         for (i, item) in self.items.into_iter().enumerate() {
             let func = self.func.clone();
             let results_clone = results.clone();
-            let task_name = format!("{}-{}", self.name, i);
+            let task_name = format!("{}_{}", self.name, i);
             let priority = self.priority;
 
             // Create a closure with moved ownership of item
@@ -1548,7 +1548,7 @@ where
         // Convert back to array
         let result_array = ndarray::Array::from_shape_vec(shape, results).map_err(|e| {
             CoreError::DimensionError(
-                ErrorContext::new(format!("Failed to reshape results: {}", e))
+                ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;

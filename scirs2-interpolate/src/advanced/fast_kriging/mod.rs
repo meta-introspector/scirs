@@ -38,13 +38,13 @@ where
 {
     /// Predicted values at query points
     pub value: Array1<F>,
-    
+
     /// Prediction variances at query points
     pub variance: Array1<F>,
-    
+
     /// Approximation method used
     pub method: FastKrigingMethod,
-    
+
     /// Computation time in milliseconds (if measured)
     pub computation_time_ms: Option<f64>,
 }
@@ -88,12 +88,13 @@ where
 
         // Approximate z-score for normal distribution
         let z_score = F::from_f64(match confidence_level {
-            level if level > 0.99 => 2.576,  // 99%
-            level if level > 0.95 => 1.96,   // 95%
-            level if level > 0.90 => 1.645,  // 90%
-            level if level > 0.80 => 1.282,  // 80%
-            _ => 1.96,  // Default to 95%
-        }).unwrap();
+            level if level > 0.99 => 2.576, // 99%
+            level if level > 0.95 => 1.96,  // 95%
+            level if level > 0.90 => 1.645, // 90%
+            level if level > 0.80 => 1.282, // 80%
+            _ => 1.96,                      // Default to 95%
+        })
+        .unwrap();
 
         let std_devs = self.standard_deviations();
         let mut intervals = Array2::zeros((self.len(), 2));
@@ -109,15 +110,15 @@ where
 }
 
 // Import submodules
+pub mod acceleration;
+pub mod covariance;
 pub mod ordinary;
 pub mod universal;
 pub mod variogram;
-pub mod covariance;
-pub mod acceleration;
 
 // Re-export public items from submodules
 pub use acceleration::*;
-pub use covariance::*; 
+pub use covariance::*;
 pub use ordinary::*;
 pub use universal::*;
 pub use variogram::*;
@@ -340,8 +341,19 @@ where
 // Base implementation
 impl<F> FastKriging<F>
 where
-    F: Float + FromPrimitive + Debug + Display + Add<Output = F> + Sub<Output = F> + Mul<Output = F> + Div<Output = F>
-        + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign + std::ops::RemAssign
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Add<Output = F>
+        + Sub<Output = F>
+        + Mul<Output = F>
+        + Div<Output = F>
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign
+        + std::ops::RemAssign
         + 'static,
 {
     /// Create a new FastKriging instance from a builder
@@ -351,7 +363,7 @@ where
     pub(crate) fn from_builder(builder: FastKrigingBuilder<F>) -> InterpolateResult<Self> {
         let points = builder.points.ok_or(InterpolateError::MissingPoints)?;
         let values = builder.values.ok_or(InterpolateError::MissingValues)?;
-        
+
         if points.nrows() != values.len() {
             return Err(InterpolateError::DimensionMismatch(
                 "Number of points must match number of values".to_string(),
@@ -361,7 +373,9 @@ where
         // Create anisotropic covariance
         let anisotropic_cov = AnisotropicCovariance::new(
             builder.cov_fn,
-            builder.length_scales.unwrap_or_else(|| Array1::from_elem(points.ncols(), F::one())),
+            builder
+                .length_scales
+                .unwrap_or_else(|| Array1::from_elem(points.ncols(), F::one())),
             builder.sigma_sq,
             builder.nugget,
         );
@@ -431,7 +445,10 @@ where
     }
 
     /// Predict values at query points
-    pub fn predict(&self, query_points: &ArrayView2<F>) -> InterpolateResult<FastPredictionResult<F>> {
+    pub fn predict(
+        &self,
+        query_points: &ArrayView2<F>,
+    ) -> InterpolateResult<FastPredictionResult<F>> {
         if query_points.ncols() != self.points.ncols() {
             return Err(InterpolateError::DimensionMismatch(
                 "Query points must have same dimensionality as training points".to_string(),
@@ -588,8 +605,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{Array1, Array2};
     use crate::advanced::kriging::CovarianceFunction;
+    use ndarray::{Array1, Array2};
 
     fn create_test_data(n_points: usize, n_dims: usize) -> (Array2<f64>, Array1<f64>) {
         let mut points = Array2::zeros((n_points, n_dims));
@@ -658,11 +675,11 @@ mod tests {
     fn test_fast_kriging_method_variants() {
         assert_eq!(FastKrigingMethod::Local, FastKrigingMethod::Local);
         assert_ne!(FastKrigingMethod::Local, FastKrigingMethod::FixedRank(10));
-        
+
         let method1 = FastKrigingMethod::FixedRank(10);
         let method2 = FastKrigingMethod::FixedRank(10);
         let method3 = FastKrigingMethod::FixedRank(20);
-        
+
         assert_eq!(method1, method2);
         assert_ne!(method1, method3);
     }
@@ -670,7 +687,7 @@ mod tests {
     #[test]
     fn test_fast_kriging_builder_default() {
         let builder = FastKrigingBuilder::<f64>::new();
-        
+
         // Test that defaults are reasonable
         assert!(builder.points.is_none());
         assert!(builder.values.is_none());
@@ -705,17 +722,17 @@ mod tests {
         assert_eq!(builder.radius_multiplier, 2.0);
     }
 
-    #[test] 
+    #[test]
     fn test_fast_kriging_build_missing_data() {
         let builder = FastKrigingBuilder::<f64>::new();
-        
+
         // Should fail without points
         let result = builder.build();
         assert!(result.is_err());
-        
+
         let (points, _) = create_test_data(5, 2);
         let builder = FastKrigingBuilder::<f64>::new().points(points);
-        
+
         // Should fail without values
         let result = builder.build();
         assert!(result.is_err());
@@ -725,12 +742,12 @@ mod tests {
     fn test_fast_kriging_dimension_mismatch() {
         let points = Array2::zeros((5, 2));
         let values = Array1::zeros(3); // Wrong size
-        
+
         let result = FastKrigingBuilder::<f64>::new()
             .points(points)
             .values(values)
             .build();
-            
+
         assert!(result.is_err());
     }
 
@@ -738,7 +755,7 @@ mod tests {
     #[test]
     fn test_local_kriging() {
         let (points, values) = create_test_data(20, 2);
-        
+
         let kriging = FastKrigingBuilder::<f64>::new()
             .points(points.clone())
             .values(values.clone())
@@ -754,20 +771,17 @@ mod tests {
         assert_eq!(kriging.approximation_method(), FastKrigingMethod::Local);
 
         // Test prediction
-        let query_points = Array2::from_shape_vec(
-            (2, 2),
-            vec![0.25, 0.25, 0.75, 0.75],
-        ).unwrap();
+        let query_points = Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).unwrap();
 
         let result = kriging.predict(&query_points.view()).unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(result.method, FastKrigingMethod::Local);
-        
+
         // Predictions should be reasonable
         for &val in result.values().iter() {
             assert!(val.is_finite());
         }
-        
+
         // Variances should be non-negative
         for &var in result.variances().iter() {
             assert!(var >= 0.0);
@@ -778,7 +792,7 @@ mod tests {
     #[test]
     fn test_fixed_rank_kriging() {
         let (points, values) = create_test_data(30, 2);
-        
+
         let kriging = FastKrigingBuilder::<f64>::new()
             .points(points)
             .values(values)
@@ -787,15 +801,13 @@ mod tests {
             .build()
             .unwrap();
 
-        let query_points = Array2::from_shape_vec(
-            (3, 2),
-            vec![0.1, 0.1, 0.5, 0.5, 0.9, 0.9],
-        ).unwrap();
+        let query_points =
+            Array2::from_shape_vec((3, 2), vec![0.1, 0.1, 0.5, 0.5, 0.9, 0.9]).unwrap();
 
         let result = kriging.predict(&query_points.view()).unwrap();
         assert_eq!(result.len(), 3);
         assert_eq!(result.method, FastKrigingMethod::FixedRank(5));
-        
+
         // Check that prediction completed without errors
         for &val in result.values().iter() {
             assert!(val.is_finite());
@@ -806,7 +818,7 @@ mod tests {
     #[test]
     fn test_tapered_kriging() {
         let (points, values) = create_test_data(25, 2);
-        
+
         let kriging = FastKrigingBuilder::<f64>::new()
             .points(points)
             .values(values)
@@ -815,15 +827,12 @@ mod tests {
             .build()
             .unwrap();
 
-        let query_points = Array2::from_shape_vec(
-            (2, 2),
-            vec![0.3, 0.3, 0.7, 0.7],
-        ).unwrap();
+        let query_points = Array2::from_shape_vec((2, 2), vec![0.3, 0.3, 0.7, 0.7]).unwrap();
 
         let result = kriging.predict(&query_points.view()).unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(result.method, FastKrigingMethod::Tapering(1.5));
-        
+
         // Check basic validity
         for &val in result.values().iter() {
             assert!(val.is_finite());
@@ -837,7 +846,7 @@ mod tests {
     #[test]
     fn test_hodlr_kriging() {
         let (points, values) = create_test_data(40, 2);
-        
+
         let kriging = FastKrigingBuilder::<f64>::new()
             .points(points)
             .values(values)
@@ -846,15 +855,12 @@ mod tests {
             .build()
             .unwrap();
 
-        let query_points = Array2::from_shape_vec(
-            (2, 2),
-            vec![0.4, 0.4, 0.6, 0.6],
-        ).unwrap();
+        let query_points = Array2::from_shape_vec((2, 2), vec![0.4, 0.4, 0.6, 0.6]).unwrap();
 
         let result = kriging.predict(&query_points.view()).unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(result.method, FastKrigingMethod::HODLR(8));
-        
+
         // Basic sanity checks
         for &val in result.values().iter() {
             assert!(val.is_finite());
@@ -864,7 +870,7 @@ mod tests {
     #[test]
     fn test_predict_dimension_mismatch() {
         let (points, values) = create_test_data(10, 2);
-        
+
         let kriging = FastKrigingBuilder::<f64>::new()
             .points(points)
             .values(values)
@@ -874,7 +880,7 @@ mod tests {
 
         // Query points with wrong dimensionality
         let wrong_query = Array2::zeros((2, 3)); // 3D instead of 2D
-        
+
         let result = kriging.predict(&wrong_query.view());
         assert!(result.is_err());
     }
@@ -882,7 +888,7 @@ mod tests {
     #[test]
     fn test_empty_query_prediction() {
         let (points, values) = create_test_data(10, 2);
-        
+
         let kriging = FastKrigingBuilder::<f64>::new()
             .points(points)
             .values(values)
@@ -892,7 +898,7 @@ mod tests {
 
         // Empty query points
         let empty_query = Array2::zeros((0, 2));
-        
+
         let result = kriging.predict(&empty_query.view()).unwrap();
         assert_eq!(result.len(), 0);
         assert!(result.is_empty());
@@ -902,7 +908,7 @@ mod tests {
     fn test_single_point_dataset() {
         let points = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
         let values = Array1::from_vec(vec![1.0]);
-        
+
         let kriging = FastKrigingBuilder::<f64>::new()
             .points(points)
             .values(values)
@@ -912,7 +918,7 @@ mod tests {
             .unwrap();
 
         let query_points = Array2::from_shape_vec((1, 2), vec![0.6, 0.6]).unwrap();
-        
+
         // Should not crash on single point
         let result = kriging.predict(&query_points.view());
         assert!(result.is_ok());

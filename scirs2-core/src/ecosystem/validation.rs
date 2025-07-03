@@ -159,7 +159,7 @@ impl EcosystemValidator {
 
         let module = registry.get_module(module_name).ok_or_else(|| {
             CoreError::ValidationError(ErrorContext {
-                message: format!("Module '{}' not found in registry", module_name),
+                message: format!("Module '{module_name}' not found in registry"),
                 location: None,
                 cause: None,
             })
@@ -208,7 +208,7 @@ impl EcosystemValidator {
             if !self.is_feature_compatible(feature, policies)? {
                 result.add_warning(ValidationWarning::new(
                     ValidationWarningType::FeatureCompatibility,
-                    format!("Feature '{}' may have compatibility issues", feature),
+                    format!("Feature '{feature}' may have compatibility issues"),
                 ));
             }
         }
@@ -247,7 +247,7 @@ impl EcosystemValidator {
             // Validate version compatibility
             let dep_version = Version::parse(&dep_module.version).map_err(|e| {
                 CoreError::ValidationError(ErrorContext {
-                    message: format!("Invalid dependency version: {}", e),
+                    message: format!("Invalid dependency version: {e}"),
                     location: None,
                     cause: None,
                 })
@@ -317,14 +317,14 @@ impl EcosystemValidator {
         // Check version compatibility
         let version_a = Version::parse(&module_a.version).map_err(|e| {
             CoreError::ValidationError(ErrorContext {
-                message: format!("Invalid version format for module {}: {}", module_a.name, e),
+                message: format!("Invalid version for module '{}': {}", module_a.name, e),
                 location: Some(crate::error::ErrorLocation::new(file!(), line!())),
                 cause: None,
             })
         })?;
         let version_b = Version::parse(&module_b.version).map_err(|e| {
             CoreError::ValidationError(ErrorContext {
-                message: format!("Invalid version format for module {}: {}", module_b.name, e),
+                message: format!("Invalid version for module '{}': {}", module_b.name, e),
                 location: Some(crate::error::ErrorLocation::new(file!(), line!())),
                 cause: None,
             })
@@ -332,8 +332,7 @@ impl EcosystemValidator {
 
         if !self.are_versions_compatible(&version_a, &version_b, policies) {
             return Ok(ModuleCompatibility::incompatible(format!(
-                "Version incompatibility: {} vs {}",
-                version_a, version_b
+                "Version incompatibility: {version_a} vs {version_b}"
             )));
         }
 
@@ -402,7 +401,7 @@ impl EcosystemValidator {
         for module in &modules {
             let version = Version::parse(&module.version).map_err(|e| {
                 CoreError::ValidationError(ErrorContext {
-                    message: format!("Invalid version format for module {}: {}", module.name, e),
+                    message: format!("Invalid version for module '{}': {}", module.name, e),
                     location: Some(crate::error::ErrorLocation::new(file!(), line!())),
                     cause: None,
                 })

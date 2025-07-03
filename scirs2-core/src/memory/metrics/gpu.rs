@@ -153,14 +153,14 @@ impl TrackedGpuContext {
     /// Create a tracked buffer with the given size
     pub fn create_buffer<T: GpuDataType>(&self, size: usize) -> TrackedGpuBuffer<T> {
         let buffer = self.inner.create_buffer::<T>(size);
-        let buffer_name = format!("{}::Buffer_{:p}", self.component_name, &buffer);
+        let buffer_name = format!("{}:{:p}", self.component_name, &buffer);
         TrackedGpuBuffer::new(buffer, buffer_name)
     }
 
     /// Create a tracked buffer from a slice
     pub fn create_buffer_from_slice<T: GpuDataType>(&self, data: &[T]) -> TrackedGpuBuffer<T> {
         let buffer = self.inner.create_buffer_from_slice(data);
-        let buffer_name = format!("{}::Buffer_{:p}", self.component_name, &buffer);
+        let buffer_name = format!("{}:{:p}", self.component_name, &buffer);
         TrackedGpuBuffer::new(buffer, buffer_name)
     }
 

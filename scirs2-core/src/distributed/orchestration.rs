@@ -320,10 +320,7 @@ impl OrchestrationEngine {
         let task_id = task.id.clone();
 
         // Create a single-task workflow
-        let mut workflow = Workflow::new(
-            format!("workflow_{}", task_id),
-            format!("Single task workflow for {}", task.name),
-        );
+        let mut workflow = Workflow::new(format!("workflow_{task_id}"), task.name.to_string());
         workflow.add_task(task);
 
         self.submit_workflow(workflow)

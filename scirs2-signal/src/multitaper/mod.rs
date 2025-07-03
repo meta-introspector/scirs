@@ -14,7 +14,7 @@ mod jackknife;
 mod psd;
 mod utils;
 pub mod validation;
-mod windows;
+pub mod windows;
 
 // Re-export public components
 pub use adaptive::adaptive_psd;

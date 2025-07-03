@@ -143,7 +143,7 @@ where
         shape: Vec<usize>,
         config: DistributedConfig,
     ) -> Self {
-        let id = format!("dist_array_{}", uuid::Uuid::new_v4());
+        let id = format!("uuid_{}", uuid::Uuid::new_v4());
         Self {
             config,
             chunks,
@@ -530,19 +530,13 @@ where
         let mut info = HashMap::new();
         info.insert("type".to_string(), "distributed_ndarray".to_string());
         info.insert("chunks".to_string(), self.chunks.len().to_string());
-        info.insert(
-            "shape".to_string(),
-            format!("{shape:?}", shape = self.shape),
-        );
+        info.insert("shape".to_string(), format!("{:?}", self.shape));
         info.insert("id".to_string(), self.id.clone());
         info.insert(
             "strategy".to_string(),
-            format!("{strategy:?}", strategy = self.config.strategy),
+            format!("{:?}", self.config.strategy),
         );
-        info.insert(
-            "backend".to_string(),
-            format!("{backend:?}", backend = self.config.backend),
-        );
+        info.insert("backend".to_string(), format!("{:?}", self.config.backend));
         info
     }
 
@@ -577,7 +571,7 @@ where
             config,
             chunks: self.chunks.clone(),
             shape: self.shape.clone(),
-            id: format!("dist_array_{}", uuid::Uuid::new_v4()),
+            id: format!("uuid_{}", uuid::Uuid::new_v4()),
         };
 
         Ok(Box::new(new_dist_array))

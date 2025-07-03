@@ -75,8 +75,7 @@ impl CpuInfo {
     fn detect_linux() -> CoreResult<Self> {
         let cpuinfo = fs::read_to_string("/proc/cpuinfo").map_err(|e| {
             CoreError::IoError(crate::error::ErrorContext::new(format!(
-                "Failed to read /proc/cpuinfo: {}",
-                e
+                "Failed to read /proc/cpuinfo: {e}"
             )))
         })?;
 
@@ -177,8 +176,7 @@ impl CpuInfo {
             let num_str = &size_str[..size_str.len() - 1];
             let size = num_str.parse::<usize>().map_err(|e| {
                 CoreError::ValidationError(crate::error::ErrorContext::new(format!(
-                    "Failed to parse cache size: {}",
-                    e
+                    "Failed to parse cache size: {e}"
                 )))
             })?;
             Ok(size)
@@ -186,16 +184,14 @@ impl CpuInfo {
             let num_str = &size_str[..size_str.len() - 1];
             let size = num_str.parse::<usize>().map_err(|e| {
                 CoreError::ValidationError(crate::error::ErrorContext::new(format!(
-                    "Failed to parse cache size: {}",
-                    e
+                    "Failed to parse cache size: {e}"
                 )))
             })? * 1024;
             Ok(size)
         } else {
             let size = size_str.parse::<usize>().map_err(|e| {
                 CoreError::ValidationError(crate::error::ErrorContext::new(format!(
-                    "Failed to parse cache size: {}",
-                    e
+                    "Failed to parse cache size: {e}"
                 )))
             })?;
             Ok(size)

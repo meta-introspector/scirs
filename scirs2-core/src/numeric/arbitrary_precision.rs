@@ -370,9 +370,7 @@ impl ArbitraryFloat {
                 value: RugFloat::with_val(prec, incomplete),
                 context,
             })
-            .map_err(|e| {
-                CoreError::ValidationError(ErrorContext::new(format!("Parse error: {}", e)))
-            })
+            .map_err(|e| CoreError::ValidationError(ErrorContext::new(format!("{e}"))))
     }
 
     /// Get the precision in bits

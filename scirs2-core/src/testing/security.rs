@@ -235,7 +235,7 @@ impl InputValidationTester {
                         severity: SecuritySeverity::High,
                         category: SecurityCategory::InputValidation,
                         description: "Function panicked on malicious input".to_string(),
-                        trigger_input: format!("Pattern {}: {:?}", i, pattern),
+                        trigger_input: format!(":?{i, pattern}"),
                         mitigation: Some(
                             "Add proper input validation and error handling".to_string(),
                         ),
@@ -249,8 +249,8 @@ impl InputValidationTester {
                 result.security_issues.push(SecurityIssue {
                     severity: SecuritySeverity::Medium,
                     category: SecurityCategory::DenialOfService,
-                    description: format!("Function took excessive time: {:?}", test_duration),
-                    trigger_input: format!("Pattern {}: {:?}", i, pattern),
+                    description: format!(":?{test_duration}"),
+                    trigger_input: format!(":?{i, pattern}"),
                     mitigation: Some("Add input size limits and timeouts".to_string()),
                 });
             }
@@ -305,7 +305,7 @@ impl InputValidationTester {
                             severity: SecuritySeverity::High,
                             category: SecurityCategory::IntegerOverflow,
                             description: "Integer overflow not detected".to_string(),
-                            trigger_input: format!("start={}, length={}", start, length),
+                            trigger_input: format!("{start, length}"),
                             mitigation: Some(
                                 "Add overflow checks in bounds validation".to_string(),
                             ),
@@ -322,7 +322,7 @@ impl InputValidationTester {
                         severity: SecuritySeverity::Critical,
                         category: SecurityCategory::OutOfBounds,
                         description: "Function panicked on bounds check".to_string(),
-                        trigger_input: format!("start={}, length={}", start, length),
+                        trigger_input: format!("{start, length}"),
                         mitigation: Some("Implement safe bounds checking".to_string()),
                     });
                 }
@@ -630,14 +630,14 @@ impl VulnerabilityAssessment {
             report.failed_tests += 1;
             for dep in vulnerable_deps {
                 report.vulnerabilities.push(SecurityVulnerability {
-                    id: format!("DEPS-{}", dep.name),
+                    id: format!("{dep.name}"),
                     severity: SecuritySeverity::High,
                     category: SecurityCategory::DependencyVuln,
-                    title: format!("Vulnerable dependency: {}", dep.name),
+                    title: format!("{dep.name}"),
                     description: dep.description,
                     affected_component: dep.name.clone(),
                     cve_id: dep.cve_id,
-                    mitigation: format!("Update {} to version {}", dep.name, dep.fixed_version),
+                    mitigation: format!("{dep.name, dep.fixed_version}"),
                 });
             }
         }

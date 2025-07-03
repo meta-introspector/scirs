@@ -26,6 +26,7 @@ fn main() {
                 0.3 + 0.3 * rng.sample::<f64, _>(StandardNormal)
             }
         })
+        .collect();
     // Convert to ndarray views
     let y_true_array = Array1::from(y_true.clone());
     let y_score_array = Array1::from(y_score.clone());
@@ -59,12 +60,19 @@ fn main() {
     let val_scores = Array2::from_shape_fn((5, 3), |(i, _j)| {
         let base = 0.4 + 0.3 * (i as f64 / 4.0);
         let noise = 0.07 * rng.sample::<f64, _>(StandardNormal);
+        base + noise
+    });
+
     // Create learning curve
     let learning_curve = LearningCurve::new(train_sizes, train_scores, val_scores).unwrap();
+
     // Plot learning curve with color
     let learning_plot = learning_curve.to_ascii_with_options(
         Some("Neural Network Training"),
         70,
-        "Accuracy",
+        20,
+        &color_options,
+    );
+
     println!("{}", learning_plot);
 }

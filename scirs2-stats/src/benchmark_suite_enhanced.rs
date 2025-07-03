@@ -565,7 +565,7 @@ impl EnhancedBenchmarkSuite {
     pub fn run_enhanced_benchmarks(&mut self) -> StatsResult<EnhancedBenchmarkReport> {
         // Run base benchmarks
         let base_suite =
-            crate::benchmark_suite::BenchmarkSuite::new(self.config.base_config.clone());
+            crate::benchmark_suite::BenchmarkSuite::with_config(self.config.base_config.clone());
 
         // For now, create a placeholder base report until we can run the actual benchmarks
         let base_report = crate::benchmark_suite::BenchmarkReport {
@@ -573,11 +573,25 @@ impl EnhancedBenchmarkSuite {
             config: self.config.base_config.clone(),
             metrics: vec![], // This would be populated by actual benchmarks
             analysis: crate::benchmark_suite::PerformanceAnalysis {
-                scalability_analysis: HashMap::new(),
-                complexity_analysis: HashMap::new(),
-                bottleneck_identification: vec![],
+                overall_score: 0.0,
+                simd_effectiveness: HashMap::new(),
+                parallel_effectiveness: HashMap::new(),
+                memory_efficiency: 0.0,
+                regressions: vec![],
+                scaling_analysis: crate::benchmark_suite::ScalingAnalysis {
+                    complexity_analysis: HashMap::new(),
+                    threshold_recommendations: HashMap::new(),
+                    memory_scaling: HashMap::new(),
+                },
             },
-            system_info: HashMap::new(),
+            system_info: crate::benchmark_suite::SystemInfo {
+                cpu_info: "Unknown".to_string(),
+                total_memory: 0,
+                cpu_cores: 0,
+                simd_capabilities: vec![],
+                os_info: "Unknown".to_string(),
+                rust_version: "Unknown".to_string(),
+            },
             recommendations: vec![],
         };
 

@@ -10,16 +10,14 @@
 //! - Vector instruction pipelining
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::ArrayView1;
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
     parallel_ops::*,
     simd_ops::{PlatformCapabilities, SimdUnifiedOps},
     validation::*,
 };
-use std::arch::x86_64::*;
 use std::marker::PhantomData;
-use std::ptr;
 
 /// Ultra-advanced SIMD configuration with sophisticated optimization strategies
 #[derive(Debug, Clone)]

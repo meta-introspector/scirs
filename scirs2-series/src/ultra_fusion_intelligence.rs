@@ -19,9 +19,9 @@
 use ndarray::Array1;
 use num_complex::Complex;
 use num_traits::{Float, FromPrimitive};
+use rand::{rng, random_range};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
-use rand::Rng;
 
 use crate::error::Result;
 
@@ -240,6 +240,8 @@ pub enum ComparisonDirection {
 pub struct KnowledgeTransferSystem<F: Float + Debug> {
     knowledge_base: Vec<KnowledgeItem<F>>,
     transfer_mechanisms: Vec<TransferMechanism>,
+    transfer_weights: Vec<F>,
+    source_tasks: Vec<String>,
 }
 
 #[allow(dead_code)]
@@ -248,6 +250,7 @@ pub struct KnowledgeItem<F: Float + Debug> {
     domain: String,
     content: Vec<F>,
     relevance_score: F,
+    confidence_score: F,
 }
 
 #[allow(dead_code)]
@@ -257,6 +260,8 @@ pub enum TransferMechanism {
     AdaptiveTransfer,
     SelectiveTransfer,
     HierarchicalTransfer,
+    ParameterMapping,
+    FeatureExtraction,
 }
 
 // Missing type definitions for architecture evolution
@@ -294,6 +299,8 @@ pub enum LayerType {
     Recurrent,
     Attention,
     Quantum,
+    LSTM,
+    Dropout,
 }
 
 #[allow(dead_code)]
@@ -305,6 +312,7 @@ pub enum ActivationFunction {
     GELU,
     Swish,
     Quantum,
+    Softmax,
 }
 
 #[allow(dead_code)]
@@ -314,6 +322,7 @@ pub struct ConnectionConfig<F: Float + Debug> {
     to_layer: usize,
     connection_type: ConnectionType,
     strength: F,
+    weight: F,
 }
 
 #[allow(dead_code)]
@@ -324,6 +333,7 @@ pub enum ConnectionType {
     Skip,
     Attention,
     Quantum,
+    FullyConnected,
 }
 
 #[allow(dead_code)]
@@ -3447,13 +3457,39 @@ impl<
             .compute_attention_weights(data)?;
 
         // Step 2: Meta-learning strategy selection
-        let complexity = F::from_usize(data.len()).unwrap() * data.iter().map(|x| *x * *x).sum::<F>();
+        let complexity =
+            F::from_usize(data.len()).unwrap() * data.iter().map(|x| *x * *x).sum::<F>();
         let characteristics = match analysis_type {
-            UltraAnalysisType::ConsciousnessEmulation => vec![F::from_f64(1.0).unwrap(), F::from_f64(0.8).unwrap()],
-            UltraAnalysisType::QuantumNeuromorphic => vec![F::from_f64(0.9).unwrap(), F::from_f64(1.0).unwrap()],
-            UltraAnalysisType::TemporalHypercomputing => vec![F::from_f64(0.7).unwrap(), F::from_f64(0.9).unwrap()],
-            UltraAnalysisType::MetaLearning => vec![F::from_f64(0.8).unwrap(), F::from_f64(0.7).unwrap()],
-            UltraAnalysisType::AutonomousDiscovery => vec![F::from_f64(0.6).unwrap(), F::from_f64(0.8).unwrap()],
+            UltraAnalysisType::ConsciousnessEmulation => {
+                vec![F::from_f64(1.0).unwrap(), F::from_f64(0.8).unwrap()]
+            }
+            UltraAnalysisType::QuantumNeuromorphic => {
+                vec![F::from_f64(0.9).unwrap(), F::from_f64(1.0).unwrap()]
+            }
+            UltraAnalysisType::TemporalHypercomputing => {
+                vec![F::from_f64(0.7).unwrap(), F::from_f64(0.9).unwrap()]
+            }
+            UltraAnalysisType::MetaLearning => {
+                vec![F::from_f64(0.8).unwrap(), F::from_f64(0.7).unwrap()]
+            }
+            UltraAnalysisType::AutonomousDiscovery => {
+                vec![F::from_f64(0.6).unwrap(), F::from_f64(0.8).unwrap()]
+            }
+            UltraAnalysisType::QuantumForecasting => {
+                vec![F::from_f64(0.95).unwrap(), F::from_f64(0.85).unwrap()]
+            }
+            UltraAnalysisType::NeuromorphicPattern => {
+                vec![F::from_f64(0.85).unwrap(), F::from_f64(0.95).unwrap()]
+            }
+            UltraAnalysisType::ConsciousDiscovery => {
+                vec![F::from_f64(0.9).unwrap(), F::from_f64(0.9).unwrap()]
+            }
+            UltraAnalysisType::TemporalHyperanalysis => {
+                vec![F::from_f64(0.8).unwrap(), F::from_f64(0.85).unwrap()]
+            }
+            UltraAnalysisType::MetaLearningOptimization => {
+                vec![F::from_f64(0.85).unwrap(), F::from_f64(0.8).unwrap()]
+            }
         };
         let optimal_strategy = self
             .meta_learner
@@ -3867,6 +3903,11 @@ pub enum UltraAnalysisType {
     ConsciousDiscovery,
     TemporalHyperanalysis,
     MetaLearningOptimization,
+    ConsciousnessEmulation,
+    QuantumNeuromorphic,
+    TemporalHypercomputing,
+    MetaLearning,
+    AutonomousDiscovery,
 }
 
 #[derive(Debug, Clone)]
@@ -4006,6 +4047,10 @@ pub enum GeneType {
     FusionInterface,
     AttentionMechanism,
     PlasticityRule,
+    Dense,
+    Convolutional,
+    LSTM,
+    Dropout,
 }
 
 #[derive(Debug, Clone)]
@@ -4928,11 +4973,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
                 KnowledgeItem {
                     domain: "timeseries_forecast".to_string(),
                     content: vec![F::from_f64(0.8).unwrap(), F::from_f64(0.6).unwrap()],
+                    relevance_score: F::from_f64(0.9).unwrap(),
                     confidence_score: F::from_f64(0.9).unwrap(),
                 },
                 KnowledgeItem {
                     domain: "anomaly_detection".to_string(),
                     content: vec![F::from_f64(0.7).unwrap(), F::from_f64(0.5).unwrap()],
+                    relevance_score: F::from_f64(0.8).unwrap(),
                     confidence_score: F::from_f64(0.8).unwrap(),
                 },
             ],
@@ -4941,6 +4988,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
                 TransferMechanism::ParameterMapping,
                 TransferMechanism::FeatureExtraction,
             ],
+            transfer_weights: vec![F::from_f64(0.9).unwrap(), F::from_f64(0.8).unwrap()],
+            source_tasks: vec!["timeseries_forecast".to_string(), "anomaly_detection".to_string()],
         };
 
         Ok(MetaLearningController {
@@ -4954,17 +5003,20 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
 
     /// Optimizes learning strategy based on task characteristics
     #[allow(dead_code)]
-    pub fn optimize_learning_strategy(&mut self, task_data: &Array1<F>) -> Result<LearningStrategy<F>> {
+    pub fn optimize_learning_strategy(
+        &mut self,
+        task_data: &Array1<F>,
+    ) -> Result<OptimalLearningStrategy<F>> {
         // Analyze task characteristics
         let task_complexity = self.analyze_task_complexity(task_data)?;
         let data_characteristics = self.analyze_data_characteristics(task_data)?;
-        
+
         // Select best strategy based on meta-learning
         let best_strategy = self.select_optimal_strategy(task_complexity, data_characteristics)?;
-        
+
         // Update performance history
-        self.update_performance_history(&best_strategy.name, &task_complexity)?;
-        
+        self.update_performance_history(&best_strategy.strategy_name, &task_complexity)?;
+
         Ok(best_strategy)
     }
 
@@ -4975,12 +5027,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
         let variance = data.var(F::from_f64(1.0).unwrap());
         let entropy = self.compute_entropy(data)?;
         let autocorr = self.compute_autocorrelation(data)?;
-        
+
         // Combine metrics into complexity score
-        let complexity = variance * F::from_f64(0.4).unwrap() + 
-                        entropy * F::from_f64(0.3).unwrap() + 
-                        autocorr * F::from_f64(0.3).unwrap();
-        
+        let complexity = variance * F::from_f64(0.4).unwrap()
+            + entropy * F::from_f64(0.3).unwrap()
+            + autocorr * F::from_f64(0.3).unwrap();
+
         Ok(complexity)
     }
 
@@ -4989,37 +5041,41 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
     fn analyze_data_characteristics(&self, data: &Array1<F>) -> Result<Vec<F>> {
         let n = data.len();
         let mut characteristics = Vec::new();
-        
+
         // Statistical moments
         let mean = data.mean().unwrap_or(F::zero());
         let std_dev = data.std(F::from_f64(1.0).unwrap());
         let skewness = self.compute_skewness(data)?;
         let kurtosis = self.compute_kurtosis(data)?;
-        
+
         characteristics.push(mean);
         characteristics.push(std_dev);
         characteristics.push(skewness);
         characteristics.push(kurtosis);
-        
+
         // Trend characteristics
         let trend_strength = self.compute_trend_strength(data)?;
         characteristics.push(trend_strength);
-        
+
         // Seasonality characteristics (if data is long enough)
         if n > 24 {
             let seasonality = self.compute_seasonality_strength(data)?;
             characteristics.push(seasonality);
         }
-        
+
         Ok(characteristics)
     }
 
     /// Selects optimal learning strategy based on analysis
     #[allow(dead_code)]
-    fn select_optimal_strategy(&self, complexity: F, characteristics: Vec<F>) -> Result<LearningStrategy<F>> {
+    fn select_optimal_strategy(
+        &self,
+        complexity: F,
+        characteristics: Vec<F>,
+    ) -> Result<OptimalLearningStrategy<F>> {
         let mut best_strategy = self.strategy_library.strategies[0].clone();
         let mut best_score = F::zero();
-        
+
         for strategy in &self.strategy_library.strategies {
             let score = self.evaluate_strategy_fitness(strategy, complexity, &characteristics)?;
             if score > best_score {
@@ -5027,48 +5083,70 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
                 best_strategy = strategy.clone();
             }
         }
-        
-        Ok(best_strategy)
+
+        // Convert LearningStrategy to OptimalLearningStrategy
+        let optimal_strategy = OptimalLearningStrategy {
+            strategy_name: best_strategy.name.clone(),
+            parameters: best_strategy.parameters.iter().enumerate()
+                .map(|(i, &param)| (format!("param_{}", i), param))
+                .collect(),
+            insights: MetaLearningInsights {
+                learning_efficiency: best_score,
+                adaptation_rate: complexity,
+                knowledge_transfer_score: characteristics.iter().copied().sum::<F>() / F::from_usize(characteristics.len()).unwrap_or(F::one()),
+            },
+        };
+        Ok(optimal_strategy)
     }
 
     /// Evaluates strategy fitness for given task characteristics
     #[allow(dead_code)]
-    fn evaluate_strategy_fitness(&self, strategy: &LearningStrategy<F>, complexity: F, characteristics: &[F]) -> Result<F> {
+    fn evaluate_strategy_fitness(
+        &self,
+        strategy: &LearningStrategy<F>,
+        complexity: F,
+        characteristics: &[F],
+    ) -> Result<F> {
         // Base fitness from strategy's applicability score
         let mut fitness = strategy.applicability_score;
-        
+
         // Adjust based on complexity
         match strategy.name.as_str() {
             "AdaptiveGradientDescent" => {
                 // Better for lower complexity tasks
                 fitness = fitness * (F::one() - complexity * F::from_f64(0.5).unwrap());
-            },
+            }
             "MetaEvolutionary" => {
                 // Better for medium complexity tasks
                 let complexity_bonus = F::one() - (complexity - F::from_f64(0.5).unwrap()).abs();
                 fitness = fitness * complexity_bonus;
-            },
+            }
             "NeuralArchitectureSearch" => {
                 // Better for high complexity tasks
-                fitness = fitness * (F::from_f64(0.5).unwrap() + complexity * F::from_f64(0.5).unwrap());
-            },
+                fitness =
+                    fitness * (F::from_f64(0.5).unwrap() + complexity * F::from_f64(0.5).unwrap());
+            }
             _ => {}
         }
-        
+
         // Adjust based on data characteristics
         if !characteristics.is_empty() {
-            let char_sum: F = characteristics.iter().fold(F::zero(), |acc, &x| acc + x.abs());
+            let char_sum: F = characteristics
+                .iter()
+                .fold(F::zero(), |acc, &x| acc + x.abs());
             let char_factor = F::one() + char_sum * F::from_f64(0.1).unwrap();
             fitness = fitness * char_factor;
         }
-        
+
         Ok(fitness)
     }
 
     /// Updates performance history for continuous learning
     #[allow(dead_code)]
     fn update_performance_history(&mut self, strategy_name: &str, performance: &F) -> Result<()> {
-        self.strategy_library.performance_history.insert(strategy_name.to_string(), *performance);
+        self.strategy_library
+            .performance_history
+            .insert(strategy_name.to_string(), *performance);
         Ok(())
     }
 
@@ -5079,24 +5157,27 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
         if n == 0 {
             return Ok(F::zero());
         }
-        
+
         // Simple entropy approximation based on histogram
         let min_val = data.iter().fold(F::infinity(), |acc, &x| acc.min(x));
         let max_val = data.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
-        
+
         if max_val == min_val {
             return Ok(F::zero());
         }
-        
+
         let range = max_val - min_val;
         let bin_size = range / F::from_usize(10).unwrap(); // 10 bins
         let mut histogram = vec![0; 10];
-        
+
         for &value in data.iter() {
-            let bin_idx = ((value - min_val) / bin_size).to_usize().unwrap_or(0).min(9);
+            let bin_idx = ((value - min_val) / bin_size)
+                .to_usize()
+                .unwrap_or(0)
+                .min(9);
             histogram[bin_idx] += 1;
         }
-        
+
         let mut entropy = F::zero();
         for &count in &histogram {
             if count > 0 {
@@ -5104,7 +5185,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
                 entropy = entropy - p * p.ln();
             }
         }
-        
+
         Ok(entropy)
     }
 
@@ -5115,18 +5196,18 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
         if n < 2 {
             return Ok(F::zero());
         }
-        
+
         let mean = data.mean().unwrap_or(F::zero());
         let mut numerator = F::zero();
         let mut denominator = F::zero();
-        
-        for i in 0..(n-1) {
+
+        for i in 0..(n - 1) {
             let x_dev = data[i] - mean;
-            let x_lag_dev = data[i+1] - mean;
+            let x_lag_dev = data[i + 1] - mean;
             numerator = numerator + x_dev * x_lag_dev;
             denominator = denominator + x_dev * x_dev;
         }
-        
+
         if denominator != F::zero() {
             Ok(numerator / denominator)
         } else {
@@ -5141,20 +5222,20 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
         if n < 3 {
             return Ok(F::zero());
         }
-        
+
         let mean = data.mean().unwrap_or(F::zero());
         let std_dev = data.std(F::from_f64(1.0).unwrap());
-        
+
         if std_dev == F::zero() {
             return Ok(F::zero());
         }
-        
+
         let mut skewness = F::zero();
         for &value in data.iter() {
             let standardized = (value - mean) / std_dev;
             skewness = skewness + standardized * standardized * standardized;
         }
-        
+
         Ok(skewness / F::from_usize(n).unwrap())
     }
 
@@ -5165,21 +5246,21 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
         if n < 4 {
             return Ok(F::zero());
         }
-        
+
         let mean = data.mean().unwrap_or(F::zero());
         let std_dev = data.std(F::from_f64(1.0).unwrap());
-        
+
         if std_dev == F::zero() {
             return Ok(F::zero());
         }
-        
+
         let mut kurtosis = F::zero();
         for &value in data.iter() {
             let standardized = (value - mean) / std_dev;
             let fourth_power = standardized * standardized * standardized * standardized;
             kurtosis = kurtosis + fourth_power;
         }
-        
+
         Ok(kurtosis / F::from_usize(n).unwrap() - F::from_f64(3.0).unwrap()) // Excess kurtosis
     }
 
@@ -5190,14 +5271,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
         if n < 2 {
             return Ok(F::zero());
         }
-        
+
         // Simple linear regression to detect trend
         let x_mean = F::from_usize(n - 1).unwrap() / F::from_f64(2.0).unwrap();
         let y_mean = data.mean().unwrap_or(F::zero());
-        
+
         let mut numerator = F::zero();
         let mut denominator = F::zero();
-        
+
         for (i, &y) in data.iter().enumerate() {
             let x = F::from_usize(i).unwrap();
             let x_dev = x - x_mean;
@@ -5205,7 +5286,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
             numerator = numerator + x_dev * y_dev;
             denominator = denominator + x_dev * x_dev;
         }
-        
+
         if denominator != F::zero() {
             let slope = numerator / denominator;
             Ok(slope.abs()) // Trend strength is absolute slope
@@ -5221,27 +5302,28 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
         if n < 24 {
             return Ok(F::zero());
         }
-        
+
         // Simple seasonality detection using variance of seasonal differences
         let seasonal_period = 12.min(n / 2); // Assume monthly or similar seasonality
         let mut seasonal_diffs = Vec::new();
-        
+
         for i in seasonal_period..n {
             let diff = data[i] - data[i - seasonal_period];
             seasonal_diffs.push(diff);
         }
-        
+
         if seasonal_diffs.is_empty() {
             return Ok(F::zero());
         }
-        
+
         // Calculate variance of seasonal differences
-        let mean_diff = seasonal_diffs.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(seasonal_diffs.len()).unwrap();
+        let mean_diff = seasonal_diffs.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from_usize(seasonal_diffs.len()).unwrap();
         let variance = seasonal_diffs.iter().fold(F::zero(), |acc, &x| {
             let dev = x - mean_diff;
             acc + dev * dev
         }) / F::from_usize(seasonal_diffs.len()).unwrap();
-        
+
         // Normalize seasonality strength
         let data_variance = data.var(F::from_f64(1.0).unwrap());
         if data_variance != F::zero() {
@@ -5255,24 +5337,30 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
     #[allow(dead_code)]
     pub fn adapt_learning(&mut self, feedback: F, strategy_name: &str) -> Result<()> {
         // Update strategy performance
-        self.strategy_library.performance_history.insert(strategy_name.to_string(), feedback);
-        
+        self.strategy_library
+            .performance_history
+            .insert(strategy_name.to_string(), feedback);
+
         // Check trigger conditions for adaptation
         for condition in &self.adaptation_mechanism.trigger_conditions {
             if self.should_trigger_adaptation(&condition, feedback)? {
                 self.execute_adaptation_rule(&condition.metric, feedback)?;
             }
         }
-        
+
         // Update meta-model parameters based on feedback
         self.update_meta_model(feedback)?;
-        
+
         Ok(())
     }
 
     /// Checks if adaptation should be triggered
     #[allow(dead_code)]
-    fn should_trigger_adaptation(&self, condition: &TriggerCondition<F>, feedback: F) -> Result<bool> {
+    fn should_trigger_adaptation(
+        &self,
+        condition: &TriggerCondition<F>,
+        feedback: F,
+    ) -> Result<bool> {
         match condition.metric.as_str() {
             "accuracy_drop" => Ok(feedback < condition.threshold),
             "learning_rate_decay" => Ok(feedback < condition.threshold),
@@ -5288,15 +5376,17 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
                 match rule.action.as_str() {
                     "increase_exploration" => {
                         // Increase adaptation rate
-                        self.meta_model.adaptation_rate = self.meta_model.adaptation_rate * F::from_f64(1.1).unwrap();
-                    },
+                        self.meta_model.adaptation_rate =
+                            self.meta_model.adaptation_rate * F::from_f64(1.1).unwrap();
+                    }
                     "switch_strategy" => {
                         // Mark current best strategy for review
                         // This would typically involve reranking strategies
                         for strategy in &mut self.strategy_library.strategies {
-                            strategy.applicability_score = strategy.applicability_score * F::from_f64(0.9).unwrap();
+                            strategy.applicability_score =
+                                strategy.applicability_score * F::from_f64(0.9).unwrap();
                         }
-                    },
+                    }
                     _ => {}
                 }
             }
@@ -5310,11 +5400,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
         // Simple gradient-based update
         let learning_rate = F::from_f64(0.01).unwrap();
         let error = F::one() - feedback; // Assuming feedback is in [0,1]
-        
+
         for param in &mut self.meta_model.model_parameters {
             *param = *param - learning_rate * error;
         }
-        
+
         Ok(())
     }
 
@@ -5322,20 +5412,20 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
     #[allow(dead_code)]
     pub fn transfer_knowledge(&self, target_task: &str, source_data: &Array1<F>) -> Result<Vec<F>> {
         let mut transferred_weights = Vec::new();
-        
+
         // Find most similar source task
         let best_source_idx = self.find_most_similar_task(target_task)?;
-        
+
         if best_source_idx < self.knowledge_transfer.transfer_weights.len() {
             let base_weight = self.knowledge_transfer.transfer_weights[best_source_idx];
-            
+
             // Compute transfer weights based on data similarity
             let data_similarity = self.compute_data_similarity(source_data)?;
             let adjusted_weight = base_weight * data_similarity;
-            
+
             transferred_weights.push(adjusted_weight);
         }
-        
+
         Ok(transferred_weights)
     }
 
@@ -5345,7 +5435,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
         // Simple string similarity for task matching
         let mut best_similarity = F::zero();
         let mut best_idx = 0;
-        
+
         for (idx, source_task) in self.knowledge_transfer.source_tasks.iter().enumerate() {
             let similarity = self.compute_task_similarity(target_task, source_task)?;
             if similarity > best_similarity {
@@ -5353,18 +5443,16 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
                 best_idx = idx;
             }
         }
-        
+
         Ok(best_idx)
     }
 
     /// Computes task similarity (simple string-based)
     #[allow(dead_code)]
     fn compute_task_similarity(&self, task1: &str, task2: &str) -> Result<F> {
-        let common_chars = task1.chars()
-            .filter(|c| task2.contains(*c))
-            .count();
+        let common_chars = task1.chars().filter(|c| task2.contains(*c)).count();
         let total_chars = task1.len().max(task2.len());
-        
+
         if total_chars > 0 {
             Ok(F::from_usize(common_chars).unwrap() / F::from_usize(total_chars).unwrap())
         } else {
@@ -5378,15 +5466,18 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
         // Simple similarity based on statistical properties
         let complexity = self.analyze_task_complexity(data)?;
         let characteristics = self.analyze_data_characteristics(data)?;
-        
+
         // Combine into similarity score
         let mut similarity = F::one() - complexity; // Higher complexity = lower similarity
-        
+
         if !characteristics.is_empty() {
-            let char_norm = characteristics.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+            let char_norm = characteristics
+                .iter()
+                .fold(F::zero(), |acc, &x| acc + x * x)
+                .sqrt();
             similarity = similarity * (F::one() / (F::one() + char_norm));
         }
-        
+
         Ok(similarity.max(F::zero()).min(F::one()))
     }
 }
@@ -5430,33 +5521,30 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         };
 
         // Initialize evolution engine with population
-        let initial_population = vec![
-            Architecture {
-                layers: vec![
-                    LayerConfig {
-                        layer_type: LayerType::Dense,
-                        size: 128,
-                        activation: ActivationFunction::ReLU,
-                        parameters: vec![F::from_f64(0.1).unwrap(), F::from_f64(0.01).unwrap()],
-                    },
-                    LayerConfig {
-                        layer_type: LayerType::Dense,
-                        size: 64,
-                        activation: ActivationFunction::ReLU,
-                        parameters: vec![F::from_f64(0.1).unwrap(), F::from_f64(0.01).unwrap()],
-                    },
-                ],
-                connections: vec![
-                    ConnectionConfig {
-                        from_layer: 0,
-                        to_layer: 1,
-                        connection_type: ConnectionType::FullyConnected,
-                        weight: F::from_f64(1.0).unwrap(),
-                    },
-                ],
-                fitness_score: F::zero(),
-            },
-        ];
+        let initial_population = vec![Architecture {
+            layers: vec![
+                LayerConfig {
+                    layer_type: LayerType::Dense,
+                    size: 128,
+                    activation: ActivationFunction::ReLU,
+                    parameters: vec![F::from_f64(0.1).unwrap(), F::from_f64(0.01).unwrap()],
+                },
+                LayerConfig {
+                    layer_type: LayerType::Dense,
+                    size: 64,
+                    activation: ActivationFunction::ReLU,
+                    parameters: vec![F::from_f64(0.1).unwrap(), F::from_f64(0.01).unwrap()],
+                },
+            ],
+            connections: vec![ConnectionConfig {
+                from_layer: 0,
+                to_layer: 1,
+                connection_type: ConnectionType::FullyConnected,
+                strength: F::from_f64(1.0).unwrap(),
+                weight: F::from_f64(1.0).unwrap(),
+            }],
+            fitness_score: F::zero(),
+        }];
 
         let evolution_engine = EvolutionEngine {
             population: initial_population,
@@ -5610,10 +5698,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         let complexity_score = self.evaluate_complexity(individual)?;
 
         // Weighted combination
-        let fitness = accuracy_score * self.fitness_evaluator.weights[0] +
-                     speed_score * self.fitness_evaluator.weights[1] +
-                     memory_score * self.fitness_evaluator.weights[2] +
-                     complexity_score * self.fitness_evaluator.weights[3];
+        let fitness = accuracy_score * self.fitness_evaluator.weights[0]
+            + speed_score * self.fitness_evaluator.weights[1]
+            + memory_score * self.fitness_evaluator.weights[2]
+            + complexity_score * self.fitness_evaluator.weights[3];
 
         Ok(fitness)
     }
@@ -5623,7 +5711,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     fn evaluate_accuracy(&self, individual: &Architecture<F>) -> Result<F> {
         // Heuristic based on layer configuration and connections
         let mut score = F::zero();
-        
+
         // Reward deep networks but not too deep
         let depth_bonus = if individual.layers.len() >= 3 && individual.layers.len() <= 8 {
             F::from_f64(0.8).unwrap()
@@ -5656,7 +5744,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     #[allow(dead_code)]
     fn evaluate_speed(&self, individual: &Architecture<F>) -> Result<F> {
         let mut score = F::one();
-        
+
         // Penalize for too many parameters
         let total_params = self.estimate_parameters(individual)?;
         let param_penalty = if total_params > F::from_f64(1000000.0).unwrap() {
@@ -5676,6 +5764,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
                 ActivationFunction::Sigmoid => F::from_f64(0.9).unwrap(),
                 ActivationFunction::Tanh => F::from_f64(0.85).unwrap(),
                 ActivationFunction::Softmax => F::from_f64(0.8).unwrap(),
+                ActivationFunction::GELU => F::from_f64(0.75).unwrap(),
+                ActivationFunction::Swish => F::from_f64(0.7).unwrap(),
+                ActivationFunction::Quantum => F::from_f64(0.6).unwrap(),
             };
             score = score * activation_penalty;
         }
@@ -5688,11 +5779,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     fn evaluate_memory_efficiency(&self, individual: &Architecture<F>) -> Result<F> {
         let total_params = self.estimate_parameters(individual)?;
         let memory_usage = total_params * F::from_f64(4.0).unwrap(); // Assume float32
-        
+
         // Memory efficiency score (lower memory = higher score)
         let max_memory = F::from_f64(100000000.0).unwrap(); // 100MB limit
         let efficiency = (max_memory - memory_usage).max(F::zero()) / max_memory;
-        
+
         Ok(efficiency)
     }
 
@@ -5701,7 +5792,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     fn evaluate_complexity(&self, individual: &Architecture<F>) -> Result<F> {
         let layer_count = individual.layers.len();
         let connection_count = individual.connections.len();
-        
+
         // Optimal complexity range
         let complexity_score = if layer_count >= 3 && layer_count <= 6 && connection_count <= 10 {
             F::from_f64(0.9).unwrap()
@@ -5710,7 +5801,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         } else {
             F::from_f64(0.5).unwrap() // Penalize under-complexity
         };
-        
+
         Ok(complexity_score)
     }
 
@@ -5719,11 +5810,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     fn calculate_activation_diversity(&self, individual: &Architecture<F>) -> Result<F> {
         use std::collections::HashSet;
         let mut activations = HashSet::new();
-        
+
         for layer in &individual.layers {
             activations.insert(std::mem::discriminant(&layer.activation));
         }
-        
+
         let diversity = F::from_usize(activations.len()).unwrap() / F::from_usize(4).unwrap(); // 4 activation types
         Ok(diversity)
     }
@@ -5732,7 +5823,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     #[allow(dead_code)]
     fn estimate_parameters(&self, individual: &Architecture<F>) -> Result<F> {
         let mut total_params = F::zero();
-        
+
         for (i, layer) in individual.layers.iter().enumerate() {
             if i == 0 {
                 // First layer - assume input size of 784 (28x28 image)
@@ -5740,37 +5831,40 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
                 total_params = total_params + params;
             } else {
                 // Hidden layers
-                let prev_size = individual.layers[i-1].size;
+                let prev_size = individual.layers[i - 1].size;
                 let params = F::from_usize(prev_size * layer.size + layer.size).unwrap();
                 total_params = total_params + params;
             }
         }
-        
+
         Ok(total_params)
     }
 
     /// Gets the best fitness in current population
     #[allow(dead_code)]
     fn get_best_fitness(&self) -> Result<F> {
-        let best_fitness = self.evolution_engine.population
+        let best_fitness = self
+            .evolution_engine
+            .population
             .iter()
             .map(|individual| individual.fitness_score)
             .fold(F::neg_infinity(), |acc, fitness| acc.max(fitness));
-        
+
         Ok(best_fitness)
     }
 
     /// Updates architecture DNA with best individual
     #[allow(dead_code)]
     fn update_architecture_dna(&mut self) -> Result<()> {
-        if let Some(best_individual) = self.evolution_engine.population
-            .iter()
-            .max_by(|a, b| a.fitness_score.partial_cmp(&b.fitness_score).unwrap_or(std::cmp::Ordering::Equal)) {
-            
+        if let Some(best_individual) = self.evolution_engine.population.iter().max_by(|a, b| {
+            a.fitness_score
+                .partial_cmp(&b.fitness_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        }) {
             // Convert best architecture to DNA representation
             self.architecture_dna = self.architecture_to_dna(best_individual)?;
         }
-        
+
         Ok(())
     }
 
@@ -5778,7 +5872,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     #[allow(dead_code)]
     fn architecture_to_dna(&self, architecture: &Architecture<F>) -> Result<ArchitectureDNA> {
         let mut genes = Vec::new();
-        
+
         for layer in &architecture.layers {
             let gene_type = match layer.layer_type {
                 LayerType::Dense => GeneType::Dense,
@@ -5786,22 +5880,25 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
                 LayerType::LSTM => GeneType::LSTM,
                 LayerType::Dropout => GeneType::Dropout,
             };
-            
+
             let mut parameters = HashMap::new();
             parameters.insert("size".to_string(), layer.size as f64);
-            parameters.insert("activation".to_string(), self.activation_to_code(&layer.activation));
-            
+            parameters.insert(
+                "activation".to_string(),
+                self.activation_to_code(&layer.activation),
+            );
+
             // Add layer-specific parameters
             for (i, param) in layer.parameters.iter().enumerate() {
                 parameters.insert(format!("param_{}", i), param.to_f64().unwrap_or(0.0));
             }
-            
+
             genes.push(ArchitectureGene {
                 gene_type,
                 parameters,
             });
         }
-        
+
         Ok(ArchitectureDNA {
             genes,
             fitness_score: architecture.fitness_score.to_f64().unwrap_or(0.0),
@@ -5816,6 +5913,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
             ActivationFunction::Sigmoid => 2.0,
             ActivationFunction::Tanh => 3.0,
             ActivationFunction::Softmax => 4.0,
+            ActivationFunction::GELU => 5.0,
+            ActivationFunction::Swish => 6.0,
+            ActivationFunction::Quantum => 7.0,
         }
     }
 
@@ -5836,23 +5936,26 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         let tournament_size = 3;
         let selection_count = self.evolution_engine.population.len() / 2;
         let mut selected = Vec::new();
-        
+
         for _ in 0..selection_count {
             let mut tournament = Vec::new();
-            
+
             // Select random individuals for tournament
             for _ in 0..tournament_size {
-                let idx = rand::random::<usize>() % self.evolution_engine.population.len();
+                let idx = random_range(0, self.evolution_engine.population.len());
                 tournament.push(&self.evolution_engine.population[idx]);
             }
-            
+
             // Select best from tournament
-            if let Some(winner) = tournament.iter()
-                .max_by(|a, b| a.fitness_score.partial_cmp(&b.fitness_score).unwrap_or(std::cmp::Ordering::Equal)) {
+            if let Some(winner) = tournament.iter().max_by(|a, b| {
+                a.fitness_score
+                    .partial_cmp(&b.fitness_score)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            }) {
                 selected.push((*winner).clone());
             }
         }
-        
+
         Ok(selected)
     }
 
@@ -5860,8 +5963,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     #[allow(dead_code)]
     fn elite_selection(&self) -> Result<Vec<Architecture<F>>> {
         let mut population = self.evolution_engine.population.clone();
-        population.sort_by(|a, b| b.fitness_score.partial_cmp(&a.fitness_score).unwrap_or(std::cmp::Ordering::Equal));
-        
+        population.sort_by(|a, b| {
+            b.fitness_score
+                .partial_cmp(&a.fitness_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
         let elite_count = self.evolution_engine.population.len() / 2;
         Ok(population.into_iter().take(elite_count).collect())
     }
@@ -5869,29 +5976,39 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     /// Rank-based selection
     #[allow(dead_code)]
     fn rank_based_selection(&self) -> Result<Vec<Architecture<F>>> {
-        let mut indexed_population: Vec<(usize, &Architecture<F>)> = self.evolution_engine.population
+        let mut indexed_population: Vec<(usize, &Architecture<F>)> = self
+            .evolution_engine
+            .population
             .iter()
             .enumerate()
             .collect();
-        
-        indexed_population.sort_by(|a, b| b.1.fitness_score.partial_cmp(&a.1.fitness_score).unwrap_or(std::cmp::Ordering::Equal));
-        
+
+        indexed_population.sort_by(|a, b| {
+            b.1.fitness_score
+                .partial_cmp(&a.1.fitness_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
         let selection_count = self.evolution_engine.population.len() / 2;
         let mut selected = Vec::new();
-        
+
         // Higher ranked individuals have higher probability
         for i in 0..selection_count {
             let rank_weight = (selection_count - i) as f64;
-            if rand::random::<f64>() < rank_weight / (selection_count as f64) {
+            if random_range(0.0, 1.0) < rank_weight / (selection_count as f64) {
                 selected.push(indexed_population[i].1.clone());
             }
         }
-        
+
         // Fill remaining slots if needed
         while selected.len() < selection_count && !indexed_population.is_empty() {
-            selected.push(indexed_population[selected.len() % indexed_population.len()].1.clone());
+            selected.push(
+                indexed_population[selected.len() % indexed_population.len()]
+                    .1
+                    .clone(),
+            );
         }
-        
+
         Ok(selected)
     }
 
@@ -5902,18 +6019,18 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
             .iter()
             .map(|individual| individual.fitness_score.max(F::zero())) // Ensure non-negative
             .fold(F::zero(), |acc, fitness| acc + fitness);
-        
+
         if total_fitness == F::zero() {
             return self.elite_selection(); // Fallback if all fitness is zero
         }
-        
+
         let selection_count = self.evolution_engine.population.len() / 2;
         let mut selected = Vec::new();
-        
+
         for _ in 0..selection_count {
-            let target = F::from_f64(rand::random::<f64>()).unwrap() * total_fitness;
+            let target = F::from_f64(random_range(0.0, 1.0)).unwrap() * total_fitness;
             let mut current_sum = F::zero();
-            
+
             for individual in &self.evolution_engine.population {
                 current_sum = current_sum + individual.fitness_score.max(F::zero());
                 if current_sum >= target {
@@ -5922,7 +6039,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
                 }
             }
         }
-        
+
         Ok(selected)
     }
 
@@ -5930,14 +6047,16 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     #[allow(dead_code)]
     fn crossover(&self, parents: &[Architecture<F>]) -> Result<Vec<Architecture<F>>> {
         let mut offspring = Vec::new();
-        
+
         for i in (0..parents.len()).step_by(2) {
             if i + 1 < parents.len() {
                 // Select crossover operator
-                let crossover_op = &self.crossover_operators[rand::random::<usize>() % self.crossover_operators.len()];
-                
-                if rand::random::<f64>() < crossover_op.probability {
-                    let (child1, child2) = self.perform_crossover(&parents[i], &parents[i + 1], crossover_op)?;
+                let crossover_op = &self.crossover_operators
+                    [random_range(0, self.crossover_operators.len())];
+
+                if random_range(0.0, 1.0) < crossover_op.probability {
+                    let (child1, child2) =
+                        self.perform_crossover(&parents[i], &parents[i + 1], crossover_op)?;
                     offspring.push(child1);
                     offspring.push(child2);
                 } else {
@@ -5950,13 +6069,18 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
                 offspring.push(parents[i].clone());
             }
         }
-        
+
         Ok(offspring)
     }
 
     /// Performs crossover between two parents
     #[allow(dead_code)]
-    fn perform_crossover(&self, parent1: &Architecture<F>, parent2: &Architecture<F>, crossover_op: &CrossoverOperator) -> Result<(Architecture<F>, Architecture<F>)> {
+    fn perform_crossover(
+        &self,
+        parent1: &Architecture<F>,
+        parent2: &Architecture<F>,
+        crossover_op: &CrossoverOperator,
+    ) -> Result<(Architecture<F>, Architecture<F>)> {
         match crossover_op.crossover_type {
             CrossoverType::SinglePoint => self.single_point_crossover(parent1, parent2),
             CrossoverType::TwoPoint => self.two_point_crossover(parent1, parent2),
@@ -5968,82 +6092,99 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
 
     /// Single point crossover
     #[allow(dead_code)]
-    fn single_point_crossover(&self, parent1: &Architecture<F>, parent2: &Architecture<F>) -> Result<(Architecture<F>, Architecture<F>)> {
+    fn single_point_crossover(
+        &self,
+        parent1: &Architecture<F>,
+        parent2: &Architecture<F>,
+    ) -> Result<(Architecture<F>, Architecture<F>)> {
         let min_len = parent1.layers.len().min(parent2.layers.len());
         if min_len == 0 {
             return Ok((parent1.clone(), parent2.clone()));
         }
-        
-        let crossover_point = rand::random::<usize>() % min_len;
-        
+
+        let crossover_point = random_range(0, min_len);
+
         let mut child1_layers = parent1.layers[..crossover_point].to_vec();
-        child1_layers.extend_from_slice(&parent2.layers[crossover_point..parent2.layers.len().min(parent1.layers.len())]);
-        
+        child1_layers.extend_from_slice(
+            &parent2.layers[crossover_point..parent2.layers.len().min(parent1.layers.len())],
+        );
+
         let mut child2_layers = parent2.layers[..crossover_point].to_vec();
-        child2_layers.extend_from_slice(&parent1.layers[crossover_point..parent1.layers.len().min(parent2.layers.len())]);
-        
+        child2_layers.extend_from_slice(
+            &parent1.layers[crossover_point..parent1.layers.len().min(parent2.layers.len())],
+        );
+
         let child1 = Architecture {
             layers: child1_layers,
             connections: parent1.connections.clone(), // Simplified - could also crossover connections
             fitness_score: F::zero(),
         };
-        
+
         let child2 = Architecture {
             layers: child2_layers,
             connections: parent2.connections.clone(),
             fitness_score: F::zero(),
         };
-        
+
         Ok((child1, child2))
     }
 
     /// Two point crossover
     #[allow(dead_code)]
-    fn two_point_crossover(&self, parent1: &Architecture<F>, parent2: &Architecture<F>) -> Result<(Architecture<F>, Architecture<F>)> {
+    fn two_point_crossover(
+        &self,
+        parent1: &Architecture<F>,
+        parent2: &Architecture<F>,
+    ) -> Result<(Architecture<F>, Architecture<F>)> {
         let min_len = parent1.layers.len().min(parent2.layers.len());
         if min_len < 2 {
             return self.single_point_crossover(parent1, parent2);
         }
-        
-        let point1 = rand::random::<usize>() % min_len;
-        let point2 = (point1 + 1 + rand::random::<usize>() % (min_len - point1 - 1)).min(min_len - 1);
-        
+
+        let point1 = random_range(0, min_len);
+        let point2 =
+            (point1 + 1 + random_range(0, min_len - point1 - 1)).min(min_len - 1);
+
         let mut child1_layers = parent1.layers[..point1].to_vec();
         child1_layers.extend_from_slice(&parent2.layers[point1..=point2]);
         if point2 + 1 < parent1.layers.len() {
             child1_layers.extend_from_slice(&parent1.layers[point2 + 1..]);
         }
-        
+
         let mut child2_layers = parent2.layers[..point1].to_vec();
         child2_layers.extend_from_slice(&parent1.layers[point1..=point2]);
         if point2 + 1 < parent2.layers.len() {
             child2_layers.extend_from_slice(&parent2.layers[point2 + 1..]);
         }
-        
+
         let child1 = Architecture {
             layers: child1_layers,
             connections: parent1.connections.clone(),
             fitness_score: F::zero(),
         };
-        
+
         let child2 = Architecture {
             layers: child2_layers,
             connections: parent2.connections.clone(),
             fitness_score: F::zero(),
         };
-        
+
         Ok((child1, child2))
     }
 
     /// Uniform crossover
     #[allow(dead_code)]
-    fn uniform_crossover(&self, parent1: &Architecture<F>, parent2: &Architecture<F>) -> Result<(Architecture<F>, Architecture<F>)> {
+    fn uniform_crossover(
+        &self,
+        parent1: &Architecture<F>,
+        parent2: &Architecture<F>,
+    ) -> Result<(Architecture<F>, Architecture<F>)> {
         let min_len = parent1.layers.len().min(parent2.layers.len());
         let mut child1_layers = Vec::new();
         let mut child2_layers = Vec::new();
-        
+
         for i in 0..min_len {
-            if rand::random::<bool>() {
+            if random_range(0.0, 1.0) < 0.5 {
                 child1_layers.push(parent1.layers[i].clone());
                 child2_layers.push(parent2.layers[i].clone());
             } else {
@@ -6051,29 +6192,33 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
                 child2_layers.push(parent1.layers[i].clone());
             }
         }
-        
+
         let child1 = Architecture {
             layers: child1_layers,
             connections: parent1.connections.clone(),
             fitness_score: F::zero(),
         };
-        
+
         let child2 = Architecture {
             layers: child2_layers,
             connections: parent2.connections.clone(),
             fitness_score: F::zero(),
         };
-        
+
         Ok((child1, child2))
     }
 
     /// Structural crossover
     #[allow(dead_code)]
-    fn structural_crossover(&self, parent1: &Architecture<F>, parent2: &Architecture<F>) -> Result<(Architecture<F>, Architecture<F>)> {
+    fn structural_crossover(
+        &self,
+        parent1: &Architecture<F>,
+        parent2: &Architecture<F>,
+    ) -> Result<(Architecture<F>, Architecture<F>)> {
         // Combine different structural elements from both parents
         let mut child1_layers = parent1.layers.clone();
         let mut child2_layers = parent2.layers.clone();
-        
+
         // Add some layers from the other parent
         if parent2.layers.len() > parent1.layers.len() {
             child1_layers.extend_from_slice(&parent2.layers[parent1.layers.len()..]);
@@ -6081,56 +6226,65 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         if parent1.layers.len() > parent2.layers.len() {
             child2_layers.extend_from_slice(&parent1.layers[parent2.layers.len()..]);
         }
-        
+
         let child1 = Architecture {
             layers: child1_layers,
             connections: parent1.connections.clone(),
             fitness_score: F::zero(),
         };
-        
+
         let child2 = Architecture {
             layers: child2_layers,
             connections: parent2.connections.clone(),
             fitness_score: F::zero(),
         };
-        
+
         Ok((child1, child2))
     }
 
     /// Semantic crossover (parameter averaging)
     #[allow(dead_code)]
-    fn semantic_crossover(&self, parent1: &Architecture<F>, parent2: &Architecture<F>) -> Result<(Architecture<F>, Architecture<F>)> {
+    fn semantic_crossover(
+        &self,
+        parent1: &Architecture<F>,
+        parent2: &Architecture<F>,
+    ) -> Result<(Architecture<F>, Architecture<F>)> {
         let min_len = parent1.layers.len().min(parent2.layers.len());
         let mut child1_layers = Vec::new();
         let mut child2_layers = Vec::new();
-        
+
         for i in 0..min_len {
             // Average parameters between corresponding layers
             let mut child1_layer = parent1.layers[i].clone();
             let mut child2_layer = parent2.layers[i].clone();
-            
-            for j in 0..child1_layer.parameters.len().min(parent2.layers[i].parameters.len()) {
-                let avg = (child1_layer.parameters[j] + parent2.layers[i].parameters[j]) / F::from_f64(2.0).unwrap();
+
+            for j in 0..child1_layer
+                .parameters
+                .len()
+                .min(parent2.layers[i].parameters.len())
+            {
+                let avg = (child1_layer.parameters[j] + parent2.layers[i].parameters[j])
+                    / F::from_f64(2.0).unwrap();
                 child1_layer.parameters[j] = avg;
                 child2_layer.parameters[j] = avg;
             }
-            
+
             child1_layers.push(child1_layer);
             child2_layers.push(child2_layer);
         }
-        
+
         let child1 = Architecture {
             layers: child1_layers,
             connections: parent1.connections.clone(),
             fitness_score: F::zero(),
         };
-        
+
         let child2 = Architecture {
             layers: child2_layers,
             connections: parent2.connections.clone(),
             fitness_score: F::zero(),
         };
-        
+
         Ok((child1, child2))
     }
 
@@ -6138,81 +6292,111 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     #[allow(dead_code)]
     fn mutation(&self, offspring: &[Architecture<F>]) -> Result<Vec<Architecture<F>>> {
         let mut mutated = Vec::new();
-        
+
         for individual in offspring {
             let mut mutated_individual = individual.clone();
-            
+
             // Apply each mutation operator with its probability
             for mutation_op in &self.mutation_operators {
-                if rand::random::<f64>() < mutation_op.probability {
+                if random_range(0.0, 1.0) < mutation_op.probability {
                     mutated_individual = self.apply_mutation(&mutated_individual, mutation_op)?;
                 }
             }
-            
+
             mutated.push(mutated_individual);
         }
-        
+
         Ok(mutated)
     }
 
     /// Applies a specific mutation to an individual
     #[allow(dead_code)]
-    fn apply_mutation(&self, individual: &Architecture<F>, mutation_op: &MutationOperator) -> Result<Architecture<F>> {
+    fn apply_mutation(
+        &self,
+        individual: &Architecture<F>,
+        mutation_op: &MutationOperator,
+    ) -> Result<Architecture<F>> {
         match mutation_op.mutation_type {
-            MutationType::ParameterMutation => self.parameter_mutation(individual, mutation_op.intensity),
-            MutationType::StructuralMutation => self.structural_mutation(individual, mutation_op.intensity),
-            MutationType::LayerAddition => self.layer_addition_mutation(individual, mutation_op.intensity),
-            MutationType::LayerRemoval => self.layer_removal_mutation(individual, mutation_op.intensity),
-            MutationType::ConnectionMutation => self.connection_mutation(individual, mutation_op.intensity),
+            MutationType::ParameterMutation => {
+                self.parameter_mutation(individual, mutation_op.intensity)
+            }
+            MutationType::StructuralMutation => {
+                self.structural_mutation(individual, mutation_op.intensity)
+            }
+            MutationType::LayerAddition => {
+                self.layer_addition_mutation(individual, mutation_op.intensity)
+            }
+            MutationType::LayerRemoval => {
+                self.layer_removal_mutation(individual, mutation_op.intensity)
+            }
+            MutationType::ConnectionMutation => {
+                self.connection_mutation(individual, mutation_op.intensity)
+            }
         }
     }
 
     /// Parameter mutation
     #[allow(dead_code)]
-    fn parameter_mutation(&self, individual: &Architecture<F>, intensity: f64) -> Result<Architecture<F>> {
+    fn parameter_mutation(
+        &self,
+        individual: &Architecture<F>,
+        intensity: f64,
+    ) -> Result<Architecture<F>> {
         let mut mutated = individual.clone();
-        
+
         for layer in &mut mutated.layers {
             for param in &mut layer.parameters {
-                if rand::random::<f64>() < 0.1 { // 10% chance to mutate each parameter
-                    let noise = F::from_f64((rand::random::<f64>() - 0.5) * intensity).unwrap();
+                if random_range(0.0, 1.0) < 0.1 {
+                    // 10% chance to mutate each parameter
+                    let noise = F::from_f64((random_range(0.0, 1.0) - 0.5) * intensity).unwrap();
                     *param = *param + noise;
                 }
             }
         }
-        
+
         mutated.fitness_score = F::zero(); // Reset fitness
         Ok(mutated)
     }
 
     /// Structural mutation
     #[allow(dead_code)]
-    fn structural_mutation(&self, individual: &Architecture<F>, _intensity: f64) -> Result<Architecture<F>> {
+    fn structural_mutation(
+        &self,
+        individual: &Architecture<F>,
+        _intensity: f64,
+    ) -> Result<Architecture<F>> {
         let mut mutated = individual.clone();
-        
-        if !mutated.layers.is_empty() && rand::random::<f64>() < 0.3 {
-            let layer_idx = rand::random::<usize>() % mutated.layers.len();
-            
+
+        if !mutated.layers.is_empty() && random_range(0.0, 1.0) < 0.3 {
+            let layer_idx = random_range(0, mutated.layers.len());
+
             // Randomly change layer size
-            let size_multiplier = 0.5 + rand::random::<f64>() * 1.0; // 0.5 to 1.5
-            mutated.layers[layer_idx].size = ((mutated.layers[layer_idx].size as f64) * size_multiplier) as usize;
-            mutated.layers[layer_idx].size = mutated.layers[layer_idx].size.max(8).min(1024); // Bounds
+            let size_multiplier = 0.5 + random_range(0.0, 1.0) * 1.0; // 0.5 to 1.5
+            mutated.layers[layer_idx].size =
+                ((mutated.layers[layer_idx].size as f64) * size_multiplier) as usize;
+            mutated.layers[layer_idx].size = mutated.layers[layer_idx].size.max(8).min(1024);
+            // Bounds
         }
-        
+
         mutated.fitness_score = F::zero();
         Ok(mutated)
     }
 
     /// Layer addition mutation
     #[allow(dead_code)]
-    fn layer_addition_mutation(&self, individual: &Architecture<F>, _intensity: f64) -> Result<Architecture<F>> {
+    fn layer_addition_mutation(
+        &self,
+        individual: &Architecture<F>,
+        _intensity: f64,
+    ) -> Result<Architecture<F>> {
         let mut mutated = individual.clone();
-        
-        if mutated.layers.len() < 10 { // Don't add too many layers
+
+        if mutated.layers.len() < 10 {
+            // Don't add too many layers
             let new_layer = LayerConfig {
                 layer_type: LayerType::Dense, // For simplicity, always add dense layers
-                size: 32 + rand::random::<usize>() % 256, // Random size between 32-288
-                activation: match rand::random::<usize>() % 4 {
+                size: 32 + random_range(0, 256), // Random size between 32-288
+                activation: match random_range(0, 4) {
                     0 => ActivationFunction::ReLU,
                     1 => ActivationFunction::Sigmoid,
                     2 => ActivationFunction::Tanh,
@@ -6220,41 +6404,51 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
                 },
                 parameters: vec![F::from_f64(0.1).unwrap(), F::from_f64(0.01).unwrap()],
             };
-            
-            let insert_pos = rand::random::<usize>() % (mutated.layers.len() + 1);
+
+            let insert_pos = random_range(0, mutated.layers.len() + 1);
             mutated.layers.insert(insert_pos, new_layer);
         }
-        
+
         mutated.fitness_score = F::zero();
         Ok(mutated)
     }
 
     /// Layer removal mutation
     #[allow(dead_code)]
-    fn layer_removal_mutation(&self, individual: &Architecture<F>, _intensity: f64) -> Result<Architecture<F>> {
+    fn layer_removal_mutation(
+        &self,
+        individual: &Architecture<F>,
+        _intensity: f64,
+    ) -> Result<Architecture<F>> {
         let mut mutated = individual.clone();
-        
-        if mutated.layers.len() > 2 { // Keep at least 2 layers
-            let remove_idx = rand::random::<usize>() % mutated.layers.len();
+
+        if mutated.layers.len() > 2 {
+            // Keep at least 2 layers
+            let remove_idx = random_range(0, mutated.layers.len());
             mutated.layers.remove(remove_idx);
         }
-        
+
         mutated.fitness_score = F::zero();
         Ok(mutated)
     }
 
     /// Connection mutation
     #[allow(dead_code)]
-    fn connection_mutation(&self, individual: &Architecture<F>, intensity: f64) -> Result<Architecture<F>> {
+    fn connection_mutation(
+        &self,
+        individual: &Architecture<F>,
+        intensity: f64,
+    ) -> Result<Architecture<F>> {
         let mut mutated = individual.clone();
-        
+
         for connection in &mut mutated.connections {
-            if rand::random::<f64>() < 0.2 { // 20% chance to mutate each connection
-                let noise = F::from_f64((rand::random::<f64>() - 0.5) * intensity).unwrap();
+            if random_range(0.0, 1.0) < 0.2 {
+                // 20% chance to mutate each connection
+                let noise = F::from_f64((random_range(0.0, 1.0) - 0.5) * intensity).unwrap();
                 connection.strength = connection.strength + noise;
             }
         }
-        
+
         mutated.fitness_score = F::zero();
         Ok(mutated)
     }
@@ -6271,14 +6465,22 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         // Adaptive parameter adjustment based on convergence
         if convergence_rate < F::from_f64(0.01).unwrap() {
             // Slow convergence - increase mutation and crossover rates
-            self.evolution_engine.mutation_rate = (self.evolution_engine.mutation_rate * F::from_f64(1.1).unwrap()).min(F::from_f64(0.3).unwrap());
-            self.evolution_engine.crossover_rate = (self.evolution_engine.crossover_rate * F::from_f64(1.05).unwrap()).min(F::from_f64(0.9).unwrap());
+            self.evolution_engine.mutation_rate = (self.evolution_engine.mutation_rate
+                * F::from_f64(1.1).unwrap())
+            .min(F::from_f64(0.3).unwrap());
+            self.evolution_engine.crossover_rate = (self.evolution_engine.crossover_rate
+                * F::from_f64(1.05).unwrap())
+            .min(F::from_f64(0.9).unwrap());
         } else if convergence_rate > F::from_f64(0.1).unwrap() {
             // Fast convergence - decrease mutation and crossover rates for fine-tuning
-            self.evolution_engine.mutation_rate = (self.evolution_engine.mutation_rate * F::from_f64(0.9).unwrap()).max(F::from_f64(0.01).unwrap());
-            self.evolution_engine.crossover_rate = (self.evolution_engine.crossover_rate * F::from_f64(0.95).unwrap()).max(F::from_f64(0.3).unwrap());
+            self.evolution_engine.mutation_rate = (self.evolution_engine.mutation_rate
+                * F::from_f64(0.9).unwrap())
+            .max(F::from_f64(0.01).unwrap());
+            self.evolution_engine.crossover_rate = (self.evolution_engine.crossover_rate
+                * F::from_f64(0.95).unwrap())
+            .max(F::from_f64(0.3).unwrap());
         }
-        
+
         Ok(())
     }
 
@@ -6289,9 +6491,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         let mut export = String::new();
         export.push_str("{\n");
         export.push_str("  \"type\": \"neural_architecture\",\n");
-        export.push_str(&format!("  \"fitness\": {},\n", self.architecture_dna.fitness_score));
+        export.push_str(&format!(
+            "  \"fitness\": {},\n",
+            self.architecture_dna.fitness_score
+        ));
         export.push_str("  \"layers\": [\n");
-        
+
         for (i, gene) in self.architecture_dna.genes.iter().enumerate() {
             export.push_str("    {\n");
             export.push_str(&format!("      \"type\": \"{:?}\",\n", gene.gene_type));
@@ -6306,10 +6511,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
             }
             export.push_str("\n");
         }
-        
+
         export.push_str("  ]\n");
         export.push_str("}");
-        
+
         Ok(export)
     }
 }

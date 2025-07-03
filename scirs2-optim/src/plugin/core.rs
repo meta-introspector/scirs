@@ -3,7 +3,7 @@
 //! This module defines the fundamental traits and structures that custom optimizers
 //! must implement to integrate with the plugin system.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};

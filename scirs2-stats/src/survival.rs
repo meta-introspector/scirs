@@ -45,9 +45,9 @@ impl KaplanMeierEstimator {
 
         if durations.len() != event_observed.len() {
             return Err(StatsError::DimensionMismatch(format!(
-                "durations length ({}) must match event_observed length ({})",
-                durations.len(),
-                event_observed.len()
+                "durations length ({durations_len}) must match event_observed length ({events_len})",
+                durations_len = durations.len(),
+                events_len = event_observed.len()
             )));
         }
 
@@ -475,8 +475,7 @@ impl CoxPHModel {
         }
 
         Err(StatsError::ConvergenceError(format!(
-            "Cox model failed to converge after {} iterations",
-            max_iter
+            "Cox model failed to converge after {max_iter} iterations"
         )))
     }
 
@@ -563,7 +562,7 @@ impl CoxPHModel {
     fn invert_hessian(hessian: &Array2<f64>) -> Result<Array2<f64>> {
         let neg_hessian = -hessian;
         scirs2_linalg::inv(&neg_hessian.view(), None)
-            .map_err(|e| StatsError::ComputationError(format!("Failed to invert Hessian: {}", e)))
+            .map_err(|e| StatsError::ComputationError(format!("Failed to invert Hessian: {e}")))
     }
 
     /// Calculate baseline hazard function
@@ -615,9 +614,9 @@ impl CoxPHModel {
 
         if covariates.ncols() != self.coefficients.len() {
             return Err(StatsError::DimensionMismatch(format!(
-                "covariates has {} features, expected {}",
-                covariates.ncols(),
-                self.coefficients.len()
+                "covariates has {features} features, expected {expected}",
+                features = covariates.ncols(),
+                expected = self.coefficients.len()
             )));
         }
 
@@ -703,7 +702,7 @@ impl AFTModel {
         }
 
         let coefficients = scirs2_linalg::solve(&xtx.view(), &xty.view(), None).map_err(|e| {
-            StatsError::ComputationError(format!("Failed to solve regression: {}", e))
+            StatsError::ComputationError(format!("Failed to solve regression: {e}"))
         })?;
 
         // Estimate scale parameter
@@ -739,9 +738,9 @@ impl AFTModel {
 
         if covariates.ncols() != self.coefficients.len() {
             return Err(StatsError::DimensionMismatch(format!(
-                "covariates has {} features, expected {}",
-                covariates.ncols(),
-                self.coefficients.len()
+                "covariates has {features} features, expected {expected}",
+                features = covariates.ncols(),
+                expected = self.coefficients.len()
             )));
         }
 
@@ -877,8 +876,7 @@ impl ExtendedCoxModel {
         }
 
         Err(StatsError::ConvergenceError(format!(
-            "Extended Cox model failed to converge after {} iterations",
-            max_iter
+            "Extended Cox model failed to converge after {max_iter} iterations"
         )))
     }
 
@@ -1077,7 +1075,7 @@ impl ExtendedCoxModel {
     fn invert_hessian(hessian: &Array2<f64>) -> Result<Array2<f64>> {
         let neg_hessian = -hessian;
         scirs2_linalg::inv(&neg_hessian.view(), None)
-            .map_err(|e| StatsError::ComputationError(format!("Failed to invert Hessian: {}", e)))
+            .map_err(|e| StatsError::ComputationError(format!("Failed to invert Hessian: {e}")))
     }
 
     /// Predict hazard ratios with optional stratum
@@ -1090,9 +1088,9 @@ impl ExtendedCoxModel {
 
         if covariates.ncols() != self.coefficients.len() {
             return Err(StatsError::DimensionMismatch(format!(
-                "covariates has {} features, expected {}",
-                covariates.ncols(),
-                self.coefficients.len()
+                "covariates has {features} features, expected {expected}",
+                features = covariates.ncols(),
+                expected = self.coefficients.len()
             )));
         }
 
@@ -1248,8 +1246,7 @@ impl CompetingRisksModel {
         }
 
         Err(StatsError::ConvergenceError(format!(
-            "Competing risks model failed to converge after {} iterations",
-            max_iter
+            "Competing risks model failed to converge after {max_iter} iterations"
         )))
     }
 
@@ -1485,7 +1482,7 @@ impl CompetingRisksModel {
     fn invert_hessian(hessian: &Array2<f64>) -> Result<Array2<f64>> {
         let neg_hessian = -hessian;
         scirs2_linalg::inv(&neg_hessian.view(), None)
-            .map_err(|e| StatsError::ComputationError(format!("Failed to invert Hessian: {}", e)))
+            .map_err(|e| StatsError::ComputationError(format!("Failed to invert Hessian: {e}")))
     }
 
     /// Predict cumulative incidence for target risk

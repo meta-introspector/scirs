@@ -5,8 +5,8 @@
 //! machine learning, distributed processing, and intelligent memory management.
 //! It supports the "Streaming Analytics" roadmap goal for Integration & Ecosystem.
 
-use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use crate::error::StatsResult;
+use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use serde::{Deserialize, Serialize};

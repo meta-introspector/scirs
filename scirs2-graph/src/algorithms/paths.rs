@@ -29,7 +29,7 @@ pub enum EulerianType {
 /// * The type of Eulerian structure in the graph
 pub fn eulerian_type<N, E, Ix>(graph: &Graph<N, E, Ix>) -> EulerianType
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -88,7 +88,7 @@ where
 /// * `bool` - True if a Hamiltonian path exists
 pub fn has_hamiltonian_path<N, E, Ix>(graph: &Graph<N, E, Ix>) -> bool
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -121,7 +121,7 @@ fn hamiltonian_path_dfs<N, E, Ix>(
     n: usize,
 ) -> bool
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -153,7 +153,7 @@ where
 /// * `bool` - True if a Hamiltonian circuit exists
 pub fn has_hamiltonian_circuit<N, E, Ix>(graph: &Graph<N, E, Ix>) -> bool
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -184,7 +184,7 @@ fn hamiltonian_circuit_dfs<N, E, Ix>(
     n: usize,
 ) -> bool
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {

@@ -327,8 +327,7 @@ impl DistributedCommunication for MockDistributedCommunication {
         match op {
             "sum" | "mean" => Ok(tensor),
             _ => Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "Unknown reduction operation: {}",
-                op
+                "Unknown reduction operation: {op}"
             )))),
         }
     }
@@ -342,8 +341,7 @@ impl DistributedCommunication for MockDistributedCommunication {
         match op {
             "sum" | "mean" => Ok(tensor),
             _ => Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "Unknown reduction operation: {}",
-                op
+                "Unknown reduction operation: {op}"
             )))),
         }
     }
@@ -616,7 +614,7 @@ impl TrainingCallback for ParameterSyncCallback {
 
         match self.channel.inner().barrier() {
             Ok(()) => {}
-            Err(e) => eprintln!("Error in barrier synchronization: {}", e),
+            Err(e) => eprintln!("Error in barrier synchronization: {e}"),
         }
     }
 
@@ -635,7 +633,7 @@ impl TrainingCallback for ParameterSyncCallback {
 
             match self.channel.inner().barrier() {
                 Ok(()) => {}
-                Err(e) => eprintln!("Error in barrier synchronization: {}", e),
+                Err(e) => eprintln!("Error in barrier synchronization: {e}"),
             }
         }
     }
@@ -644,7 +642,7 @@ impl TrainingCallback for ParameterSyncCallback {
         // Synchronize initial parameters
         match self.channel.inner().barrier() {
             Ok(()) => {}
-            Err(e) => eprintln!("Error in barrier synchronization: {}", e),
+            Err(e) => eprintln!("Error in barrier synchronization: {e}"),
         }
     }
 
@@ -652,7 +650,7 @@ impl TrainingCallback for ParameterSyncCallback {
         // Final synchronization
         match self.channel.inner().barrier() {
             Ok(()) => {}
-            Err(e) => eprintln!("Error in barrier synchronization: {}", e),
+            Err(e) => eprintln!("Error in barrier synchronization: {e}"),
         }
     }
 }

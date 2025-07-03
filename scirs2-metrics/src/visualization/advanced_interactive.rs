@@ -1278,6 +1278,8 @@ pub enum DeviceType {
 /// Layout changes
 #[derive(Debug, Clone)]
 pub struct LayoutChange {
+    /// Widget selector (e.g., "*" for all widgets, or specific widget ID)
+    pub widget_selector: String,
     /// New position
     pub position: Option<Position>,
     /// New size
@@ -2494,15 +2496,13 @@ impl RenderingEngine for DefaultRenderingEngine {
         // Render each widget
         for (widget_id, widget_state) in &dashboard_state.widgets {
             html.push_str(&format!(
-                "  <div id=\"widget-{}\" class=\"dashboard-widget widget-{}\" data-type=\"{}\">\n",
-                widget_id,
-                widget_state.widget_type.to_string().to_lowercase(),
-                widget_state.widget_type.to_string()
+                "  <div id=\"widget-{}\" class=\"dashboard-widget widget-generic\" data-type=\"generic\">\n",
+                widget_id
             ));
             html.push_str("    <div class=\"widget-header\">\n");
             html.push_str(&format!(
                 "      <h3 class=\"widget-title\">{}</h3>\n",
-                widget_state.title
+                widget_state.config.title
             ));
             html.push_str("      <div class=\"widget-controls\">\n");
             html.push_str("        <button class=\"widget-menu-btn\">⋮</button>\n");
@@ -2567,7 +2567,7 @@ impl RenderingEngine for DefaultRenderingEngine {
             assets: Vec::new(),
             performance: RenderPerformance {
                 render_time,
-                memory_usage: (html.len() + css.len() + javascript.len()) as u64,
+                memory_usage: html.len() + css.len() + javascript.len(),
                 frame_rate: 60.0,
                 gpu_usage: Some(0.1), // Simulated low GPU usage
             },

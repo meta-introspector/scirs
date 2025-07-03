@@ -803,13 +803,13 @@ impl ClusteringCoordinationInterface {
     ) -> Result<ClusteringResult> {
         // Enhanced quantum-AI clustering coordination
         let start_time = Instant::now();
-        
+
         // Apply quantum-inspired clustering if enabled
         let quantum_clusters = if self.quantum_neuromorphic_enabled {
             // Quantum-inspired K-means with superposition of cluster centers
             let num_clusters = ((data.nrows() as f64).sqrt().ceil() as usize).max(2);
             let mut clusters = Array1::zeros(data.nrows());
-            
+
             // Simulate quantum superposition by using probabilistic assignments
             for (i, _row) in data.rows().into_iter().enumerate() {
                 let quantum_state = (i as f64 * 0.618033988749).sin().abs(); // Golden ratio for quantum simulation
@@ -819,22 +819,31 @@ impl ClusteringCoordinationInterface {
         } else {
             Array1::zeros(data.nrows())
         };
-        
+
         // Calculate performance metrics
         let processing_time = start_time.elapsed().as_secs_f64();
-        let quantum_advantage = if self.quantum_neuromorphic_enabled { 2.5 + processing_time * 0.1 } else { 1.0 };
-        let ai_speedup = if self.ai_clustering_enabled { 1.8 + (data.nrows() as f64).log10() * 0.2 } else { 1.0 };
-        
+        let quantum_advantage = if self.quantum_neuromorphic_enabled {
+            2.5 + processing_time * 0.1
+        } else {
+            1.0
+        };
+        let ai_speedup = if self.ai_clustering_enabled {
+            1.8 + (data.nrows() as f64).log10() * 0.2
+        } else {
+            1.0
+        };
+
         // Update performance feedback
-        self.performance_feedback.push(ClusteringPerformanceFeedback {
-            timestamp: Instant::now(),
-            processing_time,
-            data_size: data.nrows(),
-            quantum_advantage,
-            ai_speedup,
-            accuracy_estimate: 0.85 + quantum_advantage * 0.05,
-        });
-        
+        self.performance_feedback
+            .push(ClusteringPerformanceFeedback {
+                timestamp: Instant::now(),
+                processing_time,
+                data_size: data.nrows(),
+                quantum_advantage,
+                ai_speedup,
+                accuracy_estimate: 0.85 + quantum_advantage * 0.05,
+            });
+
         Ok(ClusteringResult {
             clusters: quantum_clusters,
             confidence: 0.85 + quantum_advantage * 0.05,
@@ -881,12 +890,13 @@ impl SpatialProcessingInterface {
         // Enhanced quantum-neuromorphic spatial processing
         let start_time = Instant::now();
         let mut processed_data = data.clone();
-        
+
         // Apply quantum-inspired spatial transformations
         let quantum_enhancement = if self.quantum_spatial_enabled {
             // Quantum-inspired spatial filtering using wave function interference
             for ((i, j), value) in processed_data.indexed_iter_mut() {
-                let phase = (i as f64 * 0.381966011 + j as f64 * 0.618033989) * 2.0 * std::f64::consts::PI;
+                let phase =
+                    (i as f64 * 0.381966011 + j as f64 * 0.618033989) * 2.0 * std::f64::consts::PI;
                 let quantum_correction = (phase.cos() * 0.1 + 1.0) * phase.sin().abs() * 0.05;
                 *value = (*value + quantum_correction).max(0.0);
             }
@@ -894,14 +904,15 @@ impl SpatialProcessingInterface {
         } else {
             1.0
         };
-        
+
         // Apply neuromorphic adaptation
         let neuromorphic_adaptation = if self.neuromorphic_spatial_enabled {
             // Simulate spike-based processing with adaptive thresholds
             let adaptive_threshold = processed_data.mean().unwrap_or(0.0);
             for value in processed_data.iter_mut() {
                 if *value > adaptive_threshold {
-                    *value = (*value - adaptive_threshold) * 1.2 + adaptive_threshold; // Spike amplification
+                    *value = (*value - adaptive_threshold) * 1.2 + adaptive_threshold;
+                // Spike amplification
                 } else {
                     *value *= 0.9; // Leaky integration
                 }
@@ -910,7 +921,7 @@ impl SpatialProcessingInterface {
         } else {
             1.0
         };
-        
+
         // Apply AI optimization
         let ai_optimization = if self.ai_optimization_enabled {
             // Gradient-based optimization of spatial features
@@ -919,7 +930,7 @@ impl SpatialProcessingInterface {
         } else {
             1.0
         };
-        
+
         // Track performance metrics
         self.spatial_performance.push(SpatialPerformanceMetric {
             timestamp: Instant::now(),
@@ -929,7 +940,7 @@ impl SpatialProcessingInterface {
             neuromorphic_adaptation,
             ai_optimization,
         });
-        
+
         Ok(SpatialResult {
             processed_data,
             quantum_enhancement,
@@ -976,7 +987,7 @@ impl NeuralNetworkInterface {
         // Enhanced neural coordination with meta-learning and NAS
         let start_time = Instant::now();
         let mut output = data.clone();
-        
+
         // Apply Neural Architecture Search optimization
         let nas_optimization = if self.nas_integration {
             // Simulate NAS-optimized layer arrangements
@@ -990,7 +1001,7 @@ impl NeuralNetworkInterface {
         } else {
             1.0
         };
-        
+
         // Apply meta-learning boost
         let meta_learning_boost = if self.meta_learning_coordination {
             // Simulate meta-learned adaptation
@@ -1002,7 +1013,7 @@ impl NeuralNetworkInterface {
         } else {
             1.0
         };
-        
+
         // Calculate coordination benefit
         let coordination_benefit = if self.ultrathink_neural_enabled {
             // Benefit from coordinated processing across modules
@@ -1011,7 +1022,7 @@ impl NeuralNetworkInterface {
         } else {
             1.0
         };
-        
+
         // Track neural performance
         self.neural_performance.push(NeuralPerformanceMetric {
             timestamp: Instant::now(),
@@ -1021,7 +1032,7 @@ impl NeuralNetworkInterface {
             meta_learning_boost,
             coordination_benefit,
         });
-        
+
         Ok(NeuralResult {
             output,
             nas_optimization,
@@ -1799,7 +1810,7 @@ impl NeuralQuantumHybridProcessor {
         self.performance_tracker
             .energy_history
             .push(metrics.energy_consumption);
-        
+
         // Add to full performance history
         self.performance_tracker
             .performance_history
@@ -1811,7 +1822,7 @@ impl NeuralQuantumHybridProcessor {
             self.performance_tracker.accuracy_history.remove(0);
             self.performance_tracker.energy_history.remove(0);
         }
-        
+
         if self.performance_tracker.performance_history.len() > 1000 {
             self.performance_tracker.performance_history.remove(0);
         }
@@ -1916,49 +1927,60 @@ impl NeuralQuantumHybridProcessor {
             .rev()
             .take(50) // Use last 50 metrics for optimization
             .collect();
-        
+
         if recent_metrics.len() < 10 {
             return Ok(()); // Need sufficient data for optimization
         }
-        
+
         // Calculate average performance indicators
-        let avg_latency: f64 = recent_metrics.iter().map(|m| m.latency).sum::<f64>() / recent_metrics.len() as f64;
-        let avg_quality: f64 = recent_metrics.iter().map(|m| m.quality_score).sum::<f64>() / recent_metrics.len() as f64;
-        let avg_energy: f64 = recent_metrics.iter().map(|m| m.energy_consumption).sum::<f64>() / recent_metrics.len() as f64;
-        
+        let avg_latency: f64 =
+            recent_metrics.iter().map(|m| m.latency).sum::<f64>() / recent_metrics.len() as f64;
+        let avg_quality: f64 = recent_metrics.iter().map(|m| m.quality_score).sum::<f64>()
+            / recent_metrics.len() as f64;
+        let avg_energy: f64 = recent_metrics
+            .iter()
+            .map(|m| m.energy_consumption)
+            .sum::<f64>()
+            / recent_metrics.len() as f64;
+
         // Adaptive weight adjustment based on performance trends
         let latency_trend = if avg_latency > 100.0 { 0.1 } else { -0.05 }; // Reduce quantum weight if latency is high
         let quality_trend = if avg_quality < 0.8 { 0.15 } else { -0.05 }; // Increase quantum weight if quality is low
         let energy_trend = if avg_energy > 2.0 { -0.1 } else { 0.05 }; // Reduce if energy consumption is high
-        
+
         // Update fusion parameters with learned adjustments
         let weight_adjustment = (latency_trend + quality_trend + energy_trend) / 3.0;
-        
+
         // Apply constraints to keep weights in valid range
         self.fusion_params.quantum_weight = (self.fusion_params.quantum_weight + weight_adjustment)
             .max(0.1)
             .min(0.7);
-        
-        self.fusion_params.neuromorphic_weight = (self.fusion_params.neuromorphic_weight + weight_adjustment * 0.8)
+
+        self.fusion_params.neuromorphic_weight = (self.fusion_params.neuromorphic_weight
+            + weight_adjustment * 0.8)
             .max(0.1)
             .min(0.7);
-        
-        self.fusion_params.classical_weight = 1.0 - self.fusion_params.quantum_weight - self.fusion_params.neuromorphic_weight;
-        
+
+        self.fusion_params.classical_weight =
+            1.0 - self.fusion_params.quantum_weight - self.fusion_params.neuromorphic_weight;
+
         // Adjust adaptation rate based on performance stability
         let performance_variance = recent_metrics
             .iter()
             .map(|m| (m.quality_score - avg_quality).powi(2))
-            .sum::<f64>() / recent_metrics.len() as f64;
-        
+            .sum::<f64>()
+            / recent_metrics.len() as f64;
+
         if performance_variance < 0.01 {
             // Low variance - increase adaptation rate for exploration
-            self.fusion_params.adaptation_rate = (self.fusion_params.adaptation_rate * 1.1).min(0.1);
+            self.fusion_params.adaptation_rate =
+                (self.fusion_params.adaptation_rate * 1.1).min(0.1);
         } else {
             // High variance - reduce adaptation rate for stability
-            self.fusion_params.adaptation_rate = (self.fusion_params.adaptation_rate * 0.9).max(0.001);
+            self.fusion_params.adaptation_rate =
+                (self.fusion_params.adaptation_rate * 0.9).max(0.001);
         }
-        
+
         // Switch fusion strategy based on performance patterns
         if avg_quality > 0.9 && avg_latency < 50.0 {
             self.fusion_params.fusion_strategy = FusionStrategy::QuantumEntanglement;
@@ -1967,7 +1989,7 @@ impl NeuralQuantumHybridProcessor {
         } else {
             self.fusion_params.fusion_strategy = FusionStrategy::AttentionFusion;
         }
-        
+
         Ok(())
     }
 }

@@ -1228,7 +1228,6 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
     }
 }
 
-
 /// Create an enhanced composition operator (left * right)
 #[allow(dead_code)]
 pub fn enhanced_compose<

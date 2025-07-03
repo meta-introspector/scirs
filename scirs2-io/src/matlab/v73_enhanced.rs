@@ -3,10 +3,12 @@
 //! This module provides comprehensive support for MATLAB v7.3+ files,
 //! which are based on HDF5 format with MATLAB-specific conventions.
 
+use crate::error::{IoError, Result};
 use crate::matlab::MatType;
 #[allow(unused_imports)]
 use ndarray::{ArrayD, IxDyn};
 use std::collections::HashMap;
+use std::path::Path;
 
 #[cfg(feature = "hdf5")]
 use crate::hdf5::{AttributeValue, CompressionOptions, DatasetOptions, FileMode, HDF5File};

@@ -285,7 +285,8 @@ impl ElasticDeformation {
             StdRng::seed_from_u64(seed_value)
         } else {
             // For rand 0.9.0+, we need to create a seeded RNG for reproducibility
-            let mut rng = rand::thread_rng();
+            use rand::rng;
+            let mut rng = rng();
             StdRng::from_rng(&mut rng)
         };
 
@@ -295,8 +296,8 @@ impl ElasticDeformation {
 
         for y in 0..height as usize {
             for x in 0..width as usize {
-                dx_map[[y, x]] = rng.gen_range(-1.0..1.0);
-                dy_map[[y, x]] = rng.gen_range(-1.0..1.0);
+                dx_map[[y, x]] = rng.random_range(-1.0..1.0);
+                dy_map[[y, x]] = rng.random_range(-1.0..1.0);
             }
         }
 

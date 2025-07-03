@@ -39,7 +39,7 @@ impl fmt::Display for TensorDataType {
             TensorDataType::Int8 => write!(f, "i8"),
             TensorDataType::Int4 => write!(f, "i4"),
             TensorDataType::Binary => write!(f, "binary"),
-            TensorDataType::Mixed(input, accum) => write!(f, "mixed({}, {})", input, accum),
+            TensorDataType::Mixed(input, accum) => write!(f, "mixed({input}, {accum})"),
         }
     }
 }
@@ -490,7 +490,7 @@ where
     if !manager.are_dimensions_optimal(m, n, k) {
         let hints = manager.get_performance_hints(m, n, k);
         for hint in hints {
-            eprintln!("Performance hint: {}", hint);
+            eprintln!("Performance hint: {hint}");
         }
     }
 

@@ -306,7 +306,7 @@ impl CompatibilityChecker {
             if let Some(ref migration_path) = breaking_change.migration_path {
                 report
                     .migration_recommendations
-                    .push(format!("{}: {}", breaking_change.component, migration_path));
+                    .push(format!("{}, {}", breaking_change.component, migration_path));
             }
         }
 
@@ -486,7 +486,7 @@ impl CompatibilityRule {
             report.issues.push(CompatibilityIssue {
                 severity: IssueSeverity::Error,
                 component: "api".to_string(),
-                description: format!("Breaking change: {}", breaking_change),
+                description: format!("{breaking_change}"),
                 resolution: Some("Update code to handle the breaking change".to_string()),
                 impact: ImpactLevel::High,
             });

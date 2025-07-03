@@ -553,7 +553,7 @@ impl CrossPlatformValidator {
     {
         // This is a simplified check - in practice we'd need unsafe transmutation
         // to properly inspect the floating-point representation
-        let value_str = format!("{:?}", value);
+        let value_str = format!("{value:?}");
 
         if value_str.contains("inf") && !self.platform_info.fp_behavior.infinity_supported {
             result.is_valid = false;

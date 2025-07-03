@@ -165,7 +165,7 @@ impl<F: Float + SampleUniform + Debug + 'static> CircularDistribution<F> for Wra
         // Method 1: Inverse transform sampling
         // Generate uniform random number in [0, 1)
         let mut rng = rand::rng();
-        let u: f64 = rng.random();
+        let u: f64 = rng.gen();
         
         // Convert to angle using inverse CDF
         // For wrapped Cauchy: x = 2 * atan(tan(π*u)/γ)

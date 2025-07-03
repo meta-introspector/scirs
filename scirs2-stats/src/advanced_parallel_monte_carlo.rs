@@ -338,7 +338,7 @@ where
         let num_chunks = (n_samples + chunk_size - 1) / chunk_size;
 
         // Generate seeds for parallel workers
-        let seeds: Vec<u64> = (0..num_chunks).map(|_| rng.random()).collect();
+        let seeds: Vec<u64> = (0..num_chunks).map(|_| rng.gen()).collect();
 
         // Parallel evaluation
         let results = parallel_map_collect(seeds.iter().enumerate(), |(chunk_idx, &seed)| {
@@ -369,7 +369,7 @@ where
     where
         T: IntegrableFunction<F>,
     {
-        self.evaluate_chunk(function, n_samples, rng.random())
+        self.evaluate_chunk(function, n_samples, rng.gen())
     }
 
     /// Evaluate function on a chunk of samples
@@ -386,7 +386,7 @@ where
             // Generate sample point
             let mut point = Array1::zeros(dimension);
             for j in 0..dimension {
-                let u: f64 = rng.random();
+                let u: f64 = rng.gen();
                 let range = upper_bounds[j] - lower_bounds[j];
                 point[j] = lower_bounds[j] + F::from(u).unwrap() * range;
             }

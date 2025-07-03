@@ -809,16 +809,15 @@ impl NeuralAdaptiveSparseProcessor {
                 for chunk_start in (0..simd_len).step_by(8) {
                     let chunk_end = (chunk_start + 8).min(nnz);
                     let actual_chunk_size = chunk_end - chunk_start;
-                    
+
                     if actual_chunk_size == 8 {
                         // Full SIMD chunk - extract data and indices
-                        let data_chunk: Vec<T> = (0..8)
-                            .map(|i| data[start_idx + chunk_start + i])
-                            .collect();
+                        let data_chunk: Vec<T> =
+                            (0..8).map(|i| data[start_idx + chunk_start + i]).collect();
                         let x_chunk: Vec<T> = (0..8)
                             .map(|i| x[indices[start_idx + chunk_start + i]])
                             .collect();
-                        
+
                         // Perform SIMD multiplication and reduction
                         use ndarray::Array1;
                         let data_array = Array1::from(data_chunk);
@@ -899,19 +898,15 @@ impl NeuralAdaptiveSparseProcessor {
                 let mut sum = T::zero();
                 let simd_chunks = nnz / 8;
                 let remainder = nnz % 8;
-                
+
                 // Process full SIMD chunks
                 for chunk in 0..simd_chunks {
                     let chunk_start = start_idx + chunk * 8;
-                    
+
                     // Extract data and corresponding x values
-                    let data_vec: Vec<T> = (0..8)
-                        .map(|i| data[chunk_start + i])
-                        .collect();
-                    let x_vec: Vec<T> = (0..8)
-                        .map(|i| x[indices[chunk_start + i]])
-                        .collect();
-                    
+                    let data_vec: Vec<T> = (0..8).map(|i| data[chunk_start + i]).collect();
+                    let x_vec: Vec<T> = (0..8).map(|i| x[indices[chunk_start + i]]).collect();
+
                     // Use SIMD operations for dot product
                     use ndarray::Array1;
                     let data_array = Array1::from(data_vec);
@@ -919,14 +914,14 @@ impl NeuralAdaptiveSparseProcessor {
                     let chunk_result = T::simd_dot(&data_array.view(), &x_array.view());
                     sum += chunk_result;
                 }
-                
+
                 // Handle remainder elements
                 for i in 0..remainder {
                     let idx = start_idx + simd_chunks * 8 + i;
                     let col = indices[idx];
                     sum += data[idx] * x[col];
                 }
-                
+
                 y[row] = sum;
             } else if nnz <= 4 {
                 // Optimized for very sparse rows
@@ -1328,7 +1323,11 @@ impl NeuralNetwork {
         // Hidden layers with attention mechanisms
         for _ in 0..config.hidden_layers {
             let hidden_layer = NeuralLayer {
-                weights: Self::initialize_weights(config.neurons_per_layer, config.neurons_per_layer, &mut rng),
+                weights: Self::initialize_weights(
+                    config.neurons_per_layer,
+                    config.neurons_per_layer,
+                    &mut rng,
+                ),
                 biases: vec![0.0; config.neurons_per_layer],
                 activation: ActivationFunction::ReLU,
             };
@@ -1362,7 +1361,11 @@ impl NeuralNetwork {
     }
 
     /// Initialize weights using He initialization for ReLU networks
-    fn initialize_weights(output_size: usize, input_size: usize, rng: &mut impl Rng) -> Vec<Vec<f64>> {
+    fn initialize_weights(
+        output_size: usize,
+        input_size: usize,
+        rng: &mut impl Rng,
+    ) -> Vec<Vec<f64>> {
         let std_dev = (2.0 / input_size as f64).sqrt();
         (0..output_size)
             .map(|_| {
@@ -1391,7 +1394,8 @@ impl NeuralNetwork {
 
         for (i, layer) in self.layers.iter().enumerate() {
             // Forward through layer with caching
-            let (layer_output, pre_activation) = self.forward_layer_with_cache(layer, &current_output);
+            let (layer_output, pre_activation) =
+                self.forward_layer_with_cache(layer, &current_output);
             cache.activations.push(pre_activation);
             current_output = layer_output;
 
@@ -1456,7 +1460,8 @@ impl NeuralNetwork {
 
         // Initialize gradient storage
         for (i, layer) in self.layers.iter().enumerate() {
-            gradients.weight_gradients[i] = vec![vec![0.0; layer.weights[0].len()]; layer.weights.len()];
+            gradients.weight_gradients[i] =
+                vec![vec![0.0; layer.weights[0].len()]; layer.weights.len()];
             gradients.bias_gradients[i] = vec![0.0; layer.biases.len()];
         }
 
@@ -1481,7 +1486,8 @@ impl NeuralNetwork {
 
                 // Weight gradients
                 for (input_idx, &input_val) in layer_input.iter().enumerate() {
-                    gradients.weight_gradients[layer_idx][neuron_idx][input_idx] = error * input_val;
+                    gradients.weight_gradients[layer_idx][neuron_idx][input_idx] =
+                        error * input_val;
                 }
 
                 // Bias gradient
@@ -1510,7 +1516,13 @@ impl NeuralNetwork {
     /// Compute activation function derivative
     fn activation_derivative(&self, x: f64, activation: ActivationFunction) -> f64 {
         match activation {
-            ActivationFunction::ReLU => if x > 0.0 { 1.0 } else { 0.0 },
+            ActivationFunction::ReLU => {
+                if x > 0.0 {
+                    1.0
+                } else {
+                    0.0
+                }
+            }
             ActivationFunction::Sigmoid => {
                 let s = 1.0 / (1.0 + (-x).exp());
                 s * (1.0 - s)
@@ -1527,7 +1539,11 @@ impl NeuralNetwork {
                 // Approximation of GELU derivative
                 let sqrt_2_pi = (2.0 / std::f64::consts::PI).sqrt();
                 let tanh_part = (sqrt_2_pi * (x + 0.044715 * x.powi(3))).tanh();
-                0.5 * (1.0 + tanh_part + x * sqrt_2_pi * (1.0 - tanh_part.powi(2)) * (1.0 + 3.0 * 0.044715 * x.powi(2)))
+                0.5 * (1.0
+                    + tanh_part
+                    + x * sqrt_2_pi
+                        * (1.0 - tanh_part.powi(2))
+                        * (1.0 + 3.0 * 0.044715 * x.powi(2)))
             }
         }
     }
@@ -1538,7 +1554,8 @@ impl NeuralNetwork {
             // Update weights
             for (neuron_idx, weights) in layer.weights.iter_mut().enumerate() {
                 for (weight_idx, weight) in weights.iter_mut().enumerate() {
-                    *weight -= learning_rate * gradients.weight_gradients[layer_idx][neuron_idx][weight_idx];
+                    *weight -= learning_rate
+                        * gradients.weight_gradients[layer_idx][neuron_idx][weight_idx];
                 }
             }
 
@@ -1639,7 +1656,7 @@ impl RLAgent {
         for experience in batch {
             // Get current Q-values
             let current_q_values = self.q_network.forward(&experience.state);
-            
+
             // Compute target Q-value
             let target_q_value = if let Some(ref target_net) = self.target_network {
                 let next_q = target_net.forward(&experience.next_state);
@@ -1662,11 +1679,9 @@ impl RLAgent {
             }
 
             // Train the network using backpropagation
-            let loss = self.q_network.train_single(
-                &experience.state,
-                &target_vector,
-                self.learning_rate,
-            );
+            let loss =
+                self.q_network
+                    .train_single(&experience.state, &target_vector, self.learning_rate);
             total_loss += loss;
         }
 
@@ -1701,32 +1716,35 @@ impl RLAgent {
 
     fn train_policy_gradient(&mut self, batch: &[Experience]) {
         // Pre-compute action indices to avoid borrowing conflicts
-        let action_indices: Vec<usize> = batch.iter()
+        let action_indices: Vec<usize> = batch
+            .iter()
             .map(|exp| self.strategy_to_index(exp.action))
             .collect();
-            
+
         if let Some(ref mut policy_net) = self.policy_network {
             let mut _total_loss = 0.0;
-            
+
             // Compute returns (discounted rewards)
             let returns = Self::compute_returns(batch, 0.99); // Using 0.99 as discount factor
-            
-            for ((experience, &return_val), &action_idx) in batch.iter().zip(&returns).zip(&action_indices) {
+
+            for ((experience, &return_val), &action_idx) in
+                batch.iter().zip(&returns).zip(&action_indices)
+            {
                 // Get action probabilities
                 let action_probs = policy_net.forward(&experience.state);
-                
+
                 if action_idx < action_probs.len() {
                     // Compute policy gradient target
                     // Target is proportional to advantage (simplified as return here)
                     let mut target = vec![0.0; action_probs.len()];
-                    
+
                     // Set target for the taken action based on advantage
                     let advantage = return_val - experience.reward; // Simplified advantage
                     target[action_idx] = action_probs[action_idx] + self.learning_rate * advantage;
-                    
+
                     // Ensure target is a valid probability distribution
                     target[action_idx] = target[action_idx].clamp(0.01, 0.99);
-                    
+
                     // Train the policy network
                     let loss = policy_net.train_single(
                         &experience.state,
@@ -1738,77 +1756,83 @@ impl RLAgent {
             }
         }
     }
-    
+
     /// Compute discounted returns for policy gradient
     fn compute_returns(batch: &[Experience], discount_factor: f64) -> Vec<f64> {
         let mut returns = vec![0.0; batch.len()];
         let mut running_return = 0.0;
-        
+
         // Compute returns backwards
         for (i, experience) in batch.iter().enumerate().rev() {
             running_return = experience.reward + discount_factor * running_return;
             returns[i] = running_return;
-            
+
             if experience.done {
                 running_return = 0.0; // Reset for new episode
             }
         }
-        
+
         returns
     }
 
     fn train_actor_critic(&mut self, batch: &[Experience], discount_factor: f64) {
         // Pre-compute action indices to avoid borrowing conflicts
-        let action_indices: Vec<usize> = batch.iter()
+        let action_indices: Vec<usize> = batch
+            .iter()
             .map(|exp| self.strategy_to_index(exp.action))
             .collect();
-            
-        if let (Some(ref mut policy_net), Some(ref mut value_net)) = 
-            (&mut self.policy_network, &mut self.value_network) {
-            
+
+        if let (Some(ref mut policy_net), Some(ref mut value_net)) =
+            (&mut self.policy_network, &mut self.value_network)
+        {
             let mut _total_actor_loss = 0.0;
             let mut _total_critic_loss = 0.0;
-            
+
             for (experience, &action_idx) in batch.iter().zip(&action_indices) {
                 // Critic update: learn value function
                 let state_value = value_net.forward(&experience.state);
-                let current_value = if !state_value.is_empty() { state_value[0] } else { 0.0 };
-                
-                // Compute TD target
-                let next_value = if !experience.done {
-                    let next_state_value = value_net.forward(&experience.next_state);
-                    if !next_state_value.is_empty() { next_state_value[0] } else { 0.0 }
+                let current_value = if !state_value.is_empty() {
+                    state_value[0]
                 } else {
                     0.0
                 };
-                
+
+                // Compute TD target
+                let next_value = if !experience.done {
+                    let next_state_value = value_net.forward(&experience.next_state);
+                    if !next_state_value.is_empty() {
+                        next_state_value[0]
+                    } else {
+                        0.0
+                    }
+                } else {
+                    0.0
+                };
+
                 let td_target = experience.reward + discount_factor * next_value;
                 let td_error = td_target - current_value;
-                
+
                 // Train critic (value network)
                 let critic_target = vec![td_target];
-                let critic_loss = value_net.train_single(
-                    &experience.state,
-                    &critic_target,
-                    self.learning_rate
-                );
+                let critic_loss =
+                    value_net.train_single(&experience.state, &critic_target, self.learning_rate);
                 _total_critic_loss += critic_loss;
-                
+
                 // Actor update: learn policy using advantage
                 let action_probs = policy_net.forward(&experience.state);
-                
+
                 if action_idx < action_probs.len() {
                     // Use TD error as advantage estimate
                     let advantage = td_error;
-                    
+
                     // Compute policy gradient target
                     let mut policy_target = action_probs.clone();
-                    
+
                     // Update action probability based on advantage
                     let prob_adjustment = self.learning_rate * 0.1 * advantage;
-                    policy_target[action_idx] = (action_probs[action_idx] + prob_adjustment)
-                        .clamp(0.01, 0.99);
-                    
+                    policy_target[action_idx] =
+                        (action_probs[action_idx] + prob_adjustment).clamp(0.01, 0.99);
+
                     // Normalize to maintain probability distribution
                     let sum: f64 = policy_target.iter().sum();
                     if sum > 0.0 {
@@ -1816,12 +1840,12 @@ impl RLAgent {
                             *prob /= sum;
                         }
                     }
-                    
+
                     // Train actor (policy network)
                     let actor_loss = policy_net.train_single(
                         &experience.state,
                         &policy_target,
-                        self.learning_rate * 0.05 // Smaller learning rate for policy
+                        self.learning_rate * 0.05, // Smaller learning rate for policy
                     );
                     _total_actor_loss += actor_loss;
                 }
@@ -1831,86 +1855,99 @@ impl RLAgent {
 
     fn train_ppo(&mut self, batch: &[Experience]) {
         // Pre-compute action indices to avoid borrowing conflicts
-        let action_indices: Vec<usize> = batch.iter()
+        let action_indices: Vec<usize> = batch
+            .iter()
             .map(|exp| self.strategy_to_index(exp.action))
             .collect();
-            
-        if let (Some(ref mut policy_net), Some(ref mut value_net)) = 
-            (&mut self.policy_network, &mut self.value_network) {
-            
+
+        if let (Some(ref mut policy_net), Some(ref mut value_net)) =
+            (&mut self.policy_network, &mut self.value_network)
+        {
             let clip_epsilon = 0.2; // PPO clipping parameter
             let ppo_epochs = 4; // Number of PPO epochs per batch
-            
+
             // Store old policy probabilities for importance sampling
             let mut old_action_probs = Vec::new();
             let mut advantages = Vec::new();
             let mut returns = Vec::new();
-            
+
             // Compute advantages and returns
             for (experience, &action_idx) in batch.iter().zip(&action_indices) {
                 let action_probs = policy_net.forward(&experience.state);
-                
+
                 if action_idx < action_probs.len() {
                     old_action_probs.push(action_probs[action_idx]);
                 } else {
                     old_action_probs.push(0.1); // Fallback probability
                 }
-                
+
                 // Compute value and advantage
                 let state_value = value_net.forward(&experience.state);
-                let current_value = if !state_value.is_empty() { state_value[0] } else { 0.0 };
-                
-                let next_value = if !experience.done {
-                    let next_state_value = value_net.forward(&experience.next_state);
-                    if !next_state_value.is_empty() { next_state_value[0] } else { 0.0 }
+                let current_value = if !state_value.is_empty() {
+                    state_value[0]
                 } else {
                     0.0
                 };
-                
+
+                let next_value = if !experience.done {
+                    let next_state_value = value_net.forward(&experience.next_state);
+                    if !next_state_value.is_empty() {
+                        next_state_value[0]
+                    } else {
+                        0.0
+                    }
+                } else {
+                    0.0
+                };
+
                 let td_target = experience.reward + 0.99 * next_value;
                 let advantage = td_target - current_value;
-                
+
                 advantages.push(advantage);
                 returns.push(td_target);
             }
-            
+
             // Normalize advantages
             let advantage_mean = advantages.iter().sum::<f64>() / advantages.len() as f64;
-            let advantage_std = (advantages.iter()
+            let advantage_std = (advantages
+                .iter()
                 .map(|&a| (a - advantage_mean).powi(2))
-                .sum::<f64>() / advantages.len() as f64).sqrt().max(1e-8);
-            
+                .sum::<f64>()
+                / advantages.len() as f64)
+                .sqrt()
+                .max(1e-8);
+
             for advantage in &mut advantages {
                 *advantage = (*advantage - advantage_mean) / advantage_std;
             }
-            
+
             // PPO training epochs
             for _ in 0..ppo_epochs {
                 let mut _total_policy_loss = 0.0;
                 let mut _total_value_loss = 0.0;
-                
+
                 for (i, experience) in batch.iter().enumerate() {
                     // Update value network
                     let value_target = vec![returns[i]];
                     let value_loss = value_net.train_single(
                         &experience.state,
                         &value_target,
-                        self.learning_rate
+                        self.learning_rate,
                     );
                     _total_value_loss += value_loss;
-                    
+
                     // Update policy network with PPO clipping
                     let current_action_probs = policy_net.forward(&experience.state);
                     let action_idx = action_indices[i];
-                    
+
                     if action_idx < current_action_probs.len() {
                         let current_prob = current_action_probs[action_idx].max(1e-8);
                         let old_prob = old_action_probs[i].max(1e-8);
                         let advantage = advantages[i];
-                        
+
                         // Importance sampling ratio
                         let ratio = current_prob / old_prob;
-                        
+
                         // PPO clipped objective
                         let clipped_ratio = ratio.max(1.0 - clip_epsilon).min(1.0 + clip_epsilon);
                         let policy_objective = if advantage >= 0.0 {
@@ -1918,13 +1955,13 @@ impl RLAgent {
                         } else {
                             ratio.max(clipped_ratio) * advantage
                         };
-                        
+
                         // Convert objective to training target
                         let mut policy_target = current_action_probs.clone();
                         let target_adjustment = self.learning_rate * 0.01 * policy_objective;
-                        policy_target[action_idx] = (current_prob + target_adjustment)
-                            .clamp(0.01, 0.99);
-                        
+                        policy_target[action_idx] =
+                            (current_prob + target_adjustment).clamp(0.01, 0.99);
+
                         // Normalize probabilities
                         let sum: f64 = policy_target.iter().sum();
                         if sum > 0.0 {
@@ -1932,11 +1969,11 @@ impl RLAgent {
                                 *prob /= sum;
                             }
                         }
-                        
+
                         let policy_loss = policy_net.train_single(
                             &experience.state,
                             &policy_target,
-                            self.learning_rate * 0.02
+                            self.learning_rate * 0.02,
                         );
                         _total_policy_loss += policy_loss;
                     }
@@ -1947,77 +1984,77 @@ impl RLAgent {
 
     fn train_sac(&mut self, batch: &[Experience], discount_factor: f64) {
         // Pre-compute action indices to avoid borrowing conflicts
-        let action_indices: Vec<usize> = batch.iter()
+        let action_indices: Vec<usize> = batch
+            .iter()
             .map(|exp| self.strategy_to_index(exp.action))
             .collect();
-            
-        if let (Some(ref mut policy_net), Some(ref mut value_net)) = 
-            (&mut self.policy_network, &mut self.value_network) {
-            
+
+        if let (Some(ref mut policy_net), Some(ref mut value_net)) =
+            (&mut self.policy_network, &mut self.value_network)
+        {
             let entropy_coeff = 0.2; // Temperature parameter for entropy regularization
             let _target_update_rate = 0.005; // Soft target network update rate
-            
+
             let mut _total_q_loss = 0.0;
             let mut _total_policy_loss = 0.0;
-            
+
             for (experience, &action_idx) in batch.iter().zip(&action_indices) {
                 // Update Q-network (critic)
                 let current_q_values = value_net.forward(&experience.state);
-                let current_q = if !current_q_values.is_empty() { 
-                    current_q_values[0] 
-                } else { 
-                    0.0 
+                let current_q = if !current_q_values.is_empty() {
+                    current_q_values[0]
+                } else {
+                    0.0
                 };
-                
+
                 // Compute target Q-value using soft Bellman equation
                 let next_action_probs = policy_net.forward(&experience.next_state);
                 let next_q_values = value_net.forward(&experience.next_state);
-                let next_q = if !next_q_values.is_empty() { 
-                    next_q_values[0] 
-                } else { 
-                    0.0 
+                let next_q = if !next_q_values.is_empty() {
+                    next_q_values[0]
+                } else {
+                    0.0
                 };
-                
+
                 // Compute entropy of next state policy
-                let entropy = -next_action_probs.iter()
+                let entropy = -next_action_probs
+                    .iter()
                     .filter(|&&p| p > 1e-8)
                     .map(|&p| p * p.ln())
                     .sum::<f64>();
-                
+
                 let target_q = if !experience.done {
                     experience.reward + discount_factor * (next_q + entropy_coeff * entropy)
                 } else {
                     experience.reward
                 };
-                
+
                 // Train Q-network
                 let q_target = vec![target_q];
-                let q_loss = value_net.train_single(
-                    &experience.state,
-                    &q_target,
-                    self.learning_rate
-                );
+                let q_loss =
+                    value_net.train_single(&experience.state, &q_target, self.learning_rate);
                 _total_q_loss += q_loss;
-                
+
                 // Update policy network to maximize Q-value + entropy
                 let current_action_probs = policy_net.forward(&experience.state);
-                let current_entropy = -current_action_probs.iter()
+                let current_entropy = -current_action_probs
+                    .iter()
                     .filter(|&&p| p > 1e-8)
                     .map(|&p| p * p.ln())
                     .sum::<f64>();
-                
+
                 // SAC policy objective: maximize Q + α * entropy
                 let policy_objective = current_q + entropy_coeff * current_entropy;
-                
+
                 // Update policy to increase the objective
                 let mut policy_target = current_action_probs.clone();
-                
+
                 if action_idx < policy_target.len() {
                     // Adjust action probability based on SAC objective
                     let adjustment = self.learning_rate * 0.01 * policy_objective;
-                    policy_target[action_idx] = (current_action_probs[action_idx] + adjustment)
-                        .clamp(0.01, 0.99);
-                    
+                    policy_target[action_idx] =
+                        (current_action_probs[action_idx] + adjustment).clamp(0.01, 0.99);
+
                     // Apply entropy regularization to encourage exploration
                     for (i, prob) in policy_target.iter_mut().enumerate() {
                         if i != action_idx {
@@ -2025,7 +2062,7 @@ impl RLAgent {
                             *prob = (*prob + entropy_coeff * 0.001).min(0.99);
                         }
                     }
-                    
+
                     // Normalize to maintain valid probability distribution
                     let sum: f64 = policy_target.iter().sum();
                     if sum > 0.0 {
@@ -2033,16 +2070,16 @@ impl RLAgent {
                             *prob /= sum;
                         }
                     }
-                    
+
                     let policy_loss = policy_net.train_single(
                         &experience.state,
                         &policy_target,
-                        self.learning_rate * 0.01
+                        self.learning_rate * 0.01,
                     );
                     _total_policy_loss += policy_loss;
                 }
             }
-            
+
             // Optional: Adaptive temperature parameter learning could be added here
             // For now, we use a fixed entropy coefficient
         }

@@ -372,10 +372,10 @@ impl Validator {
     ///             if email.contains('@') {
     ///                 Ok(())
     ///             } else {
-    ///                 Err(format!("Invalid email at {}", field_path))
+    ///                 Err(format!("{field_path}"))
     ///             }
     ///         } else {
-    ///             Err(format!("Expected string at {}", field_path))
+    ///             Err(format!("{field_path}"))
     ///         }
     ///     }
     ///
@@ -464,7 +464,7 @@ impl Validator {
             let field_path = if depth == 0 {
                 field_name.clone()
             } else {
-                format!("root.{}", field_name)
+                format!("{field_name}")
             };
 
             if let Some(field_value) = data_obj.get(field_name) {
@@ -543,7 +543,7 @@ impl Validator {
                     expected_type,
                     self.get_value_type_name(value)
                 ),
-                expected: Some(format!("{:?}", expected_type)),
+                expected: Some(format!("{expected_type:?}")),
                 actual: Some(self.get_value_type_name(value)),
                 constraint: Some("type".to_string()),
                 severity: ErrorSeverity::Error,
@@ -632,7 +632,7 @@ impl Validator {
                                 errors.push(ValidationError {
                                     error_type: ValidationErrorType::DuplicateValues,
                                     field_path: field_path.to_string(),
-                                    message: format!("Duplicate value found: {}", item_str),
+                                    message: format!("{item_str}"),
                                     expected: Some("unique values".to_string()),
                                     actual: Some("duplicate found".to_string()),
                                     constraint: Some("unique".to_string()),
@@ -656,7 +656,7 @@ impl Validator {
                                             "Value '{}' does not match pattern '{}'",
                                             s, pattern
                                         ),
-                                        expected: Some(format!("pattern: {}", pattern)),
+                                        expected: Some(format!("{pattern}")),
                                         actual: Some(s.to_string()),
                                         constraint: Some("pattern".to_string()),
                                         severity: ErrorSeverity::Error,
@@ -693,7 +693,7 @@ impl Validator {
                                 "Value '{}' is not in allowed values: {:?}",
                                 value_str, allowed
                             ),
-                            expected: Some(format!("{:?}", allowed)),
+                            expected: Some(format!("{allowed:?}")),
                             actual: Some(value_str),
                             constraint: Some("allowed_values".to_string()),
                             severity: ErrorSeverity::Error,
@@ -781,7 +781,7 @@ impl Validator {
                                 errors.push(ValidationError {
                                     error_type: ValidationErrorType::TypeMismatch,
                                     field_path: format!("{}[{}]", field_path, idx),
-                                    message: format!("Expected numeric value, got {}", val),
+                                    message: format!("{val}"),
                                     expected: Some("number".to_string()),
                                     actual: Some(val.to_string()),
                                     constraint: Some("statistical".to_string()),
@@ -827,8 +827,8 @@ impl Validator {
                                             "Mean {:.4} is less than minimum {:.4}",
                                             mean, min_mean
                                         ),
-                                        expected: Some(format!("mean >= {:.4}", min_mean)),
-                                        actual: Some(format!("mean = {:.4}", mean)),
+                                        expected: Some(format!(":.4{min_mean}")),
+                                        actual: Some(format!(":.4{mean}")),
                                         constraint: Some("statistical.min_mean".to_string()),
                                         severity: ErrorSeverity::Error,
                                         context: HashMap::new(),
@@ -845,8 +845,8 @@ impl Validator {
                                             "Mean {:.4} exceeds maximum {:.4}",
                                             mean, max_mean
                                         ),
-                                        expected: Some(format!("mean <= {:.4}", max_mean)),
-                                        actual: Some(format!("mean = {:.4}", mean)),
+                                        expected: Some(format!(":.4{max_mean}")),
+                                        actual: Some(format!(":.4{mean}")),
                                         constraint: Some("statistical.max_mean".to_string()),
                                         severity: ErrorSeverity::Error,
                                         context: HashMap::new(),
@@ -864,8 +864,8 @@ impl Validator {
                                             "Standard deviation {:.4} is less than minimum {:.4}",
                                             std_dev, min_std
                                         ),
-                                        expected: Some(format!("std >= {:.4}", min_std)),
-                                        actual: Some(format!("std = {:.4}", std_dev)),
+                                        expected: Some(format!(":.4{min_std}")),
+                                        actual: Some(format!(":.4{std_dev}")),
                                         constraint: Some("statistical.min_std".to_string()),
                                         severity: ErrorSeverity::Error,
                                         context: HashMap::new(),
@@ -882,8 +882,8 @@ impl Validator {
                                             "Standard deviation {:.4} exceeds maximum {:.4}",
                                             std_dev, max_std
                                         ),
-                                        expected: Some(format!("std <= {:.4}", max_std)),
-                                        actual: Some(format!("std = {:.4}", std_dev)),
+                                        expected: Some(format!(":.4{max_std}")),
+                                        actual: Some(format!(":.4{std_dev}")),
                                         constraint: Some("statistical.max_std".to_string()),
                                         severity: ErrorSeverity::Error,
                                         context: HashMap::new(),
@@ -938,7 +938,7 @@ impl Validator {
                                 errors.push(ValidationError {
                                     error_type: ValidationErrorType::TypeMismatch,
                                     field_path: format!("{}[{}]", field_path, idx),
-                                    message: format!("Expected timestamp (number), got {}", val),
+                                    message: format!("{val}"),
                                     expected: Some("timestamp (integer or float)".to_string()),
                                     actual: Some(val.to_string()),
                                     constraint: Some("temporal".to_string()),
@@ -997,7 +997,7 @@ impl Validator {
                                         errors.push(ValidationError {
                                             error_type: ValidationErrorType::ConstraintViolation,
                                             field_path: field_path.to_string(),
-                                            message: format!("Duplicate timestamp found: {}", ts),
+                                            message: format!("{ts}"),
                                             expected: Some("unique timestamps".to_string()),
                                             actual: Some("duplicate timestamps".to_string()),
                                             constraint: Some("temporal.unique".to_string()),
@@ -1027,7 +1027,7 @@ impl Validator {
                                                 "min interval {:?}",
                                                 min_interval
                                             )),
-                                            actual: Some(format!("interval {:?}", interval)),
+                                            actual: Some(format!("{:?}", interval)),
                                             constraint: Some("temporal.min_interval".to_string()),
                                             severity: ErrorSeverity::Error,
                                             context: HashMap::new(),
@@ -1049,7 +1049,7 @@ impl Validator {
                                                 "max interval {:?}",
                                                 max_interval
                                             )),
-                                            actual: Some(format!("interval {:?}", interval)),
+                                            actual: Some(format!("{:?}", interval)),
                                             constraint: Some("temporal.max_interval".to_string()),
                                             severity: ErrorSeverity::Error,
                                             context: HashMap::new(),
@@ -1998,7 +1998,7 @@ mod tests {
 
         // Test large OR constraint
         let many_patterns: Vec<Constraint> = (0..100)
-            .map(|i| Constraint::Pattern(format!("pattern{}", i)))
+            .map(|i| Constraint::Pattern(format!("{i}")))
             .collect();
 
         let schema = ValidationSchema::new()

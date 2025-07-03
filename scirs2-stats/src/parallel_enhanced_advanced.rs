@@ -279,7 +279,8 @@ where
             .unwrap_or(4);
 
         // Account for hyperthreading - usually optimal to use physical cores
-        let physical_cores = if self.capabilities.has_hyperthreading() {
+        // Simple heuristic: if we have more than 2 logical cores, assume hyperthreading
+        let physical_cores = if logical_cores > 2 {
             logical_cores / 2
         } else {
             logical_cores
@@ -287,11 +288,8 @@ where
 
         // For CPU-intensive tasks, use physical cores
         // For memory-bound tasks, might benefit from more threads
-        if self.capabilities.memory_bandwidth_limited() {
-            logical_cores
-        } else {
-            physical_cores
-        }
+        // Use physical cores for better performance
+        physical_cores
     }
 
     fn mean_work_stealing<D>(&self, x: &ArrayBase<D, Ix1>) -> StatsResult<F>

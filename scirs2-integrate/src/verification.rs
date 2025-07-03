@@ -843,6 +843,7 @@ pub struct TrigonometricSolution3D<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> TrigonometricSolution3D<F> {
     /// Create sin(freq_x * x + phase_x) * cos(freq_y * y + phase_y) * sin(freq_z * z + phase_z)
+    #[allow(clippy::too_many_arguments)]
     pub fn new(freq_x: F, freq_y: F, freq_z: F, phase_x: F, phase_y: F, phase_z: F) -> Self {
         Self {
             freq_x,

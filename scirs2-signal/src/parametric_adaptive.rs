@@ -477,7 +477,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_spectrum() {
-        let mut model = AdaptiveArModel {
+        let model = AdaptiveArModel {
             coefficients: Array1::from_vec(vec![0.5, -0.3]),
             order: 2,
             variance: 1.0,

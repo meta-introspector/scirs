@@ -183,8 +183,8 @@ impl FuzzingEngine {
             if let Err(error) = test_fn(&input) {
                 failures.push(FuzzingFailure {
                     case_number,
-                    input: format!("{:?}", input),
-                    error: format!("{:?}", error),
+                    input: format!("{input:?}"),
+                    error: format!("{error:?}"),
                     case_type: "random".to_string(),
                 });
             }
@@ -197,8 +197,8 @@ impl FuzzingEngine {
             if let Err(error) = test_fn(&input) {
                 failures.push(FuzzingFailure {
                     case_number,
-                    input: format!("{:?}", input),
-                    error: format!("{:?}", error),
+                    input: format!("{input:?}"),
+                    error: format!("{error:?}"),
                     case_type: "edge".to_string(),
                 });
             }
@@ -211,8 +211,8 @@ impl FuzzingEngine {
             if let Err(error) = test_fn(&input) {
                 failures.push(FuzzingFailure {
                     case_number,
-                    input: format!("{:?}", input),
-                    error: format!("{:?}", error),
+                    input: format!("{input:?}"),
+                    error: format!("{error:?}"),
                     case_type: "boundary".to_string(),
                 });
             }

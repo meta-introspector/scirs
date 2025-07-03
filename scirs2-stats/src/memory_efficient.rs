@@ -4,7 +4,7 @@
 //! that minimize allocations and use streaming/chunked processing for large datasets.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::{ErrorMessages, ErrorValidator};
+use crate::error_standardization::ErrorMessages;
 #[cfg(feature = "memmap")]
 use memmap2::Mmap;
 use ndarray::{s, ArrayBase, ArrayViewMut1, Data, Ix1, Ix2};
@@ -641,7 +641,7 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
         has_header: bool,
     ) -> StatsResult<F> {
         let file = File::open(path)
-            .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {e}")))?;
         let mut reader = BufReader::new(file);
 
         let mut sum = F::zero();
@@ -651,9 +651,9 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
 
         // Skip header if present
         if has_header {
-            reader.read_line(&mut line).map_err(|e| {
-                StatsError::InvalidArgument(format!("Failed to read header: {}", e))
-            })?;
+            reader
+                .read_line(&mut line)
+                .map_err(|e| StatsError::InvalidArgument(format!("Failed to read header: {e}")))?;
             line.clear();
         }
 
@@ -676,8 +676,7 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
                 }
                 Err(e) => {
                     return Err(StatsError::ComputationError(format!(
-                        "Error reading line {}: {}",
-                        line_num, e
+                        "Error reading line {line_num}: {e}"
                     )))
                 }
             }
@@ -705,7 +704,7 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
 
         // Second pass: compute variance
         let file = File::open(path)
-            .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {e}")))?;
         let mut reader = BufReader::new(file);
 
         let mut sum_sq = F::zero();
@@ -714,9 +713,9 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
 
         // Skip header if present
         if has_header {
-            reader.read_line(&mut line).map_err(|e| {
-                StatsError::InvalidArgument(format!("Failed to read header: {}", e))
-            })?;
+            reader
+                .read_line(&mut line)
+                .map_err(|e| StatsError::InvalidArgument(format!("Failed to read header: {e}")))?;
             line.clear();
         }
 
@@ -773,7 +772,7 @@ impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
         use std::mem;
 
         let file = File::open(path)
-            .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {e}")))?;
         let mut reader = BufReader::new(file);
 
         let element_size = mem::size_of::<F>();
@@ -829,7 +828,7 @@ impl<F: Float + NumCast> MemoryMappedStats<F> {
         G: FnOnce(&[F]) -> StatsResult<()>,
     {
         let file = File::open(path)
-            .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {e}")))?;
 
         let mmap = unsafe {
             Mmap::map(&file)

@@ -12,9 +12,11 @@
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::dwt2d_enhanced::{BoundaryMode, Dwt2dConfig, Dwt2dQualityMetrics, EnhancedDwt2dResult};
 use crate::error::{SignalError, SignalResult};
-use ndarray::Array2;
+use ndarray::{Array2, Array3};
+use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::check_finite;
+use scirs2_core::validation::{check_finite, check_positive};
+use std::f64::consts::PI;
 
 /// Advanced 2D DWT decomposition result with multiple representations
 #[derive(Debug, Clone)]
@@ -373,7 +375,7 @@ fn compute_complex_dwt2d(
     let coeffs_b = apply_tree_decomposition(data, &tree_b_filters, config.decomposition_levels)?;
 
     // Combine to form complex coefficients
-    let mut coefficients = Array3::zeros((config.decomposition_levels, rows, cols));
+    let mut coefficients = Array3::<Complex64>::zeros((config.decomposition_levels, rows, cols));
     let mut magnitude = Array2::zeros((rows, cols));
     let mut phase = Array2::zeros((rows, cols));
 

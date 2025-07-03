@@ -27,6 +27,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let model_b3 = EfficientNet::<f32>::efficientnet_b3(input_channels, num_classes)?;
     // Create dummy input with higher resolution for B3 (300x300)
     let input_b3 = Array::from_shape_fn(IxDyn(&[1, input_channels, 300, 300]), |_| {
+        use rand::prelude::*;
+        let mut rng = thread_rng();
+        rng.gen_range(-1.0..1.0)
+    });
     println!("Input shape for B3: {:?}", input_b3.shape());
     let output_b3 = model_b3.forward(&input_b3)?;
     println!("Output shape for B3: {:?}", output_b3.shape());
@@ -34,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nCreating a custom EfficientNet model for smaller images...");
     // Create simplified config with fewer stages
     let mut custom_config = EfficientNetConfig::efficientnet_b0(input_channels, 10); // 10 classes
-    // Simplify by keeping only first 4 stages
+                                                                                     // Simplify by keeping only first 4 stages
     custom_config.stages.truncate(4);
     // Scale down the model
     custom_config.width_coefficient = 0.5;
@@ -43,11 +47,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let custom_model = EfficientNet::<f32>::new(custom_config)?;
     // Create dummy input for small images (32x32)
     let small_input = Array::from_shape_fn(IxDyn(&[1, input_channels, 32, 32]), |_| {
+        use rand::prelude::*;
+        let mut rng = thread_rng();
+        rng.gen_range(-1.0..1.0)
+    });
     println!("Custom input shape: {:?}", small_input.shape());
     let custom_output = custom_model.forward(&small_input)?;
     println!("Custom output shape: {:?}", custom_output.shape());
+    println!(
         "Custom model produces logits for {} classes",
         custom_output.shape()[1]
+    );
     println!("\nEfficientNet example completed successfully!");
     Ok(())
 }

@@ -140,7 +140,7 @@ where
         + std::default::Default,
     Ix: petgraph::graph::IndexType + Send + Sync,
 {
-    use crate::algorithms::shortest_path::shortest_path;
+    use crate::algorithms::shortest_path::dijkstra_path;
 
     // Note: Thread pool configuration is handled globally by scirs2-core
     // The num_threads config parameter is preserved for future use but currently ignored
@@ -154,7 +154,7 @@ where
             let mut paths_from_source = HashMap::new();
 
             for target in &all_nodes {
-                if let Ok(Some(path)) = shortest_path(graph, source, target) {
+                if let Ok(Some(path)) = dijkstra_path(graph, source, target) {
                     paths_from_source.insert(target.clone(), path.total_weight);
                 }
             }

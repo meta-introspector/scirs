@@ -67,8 +67,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let batch_size = 16;
     let in_features = 10;
     let mut input_2d = Array::from_elem((batch_size, in_features), 0.0);
+    for n in 0..batch_size {
         for f in 0..in_features {
             input_2d[[n, f]] = rng.random_range(-1.0..1.0);
+        }
+    }
     // Create dense layer
     let dense1 = Dense::new(in_features, 32, None, &mut rng)?;
     // Create batch norm for dense output
@@ -81,9 +84,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         compute_mean(&dense1_output),
         compute_std(&dense1_output, compute_mean(&dense1_output))
     );
+    println!(
         "After BatchNorm - Mean: {:.6}, Std: {:.6}",
         compute_mean(&bn1_output),
         compute_std(&bn1_output, compute_mean(&bn1_output))
+    );
     Ok(())
 }
 // Helper function to compute mean of an array
@@ -92,10 +97,17 @@ fn compute_mean<F: num_traits::Float>(arr: &Array<F, ndarray::IxDyn>) -> F {
     let mut sum = F::zero();
     for &val in arr.iter() {
         sum = sum + val;
+    }
     sum / F::from(n).unwrap()
+}
+
 // Helper function to compute standard deviation
 fn compute_std<F: num_traits::Float>(arr: &Array<F, ndarray::IxDyn>, mean: F) -> F {
+    let n = arr.len();
     let mut sum_sq = F::zero();
+    for &val in arr.iter() {
         let diff = val - mean;
         sum_sq = sum_sq + diff * diff;
+    }
     (sum_sq / F::from(n).unwrap()).sqrt()
+}

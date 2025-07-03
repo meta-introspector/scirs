@@ -43,7 +43,7 @@ impl AdvancedParallelConfig {
             return size;
         }
 
-        let threads = self.max_threads.unwrap_or_else(num_threads);
+        let threads = self.max_threads.unwrap_or_else(|| num_cpus::get());
 
         if self.dynamic_chunks {
             // Dynamic sizing based on data size and thread count
@@ -89,7 +89,7 @@ where
         }
 
         let results: Vec<StatsResult<(F, F, F, F)>> = datasets
-            .par_iter()
+            .iter()
             .map(|dataset| self.compute_single_dataset_stats(dataset))
             .collect();
 
@@ -102,7 +102,9 @@ where
     {
         let n = data.len();
         if n == 0 {
-            return Err(StatsError::invalid_argument("Dataset cannot be empty"));
+            return Err(StatsError::InvalidArgument(
+                "Dataset cannot be empty".to_string(),
+            ));
         }
 
         if n < self.config.min_size {
@@ -130,32 +132,33 @@ where
         let chunk_size = self.config.get_optimal_chunk_size(n);
 
         // Parallel reduction for statistics
-        let results: Vec<(F, F, F, F, usize)> = par_chunks(data.as_slice().unwrap(), chunk_size)
-            .map(|chunk| {
-                let len = chunk.len();
-                let sum = chunk.iter().fold(F::zero(), |acc, &x| acc + x);
-                let min = chunk.iter().fold(
-                    chunk[0],
-                    |min_val, &x| if x < min_val { x } else { min_val },
-                );
-                let max = chunk.iter().fold(
-                    chunk[0],
-                    |max_val, &x| if x > max_val { x } else { max_val },
-                );
+        let results: Vec<(F, F, F, F, usize)> =
+            parallel_chunks(data.as_slice().unwrap(), chunk_size)
+                .map(|chunk| {
+                    let len = chunk.len();
+                    let sum = chunk.iter().fold(F::zero(), |acc, &x| acc + x);
+                    let min = chunk.iter().fold(
+                        chunk[0],
+                        |min_val, &x| if x < min_val { x } else { min_val },
+                    );
+                    let max = chunk.iter().fold(
+                        chunk[0],
+                        |max_val, &x| if x > max_val { x } else { max_val },
+                    );
 
-                // Local mean for variance calculation
-                let local_mean = sum / F::from(len).unwrap();
-                let sum_sq_dev = chunk
-                    .iter()
-                    .map(|&x| {
-                        let diff = x - local_mean;
-                        diff * diff
-                    })
-                    .fold(F::zero(), |acc, x| acc + x);
+                    // Local mean for variance calculation
+                    let local_mean = sum / F::from(len).unwrap();
+                    let sum_sq_dev = chunk
+                        .iter()
+                        .map(|&x| {
+                            let diff = x - local_mean;
+                            diff * diff
+                        })
+                        .fold(F::zero(), |acc, x| acc + x);
 
-                (sum, sum_sq_dev, min, max, len)
-            })
-            .collect();
+                    (sum, sum_sq_dev, min, max, len)
+                })
+                .collect();
 
         // Combine results
         let total_sum = results
@@ -183,7 +186,7 @@ where
                 );
 
         // Recalculate variance with global mean (more accurate)
-        let global_variance = par_chunks(data.as_slice().unwrap(), chunk_size)
+        let global_variance = parallel_chunks(data.as_slice().unwrap(), chunk_size)
             .map(|chunk| {
                 chunk
                     .iter()
@@ -234,15 +237,15 @@ where
         D2: Data<Elem = F> + Sync,
     {
         if x.len() != y.len() {
-            return Err(StatsError::dimension_mismatch(
-                "Arrays must have same length",
+            return Err(StatsError::DimensionMismatch(
+                "Arrays must have same length".to_string(),
             ));
         }
 
         let n = x.len();
         if n < self.k_folds {
-            return Err(StatsError::invalid_argument(
-                "Not enough data for k-fold validation",
+            return Err(StatsError::InvalidArgument(
+                "Not enough data for k-fold validation".to_string(),
             ));
         }
 
@@ -252,7 +255,7 @@ where
 
         // Parallel computation of correlations for each fold
         let correlations: Vec<F> = (0..self.k_folds)
-            .into_par_iter()
+            .into_iter()
             .map(|fold| {
                 let start = fold * fold_size;
                 let end = if fold == self.k_folds - 1 {
@@ -314,7 +317,8 @@ where
             sum_y2 = sum_y2 + y_dev * y_dev;
         }
 
-        if sum_x2 <= F::epsilon() || sum_y2 <= F::epsilon() {
+        let epsilon = F::from(1e-15).unwrap_or_else(|| F::from(0.0).unwrap());
+        if sum_x2 <= epsilon || sum_y2 <= epsilon {
             return Ok(F::zero());
         }
 
@@ -355,12 +359,14 @@ where
         D: Data<Elem = F> + Sync,
     {
         if data.is_empty() {
-            return Err(StatsError::invalid_argument("Data cannot be empty"));
+            return Err(StatsError::InvalidArgument(
+                "Data cannot be empty".to_string(),
+            ));
         }
 
         if confidence_level <= F::zero() || confidence_level >= F::one() {
-            return Err(StatsError::invalid_argument(
-                "Confidence level must be between 0 and 1",
+            return Err(StatsError::InvalidArgument(
+                "Confidence level must be between 0 and 1".to_string(),
             ));
         }
 
@@ -369,7 +375,7 @@ where
 
         // Parallel bootstrap sampling
         let bootstrap_stats: Vec<F> = (0..self.n_simulations)
-            .into_par_iter()
+            .into_iter()
             .map(|seed| {
                 use rand::rngs::StdRng;
                 use rand::{Rng, SeedableRng};
@@ -424,7 +430,9 @@ where
         D2: Data<Elem = F> + Sync,
     {
         if group1.is_empty() || group2.is_empty() {
-            return Err(StatsError::invalid_argument("Groups cannot be empty"));
+            return Err(StatsError::InvalidArgument(
+                "Groups cannot be empty".to_string(),
+            ));
         }
 
         // Combine groups for permutation
@@ -440,7 +448,7 @@ where
         let combined_arc = Arc::new(combined);
         let count_extreme = Arc::new(Mutex::new(0usize));
 
-        (0..self.n_simulations).into_par_iter().for_each(|seed| {
+        (0..self.n_simulations).into_iter().for_each(|seed| {
             use rand::rngs::StdRng;
             use rand::{seq::SliceRandom, SeedableRng};
 
@@ -485,8 +493,8 @@ impl ParallelMatrixOps {
     {
         let (m, n) = matrix.dim();
         if n != vector.len() {
-            return Err(StatsError::dimension_mismatch(
-                "Matrix columns must match vector length",
+            return Err(StatsError::DimensionMismatch(
+                "Matrix columns must match vector length".to_string(),
             ));
         }
 
@@ -506,7 +514,6 @@ impl ParallelMatrixOps {
             result
                 .axis_chunks_iter_mut(Axis(0), chunk_size)
                 .enumerate()
-                .par_bridge()
                 .for_each(|(chunk_idx, mut result_chunk)| {
                     let start_row = chunk_idx * chunk_size;
                     let end_row = (start_row + result_chunk.len()).min(m);

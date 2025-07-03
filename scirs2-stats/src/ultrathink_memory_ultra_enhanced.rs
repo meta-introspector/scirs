@@ -6,19 +6,17 @@
 //! efficiency in large-scale statistical computing operations.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::ErrorMessages;
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
-use num_traits::{Float, NumCast, One, Zero};
+use ndarray::{Array1, Array2, ArrayBase, Data, Ix1};
+use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
-use serde::{Deserialize, Serialize};
 use std::alloc::{alloc, dealloc, Layout};
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::collections::{HashMap, VecDeque};
 use std::ptr::NonNull;
 use std::sync::{
     atomic::{AtomicU64, AtomicUsize, Ordering},
-    Arc, Mutex, RwLock,
+    Arc, RwLock,
 };
-use std::time::{Duration, Instant, SystemTime};
+use std::time::{Duration, Instant};
 
 /// Ultra-Think Memory Configuration with Advanced Optimization
 #[derive(Debug, Clone)]
@@ -393,7 +391,7 @@ impl UltraThinkMemoryManager {
         memory_state: &Option<MemoryState>,
     ) -> StatsResult<AllocationStrategy> {
         // Use memory state if available for more informed decisions
-        let available_memory = memory_state
+        let _available_memory = memory_state
             .as_ref()
             .map(|s| s.available_memory)
             .unwrap_or(usize::MAX);

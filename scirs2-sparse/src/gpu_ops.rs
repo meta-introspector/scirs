@@ -3,10 +3,6 @@
 //! This module provides GPU acceleration for sparse matrix operations
 //! using the scirs2-core GPU backend system.
 
-#![allow(unused_variables)]
-#![allow(unused_assignments)]
-#![allow(unused_mut)]
-
 use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
@@ -325,7 +321,7 @@ pub struct SpMVKernel {
 }
 
 impl SpMVKernel {
-    pub fn new(device: &GpuDevice, workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
+    pub fn new(device: &GpuDevice, _workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
         // Compile GPU kernels for actual hardware acceleration
 
         match device.backend() {
@@ -552,7 +548,7 @@ impl SpMVKernel {
 
     pub fn execute<T>(
         &self,
-        device: &GpuDevice,
+        _device: &GpuDevice,
         rows: usize,
         cols: usize,
         indptr: &GpuBuffer<usize>,
@@ -784,7 +780,7 @@ pub struct SpMSKernel {
 }
 
 impl SpMSKernel {
-    pub fn new(device: &GpuDevice, workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
+    pub fn new(device: &GpuDevice, _workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
         // Compile GPU kernels for advanced sparse operations
 
         match device.backend() {
@@ -1173,7 +1169,7 @@ impl SpMSKernel {
 
     pub fn execute_symmetric<T>(
         &self,
-        device: &GpuDevice,
+        _device: &GpuDevice,
         rows: usize,
         indptr: &GpuBuffer<usize>,
         indices: &GpuBuffer<usize>,
@@ -1228,7 +1224,7 @@ impl SpMSKernel {
 
     pub fn execute_spmm<T>(
         &self,
-        device: &GpuDevice,
+        _device: &GpuDevice,
         a_rows: usize,
         a_cols: usize,
         b_cols: usize,
@@ -1310,7 +1306,7 @@ impl SpMSKernel {
 
     pub fn execute_triangular_solve<T>(
         &self,
-        device: &GpuDevice,
+        _device: &GpuDevice,
         n: usize,
         indptr: &GpuBuffer<usize>,
         indices: &GpuBuffer<usize>,
@@ -2044,9 +2040,9 @@ where
 
 #[cfg(not(feature = "gpu"))]
 fn gpu_sparse_matvec_impl_wrapper<T, S>(
-    matrix: &S,
-    x: &ArrayView1<T>,
-    options: &GpuOptions,
+    _matrix: &S,
+    _x: &ArrayView1<T>,
+    _options: &GpuOptions,
 ) -> Result<Array1<T>, String>
 where
     T: Float + Debug + Copy + 'static + Send + Sync,
@@ -2168,9 +2164,9 @@ where
 
 #[cfg(not(feature = "gpu"))]
 fn gpu_sym_sparse_matvec_impl_wrapper<T>(
-    matrix: &SymCsrMatrix<T>,
-    x: &ArrayView1<T>,
-    options: &GpuOptions,
+    _matrix: &SymCsrMatrix<T>,
+    _x: &ArrayView1<T>,
+    _options: &GpuOptions,
 ) -> Result<Array1<T>, String>
 where
     T: Float + Debug + Copy + 'static + Send + Sync,
@@ -2257,7 +2253,7 @@ where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (rows, cols) = matrix.shape();
+    let (rows, _cols) = matrix.shape();
     let mut result = Array1::zeros(rows);
     let (row_indices, col_indices, values) = matrix.find();
 
@@ -2410,13 +2406,13 @@ impl AdvancedGpuOps {
         let (b_rows, b_cols) = b.shape();
 
         // Convert matrices to GPU buffers
-        let a_indptr_buffer = device.create_buffer(a.get_indptr().as_slice().unwrap())?;
-        let a_indices_buffer = device.create_buffer(a.get_indices().as_slice().unwrap())?;
-        let a_data_buffer = device.create_buffer(a.get_data().as_slice().unwrap())?;
+        let a_indptr_buffer = device.create_buffer(a.get_indptr())?;
+        let a_indices_buffer = device.create_buffer(a.get_indices())?;
+        let a_data_buffer = device.create_buffer(a.get_data())?;
 
-        let b_indptr_buffer = device.create_buffer(b.get_indptr().as_slice().unwrap())?;
-        let b_indices_buffer = device.create_buffer(b.get_indices().as_slice().unwrap())?;
-        let b_data_buffer = device.create_buffer(b.get_data().as_slice().unwrap())?;
+        let b_indptr_buffer = device.create_buffer(b.get_indptr())?;
+        let b_indices_buffer = device.create_buffer(b.get_indices())?;
+        let b_data_buffer = device.create_buffer(b.get_data())?;
 
         // Estimate result size (upper bound)
         let max_result_nnz = (a.nnz() * b.nnz()) / a_cols.max(1);
@@ -2467,7 +2463,7 @@ impl AdvancedGpuOps {
         // Note: This implementation is O(nnz_a * nnz_b) which is not optimal
         // A proper implementation would convert B to CSC format first
 
-        let (a_rows, a_cols) = a.shape();
+        let (a_rows, _a_cols) = a.shape();
         let (_, b_cols) = b.shape();
 
         let mut result_data = Vec::new();
@@ -2581,10 +2577,10 @@ impl AdvancedGpuOps {
         let n = l.shape().0;
 
         // Create GPU buffers
-        let indptr_buffer = device.create_buffer(l.get_indptr().as_slice().unwrap())?;
-        let indices_buffer = device.create_buffer(l.get_indices().as_slice().unwrap())?;
-        let data_buffer = device.create_buffer(l.get_data().as_slice().unwrap())?;
-        let b_buffer = device.create_buffer(b.as_slice().unwrap())?;
+        let indptr_buffer = device.create_buffer(l.get_indptr())?;
+        let indices_buffer = device.create_buffer(l.get_indices())?;
+        let data_buffer = device.create_buffer(l.get_data())?;
+        let b_buffer = device.create_buffer(&b)?;
         let mut x_buffer = device.create_buffer_zeros::<T>(n)?;
 
         // Create triangular solve kernel

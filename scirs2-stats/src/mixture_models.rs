@@ -16,13 +16,11 @@
 
 use crate::error::{StatsError, StatsResult};
 use either::Either;
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::Rng;
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
-use std::collections::HashMap;
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex};
 
 /// Gaussian Mixture Model with EM algorithm
 pub struct GaussianMixtureModel<F> {

@@ -585,7 +585,11 @@ impl ContinuousPerformanceMonitor {
                     now,
                 ) {
                     let alert = PerformanceAlert {
-                        id: format!("cpu_{}_{}", now.elapsed().as_secs(), rand::random::<u32>()),
+                        id: format!(
+                            "cpu_{elapsed}_{random}",
+                            elapsed = now.elapsed().as_secs(),
+                            random = rand::random::<u32>()
+                        ),
                         alert_type: AlertType::HighCpuUsage,
                         severity: if sys_metrics.cpu_usage > alert_config.cpu_threshold * 1.2 {
                             AlertSeverity::Critical
@@ -662,7 +666,11 @@ impl ContinuousPerformanceMonitor {
                 now,
             ) {
                 let alert = PerformanceAlert {
-                    id: format!("resp_{}_{}", now.elapsed().as_secs(), rand::random::<u32>()),
+                    id: format!(
+                        "resp_{elapsed}_{random}",
+                        elapsed = now.elapsed().as_secs(),
+                        random = rand::random::<u32>()
+                    ),
                     alert_type: AlertType::HighResponseTime,
                     severity: AlertSeverity::Warning,
                     message: format!("High response time: {:.1}ms", app_metrics.avg_response_time),
@@ -818,7 +826,7 @@ impl ContinuousPerformanceMonitor {
         if let Some(cpu_trend) = trends.get("cpu_usage") {
             if cpu_trend.trend == TrendDirection::Increasing && cpu_trend.strength > 0.5 {
                 new_recommendations.push(OptimizationRecommendation {
-                    id: format!("cpu_opt_{}", Instant::now().elapsed().as_secs()),
+                    id: format!("cpu_trend_{}", Instant::now().elapsed().as_secs()),
                     recommendation_type: RecommendationType::ScaleUp,
                     description: "CPU usage is trending upward. Consider scaling up resources or optimizing CPU-intensive operations.".to_string(),
                     expected_impact: cpu_trend.strength * 20.0, // Estimated percentage improvement
@@ -833,7 +841,7 @@ impl ContinuousPerformanceMonitor {
         if let Some(memory_trend) = trends.get("memory_usage") {
             if memory_trend.trend == TrendDirection::Increasing && memory_trend.strength > 0.3 {
                 new_recommendations.push(OptimizationRecommendation {
-                    id: format!("mem_opt_{}", Instant::now().elapsed().as_secs()),
+                    id: format!("trend_{}", Instant::now().elapsed().as_secs()),
                     recommendation_type: RecommendationType::MemoryOptimization,
                     description: "Memory usage is increasing. Consider implementing memory pooling or optimizing data structures.".to_string(),
                     expected_impact: memory_trend.strength * 15.0,
@@ -848,7 +856,7 @@ impl ContinuousPerformanceMonitor {
         if let Some(response_trend) = trends.get("avg_response_time") {
             if response_trend.trend == TrendDirection::Increasing && response_trend.strength > 0.4 {
                 new_recommendations.push(OptimizationRecommendation {
-                    id: format!("resp_opt_{}", Instant::now().elapsed().as_secs()),
+                    id: format!("trend_{}", Instant::now().elapsed().as_secs()),
                     recommendation_type: RecommendationType::CacheOptimization,
                     description: "Response times are increasing. Consider implementing caching or optimizing database queries.".to_string(),
                     expected_impact: response_trend.strength * 25.0,

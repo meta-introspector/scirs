@@ -115,8 +115,8 @@ impl CircuitBreaker {
         // Check if we should allow the request
         if !self.should_allow_request()? {
             return Err(CoreError::ComputationError(ErrorContext::new(format!(
-                "Circuit breaker '{}' is open - rejecting request",
-                self.name
+                "Circuit breaker '{name}' is open - rejecting request",
+                name = self.name
             ))));
         }
 
@@ -425,7 +425,7 @@ impl fmt::Display for CircuitBreakerStatus {
         writeln!(f, "  Total Requests: {}", self.request_count)?;
         writeln!(f, "  Half-open Requests: {}", self.half_open_requests)?;
         if let Some(last_failure) = self.last_failure_time {
-            writeln!(f, "  Last Failure: {:?}", last_failure)?;
+            writeln!(f, "  Last Failure: {last_failure:?}")?;
         }
         writeln!(f, "  Last State Change: {:?} ago", self.last_state_change)?;
         Ok(())

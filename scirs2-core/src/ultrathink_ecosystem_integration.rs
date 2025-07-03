@@ -1831,7 +1831,7 @@ impl UltrathinkEcosystemCoordinator {
             module.process_ultrathink(input.clone())
         } else {
             Err(CoreError::InvalidArgument(crate::error::ErrorContext::new(
-                format!("Module {} not found", module_name),
+                format!("Module {module_name} not found"),
             )))
         }
     }
@@ -1901,10 +1901,10 @@ impl UltrathinkEcosystemCoordinator {
                         best_score = output.quality_score;
                         best_output = Some(output);
                     }
-                    println!("  ✅ Module {} completed", module_name);
+                    println!("  ✅ Module {module_name} completed");
                 }
                 Err(_) => {
-                    println!("  ❌ Module {} failed", module_name);
+                    println!("  ❌ Module {module_name} failed");
                 }
             }
         }
@@ -1948,8 +1948,7 @@ impl UltrathinkEcosystemCoordinator {
     ) -> CoreResult<()> {
         let mut status = self.status.write().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire status lock: {}",
-                e
+                "Failed to acquire status lock: {e}"
             )))
         })?;
 
@@ -2366,10 +2365,7 @@ impl EcosystemResourceManager {
             for allocation in self.allocations.values_mut() {
                 allocation.cpu_cores *= scale_factor;
             }
-            println!(
-                "    📉 Scaled down CPU allocations by factor: {:.2}",
-                scale_factor
-            );
+            println!("    📉 Scaled down CPU allocations by factor: {scale_factor:.2}");
         }
 
         if total_memory_demand > self.available_resources.memory_mb {
@@ -2378,10 +2374,7 @@ impl EcosystemResourceManager {
             for allocation in self.allocations.values_mut() {
                 allocation.memory_mb = (allocation.memory_mb as f64 * scale_factor) as usize;
             }
-            println!(
-                "    📉 Scaled down memory allocations by factor: {:.2}",
-                scale_factor
-            );
+            println!("    📉 Scaled down memory allocations by factor: {scale_factor:.2}");
         }
 
         Ok(())
@@ -2397,10 +2390,7 @@ impl EcosystemResourceManager {
             if module_name.contains("neural") || module_name.contains("ml") {
                 allocation.cpu_cores *= 1.2; // 20% increase for ML workloads
                 allocation.memory_mb = (allocation.memory_mb as f64 * 1.3) as usize; // 30% increase
-                println!(
-                    "    📈 Predictively scaled up resources for ML module: {}",
-                    module_name
-                );
+                println!("    📈 Predictively scaled up resources for ML module: {module_name}");
             }
         }
 
@@ -2436,7 +2426,7 @@ impl ModuleCommunicationHub {
         for (source, destinations) in &mut self.routing_table {
             // Sort destinations by priority and performance
             destinations.sort();
-            println!("    📍 Optimized routing for module: {}", source);
+            println!("    📍 Optimized routing for module: {source}");
         }
 
         Ok(())
@@ -2771,7 +2761,7 @@ impl ModuleCommunicationHub {
 
         // Create communication channels for each stage
         for stage in &plan.stages {
-            let channel_name = format!("channel_{}", stage.name);
+            let channel_name = stage.name.to_string();
             channels.push(channel_name);
         }
 
@@ -2784,7 +2774,7 @@ impl ModuleCommunicationHub {
         for i in 0..plan.stages.len() {
             if i > 0 {
                 let inter_stage_channel =
-                    format!("stage_{}_{}", plan.stages[i - 1].name, plan.stages[i].name);
+                    format!("{}-{}", plan.stages[i - 1].name, plan.stages[i].name);
                 channels.push(inter_stage_channel);
             }
         }

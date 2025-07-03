@@ -12,15 +12,14 @@
 //! - Performance trend analysis and prediction
 //! - Integration with CI/CD pipelines
 
-use crate::benchmark_suite::{BenchmarkConfig, BenchmarkReport, BenchmarkSuite};
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1};
-use num_traits::{Float, NumCast, One, Zero};
+use ndarray::Array1;
+use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Cross-platform regression detection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

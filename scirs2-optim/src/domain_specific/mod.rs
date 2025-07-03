@@ -5,7 +5,7 @@
 //! domain-aware optimization approaches.
 
 use crate::adaptive_selection::{OptimizerType, ProblemCharacteristics};
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use ndarray::ScalarOperand;
 use num_traits::Float;
 use std::collections::HashMap;

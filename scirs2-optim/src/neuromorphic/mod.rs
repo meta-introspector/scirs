@@ -4,7 +4,7 @@
 //! computing platforms, including spike-based optimization, event-driven parameter updates,
 //! and energy-efficient optimization strategies for neuromorphic chips.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use crate::optimizers::Optimizer;
 use ndarray::{Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;

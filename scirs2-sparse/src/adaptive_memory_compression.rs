@@ -19,7 +19,6 @@ use std::os::unix::fs::FileExt;
 
 // Memory mapping support
 #[cfg(unix)]
-
 #[cfg(windows)]
 use std::os::windows::fs::FileExt;
 
@@ -143,7 +142,11 @@ pub struct BlockId {
 
 impl std::fmt::Display for BlockId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}_{}-{}", self.matrix_id, self.block_row, self.block_col)
+        write!(
+            f,
+            "{}_{}-{}",
+            self.matrix_id, self.block_row, self.block_col
+        )
     }
 }
 
@@ -156,7 +159,7 @@ impl BlockId {
             .wrapping_add((self.block_row as u64) * 1000)
             .wrapping_add(self.block_col as u64)
     }
-    
+
     /// Create BlockId from u64 (for deserialization)
     pub fn from_u64(value: u64) -> Self {
         // This is a simplified reverse operation - in practice you'd want a proper bijection
@@ -257,7 +260,9 @@ impl MemoryMappedFile {
             .read(true)
             .write(true)
             .open(&file_path)
-            .map_err(|e| SparseError::Io(format!("Failed to create file {:?}: {}", file_path, e)))?;
+            .map_err(|e| {
+                SparseError::Io(format!("Failed to create file {:?}: {}", file_path, e))
+            })?;
 
         // Set file size if creating new file
         file.set_len(size as u64)
@@ -277,25 +282,33 @@ impl MemoryMappedFile {
     fn read_at(&self, offset: usize, buffer: &mut [u8]) -> SparseResult<usize> {
         #[cfg(unix)]
         {
-            self.file.read_at(buffer, offset as u64)
+            self.file
+                .read_at(buffer, offset as u64)
                 .map_err(|e| SparseError::Io(format!("Failed to read at offset {}: {}", offset, e)))
         }
-        
+
         #[cfg(windows)]
         {
             let mut file_ref = &self.file;
-            file_ref.seek_read(buffer, offset as u64)
+            file_ref
+                .seek_read(buffer, offset as u64)
                 .map_err(|e| SparseError::Io(format!("Failed to read at offset {}: {}", offset, e)))
         }
-        
+
         #[cfg(not(any(unix, windows)))]
         {
             // Fallback for other platforms - use regular seeking
-            let mut file_clone = self.file.try_clone()
+            let mut file_clone = self
+                .file
+                .try_clone()
                 .map_err(|e| SparseError::Io(format!("Failed to clone file handle: {}", e)))?;
-            file_clone.seek(SeekFrom::Start(offset as u64))
-                .map_err(|e| SparseError::Io(format!("Failed to seek to offset {}: {}", offset, e)))?;
-            file_clone.read(buffer)
+            file_clone
+                .seek(SeekFrom::Start(offset as u64))
+                .map_err(|e| {
+                    SparseError::Io(format!("Failed to seek to offset {}: {}", offset, e))
+                })?;
+            file_clone
+                .read(buffer)
                 .map_err(|e| SparseError::Io(format!("Failed to read data: {}", e)))
         }
     }
@@ -305,25 +318,33 @@ impl MemoryMappedFile {
     fn write_at(&self, offset: usize, data: &[u8]) -> SparseResult<usize> {
         #[cfg(unix)]
         {
-            self.file.write_at(data, offset as u64)
-                .map_err(|e| SparseError::Io(format!("Failed to write at offset {}: {}", offset, e)))
+            self.file.write_at(data, offset as u64).map_err(|e| {
+                SparseError::Io(format!("Failed to write at offset {}: {}", offset, e))
+            })
         }
-        
+
         #[cfg(windows)]
         {
             let mut file_ref = &self.file;
-            file_ref.seek_write(data, offset as u64)
-                .map_err(|e| SparseError::Io(format!("Failed to write at offset {}: {}", offset, e)))
+            file_ref.seek_write(data, offset as u64).map_err(|e| {
+                SparseError::Io(format!("Failed to write at offset {}: {}", offset, e))
+            })
         }
-        
+
         #[cfg(not(any(unix, windows)))]
         {
             // Fallback for other platforms - use regular seeking
-            let mut file_clone = self.file.try_clone()
+            let mut file_clone = self
+                .file
+                .try_clone()
                 .map_err(|e| SparseError::Io(format!("Failed to clone file handle: {}", e)))?;
-            file_clone.seek(SeekFrom::Start(offset as u64))
-                .map_err(|e| SparseError::Io(format!("Failed to seek to offset {}: {}", offset, e)))?;
-            file_clone.write(data)
+            file_clone
+                .seek(SeekFrom::Start(offset as u64))
+                .map_err(|e| {
+                    SparseError::Io(format!("Failed to seek to offset {}: {}", offset, e))
+                })?;
+            file_clone
+                .write(data)
                 .map_err(|e| SparseError::Io(format!("Failed to write data: {}", e)))
         }
     }
@@ -331,7 +352,8 @@ impl MemoryMappedFile {
     /// Flush data to disk
     #[allow(dead_code)]
     fn flush(&self) -> SparseResult<()> {
-        self.file.sync_all()
+        self.file
+            .sync_all()
             .map_err(|e| SparseError::Io(format!("Failed to flush file: {}", e)))
     }
 }
@@ -2017,8 +2039,9 @@ impl OutOfCoreManager {
         let file_path = Path::new(&self.temp_dir).join(&file_name);
 
         // Create and write to file
-        let mut file = File::create(&file_path)
-            .map_err(|e| SparseError::Io(format!("Failed to create file {:?}: {}", file_path, e)))?;
+        let mut file = File::create(&file_path).map_err(|e| {
+            SparseError::Io(format!("Failed to create file {:?}: {}", file_path, e))
+        })?;
 
         // Write block header
         let header = BlockHeader {
@@ -2040,7 +2063,8 @@ impl OutOfCoreManager {
             .map_err(|e| SparseError::Io(format!("Failed to flush file: {}", e)))?;
 
         // Track the file
-        self.active_files.insert(block.block_id.clone(), file_name.clone());
+        self.active_files
+            .insert(block.block_id.clone(), file_name.clone());
 
         Ok(file_name)
     }
@@ -2048,8 +2072,9 @@ impl OutOfCoreManager {
     /// Read compressed block from disk
     #[allow(dead_code)]
     fn read_block_from_disk(&self, block_id: BlockId) -> SparseResult<CompressedBlock> {
-        let file_name = self.active_files.get(&block_id)
-            .ok_or_else(|| SparseError::BlockNotFound(format!("Block {} not found on disk", block_id)))?;
+        let file_name = self.active_files.get(&block_id).ok_or_else(|| {
+            SparseError::BlockNotFound(format!("Block {} not found on disk", block_id))
+        })?;
 
         let file_path = Path::new(&self.temp_dir).join(file_name);
         let mut file = File::open(&file_path)
@@ -2084,13 +2109,18 @@ impl OutOfCoreManager {
 
     /// Create memory-mapped file for large blocks
     #[allow(dead_code)]
-    fn create_memory_mapped_file(&mut self, block_id: BlockId, size: usize) -> SparseResult<String> {
+    fn create_memory_mapped_file(
+        &mut self,
+        block_id: BlockId,
+        size: usize,
+    ) -> SparseResult<String> {
         let file_id = self.file_counter.fetch_add(1, Ordering::Relaxed);
         let file_name = format!("mmap_{}_{}.dat", block_id, file_id);
         let file_path = Path::new(&self.temp_dir).join(&file_name);
 
         let mapped_file = MemoryMappedFile::new(file_path, size)?;
-        self.memory_mapped_files.insert(file_name.clone(), mapped_file);
+        self.memory_mapped_files
+            .insert(file_name.clone(), mapped_file);
         self.active_files.insert(block_id, file_name.clone());
 
         Ok(file_name)
@@ -2098,26 +2128,42 @@ impl OutOfCoreManager {
 
     /// Write data to memory-mapped file
     #[allow(dead_code)]
-    fn write_to_mapped_file(&self, file_name: &str, offset: usize, data: &[u8]) -> SparseResult<()> {
+    fn write_to_mapped_file(
+        &self,
+        file_name: &str,
+        offset: usize,
+        data: &[u8],
+    ) -> SparseResult<()> {
         if let Some(mapped_file) = self.memory_mapped_files.get(file_name) {
             mapped_file.write_at(offset, data)?;
             mapped_file.flush()?;
             Ok(())
         } else {
-            Err(SparseError::Io(format!("Memory-mapped file {} not found", file_name)))
+            Err(SparseError::Io(format!(
+                "Memory-mapped file {} not found",
+                file_name
+            )))
         }
     }
 
     /// Read data from memory-mapped file
     #[allow(dead_code)]
-    fn read_from_mapped_file(&self, file_name: &str, offset: usize, size: usize) -> SparseResult<Vec<u8>> {
+    fn read_from_mapped_file(
+        &self,
+        file_name: &str,
+        offset: usize,
+        size: usize,
+    ) -> SparseResult<Vec<u8>> {
         if let Some(mapped_file) = self.memory_mapped_files.get(file_name) {
             let mut buffer = vec![0u8; size];
             let bytes_read = mapped_file.read_at(offset, &mut buffer)?;
             buffer.truncate(bytes_read);
             Ok(buffer)
         } else {
-            Err(SparseError::Io(format!("Memory-mapped file {} not found", file_name)))
+            Err(SparseError::Io(format!(
+                "Memory-mapped file {} not found",
+                file_name
+            )))
         }
     }
 
@@ -2126,13 +2172,14 @@ impl OutOfCoreManager {
     fn remove_block(&mut self, block_id: BlockId) -> SparseResult<()> {
         if let Some(file_name) = self.active_files.remove(&block_id) {
             let file_path = Path::new(&self.temp_dir).join(&file_name);
-            
+
             // Remove from memory-mapped files if it exists
             self.memory_mapped_files.remove(&file_name);
-            
+
             // Remove file from disk
-            std::fs::remove_file(&file_path)
-                .map_err(|e| SparseError::Io(format!("Failed to remove file {:?}: {}", file_path, e)))?;
+            std::fs::remove_file(&file_path).map_err(|e| {
+                SparseError::Io(format!("Failed to remove file {:?}: {}", file_path, e))
+            })?;
         }
         Ok(())
     }

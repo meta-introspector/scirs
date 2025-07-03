@@ -76,7 +76,7 @@ impl ClusterManager {
 
         thread::spawn(move || loop {
             if let Err(e) = Self::node_discovery_loop(&registry, &config, &event_log) {
-                eprintln!("Node discovery error: {:?}", e);
+                eprintln!("Node discovery error: {e:?}");
             }
             thread::sleep(Duration::from_secs(30));
         });
@@ -91,7 +91,7 @@ impl ClusterManager {
 
         thread::spawn(move || loop {
             if let Err(e) = Self::health_monitoring_loop(&health_monitor, &registry, &event_log) {
-                eprintln!("Health monitoring error: {:?}", e);
+                eprintln!("Health monitoring error: {e:?}");
             }
             thread::sleep(Duration::from_secs(10));
         });
@@ -105,7 +105,7 @@ impl ClusterManager {
 
         thread::spawn(move || loop {
             if let Err(e) = Self::resource_management_loop(&allocator, &registry) {
-                eprintln!("Resource management error: {:?}", e);
+                eprintln!("Resource management error: {e:?}");
             }
             thread::sleep(Duration::from_secs(15));
         });
@@ -120,7 +120,7 @@ impl ClusterManager {
 
         thread::spawn(move || loop {
             if let Err(e) = Self::cluster_coordination_loop(&cluster_state, &registry, &event_log) {
-                eprintln!("Cluster coordination error: {:?}", e);
+                eprintln!("Cluster coordination error: {e:?}");
             }
             thread::sleep(Duration::from_secs(5));
         });
@@ -176,7 +176,7 @@ impl ClusterManager {
                 for address in addresses {
                     if Self::is_node_reachable(*address)? {
                         nodes.push(NodeInfo {
-                            id: format!("node_{}", address),
+                            id: format!("node_{address}"),
                             address: *address,
                             node_type: NodeType::Worker,
                             capabilities: NodeCapabilities::default(),
@@ -218,8 +218,7 @@ impl ClusterManager {
         // Create a UDP socket for multicast discovery
         let socket = UdpSocket::bind(SocketAddr::new(*group, port)).map_err(|e| {
             CoreError::IoError(crate::error::ErrorContext::new(format!(
-                "Failed to bind multicast socket: {}",
-                e
+                "Failed to bind multicast socket: {e}"
             )))
         })?;
 
@@ -228,8 +227,7 @@ impl ClusterManager {
             .set_read_timeout(Some(Duration::from_secs(5)))
             .map_err(|e| {
                 CoreError::IoError(crate::error::ErrorContext::new(format!(
-                    "Failed to set socket timeout: {}",
-                    e
+                    "Failed to set socket timeout: {e}"
                 )))
             })?;
 
@@ -278,7 +276,7 @@ impl ClusterManager {
             }
             Err(e) => {
                 return Err(CoreError::IoError(crate::error::ErrorContext::new(
-                    format!("Failed to send discovery broadcast: {}", e),
+                    format!("Failed to send discovery broadcast: {e}"),
                 )));
             }
         }
@@ -307,8 +305,7 @@ impl ClusterManager {
                 Ok(output) => {
                     let output_str = str::from_utf8(&output.stdout).map_err(|e| {
                         CoreError::ValidationError(ErrorContext::new(format!(
-                            "Failed to parse avahi output: {}",
-                            e
+                            "Failed to parse avahi output: {e}"
                         )))
                     })?;
 
@@ -325,7 +322,7 @@ impl ClusterManager {
                                 // Try to parse IP address
                                 if let Ok(ip) = address_str.parse::<IpAddr>() {
                                     let socket_addr = SocketAddr::new(ip, port);
-                                    let node_id = format!("dns_{}_{}", hostname, port);
+                                    let node_id = format!("dns_{hostname}_{port}");
 
                                     discovered_nodes.push(NodeInfo {
                                         id: node_id,
@@ -357,8 +354,7 @@ impl ClusterManager {
                         Ok(output) => {
                             let output_str = str::from_utf8(&output.stdout).map_err(|e| {
                                 CoreError::ValidationError(ErrorContext::new(format!(
-                                    "Failed to parse nslookup output: {}",
-                                    e
+                                    "Failed to parse nslookup output: {e}"
                                 )))
                             })?;
 
@@ -370,13 +366,12 @@ impl ClusterManager {
                                     if parts.len() >= 4 {
                                         if let Ok(port) = parts[2].parse::<u16>() {
                                             let hostname = parts[3].trim_end_matches('.');
-                                            let node_id = format!("srv_{}_{}", hostname, port);
+                                            let node_id = format!("srv_{hostname}_{port}");
 
                                             // Try to resolve hostname to IP
                                             if let Ok(mut addrs) =
                                                 std::net::ToSocketAddrs::to_socket_addrs(&format!(
-                                                    "{}:{}",
-                                                    hostname, port
+                                                    "{hostname}:{port}"
                                                 ))
                                             {
                                                 if let Some(addr) = addrs.next() {
@@ -422,8 +417,7 @@ impl ClusterManager {
                 Ok(output) => {
                     let output_str = str::from_utf8(&output.stdout).map_err(|e| {
                         CoreError::ValidationError(ErrorContext::new(format!(
-                            "Failed to parse dns-sd output: {}",
-                            e
+                            "Failed to parse dns-sd output: {e}"
                         )))
                     })?;
 
@@ -435,7 +429,7 @@ impl ClusterManager {
                             let parts: Vec<&str> = line.split_whitespace().collect();
                             if parts.len() >= 2 {
                                 let service_instance = parts[1];
-                                let node_id = format!("dnssd_{}", service_instance);
+                                let node_id = format!("dnssd_{service_instance}");
 
                                 // For now, use a default port and localhost
                                 // Real implementation would resolve the service
@@ -475,9 +469,9 @@ impl ClusterManager {
 
         // Try to query Consul catalog API for services
         let consul_url = if endpoint.starts_with("http") {
-            format!("{}/v1/catalog/services", endpoint)
+            format!("{endpoint}/v1/catalog/services")
         } else {
-            format!("http://{}/v1/catalog/services", endpoint)
+            format!("http://{endpoint}/v1/catalog/services")
         };
 
         // Use curl to query Consul API (most portable approach)
@@ -493,8 +487,7 @@ impl ClusterManager {
                 if output.status.success() {
                     let json_str = str::from_utf8(&output.stdout).map_err(|e| {
                         CoreError::ValidationError(ErrorContext::new(format!(
-                            "Failed to parse Consul response: {}",
-                            e
+                            "Failed to parse Consul response: {e}"
                         )))
                     })?;
 
@@ -510,12 +503,9 @@ impl ClusterManager {
 
                                 // Query specific service details
                                 let service_url = if endpoint.starts_with("http") {
-                                    format!("{}/v1/catalog/service/{}", endpoint, service_name)
+                                    format!("{endpoint}/v1/catalog/service/{service_name}")
                                 } else {
-                                    format!(
-                                        "http://{}/v1/catalog/service/{}",
-                                        endpoint, service_name
-                                    )
+                                    format!("http://{endpoint}/v1/catalog/service/{service_name}")
                                 };
 
                                 match Command::new("curl")
@@ -572,8 +562,7 @@ impl ClusterManager {
                                                     ) {
                                                         let socket_addr = SocketAddr::new(ip, port);
                                                         let node_id = format!(
-                                                            "consul_{}_{}",
-                                                            service_name, address_str
+                                                            "consul_{service_name}_{address_str}"
                                                         );
 
                                                         discovered_nodes.push(NodeInfo {
@@ -608,8 +597,7 @@ impl ClusterManager {
                     }
                 } else {
                     return Err(CoreError::IoError(ErrorContext::new(format!(
-                        "Failed to connect to Consul at {}",
-                        endpoint
+                        "Failed to connect to Consul at {endpoint}"
                     ))));
                 }
             }
@@ -1314,8 +1302,7 @@ impl ResourceAllocator {
         if optimizations_made > 0 {
             #[cfg(feature = "logging")]
             log::info!(
-                "Best-fit optimization completed: {} optimizations, fragmentation improved by {:.2}",
-                optimizations_made, _improvement
+                "Best-fit optimization completed: {optimizations_made} optimizations, fragmentation improved by {_improvement:.2}"
             );
         }
 
@@ -1426,10 +1413,8 @@ impl ResourceAllocator {
         if rebalancing_actions > 0 {
             #[cfg(feature = "logging")]
             log::info!(
-                "Load-balanced optimization completed: {} rebalancing actions, \
-                 load variance improved by {:.2}",
-                rebalancing_actions,
-                _variance_improvement
+                "Load-balanced optimization completed: {rebalancing_actions} rebalancing actions, \
+                 load variance improved by {_variance_improvement:.2}"
             );
         }
 

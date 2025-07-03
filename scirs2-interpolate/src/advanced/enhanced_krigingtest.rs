@@ -2,12 +2,12 @@
 // This file just mocks the necessary types and implementations
 // to verify our fix approach
 
-use thiserror::Error;
-use num_traits::{Float, FromPrimitive};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use std::marker::PhantomData;
+use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
-use std::ops::{Add, Div, Mul, Sub, AddAssign};
+use std::marker::PhantomData;
+use std::ops::{Add, AddAssign, Div, Mul, Sub};
+use thiserror::Error;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CovarianceFunction {
@@ -75,10 +75,10 @@ pub struct EnhancedKriging<F> {
 pub enum InterpolateError {
     #[error("Computation error: {0}")]
     ComputationError(String),
-    
+
     #[error("Invalid value: {0}")]
     InvalidValue(String),
-    
+
     #[error("Dimension mismatch: {0}")]
     DimensionMismatch(String),
 }
@@ -111,7 +111,7 @@ where
 // Helper functions
 fn create_basis_functions<F: Float + FromPrimitive>(
     points: &ArrayView2<F>,
-    trend_fn: TrendFunction
+    trend_fn: TrendFunction,
 ) -> InterpolateResult<Array2<F>> {
     let n_points = points.shape()[0];
     Ok(Array2::ones((n_points, 1)))
@@ -120,15 +120,12 @@ fn create_basis_functions<F: Float + FromPrimitive>(
 fn anisotropic_distance<F: Float + FromPrimitive>(
     p1: &ArrayView1<F>,
     p2: &ArrayView1<F>,
-    anisotropic_cov: &AnisotropicCovariance<F>
+    anisotropic_cov: &AnisotropicCovariance<F>,
 ) -> InterpolateResult<F> {
     Ok(F::one())
 }
 
-fn covariance<F: Float + FromPrimitive>(
-    r: F,
-    anisotropic_cov: &AnisotropicCovariance<F>
-) -> F {
+fn covariance<F: Float + FromPrimitive>(r: F, anisotropic_cov: &AnisotropicCovariance<F>) -> F {
     anisotropic_cov.sigma_sq
 }
 
@@ -157,7 +154,14 @@ where
 
 impl<F> EnhancedKrigingBuilder<F>
 where
-    F: Float + FromPrimitive + Debug + AddAssign + Sub<Output = F> + Div<Output = F> + Mul<Output = F> + Add<Output = F>,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + AddAssign
+        + Sub<Output = F>
+        + Div<Output = F>
+        + Mul<Output = F>
+        + Add<Output = F>,
 {
     pub fn new() -> Self {
         Self {
@@ -179,32 +183,32 @@ where
             _phantom: PhantomData,
         }
     }
-    
+
     pub fn points(mut self, points: Array2<F>) -> Self {
         self.points = Some(points);
         self
     }
-    
+
     pub fn values(mut self, values: Array1<F>) -> Self {
         self.values = Some(values);
         self
     }
-    
+
     pub fn covariance_function(mut self, cov_fn: CovarianceFunction) -> Self {
         self.cov_fn = cov_fn;
         self
     }
-    
+
     pub fn anisotropic_covariance(mut self, cov: AnisotropicCovariance<F>) -> Self {
         self.anisotropic_cov = Some(cov);
         self
     }
-    
+
     pub fn optimize_parameters(mut self, optimize: bool) -> Self {
         self.optimize_parameters = optimize;
         self
     }
-    
+
     // FIX BEGINS HERE - These methods were previously outside the impl block
     /// Set the covariance function
     pub fn with_covariance_function(mut self, cov_fn: CovarianceFunction) -> Self {
@@ -290,24 +294,28 @@ where
         self.use_exact_computation = use_exact_computation;
         self
     }
-    
+
     // Simplified build function for testing
     pub fn build(self) -> InterpolateResult<EnhancedKriging<F>> {
         // Basic validation
         let points = match self.points {
             Some(p) => p,
-            None => return Err(InterpolateError::InvalidValue(
-                "Points must be provided".to_string()
-            )),
+            None => {
+                return Err(InterpolateError::InvalidValue(
+                    "Points must be provided".to_string(),
+                ))
+            }
         };
-        
+
         let values = match self.values {
             Some(v) => v,
-            None => return Err(InterpolateError::InvalidValue(
-                "Values must be provided".to_string()
-            )),
+            None => {
+                return Err(InterpolateError::InvalidValue(
+                    "Values must be provided".to_string(),
+                ))
+            }
         };
-        
+
         // Simplified build to verify syntax
         let kriging = EnhancedKriging {
             points,
@@ -332,19 +340,26 @@ where
             use_exact_computation: self.use_exact_computation,
             _phantom: PhantomData,
         };
-        
+
         Ok(kriging)
     }
 }
 
 impl<F> EnhancedKriging<F>
 where
-    F: Float + FromPrimitive + Debug + AddAssign + Sub<Output = F> + Div<Output = F> + Mul<Output = F> + Add<Output = F>,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + AddAssign
+        + Sub<Output = F>
+        + Div<Output = F>
+        + Mul<Output = F>
+        + Add<Output = F>,
 {
     pub fn builder() -> EnhancedKrigingBuilder<F> {
         EnhancedKrigingBuilder::new()
     }
-    
+
     pub fn optimize_hyperparameters(&mut self) -> InterpolateResult<()> {
         Ok(())
     }
@@ -352,12 +367,12 @@ where
 
 fn main() {
     println!("Enhanced Kriging Builder Test");
-    
+
     // This verifies that our fix for the EnhancedKrigingBuilder methods works
     let _builder = EnhancedKrigingBuilder::<f64>::new()
         .with_covariance_function(CovarianceFunction::Matern52)
         .with_length_scale(1.0)
         .with_nugget(0.001);
-        
+
     println!("All methods compile correctly!");
 }

@@ -497,9 +497,9 @@ where
     fn to_coo(&self) -> SparseResult<Box<dyn SparseArray<T>>> {
         let (rows, cols, data) = self.find();
         let coo = crate::coo_array::CooArray::from_triplets(
-            rows.as_slice().unwrap(),
-            cols.as_slice().unwrap(),
-            data.as_slice().unwrap(),
+            &rows,
+            &cols,
+            &data,
             self.shape,
             false,
         )?;
@@ -509,9 +509,9 @@ where
     fn to_csr(&self) -> SparseResult<Box<dyn SparseArray<T>>> {
         let (rows, cols, data) = self.find();
         let csr = crate::csr_array::CsrArray::from_triplets(
-            rows.as_slice().unwrap(),
-            cols.as_slice().unwrap(),
-            data.as_slice().unwrap(),
+            &rows,
+            &cols,
+            &data,
             self.shape,
             false,
         )?;
@@ -521,9 +521,9 @@ where
     fn to_csc(&self) -> SparseResult<Box<dyn SparseArray<T>>> {
         let (rows, cols, data) = self.find();
         let csc = crate::csc_array::CscArray::from_triplets(
-            rows.as_slice().unwrap(),
-            cols.as_slice().unwrap(),
-            data.as_slice().unwrap(),
+            &rows,
+            &cols,
+            &data,
             self.shape,
             false,
         )?;

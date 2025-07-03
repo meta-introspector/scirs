@@ -2901,7 +2901,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
     }
 
     /// Update strategy prediction accuracy
-    fn update_strategy_prediction_accuracy(&mut self, predicted_strategy: OptimizationStrategy) {
+    fn update_strategy_prediction_accuracy(&mut self, _predicted_strategy: OptimizationStrategy) {
         // Simplified accuracy tracking
         // In practice, this would compare against actual performance outcomes
         self.metrics.strategy_prediction_accuracy = 0.85; // Placeholder
@@ -3354,7 +3354,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
     // Helper methods for meta-learning
     fn initialize_meta_gradients(
         &self,
-        network: &TransformerNetwork<T>,
+        _network: &TransformerNetwork<T>,
     ) -> Result<MetaGradients<T>> {
         // Simplified meta-gradients initialization
         Ok(MetaGradients {
@@ -3362,7 +3362,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         })
     }
 
-    fn save_network_params(&self, network: &TransformerNetwork<T>) -> Result<NetworkParams<T>> {
+    fn save_network_params(&self, _network: &TransformerNetwork<T>) -> Result<NetworkParams<T>> {
         // Simplified parameter saving
         Ok(NetworkParams {
             params: HashMap::new(),
@@ -3371,22 +3371,22 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
 
     fn restore_network_params(
         &self,
-        network: &mut TransformerNetwork<T>,
-        params: &NetworkParams<T>,
+        _network: &mut TransformerNetwork<T>,
+        _params: &NetworkParams<T>,
     ) -> Result<()> {
         // Simplified parameter restoration
         Ok(())
     }
 
-    fn compute_task_loss(&self, task: &TaskInfo<T>, network: &TransformerNetwork<T>) -> Result<T> {
+    fn compute_task_loss(&self, task: &TaskInfo<T>, _network: &TransformerNetwork<T>) -> Result<T> {
         // Simplified task loss computation
         Ok(task.difficulty) // Use difficulty as proxy for loss
     }
 
     fn compute_task_gradients(
         &self,
-        task: &TaskInfo<T>,
-        network: &TransformerNetwork<T>,
+        _task: &TaskInfo<T>,
+        _network: &TransformerNetwork<T>,
     ) -> Result<TaskGradients<T>> {
         // Simplified gradient computation
         Ok(TaskGradients {
@@ -3396,9 +3396,9 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
 
     fn apply_inner_update(
         &self,
-        network: &mut TransformerNetwork<T>,
-        gradients: &TaskGradients<T>,
-        lr: T,
+        _network: &mut TransformerNetwork<T>,
+        _gradients: &TaskGradients<T>,
+        _lr: T,
     ) -> Result<()> {
         // Simplified inner update
         Ok(())
@@ -3406,9 +3406,9 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
 
     fn compute_meta_gradient(
         &self,
-        network: &TransformerNetwork<T>,
-        original_params: &NetworkParams<T>,
-        loss: T,
+        _network: &TransformerNetwork<T>,
+        _original_params: &NetworkParams<T>,
+        _loss: T,
     ) -> Result<MetaGradient<T>> {
         // Simplified meta-gradient computation
         Ok(MetaGradient {
@@ -3418,8 +3418,8 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
 
     fn accumulate_meta_gradients(
         &self,
-        meta_gradients: &mut MetaGradients<T>,
-        grad: &MetaGradient<T>,
+        _meta_gradients: &mut MetaGradients<T>,
+        _grad: &MetaGradient<T>,
     ) -> Result<()> {
         // Simplified meta-gradient accumulation
         Ok(())
@@ -3427,9 +3427,9 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
 
     fn apply_meta_update(
         &self,
-        network: &mut TransformerNetwork<T>,
-        meta_gradients: &MetaGradients<T>,
-        lr: T,
+        _network: &mut TransformerNetwork<T>,
+        _meta_gradients: &MetaGradients<T>,
+        _lr: T,
     ) -> Result<()> {
         // Simplified meta-update
         Ok(())
@@ -3437,24 +3437,24 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
 
     fn accumulate_params(
         &self,
-        accumulated: &mut NetworkParams<T>,
-        params: &NetworkParams<T>,
+        _accumulated: &mut NetworkParams<T>,
+        _params: &NetworkParams<T>,
     ) -> Result<()> {
         // Simplified parameter accumulation
         Ok(())
     }
 
-    fn scale_params(&self, params: &mut NetworkParams<T>, scale: T) -> Result<()> {
+    fn scale_params(&self, _params: &mut NetworkParams<T>, _scale: T) -> Result<()> {
         // Simplified parameter scaling
         Ok(())
     }
 
     fn apply_reptile_update(
         &self,
-        network: &mut TransformerNetwork<T>,
-        original: &NetworkParams<T>,
-        accumulated: &NetworkParams<T>,
-        lr: T,
+        _network: &mut TransformerNetwork<T>,
+        _original: &NetworkParams<T>,
+        _accumulated: &NetworkParams<T>,
+        _lr: T,
     ) -> Result<()> {
         // Simplified Reptile update
         Ok(())
@@ -3517,11 +3517,12 @@ impl<T: Float + Default + Clone> FewShotLearner<T> {
         })
     }
 
+    #[allow(dead_code)]
     fn adapt(
         &mut self,
-        support_set: &SupportSet<T>,
-        target_task: &TaskInfo<T>,
-        network: &mut TransformerNetwork<T>,
+        _support_set: &SupportSet<T>,
+        _target_task: &TaskInfo<T>,
+        _network: &mut TransformerNetwork<T>,
     ) -> Result<FewShotAdaptationResult<T>> {
         // Simplified few-shot adaptation
         Ok(FewShotAdaptationResult {
@@ -3542,10 +3543,11 @@ impl<T: Float + Default + Clone> ContinualLearningState<T> {
         })
     }
 
+    #[allow(dead_code)]
     fn update(
         &mut self,
-        new_task: &TaskInfo<T>,
-        network: &mut TransformerNetwork<T>,
+        _new_task: &TaskInfo<T>,
+        _network: &mut TransformerNetwork<T>,
     ) -> Result<ContinualUpdateResult<T>> {
         // Simplified continual learning update
         Ok(ContinualUpdateResult {
@@ -3805,7 +3807,7 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
         let mut output = input.clone();
 
         match self.encoding_type {
-            PositionalEncodingType::Sinusoidal | _ => {
+            PositionalEncodingType::Sinusoidal => {
                 if let Some(ref encodings) = self.cached_encodings {
                     let pos_enc = encodings.slice(s![..seq_len, ..]);
                     output = output + &pos_enc;
@@ -3816,6 +3818,16 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
                     let pos_emb = embeddings.slice(s![..seq_len, ..]);
                     output = output + &pos_emb;
                 }
+            }
+            PositionalEncodingType::Rotary => {
+                // Rotary position embedding (RoPE) doesn't add to input,
+                // it modifies attention computation
+                // For now, just return input unchanged
+            }
+            PositionalEncodingType::Relative => {
+                // Relative position encoding doesn't add to input,
+                // it modifies attention computation
+                // For now, just return input unchanged
             }
             PositionalEncodingType::ALiBi => {
                 // ALiBi doesn't add to input, it modifies attention scores
@@ -3828,6 +3840,7 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
 }
 
 impl<T: Float + Default + Clone> StrategyPredictor<T> {
+    #[allow(dead_code)]
     fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
         let mut rng = rand::rng();
 
@@ -3847,7 +3860,7 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
 
         // Initialize strategy performance tracking
         let mut strategy_performance = HashMap::new();
-        for (i, &strategy) in strategies.iter().enumerate() {
+        for (i, &_strategy) in strategies.iter().enumerate() {
             strategy_performance.insert(
                 i,
                 StrategyPerformance {
@@ -3870,7 +3883,7 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
     }
 
     fn predict_strategy(&mut self, transformer_output: &Array2<T>) -> Result<OptimizationStrategy> {
-        let (seq_len, model_dim) = transformer_output.dim();
+        let (seq_len, _model_dim) = transformer_output.dim();
 
         if seq_len == 0 {
             return Ok(OptimizationStrategy::Adaptive);
@@ -3913,9 +3926,10 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
         Ok(self.strategies[best_strategy_idx])
     }
 
+    #[allow(dead_code)]
     fn apply_adaptive_selection(
         &self,
-        predicted_idx: usize,
+        _predicted_idx: usize,
         strategy_scores: &Array1<T>,
     ) -> Result<usize> {
         // Apply epsilon-greedy exploration
@@ -4331,7 +4345,7 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         key: &Array2<T>,
         value: &Array2<T>,
     ) -> Result<Array2<T>> {
-        let (seq_len, model_dim) = query.dim();
+        let (_seq_len, model_dim) = query.dim();
 
         if model_dim != self.model_dim {
             return Err(OptimError::InvalidConfig(format!(

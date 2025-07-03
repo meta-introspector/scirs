@@ -975,7 +975,6 @@ impl MemoryOptimizationSuite {
         let chunk_size = self.config.streaming_chunk_size;
 
         // Initialize streaming calculators for each feature pair
-        let mut correlation_accumulators = HashMap::new();
         let mut means = vec![F::zero(); n_features];
         let mut variances = vec![F::zero(); n_features];
 

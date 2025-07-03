@@ -565,9 +565,9 @@ impl GpuRandomGenerator {
         let flat_result = self.generate(distribution, total_size)?;
 
         // Reshape to desired dimensions
-        let reshaped = flat_result.to_shape(shape).map_err(|e| {
-            CoreError::ShapeError(ErrorContext::new(format!("Failed to reshape array: {}", e)))
-        })?;
+        let reshaped = flat_result
+            .to_shape(shape)
+            .map_err(|e| CoreError::ShapeError(ErrorContext::new(format!("{e}"))))?;
         Ok(reshaped.to_owned())
     }
 

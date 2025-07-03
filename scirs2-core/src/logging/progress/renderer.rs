@@ -73,7 +73,7 @@ impl ProgressRenderer {
         let mut output = format!("{description}: {progress_bar} {percentage:.1}%");
 
         if show_eta && stats.processed < stats.total {
-            output.push_str(&format!(" ETA: {eta}", eta = format_duration(&stats.eta)));
+            output.push_str(&format!(" eta: {}", format_duration(&stats.eta)));
         }
 
         self.print_progress(&output);
@@ -96,7 +96,7 @@ impl ProgressRenderer {
         );
 
         if show_eta && stats.processed < stats.total {
-            output.push_str(&format!(" ETA: {eta}", eta = format_duration(&stats.eta)));
+            output.push_str(&format!(" eta: {}", format_duration(&stats.eta)));
         }
 
         self.print_progress(&output);
@@ -138,7 +138,7 @@ impl ProgressRenderer {
         }
 
         if show_eta && stats.processed < stats.total {
-            output.push_str(&format!(" ETA: {eta}", eta = format_duration(&stats.eta)));
+            output.push_str(&format!(" eta: {}", format_duration(&stats.eta)));
         }
 
         if show_statistics {

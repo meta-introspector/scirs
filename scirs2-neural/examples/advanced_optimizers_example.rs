@@ -31,11 +31,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut true_weights = Array2::<f32>::zeros((num_features, 1));
     for i in 0..num_features {
         true_weights[[i, 0]] = rng.random_range(-1.0..1.0);
+    }
     let true_bias = rng.random_range(-1.0..1.0);
     // Generate binary labels (0 or 1) based on linear model with logistic function
     let mut y_data = Array2::<f32>::zeros((num_samples, num_classes));
+    for i in 0..num_samples {
         let mut logit = true_bias;
+        for j in 0..num_features {
             logit += x_data[[i, j]] * true_weights[[j, 0]];
+        }
         // Apply sigmoid to get probability
         let prob = 1.0 / (1.0 + (-logit).exp());
         // Convert to one-hot encoding
@@ -43,6 +47,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             y_data[[i, 1]] = 1.0; // Class 1
         } else {
             y_data[[i, 0]] = 1.0; // Class 0
+        }
+    }
     // Split into train and test sets (80% train, 20% test)
     let train_size = (num_samples as f32 * 0.8) as usize;
     let test_size = num_samples - train_size;
@@ -110,11 +116,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     max_idx = j;
                 }
             }
-            let true_idx =
-                y[[i, 0]] < y[[i, 1]] as usize as u8 as i8 as usize as isize as i32 as f32;
+            let true_idx = if y[[i, 0]] < y[[i, 1]] { 1 } else { 0 };
             if max_idx as i32 == true_idx as i32 {
                 correct += 1;
+            }
+        }
         correct as f32 / x.shape()[0] as f32
+    };
     // Helper function to train model
     let mut train_model =
         |model: &mut Sequential<f32>, optimizer: &mut dyn Optimizer<f32>, name: &str| -> Vec<f32> {
@@ -140,6 +148,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                         for j in 0..num_classes {
                             y_batch[[i, j]] = y_train[[idx, j]];
+                        }
                     }
                     // Convert to dynamic dimension arrays
                     let x_batch_dyn = x_batch.into_dyn();
@@ -149,6 +158,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .train_batch(&x_batch_dyn, &y_batch_dyn, &loss_fn, optimizer)
                         .unwrap();
                     epoch_loss += batch_loss;
+                }
                 epoch_loss /= num_batches as f32;
                 train_losses.push(epoch_loss);
                 // Calculate and print metrics every few epochs
@@ -163,6 +173,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         train_accuracy * 100.0,
                         test_accuracy * 100.0
                     );
+                }
+            }
             let elapsed = start_time.elapsed();
             println!("{} training completed in {:.2?}", name, elapsed);
             // Final evaluation
@@ -193,37 +205,57 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  RAdam:   {:.6}", radam_losses.last().unwrap());
     println!("  RMSprop: {:.6}", rmsprop_losses.last().unwrap());
     println!("\nLoss progression (first value, middle value, last value):");
+    println!(
         "  SGD:     {:.6}, {:.6}, {:.6}",
         sgd_losses.first().unwrap(),
         sgd_losses[epochs / 2],
         sgd_losses.last().unwrap()
+    );
+    println!(
         "  Adam:    {:.6}, {:.6}, {:.6}",
         adam_losses.first().unwrap(),
         adam_losses[epochs / 2],
         adam_losses.last().unwrap()
+    );
+    println!(
         "  AdamW:   {:.6}, {:.6}, {:.6}",
         adamw_losses.first().unwrap(),
         adamw_losses[epochs / 2],
         adamw_losses.last().unwrap()
+    );
+    println!(
         "  RAdam:   {:.6}, {:.6}, {:.6}",
         radam_losses.first().unwrap(),
         radam_losses[epochs / 2],
         radam_losses.last().unwrap()
+    );
+    println!(
         "  RMSprop: {:.6}, {:.6}, {:.6}",
         rmsprop_losses.first().unwrap(),
         rmsprop_losses[epochs / 2],
         rmsprop_losses.last().unwrap()
+    );
     println!("\nLoss improvement ratio (first loss / last loss):");
+    println!(
         "  SGD:     {:.2}x",
         sgd_losses.first().unwrap() / sgd_losses.last().unwrap()
+    );
+    println!(
         "  Adam:    {:.2}x",
         adam_losses.first().unwrap() / adam_losses.last().unwrap()
+    );
+    println!(
         "  AdamW:   {:.2}x",
         adamw_losses.first().unwrap() / adamw_losses.last().unwrap()
+    );
+    println!(
         "  RAdam:   {:.2}x",
         radam_losses.first().unwrap() / radam_losses.last().unwrap()
+    );
+    println!(
         "  RMSprop: {:.2}x",
         rmsprop_losses.first().unwrap() / rmsprop_losses.last().unwrap()
+    );
     println!("\nAdvanced optimizers demo completed successfully!");
     Ok(())
 }

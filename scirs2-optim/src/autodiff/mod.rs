@@ -4,6 +4,7 @@
 //! higher-order gradients, Hessians, and meta-gradients used in advanced
 //! optimization algorithms.
 
+use crate::error::OptimError;
 use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::Float;
 use std::collections::HashMap;

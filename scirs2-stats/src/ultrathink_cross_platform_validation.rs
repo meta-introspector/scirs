@@ -5,14 +5,12 @@
 //! configurations. It ensures numerical accuracy and performance characteristics
 //! are maintained across the entire ecosystem.
 
-use crate::error::{StatsError, StatsResult};
-use crate::ultrathink_numerical_stability::{
-    create_numerical_stability_analyzer, NumericalStabilityConfig,
-};
+use crate::error::StatsResult;
+use crate::ultrathink_numerical_stability::create_numerical_stability_analyzer;
 use crate::ultrathink_unified_processor::{
     create_ultrathink_processor, OptimizationMode, UltrathinkProcessorConfig,
 };
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use serde::{Deserialize, Serialize};
@@ -703,7 +701,7 @@ fn generate_outlier_data(n: usize) -> Array1<f64> {
     data
 }
 
-fn generate_aligned_data(size: usize, alignment: usize) -> Array1<f64> {
+fn generate_aligned_data(size: usize, _alignment: usize) -> Array1<f64> {
     // Generate data with specific memory alignment for SIMD testing
     Array1::from_shape_fn(size, |i| (i as f64).sin())
 }
@@ -786,7 +784,7 @@ fn estimate_memory_bandwidth() -> f64 {
     10.0 // GB/s - should be measured properly
 }
 
-fn measure_cache_efficiency(data: &Array1<f64>) -> f64 {
+fn measure_cache_efficiency(_data: &Array1<f64>) -> f64 {
     // Simplified cache efficiency measurement
     0.85 // Should be measured properly
 }

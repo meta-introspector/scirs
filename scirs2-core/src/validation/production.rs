@@ -221,9 +221,9 @@ impl ProductionValidator {
                 result.is_valid = false;
                 result.errors.push(ValidationError {
                     code: "VALUE_TOO_SMALL".to_string(),
-                    message: format!("Value {} is less than minimum {}", value, min),
+                    message: format!("Value {} is below minimum {}", value, min),
                     field: constraints.field_name.clone(),
-                    suggestion: Some(format!("Use a value >= {}", min)),
+                    suggestion: Some(format!("{min}")),
                     severity: ValidationSeverity::Error,
                 });
             }
@@ -235,9 +235,9 @@ impl ProductionValidator {
                 result.is_valid = false;
                 result.errors.push(ValidationError {
                     code: "VALUE_TOO_LARGE".to_string(),
-                    message: format!("Value {} is greater than maximum {}", value, max),
+                    message: format!("Value {} exceeds maximum {}", value, max),
                     field: constraints.field_name.clone(),
-                    suggestion: Some(format!("Use a value <= {}", max)),
+                    suggestion: Some(format!("{max}")),
                     severity: ValidationSeverity::Error,
                 });
             }
@@ -317,7 +317,7 @@ impl ProductionValidator {
                 result.is_valid = false;
                 result.errors.push(ValidationError {
                     code: "COLLECTION_TOO_SMALL".to_string(),
-                    message: format!("Collection size {} is less than minimum {}", size, min_size),
+                    message: format!("Size {} is below minimum {}", size, min_size),
                     field: constraints.field_name.clone(),
                     suggestion: Some(format!("Provide at least {} elements", min_size)),
                     severity: ValidationSeverity::Error,
@@ -331,7 +331,7 @@ impl ProductionValidator {
                 result.is_valid = false;
                 result.errors.push(ValidationError {
                     code: "COLLECTION_TOO_LARGE".to_string(),
-                    message: format!("Collection size {} exceeds maximum {}", size, max_size),
+                    message: format!("Size {} exceeds maximum {}", size, max_size),
                     field: constraints.field_name.clone(),
                     suggestion: Some(format!("Limit collection to {} elements", max_size)),
                     severity: ValidationSeverity::Error,
@@ -359,7 +359,7 @@ impl ProductionValidator {
                     result.is_valid = false;
                     result.errors.push(ValidationError {
                         code: "ELEMENT_VALIDATION_FAILED".to_string(),
-                        message: format!("Element at index {} failed validation: {}", index, error),
+                        message: format!("Index {}: {}", index, error),
                         field: constraints.field_name.clone(),
                         suggestion: Some("Check element constraints".to_string()),
                         severity: ValidationSeverity::Error,

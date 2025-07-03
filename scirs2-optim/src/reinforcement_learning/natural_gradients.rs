@@ -4,7 +4,7 @@
 //! matrix to precondition policy gradients for more efficient optimization.
 
 use super::{PolicyNetwork, RLOptimizationMetrics, RLOptimizerConfig, TrajectoryBatch};
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
 

@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 use ndarray::{Array, Array1, Dimension};
 use num_traits::Float;
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{CudaContext, CudaStream};

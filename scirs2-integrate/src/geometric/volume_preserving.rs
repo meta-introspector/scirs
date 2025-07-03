@@ -4,7 +4,6 @@
 //! suitable for divergence-free flows and incompressible fluid dynamics.
 
 use crate::error::{IntegrateError, IntegrateResult as Result};
-use crate::IntegrateResult;
 use ndarray::{Array1, Array2, ArrayView1};
 #[allow(unused_imports)]
 use scirs2_core::constants::PI;

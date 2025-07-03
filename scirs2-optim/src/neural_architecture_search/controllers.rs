@@ -610,7 +610,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
 
             // Convert token to component if it represents a component type
             if token >= 2 && token < self.action_space.component_types.len() + 2 {
-                let component_type = self.action_space.component_types[token - 2];
+                let component_type = self.action_space.component_types[token - 2].clone();
                 let component = self.create_component_from_type(component_type)?;
                 components.push(component);
             }
@@ -701,7 +701,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> ArchitectureController<
             component_types: search_space
                 .optimizer_components
                 .iter()
-                .map(|c| c.component_type)
+                .map(|c| c.component_type.clone())
                 .collect(),
             connection_types: vec!["sequential".to_string(), "parallel".to_string()],
             hyperparameter_ranges: HashMap::new(),
@@ -811,7 +811,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
                 .action_space
                 .component_types
                 .iter()
-                .position(|&x| x == component.component_type)
+                .position(|x| *x == component.component_type)
             {
                 sequence.push(pos + 2); // Offset by 2 (start and end tokens)
             }
@@ -941,7 +941,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T> for Ran
         self.component_types = search_space
             .optimizer_components
             .iter()
-            .map(|c| c.component_type)
+            .map(|c| c.component_type.clone())
             .collect();
         self.generation_count = 0;
         Ok(())

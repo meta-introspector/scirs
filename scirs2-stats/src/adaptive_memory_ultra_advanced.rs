@@ -11,16 +11,15 @@
 //! - Adaptive garbage collection with statistical workload awareness
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array2, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
     parallel_ops::*,
     simd_ops::{PlatformCapabilities, SimdUnifiedOps},
-    validation::*,
 };
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::marker::PhantomData;
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, RwLock, Weak};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};

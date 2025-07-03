@@ -9,15 +9,14 @@
 //! - Variational MCMC hybrids
 //! - Reversible Jump MCMC for model selection
 
-use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use crate::error::StatsResult;
+use ndarray::{Array1, Array2, Array3};
 use num_traits::{Float, NumCast, One, Zero};
-use rand::{Rng, SeedableRng};
-use rand_distr::{Distribution, Normal, Uniform};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
-use std::collections::{HashMap, VecDeque};
+use rand::Rng;
+use rand_distr::{Distribution, Normal};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::RwLock;
 use std::time::Instant;
 
 /// Ultra-advanced MCMC sampler with adaptive methods

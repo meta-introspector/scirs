@@ -8,7 +8,7 @@
 //! - Competing risks analysis
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
@@ -360,7 +360,7 @@ where
 
             // Newton-Raphson update
             let hessian_inv = scirs2_linalg::inv(&hessian.view(), None).map_err(|e| {
-                StatsError::ComputationError(format!("Hessian inversion failed: {}", e))
+                StatsError::ComputationError(format!("Hessian inversion failed: {e}"))
             })?;
 
             let update = hessian_inv.dot(&gradient);
@@ -376,7 +376,7 @@ where
         )?;
 
         let cov_matrix = scirs2_linalg::inv(&(-hessian).view(), None).map_err(|e| {
-            StatsError::ComputationError(format!("Covariance matrix computation failed: {}", e))
+            StatsError::ComputationError(format!("Covariance matrix computation failed: {e}"))
         })?;
 
         let standard_errors = cov_matrix.diag().mapv(|x| x.sqrt());

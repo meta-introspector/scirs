@@ -46,10 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!(
-        "Set boundary conditions on {} boundary points",
-        boundary_count
-    );
+    println!("Set boundary conditions on {boundary_count} boundary points");
 
     // Create the Laplacian matrix for the irregular domain
     let laplacian_matrix = grid.create_laplacian_matrix()?;
@@ -110,10 +107,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!(
-        "Maximum error: {:.2e} (over {} points)",
-        max_error, error_count
-    );
+    println!("Maximum error: {max_error:.2e} (over {error_count} points)");
 
     // Print a cross-section of the solution
     println!("\nSolution cross-section along y=0:");
@@ -130,10 +124,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let analytical = (2.0 * std::f64::consts::PI * (x * x)).sin();
                 let error = (numerical - analytical).abs();
 
-                println!(
-                    "{:.3}\t\t{:.6}\t{:.6}\t{:.2e}",
-                    x, numerical, analytical, error
-                );
+                println!("{x:.3}\t\t{numerical:.6}\t{analytical:.6}\t{error:.2e}");
             }
         }
     }
@@ -157,9 +148,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("Domain statistics:");
-    println!("  Interior points: {}", interior_count);
-    println!("  Boundary points: {}", boundary_count);
-    println!("  Ghost points: {}", ghost_count);
+    println!("  Interior points: {interior_count}");
+    println!("  Boundary points: {boundary_count}");
+    println!("  Ghost points: {ghost_count}");
     println!("  Total grid points: {}", grid.nx * grid.ny);
     println!(
         "  Domain coverage: {:.1}%",

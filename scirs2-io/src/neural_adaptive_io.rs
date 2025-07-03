@@ -253,12 +253,12 @@ impl NeuralIoNetwork {
         // Output layer weight gradients
         let output_weight_grad = output_bias_grad
             .view()
-            .into_shape((output_bias_grad.len(), 1))
+            .to_shape((output_bias_grad.len(), 1))
             .unwrap()
             .dot(
                 &hidden_output2
                     .view()
-                    .into_shape((1, hidden_output2.len()))
+                    .to_shape((1, hidden_output2.len()))
                     .unwrap(),
             );
 
@@ -273,18 +273,18 @@ impl NeuralIoNetwork {
         // Input weight gradients
         let input_weight_grad = input_bias_grad
             .view()
-            .into_shape((input_bias_grad.len(), 1))
+            .to_shape((input_bias_grad.len(), 1))
             .unwrap()
             .dot(
                 &attended_input
                     .view()
-                    .into_shape((1, attended_input.len()))
+                    .to_shape((1, attended_input.len()))
                     .unwrap(),
             );
 
         // Update weights using Adam optimizer for output layer
-        let mut dummy_weights = Array2::zeros((0, 0)); // Placeholder for interface compatibility
-        let mut dummy_bias = Array1::zeros(0);
+        let mut dummy_weights: Array2<f32> = Array2::zeros((0, 0)); // Placeholder for interface compatibility
+        let mut dummy_bias: Array1<f32> = Array1::zeros(0);
 
         // For simplicity, we'll use a direct Adam-inspired update
         self.update_attention_weights(&output_error, input);
@@ -820,9 +820,11 @@ impl ReinforcementLearningAgent {
         ];
 
         // Exploration vs exploitation
-        if fastrand::f32() < self.exploration_rate {
+        if rand::random::<f32>() < self.exploration_rate {
             // Explore: choose random action
-            actions[fastrand::usize(0..actions.len())].clone()
+            use rand::prelude::*;
+            let mut rng = rand::rng();
+            actions[rng.random_range(0..actions.len())].clone()
         } else {
             // Exploit: choose best known action
             self.get_best_action(state, &actions)

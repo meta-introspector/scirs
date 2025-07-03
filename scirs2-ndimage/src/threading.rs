@@ -4,7 +4,7 @@
 //! used across different scirs2 modules for consistent thread management
 //! and resource control.
 
-use rayon::prelude::*;
+// use rayon::prelude::*; // FORBIDDEN: Use scirs2-core::parallel_ops instead
 use scirs2_core::parallel_ops::*;
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -92,7 +92,8 @@ pub fn set_worker_info(info: WorkerInfo) {
 }
 
 /// Parallel iterator with thread pool integration
-pub trait ParallelIteratorExt: rayon::prelude::ParallelIterator {
+#[allow(dead_code)]
+pub trait ParallelIteratorExt: ParallelIterator {
     /// Configure the number of threads for this operation
     fn with_threads(self, num_threads: usize) -> Self;
 
@@ -103,6 +104,7 @@ pub trait ParallelIteratorExt: rayon::prelude::ParallelIterator {
 }
 
 /// Extension trait for arrays to use the shared thread pool
+#[allow(dead_code)]
 pub trait ThreadPoolArrayExt<T, D> {
     /// Apply a function to each element in parallel using the shared thread pool
     fn par_map_inplace<F>(&mut self, f: F)
@@ -116,6 +118,7 @@ pub trait ThreadPoolArrayExt<T, D> {
 }
 
 /// Thread pool aware execution context
+#[allow(dead_code)]
 pub struct ThreadPoolContext {
     config: ThreadPoolConfig,
 }
@@ -154,6 +157,7 @@ impl ThreadPoolContext {
 }
 
 /// Adaptive thread pool that adjusts based on workload
+#[allow(dead_code)]
 pub struct AdaptiveThreadPool {
     min_threads: usize,
     max_threads: usize,
@@ -189,6 +193,7 @@ impl AdaptiveThreadPool {
 }
 
 /// Work-stealing queue for load balancing
+#[allow(dead_code)]
 pub struct WorkStealingQueue<T> {
     queues: Vec<Arc<Mutex<Vec<T>>>>,
 }
@@ -232,6 +237,7 @@ impl<T: Send> WorkStealingQueue<T> {
 }
 
 /// Integration with scirs2-core parallel operations
+#[allow(dead_code)]
 pub fn configure_parallel_ops() {
     let config = get_thread_pool_config();
 

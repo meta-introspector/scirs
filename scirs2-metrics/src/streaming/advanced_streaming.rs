@@ -19,7 +19,7 @@ use std::time::{Duration, Instant, SystemTime};
 
 /// Advanced streaming metrics with concept drift detection
 #[derive(Debug)]
-pub struct AdaptiveStreamingMetrics<F: Float> {
+pub struct AdaptiveStreamingMetrics<F: Float + std::fmt::Debug> {
     /// Configuration for the streaming system
     config: StreamingConfig,
     /// Drift detection algorithms
@@ -215,7 +215,7 @@ pub enum DriftStatus {
 
 /// Drift detection statistics
 #[derive(Debug, Clone)]
-pub struct DriftStatistics<F: Float> {
+pub struct DriftStatistics<F: Float + std::fmt::Debug> {
     pub samples_since_reset: usize,
     pub warnings_count: usize,
     pub drifts_count: usize,
@@ -227,7 +227,7 @@ pub struct DriftStatistics<F: Float> {
 
 /// ADWIN drift detector implementation
 #[derive(Debug, Clone)]
-pub struct AdwinDetector<F: Float> {
+pub struct AdwinDetector<F: Float + std::fmt::Debug> {
     confidence: f64,
     window: VecDeque<F>,
     total_sum: F,
@@ -243,7 +243,7 @@ pub struct AdwinDetector<F: Float> {
 
 /// Bucket for ADWIN algorithm - optimized for memory efficiency
 #[derive(Debug, Clone)]
-struct Bucket<F: Float> {
+struct Bucket<F: Float + std::fmt::Debug> {
     max_buckets: usize,
     sum: Vec<F>,
     variance: Vec<F>,
@@ -328,7 +328,7 @@ impl<F: Float> Bucket<F> {
 
 /// DDM (Drift Detection Method) implementation
 #[derive(Debug, Clone)]
-pub struct DdmDetector<F: Float> {
+pub struct DdmDetector<F: Float + std::fmt::Debug> {
     warning_level: f64,
     drift_level: f64,
     min_instances: usize,
@@ -345,7 +345,7 @@ pub struct DdmDetector<F: Float> {
 
 /// Page-Hinkley test implementation
 #[derive(Debug, Clone)]
-pub struct PageHinkleyDetector<F: Float> {
+pub struct PageHinkleyDetector<F: Float + std::fmt::Debug> {
     threshold: f64,
     alpha: f64,
     cumulative_sum: F,
@@ -358,7 +358,7 @@ pub struct PageHinkleyDetector<F: Float> {
 
 /// Adaptive window manager
 #[derive(Debug, Clone)]
-pub struct AdaptiveWindowManager<F: Float> {
+pub struct AdaptiveWindowManager<F: Float + std::fmt::Debug> {
     current_window_size: usize,
     base_window_size: usize,
     min_window_size: usize,
@@ -394,7 +394,7 @@ pub enum AdaptationTrigger {
 
 /// Performance monitor for streaming metrics
 #[derive(Debug, Clone)]
-pub struct PerformanceMonitor<F: Float> {
+pub struct PerformanceMonitor<F: Float + std::fmt::Debug> {
     monitoring_interval: Duration,
     last_monitoring: Instant,
     performance_history: VecDeque<PerformanceSnapshot<F>>,
@@ -406,7 +406,7 @@ pub struct PerformanceMonitor<F: Float> {
 
 /// Performance snapshot
 #[derive(Debug, Clone)]
-pub struct PerformanceSnapshot<F: Float> {
+pub struct PerformanceSnapshot<F: Float + std::fmt::Debug> {
     pub timestamp: Instant,
     pub accuracy: F,
     pub precision: F,
@@ -431,7 +431,7 @@ pub struct PerformanceDegradation {
 
 /// Anomaly detector for streaming data
 #[derive(Debug, Clone)]
-pub struct AnomalyDetector<F: Float> {
+pub struct AnomalyDetector<F: Float + std::fmt::Debug> {
     algorithm: AnomalyDetectionAlgorithm,
     history_buffer: VecDeque<F>,
     anomaly_scores: VecDeque<F>,
@@ -442,7 +442,7 @@ pub struct AnomalyDetector<F: Float> {
 
 /// Detected anomaly
 #[derive(Debug, Clone)]
-pub struct Anomaly<F: Float> {
+pub struct Anomaly<F: Float + std::fmt::Debug> {
     pub timestamp: Instant,
     pub value: F,
     pub score: F,
@@ -464,7 +464,7 @@ pub enum AnomalyType {
 
 /// Anomaly detection statistics
 #[derive(Debug, Clone)]
-pub struct AnomalyStatistics<F: Float> {
+pub struct AnomalyStatistics<F: Float + std::fmt::Debug> {
     pub total_anomalies: usize,
     pub anomalies_by_type: HashMap<String, usize>,
     pub false_positive_rate: F,
@@ -474,7 +474,7 @@ pub struct AnomalyStatistics<F: Float> {
 
 /// Ensemble of different metrics
 #[derive(Debug, Clone)]
-pub struct MetricEnsemble<F: Float> {
+pub struct MetricEnsemble<F: Float + std::fmt::Debug> {
     base_metrics: HashMap<String, Box<dyn StreamingMetric<F> + Send + Sync>>,
     weights: HashMap<String, F>,
     aggregation_strategy: EnsembleAggregation,
@@ -503,7 +503,7 @@ pub enum EnsembleAggregation {
 
 /// History buffer for storing past data
 #[derive(Debug, Clone)]
-pub struct HistoryBuffer<F: Float> {
+pub struct HistoryBuffer<F: Float + std::fmt::Debug> {
     max_size: usize,
     data: VecDeque<DataPoint<F>>,
     timestamps: VecDeque<Instant>,
@@ -512,7 +512,7 @@ pub struct HistoryBuffer<F: Float> {
 
 /// Data point in the history buffer
 #[derive(Debug, Clone)]
-pub struct DataPoint<F: Float> {
+pub struct DataPoint<F: Float + std::fmt::Debug> {
     pub true_value: F,
     pub predicted_value: F,
     pub error: F,
@@ -522,7 +522,7 @@ pub struct DataPoint<F: Float> {
 
 /// Current streaming statistics
 #[derive(Debug, Clone)]
-pub struct StreamingStatistics<F: Float> {
+pub struct StreamingStatistics<F: Float + std::fmt::Debug> {
     pub total_samples: usize,
     pub correct_predictions: usize,
     pub current_accuracy: F,
@@ -603,7 +603,7 @@ impl Default for StreamingConfig {
     }
 }
 
-impl<F: Float> AdaptiveStreamingMetrics<F> {
+impl<F: Float + std::fmt::Debug> AdaptiveStreamingMetrics<F> {
     /// Create new adaptive streaming metrics
     pub fn new(config: StreamingConfig) -> Result<Self> {
         let mut drift_detectors: Vec<Box<dyn ConceptDriftDetector<F> + Send + Sync>> = Vec::new();
@@ -813,7 +813,7 @@ impl<F: Float> AdaptiveStreamingMetrics<F> {
 
 /// Result of updating metrics
 #[derive(Debug, Clone)]
-pub struct UpdateResult<F: Float> {
+pub struct UpdateResult<F: Float + std::fmt::Debug> {
     pub drift_detected: bool,
     pub drift_results: Vec<DriftDetectionResult>,
     pub anomaly_detected: bool,
@@ -826,7 +826,7 @@ pub struct UpdateResult<F: Float> {
 
 /// Anomaly detection summary
 #[derive(Debug, Clone)]
-pub struct AnomalySummary<F: Float> {
+pub struct AnomalySummary<F: Float + std::fmt::Debug> {
     pub total_anomalies: usize,
     pub recent_anomalies: Vec<Anomaly<F>>,
     pub anomaly_rate: F,
@@ -967,7 +967,7 @@ impl<F: Float + std::iter::Sum> AdwinDetector<F> {
     }
 }
 
-impl<F: Float> ConceptDriftDetector<F> for AdwinDetector<F> {
+impl<F: Float + std::fmt::Debug> ConceptDriftDetector<F> for AdwinDetector<F> {
     fn update(&mut self, _prediction_correct: bool, error: F) -> Result<DriftDetectionResult> {
         self.samples_count += 1;
 
@@ -1092,7 +1092,7 @@ impl<F: Float> DdmDetector<F> {
     }
 }
 
-impl<F: Float> ConceptDriftDetector<F> for DdmDetector<F> {
+impl<F: Float + std::fmt::Debug> ConceptDriftDetector<F> for DdmDetector<F> {
     fn update(&mut self, prediction_correct: bool, _error: F) -> Result<DriftDetectionResult> {
         self.num_instances += 1;
         if !prediction_correct {
@@ -1175,7 +1175,7 @@ impl<F: Float> ConceptDriftDetector<F> for DdmDetector<F> {
     }
 }
 
-impl<F: Float> PageHinkleyDetector<F> {
+impl<F: Float + std::fmt::Debug> PageHinkleyDetector<F> {
     fn new(threshold: f64, alpha: f64) -> Self {
         Self {
             threshold,
@@ -1190,7 +1190,7 @@ impl<F: Float> PageHinkleyDetector<F> {
     }
 }
 
-impl<F: Float> ConceptDriftDetector<F> for PageHinkleyDetector<F> {
+impl<F: Float + std::fmt::Debug> ConceptDriftDetector<F> for PageHinkleyDetector<F> {
     fn update(&mut self, prediction_correct: bool, _error: F) -> Result<DriftDetectionResult> {
         self.samples_count += 1;
 
@@ -1261,7 +1261,7 @@ impl<F: Float> ConceptDriftDetector<F> for PageHinkleyDetector<F> {
 }
 
 // Optimized adaptive window manager for efficient streaming
-impl<F: Float> AdaptiveWindowManager<F> {
+impl<F: Float + std::fmt::Debug> AdaptiveWindowManager<F> {
     fn new(
         base_size: usize,
         min_size: usize,
@@ -1550,7 +1550,7 @@ impl<F: Float> AdaptiveWindowManager<F> {
     }
 }
 
-impl<F: Float> PerformanceMonitor<F> {
+impl<F: Float + std::fmt::Debug> PerformanceMonitor<F> {
     fn new(interval: Duration) -> Self {
         let mut thresholds = HashMap::new();
         thresholds.insert("accuracy".to_string(), F::from(0.8).unwrap()); // 80% accuracy threshold
@@ -1724,7 +1724,7 @@ impl<F: Float> PerformanceMonitor<F> {
     }
 }
 
-impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
+impl<F: Float + std::iter::Sum + std::fmt::Debug> AnomalyDetector<F> {
     fn new(algorithm: AnomalyDetectionAlgorithm) -> Result<Self> {
         let threshold = match &algorithm {
             AnomalyDetectionAlgorithm::ZScore { threshold } => F::from(*threshold).unwrap(),
@@ -2014,7 +2014,7 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
     }
 }
 
-impl<F: Float> MetricEnsemble<F> {
+impl<F: Float + std::fmt::Debug> MetricEnsemble<F> {
     fn new() -> Self {
         Self {
             base_metrics: HashMap::new(),
@@ -2034,7 +2034,7 @@ impl<F: Float> MetricEnsemble<F> {
     }
 }
 
-impl<F: Float> HistoryBuffer<F> {
+impl<F: Float + std::fmt::Debug> HistoryBuffer<F> {
     fn new(max_size: usize) -> Self {
         Self {
             max_size,
@@ -2063,7 +2063,7 @@ impl<F: Float> HistoryBuffer<F> {
     }
 }
 
-impl<F: Float> StreamingStatistics<F> {
+impl<F: Float + std::fmt::Debug> StreamingStatistics<F> {
     fn new() -> Self {
         Self {
             total_samples: 0,
@@ -2150,7 +2150,7 @@ impl AlertsManager {
 /// This system uses neural networks and reinforcement learning to automatically
 /// tune streaming parameters for optimal performance across different data patterns.
 #[derive(Debug, Clone)]
-pub struct NeuralAdaptiveStreaming<F: Float> {
+pub struct NeuralAdaptiveStreaming<F: Float + std::fmt::Debug> {
     /// Neural parameter optimizer
     parameter_optimizer: NeuralParameterOptimizer<F>,
     /// Reinforcement learning agent for adaptive control
@@ -2380,7 +2380,7 @@ pub enum ActivationFunction {
 
 /// Neural parameter optimizer using deep learning
 #[derive(Debug, Clone)]
-pub struct NeuralParameterOptimizer<F: Float> {
+pub struct NeuralParameterOptimizer<F: Float + std::fmt::Debug> {
     /// Input layer size (number of input features)
     input_size: usize,
     /// Output layer size (number of parameters to optimize)
@@ -2401,7 +2401,7 @@ pub struct NeuralParameterOptimizer<F: Float> {
 
 /// Neural layer representation
 #[derive(Debug, Clone)]
-pub struct NeuralLayer<F: Float> {
+pub struct NeuralLayer<F: Float + std::fmt::Debug> {
     /// Weight matrix
     weights: Array2<F>,
     /// Bias vector
@@ -2416,7 +2416,7 @@ pub struct NeuralLayer<F: Float> {
 
 /// Batch normalization parameters
 #[derive(Debug, Clone)]
-pub struct BatchNormParams<F: Float> {
+pub struct BatchNormParams<F: Float + std::fmt::Debug> {
     /// Running mean
     running_mean: Array1<F>,
     /// Running variance
@@ -2452,7 +2452,7 @@ pub trait NeuralOptimizer<F: Float> {
 
 /// Adam optimizer implementation
 #[derive(Debug, Clone)]
-pub struct AdamOptimizer<F: Float> {
+pub struct AdamOptimizer<F: Float + std::fmt::Debug> {
     learning_rate: F,
     beta1: F,
     beta2: F,
@@ -2520,7 +2520,7 @@ impl<F: Float> NeuralOptimizer<F> for AdamOptimizer<F> {
 
 /// Training metrics for neural networks
 #[derive(Debug, Clone)]
-pub struct TrainingMetrics<F: Float> {
+pub struct TrainingMetrics<F: Float + std::fmt::Debug> {
     pub epoch: usize,
     pub loss: F,
     pub accuracy: F,
@@ -2531,7 +2531,7 @@ pub struct TrainingMetrics<F: Float> {
 
 /// Regularization configuration
 #[derive(Debug, Clone)]
-pub struct RegularizationConfig<F: Float> {
+pub struct RegularizationConfig<F: Float + std::fmt::Debug> {
     /// L1 regularization strength
     pub l1_strength: F,
     /// L2 regularization strength
@@ -2546,7 +2546,7 @@ pub struct RegularizationConfig<F: Float> {
 
 /// Reinforcement learning agent for adaptive control
 #[derive(Debug, Clone)]
-pub struct AdaptiveControlAgent<F: Float> {
+pub struct AdaptiveControlAgent<F: Float + std::fmt::Debug> {
     /// Current state representation
     current_state: Array1<F>,
     /// Action space definition
@@ -2569,7 +2569,7 @@ pub struct AdaptiveControlAgent<F: Float> {
 
 /// Action space for reinforcement learning
 #[derive(Debug, Clone)]
-pub struct ActionSpace<F: Float> {
+pub struct ActionSpace<F: Float + std::fmt::Debug> {
     /// Continuous action bounds
     pub continuous_bounds: Vec<(F, F)>,
     /// Discrete action choices
@@ -2588,7 +2588,7 @@ pub enum ActionType {
 
 /// Experience replay buffer
 #[derive(Debug, Clone)]
-pub struct ExperienceReplayBuffer<F: Float> {
+pub struct ExperienceReplayBuffer<F: Float + std::fmt::Debug> {
     /// Buffer capacity
     capacity: usize,
     /// Stored experiences
@@ -2599,7 +2599,7 @@ pub struct ExperienceReplayBuffer<F: Float> {
 
 /// Experience tuple for replay buffer
 #[derive(Debug, Clone)]
-pub struct Experience<F: Float> {
+pub struct Experience<F: Float + std::fmt::Debug> {
     pub state: Array1<F>,
     pub action: Array1<F>,
     pub reward: F,
@@ -2610,7 +2610,7 @@ pub struct Experience<F: Float> {
 
 /// Policy for action selection
 #[derive(Debug, Clone)]
-pub struct Policy<F: Float> {
+pub struct Policy<F: Float + std::fmt::Debug> {
     /// Policy type
     policy_type: PolicyType,
     /// Policy parameters
@@ -2631,7 +2631,7 @@ pub enum PolicyType {
 
 /// Policy action with metadata
 #[derive(Debug, Clone)]
-pub struct PolicyAction<F: Float> {
+pub struct PolicyAction<F: Float + std::fmt::Debug> {
     pub action: Array1<F>,
     pub probability: F,
     pub value: F,
@@ -2640,7 +2640,7 @@ pub struct PolicyAction<F: Float> {
 
 /// Exploration strategies
 #[derive(Debug, Clone)]
-pub struct ExplorationStrategy<F: Float> {
+pub struct ExplorationStrategy<F: Float + std::fmt::Debug> {
     /// Strategy type
     strategy_type: ExplorationStrategyType,
     /// Current exploration rate
@@ -2660,7 +2660,7 @@ pub enum ExplorationStrategyType {
 
 /// Exploration decay parameters
 #[derive(Debug, Clone)]
-pub struct ExplorationDecay<F: Float> {
+pub struct ExplorationDecay<F: Float + std::fmt::Debug> {
     pub initial_rate: F,
     pub final_rate: F,
     pub decay_rate: F,
@@ -2684,7 +2684,7 @@ pub trait RewardFunction<F: Float> {
 
 /// RL training metrics
 #[derive(Debug, Clone)]
-pub struct RLTrainingMetrics<F: Float> {
+pub struct RLTrainingMetrics<F: Float + std::fmt::Debug> {
     pub episode: usize,
     pub total_reward: F,
     pub average_reward: F,
@@ -2695,7 +2695,7 @@ pub struct RLTrainingMetrics<F: Float> {
 
 /// Online learning system for pattern recognition and adaptation
 #[derive(Debug, Clone)]
-pub struct OnlineLearningSystem<F: Float> {
+pub struct OnlineLearningSystem<F: Float + std::fmt::Debug> {
     /// Current model parameters
     model_parameters: Array1<F>,
     /// Feature buffer for online learning
@@ -2734,7 +2734,7 @@ pub trait OnlineOptimizer<F: Float> {
 
 /// Online model representation
 #[derive(Debug, Clone)]
-pub struct OnlineModel<F: Float> {
+pub struct OnlineModel<F: Float + std::fmt::Debug> {
     /// Model type
     model_type: OnlineModelType,
     /// Model parameters
@@ -2758,7 +2758,7 @@ pub enum OnlineModelType {
 
 /// Online model performance metrics
 #[derive(Debug, Clone)]
-pub struct OnlineModelPerformance<F: Float> {
+pub struct OnlineModelPerformance<F: Float + std::fmt::Debug> {
     pub accuracy: F,
     pub loss: F,
     pub prediction_variance: F,
@@ -2768,7 +2768,7 @@ pub struct OnlineModelPerformance<F: Float> {
 
 /// Adaptation event for tracking model changes
 #[derive(Debug, Clone)]
-pub struct AdaptationEvent<F: Float> {
+pub struct AdaptationEvent<F: Float + std::fmt::Debug> {
     pub timestamp: Instant,
     pub event_type: AdaptationEventType,
     pub magnitude: F,
@@ -2789,7 +2789,7 @@ pub enum AdaptationEventType {
 
 /// Online performance tracker
 #[derive(Debug, Clone)]
-pub struct OnlinePerformanceTracker<F: Float> {
+pub struct OnlinePerformanceTracker<F: Float + std::fmt::Debug> {
     /// Performance history
     performance_history: VecDeque<PerformanceSnapshot<F>>,
     /// Current performance metrics
@@ -2802,7 +2802,7 @@ pub struct OnlinePerformanceTracker<F: Float> {
 
 /// Trend analysis for performance metrics
 #[derive(Debug, Clone)]
-pub struct TrendAnalysis<F: Float> {
+pub struct TrendAnalysis<F: Float + std::fmt::Debug> {
     pub slope: F,
     pub r_squared: F,
     pub trend_direction: TrendDirection,
@@ -2822,7 +2822,7 @@ pub enum TrendDirection {
 
 /// Performance predictor using neural networks
 #[derive(Debug, Clone)]
-pub struct PerformancePredictor<F: Float> {
+pub struct PerformancePredictor<F: Float + std::fmt::Debug> {
     /// Neural network for prediction
     predictor_network: NeuralParameterOptimizer<F>,
     /// Feature preprocessor
@@ -2837,7 +2837,7 @@ pub struct PerformancePredictor<F: Float> {
 
 /// Feature preprocessor for performance prediction
 #[derive(Debug, Clone)]
-pub struct FeaturePreprocessor<F: Float> {
+pub struct FeaturePreprocessor<F: Float + std::fmt::Debug> {
     /// Normalization parameters
     normalization_params: NormalizationParams<F>,
     /// Feature selection mask
@@ -2850,7 +2850,7 @@ pub struct FeaturePreprocessor<F: Float> {
 
 /// Normalization parameters
 #[derive(Debug, Clone)]
-pub struct NormalizationParams<F: Float> {
+pub struct NormalizationParams<F: Float + std::fmt::Debug> {
     pub mean: Array1<F>,
     pub std: Array1<F>,
     pub min: Array1<F>,
@@ -2870,7 +2870,7 @@ pub enum FeatureEngineeringFunction {
 
 /// Prediction record
 #[derive(Debug, Clone)]
-pub struct PredictionRecord<F: Float> {
+pub struct PredictionRecord<F: Float + std::fmt::Debug> {
     pub timestamp: Instant,
     pub features: Array1<F>,
     pub predicted_performance: F,
@@ -2882,7 +2882,7 @@ pub struct PredictionRecord<F: Float> {
 
 /// Confidence estimator for predictions
 #[derive(Debug, Clone)]
-pub struct ConfidenceEstimator<F: Float> {
+pub struct ConfidenceEstimator<F: Float + std::fmt::Debug> {
     /// Ensemble of confidence models
     confidence_models: Vec<ConfidenceModel<F>>,
     /// Calibration parameters
@@ -2893,7 +2893,7 @@ pub struct ConfidenceEstimator<F: Float> {
 
 /// Confidence model
 #[derive(Debug, Clone)]
-pub struct ConfidenceModel<F: Float> {
+pub struct ConfidenceModel<F: Float + std::fmt::Debug> {
     pub model_type: ConfidenceModelType,
     pub parameters: Array1<F>,
     pub weight: F,
@@ -2911,7 +2911,7 @@ pub enum ConfidenceModelType {
 
 /// Calibration parameters
 #[derive(Debug, Clone)]
-pub struct CalibrationParams<F: Float> {
+pub struct CalibrationParams<F: Float + std::fmt::Debug> {
     pub temperature: F,
     pub bias: F,
     pub scale: F,
@@ -2919,7 +2919,7 @@ pub struct CalibrationParams<F: Float> {
 
 /// Calibration point for confidence estimation
 #[derive(Debug, Clone)]
-pub struct CalibrationPoint<F: Float> {
+pub struct CalibrationPoint<F: Float + std::fmt::Debug> {
     pub predicted_confidence: F,
     pub actual_accuracy: F,
     pub timestamp: Instant,
@@ -2927,7 +2927,7 @@ pub struct CalibrationPoint<F: Float> {
 
 /// Uncertainty quantifier
 #[derive(Debug, Clone)]
-pub struct UncertaintyQuantifier<F: Float> {
+pub struct UncertaintyQuantifier<F: Float + std::fmt::Debug> {
     /// Aleatoric uncertainty (data noise)
     aleatoric_estimator: AleatoricUncertaintyEstimator<F>,
     /// Epistemic uncertainty (model uncertainty)
@@ -2938,7 +2938,7 @@ pub struct UncertaintyQuantifier<F: Float> {
 
 /// Aleatoric uncertainty estimator
 #[derive(Debug, Clone)]
-pub struct AleatoricUncertaintyEstimator<F: Float> {
+pub struct AleatoricUncertaintyEstimator<F: Float + std::fmt::Debug> {
     /// Noise model parameters
     noise_parameters: Array1<F>,
     /// Heteroscedastic noise model
@@ -2947,7 +2947,7 @@ pub struct AleatoricUncertaintyEstimator<F: Float> {
 
 /// Epistemic uncertainty estimator
 #[derive(Debug, Clone)]
-pub struct EpistemicUncertaintyEstimator<F: Float> {
+pub struct EpistemicUncertaintyEstimator<F: Float + std::fmt::Debug> {
     /// Model ensemble for uncertainty estimation
     model_ensemble: Vec<NeuralParameterOptimizer<F>>,
     /// Monte Carlo dropout parameters
@@ -2966,7 +2966,7 @@ pub struct MCDropoutParams {
 
 /// Bayesian neural network parameters
 #[derive(Debug, Clone)]
-pub struct BayesianParams<F: Float> {
+pub struct BayesianParams<F: Float + std::fmt::Debug> {
     /// Prior distribution parameters
     pub prior_mean: F,
     pub prior_std: F,
@@ -2987,7 +2987,7 @@ pub enum UncertaintyCombination {
 
 /// Multi-armed bandit for parameter exploration
 #[derive(Debug, Clone)]
-pub struct MultiArmedBandit<F: Float> {
+pub struct MultiArmedBandit<F: Float + std::fmt::Debug> {
     /// Bandit algorithm
     algorithm: BanditAlgorithm<F>,
     /// Arms (parameter configurations)
@@ -3019,7 +3019,7 @@ pub enum BanditAlgorithm<F: Float> {
 
 /// Parameter configuration for bandit arms
 #[derive(Debug, Clone)]
-pub struct ParameterConfiguration<F: Float> {
+pub struct ParameterConfiguration<F: Float + std::fmt::Debug> {
     /// Parameter values
     pub parameters: HashMap<String, F>,
     /// Configuration name
@@ -3034,7 +3034,7 @@ pub struct ParameterConfiguration<F: Float> {
 
 /// Bandit action record
 #[derive(Debug, Clone)]
-pub struct BanditAction<F: Float> {
+pub struct BanditAction<F: Float + std::fmt::Debug> {
     pub timestamp: Instant,
     pub arm_index: usize,
     pub reward: F,
@@ -3044,7 +3044,7 @@ pub struct BanditAction<F: Float> {
 
 /// Regret tracker for bandit performance
 #[derive(Debug, Clone)]
-pub struct RegretTracker<F: Float> {
+pub struct RegretTracker<F: Float + std::fmt::Debug> {
     /// Cumulative regret
     pub cumulative_regret: F,
     /// Regret history
@@ -3057,7 +3057,7 @@ pub struct RegretTracker<F: Float> {
 
 /// Neural feature extractor
 #[derive(Debug, Clone)]
-pub struct NeuralFeatureExtractor<F: Float> {
+pub struct NeuralFeatureExtractor<F: Float + std::fmt::Debug> {
     /// Autoencoder for feature extraction
     autoencoder: AutoencoderNetwork<F>,
     /// Convolutional layers for pattern recognition
@@ -3072,7 +3072,7 @@ pub struct NeuralFeatureExtractor<F: Float> {
 
 /// Autoencoder network for feature extraction
 #[derive(Debug, Clone)]
-pub struct AutoencoderNetwork<F: Float> {
+pub struct AutoencoderNetwork<F: Float + std::fmt::Debug> {
     /// Encoder network
     encoder: NeuralParameterOptimizer<F>,
     /// Decoder network
@@ -3085,7 +3085,7 @@ pub struct AutoencoderNetwork<F: Float> {
 
 /// Convolutional layer for pattern recognition
 #[derive(Debug, Clone)]
-pub struct ConvolutionalLayer<F: Float> {
+pub struct ConvolutionalLayer<F: Float + std::fmt::Debug> {
     /// Convolution kernels
     kernels: Array2<F>,
     /// Bias terms
@@ -3100,7 +3100,7 @@ pub struct ConvolutionalLayer<F: Float> {
 
 /// Attention mechanism for feature importance
 #[derive(Debug, Clone)]
-pub struct AttentionMechanism<F: Float> {
+pub struct AttentionMechanism<F: Float + std::fmt::Debug> {
     /// Query matrix
     query_matrix: Array2<F>,
     /// Key matrix
@@ -3124,7 +3124,7 @@ pub enum AttentionType {
 
 /// Feature selection network
 #[derive(Debug, Clone)]
-pub struct FeatureSelectionNetwork<F: Float> {
+pub struct FeatureSelectionNetwork<F: Float + std::fmt::Debug> {
     /// Selection network
     selection_network: NeuralParameterOptimizer<F>,
     /// Feature importance scores
@@ -3137,7 +3137,7 @@ pub struct FeatureSelectionNetwork<F: Float> {
 
 /// Adaptive learning rate scheduler
 #[derive(Debug, Clone)]
-pub struct AdaptiveLearningScheduler<F: Float> {
+pub struct AdaptiveLearningScheduler<F: Float + std::fmt::Debug> {
     /// Current learning rate
     current_lr: F,
     /// Initial learning rate
@@ -3175,7 +3175,7 @@ pub enum SchedulerType<F: Float> {
 
 /// Scheduler adaptation parameters
 #[derive(Debug, Clone)]
-pub struct SchedulerAdaptationParams<F: Float> {
+pub struct SchedulerAdaptationParams<F: Float + std::fmt::Debug> {
     /// Minimum learning rate
     pub min_lr: F,
     /// Maximum learning rate
@@ -3188,7 +3188,7 @@ pub struct SchedulerAdaptationParams<F: Float> {
 
 // Implementation methods for NeuralAdaptiveStreaming
 
-impl<F: Float> NeuralAdaptiveStreaming<F> {
+impl<F: Float + std::fmt::Debug> NeuralAdaptiveStreaming<F> {
     /// Create a new neural-adaptive streaming system
     pub fn new(config: NeuralAdaptiveConfig) -> Result<Self> {
         let parameter_optimizer = NeuralParameterOptimizer::new(
@@ -3385,7 +3385,7 @@ impl<F: Float> NeuralAdaptiveStreaming<F> {
 
 /// Performance prediction result
 #[derive(Debug, Clone)]
-pub struct PerformancePrediction<F: Float> {
+pub struct PerformancePrediction<F: Float + std::fmt::Debug> {
     pub predicted_performance: HashMap<String, F>,
     pub confidence: F,
     pub uncertainty: F,
@@ -3395,7 +3395,7 @@ pub struct PerformancePrediction<F: Float> {
 
 /// Neural-adaptive system statistics
 #[derive(Debug, Clone)]
-pub struct NeuralAdaptiveStatistics<F: Float> {
+pub struct NeuralAdaptiveStatistics<F: Float + std::fmt::Debug> {
     pub optimizer_performance: HashMap<String, F>,
     pub rl_performance: HashMap<String, F>,
     pub online_learning_performance: HashMap<String, F>,

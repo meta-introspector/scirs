@@ -68,27 +68,27 @@ impl From<JitError> for CoreError {
     fn from(err: JitError) -> Self {
         match err {
             JitError::CompilationError(msg) => CoreError::ComputationError(
-                ErrorContext::new(format!("JIT compilation failed: {}", msg))
+                ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             JitError::CodeGenerationError(msg) => CoreError::ComputationError(
-                ErrorContext::new(format!("JIT code generation failed: {}", msg))
+                ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             JitError::OptimizationError(msg) => CoreError::ComputationError(
-                ErrorContext::new(format!("JIT optimization failed: {}", msg))
+                ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             JitError::BackendNotSupported { backend } => CoreError::NotImplementedError(
-                ErrorContext::new(format!("JIT backend not supported: {}", backend))
+                ErrorContext::new(format!("{backend}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             JitError::RuntimeError(msg) => CoreError::ComputationError(
-                ErrorContext::new(format!("JIT runtime error: {}", msg))
+                ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             _ => CoreError::ComputationError(
-                ErrorContext::new(format!("JIT error: {}", err))
+                ErrorContext::new(format!("{err}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
         }
@@ -662,7 +662,7 @@ impl JitCompiler {
         // Get backend
         let backend = self.backends.get(&self.config.backend).ok_or_else(|| {
             JitError::BackendNotSupported {
-                backend: format!("{:?}", self.config.backend),
+                backend: format!(":?{self.config.backend}"),
             }
         })?;
 
@@ -690,9 +690,7 @@ impl JitCompiler {
             let cache = self.cache.read().unwrap();
             cache
                 .get(kernel_id)
-                .ok_or_else(|| {
-                    JitError::CacheError(format!("Kernel not found in cache: {}", kernel_id))
-                })?
+                .ok_or_else(|| JitError::CacheError(format!("{kernel_id}")))?
                 .clone()
         };
 
@@ -701,7 +699,7 @@ impl JitCompiler {
             self.backends
                 .get(&kernel.backend)
                 .ok_or_else(|| JitError::BackendNotSupported {
-                    backend: format!("{:?}", kernel.backend),
+                    backend: format!(":?{kernel.backend}"),
                 })?;
 
         // Execute kernel
@@ -1113,13 +1111,13 @@ kernel void arithmetic_op(global {input_type}* input, global {output_type}* outp
     }}
 }}
 "#,
-            input_type = format!("{:?}", input_type).to_lowercase(),
-            output_type = format!("{:?}", output_type).to_lowercase(),
+            input_type = format!("{input_type:?}").to_lowercase(),
+            output_type = format!("{output_type:?}").to_lowercase(),
             operation = operation
         );
 
         KernelSource {
-            id: format!("arithmetic_{}", operation),
+            id: format!("{operation}"),
             source,
             language: KernelLanguage::OpenCl,
             entry_point: "arithmetic_op".to_string(),
@@ -1156,12 +1154,12 @@ kernel void reduction_op(global {data_type}* input, global {data_type}* output, 
     }}
 }}
 "#,
-            data_type = format!("{:?}", data_type).to_lowercase(),
+            data_type = format!("{data_type:?}").to_lowercase(),
             operation = operation
         );
 
         KernelSource {
-            id: format!("reduction_{}", operation),
+            id: format!("{operation}"),
             source,
             language: KernelLanguage::OpenCl,
             entry_point: "reduction_op".to_string(),

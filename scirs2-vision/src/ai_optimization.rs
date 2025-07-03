@@ -16,7 +16,7 @@
 
 use crate::error::Result;
 use rand::prelude::*;
-use rand::thread_rng;
+use rand::rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -238,9 +238,9 @@ impl RLParameterOptimizer {
 
     /// Select action using epsilon-greedy policy
     pub fn select_action(&mut self, state: &StateDiscrete) -> ActionDiscrete {
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
-        if rng.gen::<f64>() < self.learning_params.epsilon {
+        if rng.random::<f64>() < self.learning_params.epsilon {
             // Explore: random action
             self.action_space.choose(&mut rng).unwrap().clone()
         } else {
@@ -717,13 +717,13 @@ impl GeneticPipelineOptimizer {
         population_size: usize,
     ) -> Vec<PipelineGenome> {
         let mut population = Vec::with_capacity(population_size);
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
         for _ in 0..population_size {
             let mut genes = HashMap::new();
 
             for (param_name, &(min_val, max_val)) in parameter_ranges {
-                let value = rng.gen_range(min_val..=max_val);
+                let value = rng.random_range(min_val..=max_val);
                 genes.insert(param_name.clone(), value);
             }
 
@@ -750,12 +750,14 @@ impl GeneticPipelineOptimizer {
         for genome in &mut self.population {
             genome.fitness_objectives = fitness_evaluator(genome);
         }
-        
+
         // Calculate fitness separately to avoid borrow conflicts
-        let fitness_values: Vec<f64> = self.population.iter()
+        let fitness_values: Vec<f64> = self
+            .population
+            .iter()
             .map(|genome| self.aggregate_objectives(&genome.fitness_objectives))
             .collect();
-        
+
         for (genome, fitness) in self.population.iter_mut().zip(fitness_values) {
             genome.fitness = fitness;
         }
@@ -808,18 +810,21 @@ impl GeneticPipelineOptimizer {
 
             if !is_dominated {
                 // Check which existing solutions are dominated by candidate
-                let dominated_indices: Vec<usize> = self.pareto_front
+                let dominated_indices: Vec<usize> = self
+                    .pareto_front
                     .iter()
                     .enumerate()
                     .filter_map(|(idx, existing)| {
-                        if self.dominates(&candidate.fitness_objectives, &existing.fitness_objectives) {
+                        if self
+                            .dominates(&candidate.fitness_objectives, &existing.fitness_objectives)
+                        {
                             Some(idx)
                         } else {
                             None
                         }
                     })
                     .collect();
-                
+
                 // Remove dominated solutions (in reverse order to maintain indices)
                 for &idx in dominated_indices.iter().rev() {
                     self.pareto_front.remove(idx);
@@ -899,10 +904,10 @@ impl GeneticPipelineOptimizer {
     /// Tournament selection for parent selection
     fn tournament_selection(&self, rng: &mut impl Rng) -> PipelineGenome {
         let tournament_size = 3;
-        let mut best = &self.population[rng.gen_range(0..self.population.len())];
+        let mut best = &self.population[rng.random_range(0..self.population.len())];
 
         for _ in 1..tournament_size {
-            let candidate = &self.population[rng.gen_range(0..self.population.len())];
+            let candidate = &self.population[rng.random_range(0..self.population.len())];
             if candidate.fitness > best.fitness {
                 best = candidate;
             }
@@ -927,7 +932,7 @@ impl GeneticPipelineOptimizer {
 
             // Simulated Binary Crossover (SBX)
             let eta = 20.0;
-            let u = rng.gen_range(0.0..1.0);
+            let u = rng.random_range(0.0..1.0);
             let beta = if u <= 0.5 {
                 (2.0_f64 * u).powf(1.0 / (eta + 1.0))
             } else {
@@ -975,17 +980,17 @@ impl GeneticPipelineOptimizer {
 
         let mutation_strength = genome.mutation_effectiveness;
 
-        for (key, value) in genome.genes.iter_mut() {
-            if rng.gen_range(0.0..1.0) < self.ga_params.mutation_rate * mutation_strength {
+        for (_key, value) in genome.genes.iter_mut() {
+            if rng.random_range(0.0..1.0) < self.ga_params.mutation_rate * mutation_strength {
                 match strategy {
                     MutationStrategy::Gaussian => {
                         let delta =
-                            rng.gen_range(-1.0..1.0) * self.adaptive_strategies.gaussian_sigma;
+                            rng.random_range(-1.0..1.0) * self.adaptive_strategies.gaussian_sigma;
                         *value += delta;
                     }
                     MutationStrategy::Polynomial => {
                         let eta = self.adaptive_strategies.polynomial_eta;
-                        let u = rng.gen_range(0.0..1.0);
+                        let u = rng.random_range(0.0..1.0);
                         let delta = if u < 0.5 {
                             (2.0_f64 * u).powf(1.0 / (eta + 1.0)) - 1.0
                         } else {
@@ -996,7 +1001,7 @@ impl GeneticPipelineOptimizer {
                     MutationStrategy::Cauchy => {
                         // Cauchy mutation with heavy tails
                         let cauchy_sample =
-                            (rng.gen_range(0.0..1.0) - 0.5) * std::f64::consts::PI;
+                            (rng.random_range(0.0..1.0) - 0.5) * std::f64::consts::PI;
                         let delta = cauchy_sample.tan() * 0.1;
                         *value += delta;
                     }
@@ -1007,7 +1012,7 @@ impl GeneticPipelineOptimizer {
                     }
                     _ => {
                         // Default to Gaussian
-                        let delta = rng.gen_range(-1.0..1.0) * 0.1;
+                        let delta = rng.random_range(-1.0..1.0) * 0.1;
                         *value += delta;
                     }
                 }
@@ -1023,7 +1028,7 @@ impl GeneticPipelineOptimizer {
     /// Select mutation strategy based on adaptive weights
     fn select_mutation_strategy(&self, rng: &mut impl Rng) -> MutationStrategy {
         let mut cumulative_weight = 0.0;
-        let random_value = rng.gen_range(0.0..1.0);
+        let random_value = rng.random_range(0.0..1.0);
 
         for (strategy, weight) in &self.adaptive_strategies.strategy_weights {
             cumulative_weight += weight;
@@ -1042,8 +1047,8 @@ impl GeneticPipelineOptimizer {
             / (gamma_function((1.0 + beta) / 2.0) * beta * (2.0_f64).powf((beta - 1.0) / 2.0)))
         .powf(1.0 / beta);
 
-        let u = rng.gen_range(-1.0..1.0) * sigma_u;
-        let v: f64 = rng.gen_range(-1.0..1.0);
+        let u = rng.random_range(-1.0..1.0) * sigma_u;
+        let v: f64 = rng.random_range(-1.0..1.0);
 
         u / v.abs().powf(1.0 / beta)
     }
@@ -1235,7 +1240,7 @@ impl GeneticPipelineOptimizer {
     pub fn evolve_generation(&mut self) -> bool {
         let elite_count = (self.population.len() as f64 * self.ga_params.elite_ratio) as usize;
         let mut new_population = Vec::with_capacity(self.population.len());
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
         // Keep elite individuals
         for i in 0..elite_count {
@@ -1251,14 +1256,14 @@ impl GeneticPipelineOptimizer {
             let parent2 = self.tournament_selection(&mut rng);
 
             // Crossover
-            let mut offspring = if rng.gen::<f64>() < self.ga_params.crossover_rate {
+            let mut offspring = if rng.random::<f64>() < self.ga_params.crossover_rate {
                 self.crossover(&parent1, &parent2)
             } else {
                 parent1.clone()
             };
 
             // Mutation
-            if rng.gen::<f64>() < self.ga_params.mutation_rate {
+            if rng.random::<f64>() < self.ga_params.mutation_rate {
                 self.mutate(&mut offspring);
             }
 
@@ -1274,15 +1279,14 @@ impl GeneticPipelineOptimizer {
         self.check_convergence()
     }
 
-
     /// Single-point crossover
     fn crossover(&self, parent1: &PipelineGenome, parent2: &PipelineGenome) -> PipelineGenome {
         let mut offspring_genes = HashMap::new();
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
         for (param_name, &value1) in &parent1.genes {
             if let Some(&value2) = parent2.genes.get(param_name) {
-                let offspring_value = if rng.gen::<f64>() < 0.5 {
+                let offspring_value = if rng.random::<f64>() < 0.5 {
                     value1
                 } else {
                     value2
@@ -1306,11 +1310,11 @@ impl GeneticPipelineOptimizer {
 
     /// Gaussian mutation
     fn mutate(&self, genome: &mut PipelineGenome) {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mutation_strength = 0.1;
 
         for value in genome.genes.values_mut() {
-            let mutation = rng.gen_range(-mutation_strength..=mutation_strength);
+            let mutation = rng.random_range(-mutation_strength..=mutation_strength);
             *value += mutation;
             *value = value.clamp(0.0, 1.0); // Keep in valid range
         }

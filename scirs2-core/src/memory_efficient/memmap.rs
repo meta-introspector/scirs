@@ -473,8 +473,11 @@ where
                 // Serialize header to bytes
                 let header_bytes = serialize(&header).map_err(|e| {
                     CoreError::ValidationError(
-                        ErrorContext::new(format!("Failed to serialize header: {}", e))
-                            .with_location(ErrorLocation::new(file!(), line!())),
+                        ErrorContext::new(format!(
+                            "Failed to serialize header: {error}",
+                            error = e
+                        ))
+                        .with_location(ErrorLocation::new(file!(), line!())),
                     )
                 })?;
 
@@ -632,7 +635,7 @@ where
         // Create an array from the memory-mapped data
         let array = Array::from_shape_vec(shape_vec, data_slice.to_vec()).map_err(|e| {
             CoreError::ShapeError(
-                ErrorContext::new(format!("Cannot reshape data: {}", e))
+                ErrorContext::new(format!("error: {}", e))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
@@ -747,7 +750,7 @@ where
         let array_view = ndarray::ArrayViewMut::from_shape(self.shape.clone(), data_slice)
             .map_err(|e| {
                 CoreError::ShapeError(
-                    ErrorContext::new(format!("Cannot reshape data: {}", e))
+                    ErrorContext::new(format!("error: {}", e))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;

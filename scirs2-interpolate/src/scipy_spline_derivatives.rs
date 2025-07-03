@@ -22,9 +22,9 @@
 //! - `antiderivative(m)` - Returns a new PPoly representing the m-th antiderivative
 //! - `integrate(a, b)` - Definite integral from a to b
 
+use crate::bspline::BSpline;
 use crate::error::{InterpolateError, InterpolateResult};
 use crate::spline::{CubicSpline, SplineBoundaryCondition};
-use crate::bspline::BSpline;
 use crate::traits::InterpolationFloat;
 use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::FromPrimitive;
@@ -56,7 +56,9 @@ pub enum SciPyBoundaryType {
 }
 
 /// Enhanced SciPy-compatible BSpline with complete derivative/integral interface
-pub struct SciPyCompatibleBSpline<T: InterpolationFloat + std::ops::MulAssign + std::ops::DivAssign + std::ops::RemAssign> {
+pub struct SciPyCompatibleBSpline<
+    T: InterpolationFloat + std::ops::MulAssign + std::ops::DivAssign + std::ops::RemAssign,
+> {
     /// Inner BSpline implementation
     inner: BSpline<T>,
     /// Extrapolation mode
@@ -78,7 +80,9 @@ pub struct SciPyPPoly<T: InterpolationFloat> {
     axis: i32,
 }
 
-impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimitive> SciPyCompatibleCubicSpline<T> {
+impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimitive>
+    SciPyCompatibleCubicSpline<T>
+{
     /// Create a new SciPy-compatible cubic spline
     pub fn new(
         x: &ArrayView1<T>,
@@ -92,20 +96,28 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
             SciPyBoundaryType::NotAKnot => CubicSpline::new_not_a_knot(x, y)?,
             SciPyBoundaryType::Clamped((left, right)) => {
                 let left_deriv = T::from_f64(*left).ok_or_else(|| {
-                    InterpolateError::ComputationError("Failed to convert left derivative".to_string())
+                    InterpolateError::ComputationError(
+                        "Failed to convert left derivative".to_string(),
+                    )
                 })?;
                 let right_deriv = T::from_f64(*right).ok_or_else(|| {
-                    InterpolateError::ComputationError("Failed to convert right derivative".to_string())
+                    InterpolateError::ComputationError(
+                        "Failed to convert right derivative".to_string(),
+                    )
                 })?;
                 CubicSpline::new_clamped(x, y, left_deriv, right_deriv)?
             }
             SciPyBoundaryType::Periodic => CubicSpline::new_periodic(x, y)?,
             SciPyBoundaryType::SecondDerivative((left, right)) => {
                 let left_d2 = T::from_f64(*left).ok_or_else(|| {
-                    InterpolateError::ComputationError("Failed to convert left second derivative".to_string())
+                    InterpolateError::ComputationError(
+                        "Failed to convert left second derivative".to_string(),
+                    )
                 })?;
                 let right_d2 = T::from_f64(*right).ok_or_else(|| {
-                    InterpolateError::ComputationError("Failed to convert right second derivative".to_string())
+                    InterpolateError::ComputationError(
+                        "Failed to convert right second derivative".to_string(),
+                    )
                 })?;
                 CubicSpline::new_second_derivative(x, y, left_d2, right_d2)?
             }
@@ -139,7 +151,7 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
     /// let spline = SciPyCompatibleCubicSpline::new(
     ///     &x.view(), &y.view(), SciPyBoundaryType::Natural, None, 0
     /// ).unwrap();
-    /// 
+    ///
     /// // Get first derivative spline
     /// let deriv_spline = spline.derivative(Some(1)).unwrap();
     /// ```
@@ -175,7 +187,7 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
     /// let spline = SciPyCompatibleCubicSpline::new(
     ///     &x.view(), &y.view(), SciPyBoundaryType::Natural, None, 0
     /// ).unwrap();
-    /// 
+    ///
     /// // Get first antiderivative spline
     /// let antideriv_spline = spline.antiderivative(Some(1)).unwrap();
     /// ```
@@ -213,7 +225,7 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
     /// let spline = SciPyCompatibleCubicSpline::new(
     ///     &x.view(), &y.view(), SciPyBoundaryType::Natural, None, 0
     /// ).unwrap();
-    /// 
+    ///
     /// // Integrate from 0 to 3
     /// let integral = spline.integrate(0.0, 3.0, None).unwrap();
     /// ```
@@ -226,20 +238,20 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
         })?;
 
         let use_extrapolate = extrapolate.unwrap_or(self.extrapolate.unwrap_or(true));
-        
+
         if use_extrapolate {
             self.inner.integrate_scipy(a_t, b_t)
         } else {
             // Check bounds and only integrate within domain
             let x_min = self.inner.x_bounds().0;
             let x_max = self.inner.x_bounds().1;
-            
+
             if a_t < x_min || b_t > x_max {
                 return Err(InterpolateError::OutOfBounds(
-                    "Integration bounds outside domain and extrapolate=False".to_string()
+                    "Integration bounds outside domain and extrapolate=False".to_string(),
                 ));
             }
-            
+
             self.inner.integrate_scipy(a_t, b_t)
         }
     }
@@ -255,7 +267,12 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
     ///
     /// # Returns
     /// Array of x values where spline equals y
-    pub fn solve(&self, y: f64, discontinuity: Option<bool>, extrapolate: Option<bool>) -> InterpolateResult<Array1<T>> {
+    pub fn solve(
+        &self,
+        y: f64,
+        discontinuity: Option<bool>,
+        extrapolate: Option<bool>,
+    ) -> InterpolateResult<Array1<T>> {
         let y_t = T::from_f64(y).ok_or_else(|| {
             InterpolateError::ComputationError("Failed to convert y value".to_string())
         })?;
@@ -263,7 +280,8 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
         let use_extrapolate = extrapolate.unwrap_or(self.extrapolate.unwrap_or(true));
         let include_discontinuity = discontinuity.unwrap_or(true);
 
-        self.inner.solve_for_y(y_t, include_discontinuity, use_extrapolate)
+        self.inner
+            .solve_for_y(y_t, include_discontinuity, use_extrapolate)
     }
 
     /// Find roots of the spline (SciPy interface)
@@ -276,12 +294,21 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
     ///
     /// # Returns
     /// Array of x values where spline equals zero
-    pub fn roots(&self, discontinuity: Option<bool>, extrapolate: Option<bool>) -> InterpolateResult<Array1<T>> {
+    pub fn roots(
+        &self,
+        discontinuity: Option<bool>,
+        extrapolate: Option<bool>,
+    ) -> InterpolateResult<Array1<T>> {
         self.solve(0.0, discontinuity, extrapolate)
     }
 
     /// Evaluate the spline at given points (SciPy interface)
-    pub fn __call__(&self, x: &ArrayView1<T>, nu: Option<usize>, extrapolate: Option<bool>) -> InterpolateResult<Array1<T>> {
+    pub fn __call__(
+        &self,
+        x: &ArrayView1<T>,
+        nu: Option<usize>,
+        extrapolate: Option<bool>,
+    ) -> InterpolateResult<Array1<T>> {
         let derivative_order = nu.unwrap_or(0);
         let use_extrapolate = extrapolate.unwrap_or(self.extrapolate.unwrap_or(true));
 
@@ -301,7 +328,9 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
     }
 }
 
-impl<T: InterpolationFloat + std::ops::MulAssign + std::ops::DivAssign + std::ops::RemAssign> SciPyCompatibleBSpline<T> {
+impl<T: InterpolationFloat + std::ops::MulAssign + std::ops::DivAssign + std::ops::RemAssign>
+    SciPyCompatibleBSpline<T>
+{
     /// Create a new SciPy-compatible BSpline
     pub fn new(inner: BSpline<T>, extrapolate: bool, axis: i32) -> Self {
         Self {
@@ -371,23 +400,28 @@ impl<T: InterpolationFloat + std::ops::MulAssign + std::ops::DivAssign + std::op
         })?;
 
         let use_extrapolate = extrapolate.unwrap_or(self.extrapolate);
-        
+
         if use_extrapolate {
             self.inner.integrate(a_t, b_t)
         } else {
             // Check bounds and only integrate within domain
             if a_t < self.inner.t()[0] || b_t > self.inner.t()[self.inner.t().len() - 1] {
                 return Err(InterpolateError::OutOfBounds(
-                    "Integration bounds outside domain and extrapolate=False".to_string()
+                    "Integration bounds outside domain and extrapolate=False".to_string(),
                 ));
             }
-            
+
             self.inner.integrate(a_t, b_t)
         }
     }
 
     /// Evaluate the BSpline at given points (SciPy interface)
-    pub fn __call__(&self, x: &ArrayView1<T>, nu: Option<usize>, extrapolate: Option<bool>) -> InterpolateResult<Array1<T>> {
+    pub fn __call__(
+        &self,
+        x: &ArrayView1<T>,
+        nu: Option<usize>,
+        extrapolate: Option<bool>,
+    ) -> InterpolateResult<Array1<T>> {
         let derivative_order = nu.unwrap_or(0);
         let use_extrapolate = extrapolate.unwrap_or(self.extrapolate);
 
@@ -417,7 +451,7 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
     ) -> InterpolateResult<Self> {
         if coefficients.ncols() != breakpoints.len() - 1 {
             return Err(InterpolateError::InvalidInput(
-                "Coefficient shape must match breakpoint structure".to_string()
+                "Coefficient shape must match breakpoint structure".to_string(),
             ));
         }
 
@@ -440,7 +474,7 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
     /// A new `SciPyPPoly` representing the m-th derivative
     pub fn derivative(&self, m: Option<usize>) -> InterpolateResult<Self> {
         let order = m.unwrap_or(1);
-        
+
         if order == 0 {
             return Ok(self.clone());
         }
@@ -449,16 +483,21 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
         if order >= k {
             // Derivative of order >= polynomial degree results in zero
             let zero_coeffs = Array2::zeros((1, self.coefficients.ncols()));
-            return Self::new(zero_coeffs, self.breakpoints.clone(), self.extrapolate, self.axis);
+            return Self::new(
+                zero_coeffs,
+                self.breakpoints.clone(),
+                self.extrapolate,
+                self.axis,
+            );
         }
 
         let mut deriv_coeffs = Array2::zeros((k - order, self.coefficients.ncols()));
-        
+
         // Compute derivative coefficients
         for i in 0..(k - order) {
             for j in 0..self.coefficients.ncols() {
                 let mut coeff = self.coefficients[[i, j]];
-                
+
                 // Apply derivative operation m times
                 for d in 0..order {
                     let power = (k - 1 - i) as i32 - d as i32;
@@ -469,12 +508,17 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
                         break;
                     }
                 }
-                
+
                 deriv_coeffs[[i, j]] = coeff;
             }
         }
 
-        Self::new(deriv_coeffs, self.breakpoints.clone(), self.extrapolate, self.axis)
+        Self::new(
+            deriv_coeffs,
+            self.breakpoints.clone(),
+            self.extrapolate,
+            self.axis,
+        )
     }
 
     /// Returns a new PPoly representing the m-th antiderivative (SciPy interface)
@@ -488,29 +532,29 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
     /// A new `SciPyPPoly` representing the m-th antiderivative
     pub fn antiderivative(&self, m: Option<usize>) -> InterpolateResult<Self> {
         let order = m.unwrap_or(1);
-        
+
         if order == 0 {
             return Ok(self.clone());
         }
 
         let k = self.coefficients.nrows();
         let mut antideriv_coeffs = Array2::zeros((k + order, self.coefficients.ncols()));
-        
+
         // Compute antiderivative coefficients
         for i in 0..k {
             for j in 0..self.coefficients.ncols() {
                 let mut coeff = self.coefficients[[i, j]];
-                
+
                 // Apply antiderivative operation m times
                 for d in 0..order {
                     let power = (k - 1 - i) as i32 + d as i32 + 1;
                     coeff = coeff / T::from_i32(power).unwrap();
                 }
-                
+
                 antideriv_coeffs[[i, j]] = coeff;
             }
         }
-        
+
         // Set integration constants to zero (as per SciPy convention)
         for j in 0..self.coefficients.ncols() {
             for d in 0..order {
@@ -518,7 +562,12 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
             }
         }
 
-        Self::new(antideriv_coeffs, self.breakpoints.clone(), self.extrapolate, self.axis)
+        Self::new(
+            antideriv_coeffs,
+            self.breakpoints.clone(),
+            self.extrapolate,
+            self.axis,
+        )
     }
 
     /// Compute definite integral over [a, b] (SciPy interface)
@@ -541,11 +590,11 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
         })?;
 
         let use_extrapolate = extrapolate.unwrap_or(self.extrapolate);
-        
+
         if !use_extrapolate {
             if a_t < self.breakpoints[0] || b_t > self.breakpoints[self.breakpoints.len() - 1] {
                 return Err(InterpolateError::OutOfBounds(
-                    "Integration bounds outside domain and extrapolate=False".to_string()
+                    "Integration bounds outside domain and extrapolate=False".to_string(),
                 ));
             }
         }
@@ -554,7 +603,7 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
         let antideriv = self.antiderivative(Some(1))?;
         let f_b = antideriv.evaluate(b_t)?;
         let f_a = antideriv.evaluate(a_t)?;
-        
+
         Ok(f_b - f_a)
     }
 
@@ -562,12 +611,12 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
     pub fn evaluate(&self, x: T) -> InterpolateResult<T> {
         // Find the appropriate piece
         let piece_idx = self.find_piece_index(x)?;
-        
+
         // Evaluate polynomial in this piece
         let dx = x - self.breakpoints[piece_idx];
         let mut result = T::zero();
         let k = self.coefficients.nrows();
-        
+
         for i in 0..k {
             let coeff = self.coefficients[[i, piece_idx]];
             let power = k - 1 - i;
@@ -582,7 +631,7 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
             };
             result = result + coeff * dx_power;
         }
-        
+
         Ok(result)
     }
 
@@ -593,7 +642,7 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
                 return Ok(i);
             }
         }
-        
+
         if self.extrapolate {
             if x < self.breakpoints[0] {
                 Ok(0)
@@ -602,7 +651,7 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
             }
         } else {
             Err(InterpolateError::OutOfBounds(
-                "x value outside domain and extrapolate=False".to_string()
+                "x value outside domain and extrapolate=False".to_string(),
             ))
         }
     }
@@ -632,19 +681,16 @@ where
     T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimitive,
 {
     SciPyCompatibleCubicSpline::new(
-        x, 
-        y, 
-        SciPyBoundaryType::Clamped((left_deriv, right_deriv)), 
-        None, 
-        0
+        x,
+        y,
+        SciPyBoundaryType::Clamped((left_deriv, right_deriv)),
+        None,
+        0,
     )
 }
 
 /// Create a SciPy-compatible BSpline
-pub fn make_scipy_bspline<T>(
-    inner: BSpline<T>,
-    extrapolate: bool,
-) -> SciPyCompatibleBSpline<T>
+pub fn make_scipy_bspline<T>(inner: BSpline<T>, extrapolate: bool) -> SciPyCompatibleBSpline<T>
 where
     T: InterpolationFloat + std::ops::MulAssign + std::ops::DivAssign + std::ops::RemAssign,
 {
@@ -672,10 +718,10 @@ mod tests {
     fn test_scipy_cubic_spline_derivative() {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
-        
+
         let spline = make_scipy_cubic_spline(&x.view(), &y.view()).unwrap();
         let deriv_spline = spline.derivative(Some(1)).unwrap();
-        
+
         // Test that derivative spline works
         let test_x = array![0.5, 1.5, 2.5];
         let _deriv_values = deriv_spline.__call__(&test_x.view(), None, None).unwrap();
@@ -685,23 +731,25 @@ mod tests {
     fn test_scipy_cubic_spline_antiderivative() {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
-        
+
         let spline = make_scipy_cubic_spline(&x.view(), &y.view()).unwrap();
         let antideriv_spline = spline.antiderivative(Some(1)).unwrap();
-        
+
         // Test that antiderivative spline works
         let test_x = array![0.5, 1.5, 2.5];
-        let _antideriv_values = antideriv_spline.__call__(&test_x.view(), None, None).unwrap();
+        let _antideriv_values = antideriv_spline
+            .__call__(&test_x.view(), None, None)
+            .unwrap();
     }
 
     #[test]
     fn test_scipy_cubic_spline_integrate() {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
-        
+
         let spline = make_scipy_cubic_spline(&x.view(), &y.view()).unwrap();
         let integral = spline.integrate(0.0, 3.0, None).unwrap();
-        
+
         // Integral should be positive for this increasing function
         assert!(integral > 0.0);
     }
@@ -710,10 +758,10 @@ mod tests {
     fn test_scipy_cubic_spline_solve() {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
-        
+
         let spline = make_scipy_cubic_spline(&x.view(), &y.view()).unwrap();
         let roots = spline.solve(1.0, None, None).unwrap();
-        
+
         // Should find at least one solution
         assert!(roots.len() >= 1);
     }
@@ -723,10 +771,10 @@ mod tests {
         // Create a simple quadratic PPoly: y = x^2
         let coeffs = array![[1.0, 1.0], [0.0, 0.0], [0.0, 0.0]]; // [a, a], [b, b], [c, c] format
         let breakpoints = array![0.0, 1.0, 2.0];
-        
+
         let ppoly = make_scipy_ppoly(coeffs, breakpoints, true).unwrap();
         let deriv_ppoly = ppoly.derivative(Some(1)).unwrap();
-        
+
         // Derivative of x^2 should be 2x
         assert_eq!(deriv_ppoly.coefficients.nrows(), 2); // One degree less
     }
@@ -736,10 +784,10 @@ mod tests {
         // Create a simple linear PPoly: y = x
         let coeffs = array![[1.0, 1.0], [0.0, 0.0]]; // [a, a], [b, b] format
         let breakpoints = array![0.0, 1.0, 2.0];
-        
+
         let ppoly = make_scipy_ppoly(coeffs, breakpoints, true).unwrap();
         let antideriv_ppoly = ppoly.antiderivative(Some(1)).unwrap();
-        
+
         // Antiderivative should have one more degree
         assert_eq!(antideriv_ppoly.coefficients.nrows(), 3);
     }

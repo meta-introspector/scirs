@@ -754,7 +754,7 @@ impl PerformanceDashboard {
         }
         #[cfg(not(feature = "serde"))]
         {
-            Ok(format!("Dashboard: {title}", title = self.config.title))
+            Ok(format!("title: {}", self.config.title))
         }
     }
 

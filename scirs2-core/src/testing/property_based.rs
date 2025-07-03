@@ -194,7 +194,7 @@ impl PropertyTestEngine {
                 Ok(false) => {
                     failures.push(PropertyFailure {
                         case_number: case_num,
-                        inputs: inputs.iter().map(|i| format!("{:?}", i)).collect(),
+                        inputs: inputs.iter().map(|i| format!("{i:?}")).collect(),
                         expected: "Property should hold".to_string(),
                         actual: "Property violated".to_string(),
                         error: None,
@@ -203,10 +203,10 @@ impl PropertyTestEngine {
                 Err(error) => {
                     failures.push(PropertyFailure {
                         case_number: case_num,
-                        inputs: inputs.iter().map(|i| format!("{:?}", i)).collect(),
+                        inputs: inputs.iter().map(|i| format!("{i:?}")).collect(),
                         expected: "Property should hold".to_string(),
                         actual: "Error during testing".to_string(),
-                        error: Some(format!("{:?}", error)),
+                        error: Some(format!("{error:?}")),
                     });
                 }
             }

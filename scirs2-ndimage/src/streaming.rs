@@ -4,8 +4,9 @@
 //! to fit in memory by processing them in chunks or tiles.
 
 use ndarray::{Array, ArrayView, ArrayViewMut, Dimension, IxDyn, Slice};
-use num_traits::{Float, FromPrimitive};
-use rayon::prelude::*;
+use num_traits::{Float, FromPrimitive, Zero};
+// use rayon::prelude::*; // FORBIDDEN: Use scirs2-core::parallel_ops instead
+use scirs2_core::parallel_ops::*;
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
@@ -13,7 +14,6 @@ use std::path::Path;
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::BorderMode;
-use scirs2_core::parallel_ops::*;
 
 /// Configuration for streaming operations
 #[derive(Debug, Clone)]
@@ -572,6 +572,7 @@ mod tests {
 /// This processor automatically adjusts chunk sizes based on available memory
 /// and processing performance, providing optimal throughput for different types
 /// of operations and hardware configurations.
+#[allow(dead_code)]
 pub struct AdaptiveStreamProcessor<T> {
     base_config: StreamConfig,
     performance_monitor: PerformanceMonitor,
@@ -663,7 +664,8 @@ where
         Op: StreamableOp<T, D> + GpuStreamableOp<T, D>,
     {
         // Check GPU availability
-        if let Some(gpu_backend) = crate::backend::detect_gpu_backend()? {
+        #[cfg(feature = "gpu")]
+        if let Some(gpu_backend) = crate::backend::detect_gpu_backend().unwrap_or(None) {
             return self.process_gpu_chunks(input, op, gpu_backend);
         }
 
@@ -802,7 +804,7 @@ where
         let chunk_dims = self.calculate_optimal_chunk_dimensions(
             input.shape(),
             std::mem::size_of::<T>(),
-            &self.config,
+            &self.base_config,
         );
 
         // Initialize output array
@@ -887,6 +889,7 @@ where
 }
 
 /// Performance monitoring for adaptive streaming
+#[allow(dead_code)]
 struct PerformanceMonitor {
     history: Vec<PerformanceMetrics>,
 }
@@ -928,6 +931,7 @@ impl PerformanceMonitor {
 
 /// Performance metrics for a chunk processing operation
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct PerformanceMetrics {
     chunk_size: usize,
     processing_time: std::time::Duration,
@@ -935,6 +939,7 @@ struct PerformanceMetrics {
 }
 
 /// Memory management for streaming operations
+#[allow(dead_code)]
 struct MemoryManager {
     available_memory: usize,
     cache_sizes: [usize; 3], // L1, L2, L3 cache sizes
@@ -996,6 +1001,7 @@ pub enum OperationComplexity {
 }
 
 /// Extended trait for operations that can adapt to streaming
+#[allow(dead_code)]
 pub trait AdaptiveOperation<T, D>: StreamableOp<T, D>
 where
     T: Float + FromPrimitive + Debug + Clone,
@@ -1017,6 +1023,7 @@ where
 
 /// GPU-specific streaming operations
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 pub trait GpuStreamableOp<T, D>: StreamableOp<T, D>
 where
     T: Float + FromPrimitive + Debug + Clone,
@@ -1038,6 +1045,7 @@ where
 
 /// Placeholder for GPU context
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 pub struct GpuContext {
     // GPU-specific context information
     device_id: u32,
@@ -1073,6 +1081,7 @@ impl GpuContext {
 }
 
 /// Enhanced streaming interface for file-based processing with compression
+#[allow(dead_code)]
 pub fn stream_process_file_compressed<T>(
     input_path: &std::path::Path,
     output_path: &std::path::Path,
@@ -1219,6 +1228,7 @@ where
 
 /// Compression types for streaming I/O
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum CompressionType {
     None,
     Lz4,
@@ -1227,6 +1237,7 @@ pub enum CompressionType {
 }
 
 /// Streaming operation for multiple arrays (batch processing)
+#[allow(dead_code)]
 pub trait BatchStreamableOp<T, D>: Send + Sync
 where
     T: Float + FromPrimitive + Debug + Clone,

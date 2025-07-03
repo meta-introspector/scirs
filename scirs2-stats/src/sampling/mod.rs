@@ -571,7 +571,7 @@ where
                 }
 
                 // Decide whether to continue the block (with probability 1-p)
-                let u: f64 = rng.random();
+                let u: f64 = rng.gen();
                 if u < p {
                     break; // End the block
                 }

@@ -43,7 +43,7 @@ impl WaveletFilters {
 }
 
 /// Predefined wavelet types
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Wavelet {
     /// Haar wavelet (equivalent to db1)
     Haar,
@@ -51,6 +51,8 @@ pub enum Wavelet {
     DB(usize),
     /// Coiflet wavelets with N vanishing moments
     Coif(usize),
+    /// Coiflet wavelets with N vanishing moments (alternative name)
+    Coiflet(usize),
     /// Symlet wavelets with N vanishing moments
     Sym(usize),
     /// Biorthogonal wavelets with Nr/Nd vanishing moments
@@ -107,10 +109,31 @@ impl Wavelet {
                 }
                 coif_filters(n)
             }
+            Wavelet::Coiflet(n) => {
+                if n == 0 {
+                    return Err(SignalError::ValueError(
+                        "Coiflet wavelet order must be at least 1".to_string(),
+                    ));
+                }
+                if n > 5 {
+                    return Err(SignalError::ValueError(
+                        "Coiflet wavelet order must be at most 5".to_string(),
+                    ));
+                }
+                coif_filters(n)
+            }
             Wavelet::BiorNrNd { nr, nd } => bior_filters(nr, nd),
             Wavelet::RBioNrNd { nr, nd } => rbior_filters(nr, nd),
             Wavelet::Meyer => meyer_filters(),
             Wavelet::DMeyer => dmeyer_filters(),
+        }
+    }
+
+    /// Get the filter length for this wavelet
+    pub fn get_filter_length(&self) -> SignalResult<usize> {
+        match self.filters() {
+            Ok(filters) => Ok(filters.dec_lo.len()),
+            Err(e) => Err(e),
         }
     }
 }
@@ -1089,13 +1112,13 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
                     -0.0129475118625466,
                     0.0289161098263542,
                     0.0529984818906909,
-                    -0.134_913_073_607_712,
+                    -0.134913073607712,
                     -0.1638291834577726,
                     0.5097608153878514,
-                    0.951_556_053_042_669,
+                    0.951556053042669,
                     0.5097608153878514,
                     -0.1638291834577726,
-                    -0.134_913_073_607_712,
+                    -0.134913073607712,
                     0.0529984818906909,
                     0.0289161098263542,
                     -0.0129475118625466,
