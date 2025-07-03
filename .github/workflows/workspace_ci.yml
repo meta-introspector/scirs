@@ -2,7 +2,7 @@ name: Workspace CI/CD
 
 on:
   push:
-    branches: [ master, main, 0.1.0-beta.1 ]
+    branches: [ master, main ]
   pull_request:
     branches: [ master, main ]
   schedule:
