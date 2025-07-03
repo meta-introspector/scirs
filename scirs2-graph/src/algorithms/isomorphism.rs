@@ -15,8 +15,8 @@ pub fn find_subgraph_matches<N1, N2, E, Ix>(
     target: &Graph<N2, E, Ix>,
 ) -> Vec<HashMap<N1, N2>>
 where
-    N1: Node + Clone + Hash + Eq,
-    N2: Node + Clone + Hash + Eq,
+    N1: Node + Clone + Hash + Eq + std::fmt::Debug,
+    N2: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -55,8 +55,8 @@ fn find_matches_recursive<N1, N2, E, Ix>(
     target_node: &N2,
     matches: &mut Vec<HashMap<N1, N2>>,
 ) where
-    N1: Node + Clone + Hash + Eq,
-    N2: Node + Clone + Hash + Eq,
+    N1: Node + Clone + Hash + Eq + std::fmt::Debug,
+    N2: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -132,8 +132,8 @@ fn is_mapping_consistent<N1, N2, E, Ix>(
     mapping: &HashMap<N1, N2>,
 ) -> bool
 where
-    N1: Node + Hash + Eq,
-    N2: Node + Hash + Eq,
+    N1: Node + Hash + Eq + std::fmt::Debug,
+    N2: Node + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -170,8 +170,8 @@ pub fn are_graphs_isomorphic<N1, N2, E, Ix>(
     graph2: &Graph<N2, E, Ix>,
 ) -> bool
 where
-    N1: Node + Clone + Hash + Eq,
-    N2: Node + Clone + Hash + Eq,
+    N1: Node + Clone + Hash + Eq + std::fmt::Debug,
+    N2: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -207,8 +207,8 @@ pub fn find_isomorphism<N1, N2, E, Ix>(
     graph2: &Graph<N2, E, Ix>,
 ) -> Option<HashMap<N1, N2>>
 where
-    N1: Node + Clone + Hash + Eq,
-    N2: Node + Clone + Hash + Eq,
+    N1: Node + Clone + Hash + Eq + std::fmt::Debug,
+    N2: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -233,8 +233,8 @@ fn have_same_degree_sequence<N1, N2, E, Ix>(
     graph2: &Graph<N2, E, Ix>,
 ) -> bool
 where
-    N1: Node,
-    N2: Node,
+    N1: Node + std::fmt::Debug,
+    N2: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -274,8 +274,8 @@ fn backtrack_isomorphism<N1, N2, E, Ix>(
     depth: usize,
 ) -> bool
 where
-    N1: Node + Clone + Hash + Eq,
-    N2: Node + Clone + Hash + Eq,
+    N1: Node + Clone + Hash + Eq + std::fmt::Debug,
+    N2: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -329,8 +329,8 @@ fn is_partial_mapping_valid<N1, N2, E, Ix>(
     _mapped_count: usize,
 ) -> bool
 where
-    N1: Node + Hash + Eq,
-    N2: Node + Hash + Eq,
+    N1: Node + Hash + Eq + std::fmt::Debug,
+    N2: Node + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -356,8 +356,8 @@ fn is_valid_isomorphism<N1, N2, E, Ix>(
     mapping: &HashMap<N1, N2>,
 ) -> bool
 where
-    N1: Node + Hash + Eq,
-    N2: Node + Hash + Eq,
+    N1: Node + Hash + Eq + std::fmt::Debug,
+    N2: Node + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -384,8 +384,8 @@ where
 #[derive(Debug, Clone)]
 struct VF2State<N1, N2>
 where
-    N1: Node + Clone + Hash + Eq,
-    N2: Node + Clone + Hash + Eq,
+    N1: Node + Clone + Hash + Eq + std::fmt::Debug,
+    N2: Node + Clone + Hash + Eq + std::fmt::Debug,
 {
     /// Current mapping from graph1 to graph2
     mapping: HashMap<N1, N2>,
@@ -405,8 +405,8 @@ where
 
 impl<N1, N2> VF2State<N1, N2>
 where
-    N1: Node + Clone + Hash + Eq,
-    N2: Node + Clone + Hash + Eq,
+    N1: Node + Clone + Hash + Eq + std::fmt::Debug,
+    N2: Node + Clone + Hash + Eq + std::fmt::Debug,
 {
     /// Create a new empty VF2 state
     fn new() -> Self {
@@ -706,8 +706,8 @@ pub fn find_isomorphism_vf2<N1, N2, E, Ix>(
     graph2: &Graph<N2, E, Ix>,
 ) -> Option<HashMap<N1, N2>>
 where
-    N1: Node + Clone + Hash + Eq,
-    N2: Node + Clone + Hash + Eq,
+    N1: Node + Clone + Hash + Eq + std::fmt::Debug,
+    N2: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -741,8 +741,8 @@ fn vf2_match<N1, N2, E, Ix>(
     graph2: &Graph<N2, E, Ix>,
 ) -> bool
 where
-    N1: Node + Clone + Hash + Eq,
-    N2: Node + Clone + Hash + Eq,
+    N1: Node + Clone + Hash + Eq + std::fmt::Debug,
+    N2: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -782,8 +782,8 @@ pub fn are_graphs_isomorphic_enhanced<N1, N2, E, Ix>(
     graph2: &Graph<N2, E, Ix>,
 ) -> bool
 where
-    N1: Node + Clone + Hash + Eq,
-    N2: Node + Clone + Hash + Eq,
+    N1: Node + Clone + Hash + Eq + std::fmt::Debug,
+    N2: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {

@@ -246,7 +246,7 @@ impl UltrathinkModule for MockClusteringUltrathinkModule {
         // Simulate clustering transformation
         let mut output_data = Vec::new();
         for chunk in input.data.chunks(4) {
-            let cluster_id = (chunk[0] % 8) as u8; // Simulate cluster assignment
+            let cluster_id = chunk[0] % 8; // Simulate cluster assignment
             output_data.push(cluster_id);
         }
 
@@ -476,7 +476,9 @@ impl UltrathinkModule for MockIoUltrathinkModule {
             from: self.name.clone(),
             to: message.from,
             message_type: MessageType::DataTransfer,
-            payload: format!("I/O processing complete. Efficiency: 94%").into_bytes(),
+            payload: "I/O processing complete. Efficiency: 94%"
+                .to_string()
+                .into_bytes(),
             timestamp: Instant::now(),
         };
 
@@ -694,7 +696,7 @@ impl UltrathinkWorkflowDemo {
             };
 
             let _ = self.coordinator.process_ecosystem(input)?;
-            println!("   Batch {}/5 processed", i);
+            println!("   Batch {i}/5 processed");
         }
 
         let status = self.coordinator.get_status()?;
@@ -746,7 +748,7 @@ impl UltrathinkWorkflowDemo {
 
         println!("\n💡 Recommendations:");
         for recommendation in &report.recommendations {
-            println!("   - {}", recommendation);
+            println!("   - {recommendation}");
         }
 
         Ok(())

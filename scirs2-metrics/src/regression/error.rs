@@ -99,7 +99,9 @@ where
         // SIMD-optimized computation - convert to 1D views for SIMD ops
         let y_true_1d = y_true.view().to_shape(y_true.len()).unwrap();
         let y_pred_1d = y_pred.view().to_shape(y_pred.len()).unwrap();
-        let diff = F::simd_sub(&y_true_1d, &y_pred_1d);
+        let y_true_view = y_true_1d.view();
+        let y_pred_view = y_pred_1d.view();
+        let diff = F::simd_sub(&y_true_view, &y_pred_view);
         let squared_diff = F::simd_mul(&diff.view(), &diff.view());
         F::simd_sum(&squared_diff.view())
     } else {
@@ -204,7 +206,9 @@ where
         // SIMD-optimized computation for 1D arrays
         let y_true_1d = y_true.view().to_shape(y_true.len()).unwrap();
         let y_pred_1d = y_pred.view().to_shape(y_pred.len()).unwrap();
-        let diff = F::simd_sub(&y_true_1d, &y_pred_1d);
+        let y_true_view = y_true_1d.view();
+        let y_pred_view = y_pred_1d.view();
+        let diff = F::simd_sub(&y_true_view, &y_pred_view);
         let abs_diff = F::simd_abs(&diff.view());
         F::simd_sum(&abs_diff.view())
     } else {

@@ -13,7 +13,7 @@ use std::sync::{
 };
 use std::time::{Duration, Instant};
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// Low-latency optimization configuration

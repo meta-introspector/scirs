@@ -107,10 +107,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let exact = (PI * x).sin() * (-PI * PI * alpha * time).exp();
             let error = (numerical - exact).abs();
 
-            println!(
-                "{:<10.4} {:<10.4} {:<15.8e} {:<15.8e} {:<10.2e}",
-                time, x, numerical, exact, error
-            );
+            println!("{time:<10.4} {x:<10.4} {numerical:<15.8e} {exact:<15.8e} {error:<10.2e}");
         }
         println!(); // Empty line between time points
     }
@@ -133,10 +130,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let exact = (PI * x).sin() * (-PI * PI * alpha * final_time).exp();
             let error = (numerical - exact).abs();
 
-            println!(
-                "{:<10.4} {:<15.8e} {:<15.8e} {:<10.2e}",
-                x, numerical, exact, error
-            );
+            println!("{x:<10.4} {numerical:<15.8e} {exact:<15.8e} {error:<10.2e}");
         }
     }
 
@@ -150,7 +144,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         max_error = max_error.max(error);
     }
 
-    println!("\nMaximum error at final time: {:.2e}", max_error);
+    println!("\nMaximum error at final time: {max_error:.2e}");
 
     Ok(())
 }

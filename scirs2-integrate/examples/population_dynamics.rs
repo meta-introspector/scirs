@@ -291,7 +291,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Calculate basic reproduction number R₀ = β/γ
     let r0 = 0.3 / 0.1;
-    println!("   Basic reproduction number R₀: {:.1}", r0);
+    println!("   Basic reproduction number R₀: {r0:.1}");
     println!(
         "   Attack rate: {:.1}%",
         (sir_initial[0] - final_state[0]) / sir_initial[0] * 100.0
@@ -349,7 +349,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Final: S={:.0}, I={:.0}", final_state[0], final_state[1]);
 
     let endemic_level = final_state[1] / (final_state[0] + final_state[1]) * 100.0;
-    println!("   Endemic infection level: {:.1}%", endemic_level);
+    println!("   Endemic infection level: {endemic_level:.1}%");
     println!();
 
     // Example 9: Metapopulation Model

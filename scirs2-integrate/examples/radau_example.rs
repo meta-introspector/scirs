@@ -27,7 +27,7 @@ fn main() {
     ) {
         Ok(res) => res,
         Err(e) => {
-            println!("Radau method failed: {}. Trying RK45 instead.", e);
+            println!("Radau method failed: {e}. Trying RK45 instead.");
             solve_ivp(
                 |_, y| array![-y[0]],
                 [0.0, 2.0],
@@ -88,7 +88,7 @@ fn main() {
     // println!("  Final step size: {:.6e}", result.final_step.unwrap());
     println!("  Success: {}", result.success);
     if let Some(msg) = &result.message {
-        println!("  Message: {}", msg);
+        println!("  Message: {msg}");
     }
 
     // Example 2: Stiff problem (Van der Pol oscillator)
@@ -126,7 +126,7 @@ fn main() {
     match result_bdf {
         Ok(result) => {
             println!("\nBDF method (Implicit, A-stable, variable order):");
-            println!("  Computation time: {:.2?}", bdf_time);
+            println!("  Computation time: {bdf_time:.2?}");
             println!("  Steps taken: {}", result.n_steps);
             println!("  Function evaluations: {}", result.n_eval);
             println!("  Success: {}", result.success);
@@ -136,7 +136,7 @@ fn main() {
             println!("  Final state: [{}, {}]", final_y[0], final_y[1]);
         }
         Err(e) => {
-            println!("BDF solver failed: {}", e);
+            println!("BDF solver failed: {e}");
         }
     }
 
@@ -159,7 +159,7 @@ fn main() {
     match result_dop853 {
         Ok(result) => {
             println!("\nDOP853 method (Explicit, 8th order):");
-            println!("  Computation time: {:.2?}", dop853_time);
+            println!("  Computation time: {dop853_time:.2?}");
             println!("  Steps taken: {}", result.n_steps);
             println!("  Function evaluations: {}", result.n_eval);
             println!("  Success: {}", result.success);
@@ -169,7 +169,7 @@ fn main() {
             println!("  Final state: [{}, {}]", final_y[0], final_y[1]);
         }
         Err(e) => {
-            println!("DOP853 solver failed: {}", e);
+            println!("DOP853 solver failed: {e}");
         }
     }
 
@@ -200,7 +200,7 @@ fn main() {
     ) {
         Ok(res) => res,
         Err(e) => {
-            println!("Radau method failed: {}. Trying RK45 instead.", e);
+            println!("Radau method failed: {e}. Trying RK45 instead.");
             solve_ivp(
                 |_, y| array![y[1], -y[0]],
                 [0.0, t_end],
@@ -220,7 +220,7 @@ fn main() {
     let final_y = result.y.last().unwrap();
     let exact_final = [1.0, 0.0]; // After complete periods, should return to initial state
 
-    println!("\nAfter {} periods (t = {}):", periods, t_end);
+    println!("\nAfter {periods} periods (t = {t_end}):");
     println!("  Final state: [{}, {}]", final_y[0], final_y[1]);
     println!("  Exact final: [{}, {}]", exact_final[0], exact_final[1]);
     println!(

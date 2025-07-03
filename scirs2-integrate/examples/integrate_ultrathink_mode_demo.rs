@@ -129,7 +129,7 @@ fn main() -> IntegrateResult<()> {
     if !performance_report.recommendations.is_empty() {
         println!("   Recommendations:");
         for rec in &performance_report.recommendations {
-            println!("     • {}", rec);
+            println!("     • {rec}");
         }
     }
 

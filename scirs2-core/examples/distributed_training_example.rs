@@ -92,7 +92,7 @@ fn main() {
 
     let _val_loader = DataLoader::new(dist_val_dataset, batch_size, false, None);
 
-    println!("Created data loaders with batch size {}", batch_size);
+    println!("Created data loaders with batch size {batch_size}");
 
     // Part 3: Training Setup
     println!("\nPart 3: Training Setup");
@@ -142,7 +142,7 @@ fn main() {
 
     match model_path {
         Ok(path) => println!("Saved model to: {}", path.display()),
-        Err(e) => println!("Error saving model: {}", e),
+        Err(e) => println!("Error saving model: {e}"),
     }
 
     // Load model
@@ -156,7 +156,7 @@ fn main() {
                 if optimizer.is_some() { "yes" } else { "no" }
             );
         }
-        Err(e) => println!("Error loading model: {}", e),
+        Err(e) => println!("Error loading model: {e}"),
     }
 
     // Part 5: Checkpoint Management
@@ -180,7 +180,7 @@ fn main() {
 
     match result {
         Ok(()) => println!("Saved checkpoint at epoch 10"),
-        Err(e) => println!("Error saving checkpoint: {}", e),
+        Err(e) => println!("Error saving checkpoint: {e}"),
     }
 
     // Load checkpoint
@@ -188,7 +188,7 @@ fn main() {
 
     match result {
         Ok((model, _optimizer, epoch, metrics)) => {
-            println!("Loaded checkpoint from epoch {}", epoch);
+            println!("Loaded checkpoint from epoch {epoch}");
             println!("Loaded model with {} layers", model.layers().len());
             println!(
                 "Metrics: loss = {}, accuracy = {}",
@@ -196,7 +196,7 @@ fn main() {
                 metrics.get("accuracy").unwrap_or(&0.0)
             );
         }
-        Err(e) => println!("Error loading checkpoint: {}", e),
+        Err(e) => println!("Error loading checkpoint: {e}"),
     }
 
     // Part 6: ONNX Export
@@ -209,7 +209,7 @@ fn main() {
 
     match result {
         Ok(()) => println!("Exported model to ONNX format at: {}", onnx_path.display()),
-        Err(e) => println!("Error exporting model to ONNX: {}", e),
+        Err(e) => println!("Error exporting model to ONNX: {e}"),
     }
 
     println!("\nDistributed Training and Model Serialization Example completed successfully!");

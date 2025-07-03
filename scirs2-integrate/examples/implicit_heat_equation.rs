@@ -122,8 +122,8 @@ fn compare_solutions(
         / nx as f64;
 
     println!("\nError analysis:");
-    println!("Crank-Nicolson mean absolute error: {:.6e}", cn_error);
-    println!("Backward Euler mean absolute error: {:.6e}", be_error);
+    println!("Crank-Nicolson mean absolute error: {cn_error:.6e}");
+    println!("Backward Euler mean absolute error: {be_error:.6e}");
     println!("Ratio (BE error / CN error): {:.2}", be_error / cn_error);
 
     // Output some solution values for verification

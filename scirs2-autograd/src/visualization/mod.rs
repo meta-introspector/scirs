@@ -96,22 +96,22 @@ impl<F: Float> GraphVisualizer<F> {
 
         // Generate nodes
         for (i, node) in nodes.iter().enumerate() {
-            let node_id = format!("node_{}", i);
+            let node_id = format!("node_{i}");
             let label = self.generate_node_label(node, &node_info)?;
             let style = self.get_node_style(node);
 
-            writeln!(output, "  {} [label=\"{}\", {}];", node_id, label, style)?;
+            writeln!(output, "  {node_id} [label=\"{label}\", {style}];")?;
         }
 
         // Generate edges
         for (i, _node) in nodes.iter().enumerate() {
-            let node_id = format!("node_{}", i);
+            let node_id = format!("node_{i}");
             // Simplified - in practice would get actual inputs from graph
             let inputs: Vec<TensorID> = Vec::new();
             for input in inputs {
                 if let Some(input_idx) = nodes.iter().position(|n| *n == input) {
-                    let input_id = format!("node_{}", input_idx);
-                    writeln!(output, "  {} -> {};", input_id, node_id)?;
+                    let input_id = format!("node_{input_idx}");
+                    writeln!(output, "  {input_id} -> {node_id};")?;
                 }
             }
         }
@@ -131,7 +131,7 @@ impl<F: Float> GraphVisualizer<F> {
 
         for (i, node) in nodes.iter().enumerate() {
             let label = self.generate_node_label(node, &node_info)?;
-            writeln!(output, "Node {}: {}", i, label)?;
+            writeln!(output, "Node {i}: {label}")?;
 
             // Simplified - in practice would get actual inputs from graph
             let inputs: Vec<TensorID> = Vec::new();
@@ -142,7 +142,7 @@ impl<F: Float> GraphVisualizer<F> {
                         write!(output, ", ")?;
                     }
                     if let Some(input_idx) = nodes.iter().position(|n| *n == *input) {
-                        write!(output, "Node {}", input_idx)?;
+                        write!(output, "Node {input_idx}")?;
                     } else {
                         write!(output, "External")?;
                     }
@@ -170,8 +170,7 @@ impl<F: Float> GraphVisualizer<F> {
             let label = self.generate_node_label(node, &node_info)?;
             write!(
                 output,
-                "    {{\"id\": {}, \"label\": \"{}\"}}",
-                i,
+                "    {{\"id\": {i}, \"label\": \"{}\"}}",
                 label.replace('"', "\\\"")
             )?;
         }
@@ -189,7 +188,7 @@ impl<F: Float> GraphVisualizer<F> {
                     if edge_count > 0 {
                         writeln!(output, ",")?;
                     }
-                    write!(output, "    {{\"from\": {}, \"to\": {}}}", input_idx, i)?;
+                    write!(output, "    {{\"from\": {input_idx}, \"to\": {i}}}")?;
                     edge_count += 1;
                 }
             }
@@ -211,20 +210,20 @@ impl<F: Float> GraphVisualizer<F> {
 
         // Generate nodes
         for (i, node) in nodes.iter().enumerate() {
-            let node_id = format!("N{}", i);
+            let node_id = format!("N{i}");
             let label = self.generate_node_label(node, &node_info)?;
-            writeln!(output, "  {}[{}]", node_id, label)?;
+            writeln!(output, "  {node_id}[{label}]")?;
         }
 
         // Generate edges
         for (i, _node) in nodes.iter().enumerate() {
-            let node_id = format!("N{}", i);
+            let node_id = format!("N{i}");
             // Simplified - in practice would get actual inputs from graph
             let inputs: Vec<TensorID> = Vec::new();
             for input in inputs {
                 if let Some(input_idx) = nodes.iter().position(|n| *n == input) {
-                    let input_id = format!("N{}", input_idx);
-                    writeln!(output, "  {} --> {}", input_id, node_id)?;
+                    let input_id = format!("N{input_idx}");
+                    writeln!(output, "  {input_id} --> {node_id}")?;
                 }
             }
         }
@@ -348,7 +347,7 @@ impl<F: Float> GraphVisualizer<F> {
         }
 
         if label.is_empty() {
-            write!(label, "Tensor {}", tensor_id)?;
+            write!(label, "Tensor {tensor_id}")?;
         }
 
         Ok(label)

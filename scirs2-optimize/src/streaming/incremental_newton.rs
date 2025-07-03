@@ -246,7 +246,7 @@ impl<T: StreamingObjective> IncrementalNewton<T> {
                             reg_hessian[[i, i]] += self.regularization;
                         }
 
-                        match solve(&reg_hessian, &(-gradient)) {
+                        match solve(&reg_hessian.view(), &(-gradient).view(), None) {
                             Ok(direction) => return Ok(direction),
                             Err(_) => {
                                 // Fall back to inverse Hessian approximation
@@ -316,7 +316,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for IncrementalNewton<T> 
 
         // Update parameters
         let old_parameters = self.parameters.clone();
-        let step = alpha * &direction;
+        let step = &direction * alpha;
         self.parameters = &self.parameters + &step;
 
         // Update second-order information
@@ -333,7 +333,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for IncrementalNewton<T> 
                 }
                 IncrementalNewtonMethod::ShermanMorrison => {
                     // Use gradient difference as rank-1 update
-                    if y.dot(y) > 1e-12 {
+                    if y.dot(&y) > 1e-12 {
                         self.update_sherman_morrison(&s.view(), &y.view())?;
                     }
                 }

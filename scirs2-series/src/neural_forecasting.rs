@@ -985,6 +985,7 @@ pub struct NBeatsBlock<F: Float + Debug> {
     /// Theta size (parameters for basis functions)
     theta_size: usize,
     /// Hidden layer size
+    #[allow(dead_code)]
     hidden_size: usize,
     /// Number of layers
     num_layers: usize,
@@ -1254,6 +1255,7 @@ pub struct NBeatsStack<F: Float + Debug> {
     /// Blocks in the stack
     blocks: Vec<NBeatsBlock<F>>,
     /// Stack type
+    #[allow(dead_code)]
     stack_type: NBeatsStackType,
 }
 
@@ -1519,11 +1521,13 @@ pub struct MambaBlock<F: Float + Debug> {
     /// State dimension
     state_dim: usize,
     /// Convolution kernel size
+    #[allow(dead_code)]
     conv_size: usize,
     /// Expansion factor
     expand: usize,
     /// Linear projections
     in_proj: Array2<F>,
+    #[allow(dead_code)]
     conv1d: Array2<F>,
     x_proj: Array2<F>,
     dt_proj: Array2<F>,
@@ -1985,44 +1989,68 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
 #[derive(Debug)]
 pub struct TemporalFusionTransformer<F: Float + Debug> {
     /// Input dimensions
+    #[allow(dead_code)]
     static_dim: usize,
+    #[allow(dead_code)]
     temporal_dim: usize,
+    #[allow(dead_code)]
     target_dim: usize,
     /// Model configuration
+    #[allow(dead_code)]
     hidden_dim: usize,
     #[allow(dead_code)]
     num_heads: usize,
+    #[allow(dead_code)]
     num_layers: usize,
+    #[allow(dead_code)]
     dropout_rate: F,
     /// Feature processing layers
+    #[allow(dead_code)]
     static_encoder: Array2<F>,
+    #[allow(dead_code)]
     temporal_encoder: Array2<F>,
     /// Variable selection networks
+    #[allow(dead_code)]
     static_selection: VariableSelectionNetwork<F>,
+    #[allow(dead_code)]
     temporal_selection: VariableSelectionNetwork<F>,
     /// Attention layers
+    #[allow(dead_code)]
     self_attention: Vec<MultiHeadAttention<F>>,
     /// Output layers
+    #[allow(dead_code)]
     output_projection: Array2<F>,
 }
 
 #[derive(Debug)]
 pub struct VariableSelectionNetwork<F: Float + Debug> {
+    #[allow(dead_code)]
     grn: GatedResidualNetwork<F>,
+    #[allow(dead_code)]
     selection_weights: Array2<F>,
+    #[allow(dead_code)]
     input_dim: usize,
+    #[allow(dead_code)]
     hidden_dim: usize,
 }
 
 #[derive(Debug)]
 pub struct GatedResidualNetwork<F: Float + Debug> {
+    #[allow(dead_code)]
     fc1: Array2<F>,
+    #[allow(dead_code)]
     fc2: Array2<F>,
+    #[allow(dead_code)]
     gate: Array2<F>,
+    #[allow(dead_code)]
     skip_proj: Option<Array2<F>>,
+    #[allow(dead_code)]
     layer_norm: LayerNorm<F>,
+    #[allow(dead_code)]
     input_dim: usize,
+    #[allow(dead_code)]
     hidden_dim: usize,
+    #[allow(dead_code)]
     output_dim: usize,
 }
 
@@ -2031,6 +2059,7 @@ pub struct LayerNorm<F: Float + Debug> {
     weight: Array1<F>,
     bias: Array1<F>,
     eps: F,
+    #[allow(dead_code)]
     dim: usize,
 }
 
@@ -2087,6 +2116,7 @@ pub struct MixtureOfExperts<F: Float + Debug> {
     gate: Array2<F>,
     /// Dimensions
     input_dim: usize,
+    #[allow(dead_code)]
     hidden_dim: usize,
     output_dim: usize,
 }
@@ -2441,6 +2471,7 @@ pub struct RotaryPositionalEmbedding<F: Float + Debug> {
     /// Maximum sequence length
     max_seq_len: usize,
     /// Frequency base
+    #[allow(dead_code)]
     base: F,
     /// Precomputed sine and cosine values
     sin_cache: Array2<F>,
@@ -2816,6 +2847,7 @@ pub struct RingAttention<F: Float + Debug> {
     /// Output projection
     w_output: Array2<F>,
     /// Communication buffer for ring rotation
+    #[allow(dead_code)]
     comm_buffer: Array3<F>,
 }
 
@@ -3380,8 +3412,10 @@ pub struct RetrievalAugmentedTimeSeries<F: Float + Debug> {
     /// Memory values (patterns)
     memory_values: Array2<F>,
     /// Retrieval attention mechanism
+    #[allow(dead_code)]
     retrieval_attention: MultiHeadAttention<F>,
     /// Cross-attention for pattern integration
+    #[allow(dead_code)]
     cross_attention: MultiHeadAttention<F>,
     /// Decoder for final prediction
     decoder: FeedForwardNetwork<F>,
@@ -3878,6 +3912,7 @@ pub struct SpeculativeDecoder<F: Float + Debug> {
     /// Maximum number of speculative steps
     max_speculative_steps: usize,
     /// Cache for efficient computation
+    #[allow(dead_code)]
     kv_cache: Option<(Array3<F>, Array3<F>)>, // (keys, values)
 }
 

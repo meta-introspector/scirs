@@ -70,7 +70,7 @@ fn scalar_fixed_point_example() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         if error_anderson < 1e-10 {
-            println!("✅ Anderson acceleration converged in {} iterations", iter);
+            println!("✅ Anderson acceleration converged in {iter} iterations");
             break;
         }
     }
@@ -128,7 +128,7 @@ fn nonlinear_system_example() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         if error < 1e-10 {
-            println!("✅ Converged in {} iterations", iter);
+            println!("✅ Converged in {iter} iterations");
             break;
         }
     }
@@ -169,10 +169,7 @@ fn performance_comparison_example() -> Result<(), Box<dyn std::error::Error>> {
             f64::INFINITY
         };
 
-        println!(
-            "{:15}   {:7}   {:7}   {:6.2}x",
-            name, iters_standard, iters_anderson, speedup
-        );
+        println!("{name:15}   {iters_standard:7}   {iters_anderson:7}   {speedup:6.2}x");
     }
 
     println!();
@@ -204,10 +201,7 @@ fn aitken_acceleration_example() -> Result<(), Box<dyn std::error::Error>> {
             f64::INFINITY
         };
 
-        println!(
-            "{:2}   {:6.4}   {:6.4}   {:8.2e}   {:8.2}x",
-            n, x_n, x_aitken, error_aitken, improvement
-        );
+        println!("{n:2}   {x_n:6.4}   {x_aitken:6.4}   {error_aitken:8.2e}   {improvement:8.2}x");
     }
 
     println!("\n✅ Aitken acceleration can provide dramatic improvements for slowly converging sequences");

@@ -225,6 +225,11 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Graph<N, E, Ix> {
         self.node_indices.contains_key(node)
     }
 
+    /// Get the node index for a specific node
+    pub fn node_index(&self, node: &N) -> Option<NodeIndex<Ix>> {
+        self.node_indices.get(node).copied()
+    }
+
     /// Get the internal petgraph structure for more advanced operations
     pub fn inner(&self) -> &PetGraph<N, E, Undirected, Ix> {
         &self.graph

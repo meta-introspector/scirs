@@ -40,7 +40,7 @@ impl GpuSpMV {
         let backends_to_try = [
             GpuBackend::Cuda,   // Best performance on NVIDIA GPUs
             GpuBackend::Metal,  // Best performance on Apple Silicon
-            GpuBackend::OpenCl, // Good cross-platform compatibility
+            GpuBackend::OpenCL, // Good cross-platform compatibility
             GpuBackend::Cpu,    // Fallback option
         ];
 
@@ -83,7 +83,7 @@ impl GpuSpMV {
         // Execute GPU-accelerated SpMV based on backend
         match self.backend {
             GpuBackend::Cuda => self.spmv_cuda(rows, indptr, indices, data, x),
-            GpuBackend::OpenCl => self.spmv_opencl(rows, indptr, indices, data, x),
+            GpuBackend::OpenCL => self.spmv_opencl(rows, indptr, indices, data, x),
             GpuBackend::Metal => self.spmv_metal(rows, indptr, indices, data, x),
             GpuBackend::Cpu => self.spmv_cpu_optimized(rows, indptr, indices, data, x),
         }
@@ -448,7 +448,7 @@ impl GpuSpMV {
     pub fn backend_info(&self) -> (GpuBackend, String) {
         let backend_name = match self.backend {
             GpuBackend::Cuda => "NVIDIA CUDA",
-            GpuBackend::OpenCl => "OpenCL",
+            GpuBackend::OpenCL => "OpenCL",
             GpuBackend::Metal => "Apple Metal",
             GpuBackend::Cpu => "CPU Fallback",
         };

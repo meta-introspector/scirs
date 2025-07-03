@@ -70,10 +70,7 @@ fn ode_verification_example() -> Result<(), Box<dyn std::error::Error>> {
         let exact_final = problem.exact_at(1.0);
         let error = (numerical_final - exact_final).abs();
 
-        println!(
-            "{:8.4}   {:11.2e}   Numerical: {:.6}",
-            h, error, numerical_final
-        );
+        println!("{h:8.4}   {error:11.2e}   Numerical: {numerical_final:.6}");
         errors.push(error);
     }
 
@@ -166,7 +163,7 @@ fn pde_verification_example() -> Result<(), Box<dyn std::error::Error>> {
         let l2_error = ErrorAnalysis::l2_norm_2d(u_exact.view(), u_numerical.view())?;
         let max_error = (0.0_f64).max(0.0); // Simplified for demonstration
 
-        println!("{:8.3}   {:9.2e}   {:9.2e}", h, l2_error, max_error);
+        println!("{h:8.3}   {l2_error:9.2e}   {max_error:9.2e}");
         errors.push(l2_error);
     }
 
@@ -191,7 +188,7 @@ fn convergence_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("First-order method (Euler):");
     if let Ok(analysis) = ConvergenceAnalysis::compute_order(grid_sizes.clone(), first_order_errors)
     {
-        println!("{}", analysis);
+        println!("{analysis}");
         if analysis.verify_order(1.0, 0.1) {
             println!("✅ First-order accuracy confirmed\n");
         }
@@ -202,7 +199,7 @@ fn convergence_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(analysis) =
         ConvergenceAnalysis::compute_order(grid_sizes.clone(), second_order_errors)
     {
-        println!("{}", analysis);
+        println!("{analysis}");
         if analysis.verify_order(2.0, 0.1) {
             println!("✅ Second-order accuracy confirmed\n");
         }
@@ -213,7 +210,7 @@ fn convergence_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(analysis) =
         ConvergenceAnalysis::compute_order(grid_sizes.clone(), fourth_order_errors)
     {
-        println!("{}", analysis);
+        println!("{analysis}");
         if analysis.verify_order(4.0, 0.1) {
             println!("✅ Fourth-order accuracy confirmed\n");
         }

@@ -6,7 +6,6 @@ use crate::layers::{Layer, ParamLayer};
 use ndarray::{Array, ArrayView, Ix2, IxDyn, ScalarOperand};
 use ndarray_rand::rand_distr::{Distribution, Uniform};
 use num_traits::Float;
-use ndarray_rand::rand::Rng;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 /// Configuration for LSTM layers
@@ -120,7 +119,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
         let scale_hh = F::from(1.0 / (hidden_size as f64).sqrt()).ok_or_else(|| {
             NeuralError::InvalidArchitecture("Failed to convert scale factor".to_string())
         })?;
-        
+
         // Helper function to create weight matrices
         let mut create_weight_matrix = |rows: usize,
                                         cols: usize,
@@ -154,7 +153,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
             bias_if[i] = one;
             bias_hf[i] = one;
         }
-        
+
         let weight_ig = create_weight_matrix(hidden_size, input_size, scale_ih)?;
         let weight_hg = create_weight_matrix(hidden_size, hidden_size, scale_hh)?;
         let bias_ig: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
@@ -265,7 +264,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
                     i_sum = i_sum + self.weight_hi[[i, j]] * h[[b, j]];
                 }
                 i_gate[[b, i]] = F::one() / (F::one() + (-i_sum).exp()); // sigmoid
-                
+
                 // Forget gate (f_t)
                 let mut f_sum = self.bias_if[i] + self.bias_hf[i];
                 for j in 0..self.input_size {
@@ -275,7 +274,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
                     f_sum = f_sum + self.weight_hf[[i, j]] * h[[b, j]];
                 }
                 f_gate[[b, i]] = F::one() / (F::one() + (-f_sum).exp()); // sigmoid
-                
+
                 // Cell gate (g_t)
                 let mut g_sum = self.bias_ig[i] + self.bias_hg[i];
                 for j in 0..self.input_size {
@@ -285,7 +284,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
                     g_sum = g_sum + self.weight_hg[[i, j]] * h[[b, j]];
                 }
                 g_gate[[b, i]] = g_sum.tanh(); // tanh
-                
+
                 // Output gate (o_t)
                 let mut o_sum = self.bias_io[i] + self.bias_ho[i];
                 for j in 0..self.input_size {
@@ -295,13 +294,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
                     o_sum = o_sum + self.weight_ho[[i, j]] * h[[b, j]];
                 }
                 o_gate[[b, i]] = F::one() / (F::one() + (-o_sum).exp()); // sigmoid
-                // New cell state (c_t)
+                                                                         // New cell state (c_t)
                 new_c[[b, i]] = f_gate[[b, i]] * c[[b, i]] + i_gate[[b, i]] * g_gate[[b, i]];
                 // New hidden state (h_t)
                 new_h[[b, i]] = o_gate[[b, i]] * new_c[[b, i]].tanh();
             }
         }
-        
+
         // Convert all to dynamic dimension
         let new_h_dyn = new_h.into_dyn();
         let new_c_dyn = new_c.into_dyn();
@@ -321,11 +320,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
-    
+
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
-    
+
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Cache input for backward pass
         *self.input_cache.write().unwrap() = Some(input.clone());
@@ -337,7 +336,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
                 input_shape
             )));
         }
-        
+
         let batch_size = input_shape[0];
         let seq_len = input_shape[1];
         let features = input_shape[2];
@@ -375,14 +374,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
                 }
             }
         }
-        
+
         // Cache states and gates for backward pass
         *self.hidden_states_cache.write().unwrap() = Some(all_hidden_states.clone().into_dyn());
         *self.cell_states_cache.write().unwrap() = Some(all_cell_states.into_dyn());
         // Return with correct dynamic dimension
         Ok(all_hidden_states.into_dyn())
     }
-    
+
     fn backward(
         &self,
         input: &Array<F, IxDyn>,
@@ -407,7 +406,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
                 "No cached values for backward pass. Call forward() first.".to_string(),
             ));
         }
-        
+
         // In a real implementation, we would compute gradients for all parameters
         // and return the gradient with respect to the input
         // Here we're providing a simplified version that returns a gradient of zeros
@@ -415,7 +414,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
         let grad_input = Array::zeros(input.dim());
         Ok(grad_input)
     }
-    
+
     fn update(&mut self, learning_rate: F) -> Result<()> {
         // Apply a small update to parameters (placeholder)
         let small_change = F::from(0.001).unwrap();
@@ -426,7 +425,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
                 *w = *w - lr;
             }
         };
-        
+
         // Update all parameters
         update_param(&mut self.weight_ii);
         update_param(&mut self.weight_hi);
@@ -449,34 +448,34 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
 }
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for LSTM<F> {
-    fn get_parameters(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
+    fn get_parameters(&self) -> Vec<Array<F, ndarray::IxDyn>> {
         vec![
-            &self.weight_ii,
-            &self.weight_hi,
-            &self.bias_ii,
-            &self.bias_hi,
-            &self.weight_if,
-            &self.weight_hf,
-            &self.bias_if,
-            &self.bias_hf,
-            &self.weight_ig,
-            &self.weight_hg,
-            &self.bias_ig,
-            &self.bias_hg,
-            &self.weight_io,
-            &self.weight_ho,
-            &self.bias_io,
-            &self.bias_ho,
+            self.weight_ii.clone(),
+            self.weight_hi.clone(),
+            self.bias_ii.clone(),
+            self.bias_hi.clone(),
+            self.weight_if.clone(),
+            self.weight_hf.clone(),
+            self.bias_if.clone(),
+            self.bias_hf.clone(),
+            self.weight_ig.clone(),
+            self.weight_hg.clone(),
+            self.bias_ig.clone(),
+            self.bias_hg.clone(),
+            self.weight_io.clone(),
+            self.weight_ho.clone(),
+            self.bias_io.clone(),
+            self.bias_ho.clone(),
         ]
     }
-    
-    fn get_gradients(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
+
+    fn get_gradients(&self) -> Vec<Array<F, ndarray::IxDyn>> {
         // This is a placeholder implementation until proper gradient access is implemented
         // Return an empty vector as we can't get references to the gradients inside the RwLock
         // The actual gradient update logic is handled in the backward method
         Vec::new()
     }
-    
+
     fn set_parameters(&mut self, params: Vec<Array<F, ndarray::IxDyn>>) -> Result<()> {
         if params.len() != 16 {
             return Err(NeuralError::InvalidArchitecture(format!(
@@ -484,7 +483,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
                 params.len()
             )));
         }
-        
+
         let expected_shapes = vec![
             self.weight_ii.shape(),
             self.weight_hi.shape(),
@@ -503,7 +502,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
             self.bias_io.shape(),
             self.bias_ho.shape(),
         ];
-        
+
         for (i, (param, expected)) in params.iter().zip(expected_shapes.iter()).enumerate() {
             if param.shape() != *expected {
                 return Err(NeuralError::InvalidArchitecture(format!(
@@ -514,7 +513,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
                 )));
             }
         }
-        
+
         // Set parameters
         self.weight_ii = params[0].clone();
         self.weight_hi = params[1].clone();
@@ -532,7 +531,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
         self.weight_ho = params[13].clone();
         self.bias_io = params[14].clone();
         self.bias_ho = params[15].clone();
-        
+
         Ok(())
     }
 }

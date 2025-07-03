@@ -4,15 +4,11 @@
 //! featuring comprehensive mathematical invariant testing, numerical stability
 //! verification, SIMD consistency checks, and performance regression detection.
 
-use crate::error::{StatsError, StatsResult};
-use crate::ultrathink_parallel_enhancements::{
-    create_ultra_parallel_processor, UltrathinkParallelConfig,
-};
+use crate::ultrathink_parallel_enhancements::UltrathinkParallelConfig;
 use crate::ultrathink_simd_optimizations::{ultra_batch_statistics, UltrathinkSimdConfig};
 use crate::{kurtosis, mean, pearson_r, skew, std, var};
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
-use quickcheck::{Arbitrary, Gen, QuickCheck, TestResult};
 use std::time::Instant;
 
 /// Ultra-comprehensive property testing framework

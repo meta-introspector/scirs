@@ -9,6 +9,7 @@
 //! - Multi-modal reasoning integration
 
 #![allow(dead_code)]
+#![allow(missing_docs)]
 
 use crate::error::Result;
 use crate::scene_understanding::SceneAnalysisResult;

@@ -19,7 +19,6 @@ pub mod private_hyperparameter_optimization;
 pub mod secure_multiparty;
 pub mod utility_analysis;
 
-use crate::error::Result;
 use crate::optimizers::Optimizer;
 
 // Re-export key utility analysis types

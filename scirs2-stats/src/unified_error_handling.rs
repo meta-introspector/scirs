@@ -11,7 +11,7 @@ use crate::error_diagnostics::{
 };
 use crate::error_handling_v2::{EnhancedError, ErrorBuilder, ErrorCode};
 use crate::error_standardization::{ErrorMessages, StandardizedErrorReporter};
-use scirs2_core::validation::{check_finite, check_not_empty, check_positive};
+use scirs2_core::validation::{check_finite, check_positive};
 use std::sync::Once;
 use std::time::Instant;
 
@@ -82,8 +82,8 @@ impl UnifiedErrorHandler {
     where
         T: PartialOrd + Copy,
     {
-        // Use scirs2-core validation
-        if let Err(_) = check_not_empty(data, name) {
+        // Check if slice is empty
+        if data.is_empty() {
             let code = ErrorCode::E2004;
             record_global_error(code, operation);
             return Err(ErrorMessages::empty_array(name));
@@ -98,8 +98,8 @@ impl UnifiedErrorHandler {
         name: &str,
         operation: &str,
     ) -> StatsResult<()> {
-        // Use scirs2-core validation
-        if let Err(_) = check_not_empty(data, name) {
+        // Check if slice is empty
+        if data.is_empty() {
             let code = ErrorCode::E2004;
             record_global_error(code, operation);
             return Err(ErrorMessages::empty_array(name));

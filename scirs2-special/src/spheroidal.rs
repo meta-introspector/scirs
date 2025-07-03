@@ -2034,15 +2034,13 @@ fn legendre_associated_second_kind(n: i32, m: i32, x: f64) -> SpecialResult<(f64
     // Parameter validation
     if n < 0 || m.abs() > n {
         return Err(SpecialError::DomainError(format!(
-            "Invalid parameters: n={}, m={}, must have n≥0 and |m|≤n",
-            n, m
+            "Invalid parameters: n={n}, m={m}, must have n≥0 and |m|≤n"
         )));
     }
 
     if x.abs() <= 1.0 {
         return Err(SpecialError::DomainError(format!(
-            "Argument x={} must satisfy |x| > 1",
-            x
+            "Argument x={x} must satisfy |x| > 1"
         )));
     }
 

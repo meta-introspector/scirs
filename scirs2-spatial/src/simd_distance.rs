@@ -1319,9 +1319,7 @@ pub mod bench {
 
             if let (Some(f32_time), Some(f32_speedup)) = (self.simd_f32_time, self.simd_f32_speedup)
             {
-                println!(
-                    "  SIMD f32 time:    {f32_time:.6} seconds ({f32_speedup:.2}x speedup)"
-                );
+                println!("  SIMD f32 time:    {f32_time:.6} seconds ({f32_speedup:.2}x speedup)");
             }
         }
     }

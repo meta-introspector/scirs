@@ -619,7 +619,7 @@ where
 
     // Solve using scirs2-linalg
     let x_f64 = solve(&a_f64.view(), &b_f64.view(), None)
-        .map_err(|e| TimeSeriesError::DecompositionError(format!("Linear solve failed: {}", e)))?;
+        .map_err(|e| TimeSeriesError::DecompositionError(format!("Linear solve failed: {e}")))?;
 
     // Convert back to original type
     let x = x_f64.mapv(|val| F::from_f64(val).unwrap_or_else(F::zero));

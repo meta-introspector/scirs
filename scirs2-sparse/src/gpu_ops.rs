@@ -26,7 +26,7 @@ pub enum GpuBackend {
     #[default]
     Cpu,
     Cuda,
-    OpenCl,
+    OpenCL,
     Metal,
 }
 
@@ -397,7 +397,7 @@ impl SpMVKernel {
                 })
             }
 
-            GpuBackend::OpenCl => {
+            GpuBackend::OpenCL => {
                 // Compile OpenCL SpMV kernel
                 let opencl_kernel_source = r#"
                 __kernel void spmv_csr_kernel(
@@ -548,7 +548,7 @@ impl SpMVKernel {
 
     pub fn execute<T>(
         &self,
-        _device: &GpuDevice,
+        device: &GpuDevice,
         rows: usize,
         cols: usize,
         indptr: &GpuBuffer<usize>,
@@ -574,7 +574,7 @@ impl SpMVKernel {
                 y,
             ),
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::OpenCl) => self.execute_opencl_optimized(
+            (Some(kernel_handle), GpuBackend::OpenCL) => self.execute_opencl_optimized(
                 device,
                 kernel_handle,
                 rows,
@@ -910,7 +910,7 @@ impl SpMSKernel {
                 }
             }
 
-            GpuBackend::OpenCl => {
+            GpuBackend::OpenCL => {
                 // Compile OpenCL kernels for sparse matrix operations
                 let opencl_kernel_source = r#"
                 __kernel void spmm_csr_kernel(
@@ -1169,7 +1169,7 @@ impl SpMSKernel {
 
     pub fn execute_symmetric<T>(
         &self,
-        _device: &GpuDevice,
+        device: &GpuDevice,
         rows: usize,
         indptr: &GpuBuffer<usize>,
         indices: &GpuBuffer<usize>,
@@ -1194,7 +1194,7 @@ impl SpMSKernel {
                 y,
             ),
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::OpenCl) => self.execute_opencl_symmetric(
+            (Some(kernel_handle), GpuBackend::OpenCL) => self.execute_opencl_symmetric(
                 device,
                 kernel_handle,
                 rows,
@@ -1224,7 +1224,7 @@ impl SpMSKernel {
 
     pub fn execute_spmm<T>(
         &self,
-        _device: &GpuDevice,
+        device: &GpuDevice,
         a_rows: usize,
         a_cols: usize,
         b_cols: usize,
@@ -1261,7 +1261,7 @@ impl SpMSKernel {
                 c_data,
             ),
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::OpenCl) => self.execute_opencl_spmm(
+            (Some(kernel_handle), GpuBackend::OpenCL) => self.execute_opencl_spmm(
                 device,
                 kernel_handle,
                 a_rows,
@@ -1306,7 +1306,7 @@ impl SpMSKernel {
 
     pub fn execute_triangular_solve<T>(
         &self,
-        _device: &GpuDevice,
+        device: &GpuDevice,
         n: usize,
         indptr: &GpuBuffer<usize>,
         indices: &GpuBuffer<usize>,
@@ -1331,7 +1331,7 @@ impl SpMSKernel {
                 x,
             ),
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::OpenCl) => self.execute_opencl_triangular_solve(
+            (Some(kernel_handle), GpuBackend::OpenCL) => self.execute_opencl_triangular_solve(
                 device,
                 kernel_handle,
                 n,
@@ -2659,7 +2659,7 @@ impl GpuKernelScheduler {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => (8_000_000_000, 108, 32), // Example RTX 3080 specs
             #[cfg(not(feature = "gpu"))]
-            GpuBackend::OpenCl => (4_000_000_000, 36, 64), // Example values
+            GpuBackend::OpenCL => (4_000_000_000, 36, 64), // Example values
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Metal => (8_000_000_000, 32, 32), // Example M1 specs
             _ => (16_000_000_000, 16, 1), // Default/fallback values
@@ -2689,7 +2689,7 @@ impl GpuKernelScheduler {
                     [base_size, 8, 1] // Balanced approach
                 }
             }
-            GpuBackend::OpenCl => {
+            GpuBackend::OpenCL => {
                 // OpenCL optimization focuses on memory coalescing
                 [base_size, 8, 1]
             }
@@ -3130,7 +3130,7 @@ mod tests {
     fn test_gpu_kernel_scheduler_creation() {
         // Test that all GPU backends can create schedulers
         let _cuda_scheduler = GpuKernelScheduler::new(GpuBackend::Cuda);
-        let _opencl_scheduler = GpuKernelScheduler::new(GpuBackend::OpenCl);
+        let _opencl_scheduler = GpuKernelScheduler::new(GpuBackend::OpenCL);
         let _metal_scheduler = GpuKernelScheduler::new(GpuBackend::Metal);
         let _cpu_scheduler = GpuKernelScheduler::new(GpuBackend::Cpu);
 
@@ -3353,7 +3353,7 @@ mod tests {
         assert_eq!(cuda_workgroup, [32, 32, 1]); // Tensor core friendly
 
         // Test OpenCL optimizations
-        let opencl_scheduler = GpuKernelScheduler::new(GpuBackend::OpenCl);
+        let opencl_scheduler = GpuKernelScheduler::new(GpuBackend::OpenCL);
         let opencl_workgroup = opencl_scheduler.calculate_optimal_workgroup(512, 512, 50000);
         assert_eq!(opencl_workgroup, [64, 8, 1]); // Memory coalescing focused
 

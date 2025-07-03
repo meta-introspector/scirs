@@ -896,7 +896,7 @@ impl Word2Vec {
         for i in 0..self.vocabulary.len() {
             if let Some(word) = self.vocabulary.get_token(i) {
                 // Write the word
-                write!(&mut file, "{} ", word).map_err(|e| TextError::IoError(e.to_string()))?;
+                write!(&mut file, "{word} ").map_err(|e| TextError::IoError(e.to_string()))?;
 
                 // Write the vector components
                 let vector = input_embeddings.row(i);
@@ -950,9 +950,9 @@ impl Word2Vec {
             let parts: Vec<&str> = line.split_whitespace().collect();
 
             if parts.len() != vector_size + 1 {
+                let line_num = i + 2;
                 return Err(TextError::EmbeddingError(format!(
-                    "Invalid vector format at line {}",
-                    i + 2
+                    "Invalid vector format at line {line_num}"
                 )));
             }
 
@@ -974,8 +974,7 @@ impl Word2Vec {
 
         if i != vocab_size {
             return Err(TextError::EmbeddingError(format!(
-                "Expected {} words but found {}",
-                vocab_size, i
+                "Expected {vocab_size} words but found {i}"
             )));
         }
 

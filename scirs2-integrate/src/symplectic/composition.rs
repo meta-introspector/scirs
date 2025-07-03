@@ -245,13 +245,11 @@ mod tests {
             // Allow some tolerance in ratio checks
             assert!(
                 base_ratio > 3.5 && base_ratio < 4.5,
-                "Base method convergence rate incorrect: {}",
-                base_ratio
+                "Base method convergence rate incorrect: {base_ratio}"
             );
             assert!(
                 fourth_ratio > 12.0 && fourth_ratio < 20.0,
-                "4th-order method convergence rate incorrect: {}",
-                fourth_ratio
+                "4th-order method convergence rate incorrect: {fourth_ratio}"
             );
         }
 
@@ -310,9 +308,7 @@ mod tests {
         ) {
             assert!(
                 fourth_error < base_error,
-                "4th-order method should have better energy conservation. Base: {}, 4th-order: {}",
-                base_error,
-                fourth_error
+                "4th-order method should have better energy conservation. Base: {base_error}, 4th-order: {fourth_error}"
             );
         }
     }

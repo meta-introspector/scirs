@@ -28,7 +28,7 @@ fn generate_random_points(n: usize, seed: u64) -> Array2<f64> {
 fn benchmark_hausdorff(n1: usize, n2: usize) {
     println!("Benchmarking Hausdorff distance computation");
     println!("------------------------------------------");
-    println!("Set 1: {} points, Set 2: {} points", n1, n2);
+    println!("Set 1: {n1} points, Set 2: {n2} points");
 
     // Generate random point sets
     let points1 = generate_random_points(n1, 42);
@@ -39,15 +39,15 @@ fn benchmark_hausdorff(n1: usize, n2: usize) {
     let start = Instant::now();
     let kdtree = KDTree::new(&points1).unwrap();
     let build_time = start.elapsed();
-    println!("KD-tree built in {:?}", build_time);
+    println!("KD-tree built in {build_time:?}");
 
     // Compute Hausdorff distance using direct method
     println!("\nComputing Hausdorff distance (direct method)...");
     let start = Instant::now();
     let direct_dist = hausdorff_distance(&points1.view(), &points2.view(), Some(42));
     let direct_time = start.elapsed();
-    println!("Distance: {:.6}", direct_dist);
-    println!("Time taken: {:?}", direct_time);
+    println!("Distance: {direct_dist:.6}");
+    println!("Time taken: {direct_time:?}");
 
     // Compute Hausdorff distance using KD-tree
     println!("\nComputing Hausdorff distance (KD-tree optimized)...");
@@ -56,12 +56,12 @@ fn benchmark_hausdorff(n1: usize, n2: usize) {
         .hausdorff_distance(&points2.view(), Some(42))
         .unwrap();
     let optimized_time = start.elapsed();
-    println!("Distance: {:.6}", optimized_dist);
-    println!("Time taken: {:?}", optimized_time);
+    println!("Distance: {optimized_dist:.6}");
+    println!("Time taken: {optimized_time:?}");
 
     // Report speedup
     let speedup = direct_time.as_secs_f64() / optimized_time.as_secs_f64();
-    println!("\nSpeedup: {:.2}x", speedup);
+    println!("\nSpeedup: {speedup:.2}x");
 
     // Verify that both methods produce similar results
     println!(
@@ -109,7 +109,7 @@ fn demo_batch_nearest_neighbor() {
         );
     }
     let individual_time = start.elapsed();
-    println!("Total time for individual queries: {:?}", individual_time);
+    println!("Total time for individual queries: {individual_time:?}");
 
     // Batch queries
     println!("\nBatch queries:");
@@ -124,11 +124,11 @@ fn demo_batch_nearest_neighbor() {
         );
     }
     let batch_time = start.elapsed();
-    println!("Total time for batch queries: {:?}", batch_time);
+    println!("Total time for batch queries: {batch_time:?}");
 
     // Report speedup
     let speedup = individual_time.as_secs_f64() / batch_time.as_secs_f64();
-    println!("\nBatch query speedup: {:.2}x", speedup);
+    println!("\nBatch query speedup: {speedup:.2}x");
 }
 
 fn main() {

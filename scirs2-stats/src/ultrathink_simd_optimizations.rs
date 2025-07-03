@@ -7,7 +7,7 @@
 use crate::error::{StatsError, StatsResult};
 use crate::error_standardization::ErrorMessages;
 use crate::ultrathink_error_enhancements::{UltrathinkContextBuilder, UltrathinkErrorMessages};
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
+use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
 use std::time::Instant;
@@ -642,7 +642,7 @@ where
     let (n_rows, n_cols) = data.dim();
 
     if n_rows == 0 || n_cols == 0 {
-        return Err(StatsError::EmptyInput);
+        return Err(StatsError::InvalidArgument("Input data cannot be empty".to_string()));
     }
 
     if n_rows < 2 {
@@ -725,7 +725,7 @@ where
     let (n_rows, n_cols) = data.dim();
 
     if n_rows == 0 || n_cols == 0 {
-        return Err(StatsError::EmptyInput);
+        return Err(StatsError::InvalidArgument("Input data cannot be empty".to_string()));
     }
 
     if n_rows < 2 {
@@ -848,7 +848,7 @@ where
     let (n_rows, n_cols) = data.dim();
 
     if n_rows == 0 || n_cols == 0 {
-        return Err(StatsError::EmptyInput);
+        return Err(StatsError::InvalidArgument("Input data cannot be empty".to_string()));
     }
 
     // Create result distance matrix (symmetric, zero diagonal)
@@ -911,7 +911,7 @@ where
     let (n_rows, n_cols) = data.dim();
 
     if n_rows == 0 || n_cols == 0 {
-        return Err(StatsError::EmptyInput);
+        return Err(StatsError::InvalidArgument("Input data cannot be empty".to_string()));
     }
 
     // Precompute norms for all rows using SIMD where possible
@@ -1015,7 +1015,7 @@ where
     let n = data.len();
 
     if n == 0 {
-        return Err(StatsError::EmptyInput);
+        return Err(StatsError::InvalidArgument("Input data cannot be empty".to_string()));
     }
 
     if quantile < 0.0 || quantile > 1.0 {
@@ -1166,7 +1166,7 @@ where
     let n = data.len();
 
     if n == 0 {
-        return Err(StatsError::EmptyInput);
+        return Err(StatsError::InvalidArgument("Input data cannot be empty".to_string()));
     }
 
     for &q in quantiles {

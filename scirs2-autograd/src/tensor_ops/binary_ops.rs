@@ -6,7 +6,6 @@ use crate::Float;
 use crate::Graph;
 use ndarray;
 use ndarray::Axis;
-use std::mem;
 
 // Import SIMD operations from scirs2-core
 #[cfg(feature = "simd")]
@@ -87,7 +86,7 @@ impl<T: Float> op::Op<T> for MaybeReduceSum {
                 };
                 // Restore the axis squashed by `fold_axis` automatically.
                 let result = crate::ndarray_ext::expand_dims(result, i);
-                mem::swap(&mut folded, &mut Some(result));
+                folded = Some(result);
             } else if orig_ith_dim_size != gy_ith_dim_size {
                 unreachable!("bug of MaybeReduceSum probably");
             }

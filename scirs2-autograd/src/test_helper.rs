@@ -141,8 +141,7 @@ pub fn check_theoretical_grads<'g, 't, 'v, F: Float, A>(
             let diff = (g_num - g_th).abs();
             if diff > tol {
                 panic!(
-                    "Gradient checking failed with too large error: numerical={}, theoretical={}",
-                    g_num, g_th
+                    "Gradient checking failed with too large error: numerical={g_num}, theoretical={g_th}"
                 );
             }
         }

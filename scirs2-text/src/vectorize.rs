@@ -171,7 +171,7 @@ impl Vectorizer for CountVectorizer {
             self_clone.transform(text).map_err(|e| {
                 // Convert TextError to CoreError
                 scirs2_core::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(
-                    format!("Text vectorization error: {}", e),
+                    format!("Text vectorization error: {e}"),
                 ))
             })
         })?;
@@ -299,8 +299,7 @@ impl TfidfVectorizer {
                 }
                 _ => {
                     return Err(TextError::InvalidInput(format!(
-                        "Unknown normalization: {}",
-                        norm
+                        "Unknown normalization: {norm}"
                     )))
                 }
             }
@@ -417,8 +416,7 @@ impl Vectorizer for TfidfVectorizer {
                     }
                     _ => {
                         return Err(TextError::InvalidInput(format!(
-                            "Unknown normalization: {}",
-                            norm
+                            "Unknown normalization: {norm}"
                         )))
                     }
                 }

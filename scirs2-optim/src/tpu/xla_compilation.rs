@@ -12,7 +12,7 @@ use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
 use super::{PodTopology, TPUConfig, TPUVersion, XLAOptimizationLevel};
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// XLA Compiler for TPU optimization

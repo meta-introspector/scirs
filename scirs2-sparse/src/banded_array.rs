@@ -45,8 +45,7 @@ where
 
         if bands != expected_bands {
             return Err(SparseError::ValueError(format!(
-                "Data array should have {} bands, got {}",
-                expected_bands, bands
+                "Data array should have {expected_bands} bands, got {bands}"
             )));
         }
 
@@ -110,8 +109,7 @@ where
                 result.set_unchecked(row, col, value);
             } else if !value.is_zero() {
                 return Err(SparseError::ValueError(format!(
-                    "Non-zero element at ({}, {}) is outside band structure",
-                    row, col
+                    "Non-zero element at ({row}, {col}) is outside band structure"
                 )));
             }
         }
@@ -184,8 +182,7 @@ where
         if !self.is_in_band(row, col) {
             if !value.is_zero() {
                 return Err(SparseError::ValueError(format!(
-                    "Cannot set non-zero value {} at ({}, {}) - outside band structure",
-                    value, row, col
+                    "Cannot set non-zero value {value} at ({row}, {col}) - outside band structure"
                 )));
             }
             // For zero values outside the band, just ignore (they're implicitly zero)

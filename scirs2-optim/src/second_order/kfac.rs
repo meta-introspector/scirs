@@ -5,7 +5,7 @@
 //! This allows for much more scalable second-order optimization compared to
 //! storing and inverting the full Fisher information matrix.
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use ndarray::{s, Array1, Array2, Axis, Dimension};
 use num_traits::Float;
 use std::collections::HashMap;

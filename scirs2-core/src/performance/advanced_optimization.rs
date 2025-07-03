@@ -1127,7 +1127,7 @@ mod tests {
     #[test]
     fn test_simd_capabilities_detection() {
         let caps = SimdCapabilities::detect();
-        println!("SIMD capabilities: {:?}", caps);
+        println!("SIMD capabilities: {caps:?}");
 
         let highest = caps.highest_available();
         assert!(highest >= SimdInstructionSet::Scalar);

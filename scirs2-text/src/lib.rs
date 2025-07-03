@@ -221,6 +221,10 @@ pub use ultrathink_performance::{
     DetailedPerformanceReport, OptimizationRecommendation, PerformanceSummary,
     PerformanceThresholds, UltrathinkPerformanceMonitor,
 };
+pub use ultrathink_text_coordinator::{
+    UltraBatchClassificationResult, UltraSemanticSimilarityResult, UltraTopicModelingResult,
+    UltrathinkTextConfig, UltrathinkTextCoordinator, UltrathinkTextResult,
+};
 pub use vectorize::{CountVectorizer, TfidfVectorizer, Vectorizer};
 pub use visualization::{
     AttentionVisualizer, Color, ColorScheme, EmbeddingVisualizer, SentimentVisualizer,

@@ -240,9 +240,9 @@ impl RuleLemmatizer {
                     requires_vowel: true,
                 },
             },
-            // General 's' rule (cats -> cat)
+            // General 's' rule (cats -> cat), but not for words ending in 'ness'
             LemmaRule {
-                pattern: "s$".to_string(),
+                pattern: "(?<!nes)s$".to_string(),
                 replacement: "".to_string(),
                 conditions: RuleCondition {
                     min_length: 3,
@@ -641,7 +641,7 @@ impl RuleLemmatizer {
         let mut lemmatizer = Self::new();
 
         let file = File::open(path).map_err(|e| {
-            TextError::IoError(format!("Failed to open dictionary file '{}': {}", path, e))
+            TextError::IoError(format!("Failed to open dictionary file '{path}': {e}"))
         })?;
 
         let reader = BufReader::new(file);

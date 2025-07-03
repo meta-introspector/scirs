@@ -217,7 +217,7 @@ fn advanced_denoising_demo(image: &Array2<f32>) -> Result<()> {
     ];
 
     let original_psnr = compute_psnr(image, &noisy_image)?;
-    println!("  📊 Original noise PSNR: {:.2} dB", original_psnr);
+    println!("  📊 Original noise PSNR: {original_psnr:.2} dB");
 
     for (name, method) in &denoising_methods {
         let start = Instant::now();
@@ -280,10 +280,7 @@ fn multi_object_tracking_demo() -> Result<()> {
         elapsed.as_secs_f32(),
         fps
     );
-    println!(
-        "  ✓ Total detections: {}, Max simultaneous tracks: {}",
-        total_detections, total_tracks
-    );
+    println!("  ✓ Total detections: {total_detections}, Max simultaneous tracks: {total_tracks}");
 
     Ok(())
 }

@@ -259,14 +259,14 @@ mod tests {
 
         // Check energy conservation
         if let Some(error) = result.energy_relative_error {
-            assert!(error < 1e-3, "Energy error too large: {}", error);
+            assert!(error < 1e-3, "Energy error too large: {error}");
         }
 
         // For circular orbit, distance from origin should be approximately constant
         for i in 0..result.q.len() {
             let q = &result.q[i];
             let r = (q[0] * q[0] + q[1] * q[1]).sqrt();
-            assert!((r - 1.0).abs() < 0.01, "Orbit not circular, r = {}", r);
+            assert!((r - 1.0).abs() < 0.01, "Orbit not circular, r = {r}");
         }
     }
 }

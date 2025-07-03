@@ -654,6 +654,13 @@ impl BiomedicalAnalysis {
             emg: None,
         }
     }
+}
+
+impl Default for BiomedicalAnalysis {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
     /// Add ECG analysis
     pub fn with_ecg(mut self, analysis: ECGAnalysis) -> Self {
@@ -705,7 +712,7 @@ impl BiomedicalAnalysis {
         // EEG assessment
         if let Some(ref eeg) = self.eeg {
             let seizures = eeg.detect_seizures(3.0)?;
-            let seizure_status = if seizures.len() > 0 {
+            let seizure_status = if !seizures.is_empty() {
                 format!("Seizure activity detected in {} events", seizures.len())
             } else {
                 "No seizure activity detected".to_string()

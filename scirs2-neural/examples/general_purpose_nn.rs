@@ -233,13 +233,18 @@ impl NeuralNetwork {
         inputs.push(x.clone());
         for i in 0..self.layers.len() - 1 {
             inputs.push(self.layers[i].a.as_ref().unwrap().clone());
+        }
         // Backward pass through all layers
         for i in (0..self.layers.len()).rev() {
             grad = self.layers[i].backward(&inputs[i], &grad, learning_rate);
+        }
+    }
     /// Train the network for a number of epochs
     fn train(
+        &mut self,
         x: &Array2<f32>,
         y: &Array2<f32>,
+        learning_rate: f32,
         epochs: usize,
     ) -> Vec<f32> {
         let mut losses = Vec::with_capacity(epochs);
@@ -252,12 +257,16 @@ impl NeuralNetwork {
             // Print progress
             if epoch % 1000 == 0 || epoch == epochs - 1 {
                 println!("Epoch {}/{}: loss = {:.6}", epoch + 1, epochs, loss);
+            }
             // Backward pass
             self.backward(x, y, learning_rate);
+        }
         losses
+    }
     /// Make predictions on new data
     fn predict(&mut self, x: &Array2<f32>) -> Array2<f32> {
         self.forward(x)
+    }
     /// Print a summary of the network architecture
     fn summary(&self) {
         println!("Neural Network Summary:");
@@ -470,6 +479,6 @@ fn main() -> Result<()> {
     train_xor_network()?;
     // Train a network for regression
     train_regression_network()?;
-    
+
     Ok(())
 }

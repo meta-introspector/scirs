@@ -1301,11 +1301,11 @@ impl TopicBasedSimilarity {
         let topics1 = self
             .topic_distributions
             .get(doc_id1)
-            .ok_or_else(|| TextError::InvalidInput(format!("Document {} not found", doc_id1)))?;
+            .ok_or_else(|| TextError::InvalidInput(format!("Document {doc_id1} not found")))?;
         let topics2 = self
             .topic_distributions
             .get(doc_id2)
-            .ok_or_else(|| TextError::InvalidInput(format!("Document {} not found", doc_id2)))?;
+            .ok_or_else(|| TextError::InvalidInput(format!("Document {doc_id2} not found")))?;
 
         match self.similarity_metric {
             TopicSimilarityMetric::Cosine => {
@@ -1367,8 +1367,7 @@ impl TopicBasedSimilarity {
     pub fn most_similar_documents(&self, doc_id: &str, top_k: usize) -> Result<Vec<(String, f64)>> {
         if !self.topic_distributions.contains_key(doc_id) {
             return Err(TextError::InvalidInput(format!(
-                "Document {} not found",
-                doc_id
+                "Document {doc_id} not found"
             )));
         }
 

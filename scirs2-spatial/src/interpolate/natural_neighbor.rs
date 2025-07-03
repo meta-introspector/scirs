@@ -723,15 +723,14 @@ mod tests {
 
         // The center of the square should have equal weights from all corners
         // Expected value: (0 + 1 + 2 + 3) / 4 = 1.5
-        assert!((result - 1.5).abs() < 0.1, "Expected ~1.5, got {}", result);
+        assert!((result - 1.5).abs() < 0.1, "Expected ~1.5, got {result}");
 
         // Test interpolation at a corner (should return exact value)
         let corner = array![0.0, 0.0];
         let corner_result = interp.interpolate(&corner.view()).unwrap();
         assert!(
             (corner_result - 0.0).abs() < 1e-6,
-            "Expected 0.0 at corner, got {}",
-            corner_result
+            "Expected 0.0 at corner, got {corner_result}"
         );
     }
 

@@ -62,8 +62,7 @@ impl ErrorMapper {
             mapping.map_error(source_error)
         } else {
             IntegrationError::ModuleCompatibility(format!(
-                "Unmapped error from {}: {}",
-                source_module, source_error
+                "Unmapped error from {source_module}: {source_error}"
             ))
         }
     }
@@ -94,8 +93,7 @@ impl ErrorMapper {
             recovery.attempt_recovery(error)
         } else {
             Err(IntegrationError::ModuleCompatibility(format!(
-                "No recovery strategy for error type: {}",
-                error_type
+                "No recovery strategy for error type: {error_type}"
             )))
         }
     }
@@ -492,13 +490,12 @@ impl ErrorMapping for NeuralErrorMapping {
 
         if error_str.contains("tensor") || error_str.contains("shape") {
             IntegrationError::TensorConversion(format!(
-                "Neural module tensor error: {}",
-                source_error
+                "Neural module tensor error: {source_error}"
             ))
         } else if error_str.contains("gradient") {
-            IntegrationError::ApiBoundary(format!("Neural module gradient error: {}", source_error))
+            IntegrationError::ApiBoundary(format!("Neural module gradient error: {source_error}"))
         } else {
-            IntegrationError::ModuleCompatibility(format!("Neural module error: {}", source_error))
+            IntegrationError::ModuleCompatibility(format!("Neural module error: {source_error}"))
         }
     }
 }
@@ -512,15 +509,13 @@ impl ErrorMapping for OptimErrorMapping {
 
         if error_str.contains("parameter") || error_str.contains("optimizer") {
             IntegrationError::ConfigMismatch(format!(
-                "Optimizer configuration error: {}",
-                source_error
+                "Optimizer configuration error: {source_error}"
             ))
         } else if error_str.contains("learning_rate") {
-            IntegrationError::ConfigMismatch(format!("Learning rate error: {}", source_error))
+            IntegrationError::ConfigMismatch(format!("Learning rate error: {source_error}"))
         } else {
             IntegrationError::ModuleCompatibility(format!(
-                "Optimization module error: {}",
-                source_error
+                "Optimization module error: {source_error}"
             ))
         }
     }
@@ -534,16 +529,12 @@ impl ErrorMapping for LinalgErrorMapping {
         let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("matrix") || error_str.contains("dimension") {
-            IntegrationError::TensorConversion(format!("Matrix dimension error: {}", source_error))
+            IntegrationError::TensorConversion(format!("Matrix dimension error: {source_error}"))
         } else if error_str.contains("singular") || error_str.contains("decomposition") {
-            IntegrationError::ApiBoundary(format!(
-                "Linear algebra operation error: {}",
-                source_error
-            ))
+            IntegrationError::ApiBoundary(format!("Linear algebra operation error: {source_error}"))
         } else {
             IntegrationError::ModuleCompatibility(format!(
-                "Linear algebra module error: {}",
-                source_error
+                "Linear algebra module error: {source_error}"
             ))
         }
     }
@@ -557,14 +548,13 @@ impl ErrorMapping for CoreErrorMapping {
         let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("config") {
-            IntegrationError::ConfigMismatch(format!("Core configuration error: {}", source_error))
+            IntegrationError::ConfigMismatch(format!("Core configuration error: {source_error}"))
         } else if error_str.contains("type") || error_str.contains("conversion") {
             IntegrationError::TensorConversion(format!(
-                "Core type conversion error: {}",
-                source_error
+                "Core type conversion error: {source_error}"
             ))
         } else {
-            IntegrationError::ModuleCompatibility(format!("Core module error: {}", source_error))
+            IntegrationError::ModuleCompatibility(format!("Core module error: {source_error}"))
         }
     }
 }
@@ -662,8 +652,7 @@ pub fn map_module_error(
         mapper_guard.map_error(source_module, source_error)
     } else {
         IntegrationError::ModuleCompatibility(format!(
-            "Failed to acquire error mapper lock for {}: {}",
-            source_module, source_error
+            "Failed to acquire error mapper lock for {source_module}: {source_error}"
         ))
     }
 }

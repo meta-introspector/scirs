@@ -122,8 +122,7 @@ fn demonstrate_multisubstrate_mechanisms() -> Result<(), Box<dyn std::error::Err
         let rate_pingpong = pingpong_params.calculate_rate(&concentrations);
 
         println!(
-            "   {:8.1}  | {:10.2}   | {:9.2}   | {:7.2}   |",
-            substrate_a, rate_ordered, rate_random, rate_pingpong
+            "   {substrate_a:8.1}  | {rate_ordered:10.2}   | {rate_random:9.2}   | {rate_pingpong:7.2}   |"
         );
     }
 
@@ -147,10 +146,7 @@ fn demonstrate_allosteric_regulation() -> Result<(), Box<dyn std::error::Error>>
     let substrate_conc = 1.0; // Fixed at Km value
     let effector_range = vec![0.0, 0.1, 0.5, 1.0, 2.0, 5.0];
 
-    println!(
-        "   Substrate concentration: {:.1} mM (= Km)",
-        substrate_conc
-    );
+    println!("   Substrate concentration: {substrate_conc:.1} mM (= Km)");
     println!();
     println!("   Effector | With Activator | With Inhibitor | Both        |");
     println!("   (mM)     | Only          | Only          | A=0.5, I=var |");
@@ -169,8 +165,7 @@ fn demonstrate_allosteric_regulation() -> Result<(), Box<dyn std::error::Error>>
         let rate_both = allosteric_params.calculate_rate(&[substrate_conc, 0.5, effector_conc]);
 
         println!(
-            "   {:6.1}   | {:11.1}     | {:11.1}     | {:9.1}   |",
-            effector_conc, rate_activator, rate_inhibitor, rate_both
+            "   {effector_conc:6.1}   | {rate_activator:11.1}     | {rate_inhibitor:11.1}     | {rate_both:9.1}   |"
         );
     }
 
@@ -192,10 +187,7 @@ fn demonstrate_allosteric_regulation() -> Result<(), Box<dyn std::error::Error>>
         };
 
         if log_ratio.is_finite() {
-            println!(
-                "   {:12.3}   | {:9.1}   | {:5.2}   | {:13.2}   |",
-                s, rate, log_s, log_ratio
-            );
+            println!("   {s:12.3}   | {rate:9.1}   | {log_s:5.2}   | {log_ratio:13.2}   |");
         }
     }
 
@@ -318,7 +310,7 @@ fn demonstrate_tca_cycle() -> Result<(), Box<dyn std::error::Error>> {
         .iter()
         .zip(initial_concentrations.iter())
     {
-        println!("   {}: {:.3} mM", name, conc);
+        println!("   {name}: {conc:.3} mM");
     }
 
     // Calculate initial fluxes
@@ -361,7 +353,7 @@ fn demonstrate_tca_cycle() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Metabolite changes:");
     for (i, name) in pathway.metabolites.iter().enumerate() {
         let change = ((final_y[i] - initial_concentrations[i]) / initial_concentrations[i]) * 100.0;
-        println!("   {}: {:+.1}% change", name, change);
+        println!("   {name}: {change:+.1}% change");
     }
 
     println!();
@@ -391,7 +383,7 @@ fn demonstrate_control_analysis() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("   Assumed steady-state concentrations:");
     for (name, &conc) in pathway.metabolites.iter().zip(steady_state.iter()) {
-        println!("   {}: {:.3} mM", name, conc);
+        println!("   {name}: {conc:.3} mM");
     }
 
     // Perform control analysis
@@ -420,7 +412,7 @@ fn demonstrate_control_analysis() -> Result<(), Box<dyn std::error::Error>> {
         for j in 1..5 {
             // Skip external metabolites (0 and 5)
             let elasticity = analysis.elasticity_coefficients[(i, j)];
-            print!(" {:5.2} |", elasticity);
+            print!(" {elasticity:5.2} |");
         }
         println!();
     }
@@ -458,10 +450,7 @@ fn demonstrate_environmental_effects() -> Result<(), Box<dyn std::error::Error>>
         let rate = base_params.calculate_rate(&[substrate_conc]);
         let relative = rate / base_rate;
 
-        println!(
-            "   {:7.0}   | {:9.1}   | {:15.2}   |",
-            temp_c, rate, relative
-        );
+        println!("   {temp_c:7.0}   | {rate:9.1}   | {relative:15.2}   |");
     }
 
     // pH effects
@@ -478,7 +467,7 @@ fn demonstrate_environmental_effects() -> Result<(), Box<dyn std::error::Error>>
         let rate = base_params.calculate_rate(&[substrate_conc]);
         let relative = rate / base_rate;
 
-        println!("   {:4.1}  | {:9.1}   | {:15.2}   |", ph, rate, relative);
+        println!("   {ph:4.1}  | {rate:9.1}   | {relative:15.2}   |");
     }
 
     // Combined effects
@@ -507,9 +496,9 @@ fn demonstrate_environmental_effects() -> Result<(), Box<dyn std::error::Error>>
         }
     }
 
-    println!("   Optimal temperature: {:.0}°C", optimal_temp);
-    println!("   Optimal pH: {:.1}", optimal_ph);
-    println!("   Maximum rate: {:.1} μM/s", max_rate);
+    println!("   Optimal temperature: {optimal_temp:.0}°C");
+    println!("   Optimal pH: {optimal_ph:.1}");
+    println!("   Maximum rate: {max_rate:.1} μM/s");
     println!(
         "   Improvement over standard conditions: {:.1}×",
         max_rate / base_rate
@@ -556,8 +545,7 @@ fn demonstrate_pathway_regulation() -> Result<(), Box<dyn std::error::Error>> {
         let pathway_flux = rates.iter().take(9).sum::<f64>() * 1000.0 / 9.0; // Average flux
 
         println!(
-            "   {:6.1}   | {:10.2}   | {:9.2}   | {:10.2}   |",
-            imp_conc, first_enzyme_rate, last_enzyme_rate, pathway_flux
+            "   {imp_conc:6.1}   | {first_enzyme_rate:10.2}   | {last_enzyme_rate:9.2}   | {pathway_flux:10.2}   |"
         );
     }
 
@@ -590,10 +578,7 @@ fn demonstrate_pathway_regulation() -> Result<(), Box<dyn std::error::Error>> {
 
         let remaining_activity = inhibition_factor * 100.0;
 
-        println!(
-            "   {:17} | {:15.3}   | {:16.1}%    |",
-            name, inhibition_factor, remaining_activity
-        );
+        println!("   {name:17} | {inhibition_factor:15.3}   | {remaining_activity:16.1}%    |");
     }
 
     Ok(())

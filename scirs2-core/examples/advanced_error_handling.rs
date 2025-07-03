@@ -53,8 +53,8 @@ fn basic_error_handling_demo() -> CoreResult<()> {
     let domain_error = domain_error!("Input value must be positive");
     let computation_error = computation_error!("Matrix is singular", "solve_linear_system");
 
-    println!("   Domain Error: {}", domain_error);
-    println!("   Computation Error: {}", computation_error);
+    println!("   Domain Error: {domain_error}");
+    println!("   Computation Error: {computation_error}");
 
     // Convert errors to recoverable format
     let recoverable = RecoverableError::new(domain_error)
@@ -85,21 +85,21 @@ fn retry_mechanisms_demo() -> CoreResult<()> {
     let mut attempt_count = 0;
     let result = executor.execute(|| {
         attempt_count += 1;
-        println!("   🔧 Attempt {} of simulated operation", attempt_count);
+        println!("   🔧 Attempt {attempt_count} of simulated operation");
 
         if attempt_count < 3 {
             Err(CoreError::ComputationError(error_context!(
                 "Temporary failure - network timeout"
             )))
         } else {
-            println!("   ✅ Operation succeeded on attempt {}", attempt_count);
+            println!("   ✅ Operation succeeded on attempt {attempt_count}");
             Ok("Operation completed successfully")
         }
     });
 
     match result {
-        Ok(message) => println!("   📊 Result: {}", message),
-        Err(e) => println!("   ❌ Final failure: {}", e),
+        Ok(message) => println!("   📊 Result: {message}"),
+        Err(e) => println!("   ❌ Final failure: {e}"),
     }
 
     // Linear backoff strategy
@@ -115,7 +115,7 @@ fn retry_mechanisms_demo() -> CoreResult<()> {
         Ok("Linear retry succeeded")
     });
 
-    println!("   📊 Linear backoff result: {:?}", linear_result);
+    println!("   📊 Linear backoff result: {linear_result:?}");
     println!("   ✅ Retry mechanisms demo completed\n");
 
     Ok(())
@@ -138,7 +138,7 @@ fn circuit_breaker_demo() -> CoreResult<()> {
 
     // Simulate failures to trigger circuit breaker
     for i in 1..=4 {
-        println!("   🔧 Circuit breaker test attempt {}", i);
+        println!("   🔧 Circuit breaker test attempt {i}");
 
         let result = circuit_breaker.execute(|| {
             if i <= 2 {
@@ -146,13 +146,13 @@ fn circuit_breaker_demo() -> CoreResult<()> {
                     "Simulated service failure"
                 )))
             } else {
-                Ok(format!("Success on attempt {}", i))
+                Ok(format!("Success on attempt {i}"))
             }
         });
 
         match result {
-            Ok(msg) => println!("   ✅ {}", msg),
-            Err(e) => println!("   ❌ Failed: {}", e),
+            Ok(msg) => println!("   ✅ {msg}"),
+            Err(e) => println!("   ❌ Failed: {e}"),
         }
 
         println!("   📊 Circuit status: {}", circuit_breaker.status());
@@ -181,10 +181,10 @@ fn error_aggregation_demo() -> CoreResult<()> {
 
     for (name, should_succeed) in operations {
         if should_succeed {
-            println!("   ✅ {} completed successfully", name);
+            println!("   ✅ {name} completed successfully");
             successful_operations.push(name);
         } else {
-            println!("   ❌ {} failed", name);
+            println!("   ❌ {name} failed");
             let error = CoreError::ComputationError(error_context!(format!(
                 "{} encountered an error",
                 name
@@ -194,7 +194,7 @@ fn error_aggregation_demo() -> CoreResult<()> {
     }
 
     println!("\n   📊 Batch Operation Summary:");
-    println!("   Successful operations: {:?}", successful_operations);
+    println!("   Successful operations: {successful_operations:?}");
     println!("   Total errors collected: {}", aggregator.error_count());
 
     if aggregator.has_errors() {
@@ -371,10 +371,10 @@ fn scientific_computing_scenario() -> CoreResult<()> {
 
     match result {
         Ok(solution) => {
-            println!("   ✅ Scientific computation completed: {}", solution);
+            println!("   ✅ Scientific computation completed: {solution}");
         }
         Err(e) => {
-            println!("   ❌ Scientific computation failed: {}", e);
+            println!("   ❌ Scientific computation failed: {e}");
 
             // Generate comprehensive diagnostic report
             let diagnostics = diagnose_error(&e);
@@ -403,8 +403,7 @@ fn simulate_iterative_solver(matrix_size: usize, max_iterations: usize) -> CoreR
                 ))))
             } else {
                 Ok(format!(
-                    "Linear system solved for {}x{} matrix",
-                    matrix_size, matrix_size
+                    "Linear system solved for {matrix_size}x{matrix_size} matrix"
                 ))
             }
         }

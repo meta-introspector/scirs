@@ -6,7 +6,7 @@
 
 use ndarray::{Array, Array2, Dimension};
 use num_traits::Float;
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::Arc;
 use std::thread;
@@ -14,7 +14,7 @@ use std::time::{Duration, Instant};
 
 use super::tpu_backend::DeviceId;
 use super::PodTopology;
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 
 // Additional type aliases and error definitions
 type TopologyStatistics = HashMap<String, f64>;
@@ -167,6 +167,7 @@ pub enum BatchParallelizationStrategy {
     ModelParallel,
     PipelineParallel,
     Hybrid,
+    HybridParallel,
     TensorParallel,
     ExpertParallel,
     Adaptive,
@@ -191,6 +192,7 @@ pub enum GradientAggregationMethod {
 pub enum LoadBalancingStrategy {
     Static,
     Dynamic,
+    PredictiveDynamic,
     WorkStealing,
     LoadAware,
     LatencyAware,
@@ -891,8 +893,11 @@ pub enum ConsistencyLevel {
 }
 
 /// Batch partition for a device
-#[derive(Debug)]
-pub struct BatchPartition<T: Float> {
+#[derive(Debug, Clone)]
+pub struct BatchPartition<T: Float>
+where
+    T: Clone,
+{
     /// Partition data
     pub data: Array<T, ndarray::IxDyn>,
 
@@ -1233,7 +1238,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
             (base_usage + workload_usage + variation).clamp(0.1, 0.95)
         } else {
             // Device not allocated - just system overhead
-            0.1 + (device_id as f64 * 0.01) % 0.05 // Small per-device variation
+            0.1 + (device_id.0 as f64 * 0.01) % 0.05 // Small per-device variation
         }
     }
 
@@ -1260,14 +1265,14 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
             };
 
             // Add realistic fluctuation based on device characteristics
-            let device_efficiency = 1.0 - (device_id as f64 * 0.02) % 0.1;
+            let device_efficiency = 1.0 - (device_id.0 as f64 * 0.02) % 0.1;
             let elapsed = allocation.allocated_at.elapsed().as_secs_f64();
             let thermal_factor = if elapsed > 300.0 { 0.95 } else { 1.0 }; // Thermal throttling simulation
 
             (base_utilization * load_factor * device_efficiency * thermal_factor).clamp(0.1, 0.99)
         } else {
             // Idle device - minimal background processes
-            0.05 + (device_id as f64 * 0.002) % 0.03
+            0.05 + (device_id.0 as f64 * 0.002) % 0.03
         }
     }
 
@@ -1281,7 +1286,6 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
 }
 
 /// Optimization step interface
-#[derive(Debug)]
 pub struct OptimizationStep<T: Float> {
     /// Step function
     pub step_fn:
@@ -1300,16 +1304,13 @@ impl<T: Float + Default + Clone + Send + Sync> OptimizationStep<T> {
     pub async fn execute(
         &self,
         partition: BatchPartition<T>,
-    ) -> Result<Vec<Array<T, ndarray::IxDyn>>, OptimError> {
+    ) -> Result<Vec<Array<T, ndarray::IxDyn>>> {
         (self.step_fn)(partition)
     }
 
     pub fn new<F>(step_fn: F) -> Self
     where
-        F: Fn(BatchPartition<T>) -> Result<Vec<Array<T, ndarray::IxDyn>>, OptimError>
-            + Send
-            + Sync
-            + 'static,
+        F: Fn(BatchPartition<T>) -> Result<Vec<Array<T, ndarray::IxDyn>>> + Send + Sync + 'static,
     {
         Self {
             step_fn: Arc::new(step_fn),
@@ -1318,7 +1319,7 @@ impl<T: Float + Default + Clone + Send + Sync> OptimizationStep<T> {
 }
 
 /// Resource allocation result
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ResourceAllocation {
     /// Allocated devices
     pub devices: Vec<DeviceId>,
@@ -1471,10 +1472,12 @@ impl PodPerformanceAnalyzer {
 
         // Calculate dynamic throughput based on configuration and load
         let base_throughput = match self.config.topology {
+            PodTopology::Single => 100.0,
             PodTopology::Pod2x2 => 400.0,
             PodTopology::Pod4x4 => 1200.0,
             PodTopology::Pod8x8 => 4800.0,
             PodTopology::Pod16x16 => 19200.0,
+            PodTopology::Pod32x32 => 76800.0,
         };
 
         let efficiency_factor = match self.config.coordination_strategy {
@@ -1500,7 +1503,11 @@ impl PodPerformanceAnalyzer {
             BatchParallelizationStrategy::DataParallel => 3.0,
             BatchParallelizationStrategy::ModelParallel => 8.0,
             BatchParallelizationStrategy::PipelineParallel => 5.0,
+            BatchParallelizationStrategy::Hybrid => 4.0,
             BatchParallelizationStrategy::HybridParallel => 4.5,
+            BatchParallelizationStrategy::TensorParallel => 6.0,
+            BatchParallelizationStrategy::ExpertParallel => 7.0,
+            BatchParallelizationStrategy::Adaptive => 3.5,
         };
 
         let communication_overhead = match self.config.communication_pattern {
@@ -1525,12 +1532,19 @@ impl PodPerformanceAnalyzer {
             SynchronizationMode::Synchronous => 0.95,
             SynchronizationMode::Asynchronous => 0.88,
             SynchronizationMode::BulkSynchronous => 0.92,
+            SynchronizationMode::Bounded => 0.90,
+            SynchronizationMode::StaleStynchronous => 0.85,
             SynchronizationMode::Adaptive => 0.93,
         };
 
         let load_balance_efficiency = match self.config.load_balancing_strategy {
             LoadBalancingStrategy::Static => 0.85,
             LoadBalancingStrategy::Dynamic => 0.93,
+            LoadBalancingStrategy::WorkStealing => 0.91,
+            LoadBalancingStrategy::LoadAware => 0.94,
+            LoadBalancingStrategy::LatencyAware => 0.92,
+            LoadBalancingStrategy::BandwidthAware => 0.89,
+            LoadBalancingStrategy::Adaptive => 0.95,
             LoadBalancingStrategy::PredictiveDynamic => 0.96,
         };
 
@@ -1582,7 +1596,7 @@ impl<T: Float> ResourceScheduler<T> {
         // Initialize device availability for all devices in the pod
         for device_id in 0..config.num_devices {
             device_availability.insert(
-                DeviceId(device_id as u32),
+                DeviceId(device_id),
                 DeviceAvailability {
                     available_memory: 16 * 1024 * 1024 * 1024, // 16GB
                     compute_capacity: 1.0,
@@ -1613,7 +1627,9 @@ impl<T: Float> ResourceScheduler<T> {
             .collect();
 
         if available_devices.is_empty() {
-            return Err(OptimError::ResourceUnavailable);
+            return Err(OptimError::ResourceUnavailable(
+                "Resource allocation failed".to_string(),
+            ));
         }
 
         // Allocate resources based on strategy
@@ -1903,7 +1919,7 @@ impl TopologyManager {
     }
 }
 
-impl<T: Float + Default + Clone> CommunicationManager<T> {
+impl<T: Float + Default + Clone + ndarray::ScalarOperand> CommunicationManager<T> {
     pub fn new(_config: &PodCoordinationConfig) -> Result<Self> {
         Ok(Self {
             active_communications: HashMap::new(),
@@ -1975,7 +1991,7 @@ impl SynchronizationManager {
 
     pub async fn global_barrier(&mut self) -> Result<()> {
         // Simplified barrier implementation
-        let barrier_id = BarrierId(thread_rng().gen());
+        let barrier_id = BarrierId(rng().gen());
         let barrier_state = BarrierState {
             participants: HashSet::new(),
             arrived: HashSet::new(),
@@ -2072,7 +2088,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
     }
 
     pub async fn create_batch(&mut self, batch_data: BatchData<T>) -> Result<BatchId> {
-        let batch_id = BatchId(thread_rng().gen());
+        let batch_id = BatchId(rng().gen());
         let batch_execution = BatchExecution {
             id: batch_id,
             data: batch_data,
@@ -2119,7 +2135,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
     ) -> Result<BatchPartition<T>> {
         if let Some(batch) = self.active_batches.get(&batch_id) {
             if let Some(partition) = batch.device_assignments.get(&device_id) {
-                return Ok(partition.clone());
+                return Ok((*partition).clone());
             }
         }
         Err(OptimError::ConfigurationError(
@@ -2168,7 +2184,7 @@ impl<T: Float + Default + Clone> GradientAggregator<T> {
     pub async fn aggregate_gradients(
         &mut self,
         device_gradients: HashMap<DeviceId, Vec<Array<T, ndarray::IxDyn>>>,
-    ) -> Result<Vec<Array<T, ndarray::IxDyn>>, OptimError> {
+    ) -> Result<Vec<Array<T, ndarray::IxDyn>>> {
         let start_time = Instant::now();
 
         if device_gradients.is_empty() {

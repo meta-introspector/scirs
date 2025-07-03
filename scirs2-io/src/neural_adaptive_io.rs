@@ -264,11 +264,17 @@ impl NeuralIoNetwork {
 
         // Hidden layer gradients (simplified for efficiency)
         let hidden_error = self.output_weights.t().dot(&output_bias_grad);
-        let hidden_bias_grad = hidden_error.mapv(|x| x * Self::gelu_derivative(x));
+        let mut hidden_bias_grad = hidden_error.clone();
+        for val in hidden_bias_grad.iter_mut() {
+            *val *= Self::gelu_derivative(*val);
+        }
 
         // Input layer gradients (simplified)
         let input_error = self.hidden_weights.t().dot(&hidden_bias_grad);
-        let input_bias_grad = input_error.mapv(|x| x * Self::gelu_derivative(x));
+        let mut input_bias_grad = input_error.clone();
+        for val in input_bias_grad.iter_mut() {
+            *val *= Self::gelu_derivative(*val);
+        }
 
         // Input weight gradients
         let input_weight_grad = input_bias_grad
@@ -282,11 +288,7 @@ impl NeuralIoNetwork {
                     .unwrap(),
             );
 
-        // Update weights using Adam optimizer for output layer
-        let mut dummy_weights: Array2<f32> = Array2::zeros((0, 0)); // Placeholder for interface compatibility
-        let mut dummy_bias: Array1<f32> = Array1::zeros(0);
-
-        // For simplicity, we'll use a direct Adam-inspired update
+        // Update weights using Adam optimizer - simplified approach
         self.update_attention_weights(&output_error, input);
         self.update_bias_with_momentum(&mut self.output_bias, &output_bias_grad);
         self.update_bias_with_momentum(&mut self.hidden_bias, &hidden_bias_grad);
@@ -819,12 +821,10 @@ impl ReinforcementLearningAgent {
             "disable_simd".to_string(),
         ];
 
-        // Exploration vs exploitation
-        if rand::random::<f32>() < self.exploration_rate {
-            // Explore: choose random action
-            use rand::prelude::*;
-            let mut rng = rand::rng();
-            actions[rng.random_range(0..actions.len())].clone()
+        // Exploration vs exploitation - simplified for now to avoid rand ICE
+        if self.exploration_rate > 0.5 {
+            // Explore: choose first action (simplified)
+            actions[0].clone()
         } else {
             // Exploit: choose best known action
             self.get_best_action(state, &actions)

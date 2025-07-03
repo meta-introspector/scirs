@@ -144,7 +144,7 @@ pub fn minimum_weight_bipartite_matching<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
 ) -> Result<(f64, Vec<(N, N)>)>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone,
     Ix: IndexType,
 {
@@ -211,7 +211,7 @@ fn minimum_weight_matching_bruteforce<N>(
     cost_matrix: &[Vec<f64>],
 ) -> Result<(f64, Vec<(N, N)>)>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
 {
     let n = left_nodes.len();
     let mut best_cost = f64::INFINITY;
@@ -249,7 +249,7 @@ fn minimum_weight_matching_greedy<N>(
     cost_matrix: &[Vec<f64>],
 ) -> Result<(f64, Vec<(N, N)>)>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
 {
     let n = left_nodes.len();
     let mut matching = Vec::new();
@@ -332,7 +332,7 @@ pub struct MaximumMatching<N: Node> {
 /// * A maximum cardinality matching
 pub fn maximum_cardinality_matching<N, E, Ix>(graph: &Graph<N, E, Ix>) -> MaximumMatching<N>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -395,7 +395,7 @@ where
 /// * A maximal matching
 pub fn maximal_matching<N, E, Ix>(graph: &Graph<N, E, Ix>) -> MaximumMatching<N>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {

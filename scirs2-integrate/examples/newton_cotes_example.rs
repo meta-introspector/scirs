@@ -18,7 +18,7 @@ fn main() {
 
     println!("Closed Newton-Cotes Formulas:");
     for (name, n) in closed_rules {
-        println!("\n{}", name);
+        println!("\n{name}");
         match newton_cotes::<f64>(n, NewtonCotesType::Closed, None, None) {
             Ok(result) => {
                 println!("  Points: {:?}", result.points);
@@ -27,14 +27,14 @@ fn main() {
                 println!("  Error coefficient: {:.10e}", result.error_coefficient);
             }
             Err(e) => {
-                println!("  Error: {}", e);
+                println!("  Error: {e}");
             }
         }
     }
 
     println!("\nOpen Newton-Cotes Formulas:");
     for n in 3..6 {
-        println!("\n{}-point Open Formula", n);
+        println!("\n{n}-point Open Formula");
         match newton_cotes::<f64>(n, NewtonCotesType::Open, None, None) {
             Ok(result) => {
                 println!("  Points: {:?}", result.points);
@@ -43,7 +43,7 @@ fn main() {
                 println!("  Error coefficient: {:.10e}", result.error_coefficient);
             }
             Err(e) => {
-                println!("  Error: {}", e);
+                println!("  Error: {e}");
             }
         }
     }
@@ -73,8 +73,8 @@ fn main() {
     ];
 
     for (name, f, a, b, exact) in test_cases {
-        println!("\nIntegrating f(x) = {} from {} to {}", name, a, b);
-        println!("Exact value: {:.10}", exact);
+        println!("\nIntegrating f(x) = {name} from {a} to {b}");
+        println!("Exact value: {exact:.10}");
 
         // Try different Newton-Cotes rules with increasing numbers of points
         println!("Closed Newton-Cotes:");
@@ -83,12 +83,11 @@ fn main() {
                 Ok((result, error)) => {
                     let actual_error = (result - exact).abs();
                     println!(
-                        "  n={}: {:.10} (estimated error: {:.10e}, actual error: {:.10e})",
-                        n, result, error, actual_error
+                        "  n={n}: {result:.10} (estimated error: {error:.10e}, actual error: {actual_error:.10e})"
                     );
                 }
                 Err(e) => {
-                    println!("  n={}: Error: {}", n, e);
+                    println!("  n={n}: Error: {e}");
                 }
             }
         }
@@ -99,12 +98,11 @@ fn main() {
                 Ok((result, error)) => {
                     let actual_error = (result - exact).abs();
                     println!(
-                        "  n={}: {:.10} (estimated error: {:.10e}, actual error: {:.10e})",
-                        n, result, error, actual_error
+                        "  n={n}: {result:.10} (estimated error: {error:.10e}, actual error: {actual_error:.10e})"
                     );
                 }
                 Err(e) => {
-                    println!("  n={}: Error: {}", n, e);
+                    println!("  n={n}: Error: {e}");
                 }
             }
         }
@@ -119,8 +117,8 @@ fn main() {
     let b: f64 = 1.0;
     let exact = b.atan() - a.atan();
 
-    println!("Integrating f(x) = 1/(1+x²) from {} to {}", a, b);
-    println!("Exact value: {:.10}", exact);
+    println!("Integrating f(x) = 1/(1+x²) from {a} to {b}");
+    println!("Exact value: {exact:.10}");
 
     // Implement composite rules with different numbers of panels
     let panels = [2, 4, 8, 16, 32];
@@ -153,15 +151,13 @@ fn main() {
 
         let trap_error = (trap_sum - exact).abs();
         println!(
-            "\nComposite Trapezoidal Rule with {} panels: {:.10} (error: {:.10e})",
-            panels_count, trap_sum, trap_error
+            "\nComposite Trapezoidal Rule with {panels_count} panels: {trap_sum:.10} (error: {trap_error:.10e})"
         );
 
         if panels_count % 2 == 0 {
             let simp_error = (simp_sum - exact).abs();
             println!(
-                "Composite Simpson's Rule with {} panels: {:.10} (error: {:.10e})",
-                panels_count, simp_sum, simp_error
+                "Composite Simpson's Rule with {panels_count} panels: {simp_sum:.10} (error: {simp_error:.10e})"
             );
         }
     }
@@ -173,7 +169,7 @@ fn main() {
     println!("Here are higher-order closed formula weights for [0,1]:");
 
     for n in [5, 7, 9, 11, 13, 15] {
-        println!("\nn = {} points:", n);
+        println!("\nn = {n} points:");
         match newton_cotes::<f64>(n, NewtonCotesType::Closed, None, None) {
             Ok(result) => {
                 println!("  Weights sum: {:.10}", result.weights.iter().sum::<f64>());
@@ -181,7 +177,7 @@ fn main() {
                 // Check if there are negative weights (which can lead to instability)
                 let neg_weights = result.weights.iter().filter(|&&w| w < 0.0).count();
                 if neg_weights > 0 {
-                    println!("  Warning: Formula has {} negative weights", neg_weights);
+                    println!("  Warning: Formula has {neg_weights} negative weights");
                 }
 
                 // Test with polynomial that should be integrated exactly
@@ -193,14 +189,13 @@ fn main() {
                     newton_cotes_integrate(poly, 0.0, 1.0, n, NewtonCotesType::Closed).unwrap();
                 let poly_error = (poly_result - exact_integral).abs();
 
-                println!("  Integration of x^{} (should be exact):", exact_degree);
+                println!("  Integration of x^{exact_degree} (should be exact):");
                 println!(
-                    "    Result: {:.10}, Exact: {:.10}, Error: {:.10e}",
-                    poly_result, exact_integral, poly_error
+                    "    Result: {poly_result:.10}, Exact: {exact_integral:.10}, Error: {poly_error:.10e}"
                 );
             }
             Err(e) => {
-                println!("  Error: {}", e);
+                println!("  Error: {e}");
             }
         }
     }

@@ -19,7 +19,7 @@ pub fn random_walk<N, E, Ix>(
     restart_probability: f64,
 ) -> Result<Vec<N>>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -66,7 +66,7 @@ where
 /// of transitioning from node i to node j.
 pub fn transition_matrix<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<(Vec<N>, Array2<f64>)>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Into<f64>,
     Ix: IndexType,
 {
@@ -122,7 +122,7 @@ pub fn personalized_pagerank<N, E, Ix>(
     max_iter: usize,
 ) -> Result<HashMap<N, f64>>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64>,
     Ix: IndexType,
 {
@@ -177,7 +177,7 @@ pub fn parallel_random_walks<N, E, Ix>(
     restart_probability: f64,
 ) -> Result<Vec<Vec<N>>>
 where
-    N: Node + Clone + Hash + Eq + Send + Sync,
+    N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug,
     E: EdgeWeight + Send + Sync,
     Ix: IndexType + Send + Sync,
 {
@@ -280,6 +280,7 @@ impl<N: Node + Clone + Hash + Eq> BatchRandomWalker<N> {
     where
         E: EdgeWeight + Into<f64>,
         Ix: IndexType,
+        N: std::fmt::Debug,
     {
         let nodes: Vec<N> = graph.nodes().cloned().collect();
         let node_to_idx: HashMap<N, usize> = nodes
@@ -428,7 +429,7 @@ pub fn node2vec_walk<N, E, Ix>(
     rng: &mut impl rand::Rng,
 ) -> Result<Vec<N>>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64>,
     Ix: IndexType,
 {
@@ -554,7 +555,7 @@ pub fn simd_random_walk_with_restart<N, E, Ix>(
     rng: &mut impl rand::Rng,
 ) -> Result<Vec<N>>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {

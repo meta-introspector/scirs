@@ -104,8 +104,7 @@ where
         "coo" => CooArray::from_triplets(&rows, &cols, &data, (m, n), false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr' and 'coo'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
 }
@@ -202,8 +201,7 @@ where
         "coo" => CooArray::from_triplets(&rows, &cols, &data, (m, n), false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr' and 'coo'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
 }
@@ -297,8 +295,7 @@ where
         "coo" => CooArray::from_triplets(&rows, &cols, &data, (total_rows, total_cols), false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr' and 'coo'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
 }
@@ -373,8 +370,7 @@ where
         "coo" => CooArray::from_triplets(&tril_rows, &tril_cols, &tril_data, shape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr' and 'coo'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
 }
@@ -449,8 +445,7 @@ where
         "coo" => CooArray::from_triplets(&triu_rows, &triu_cols, &triu_data, shape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr' and 'coo'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
 }

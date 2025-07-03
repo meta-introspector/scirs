@@ -2405,7 +2405,6 @@ fn example_usage() -> FFTResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use num_complex::Complex64;
 
     #[test]
     fn test_ultrathink_coordinator_creation() {
@@ -2423,7 +2422,7 @@ mod tests {
 
     #[test]
     fn test_algorithm_types() {
-        let algorithms = vec![
+        let algorithms = [
             FftAlgorithmType::CooleyTukeyRadix2,
             FftAlgorithmType::CooleyTukeyMixedRadix,
             FftAlgorithmType::BluesteinAlgorithm,

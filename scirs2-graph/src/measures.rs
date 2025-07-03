@@ -940,7 +940,7 @@ pub fn parallel_pagerank_centrality<N, E, Ix>(
     max_iterations: Option<usize>,
 ) -> Result<HashMap<N, f64>>
 where
-    N: Node + Send + Sync,
+    N: Node + Send + Sync + std::fmt::Debug,
     E: EdgeWeight + Send + Sync,
     Ix: petgraph::graph::IndexType + Send + Sync,
 {

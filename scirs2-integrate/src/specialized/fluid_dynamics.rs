@@ -2302,7 +2302,7 @@ mod tests {
                 }
             }
 
-            assert!(max_div < 1e-3, "Divergence too large: {}", max_div);
+            assert!(max_div < 1e-3, "Divergence too large: {max_div}");
         }
     }
 

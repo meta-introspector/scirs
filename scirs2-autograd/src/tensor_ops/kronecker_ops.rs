@@ -25,8 +25,7 @@ impl<F: Float> Op<F> for KroneckerOp {
 
         if a_shape.len() != 2 || b_shape.len() != 2 {
             return Err(OpError::IncompatibleShape(format!(
-                "Kronecker product requires 2D matrices, got shapes {:?} and {:?}",
-                a_shape, b_shape
+                "Kronecker product requires 2D matrices, got shapes {a_shape:?} and {b_shape:?}"
             )));
         }
 

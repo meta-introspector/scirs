@@ -224,9 +224,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
         let cached_input = {
             let cache = self.input.read().unwrap();
             cache.clone().ok_or_else(|| {
-                NeuralError::InferenceError(
-                    "No cached input for backward pass".to_string(),
-                )
+                NeuralError::InferenceError("No cached input for backward pass".to_string())
             })?
         };
 
@@ -367,11 +365,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
 }
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for Dense<F> {
-    fn get_parameters(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
-        vec![&self.weights, &self.biases]
+    fn get_parameters(&self) -> Vec<Array<F, ndarray::IxDyn>> {
+        vec![self.weights.clone(), self.biases.clone()]
     }
 
-    fn get_gradients(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
+    fn get_gradients(&self) -> Vec<Array<F, ndarray::IxDyn>> {
         // This method has limitations with RwLock - in practice this would need redesign
         vec![]
     }

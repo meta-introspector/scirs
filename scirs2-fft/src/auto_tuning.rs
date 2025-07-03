@@ -718,7 +718,7 @@ mod tests {
             }
             Err(e) => {
                 // Benchmark may fail in some environments, just log and continue
-                println!("Benchmark failed: {}", e);
+                println!("Benchmark failed: {e}");
             }
         }
     }

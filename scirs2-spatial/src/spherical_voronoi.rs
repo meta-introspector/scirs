@@ -1444,7 +1444,7 @@ mod tests {
         for i in 0..points.nrows() {
             let point = points.row(i);
             let (nearest_idx, dist) = sv.nearest_generator(&point).unwrap();
-            assert_eq!(nearest_idx, i, "Point {} should be nearest to itself", i);
+            assert_eq!(nearest_idx, i, "Point {i} should be nearest to itself");
             assert!(dist < 1e-10, "Distance to self should be near zero");
         }
 

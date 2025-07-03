@@ -642,6 +642,22 @@ impl<
         // Use the existing interpolate method
         self.interpolate(query_points)
     }
+
+    /// Evaluate the RBF interpolator at given points
+    ///
+    /// This is an alias for the `interpolate` method to maintain API compatibility
+    /// with existing code that expects an `evaluate` method.
+    ///
+    /// # Arguments
+    ///
+    /// * `query_points` - Points at which to evaluate the interpolator (n_points × n_dimensions)
+    ///
+    /// # Returns
+    ///
+    /// Interpolated values at the query points
+    pub fn evaluate(&self, query_points: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
+        self.interpolate(query_points)
+    }
 }
 
 // Enhanced solver for the linear system Ax = b with numerical stability checks

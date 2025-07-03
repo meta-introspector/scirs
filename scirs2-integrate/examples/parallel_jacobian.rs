@@ -184,7 +184,7 @@ fn benchmark_jacobian_strategies(
         // Set the strategy as a custom option (this would require extending ODEOptions)
         // For a real implementation, you'd need to modify the ODEOptions struct
         // to include Jacobian strategy. We're simulating this here.
-        println!("Solving with strategy: {}", name);
+        println!("Solving with strategy: {name}");
 
         // For testing purposes, just showing the general approach
         // Time the solution
@@ -243,13 +243,13 @@ fn benchmark_jacobian_strategies(
         "Parallel:    {:.3} ms",
         parallel_time.as_secs_f64() * 1000.0 / 5.0
     );
-    println!("Speedup:     {:.2}x", speedup);
+    println!("Speedup:     {speedup:.2}x");
 
     #[cfg(feature = "parallel")]
     {
         use scirs2_core::parallel_ops::num_threads;
         let n_threads = num_threads();
-        println!("Using {} threads", n_threads);
+        println!("Using {n_threads} threads");
         println!("Efficiency:  {:.1}%", 100.0 * speedup / n_threads as f64);
     }
     #[cfg(not(feature = "parallel"))]

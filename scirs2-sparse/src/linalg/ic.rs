@@ -66,8 +66,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> IC0Preconditioner<F> {
                 Some(idx) => idx,
                 None => {
                     return Err(SparseError::ValueError(format!(
-                        "Missing diagonal element at position {}",
-                        i
+                        "Missing diagonal element at position {i}"
                     )));
                 }
             };

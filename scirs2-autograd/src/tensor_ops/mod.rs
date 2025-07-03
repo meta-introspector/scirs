@@ -1197,7 +1197,7 @@ where
 {
     // Save the original shape for debugging
     let orig_shape = arr.shape().to_vec();
-    println!("Creating variable with shape: {:?}", orig_shape);
+    println!("Creating variable with shape: {orig_shape:?}");
 
     // Convert the array to dynamic form for tensor creation
     let arr_dyn = arr.into_dyn();

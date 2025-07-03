@@ -146,10 +146,7 @@ fn main() -> IntegrateResult<()> {
             _ => "?",
         };
 
-        println!(
-            "  t = {:.4}: {:15} | y = {:.6} | direction: {}",
-            time, id, value, dir_str
-        );
+        println!("  t = {time:.4}: {id:15} | y = {value:.6} | direction: {dir_str}");
     }
 
     // Report final state

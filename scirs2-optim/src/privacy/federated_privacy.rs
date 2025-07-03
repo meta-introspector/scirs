@@ -10,7 +10,7 @@ use super::noise_mechanisms::{
     GaussianMechanism, LaplaceMechanism, NoiseMechanism as NoiseMechanismTrait,
 };
 use super::{AccountingMethod, DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
 use rand::{Rng, SeedableRng};

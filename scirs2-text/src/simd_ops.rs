@@ -1979,9 +1979,9 @@ mod tests {
         // Test with longer strings
         let prefix = "common_prefix_";
         let strings5 = [
-            format!("{}test1", prefix),
-            format!("{}test2", prefix),
-            format!("{}test3", prefix),
+            format!("{prefix}test1"),
+            format!("{prefix}test2"),
+            format!("{prefix}test3"),
         ];
         let string_refs: Vec<&str> = strings5.iter().map(|s| s.as_str()).collect();
         assert_eq!(

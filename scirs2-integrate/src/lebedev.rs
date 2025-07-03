@@ -776,8 +776,7 @@ mod tests {
             // Higher tolerance due to approximation in weights
             assert!(
                 result.abs() < 0.5,
-                "Expected z to integrate close to 0, got {}",
-                result
+                "Expected z to integrate close to 0, got {result}"
             );
         }
 

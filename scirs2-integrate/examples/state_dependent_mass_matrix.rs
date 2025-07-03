@@ -155,8 +155,7 @@ fn main() -> IntegrateResult<()> {
         let omega_rk45 = result_rk45.y[idx_rk45][1];
 
         println!(
-            "  {:.1}\t\t{:.6}\t{:.6}\t{:.6}\t{:.6}",
-            t_cmp, theta_radau, theta_rk45, omega_radau, omega_rk45
+            "  {t_cmp:.1}\t\t{theta_radau:.6}\t{theta_rk45:.6}\t{omega_radau:.6}\t{omega_rk45:.6}"
         );
     }
 
@@ -168,14 +167,8 @@ fn main() -> IntegrateResult<()> {
     let final_theta_rk45 = result_rk45.y.last().unwrap()[0];
 
     println!("\nFinal values:");
-    println!(
-        "  Radau final t = {:.6}, theta = {:.6}",
-        final_t_radau, final_theta_radau
-    );
-    println!(
-        "  RK45 final t = {:.6}, theta = {:.6}",
-        final_t_rk45, final_theta_rk45
-    );
+    println!("  Radau final t = {final_t_radau:.6}, theta = {final_theta_radau:.6}");
+    println!("  RK45 final t = {final_t_rk45:.6}, theta = {final_theta_rk45:.6}");
     println!(
         "  Difference in final theta: {:.3e}",
         (final_theta_radau - final_theta_rk45).abs()
@@ -202,11 +195,8 @@ fn main() -> IntegrateResult<()> {
     let final_theta_const = result_const.y.last().unwrap()[0];
 
     println!("\nEffect of state-dependent mass:");
-    println!(
-        "  Final theta with state-dependent mass: {:.6}",
-        final_theta_radau
-    );
-    println!("  Final theta with constant mass: {:.6}", final_theta_const);
+    println!("  Final theta with state-dependent mass: {final_theta_radau:.6}");
+    println!("  Final theta with constant mass: {final_theta_const:.6}");
     println!(
         "  Difference: {:.6}",
         (final_theta_radau - final_theta_const).abs()

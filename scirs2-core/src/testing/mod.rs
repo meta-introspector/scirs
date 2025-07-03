@@ -263,7 +263,7 @@ impl TestRunner {
                     return Ok(TestResult::failure(
                         start_time.elapsed(),
                         cases_executed,
-                        format!(":?{i, e}"),
+                        format!(":?{}, {}", i, e),
                     )
                     .with_memory_usage(max_memory));
                 }

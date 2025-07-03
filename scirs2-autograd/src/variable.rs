@@ -228,7 +228,7 @@ impl Display for FullName {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let ns = self.namespace_id.deref();
         let name = self.variable_name.deref();
-        write!(f, "{}\u{00001}{}", ns, name)
+        write!(f, "{ns}\u{00001}{name}")
     }
 }
 

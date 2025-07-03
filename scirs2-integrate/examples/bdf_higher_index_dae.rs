@@ -23,9 +23,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let g = 9.81; // Gravity (m/s²)
 
     println!("Slider-crank mechanism parameters:");
-    println!("  Crank mass: {} kg, length: {} m", m1, l1);
-    println!("  Connecting rod mass: {} kg, length: {} m", m2, l2);
-    println!("  Slider mass: {} kg", m3);
+    println!("  Crank mass: {m1} kg, length: {l1} m");
+    println!("  Connecting rod mass: {m2} kg, length: {l2} m");
+    println!("  Slider mass: {m3} kg");
 
     // Initial configuration (crank at 45°, with angular velocity)
     let theta1_0 = std::f64::consts::PI / 4.0; // Crank angle (rad)
@@ -167,7 +167,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Success: {}", result.success);
 
     if let Some(msg) = &result.message {
-        println!("  Message: {}", msg);
+        println!("  Message: {msg}");
     }
 
     // Check constraint satisfaction
@@ -181,10 +181,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         max_constraint_violation = max_constraint_violation.max(violation);
     }
 
-    println!(
-        "Maximum constraint violation: {:.6e}",
-        max_constraint_violation
-    );
+    println!("Maximum constraint violation: {max_constraint_violation:.6e}");
 
     // Calculate the energy at each time point
     let mut energy = Vec::new();

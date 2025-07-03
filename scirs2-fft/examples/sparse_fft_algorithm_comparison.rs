@@ -252,11 +252,11 @@ fn analyze_algorithm_accuracy() {
         let error_trace = Scatter::new(
             noise_levels
                 .iter()
-                .map(|&n| format!("{:.2}", n))
+                .map(|&n| format!("{n:.2}"))
                 .collect::<Vec<_>>(),
             algorithm_errors[i].clone(),
         )
-        .name(format!("{:?}", algorithm))
+        .name(format!("{algorithm:?}"))
         .mode(Mode::LinesMarkers);
 
         accuracy_plot.add_trace(error_trace);
@@ -265,11 +265,11 @@ fn analyze_algorithm_accuracy() {
         let time_trace = Scatter::new(
             noise_levels
                 .iter()
-                .map(|&n| format!("{:.2}", n))
+                .map(|&n| format!("{n:.2}"))
                 .collect::<Vec<_>>(),
             algorithm_times[i].clone(),
         )
-        .name(format!("{:?}", algorithm))
+        .name(format!("{algorithm:?}"))
         .mode(Mode::LinesMarkers);
 
         time_plot.add_trace(time_trace);
@@ -384,10 +384,10 @@ fn analyze_scaling_behavior() {
     for (i, &algorithm) in algorithms.iter().enumerate() {
         // Scaling plot
         let time_trace = Scatter::new(
-            sizes.iter().map(|&s| format!("{}", s)).collect::<Vec<_>>(),
+            sizes.iter().map(|&s| format!("{s}")).collect::<Vec<_>>(),
             algorithm_times[i].clone(),
         )
-        .name(format!("{:?}", algorithm))
+        .name(format!("{algorithm:?}"))
         .mode(Mode::LinesMarkers);
 
         scaling_plot.add_trace(time_trace);

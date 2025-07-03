@@ -81,7 +81,7 @@ where
         count_tokens(text, &*tokenizer_boxed).map_err(|e| {
             // Convert TextError to CoreError
             scirs2_core::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(
-                format!("Text processing error: {}", e),
+                format!("Text processing error: {e}"),
             ))
         })
     })?;

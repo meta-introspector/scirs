@@ -165,7 +165,7 @@ fn bench_ode_solvers(c: &mut Criterion) {
 
     for (prob_name, dim, t_span, y0) in problems {
         for method in &methods {
-            let parameter = format!("{}_{:?}_dim{}", prob_name, method, dim);
+            let parameter = format!("{prob_name}_{method:?}_dim{dim}");
 
             group.bench_with_input(
                 BenchmarkId::new("solve_ivp", &parameter),
@@ -268,7 +268,7 @@ fn bench_quadrature_methods(c: &mut Criterion) {
     ];
 
     for (prob_name, a, b) in problems {
-        let parameter = format!("{}_{:.1e}_{:.1e}", prob_name, a, b);
+        let parameter = format!("{prob_name}_{a:.1e}_{b:.1e}");
 
         group.bench_with_input(
             BenchmarkId::new("quad", &parameter),
@@ -312,7 +312,7 @@ fn bench_multidimensional_integration(c: &mut Criterion) {
     for &dim in &dimensions {
         // Monte Carlo integration
         group.bench_with_input(
-            BenchmarkId::new("monte_carlo", format!("gaussian_{}d", dim)),
+            BenchmarkId::new("monte_carlo", format!("gaussian_{dim}d")),
             &dim,
             |b, &dim| {
                 b.iter(|| {
@@ -336,7 +336,7 @@ fn bench_multidimensional_integration(c: &mut Criterion) {
         // Cubature integration (for reasonable dimensions)
         if dim <= 4 {
             group.bench_with_input(
-                BenchmarkId::new("cubature", format!("gaussian_{}d", dim)),
+                BenchmarkId::new("cubature", format!("gaussian_{dim}d")),
                 &dim,
                 |b, &dim| {
                     b.iter(|| {
@@ -460,7 +460,7 @@ fn bench_memory_usage(c: &mut Criterion) {
 
     for &n in &system_sizes {
         group.bench_with_input(
-            BenchmarkId::new("large_ode_system", format!("{}x{}", n, n)),
+            BenchmarkId::new("large_ode_system", format!("{n}x{n}")),
             &n,
             |b, &n| {
                 b.iter(|| {
@@ -506,7 +506,7 @@ fn bench_accuracy_performance_tradeoff(c: &mut Criterion) {
 
     for &tol in &tolerances {
         group.bench_with_input(
-            BenchmarkId::new("ode_tolerance", format!("rtol_{:.0e}", tol)),
+            BenchmarkId::new("ode_tolerance", format!("rtol_{tol:.0e}")),
             &tol,
             |b, &tol| {
                 b.iter(|| {

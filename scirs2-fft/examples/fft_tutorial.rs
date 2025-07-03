@@ -53,7 +53,7 @@ fn basic_fft_example() {
 
     // Create a simple signal
     let signal = vec![1.0, 2.0, 3.0, 4.0];
-    println!("Input signal: {:?}", signal);
+    println!("Input signal: {signal:?}");
 
     // Compute the FFT
     let spectrum = fft(&signal, None).unwrap();
@@ -128,7 +128,7 @@ fn multi_dimensional_fft_example() {
 
     println!("Input 2D array:");
     for row in data.rows() {
-        println!("  {:?}", row);
+        println!("  {row:?}");
     }
 
     // Compute 2D FFT
@@ -136,7 +136,7 @@ fn multi_dimensional_fft_example() {
 
     // DC component should be the sum of all elements
     let total_sum: f64 = data.iter().sum();
-    println!("Sum of all elements: {:.2}", total_sum);
+    println!("Sum of all elements: {total_sum:.2}");
     println!(
         "DC component (FFT[0,0]): {:.2} + {:.2}i",
         spectrum_2d[[0, 0]].re,
@@ -427,8 +427,8 @@ fn frequency_domain_filtering() {
     let filtered_snr = calc_snr(&filtered_signal.iter().map(|c| c.re).collect::<Vec<f64>>());
 
     println!("Signal-to-noise ratio comparison:");
-    println!("  Original signal: {:.1} dB", original_snr);
-    println!("  Filtered signal: {:.1} dB", filtered_snr);
+    println!("  Original signal: {original_snr:.1} dB");
+    println!("  Filtered signal: {filtered_snr:.1} dB");
     println!("  Improvement: {:.1} dB", filtered_snr - original_snr);
 
     println!("Frequency domain filtering allows precise control over which");
@@ -451,7 +451,7 @@ fn hilbert_transform_example() {
         .map(|&ti| (2.0 * PI * frequency * ti).cos())
         .collect();
 
-    println!("Created a {} Hz cosine signal", frequency);
+    println!("Created a {frequency} Hz cosine signal");
 
     // Compute the Hilbert transform (analytic signal)
     let analytic = hilbert(&signal).unwrap();
@@ -480,11 +480,8 @@ fn hilbert_transform_example() {
     let avg_freq: f64 = inst_freq.iter().sum::<f64>() / ((n - 1) as f64);
 
     println!("Analytic signal properties:");
-    println!("  Average amplitude: {:.2} (expected: 1.0)", avg_amplitude);
-    println!(
-        "  Average instantaneous frequency: {:.2} Hz (expected: {})",
-        avg_freq, frequency
-    );
+    println!("  Average amplitude: {avg_amplitude:.2} (expected: 1.0)");
+    println!("  Average instantaneous frequency: {avg_freq:.2} Hz (expected: {frequency})");
 
     println!("The Hilbert transform creates an analytic signal,");
     println!("which lets us extract instantaneous amplitude and frequency.");
@@ -521,8 +518,8 @@ fn fractional_fourier_transform_example() {
         let output_energy: f64 = frft_result.iter().map(|c| c.norm_sqr()).sum();
         let energy_ratio = output_energy / input_energy;
 
-        println!("  FrFT at α = {:.2}π:", alpha);
-        println!("    Energy preservation ratio: {:.4}", energy_ratio);
+        println!("  FrFT at α = {alpha:.2}π:");
+        println!("    Energy preservation ratio: {energy_ratio:.4}");
 
         // For α = 0, the transform should be the original signal
         // For α = 0.5, it should be similar to the regular FFT
@@ -539,7 +536,7 @@ fn fractional_fourier_transform_example() {
             expected = "intermediate representation";
         }
 
-        println!("    This transform is close to the {}", expected);
+        println!("    This transform is close to the {expected}");
     }
 
     println!("The Fractional Fourier Transform provides a continuous");
@@ -571,10 +568,7 @@ fn time_frequency_analysis() {
         })
         .collect();
 
-    println!(
-        "Created a chirp signal from {} Hz to {} Hz",
-        start_freq, end_freq
-    );
+    println!("Created a chirp signal from {start_freq} Hz to {end_freq} Hz");
 
     // Compute the spectrogram
     let window_size = 128;
@@ -626,7 +620,7 @@ fn time_frequency_analysis() {
     println!("Spectrogram analysis:");
     println!("  Number of time frames: {}", times.len());
     println!("  Number of frequency bins: {}", frequencies.len());
-    println!("  Mean frequency estimation error: {:.2} Hz", mean_error);
+    println!("  Mean frequency estimation error: {mean_error:.2} Hz");
 
     println!("Spectrograms reveal how frequency content changes over time,");
     println!("making them ideal for analyzing signals with time-varying properties.");

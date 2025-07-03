@@ -419,8 +419,8 @@ fn compare_results(cpu_result: &[f32], gpu_result: &[f32], tolerance: f32) -> bo
 #[allow(dead_code)]
 fn print_performance_comparison(operation: &str, cpu_time: f64, gpu_time: f64) {
     let speedup = cpu_time / gpu_time;
-    println!("   {} Performance:", operation);
+    println!("   {operation} Performance:");
     println!("     CPU: {:.2} ms", cpu_time * 1000.0);
     println!("     GPU: {:.2} ms", gpu_time * 1000.0);
-    println!("     Speedup: {:.2}x", speedup);
+    println!("     Speedup: {speedup:.2}x");
 }

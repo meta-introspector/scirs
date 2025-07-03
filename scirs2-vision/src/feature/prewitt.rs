@@ -46,20 +46,20 @@ pub fn prewitt_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
             // Horizontal Prewitt kernel: [[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]]
-            let gx = -1.0 * array[[y - 1, x - 1]]
+            let gx = -array[[y - 1, x - 1]]
                 + 0.0 * array[[y - 1, x]]
                 + 1.0 * array[[y - 1, x + 1]]
-                + -1.0 * array[[y, x - 1]]
+                + -array[[y, x - 1]]
                 + 0.0 * array[[y, x]]
                 + 1.0 * array[[y, x + 1]]
-                + -1.0 * array[[y + 1, x - 1]]
+                + -array[[y + 1, x - 1]]
                 + 0.0 * array[[y + 1, x]]
                 + 1.0 * array[[y + 1, x + 1]];
 
             // Vertical Prewitt kernel: [[-1, -1, -1], [0, 0, 0], [1, 1, 1]]
-            let gy = -1.0 * array[[y - 1, x - 1]]
-                + -1.0 * array[[y - 1, x]]
-                + -1.0 * array[[y - 1, x + 1]]
+            let gy = -array[[y - 1, x - 1]]
+                + -array[[y - 1, x]]
+                + -array[[y - 1, x + 1]]
                 + 0.0 * array[[y, x - 1]]
                 + 0.0 * array[[y, x]]
                 + 0.0 * array[[y, x + 1]]
@@ -105,17 +105,17 @@ pub fn prewitt_gradients(img: &DynamicImage) -> Result<(Array2<f32>, Array2<f32>
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
             // Horizontal Prewitt kernel
-            let gx = -1.0 * array[[y - 1, x - 1]]
+            let gx = -array[[y - 1, x - 1]]
                 + 1.0 * array[[y - 1, x + 1]]
-                + -1.0 * array[[y, x - 1]]
+                + -array[[y, x - 1]]
                 + 1.0 * array[[y, x + 1]]
-                + -1.0 * array[[y + 1, x - 1]]
+                + -array[[y + 1, x - 1]]
                 + 1.0 * array[[y + 1, x + 1]];
 
             // Vertical Prewitt kernel
-            let gy = -1.0 * array[[y - 1, x - 1]]
-                + -1.0 * array[[y - 1, x]]
-                + -1.0 * array[[y - 1, x + 1]]
+            let gy = -array[[y - 1, x - 1]]
+                + -array[[y - 1, x]]
+                + -array[[y - 1, x + 1]]
                 + 1.0 * array[[y + 1, x - 1]]
                 + 1.0 * array[[y + 1, x]]
                 + 1.0 * array[[y + 1, x + 1]];

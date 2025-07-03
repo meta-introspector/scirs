@@ -28,12 +28,10 @@ pub use concrete_gpu_backends::OpenCLContext;
 // #[cfg(all(target_os = "macos", feature = "metal"))]
 // pub use concrete_gpu_backends::MetalContext;
 
+use crate::error::{NdimageError, NdimageResult};
 use ndarray::{Array, ArrayView, Dimension};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
-use std::sync::Arc;
-
-use crate::error::{NdimageError, NdimageResult};
 
 /// Available computation backends
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

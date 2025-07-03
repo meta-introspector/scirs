@@ -752,11 +752,12 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
             let x_query = self.generate_query_points_2d(size / 20, 2)?;
 
             let result = self.time_method(&format!("rbf_size_{}", size), || {
-                let mut rbf = crate::advanced::rbf::RBFInterpolator::new(
+                let rbf = crate::advanced::rbf::RBFInterpolator::new(
+                    &x.view(),
+                    &y.view(),
                     crate::advanced::rbf::RBFKernel::Gaussian,
                     T::from_f64(1.0).unwrap(),
                 )?;
-                rbf.fit(&x.view(), &y.view())?;
                 rbf.predict(&x_query.view())
             })?;
 
@@ -1069,11 +1070,12 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
             let data_memory = after_data_memory - initial_memory;
 
             // Create interpolator
-            let mut rbf = crate::advanced::rbf::RBFInterpolator::new(
+            let rbf = crate::advanced::rbf::RBFInterpolator::new(
+                &x.view(),
+                &y.view(),
                 crate::advanced::rbf::RBFKernel::Gaussian,
                 T::from_f64(1.0).unwrap(),
             )?;
-            rbf.fit(&x.view(), &y.view())?;
 
             let after_fit_memory = Self::get_current_memory_usage();
             let interpolator_memory = after_fit_memory - after_data_memory;
@@ -1389,11 +1391,12 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
         }
 
         let result = self.time_method("image_resampling_workload", || {
-            let mut rbf = crate::advanced::rbf::RBFInterpolator::new(
-                crate::advanced::rbf::RBFKernel::ThinPlate,
+            let rbf = crate::advanced::rbf::RBFInterpolator::new(
+                &image_points.view(),
+                &image_values.view(),
+                crate::advanced::rbf::RBFKernel::ThinPlateSpline,
                 T::from_f64(0.1).unwrap(),
             )?;
-            rbf.fit(&image_points.view(), &image_values.view())?;
             rbf.predict(&query_points.view())
         })?;
 
@@ -1461,11 +1464,12 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
         }
 
         let result = self.time_method("scientific_data_workload", || {
-            let mut rbf = crate::advanced::rbf::RBFInterpolator::new(
+            let rbf = crate::advanced::rbf::RBFInterpolator::new(
+                &points.view(),
+                &values.view(),
                 crate::advanced::rbf::RBFKernel::Gaussian,
                 T::from_f64(5.0).unwrap(),
             )?;
-            rbf.fit(&points.view(), &values.view())?;
             rbf.predict(&query_points.view())
         })?;
 
@@ -1932,7 +1936,7 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
             &x.view(),
             &y.view(),
             crate::advanced::rbf::RBFKernel::Gaussian,
-            Some(T::from(1.0).unwrap()),
+            T::from(1.0).unwrap(),
         ) {
             let x_query = Array1::from_iter((0..50).map(|i| T::from(i as f64 / 5.0).unwrap()));
 
@@ -2441,24 +2445,11 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
         println!("Running enhanced SciPy 1.13+ compatibility suite...");
 
         // Test various function types with different interpolation methods
-        let test_functions = vec![
-            (
-                "smooth_gaussian",
-                Box::new(|slf: &Self, x| slf.evaluate_smooth_function(x))
-                    as Box<dyn Fn(&Self, &ArrayView1<T>) -> Array1<T>>,
-            ),
-            (
-                "noisy_sine",
-                Box::new(|slf: &Self, x| slf.evaluate_noisy_function(x)),
-            ),
-            (
-                "oscillatory",
-                Box::new(|slf: &Self, x| slf.evaluate_oscillatory_function(x)),
-            ),
-            (
-                "discontinuous",
-                Box::new(|slf: &Self, x| slf.evaluate_discontinuous_function(x)),
-            ),
+        let test_functions: Vec<(&str, fn(&Self, &ArrayView1<T>) -> Array1<T>)> = vec![
+            ("smooth_gaussian", Self::evaluate_smooth_function),
+            ("noisy_sine", Self::evaluate_noisy_function),
+            ("oscillatory", Self::evaluate_oscillatory_function),
+            ("discontinuous", Self::evaluate_discontinuous_function),
         ];
 
         let interpolation_methods = vec!["linear", "cubic", "nearest", "pchip", "akima"];

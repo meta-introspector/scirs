@@ -156,7 +156,7 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
             *gradient_accumulator /= total_weight;
 
             // Apply gradient descent update
-            self.parameters = &self.parameters - &(learning_rate * gradient_accumulator);
+            self.parameters = &self.parameters - &(&*gradient_accumulator * learning_rate);
         }
 
         Ok(())

@@ -40,7 +40,7 @@ impl MemoryProfiler {
     /// Calculate memory statistics for an undirected graph
     pub fn profile_graph<N, E, Ix>(graph: &Graph<N, E, Ix>) -> MemoryStats
     where
-        N: crate::base::Node,
+        N: crate::base::Node + std::fmt::Debug,
         E: crate::base::EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -90,7 +90,7 @@ impl MemoryProfiler {
     /// Calculate memory statistics for a directed graph
     pub fn profile_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> MemoryStats
     where
-        N: crate::base::Node,
+        N: crate::base::Node + std::fmt::Debug,
         E: crate::base::EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -170,7 +170,7 @@ impl MemoryProfiler {
     /// Analyze memory fragmentation in the graph
     pub fn analyze_fragmentation<N, E, Ix>(graph: &Graph<N, E, Ix>) -> FragmentationReport
     where
-        N: crate::base::Node,
+        N: crate::base::Node + std::fmt::Debug,
         E: crate::base::EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {

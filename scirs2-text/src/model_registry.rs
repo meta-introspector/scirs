@@ -46,7 +46,7 @@ impl std::fmt::Display for ModelType {
             ModelType::TextClassification => write!(f, "text_classification"),
             ModelType::NamedEntityRecognition => write!(f, "named_entity_recognition"),
             ModelType::PartOfSpeech => write!(f, "part_of_speech"),
-            ModelType::Custom(name) => write!(f, "custom_{}", name),
+            ModelType::Custom(name) => write!(f, "custom_{name}"),
         }
     }
 }
@@ -205,7 +205,7 @@ impl ModelRegistry {
         // Create registry directory if it doesn't exist
         if !registry_dir.exists() {
             fs::create_dir_all(&registry_dir).map_err(|e| {
-                TextError::IoError(format!("Failed to create registry directory: {}", e))
+                TextError::IoError(format!("Failed to create registry directory: {e}"))
             })?;
         }
 
@@ -235,15 +235,14 @@ impl ModelRegistry {
         }
 
         for entry in fs::read_dir(&self.registry_dir)
-            .map_err(|e| TextError::IoError(format!("Failed to read registry directory: {}", e)))?
+            .map_err(|e| TextError::IoError(format!("Failed to read registry directory: {e}")))?
         {
-            let entry = entry.map_err(|e| {
-                TextError::IoError(format!("Failed to read directory entry: {}", e))
-            })?;
+            let entry = entry
+                .map_err(|e| TextError::IoError(format!("Failed to read directory entry: {e}")))?;
 
             if entry
                 .file_type()
-                .map_err(|e| TextError::IoError(format!("Failed to get file type: {}", e)))?
+                .map_err(|e| TextError::IoError(format!("Failed to get file type: {e}")))?
                 .is_dir()
             {
                 let model_dir = entry.path();
@@ -271,10 +270,10 @@ impl ModelRegistry {
         #[cfg(feature = "serde-support")]
         {
             let file = fs::File::open(&metadata_file)
-                .map_err(|e| TextError::IoError(format!("Failed to open metadata file: {}", e)))?;
+                .map_err(|e| TextError::IoError(format!("Failed to open metadata file: {e}")))?;
             let reader = BufReader::new(file);
             let mut metadata: ModelMetadata = serde_json::from_reader(reader).map_err(|e| {
-                TextError::InvalidInput(format!("Failed to deserialize metadata: {}", e))
+                TextError::InvalidInput(format!("Failed to deserialize metadata: {e}"))
             })?;
 
             // Update file path to current directory
@@ -293,7 +292,7 @@ impl ModelRegistry {
 
             Ok(ModelMetadata::new(
                 model_id.clone(),
-                format!("Model {}", model_id),
+                format!("Model {model_id}"),
                 ModelType::Custom("unknown".to_string()),
             )
             .with_file_path(model_dir.to_path_buf()))
@@ -310,7 +309,7 @@ impl ModelRegistry {
         let model_dir = self.registry_dir.join(&metadata.id);
         if !model_dir.exists() {
             fs::create_dir_all(&model_dir).map_err(|e| {
-                TextError::IoError(format!("Failed to create model directory: {}", e))
+                TextError::IoError(format!("Failed to create model directory: {e}"))
             })?;
         }
 
@@ -334,19 +333,19 @@ impl ModelRegistry {
         #[cfg(feature = "serde-support")]
         {
             let file = fs::File::create(&data_file)
-                .map_err(|e| TextError::IoError(format!("Failed to create model file: {}", e)))?;
+                .map_err(|e| TextError::IoError(format!("Failed to create model file: {e}")))?;
             let writer = BufWriter::new(file);
             serde_json::to_writer_pretty(writer, data).map_err(|e| {
-                TextError::InvalidInput(format!("Failed to serialize model data: {}", e))
+                TextError::InvalidInput(format!("Failed to serialize model data: {e}"))
             })?;
         }
 
         #[cfg(not(feature = "serde-support"))]
         {
             // Fallback to simplified format when serde is not available
-            let data_str = format!("{:#?}", data);
+            let data_str = format!("{data:#?}");
             fs::write(&data_file, data_str)
-                .map_err(|e| TextError::IoError(format!("Failed to save model data: {}", e)))?;
+                .map_err(|e| TextError::IoError(format!("Failed to save model data: {e}")))?;
         }
 
         Ok(())
@@ -358,21 +357,20 @@ impl ModelRegistry {
 
         #[cfg(feature = "serde-support")]
         {
-            let file = fs::File::create(&metadata_file).map_err(|e| {
-                TextError::IoError(format!("Failed to create metadata file: {}", e))
-            })?;
+            let file = fs::File::create(&metadata_file)
+                .map_err(|e| TextError::IoError(format!("Failed to create metadata file: {e}")))?;
             let writer = BufWriter::new(file);
             serde_json::to_writer_pretty(writer, metadata).map_err(|e| {
-                TextError::InvalidInput(format!("Failed to serialize metadata: {}", e))
+                TextError::InvalidInput(format!("Failed to serialize metadata: {e}"))
             })?;
         }
 
         #[cfg(not(feature = "serde-support"))]
         {
             // Fallback to simplified format when serde is not available
-            let metadata_str = format!("{:#?}", metadata);
+            let metadata_str = format!("{metadata:#?}");
             fs::write(&metadata_file, metadata_str)
-                .map_err(|e| TextError::IoError(format!("Failed to save metadata: {}", e)))?;
+                .map_err(|e| TextError::IoError(format!("Failed to save metadata: {e}")))?;
         }
 
         Ok(())
@@ -422,7 +420,7 @@ impl ModelRegistry {
         let metadata = self
             .models
             .get(model_id)
-            .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {}", model_id)))?;
+            .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {model_id}")))?;
 
         // Load model data
         let model_data = self.load_model_data(&metadata.file_path)?;
@@ -466,12 +464,11 @@ impl ModelRegistry {
 
         #[cfg(feature = "serde-support")]
         {
-            let file = fs::File::open(&data_file).map_err(|e| {
-                TextError::IoError(format!("Failed to open model data file: {}", e))
-            })?;
+            let file = fs::File::open(&data_file)
+                .map_err(|e| TextError::IoError(format!("Failed to open model data file: {e}")))?;
             let reader = BufReader::new(file);
             serde_json::from_reader(reader).map_err(|e| {
-                TextError::InvalidInput(format!("Failed to deserialize model data: {}", e))
+                TextError::InvalidInput(format!("Failed to deserialize model data: {e}"))
             })
         }
 
@@ -504,12 +501,12 @@ impl ModelRegistry {
         let metadata = self
             .models
             .remove(model_id)
-            .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {}", model_id)))?;
+            .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {model_id}")))?;
 
         // Remove model files
         if metadata.file_path.exists() {
             fs::remove_dir_all(&metadata.file_path)
-                .map_err(|e| TextError::IoError(format!("Failed to remove model files: {}", e)))?;
+                .map_err(|e| TextError::IoError(format!("Failed to remove model files: {e}")))?;
         }
 
         // Remove from cache
@@ -553,7 +550,7 @@ impl ModelRegistry {
         let metadata = self
             .models
             .get(model_id)
-            .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {}", model_id)))?;
+            .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {model_id}")))?;
 
         // Simple version comparison (in practice, this would be more sophisticated)
         let current_version = "0.1.0-beta.1"; // Use hardcoded version
@@ -585,7 +582,7 @@ impl ModelRegistry {
         let metadata = self
             .models
             .get(model_id)
-            .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {}", model_id)))?;
+            .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {model_id}")))?;
 
         // Check if model files exist
         let model_dir = &metadata.file_path;
@@ -600,7 +597,7 @@ impl ModelRegistry {
         let metadata = self
             .models
             .get(model_id)
-            .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {}", model_id)))?;
+            .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {model_id}")))?;
 
         let mut info = HashMap::new();
         info.insert("id".to_string(), metadata.id.clone());
@@ -615,7 +612,7 @@ impl ModelRegistry {
 
         // Add metrics as string
         for (metric_name, metric_value) in &metadata.metrics {
-            info.insert(format!("metric_{}", metric_name), metric_value.to_string());
+            info.insert(format!("metric_{metric_name}"), metric_value.to_string());
         }
 
         Ok(info)
@@ -964,72 +961,72 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             // Serialize attention weights
             let (w_q, w_k, w_v, w_o) = attention.get_weights();
             weights.insert(
-                format!("encoder_{}_attention_wq", i),
+                format!("encoder_{i}_attention_wq"),
                 w_q.as_slice().unwrap().to_vec(),
             );
-            shapes.insert(format!("encoder_{}_attention_wq", i), w_q.shape().to_vec());
+            shapes.insert(format!("encoder_{i}_attention_wq"), w_q.shape().to_vec());
             weights.insert(
-                format!("encoder_{}_attention_wk", i),
+                format!("encoder_{i}_attention_wk"),
                 w_k.as_slice().unwrap().to_vec(),
             );
-            shapes.insert(format!("encoder_{}_attention_wk", i), w_k.shape().to_vec());
+            shapes.insert(format!("encoder_{i}_attention_wk"), w_k.shape().to_vec());
             weights.insert(
-                format!("encoder_{}_attention_wv", i),
+                format!("encoder_{i}_attention_wv"),
                 w_v.as_slice().unwrap().to_vec(),
             );
-            shapes.insert(format!("encoder_{}_attention_wv", i), w_v.shape().to_vec());
+            shapes.insert(format!("encoder_{i}_attention_wv"), w_v.shape().to_vec());
             weights.insert(
-                format!("encoder_{}_attention_wo", i),
+                format!("encoder_{i}_attention_wo"),
                 w_o.as_slice().unwrap().to_vec(),
             );
-            shapes.insert(format!("encoder_{}_attention_wo", i), w_o.shape().to_vec());
+            shapes.insert(format!("encoder_{i}_attention_wo"), w_o.shape().to_vec());
 
             // Serialize feedforward weights
             let (w1, w2, b1, b2) = ff.get_weights();
             weights.insert(
-                format!("encoder_{}_ff_w1", i),
+                format!("encoder_{i}_ff_w1"),
                 w1.as_slice().unwrap().to_vec(),
             );
-            shapes.insert(format!("encoder_{}_ff_w1", i), w1.shape().to_vec());
+            shapes.insert(format!("encoder_{i}_ff_w1"), w1.shape().to_vec());
             weights.insert(
-                format!("encoder_{}_ff_w2", i),
+                format!("encoder_{i}_ff_w2"),
                 w2.as_slice().unwrap().to_vec(),
             );
-            shapes.insert(format!("encoder_{}_ff_w2", i), w2.shape().to_vec());
+            shapes.insert(format!("encoder_{i}_ff_w2"), w2.shape().to_vec());
             weights.insert(
-                format!("encoder_{}_ff_b1", i),
+                format!("encoder_{i}_ff_b1"),
                 b1.as_slice().unwrap().to_vec(),
             );
-            shapes.insert(format!("encoder_{}_ff_b1", i), vec![b1.len()]);
+            shapes.insert(format!("encoder_{i}_ff_b1"), vec![b1.len()]);
             weights.insert(
-                format!("encoder_{}_ff_b2", i),
+                format!("encoder_{i}_ff_b2"),
                 b2.as_slice().unwrap().to_vec(),
             );
-            shapes.insert(format!("encoder_{}_ff_b2", i), vec![b2.len()]);
+            shapes.insert(format!("encoder_{i}_ff_b2"), vec![b2.len()]);
 
             // Serialize layer norm parameters
             let (gamma1, beta1) = ln1.get_params();
             let (gamma2, beta2) = ln2.get_params();
             weights.insert(
-                format!("encoder_{}_ln1_gamma", i),
+                format!("encoder_{i}_ln1_gamma"),
                 gamma1.as_slice().unwrap().to_vec(),
             );
-            shapes.insert(format!("encoder_{}_ln1_gamma", i), vec![gamma1.len()]);
+            shapes.insert(format!("encoder_{i}_ln1_gamma"), vec![gamma1.len()]);
             weights.insert(
-                format!("encoder_{}_ln1_beta", i),
+                format!("encoder_{i}_ln1_beta"),
                 beta1.as_slice().unwrap().to_vec(),
             );
-            shapes.insert(format!("encoder_{}_ln1_beta", i), vec![beta1.len()]);
+            shapes.insert(format!("encoder_{i}_ln1_beta"), vec![beta1.len()]);
             weights.insert(
-                format!("encoder_{}_ln2_gamma", i),
+                format!("encoder_{i}_ln2_gamma"),
                 gamma2.as_slice().unwrap().to_vec(),
             );
-            shapes.insert(format!("encoder_{}_ln2_gamma", i), vec![gamma2.len()]);
+            shapes.insert(format!("encoder_{i}_ln2_gamma"), vec![gamma2.len()]);
             weights.insert(
-                format!("encoder_{}_ln2_beta", i),
+                format!("encoder_{i}_ln2_beta"),
                 beta2.as_slice().unwrap().to_vec(),
             );
-            shapes.insert(format!("encoder_{}_ln2_beta", i), vec![beta2.len()]);
+            shapes.insert(format!("encoder_{i}_ln2_beta"), vec![beta2.len()]);
         }
 
         // Serialize all decoder layers (placeholder - would need access to internal weights)
@@ -1038,33 +1035,33 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             let self_attn_weight_size = self.config.d_model * self.config.d_model * 4; // Q, K, V, O
             let self_attn_weights = vec![0.0f64; self_attn_weight_size];
             let self_attn_shape = vec![self.config.d_model, self.config.d_model * 4];
-            weights.insert(format!("decoder_{}_self_attention", i), self_attn_weights);
-            shapes.insert(format!("decoder_{}_self_attention", i), self_attn_shape);
+            weights.insert(format!("decoder_{i}_self_attention"), self_attn_weights);
+            shapes.insert(format!("decoder_{i}_self_attention"), self_attn_shape);
 
             // Placeholder for cross-attention weights
             let cross_attn_weights = vec![0.0f64; self_attn_weight_size];
             let cross_attn_shape = vec![self.config.d_model, self.config.d_model * 4];
-            weights.insert(format!("decoder_{}_cross_attention", i), cross_attn_weights);
-            shapes.insert(format!("decoder_{}_cross_attention", i), cross_attn_shape);
+            weights.insert(format!("decoder_{i}_cross_attention"), cross_attn_weights);
+            shapes.insert(format!("decoder_{i}_cross_attention"), cross_attn_shape);
 
             // Placeholder for feedforward weights
             let ff_weight_size = self.config.d_model * self.config.d_ff * 2; // W1, W2
             let ff_weights = vec![0.0f64; ff_weight_size];
             let ff_shape = vec![self.config.d_model, self.config.d_ff * 2];
-            weights.insert(format!("decoder_{}_feedforward", i), ff_weights);
-            shapes.insert(format!("decoder_{}_feedforward", i), ff_shape);
+            weights.insert(format!("decoder_{i}_feedforward"), ff_weights);
+            shapes.insert(format!("decoder_{i}_feedforward"), ff_shape);
 
             // Placeholder for layer norm parameters
             let ln_weights = vec![1.0f64; self.config.d_model];
             let ln_shape = vec![self.config.d_model];
-            weights.insert(format!("decoder_{}_ln1", i), ln_weights.clone());
-            shapes.insert(format!("decoder_{}_ln1", i), ln_shape.clone());
+            weights.insert(format!("decoder_{i}_ln1"), ln_weights.clone());
+            shapes.insert(format!("decoder_{i}_ln1"), ln_shape.clone());
 
-            weights.insert(format!("decoder_{}_ln2", i), ln_weights.clone());
-            shapes.insert(format!("decoder_{}_ln2", i), ln_shape.clone());
+            weights.insert(format!("decoder_{i}_ln2"), ln_weights.clone());
+            shapes.insert(format!("decoder_{i}_ln2"), ln_shape.clone());
 
-            weights.insert(format!("decoder_{}_ln3", i), ln_weights);
-            shapes.insert(format!("decoder_{}_ln3", i), ln_shape);
+            weights.insert(format!("decoder_{i}_ln3"), ln_weights);
+            shapes.insert(format!("decoder_{i}_ln3"), ln_shape);
         }
 
         // Serialize output projection layer (placeholder - would need access to internal weights)
@@ -1082,7 +1079,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                     id_to_vocab
                         .get(&i)
                         .cloned()
-                        .unwrap_or_else(|| format!("unk_{}", i))
+                        .unwrap_or_else(|| format!("unk_{i}"))
                 })
                 .collect(),
         );
@@ -1157,7 +1154,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
         let vocabulary = data.vocabulary.clone().unwrap_or_else(|| {
             // Fallback to placeholder if vocabulary not saved
             (0..config.vocab_size)
-                .map(|i| format!("token_{}", i))
+                .map(|i| format!("token_{i}"))
                 .collect()
         });
 
@@ -1173,7 +1170,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 (embed_shape[0], embed_shape[1]),
                 embed_weights.clone(),
             )
-            .map_err(|e| TextError::InvalidInput(format!("Invalid embedding shape: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid embedding shape: {e}")))?;
             model.token_embedding.set_embeddings(embed_array)?;
         }
 
@@ -1187,7 +1184,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 pos_embed_weights.clone(),
             )
             .map_err(|e| {
-                TextError::InvalidInput(format!("Invalid positional embedding shape: {}", e))
+                TextError::InvalidInput(format!("Invalid positional embedding shape: {e}"))
             })?;
             // TODO: Restore positional encoding weights when available
             // model.positional_encoding.set_embeddings(pos_embed_array)?;
@@ -1209,27 +1206,27 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 Some(wo_weights),
                 Some(wo_shape),
             ) = (
-                data.weights.get(&format!("encoder_{}_attention_wq", i)),
-                data.shapes.get(&format!("encoder_{}_attention_wq", i)),
-                data.weights.get(&format!("encoder_{}_attention_wk", i)),
-                data.shapes.get(&format!("encoder_{}_attention_wk", i)),
-                data.weights.get(&format!("encoder_{}_attention_wv", i)),
-                data.shapes.get(&format!("encoder_{}_attention_wv", i)),
-                data.weights.get(&format!("encoder_{}_attention_wo", i)),
-                data.shapes.get(&format!("encoder_{}_attention_wo", i)),
+                data.weights.get(&format!("encoder_{i}_attention_wq")),
+                data.shapes.get(&format!("encoder_{i}_attention_wq")),
+                data.weights.get(&format!("encoder_{i}_attention_wk")),
+                data.shapes.get(&format!("encoder_{i}_attention_wk")),
+                data.weights.get(&format!("encoder_{i}_attention_wv")),
+                data.shapes.get(&format!("encoder_{i}_attention_wv")),
+                data.weights.get(&format!("encoder_{i}_attention_wo")),
+                data.shapes.get(&format!("encoder_{i}_attention_wo")),
             ) {
                 let w_q =
                     ndarray::Array::from_shape_vec((wq_shape[0], wq_shape[1]), wq_weights.clone())
-                        .map_err(|e| TextError::InvalidInput(format!("Invalid wq shape: {}", e)))?;
+                        .map_err(|e| TextError::InvalidInput(format!("Invalid wq shape: {e}")))?;
                 let w_k =
                     ndarray::Array::from_shape_vec((wk_shape[0], wk_shape[1]), wk_weights.clone())
-                        .map_err(|e| TextError::InvalidInput(format!("Invalid wk shape: {}", e)))?;
+                        .map_err(|e| TextError::InvalidInput(format!("Invalid wk shape: {e}")))?;
                 let w_v =
                     ndarray::Array::from_shape_vec((wv_shape[0], wv_shape[1]), wv_weights.clone())
-                        .map_err(|e| TextError::InvalidInput(format!("Invalid wv shape: {}", e)))?;
+                        .map_err(|e| TextError::InvalidInput(format!("Invalid wv shape: {e}")))?;
                 let w_o =
                     ndarray::Array::from_shape_vec((wo_shape[0], wo_shape[1]), wo_weights.clone())
-                        .map_err(|e| TextError::InvalidInput(format!("Invalid wo shape: {}", e)))?;
+                        .map_err(|e| TextError::InvalidInput(format!("Invalid wo shape: {e}")))?;
 
                 attention.set_weights(w_q, w_k, w_v, w_o)?;
             }
@@ -1243,19 +1240,19 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 Some(b1_weights),
                 Some(b2_weights),
             ) = (
-                data.weights.get(&format!("encoder_{}_ff_w1", i)),
-                data.shapes.get(&format!("encoder_{}_ff_w1", i)),
-                data.weights.get(&format!("encoder_{}_ff_w2", i)),
-                data.shapes.get(&format!("encoder_{}_ff_w2", i)),
-                data.weights.get(&format!("encoder_{}_ff_b1", i)),
-                data.weights.get(&format!("encoder_{}_ff_b2", i)),
+                data.weights.get(&format!("encoder_{i}_ff_w1")),
+                data.shapes.get(&format!("encoder_{i}_ff_w1")),
+                data.weights.get(&format!("encoder_{i}_ff_w2")),
+                data.shapes.get(&format!("encoder_{i}_ff_w2")),
+                data.weights.get(&format!("encoder_{i}_ff_b1")),
+                data.weights.get(&format!("encoder_{i}_ff_b2")),
             ) {
                 let w1 =
                     ndarray::Array::from_shape_vec((w1_shape[0], w1_shape[1]), w1_weights.clone())
-                        .map_err(|e| TextError::InvalidInput(format!("Invalid w1 shape: {}", e)))?;
+                        .map_err(|e| TextError::InvalidInput(format!("Invalid w1 shape: {e}")))?;
                 let w2 =
                     ndarray::Array::from_shape_vec((w2_shape[0], w2_shape[1]), w2_weights.clone())
-                        .map_err(|e| TextError::InvalidInput(format!("Invalid w2 shape: {}", e)))?;
+                        .map_err(|e| TextError::InvalidInput(format!("Invalid w2 shape: {e}")))?;
                 let b1 = ndarray::Array::from_vec(b1_weights.clone());
                 let b2 = ndarray::Array::from_vec(b2_weights.clone());
 
@@ -1264,8 +1261,8 @@ impl RegistrableModel for crate::transformer::TransformerModel {
 
             // Restore layer norm parameters
             if let (Some(gamma1_weights), Some(beta1_weights)) = (
-                data.weights.get(&format!("encoder_{}_ln1_gamma", i)),
-                data.weights.get(&format!("encoder_{}_ln1_beta", i)),
+                data.weights.get(&format!("encoder_{i}_ln1_gamma")),
+                data.weights.get(&format!("encoder_{i}_ln1_beta")),
             ) {
                 let gamma1 = ndarray::Array::from_vec(gamma1_weights.clone());
                 let beta1 = ndarray::Array::from_vec(beta1_weights.clone());
@@ -1273,8 +1270,8 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             }
 
             if let (Some(gamma2_weights), Some(beta2_weights)) = (
-                data.weights.get(&format!("encoder_{}_ln2_gamma", i)),
-                data.weights.get(&format!("encoder_{}_ln2_beta", i)),
+                data.weights.get(&format!("encoder_{i}_ln2_gamma")),
+                data.weights.get(&format!("encoder_{i}_ln2_beta")),
             ) {
                 let gamma2 = ndarray::Array::from_vec(gamma2_weights.clone());
                 let beta2 = ndarray::Array::from_vec(beta2_weights.clone());
@@ -1298,7 +1295,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 output_weights.clone(),
             )
             .map_err(|e| {
-                TextError::InvalidInput(format!("Invalid output projection shape: {}", e))
+                TextError::InvalidInput(format!("Invalid output projection shape: {e}"))
             })?;
             // model.output_projection.set_weights(output_array)?;
         }
@@ -1439,7 +1436,7 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
                 (embed_shape[0], embed_shape[1]),
                 embed_weights.clone(),
             )
-            .map_err(|e| TextError::InvalidInput(format!("Invalid embedding shape: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Invalid embedding shape: {e}")))?;
 
             // Create vocabulary mapping
             let mut word_to_index = HashMap::new();

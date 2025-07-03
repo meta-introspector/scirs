@@ -48,8 +48,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n🧮 Setting up ODE problem:");
     println!("   - Equation: dy/dt = -0.5 * y");
-    println!("   - Initial conditions: {:?}", y_initial);
-    println!("   - Step size: {}", h);
+    println!("   - Initial conditions: {y_initial:?}");
+    println!("   - Step size: {h}");
 
     // Define the ODE function: dy/dt = -0.5 * y
     let ode_function = |_t: f64, y: &ArrayView1<f64>| -> IntegrateResult<Array1<f64>> {
@@ -86,7 +86,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n🔧 Optimizations applied:");
     for optimization in &result.optimizations_applied {
-        println!("   - {}", optimization);
+        println!("   - {optimization}");
     }
 
     // Verify the solution is physically reasonable (should decay)
@@ -125,7 +125,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n💡 Optimization recommendations:");
     for recommendation in &performance_report.recommendations {
-        println!("   - {}", recommendation);
+        println!("   - {recommendation}");
     }
 
     println!("\n🎉 Ultrathink mode demonstration completed successfully!");

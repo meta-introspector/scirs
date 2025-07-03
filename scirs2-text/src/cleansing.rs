@@ -755,7 +755,8 @@ pub fn expand_contractions(text: &str) -> String {
     contractions.sort_by_key(|(k, _)| std::cmp::Reverse(k.len()));
 
     for (contraction, expansion) in contractions {
-        let pattern = format!(r"\b{}\b", regex::escape(contraction));
+        let escaped = regex::escape(contraction);
+        let pattern = format!(r"\b{escaped}\b");
         if let Ok(re) = Regex::new(&pattern) {
             result = re.replace_all(&result, *expansion).to_string();
         }

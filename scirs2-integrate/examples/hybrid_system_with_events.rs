@@ -290,11 +290,8 @@ fn main() -> IntegrateResult<()> {
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
-    println!("  Average temperature: {:.2}°C", avg_temp);
-    println!(
-        "  Temperature range: {:.2}°C to {:.2}°C",
-        min_temp, max_temp
-    );
+    println!("  Average temperature: {avg_temp:.2}°C");
+    println!("  Temperature range: {min_temp:.2}°C to {max_temp:.2}°C");
 
     // Save results to CSV
     save_to_csv(&times, &temperatures, &modes, &event_times, &event_types)?;
@@ -311,11 +308,11 @@ fn save_to_csv(
     event_types: &[String],
 ) -> IntegrateResult<()> {
     let mut file = File::create("thermostat_simulation.csv")
-        .map_err(|e| IntegrateError::ComputationError(format!("Failed to create file: {}", e)))?;
+        .map_err(|e| IntegrateError::ComputationError(format!("Failed to create file: {e}")))?;
 
     // Write header
     writeln!(file, "time,temperature,heater_mode,is_event,event_type")
-        .map_err(|e| IntegrateError::ComputationError(format!("Failed to write to file: {}", e)))?;
+        .map_err(|e| IntegrateError::ComputationError(format!("Failed to write to file: {e}")))?;
 
     // Write data
     for i in 0..times.len() {
@@ -338,7 +335,7 @@ fn save_to_csv(
             if modes[i] == HeaterMode::On { 1 } else { 0 },
             event_info
         )
-        .map_err(|e| IntegrateError::ComputationError(format!("Failed to write to file: {}", e)))?;
+        .map_err(|e| IntegrateError::ComputationError(format!("Failed to write to file: {e}")))?;
     }
 
     Ok(())

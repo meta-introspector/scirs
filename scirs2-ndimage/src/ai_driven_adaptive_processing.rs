@@ -67,7 +67,7 @@ impl Default for AIAdaptiveConfig {
 }
 
 /// Optimization Target Preferences
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum OptimizationTarget {
     Speed,
     Quality,
@@ -97,7 +97,7 @@ pub struct AIProcessingState {
     /// Learned processing strategies
     pub processing_strategies: HashMap<ImagePattern, ProcessingStrategy>,
     /// Performance history
-    pub performance_history: Vec<PerformanceRecord>,
+    pub performance_history: VecDeque<f64>,
     /// Multi-modal knowledge base
     pub knowledge_base: MultiModalKnowledgeBase,
     /// Current processing context
@@ -110,6 +110,20 @@ pub struct AIProcessingState {
     pub transfer_models: Vec<TransferLearningModel>,
     /// Few-shot learning cache
     pub few_shot_cache: HashMap<String, FewShotLearningEntry>,
+    /// Algorithm confidence levels
+    pub algorithm_confidence: HashMap<String, f64>,
+    /// Neural network for pattern classification
+    pub neural_network: NeuralModel,
+    /// Pattern to strategy mapping
+    pub pattern_strategy_mapping: HashMap<String, String>,
+    /// Algorithm usage count tracking
+    pub algorithm_usage_count: HashMap<String, usize>,
+    /// Strategy performance tracking
+    pub strategy_performance: HashMap<String, f64>,
+    /// Pattern processing history
+    pub pattern_history: VecDeque<ImagePattern>,
+    /// Learned feature representations
+    pub learned_features: HashMap<String, Array1<f64>>,
 }
 
 /// Processing Experience (for reinforcement learning)
@@ -155,6 +169,7 @@ pub enum PatternType {
     Face,
     Object,
     Texture,
+    Geometric,
     Unknown,
 }
 
@@ -188,6 +203,7 @@ pub enum FeatureType {
     Patterns,
     Symmetry,
     Frequency,
+    Regions,
 }
 
 /// Neural Model for AI-driven processing
@@ -697,7 +713,7 @@ fn initialize_or_update_ai_state(
         decision_network: Array3::zeros((10, 10, 5)),
         experience_buffer: VecDeque::new(),
         processing_strategies: HashMap::new(),
-        performance_history: Vec::new(),
+        performance_history: VecDeque::new(),
         knowledge_base: MultiModalKnowledgeBase {
             visual_patterns: HashMap::new(),
             temporal_patterns: HashMap::new(),
@@ -733,6 +749,17 @@ fn initialize_or_update_ai_state(
         },
         transfer_models: Vec::new(),
         few_shot_cache: HashMap::new(),
+        algorithm_confidence: HashMap::new(),
+        neural_network: NeuralModel {
+            weights: Array2::zeros((100, 50)),
+            biases: Array1::zeros(50),
+            architecture: "default_mlp".to_string(),
+        },
+        pattern_strategy_mapping: HashMap::new(),
+        algorithm_usage_count: HashMap::new(),
+        strategy_performance: HashMap::new(),
+        pattern_history: VecDeque::new(),
+        learned_features: HashMap::new(),
     })
 }
 
@@ -785,8 +812,18 @@ where
     features[7] = noise_level;
 
     // Update AI state with extracted features
-    state.learned_features = features.clone();
-    state.pattern_history.push_back(features.clone());
+    state
+        .learned_features
+        .insert("current_features".to_string(), features.clone());
+
+    // Create preliminary pattern for history (will be updated after full classification)
+    let preliminary_pattern = ImagePattern {
+        pattern_type: PatternType::Unknown,
+        complexity: ComplexityLevel::Medium,
+        noise_level: NoiseLevel::Medium,
+        dominant_features: vec![FeatureType::Edges],
+    };
+    state.pattern_history.push_back(preliminary_pattern);
     if state.pattern_history.len() > 100 {
         state.pattern_history.pop_front();
     }
@@ -1355,11 +1392,30 @@ fn generate_candidate_strategies(
     if pattern.dominant_features.contains(&FeatureType::Edges) {
         strategies.push(ProcessingStrategy {
             algorithm_sequence: vec![
-                ProcessingAlgorithm::AdaptiveGaussianFilter,
-                ProcessingAlgorithm::IntelligentEdgeDetection,
-                ProcessingAlgorithm::AIFeatureExtraction,
+                AlgorithmStep {
+                    algorithm: AlgorithmType::GaussianFilter,
+                    parameters: [("sigma".to_string(), 1.0)].iter().cloned().collect(),
+                    quality_contribution: 0.8,
+                    computational_cost: 0.3,
+                },
+                AlgorithmStep {
+                    algorithm: AlgorithmType::EdgeDetection,
+                    parameters: [("threshold".to_string(), 0.1)].iter().cloned().collect(),
+                    quality_contribution: 0.9,
+                    computational_cost: 0.4,
+                },
             ],
+            parameters: HashMap::new(),
+            expected_performance: PerformanceMetrics {
+                speed: 1000.0,
+                quality: 0.8,
+                memory_usage: 100.0,
+                energy_consumption: 10.0,
+                user_satisfaction: Some(0.9),
+            },
             confidence: 0.8,
+            usage_count: 0,
+            success_rate: 0.8,
         });
     }
 
@@ -1367,11 +1423,42 @@ fn generate_candidate_strategies(
     if pattern.dominant_features.contains(&FeatureType::Textures) {
         strategies.push(ProcessingStrategy {
             algorithm_sequence: vec![
-                ProcessingAlgorithm::SmartBilateralFilter,
-                ProcessingAlgorithm::AIFeatureExtraction,
-                ProcessingAlgorithm::ContextAwareNoiseReduction,
+                AlgorithmStep {
+                    algorithm: AlgorithmType::BilateralFilter,
+                    parameters: [
+                        ("sigma_color".to_string(), 75.0),
+                        ("sigma_space".to_string(), 75.0),
+                    ]
+                    .iter()
+                    .cloned()
+                    .collect(),
+                    quality_contribution: 0.8,
+                    computational_cost: 0.6,
+                },
+                AlgorithmStep {
+                    algorithm: AlgorithmType::CustomAI,
+                    parameters: HashMap::new(),
+                    quality_contribution: 0.7,
+                    computational_cost: 0.5,
+                },
+                AlgorithmStep {
+                    algorithm: AlgorithmType::GaussianFilter,
+                    parameters: [("sigma".to_string(), 0.5)].iter().cloned().collect(),
+                    quality_contribution: 0.6,
+                    computational_cost: 0.3,
+                },
             ],
+            parameters: HashMap::new(),
+            expected_performance: PerformanceMetrics {
+                speed: 900.0,
+                quality: 0.7,
+                memory_usage: 100.0,
+                energy_consumption: 12.0,
+                user_satisfaction: Some(0.8),
+            },
             confidence: 0.7,
+            usage_count: 0,
+            success_rate: 0.7,
         });
     }
 
@@ -1379,11 +1466,30 @@ fn generate_candidate_strategies(
     if pattern.dominant_features.contains(&FeatureType::Regions) {
         strategies.push(ProcessingStrategy {
             algorithm_sequence: vec![
-                ProcessingAlgorithm::ContextAwareNoiseReduction,
-                ProcessingAlgorithm::IntelligentSegmentation,
-                ProcessingAlgorithm::AdaptiveMorphology,
+                AlgorithmStep {
+                    algorithm: AlgorithmType::GaussianFilter,
+                    parameters: HashMap::new(),
+                    quality_contribution: 0.6,
+                    computational_cost: 0.3,
+                },
+                AlgorithmStep {
+                    algorithm: AlgorithmType::MorphologyOperation,
+                    parameters: HashMap::new(),
+                    quality_contribution: 0.7,
+                    computational_cost: 0.5,
+                },
             ],
+            parameters: HashMap::new(),
+            expected_performance: PerformanceMetrics {
+                speed: 1.0,
+                quality: 0.6,
+                memory_usage: 100.0,
+                energy_consumption: 0.7,
+                user_satisfaction: Some(0.6),
+            },
             confidence: 0.6,
+            usage_count: 0,
+            success_rate: 0.6,
         });
     }
 
@@ -1391,12 +1497,36 @@ fn generate_candidate_strategies(
     if config.optimization_target == OptimizationTarget::Quality {
         strategies.push(ProcessingStrategy {
             algorithm_sequence: vec![
-                ProcessingAlgorithm::ContextAwareNoiseReduction,
-                ProcessingAlgorithm::SmartBilateralFilter,
-                ProcessingAlgorithm::IntelligentEdgeDetection,
-                ProcessingAlgorithm::AIFeatureExtraction,
+                AlgorithmStep {
+                    algorithm: AlgorithmType::GaussianFilter,
+                    parameters: HashMap::new(),
+                    quality_contribution: 0.8,
+                    computational_cost: 0.3,
+                },
+                AlgorithmStep {
+                    algorithm: AlgorithmType::BilateralFilter,
+                    parameters: HashMap::new(),
+                    quality_contribution: 0.9,
+                    computational_cost: 0.6,
+                },
+                AlgorithmStep {
+                    algorithm: AlgorithmType::EdgeDetection,
+                    parameters: HashMap::new(),
+                    quality_contribution: 0.9,
+                    computational_cost: 0.4,
+                },
             ],
+            parameters: HashMap::new(),
+            expected_performance: PerformanceMetrics {
+                speed: 1200.0,
+                quality: 0.9,
+                memory_usage: 100.0,
+                energy_consumption: 8.0,
+                user_satisfaction: Some(0.9),
+            },
             confidence: 0.9,
+            usage_count: 0,
+            success_rate: 0.9,
         });
     }
 
@@ -1404,10 +1534,30 @@ fn generate_candidate_strategies(
     if config.optimization_target == OptimizationTarget::Speed {
         strategies.push(ProcessingStrategy {
             algorithm_sequence: vec![
-                ProcessingAlgorithm::AdaptiveGaussianFilter,
-                ProcessingAlgorithm::IntelligentEdgeDetection,
+                AlgorithmStep {
+                    algorithm: AlgorithmType::GaussianFilter,
+                    parameters: HashMap::new(),
+                    quality_contribution: 0.7,
+                    computational_cost: 0.2,
+                },
+                AlgorithmStep {
+                    algorithm: AlgorithmType::EdgeDetection,
+                    parameters: HashMap::new(),
+                    quality_contribution: 0.8,
+                    computational_cost: 0.3,
+                },
             ],
+            parameters: HashMap::new(),
+            expected_performance: PerformanceMetrics {
+                speed: 2000.0,
+                quality: 0.7,
+                memory_usage: 50.0,
+                energy_consumption: 5.0,
+                user_satisfaction: Some(0.8),
+            },
             confidence: 0.8,
+            usage_count: 0,
+            success_rate: 0.8,
         });
     }
 
@@ -1415,22 +1565,60 @@ fn generate_candidate_strategies(
     if pattern.noise_level == NoiseLevel::High {
         strategies.push(ProcessingStrategy {
             algorithm_sequence: vec![
-                ProcessingAlgorithm::ContextAwareNoiseReduction,
-                ProcessingAlgorithm::AIEnhancedMedianFilter,
-                ProcessingAlgorithm::SmartBilateralFilter,
+                AlgorithmStep {
+                    algorithm: AlgorithmType::MedianFilter,
+                    parameters: HashMap::new(),
+                    quality_contribution: 0.8,
+                    computational_cost: 0.4,
+                },
+                AlgorithmStep {
+                    algorithm: AlgorithmType::BilateralFilter,
+                    parameters: HashMap::new(),
+                    quality_contribution: 0.9,
+                    computational_cost: 0.6,
+                },
             ],
+            parameters: HashMap::new(),
+            expected_performance: PerformanceMetrics {
+                speed: 800.0,
+                quality: 0.8,
+                memory_usage: 120.0,
+                energy_consumption: 12.0,
+                user_satisfaction: Some(0.8),
+            },
             confidence: 0.8,
+            usage_count: 0,
+            success_rate: 0.8,
         });
     }
 
     // Always include a default balanced strategy
     strategies.push(ProcessingStrategy {
         algorithm_sequence: vec![
-            ProcessingAlgorithm::AdaptiveGaussianFilter,
-            ProcessingAlgorithm::IntelligentEdgeDetection,
-            ProcessingAlgorithm::AIFeatureExtraction,
+            AlgorithmStep {
+                algorithm: AlgorithmType::GaussianFilter,
+                parameters: HashMap::new(),
+                quality_contribution: 0.6,
+                computational_cost: 0.3,
+            },
+            AlgorithmStep {
+                algorithm: AlgorithmType::EdgeDetection,
+                parameters: HashMap::new(),
+                quality_contribution: 0.6,
+                computational_cost: 0.4,
+            },
         ],
+        parameters: HashMap::new(),
+        expected_performance: PerformanceMetrics {
+            speed: 1000.0,
+            quality: 0.6,
+            memory_usage: 80.0,
+            energy_consumption: 8.0,
+            user_satisfaction: Some(0.6),
+        },
         confidence: 0.6,
+        usage_count: 0,
+        success_rate: 0.6,
     });
 
     strategies

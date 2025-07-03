@@ -15,7 +15,7 @@ fn main() {
 
     // Check for SIMD support
     let simd_available = simd_support_available();
-    println!("SIMD support available: {}", simd_available);
+    println!("SIMD support available: {simd_available}");
 
     // Define volume dimensions
     let width = 64;
@@ -25,8 +25,7 @@ fn main() {
     let total_voxels = width * height * depth;
 
     println!(
-        "\nGenerating volumetric test data ({} x {} x {} = {} voxels)",
-        width, height, depth, total_voxels
+        "\nGenerating volumetric test data ({width} x {height} x {depth} = {total_voxels} voxels)"
     );
 
     // Generate a test volumetric dataset with various frequency components
@@ -37,7 +36,7 @@ fn main() {
     let start = Instant::now();
     let filtered_volume = frequency_domain_filter_3d(&volume_data, &shape, "lowpass");
     let processing_time = start.elapsed();
-    println!("Processing time: {:?}", processing_time);
+    println!("Processing time: {processing_time:?}");
 
     // Measure the difference between original and filtered data
     let mut sum_diff = 0.0;
@@ -45,7 +44,7 @@ fn main() {
         sum_diff += (volume_data[i] - filtered_volume[i]).abs();
     }
     let mean_diff = sum_diff / total_voxels as f64;
-    println!("Mean absolute difference after filtering: {:.6}", mean_diff);
+    println!("Mean absolute difference after filtering: {mean_diff:.6}");
 
     // Performance comparison
     println!("\nPerformance comparison for different volume sizes:");
@@ -54,18 +53,15 @@ fn main() {
         let test_total = size * size * size;
         let test_data = generate_test_volume(size, size, size);
 
-        println!(
-            "\nVolume size: {} x {} x {} = {} voxels",
-            size, size, size, test_total
-        );
+        println!("\nVolume size: {size} x {size} x {size} = {test_total} voxels");
         let start = Instant::now();
         let _filtered = frequency_domain_filter_3d(&test_data, &test_shape, "lowpass");
         let time = start.elapsed();
-        println!("Processing time: {:?}", time);
+        println!("Processing time: {time:?}");
 
         // Calculate operations per second metric
         let ops_per_sec = test_total as f64 / time.as_secs_f64();
-        println!("Voxels processed per second: {:.2e}", ops_per_sec);
+        println!("Voxels processed per second: {ops_per_sec:.2e}");
     }
 }
 
@@ -237,7 +233,7 @@ fn simulate_visualization(volume: &[f64], shape: &[usize]) {
         max_val = max_val.max(val);
     }
 
-    println!("- Data range: {:.6} to {:.6}", min_val, max_val);
+    println!("- Data range: {min_val:.6} to {max_val:.6}");
 
     // Print a few data points for verification
     println!("- Sample data points:");

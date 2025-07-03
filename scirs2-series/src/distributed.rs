@@ -294,8 +294,7 @@ impl<
                 && !self.running_tasks.contains_key(dep_id)
             {
                 return Err(TimeSeriesError::InvalidInput(format!(
-                    "Dependency task {} not found",
-                    dep_id
+                    "Dependency task {dep_id} not found"
                 )));
             }
         }
@@ -335,7 +334,7 @@ impl<
             params.insert("chunk_index".to_string(), i as f64);
 
             let task = DistributedTask {
-                id: format!("forecast_chunk_{}", i),
+                id: format!("forecast_chunk_{i}"),
                 task_type: TaskType::Forecasting,
                 input_data: chunk.clone(),
                 parameters: params,
@@ -382,7 +381,7 @@ impl<
             params.insert("window_size".to_string(), window_size as f64);
 
             let task = DistributedTask {
-                id: format!("features_window_{}", i),
+                id: format!("features_window_{i}"),
                 task_type: TaskType::FeatureExtraction,
                 input_data: window,
                 parameters: params,
@@ -780,8 +779,7 @@ impl<
             Ok(())
         } else {
             Err(TimeSeriesError::InvalidInput(format!(
-                "Task {} not found in running tasks",
-                task_id
+                "Task {task_id} not found in running tasks"
             )))
         }
     }

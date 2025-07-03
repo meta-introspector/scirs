@@ -500,7 +500,9 @@ impl BranchOptimizer {
     /// Optimize conditional execution in matrix operations
     #[inline(always)]
     pub fn likely_branch<T>(condition: bool, if_true: T, if_false: T) -> T {
-        if std::intrinsics::likely(condition) {
+        // Note: std::intrinsics::likely requires unstable features
+        // Using standard conditional logic for stable compatibility
+        if condition {
             if_true
         } else {
             if_false
@@ -510,7 +512,9 @@ impl BranchOptimizer {
     /// Optimize unlikely branches (e.g., error conditions)
     #[inline(always)]
     pub fn unlikely_branch<T>(condition: bool, if_true: T, if_false: T) -> T {
-        if std::intrinsics::unlikely(condition) {
+        // Note: std::intrinsics::unlikely requires unstable features
+        // Using standard conditional logic for stable compatibility
+        if condition {
             if_true
         } else {
             if_false

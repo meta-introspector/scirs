@@ -922,7 +922,7 @@ where
                         .min(self.shape.0.saturating_sub((-offset) as usize))
                 };
 
-                write!(f, "Diagonal {}: [", offset)?;
+                write!(f, "Diagonal {offset}: [")?;
                 for j in 0..length.min(10) {
                     if j > 0 {
                         write!(f, ", ")?;

@@ -7,7 +7,7 @@ use super::{
     ActionDistribution, DistributionType, PolicyNetwork, RLOptimizationMetrics, RLOptimizerConfig,
     RLScheduler, TrajectoryBatch, ValueNetwork,
 };
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
 use rand::{rng, Rng};

@@ -83,15 +83,30 @@ pub trait Layer<F: Float + Debug + ScalarOperand>: Send + Sync {
     fn layer_description(&self) -> String {
         format!("type:{}", self.layer_type())
     }
+
+    /// Get the input shape if known
+    fn input_shape(&self) -> Option<Vec<usize>> {
+        None
+    }
+
+    /// Get the output shape if known  
+    fn output_shape(&self) -> Option<Vec<usize>> {
+        None
+    }
+
+    /// Get the name of the layer if set
+    fn name(&self) -> Option<&str> {
+        None
+    }
 }
 
 /// Trait for layers with parameters (weights, biases)
 pub trait ParamLayer<F: Float + Debug + ScalarOperand>: Layer<F> {
     /// Get the parameters of the layer as a vector of arrays
-    fn get_parameters(&self) -> Vec<&Array<F, ndarray::IxDyn>>;
+    fn get_parameters(&self) -> Vec<Array<F, ndarray::IxDyn>>;
 
     /// Get the gradients of the parameters
-    fn get_gradients(&self) -> Vec<&Array<F, ndarray::IxDyn>>;
+    fn get_gradients(&self) -> Vec<Array<F, ndarray::IxDyn>>;
 
     /// Set the parameters
     fn set_parameters(&mut self, params: Vec<Array<F, ndarray::IxDyn>>) -> Result<()>;
@@ -158,7 +173,10 @@ impl<F: Float + Debug + ScalarOperand> Sequential<F> {
 
     /// Get total parameter count across all layers
     pub fn total_parameters(&self) -> usize {
-        self.layers.iter().map(|layer| layer.parameter_count()).sum()
+        self.layers
+            .iter()
+            .map(|layer| layer.parameter_count())
+            .sum()
     }
 }
 
@@ -220,7 +238,10 @@ impl<F: Float + Debug + ScalarOperand> Layer<F> for Sequential<F> {
     }
 
     fn parameter_count(&self) -> usize {
-        self.layers.iter().map(|layer| layer.parameter_count()).sum()
+        self.layers
+            .iter()
+            .map(|layer| layer.parameter_count())
+            .sum()
     }
 }
 
@@ -228,17 +249,25 @@ impl<F: Float + Debug + ScalarOperand> Layer<F> for Sequential<F> {
 #[derive(Debug, Clone)]
 pub enum LayerConfig {
     /// Dense (fully connected) layer
-    Dense { input_size: usize, output_size: usize, activation: Option<String> },
+    Dense {
+        input_size: usize,
+        output_size: usize,
+        activation: Option<String>,
+    },
     /// 2D Convolutional layer
-    Conv2D { in_channels: usize, out_channels: usize, kernel_size: (usize, usize) },
+    Conv2D {
+        in_channels: usize,
+        out_channels: usize,
+        kernel_size: (usize, usize),
+    },
     /// Dropout layer
     Dropout { rate: f64 },
 }
 
 // Fixed modules
+pub mod conv;
 pub mod dense;
 pub mod dropout;
-pub mod conv;
 pub mod recurrent;
 
 // Temporarily comment out layer modules that need fixing
@@ -248,9 +277,9 @@ pub mod recurrent;
 // mod regularization;
 
 // Re-export fixed modules
+pub use conv::Conv2D;
 pub use dense::Dense;
 pub use dropout::Dropout;
-pub use conv::Conv2D;
 pub use recurrent::LSTM;
 
 // Re-export will be added as modules are fixed

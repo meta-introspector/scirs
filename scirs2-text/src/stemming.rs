@@ -205,7 +205,7 @@ impl PorterStemmer {
     fn step1a(&self, word: String) -> String {
         if word.ends_with("sses") || word.ends_with("ies") {
             word[..word.len() - 2].to_string()
-        } else if word.ends_with("s") && !word.ends_with("ss") {
+        } else if word.ends_with("s") && !word.ends_with("ss") && !word.ends_with("ness") {
             word[..word.len() - 1].to_string()
         } else {
             word
@@ -219,7 +219,7 @@ impl PorterStemmer {
         if word.ends_with("eed") {
             let stem = &word[..word.len() - 3];
             if self.measure(stem) > 0 {
-                word = format!("{}{}", stem, "ee");
+                word = format!("{stem}ee");
             }
         } else if word.ends_with("ed") {
             let stem = &word[..word.len() - 2];
@@ -257,7 +257,7 @@ impl PorterStemmer {
         if word.ends_with("y") && word.len() > 1 {
             let stem = &word[..word.len() - 1];
             if VOWEL_SEQUENCE.is_match(stem) {
-                return format!("{}{}", stem, "i");
+                return format!("{stem}i");
             }
         }
         word
@@ -292,7 +292,7 @@ impl PorterStemmer {
             if word.ends_with(suffix) {
                 let stem = &word[..word.len() - suffix.len()];
                 if self.measure(stem) > 0 {
-                    return format!("{}{}", stem, replacement);
+                    return format!("{stem}{replacement}");
                 }
             }
         }
@@ -316,7 +316,7 @@ impl PorterStemmer {
             if word.ends_with(suffix) {
                 let stem = &word[..word.len() - suffix.len()];
                 if self.measure(stem) > 0 {
-                    return format!("{}{}", stem, replacement);
+                    return format!("{stem}{replacement}");
                 }
             }
         }
@@ -405,8 +405,7 @@ impl SnowballStemmer {
                 language: "english".to_string(),
             }),
             _ => Err(TextError::InvalidInput(format!(
-                "Unsupported language: {}",
-                language
+                "Unsupported language: {language}"
             ))),
         }
     }
@@ -469,12 +468,15 @@ impl SnowballStemmer {
 
         // Step 1a: Plurals
         if stemmed.ends_with("sses") {
-            stemmed = format!("{}ss", &stemmed[..stemmed.len() - 4]);
+            let truncated = &stemmed[..stemmed.len() - 4];
+            stemmed = format!("{truncated}ss");
         } else if stemmed.ends_with("ied") || stemmed.ends_with("ies") {
             if stemmed.len() > 4 {
-                stemmed = format!("{}i", &stemmed[..stemmed.len() - 3]);
+                let truncated = &stemmed[..stemmed.len() - 3];
+                stemmed = format!("{truncated}i");
             } else {
-                stemmed = format!("{}ie", &stemmed[..stemmed.len() - 3]);
+                let truncated = &stemmed[..stemmed.len() - 3];
+                stemmed = format!("{truncated}ie");
             }
         } else if stemmed.ends_with("s") && !stemmed.ends_with("us") && !stemmed.ends_with("ss") {
             // Check if word contains a vowel before the s
@@ -592,7 +594,7 @@ mod tests {
 
         for (word, expected) in test_cases {
             let stemmed = stemmer.stem(word).unwrap();
-            assert_eq!(stemmed, expected, "Failed for word: {}", word);
+            assert_eq!(stemmed, expected, "Failed for word: {word}");
         }
     }
 
@@ -609,7 +611,7 @@ mod tests {
 
         for (word, expected) in test_cases {
             let stemmed = stemmer.stem(word).unwrap();
-            assert_eq!(stemmed, expected, "Failed for word: {}", word);
+            assert_eq!(stemmed, expected, "Failed for word: {word}");
         }
     }
 
@@ -628,7 +630,7 @@ mod tests {
 
         for (word, expected) in test_cases {
             let lemma = lemmatizer.stem(word).unwrap();
-            assert_eq!(lemma, expected, "Failed for word: {}", word);
+            assert_eq!(lemma, expected, "Failed for word: {word}");
         }
     }
 
@@ -680,8 +682,7 @@ mod tests {
             let rule_only_result = rule_only.stem(word).unwrap();
 
             println!(
-                "Word: '{}' -> POS-aware: '{}', Rule-only: '{}'",
-                word, pos_aware_result, rule_only_result
+                "Word: '{word}' -> POS-aware: '{pos_aware_result}', Rule-only: '{rule_only_result}'"
             );
 
             // Both should produce valid results

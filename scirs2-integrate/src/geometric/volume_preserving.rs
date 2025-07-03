@@ -748,8 +748,7 @@ mod tests {
 
         assert!(
             volume_change < 0.01,
-            "Volume not preserved: {}",
-            volume_change
+            "Volume not preserved: {volume_change}"
         );
     }
 
@@ -763,7 +762,7 @@ mod tests {
         let x = Array1::from_vec(vec![0.5, 0.5, 0.5]);
 
         let div = flow.verify_divergence_free(&x.view(), 0.0, 1e-6);
-        assert!(div.abs() < 1e-8, "Flow not divergence-free: {}", div);
+        assert!(div.abs() < 1e-8, "Flow not divergence-free: {div}");
     }
 
     #[test]

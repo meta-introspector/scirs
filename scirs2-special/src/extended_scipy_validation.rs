@@ -70,7 +70,7 @@ pub fn test_dawson_integral_properties() -> Result<(), String> {
     // Test known values from literature
     // D(1) ≈ 0.5380795069127684 (check our implementation)
     let d1 = dawsn(1.0);
-    println!("  dawsn(1.0) = {:.16}, reference ≈ 0.5380795069127684", d1);
+    println!("  dawsn(1.0) = {d1:.16}, reference ≈ 0.5380795069127684");
     // For now, just check our implementation is reasonable
     assert!(
         d1 > 0.5 && d1 < 0.6,
@@ -115,10 +115,7 @@ pub fn test_polygamma_properties() -> Result<(), String> {
     // polygamma(1, 1) = π²/6 (Basel problem solution)
     let pi_squared_over_6 = std::f64::consts::PI.powi(2) / 6.0;
     let psi1_1: f64 = polygamma(1, 1.0);
-    println!(
-        "  polygamma(1, 1.0) = {:.16}, expected π²/6 ≈ {:.16}",
-        psi1_1, pi_squared_over_6
-    );
+    println!("  polygamma(1, 1.0) = {psi1_1:.16}, expected π²/6 ≈ {pi_squared_over_6:.16}");
     // Fixed sign issue - polygamma(1, 1) should be positive
     assert_relative_eq!(psi1_1, pi_squared_over_6, epsilon = 1e-3);
 
@@ -139,12 +136,7 @@ pub fn test_polygamma_properties() -> Result<(), String> {
     for n in 1..=4 {
         for &x in &[1.0f64, 2.0, 5.0] {
             let psi_n = polygamma(n, x);
-            assert!(
-                psi_n.is_finite(),
-                "polygamma({}, {}) should be finite",
-                n,
-                x
-            );
+            assert!(psi_n.is_finite(), "polygamma({n}, {x}) should be finite");
         }
     }
 
@@ -160,11 +152,10 @@ pub fn test_numerical_stability() -> Result<(), String> {
     let small_vals = vec![1e-10f64, 1e-8, 1e-6];
     for &x in &small_vals {
         let d_val = dawsn(x);
-        assert!(d_val.is_finite(), "dawsn({}) should be finite", x);
+        assert!(d_val.is_finite(), "dawsn({x}) should be finite");
         assert!(
             d_val.abs() < 1.0,
-            "dawsn({}) should be bounded for small x",
-            x
+            "dawsn({x}) should be bounded for small x"
         );
     }
 
@@ -172,18 +163,17 @@ pub fn test_numerical_stability() -> Result<(), String> {
     let large_vals = vec![10.0f64, 50.0];
     for &x in &large_vals {
         let d_val = dawsn(x);
-        assert!(d_val.is_finite(), "dawsn({}) should be finite", x);
+        assert!(d_val.is_finite(), "dawsn({x}) should be finite");
         assert!(
             d_val.abs() < 1.0,
-            "dawsn({}) should be bounded for large x",
-            x
+            "dawsn({x}) should be bounded for large x"
         );
 
         // Test exponentially scaled Bessel functions don't overflow
-        assert!(j0e(x).is_finite(), "j0e({}) should be finite", x);
-        assert!(i0e(x).is_finite(), "i0e({}) should be finite", x);
+        assert!(j0e(x).is_finite(), "j0e({x}) should be finite");
+        assert!(i0e(x).is_finite(), "i0e({x}) should be finite");
         if x > 0.0 {
-            assert!(k0e(x).is_finite(), "k0e({}) should be finite", x);
+            assert!(k0e(x).is_finite(), "k0e({x}) should be finite");
         }
     }
 
@@ -191,12 +181,7 @@ pub fn test_numerical_stability() -> Result<(), String> {
     for n in 0..=10 {
         for &x in &[1.0f64, 2.0, 10.0] {
             let psi_n = polygamma(n, x);
-            assert!(
-                psi_n.is_finite(),
-                "polygamma({}, {}) should be finite",
-                n,
-                x
-            );
+            assert!(psi_n.is_finite(), "polygamma({n}, {x}) should be finite");
         }
     }
 

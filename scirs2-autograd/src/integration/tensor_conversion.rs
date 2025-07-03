@@ -85,8 +85,7 @@ impl TensorConverter {
             converter.convert(&data, &metadata)
         } else {
             Err(IntegrationError::TensorConversion(format!(
-                "No converter found for format: {}",
-                target_format
+                "No converter found for format: {target_format}"
             )))
         }
     }
@@ -161,7 +160,7 @@ impl TensorConverter {
             .collect();
 
         Array::from_shape_vec(IxDyn(&shape), data).map_err(|e| {
-            IntegrationError::TensorConversion(format!("Failed to create ndarray: {}", e))
+            IntegrationError::TensorConversion(format!("Failed to create ndarray: {e}"))
         })
     }
 
@@ -212,7 +211,7 @@ impl TensorConverter {
                 });
 
                 serde_json::to_vec(&json_repr).map_err(|e| {
-                    IntegrationError::TensorConversion(format!("JSON serialization failed: {}", e))
+                    IntegrationError::TensorConversion(format!("JSON serialization failed: {e}"))
                 })
             }),
         );

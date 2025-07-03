@@ -396,6 +396,19 @@ where
     Ok(dst_values)
 }
 
+/// Convert multi-dimensional indices to linear index
+fn ravel_multi_index(indices: &[usize], shape: &[usize]) -> usize {
+    let mut linear_idx = 0;
+    let mut stride = 1;
+
+    for i in (0..indices.len()).rev() {
+        linear_idx += indices[i] * stride;
+        stride *= shape[i];
+    }
+
+    linear_idx
+}
+
 /// Grid-to-grid resampling using nearest neighbor
 fn grid_to_grid_nearest<F, D>(
     src_coords: &[Array1<F>],
@@ -407,7 +420,6 @@ fn grid_to_grid_nearest<F, D>(
 where
     F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero,
     D: ndarray::Dimension,
-    [usize]: ndarray::NdIndex<D>,
 {
     let n_dims = src_coords.len();
     let dst_shape: Vec<usize> = dst_coords.iter().map(|coord| coord.len()).collect();
@@ -422,7 +434,7 @@ where
 
         // Find nearest source grid indices
         let mut src_indices = vec![0; n_dims];
-        let mut valid = true;
+        let valid = true;
 
         for dim in 0..n_dims {
             let coord = dst_point[dim];
@@ -445,12 +457,14 @@ where
 
         // Get the source value and assign to destination
         if valid {
-            // Convert Vec<usize> to slice and use get method
-            if let Some(src_value) = src_values.get(src_indices.as_slice()) {
-                *dst_values.get_mut(indices.as_slice()).unwrap() = *src_value;
-            }
+            // Use linear indexing for all cases to avoid generic dimension issues
+            let linear_idx = ravel_multi_index(&src_indices, &src_values.shape());
+            let src_value = src_values.as_slice().unwrap()[linear_idx];
+            let dst_linear_idx = ravel_multi_index(&indices, &dst_shape);
+            dst_values.as_slice_mut().unwrap()[dst_linear_idx] = src_value;
         } else {
-            *dst_values.get_mut(indices.as_slice()).unwrap() = fill_value;
+            let dst_linear_idx = ravel_multi_index(&indices, &dst_shape);
+            dst_values.as_slice_mut().unwrap()[dst_linear_idx] = fill_value;
         }
 
         // Increment indices
@@ -566,8 +580,9 @@ where
             }
         }
 
-        // Get value at this corner
-        let corner_value = *values.get(corner_indices.as_slice()).unwrap();
+        // Get value at this corner using linear indexing
+        let linear_idx = ravel_multi_index(&corner_indices, &values.shape());
+        let corner_value = values.as_slice().unwrap()[linear_idx];
         result = result + corner_weight * corner_value;
     }
 
@@ -646,7 +661,7 @@ fn grid_nearest_neighbor<F, D>(
     grid_coords: &[Array1<F>],
     grid_values: &ndarray::ArrayView<F, D>,
     query_point: &[F],
-    fill_value: F,
+    _fill_value: F,
 ) -> InterpolateResult<F>
 where
     F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero,
@@ -674,7 +689,8 @@ where
         nearest_indices[dim] = best_idx;
     }
 
-    Ok(*grid_values.get(nearest_indices.as_slice()).unwrap())
+    let linear_idx = ravel_multi_index(&nearest_indices, &grid_values.shape());
+    Ok(grid_values.as_slice().unwrap()[linear_idx])
 }
 
 /// Efficient grid coordinate range checking

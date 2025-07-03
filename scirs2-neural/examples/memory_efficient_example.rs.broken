@@ -57,6 +57,9 @@ fn demo_memory_pool() -> Result<()> {
     let reuse_time = start.elapsed();
     println!("Reuse time: {:?}", reuse_time);
     println!("Final pool stats:");
+    Ok(())
+}
+
 fn demo_gradient_checkpointing() -> Result<()> {
     println!("\n📊 Gradient Checkpointing Demo");
     println!("------------------------------");
@@ -123,6 +126,8 @@ fn demo_in_place_operations() -> Result<()> {
     println!("\nScaling test - before: {:?}", scale_test);
     InPlaceOperations::scale_inplace(&mut scale_test, 3.0);
     println!("Scaling test - after: {:?}", scale_test);
+    Ok(())
+}
 fn demo_memory_aware_batch_processing() -> Result<()> {
     println!("\n🔀 Memory-Aware Batch Processing Demo");
     println!("------------------------------------");
@@ -135,13 +140,15 @@ fn demo_memory_aware_batch_processing() -> Result<()> {
     println!("Creating large dataset (1000 samples x 784 features)...");
     let large_dataset = Array2::from_shape_fn((1000, 784), |(i, j)| {
         (i as f32 * 0.01 + j as f32 * 0.001).sin()
-    })
+    });
     println!("Dataset shape: {:?}", large_dataset.shape());
     println!(
         "Estimated memory: {:.2} MB",
         (large_dataset.len() * std::mem::size_of::<f32>()) as f64 / (1024.0 * 1024.0)
+    );
     // Process in memory-aware batches
     println!("Processing with automatic batch size adjustment...");
+    let start = std::time::Instant::now();
     let results = processor.process_batches(&large_dataset, |batch| {
         // Simulate some processing (e.g., forward pass through a layer)
         let processed = batch.mapv(|x| x.tanh()); // Apply activation
@@ -154,6 +161,8 @@ fn demo_memory_aware_batch_processing() -> Result<()> {
     let stats = processor.get_stats();
     println!("Batch processor statistics:");
     print_batch_processor_stats(&stats);
+    Ok(())
+}
 fn demo_memory_efficient_layer() -> Result<()> {
     println!("\n🧠 Memory-Efficient Layer Demo");
     // Create a memory-efficient layer
@@ -169,6 +178,7 @@ fn demo_memory_efficient_layer() -> Result<()> {
     println!("Input shape: {:?}", input.shape());
     // Forward pass
     println!("Performing forward pass...");
+    let start = std::time::Instant::now();
     let output = layer.forward(&input)?;
     let forward_time = start.elapsed();
     println!("Forward pass completed in {:?}", forward_time);
@@ -182,10 +192,16 @@ fn demo_memory_efficient_layer() -> Result<()> {
     println!("Output statistics:");
     println!("  Mean: {:.6}", mean);
     println!("  Std: {:.6}", std);
+    println!(
         "  Min: {:.6}",
         output.iter().cloned().fold(f32::INFINITY, f32::min)
+    );
+    println!(
         "  Max: {:.6}",
         output.iter().cloned().fold(f32::NEG_INFINITY, f32::max)
+    );
+    Ok(())
+}
 fn demo_memory_usage_tracking() -> Result<()> {
     println!("\n📈 Memory Usage Tracking Demo");
     println!("-----------------------------");
@@ -203,26 +219,38 @@ fn demo_memory_usage_tracking() -> Result<()> {
             println!("After {} small allocations:", i);
             print_memory_usage(&usage);
         }
+    }
     // Peak usage reached
     println!("Peak memory usage reached:");
+    print_memory_usage(&usage);
     // Simulate deallocations
     println!("\nSimulating deallocations...");
     for i in 1..=8 {
         usage.deallocate(5 * 1024 * 1024); // 5MB each
         if i % 2 == 0 {
             println!("After {} deallocations:", i);
+            print_memory_usage(&usage);
+        }
+    }
     println!("\nFinal state (note peak is preserved):");
+    print_memory_usage(&usage);
+    Ok(())
+}
 // Helper functions for pretty printing
 fn print_pool_stats(stats: &PoolStatistics) {
     println!("  Cached tensors: {}", stats.total_cached_tensors);
     println!("  Unique shapes: {}", stats.unique_shapes);
+    println!(
         "  Pool size: {:.2}/{:.2} MB",
         stats.current_pool_size_mb, stats.max_pool_size_mb
+    );
+}
 fn print_memory_usage(usage: &MemoryUsage) {
     println!("  Current: {:.2} MB", usage.current_mb());
     println!("  Peak: {:.2} MB", usage.peak_mb());
     println!("  Active allocations: {}", usage.active_allocations);
     println!("  Total allocations: {}", usage.total_allocations);
+}
 fn print_batch_processor_stats(stats: &BatchProcessorStats) {
     println!("  Max batch size: {}", stats.max_batch_size);
     println!("  Current memory: {:.2} MB", stats.current_memory_mb);
@@ -230,3 +258,4 @@ fn print_batch_processor_stats(stats: &BatchProcessorStats) {
     println!("  Memory threshold: {:.2} MB", stats.memory_threshold_mb);
     println!("  Pool stats:");
     print_pool_stats(&stats.pool_stats);
+}

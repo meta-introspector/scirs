@@ -1074,7 +1074,7 @@ mod tests {
             let octree = Octree::new(&points.view()).unwrap();
             let build_time = start.elapsed();
 
-            println!("Built octree with {} points in {:?}", n_points, build_time);
+            println!("Built octree with {n_points} points in {build_time:?}");
 
             // Measure query time
             let query = array![0.0, 0.0, 0.0];
@@ -1082,7 +1082,7 @@ mod tests {
             let (indices, _) = octree.query_nearest(&query.view(), 10).unwrap();
             let query_time = start.elapsed();
 
-            println!("Found 10 nearest neighbors in {:?}", query_time);
+            println!("Found 10 nearest neighbors in {query_time:?}");
             assert_eq!(indices.len(), 10);
 
             // Measure radius search time

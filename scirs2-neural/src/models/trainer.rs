@@ -6,6 +6,7 @@ use ndarray::ScalarOperand;
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;
+
 /// Training history that stores metrics during training
 #[derive(Debug, Clone)]
 pub struct History<F: Float> {
@@ -16,6 +17,7 @@ pub struct History<F: Float> {
     /// Additional metrics
     pub metrics: HashMap<String, Vec<F>>,
 }
+
 impl<F: Float> Default for History<F> {
     fn default() -> Self {
         Self {
@@ -24,7 +26,10 @@ impl<F: Float> Default for History<F> {
             metrics: HashMap::new(),
         }
     }
+}
+
 /// Configuration for model training
+#[derive(Debug, Clone)]
 pub struct TrainingConfig {
     /// Number of epochs to train
     pub epochs: usize,
@@ -38,21 +43,35 @@ pub struct TrainingConfig {
     pub validation_split: f64,
     /// Verbose level (0: silent, 1: progress bar, 2: one line per epoch)
     pub verbose: usize,
+}
+
 impl Default for TrainingConfig {
+    fn default() -> Self {
+        Self {
             epochs: 10,
             batch_size: 32,
             learning_rate: 0.01,
             shuffle: true,
             validation_split: 0.2,
             verbose: 1,
+        }
+    }
+}
+
 /// Neural network model trainer
 pub struct Trainer<F: Float + Debug + ScalarOperand> {
     /// Training configuration
     pub config: TrainingConfig,
     /// Training history
     pub history: History<F>,
+}
+
 impl<F: Float + Debug + ScalarOperand> Trainer<F> {
     /// Create a new trainer
     pub fn new(config: TrainingConfig) -> Self {
+        Self {
             config,
             history: History::default(),
+        }
+    }
+}

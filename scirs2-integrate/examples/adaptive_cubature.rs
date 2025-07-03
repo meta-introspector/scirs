@@ -73,8 +73,7 @@ where
     for i in 0..dim {
         if a[i] >= b[i] {
             return Err(IntegrateError::ValueError(format!(
-                "Invalid integration bounds: a[{}] >= b[{}]",
-                i, i
+                "Invalid integration bounds: a[{i}] >= b[{i}]"
             )));
         }
     }
@@ -208,10 +207,10 @@ where
     }
 
     let elapsed = start_time.elapsed();
-    println!("Adaptive cubature completed in {:.2?}", elapsed);
-    println!("Total evaluations: {}", n_evals);
-    println!("Total subregions: {}", n_subregions);
-    println!("Maximum depth: {}", max_depth_reached);
+    println!("Adaptive cubature completed in {elapsed:.2?}");
+    println!("Total evaluations: {n_evals}");
+    println!("Total subregions: {n_subregions}");
+    println!("Maximum depth: {max_depth_reached}");
 
     Ok(AdaptiveCubatureResult {
         value: total_integral,
@@ -411,9 +410,9 @@ fn run_test<F>(
 ) where
     F: Fn(ArrayView1<f64>) -> f64 + Sync,
 {
-    println!("\n=== Testing {} function ===", name);
+    println!("\n=== Testing {name} function ===");
     println!("Dimension: {}", a.len());
-    println!("Tolerance: {:.2e}", tol);
+    println!("Tolerance: {tol:.2e}");
 
     let result = adaptive_cubature(f, a, b, tol, max_evals, max_depth).unwrap();
 
@@ -424,8 +423,8 @@ fn run_test<F>(
 
     if let Some(ref_value) = reference {
         let actual_error = (result.value - ref_value).abs();
-        println!("Reference value: {:.10}", ref_value);
-        println!("Actual error: {:.10}", actual_error);
+        println!("Reference value: {ref_value:.10}");
+        println!("Actual error: {actual_error:.10}");
         println!("Relative error: {:.10}", actual_error / ref_value.abs());
     }
 }

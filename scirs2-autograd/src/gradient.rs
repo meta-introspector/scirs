@@ -67,7 +67,7 @@ where
 
                 // Get the operation type from the tensor
                 let op_name = y_tensor.inner().get_op().name();
-                println!("DEBUG gradient.rs: Processing op '{}'", op_name);
+                println!("DEBUG gradient.rs: Processing op '{op_name}'");
 
                 // Get the input tensors
                 let num_inputs = y_tensor.num_backprop_inputs();

@@ -372,6 +372,8 @@ impl GpuDataType for u16 {}
 impl GpuDataType for i16 {}
 impl GpuDataType for u64 {}
 impl GpuDataType for i64 {}
+impl GpuDataType for usize {}
+impl GpuDataType for isize {}
 
 /// GPU buffer
 pub struct GpuBuffer<T: GpuDataType> {

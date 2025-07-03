@@ -153,7 +153,7 @@ pub mod gamma_stability {
             let derivative = (g_plus - g_minus) / (2.0 * h);
             let condition = ((x * derivative / g).abs()) as f64;
 
-            condition_numbers.insert(format!("x={}", x), condition);
+            condition_numbers.insert(format!("x={x}"), condition);
         }
 
         StabilityAnalysis {
@@ -349,7 +349,7 @@ pub mod bessel_stability {
             } else {
                 0.0
             };
-            ulp_errors.insert(format!("J0({:.1})", x), ulp_error);
+            ulp_errors.insert(format!("J0({x:.1})"), ulp_error);
         }
 
         // Test J_1(x) at selected points
@@ -386,7 +386,7 @@ pub mod bessel_stability {
             } else {
                 0.0
             };
-            ulp_errors.insert(format!("J1({:.1})", x), ulp_error);
+            ulp_errors.insert(format!("J1({x:.1})"), ulp_error);
         }
 
         // Test spherical Bessel function j_0(x) = sin(x)/x
@@ -415,7 +415,7 @@ pub mod bessel_stability {
             } else {
                 0.0
             };
-            ulp_errors.insert(format!("sph_j0({:.1})", x), ulp_error);
+            ulp_errors.insert(format!("sph_j0({x:.1})"), ulp_error);
         }
 
         let mean_rel_error = rel_errors.iter().sum::<f64>() / rel_errors.len() as f64;
@@ -547,7 +547,8 @@ pub fn generate_stability_report() -> String {
     ];
 
     for analysis in analyses {
-        report.push_str(&format!("## {}\n\n", analysis.function_name));
+        let function_name = &analysis.function_name;
+        report.push_str(&format!("## {function_name}\n\n"));
 
         // Parameter ranges
         report.push_str("### Parameter Ranges Tested\n");
@@ -563,7 +564,8 @@ pub fn generate_stability_report() -> String {
         if !analysis.issues.is_empty() {
             report.push_str("### Stability Issues\n");
             for issue in &analysis.issues {
-                report.push_str(&format!("- {}\n", format_issue(issue)));
+                let issue_str = format_issue(issue);
+                report.push_str(&format!("- {issue_str}\n"));
             }
             report.push('\n');
         }
@@ -572,7 +574,7 @@ pub fn generate_stability_report() -> String {
         if !analysis.condition_numbers.is_empty() {
             report.push_str("### Condition Numbers\n");
             for (params, cond) in &analysis.condition_numbers {
-                report.push_str(&format!("- {}: {:.2e}\n", params, cond));
+                report.push_str(&format!("- {params}: {cond:.2e}\n"));
             }
             report.push('\n');
         }
@@ -614,10 +616,12 @@ pub fn generate_stability_report() -> String {
 fn format_issue(issue: &StabilityIssue) -> String {
     match issue {
         StabilityIssue::Overflow { params } => {
-            format!("Overflow at {}", format_params(params))
+            let params_str = format_params(params);
+            format!("Overflow at {params_str}")
         }
         StabilityIssue::Underflow { params } => {
-            format!("Underflow at {}", format_params(params))
+            let params_str = format_params(params);
+            format!("Underflow at {params_str}")
         }
         StabilityIssue::CatastrophicCancellation {
             params,
@@ -644,7 +648,8 @@ fn format_issue(issue: &StabilityIssue) -> String {
             )
         }
         StabilityIssue::NonConvergence { params } => {
-            format!("Non-convergence at {}", format_params(params))
+            let params_str = format_params(params);
+            format!("Non-convergence at {params_str}")
         }
         StabilityIssue::NumericalInstability {
             params,
@@ -662,7 +667,7 @@ fn format_issue(issue: &StabilityIssue) -> String {
 fn format_params(params: &[(String, f64)]) -> String {
     params
         .iter()
-        .map(|(name, value)| format!("{}={}", name, value))
+        .map(|(name, value)| format!("{name}={value}"))
         .collect::<Vec<_>>()
         .join(", ")
 }
@@ -672,7 +677,7 @@ pub fn run_stability_tests() -> SpecialResult<()> {
     println!("Running numerical stability analysis...\n");
 
     let report = generate_stability_report();
-    println!("{}", report);
+    println!("{report}");
 
     // Save report to file
     std::fs::write("STABILITY_ANALYSIS.md", report)

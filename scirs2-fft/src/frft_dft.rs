@@ -192,9 +192,7 @@ mod tests {
             let ratio = output_energy / input_energy;
             assert!(
                 ratio > 0.1 && ratio < 10.0,
-                "Energy ratio {} for alpha {} is outside acceptable range",
-                ratio,
-                alpha
+                "Energy ratio {ratio} for alpha {alpha} is outside acceptable range"
             );
         }
 
@@ -207,9 +205,7 @@ mod tests {
             let ratio = output_energy / input_energy;
             assert!(
                 ratio > 0.01 && ratio < 100.0,
-                "Energy ratio {} for alpha {} is completely unreasonable",
-                ratio,
-                alpha
+                "Energy ratio {ratio} for alpha {alpha} is completely unreasonable"
             );
         }
     }

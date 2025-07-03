@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for &alpha in &[0.0, 0.5, 1.0, 1.5, 2.0] {
         let result = frft(&signal, alpha, None)?;
         let energy: f64 = result.iter().map(|c| c.norm_sqr()).sum();
-        println!("FrFT order {}: energy = {:.6}", alpha, energy);
+        println!("FrFT order {alpha}: energy = {energy:.6}");
     }
 
     // Example 2: Complex-valued signal
@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Compute FrFT for complex signal
     let result_complex = frft_complex(&complex_signal, 0.5, None)?;
     let complex_energy: f64 = result_complex.iter().map(|c| c.norm_sqr()).sum();
-    println!("FrFT of complex signal: energy = {:.6}", complex_energy);
+    println!("FrFT of complex signal: energy = {complex_energy:.6}");
 
     // Example 3: Demonstrate additivity property
     println!("\nExample 3: Additivity property");
@@ -50,8 +50,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Compare energies (they should be similar)
     let energy1: f64 = result1.iter().map(|c| c.norm_sqr()).sum();
     let energy2: f64 = result2.iter().map(|c| c.norm_sqr()).sum();
-    println!("Energy from direct computation: {:.6}", energy1);
-    println!("Energy from sequential application: {:.6}", energy2);
+    println!("Energy from direct computation: {energy1:.6}");
+    println!("Energy from sequential application: {energy2:.6}");
     println!(
         "Relative difference: {:.2e}",
         ((energy1 - energy2) / energy1).abs()

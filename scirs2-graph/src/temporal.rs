@@ -109,13 +109,13 @@ pub struct TemporalGraph<N: Node, E: EdgeWeight, Ix: IndexType = u32> {
     _phantom: std::marker::PhantomData<Ix>,
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for TemporalGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Default for TemporalGraph<N, E, Ix> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> TemporalGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> TemporalGraph<N, E, Ix> {
     /// Create a new empty temporal graph
     pub fn new() -> Self {
         TemporalGraph {
@@ -414,7 +414,7 @@ pub fn temporal_reachability<N, E, Ix>(
     max_duration: u64,
 ) -> HashSet<N>
 where
-    N: Node + Clone + Ord,
+    N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight + Clone,
     Ix: IndexType,
 {
@@ -462,7 +462,7 @@ pub fn temporal_betweenness_centrality<N, E, Ix>(
     time_window: TimeInterval,
 ) -> HashMap<N, f64>
 where
-    N: Node + Clone + Ord,
+    N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight + Clone,
     Ix: IndexType,
 {

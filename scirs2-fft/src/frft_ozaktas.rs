@@ -270,8 +270,7 @@ mod tests {
         // This is still not ideal, but better than the original
         assert!(
             energy_ratio > 0.01 && energy_ratio < 100.0,
-            "Energy ratio {} is outside acceptable range",
-            energy_ratio
+            "Energy ratio {energy_ratio} is outside acceptable range"
         );
     }
 }

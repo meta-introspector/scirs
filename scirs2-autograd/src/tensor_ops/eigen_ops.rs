@@ -341,10 +341,7 @@ fn compute_general_eigen<F: Float + ScalarOperand + FromPrimitive>(
     // This is a more robust implementation for non-symmetric matrices
 
     let n = matrix.shape()[0];
-    println!(
-        "Computing eigendecomposition for general matrix of size: {}",
-        n
-    );
+    println!("Computing eigendecomposition for general matrix of size: {n}");
 
     // Check if the matrix is close to symmetric within a tolerance
     let is_nearly_symmetric =
@@ -587,10 +584,7 @@ fn eigendecomposition_gradient<F: Float + ScalarOperand + FromPrimitive>(
     let n = eigenvalues.len();
     let mut grad = Array2::<F>::zeros((n, n));
 
-    println!(
-        "Computing eigendecomposition gradient for matrix of size: {}",
-        n
-    );
+    println!("Computing eigendecomposition gradient for matrix of size: {n}");
 
     // Gradient for eigenvalues part
     // For each eigenvalue, we add the corresponding component to the gradient

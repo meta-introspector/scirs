@@ -519,7 +519,7 @@ impl QuantumNeuromorphicFusion {
                 quantum_amplitudes: (amplitude_real, amplitude_imag),
                 quantum_phase,
                 entangled_partner: if rng.random::<f64>() < 0.3 {
-                    Some(rng.gen_range(0..n_synapses))
+                    Some(rng.random_range(0..n_synapses))
                 } else {
                     None
                 },

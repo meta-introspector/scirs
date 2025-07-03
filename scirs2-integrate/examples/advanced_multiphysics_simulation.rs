@@ -143,6 +143,12 @@ impl Default for CouplingParams {
     }
 }
 
+impl Default for MultiPhysicsSimulation {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MultiPhysicsSimulation {
     /// Create a new multi-physics simulation
     pub fn new() -> Self {
@@ -725,7 +731,7 @@ impl SimulationResults {
                 bif_point.parameter_value
             ));
         }
-        report.push_str("\n");
+        report.push('\n');
 
         // Stability analysis summary
         report.push_str("STABILITY ANALYSIS:\n");
@@ -767,7 +773,7 @@ fn main() -> Result<()> {
 
     // Generate and display report
     let report = results.generate_report();
-    println!("{}", report);
+    println!("{report}");
 
     // Additional analysis
     println!("=== ADDITIONAL INSIGHTS ===");
@@ -796,7 +802,7 @@ fn main() -> Result<()> {
         .filter(|fp| fp.stability == scirs2_integrate::StabilityType::Stable)
         .count();
 
-    println!("System has {} stable fixed points", stable_points);
+    println!("System has {stable_points} stable fixed points");
 
     if !results.bifurcation_results.is_empty() {
         println!("System exhibits bifurcations - parameter sensitivity detected");

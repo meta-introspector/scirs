@@ -405,7 +405,7 @@ impl MultiHeadAttention {
         let reshaped = x
             .clone()
             .into_shape_with_order((seq_len, self.n_heads, self.d_k))
-            .map_err(|e| TextError::InvalidInput(format!("Reshape error: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Reshape error: {e}")))?;
 
         // Transpose to (n_heads, seq_len, d_k)
         Ok(reshaped.permuted_axes([1, 0, 2]))
@@ -934,7 +934,7 @@ impl TransformerModel {
                 self.vocab_to_id
                     .get(token)
                     .cloned()
-                    .ok_or_else(|| TextError::InvalidInput(format!("Unknown token: {}", token)))
+                    .ok_or_else(|| TextError::InvalidInput(format!("Unknown token: {token}")))
             })
             .collect();
         let token_ids = token_ids?;
@@ -995,7 +995,7 @@ impl TransformerModel {
                 self.vocab_to_id
                     .get(token)
                     .copied()
-                    .ok_or_else(|| TextError::InvalidInput(format!("Unknown token: {}", token)))
+                    .ok_or_else(|| TextError::InvalidInput(format!("Unknown token: {token}")))
             })
             .collect();
         let target_ids = target_ids?;
@@ -1046,7 +1046,7 @@ impl TransformerModel {
                     self.vocab_to_id
                         .get(token)
                         .copied()
-                        .ok_or_else(|| TextError::InvalidInput(format!("Unknown token: {}", token)))
+                        .ok_or_else(|| TextError::InvalidInput(format!("Unknown token: {token}")))
                 })
                 .collect();
             let current_ids = current_ids?;

@@ -154,8 +154,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     l2_error = (l2_error * dx * dy).sqrt();
 
     println!("\nError analysis:");
-    println!("  - Maximum error: {:.6e}", max_error);
-    println!("  - L2 error norm: {:.6e}", l2_error);
+    println!("  - Maximum error: {max_error:.6e}");
+    println!("  - L2 error norm: {l2_error:.6e}");
 
     // Print solution at selected points
     println!("\nSolution values at selected points:");
@@ -173,10 +173,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let exact = (PI * x).sin() * (PI * y).sinh() / (PI).sinh();
             let error = (numerical - exact).abs();
 
-            println!(
-                "{:<10.4} {:<10.4} {:<15.8e} {:<15.8e} {:<10.2e}",
-                x, y, numerical, exact, error
-            );
+            println!("{x:<10.4} {y:<10.4} {numerical:<15.8e} {exact:<15.8e} {error:<10.2e}");
         }
     }
 
@@ -193,25 +190,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let rate_middle = history[n / 2] / history[n / 2 - 10];
             let rate_late = history[n - 1] / history[n - 10];
 
-            println!(
-                "  - Convergence rate (early): {:.6e} per 10 iterations",
-                rate_early
-            );
-            println!(
-                "  - Convergence rate (middle): {:.6e} per 10 iterations",
-                rate_middle
-            );
-            println!(
-                "  - Convergence rate (late): {:.6e} per 10 iterations",
-                rate_late
-            );
+            println!("  - Convergence rate (early): {rate_early:.6e} per 10 iterations");
+            println!("  - Convergence rate (middle): {rate_middle:.6e} per 10 iterations");
+            println!("  - Convergence rate (late): {rate_late:.6e} per 10 iterations");
         }
 
         // Print residual norm every 500 iterations
         println!("\nResidual norm progression:");
         for (i, residual) in history.iter().enumerate() {
             if i % 500 == 0 || i == history.len() - 1 {
-                println!("  - Iteration {}: {:.6e}", i, residual);
+                println!("  - Iteration {i}: {residual:.6e}");
             }
         }
     }

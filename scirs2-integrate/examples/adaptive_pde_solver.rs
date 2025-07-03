@@ -432,7 +432,7 @@ fn main() -> IntegrateResult<()> {
             );
 
             if let Some(richardson_error) = result.error_analysis.richardson_error {
-                println!("  Richardson error: {:.2e}", richardson_error);
+                println!("  Richardson error: {richardson_error:.2e}");
             }
             println!();
         }

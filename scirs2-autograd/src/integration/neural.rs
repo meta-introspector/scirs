@@ -450,7 +450,7 @@ impl<'a, F: Float> AutogradNetwork<'a, F> {
         // Add network parameters
         for (layer_idx, layer) in self.layers.iter().enumerate() {
             for (param_name, tensor) in &layer.parameters {
-                let key = format!("layer_{}_{}", layer_idx, param_name);
+                let key = format!("layer_{layer_idx}_{param_name}");
                 data = data.add_tensor(key, *tensor);
             }
         }

@@ -114,7 +114,7 @@ pub fn test_fft_accuracy() -> Vec<AccuracyResult> {
             mean_error,
             rms_error,
             relative_error,
-            notes: format!("Pure sine wave at {} Hz", frequency),
+            notes: format!("Pure sine wave at {frequency} Hz"),
         });
     }
 
@@ -303,7 +303,7 @@ pub fn test_dct_accuracy() -> Vec<AccuracyResult> {
             mean_error: frequency_error,
             rms_error: frequency_error,
             relative_error: frequency_error / frequency,
-            notes: format!("DCT-II frequency detection at {} Hz", frequency),
+            notes: format!("DCT-II frequency detection at {frequency} Hz"),
         });
     }
 
@@ -344,10 +344,7 @@ pub fn test_frft_accuracy() -> Vec<AccuracyResult> {
             mean_error,
             rms_error,
             relative_error,
-            notes: format!(
-                "FrFT additivity: ({} + {}) vs {}",
-                alpha1, alpha2, alpha_sum
-            ),
+            notes: format!("FrFT additivity: ({alpha1} + {alpha2}) vs {alpha_sum}"),
         });
     }
 

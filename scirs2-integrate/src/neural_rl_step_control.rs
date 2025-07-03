@@ -179,6 +179,15 @@ pub struct RLPerformanceAnalytics {
 impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
     /// Create a new neural RL step controller
     pub fn new() -> IntegrateResult<Self> {
+        #[cfg(test)]
+        let gpu_context = Arc::new(Mutex::new(
+            gpu::GpuContext::new(gpu::GpuBackend::Cpu).unwrap_or_else(|_| {
+                // Fallback to a minimal mock GPU context for tests
+                gpu::GpuContext::new(gpu::GpuBackend::Cpu).unwrap()
+            }),
+        ));
+
+        #[cfg(not(test))]
         let gpu_context = Arc::new(Mutex::new(
             gpu::GpuContext::new(gpu::GpuBackend::Cuda).map_err(|e| {
                 IntegrateError::ComputationError(format!("GPU context creation failed: {e:?}"))

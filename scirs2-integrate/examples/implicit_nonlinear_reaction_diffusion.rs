@@ -105,10 +105,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nFisher-KPP Simulation Results:");
     println!("==============================");
     println!("Domain: x ∈ [0, 10], t ∈ [0, 5.0]");
-    println!(
-        "Parameters: Diffusion D = {}, Growth rate r = {}",
-        diffusion, growth_rate
-    );
+    println!("Parameters: Diffusion D = {diffusion}, Growth rate r = {growth_rate}");
 
     // Analyze wave propagation (Fisher-KPP generates traveling waves)
     analyze_wave_propagation(&cn_result, &domain)?;
@@ -199,10 +196,7 @@ fn analyze_wave_propagation(
         // Theoretical Fisher-KPP wave speed = 2√(D*r)
         let theoretical_speed = 2.0 * (0.5_f64 * 1.0).sqrt();
 
-        println!(
-            "{:.1} | {:.4} | {:.4} (expected: {:.4})",
-            time, front_pos, speed, theoretical_speed
-        );
+        println!("{time:.1} | {front_pos:.4} | {speed:.4} (expected: {theoretical_speed:.4})");
 
         prev_pos = front_pos;
         prev_time = time;
@@ -250,8 +244,8 @@ fn compare_solutions(
 
     println!("\nComparison between Crank-Nicolson and Backward Euler:");
     println!("===============================================");
-    println!("Maximum absolute difference: {:.6e}", max_diff);
-    println!("Average absolute difference: {:.6e}", avg_diff);
+    println!("Maximum absolute difference: {max_diff:.6e}");
+    println!("Average absolute difference: {avg_diff:.6e}");
     println!(
         "Relative difference: {:.2}%",
         100.0 * avg_diff / cn_final.iter().sum::<f64>() * nx as f64

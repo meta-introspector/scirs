@@ -104,7 +104,6 @@ where
     D: Dimension + 'static,
     P: ChunkProcessorV2<T, D>,
 {
-    use std::path::PathBuf;
     use tempfile::tempdir;
 
     // Create temporary directory for memory-mapped files

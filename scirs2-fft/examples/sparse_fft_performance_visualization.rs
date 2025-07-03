@@ -114,16 +114,12 @@ fn benchmark_and_visualize() {
                 algorithm_speedups.push(speedup);
 
                 println!(
-                    "Algorithm: {:?}, Size: {}, CPU: {:.2} ms, GPU: {:.2} ms, Speedup: {:.2}x",
-                    algorithm, size, cpu_time, gpu_time, speedup
+                    "Algorithm: {algorithm:?}, Size: {size}, CPU: {cpu_time:.2} ms, GPU: {gpu_time:.2} ms, Speedup: {speedup:.2}x"
                 );
             } else {
                 gpu_size_times.push(0.0);
                 algorithm_speedups.push(0.0);
-                println!(
-                    "Algorithm: {:?}, Size: {}, CPU: {:.2} ms, GPU: N/A",
-                    algorithm, size, cpu_time
-                );
+                println!("Algorithm: {algorithm:?}, Size: {size}, CPU: {cpu_time:.2} ms, GPU: N/A");
             }
         }
 
@@ -144,20 +140,20 @@ fn benchmark_and_visualize() {
     for (i, &algorithm) in algorithms.iter().enumerate() {
         // CPU times plot
         let cpu_trace = Scatter::new(size_labels.clone(), cpu_times[i].clone())
-            .name(format!("{:?}", algorithm))
+            .name(format!("{algorithm:?}"))
             .mode(Mode::LinesMarkers);
         cpu_plot.add_trace(cpu_trace);
 
         if cuda_available {
             // GPU times plot
             let gpu_trace = Scatter::new(size_labels.clone(), gpu_times[i].clone())
-                .name(format!("{:?}", algorithm))
+                .name(format!("{algorithm:?}"))
                 .mode(Mode::LinesMarkers);
             gpu_plot.add_trace(gpu_trace);
 
             // Speedup plot
             let speedup_trace = Scatter::new(size_labels.clone(), speedups[i].clone())
-                .name(format!("{:?}", algorithm))
+                .name(format!("{algorithm:?}"))
                 .mode(Mode::LinesMarkers);
             speedup_plot.add_trace(speedup_trace);
         }
@@ -274,8 +270,7 @@ fn benchmark_accuracy() {
             algorithm_accuracies.push(accuracy);
 
             println!(
-                "Algorithm: {:?}, Noise Level: {:.2}, Accuracy: {:.2}",
-                algorithm, noise_level, accuracy
+                "Algorithm: {algorithm:?}, Noise Level: {noise_level:.2}, Accuracy: {accuracy:.2}"
             );
         }
 
@@ -290,11 +285,11 @@ fn benchmark_accuracy() {
         let trace = Scatter::new(
             noise_levels
                 .iter()
-                .map(|&n| format!("{:.2}", n))
+                .map(|&n| format!("{n:.2}"))
                 .collect::<Vec<_>>(),
             accuracies[i].clone(),
         )
-        .name(format!("{:?}", algorithm))
+        .name(format!("{algorithm:?}"))
         .mode(Mode::LinesMarkers);
 
         accuracy_plot.add_trace(trace);

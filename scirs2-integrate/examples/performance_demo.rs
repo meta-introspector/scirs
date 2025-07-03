@@ -18,7 +18,7 @@ where
     let result = f();
     let duration = start.elapsed();
     let time_secs = duration.as_secs_f64();
-    println!("{}: {:.6} seconds", name, time_secs);
+    println!("{name}: {time_secs:.6} seconds");
     (time_secs, result)
 }
 
@@ -43,7 +43,7 @@ where
     }
 
     let avg_time = total_time / runs as f64;
-    println!("{} (avg of {} runs): {:.6} seconds", name, runs, avg_time);
+    println!("{name} (avg of {runs} runs): {avg_time:.6} seconds");
     (avg_time, result.unwrap())
 }
 
@@ -111,14 +111,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Some(opts),
                 )
             },
-            &format!("Exponential decay ({})", name),
+            &format!("Exponential decay ({name})"),
         );
 
         if let Ok(sol) = result {
             let final_value = sol.y.last().unwrap()[0];
             let exact = (-5.0_f64).exp();
             let error = (final_value - exact).abs();
-            println!("  Final value: {:.6}, Error: {:.2e}", final_value, error);
+            println!("  Final value: {final_value:.6}, Error: {error:.2e}");
         }
     }
 
@@ -146,14 +146,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Some(opts),
                 )
             },
-            &format!("Harmonic oscillator ({})", name),
+            &format!("Harmonic oscillator ({name})"),
         );
 
         if let Ok(sol) = result {
             let final_y = sol.y.last().unwrap();
             let energy = 0.5 * (final_y[0] * final_y[0] + final_y[1] * final_y[1]);
             let energy_error = (energy - 0.5).abs();
-            println!("  Energy conservation error: {:.2e}", energy_error);
+            println!("  Energy conservation error: {energy_error:.2e}");
         }
     }
 
@@ -174,7 +174,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let (_time, result) = time_function(
             || solve_ivp(van_der_pol_stiff, t_span_vdp, y0_vdp.clone(), Some(opts)),
-            &format!("Van der Pol stiff ({})", name),
+            &format!("Van der Pol stiff ({name})"),
         );
 
         if let Ok(sol) = result {
@@ -253,7 +253,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 };
                 monte_carlo(gaussian_2d, &ranges, Some(opts))
             },
-            &format!("2D Gaussian MC ({} samples)", n_samples),
+            &format!("2D Gaussian MC ({n_samples} samples)"),
         );
 
         if let Ok(mc_result) = result {
@@ -309,7 +309,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if seq_time > 0.0 && par_time > 0.0 {
             let speedup = seq_time / par_time;
-            println!("  Speedup: {:.2}x", speedup);
+            println!("  Speedup: {speedup:.2}x");
         }
     }
 
@@ -352,7 +352,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 solve_ivp(linear_system, [0.0, 1.0], y0, Some(opts))
             },
-            &format!("Large linear system ({}×{})", n, n),
+            &format!("Large linear system ({n}×{n})"),
         );
 
         if let Ok(sol) = result {

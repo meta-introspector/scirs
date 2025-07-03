@@ -205,15 +205,15 @@ impl TransformError {
 
     /// Check if the error should trigger a retry
     pub fn should_retry(&self) -> bool {
-        match self {
+        matches!(
+            self,
             TransformError::TimeoutError(_)
-            | TransformError::MemoryError(_)
-            | TransformError::DistributedError(_)
-            | TransformError::StreamingError(_)
-            | TransformError::ParallelError(_) => true,
-            TransformError::IoError(_) => true,
-            _ => false,
-        }
+                | TransformError::MemoryError(_)
+                | TransformError::DistributedError(_)
+                | TransformError::StreamingError(_)
+                | TransformError::ParallelError(_)
+                | TransformError::IoError(_)
+        )
     }
 
     /// Get user-friendly error message

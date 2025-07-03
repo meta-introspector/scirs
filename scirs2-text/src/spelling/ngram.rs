@@ -152,13 +152,13 @@ impl NGramModel {
     /// Add a corpus file to the language model
     pub fn add_corpus_file<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
         let file = File::open(path)
-            .map_err(|e| TextError::IoError(format!("Failed to open corpus file: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to open corpus file: {e}")))?;
 
         let reader = BufReader::new(file);
 
         for line in reader.lines() {
             let line = line.map_err(|e| {
-                TextError::IoError(format!("Failed to read line from corpus file: {}", e))
+                TextError::IoError(format!("Failed to read line from corpus file: {e}"))
             })?;
 
             // Skip empty lines
@@ -361,9 +361,18 @@ impl std::fmt::Debug for NGramModel {
             .field("order", &self.order)
             .field("vocabulary_size", &self.vocabulary_size())
             .field("total_words", &self.total_words)
-            .field("unigrams", &format!("<{} entries>", self.unigrams.len()))
-            .field("bigrams", &format!("<{} entries>", self.bigrams.len()))
-            .field("trigrams", &format!("<{} entries>", self.trigrams.len()))
+            .field("unigrams", &{
+                let unigram_len = self.unigrams.len();
+                format!("<{unigram_len} entries>")
+            })
+            .field("bigrams", &{
+                let bigram_len = self.bigrams.len();
+                format!("<{bigram_len} entries>")
+            })
+            .field("trigrams", &{
+                let trigram_len = self.trigrams.len();
+                format!("<{trigram_len} entries>")
+            })
             .finish()
     }
 }

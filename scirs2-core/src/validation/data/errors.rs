@@ -81,7 +81,7 @@ impl ValidationError {
 
     /// Get formatted error message
     pub fn formatted_message(&self) -> String {
-        let mut message = format!("{self.field_path, self.message}");
+        let mut message = format!("{}, {}", self.field_path, self.message);
 
         if let Some(expected) = &self.expected {
             message.push_str(&format!(" (expected: {expected})"));

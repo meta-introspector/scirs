@@ -137,11 +137,11 @@ fn demonstrate_formal_verification(
 
     // Check verification status
     let status = manager.get_verification_status("matrix_multiply", "linalg");
-    println!("📊 Matrix multiply verification status: {:?}", status);
+    println!("📊 Matrix multiply verification status: {status:?}");
 
     // Get overall verification coverage
     let coverage = manager.get_verification_coverage();
-    println!("📈 Overall verification coverage: {:.1}%", coverage);
+    println!("📈 Overall verification coverage: {coverage:.1}%");
 
     // In a real scenario, we'd wait for verification to complete
     println!("⏳ Formal verification includes:");
@@ -169,15 +169,15 @@ fn demonstrate_runtime_validation(
         let call_context = ApiCallContext {
             execution_time: Duration::from_millis(50 + (i * 10)), // Increasing time
             memory_usage: 1024 * 1024 * (1 + i as usize),         // Increasing memory
-            input_hash: format!("input_{}", i),
-            output_hash: format!("output_{}", i),
+            input_hash: format!("input_{i}"),
+            output_hash: format!("output_{i}"),
             thread_id: format!("thread_{}", i % 4),
         };
 
         print!("🔄 Validating call {} ... ", i + 1);
         match manager.validate_runtime_call("matrix_multiply", "linalg", &call_context) {
             Ok(()) => println!("✅ Passed"),
-            Err(e) => println!("❌ Failed: {}", e),
+            Err(e) => println!("❌ Failed: {e}"),
         }
 
         // Small delay to simulate real workload
@@ -196,9 +196,9 @@ fn demonstrate_runtime_validation(
     // Check chaos engineering status
     if let Some((enabled, probability, fault_count)) = manager.get_chaos_status() {
         println!("\n🌪️  Chaos Engineering Status:");
-        println!("   - Enabled: {}", enabled);
+        println!("   - Enabled: {enabled}");
         println!("   - Fault probability: {:.1}%", probability * 100.0);
-        println!("   - Total faults injected: {}", fault_count);
+        println!("   - Total faults injected: {fault_count}");
     }
 
     Ok(())
@@ -227,7 +227,7 @@ fn demonstrate_performance_modeling(
 
         manager.record_performance("matrix_multiply", input_chars, performance, system_state);
 
-        println!("📈 Recorded performance for {}x{} matrix", size, size);
+        println!("📈 Recorded performance for {size}x{size} matrix");
     }
 
     // Test performance prediction
@@ -275,7 +275,7 @@ fn demonstrate_audit_trail(
     let integrity_verified = manager.verify_audit_integrity();
 
     println!("📋 Audit Trail Status:");
-    println!("   - Total records: {}", trail_length);
+    println!("   - Total records: {trail_length}");
     println!(
         "   - Integrity verified: {}",
         if integrity_verified {
@@ -293,7 +293,7 @@ fn demonstrate_audit_trail(
                 println!("💾 Exported audit trail ({} bytes)", exported.len());
                 // In a real application, you'd save this to a file or send to external audit system
             }
-            Err(e) => println!("❌ Failed to export audit trail: {}", e),
+            Err(e) => println!("❌ Failed to export audit trail: {e}"),
         }
     }
 
@@ -318,7 +318,7 @@ fn generate_advanced_report(
     let lines: Vec<&str> = report.lines().collect();
     for line in lines.iter().take(30) {
         // Show first 30 lines
-        println!("{}", line);
+        println!("{line}");
     }
 
     if lines.len() > 30 {
@@ -369,10 +369,10 @@ fn demonstrate_usage_context_validation(
     ];
 
     for (name, context) in contexts {
-        print!("🔍 Testing {} ... ", name);
+        print!("🔍 Testing {name} ... ");
         match manager.validate_api_usage("matrix_multiply", "linalg", &context) {
             Ok(()) => println!("✅ Compatible"),
-            Err(e) => println!("❌ Incompatible: {}", e),
+            Err(e) => println!("❌ Incompatible: {e}"),
         }
     }
 

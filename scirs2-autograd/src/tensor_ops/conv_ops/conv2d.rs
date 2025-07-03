@@ -363,8 +363,7 @@ fn conv2d_extract_params<F: Float>(
         let x_shape = x.shape();
         if x_shape.len() != 4 {
             return Err(op::OpError::IncompatibleShape(format!(
-                "conv2d: lhs input must be 4D (got {:?})",
-                x_shape
+                "conv2d: lhs input must be 4D (got {x_shape:?})"
             )));
         }
         (x_shape[0], x_shape[1], x_shape[2], x_shape[3])
@@ -373,8 +372,7 @@ fn conv2d_extract_params<F: Float>(
         let w_shape = w.shape();
         if w_shape.len() != 4 {
             return Err(op::OpError::IncompatibleShape(format!(
-                "conv2d: filter must be 4D (got {:?})",
-                w_shape
+                "conv2d: filter must be 4D (got {w_shape:?})"
             )));
         }
         if xch != w_shape[1] {

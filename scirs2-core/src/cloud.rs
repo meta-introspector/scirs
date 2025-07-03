@@ -864,7 +864,7 @@ impl CloudStorageBackend for S3Backend {
 
     async fn copy_object(
         &self,
-        source_key: &str,
+        _source_key: &str,
         dest_key: &str,
         _options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {

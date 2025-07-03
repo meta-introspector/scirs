@@ -212,11 +212,7 @@ where
     }
 
     /// Iterator over chunk information
-    fn chunk_iterator<'a>(
-        &'a self,
-        shape: &'a [usize],
-        chunk_dims: &'a [usize],
-    ) -> ChunkIterator<'a> {
+    fn chunk_iterator<'a>(&'a self, shape: &'a [usize], chunk_dims: &'a [usize]) -> ChunkIterator {
         ChunkIterator::new(shape, chunk_dims, &self.config.overlap)
     }
 

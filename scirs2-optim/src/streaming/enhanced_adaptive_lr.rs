@@ -9,7 +9,7 @@ use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 
 /// Performance metric types for adaptation
 #[derive(Debug, Clone)]

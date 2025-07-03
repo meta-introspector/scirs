@@ -9,7 +9,7 @@ use super::{
     STDPConfig, MembraneDynamicsConfig, PlasticityModel, ThermalManagementConfig,
     SleepModeConfig, ThermalThrottlingStrategy
 };
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 use ndarray::{Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;

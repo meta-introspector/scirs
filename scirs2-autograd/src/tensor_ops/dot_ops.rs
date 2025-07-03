@@ -175,13 +175,10 @@ fn dot_shape_error(m: usize, k: usize, k2: usize, n: usize) -> String {
     match m.checked_mul(n) {
         Some(len) if len <= isize::MAX as usize => {}
         _ => {
-            return format!("ndarray: shape {} × {} overflows isize", m, n);
+            return format!("ndarray: shape {m} × {n} overflows isize");
         }
     }
-    format!(
-        "ndarray: inputs {} × {} and {} × {} are not compatible for matrix multiplication",
-        m, k, k2, n
-    )
+    format!("ndarray: inputs {m} × {k} and {k2} × {n} are not compatible for matrix multiplication")
 }
 
 // ========= Op impls =========
@@ -353,14 +350,12 @@ impl<T: Float> op::Op<T> for BatchMatMul {
 
         if rank0 < 2 {
             return Err(op::OpError::IncompatibleShape(format!(
-                "BatchMatMul: Left-hand-side input's ndim must be >= 2, actual: {}",
-                rank0
+                "BatchMatMul: Left-hand-side input's ndim must be >= 2, actual: {rank0}"
             )));
         }
         if rank1 < 2 {
             return Err(op::OpError::IncompatibleShape(format!(
-                "BatchMatMul: Right-hand-side input's ndim must be >= 2, actual: {}",
-                rank1
+                "BatchMatMul: Right-hand-side input's ndim must be >= 2, actual: {rank1}"
             )));
         }
 
@@ -376,8 +371,7 @@ impl<T: Float> op::Op<T> for BatchMatMul {
         let shape1 = x1.shape();
         if rank0 != rank1 || shape0[..rank0 - 2] != shape1[..rank0 - 2] {
             return Err(op::OpError::IncompatibleShape(format!(
-                "Input shapes mismatch: {:?} vs {:?}",
-                shape0, shape1
+                "Input shapes mismatch: {shape0:?} vs {shape1:?}"
             )));
         }
 

@@ -99,7 +99,7 @@ where
                 iterations: iter,
                 residual_norm: rnorm,
                 converged: true,
-                message: format!("Converged in {} iterations", iter),
+                message: format!("Converged in {iter} iterations"),
             });
         }
 

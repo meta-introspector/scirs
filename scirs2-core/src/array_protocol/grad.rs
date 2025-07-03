@@ -1494,7 +1494,7 @@ mod tests {
         let c = match grad_add(&a, &b) {
             Ok(c) => c,
             Err(e) => {
-                println!("Skipping test_gradient_computation_add: {}", e);
+                println!("Skipping test_gradient_computation_add: {e}");
                 return;
             }
         };
@@ -1512,7 +1512,7 @@ mod tests {
 
         // Compute gradients
         if let Err(e) = c.backward() {
-            println!("Skipping test_gradient_computation_add: {}", e);
+            println!("Skipping test_gradient_computation_add: {e}");
             return;
         }
 
@@ -1569,7 +1569,7 @@ mod tests {
         let c = match grad_multiply(&a, &b) {
             Ok(c) => c,
             Err(e) => {
-                println!("Skipping test_gradient_computation_multiply: {}", e);
+                println!("Skipping test_gradient_computation_multiply: {e}");
                 return;
             }
         };
@@ -1589,7 +1589,7 @@ mod tests {
 
         // Compute gradients
         if let Err(e) = c.backward() {
-            println!("Skipping test_gradient_computation_multiply: {}", e);
+            println!("Skipping test_gradient_computation_multiply: {e}");
             return;
         }
 
@@ -1671,7 +1671,7 @@ mod tests {
                 assert!(optimizer.variables()[1].grad().is_none());
             }
             Err(e) => {
-                println!("Skipping test_sgd_optimizer - step failed: {}", e);
+                println!("Skipping test_sgd_optimizer - step failed: {e}");
             }
         }
     }

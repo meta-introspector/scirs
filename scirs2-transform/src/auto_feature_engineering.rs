@@ -133,7 +133,7 @@ impl MetaLearningModel {
             opt.step();
 
             if epoch % 20 == 0 {
-                println!("Epoch {}: Loss = {:.4}", epoch, f64::from(loss));
+                println!("Epoch {epoch}: Loss = {:.4}", f64::from(loss));
             }
         }
 
@@ -238,7 +238,9 @@ impl MetaLearningModel {
     }
 
     fn tensor_to_transformations(&self, prediction: &Tensor) -> Result<Vec<TransformationConfig>> {
-        let scores: Vec<f64> = prediction.double_value(&[0]).into();
+        let scores: Vec<f64> = prediction.try_into().map_err(|e| {
+            TransformError::ComputationError(format!("Failed to extract tensor data: {:?}", e))
+        })?;
 
         if scores.len() != 10 {
             return Err(TransformError::ComputationError(format!(
@@ -1852,7 +1854,9 @@ impl AdvancedMetaLearningSystem {
         tensor: &Tensor,
         features: &EnhancedMetaFeatures,
     ) -> Result<Vec<MultiObjectiveRecommendation>> {
-        let scores: Vec<f64> = tensor.double_value(&[0]).into();
+        let scores: Vec<f64> = tensor.try_into().map_err(|e| {
+            TransformError::ComputationError(format!("Failed to extract tensor data: {:?}", e))
+        })?;
 
         if scores.len() != 20 {
             return Err(TransformError::ComputationError(format!(

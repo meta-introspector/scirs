@@ -118,7 +118,7 @@ fn main() -> IntegrateResult<()> {
     );
 
     println!("Simulating Brusselator chemical reaction system with event detection...");
-    println!("Parameters: A = {}, B = {}", a, b);
+    println!("Parameters: A = {a}, B = {b}");
     println!("Oscillatory behavior expected: {}", b > 1.0 + a * a);
 
     // Solve the ODE with event detection
@@ -152,7 +152,7 @@ fn main() -> IntegrateResult<()> {
 
             let avg_period = periods.iter().sum::<f64>() / periods.len() as f64;
 
-            println!("  Average oscillation period: {:.4} time units", avg_period);
+            println!("  Average oscillation period: {avg_period:.4} time units");
             println!(
                 "  Oscillation frequency: {:.4} cycles/time unit",
                 1.0 / avg_period
@@ -237,11 +237,11 @@ fn save_results_to_csv(
     result: &scirs2_integrate::ode::ODEResultWithEvents<f64>,
 ) -> IntegrateResult<()> {
     let mut file = File::create("brusselator_results.csv")
-        .map_err(|e| IntegrateError::ComputationError(format!("Failed to create file: {}", e)))?;
+        .map_err(|e| IntegrateError::ComputationError(format!("Failed to create file: {e}")))?;
 
     // Write header
     writeln!(file, "time,x,y,x_maximum,y_maximum,x_threshold")
-        .map_err(|e| IntegrateError::ComputationError(format!("Failed to write header: {}", e)))?;
+        .map_err(|e| IntegrateError::ComputationError(format!("Failed to write header: {e}")))?;
 
     // Get event times for each event type
     let x_max_times: Vec<f64> = result
@@ -281,7 +281,7 @@ fn save_results_to_csv(
             "{},{},{},{},{},{}",
             t, x, y, x_max as i32, y_max as i32, x_thresh as i32
         )
-        .map_err(|e| IntegrateError::ComputationError(format!("Failed to write data: {}", e)))?;
+        .map_err(|e| IntegrateError::ComputationError(format!("Failed to write data: {e}")))?;
     }
 
     Ok(())

@@ -10,7 +10,7 @@ use std::hash::Hash;
 ///
 /// A motif is a small recurring subgraph pattern. This function finds all
 /// instances of common motifs like triangles, squares, or stars.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MotifType {
     /// Triangle (3-cycle)
     Triangle,
@@ -33,9 +33,9 @@ pub enum MotifType {
 /// Find all occurrences of a specified motif in the graph
 pub fn find_motifs<N, E, Ix>(graph: &Graph<N, E, Ix>, motif_type: MotifType) -> Vec<Vec<N>>
 where
-    N: Node + Clone + Hash + Eq,
-    E: EdgeWeight,
-    Ix: IndexType,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
+    E: EdgeWeight + Send + Sync,
+    Ix: IndexType + Send + Sync,
 {
     match motif_type {
         MotifType::Triangle => find_triangles(graph),
@@ -51,9 +51,9 @@ where
 
 fn find_triangles<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
-    N: Node + Clone + Hash + Eq,
-    E: EdgeWeight,
-    Ix: IndexType,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
+    E: EdgeWeight + Send + Sync,
+    Ix: IndexType + Send + Sync,
 {
     use scirs2_core::parallel_ops::*;
     use std::sync::Mutex;
@@ -62,7 +62,7 @@ where
     let triangles = Mutex::new(Vec::new());
 
     // Parallel triangle finding using edge-based approach for better performance
-    nodes.par_iter().enumerate().for_each(|(i, node_i)| {
+    nodes.par_iter().enumerate().for_each(|(_i, node_i)| {
         if let Ok(neighbors_i) = graph.neighbors(node_i) {
             let neighbors_i: Vec<_> = neighbors_i;
 
@@ -88,9 +88,9 @@ where
 
 fn find_squares<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
-    N: Node + Clone + Hash + Eq,
-    E: EdgeWeight,
-    Ix: IndexType,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
+    E: EdgeWeight + Send + Sync,
+    Ix: IndexType + Send + Sync,
 {
     let mut squares = Vec::new();
     let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
@@ -128,9 +128,9 @@ where
 
 fn find_star3s<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
-    N: Node + Clone + Hash + Eq,
-    E: EdgeWeight,
-    Ix: IndexType,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
+    E: EdgeWeight + Send + Sync,
+    Ix: IndexType + Send + Sync,
 {
     let mut stars = Vec::new();
     let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
@@ -169,9 +169,9 @@ where
 
 fn find_clique4s<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
-    N: Node + Clone + Hash + Eq,
-    E: EdgeWeight,
-    Ix: IndexType,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
+    E: EdgeWeight + Send + Sync,
+    Ix: IndexType + Send + Sync,
 {
     let mut cliques = Vec::new();
     let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
@@ -209,9 +209,9 @@ where
 /// Find all path motifs of length 3 (4 nodes in a line)
 fn find_path3s<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
-    N: Node + Clone + Hash + Eq,
-    E: EdgeWeight,
-    Ix: IndexType,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
+    E: EdgeWeight + Send + Sync,
+    Ix: IndexType + Send + Sync,
 {
     use scirs2_core::parallel_ops::*;
     use std::sync::Mutex;
@@ -268,9 +268,9 @@ where
 /// Find bi-fan motifs (2 nodes connected to the same 2 other nodes)
 fn find_bi_fans<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
-    N: Node + Clone + Hash + Eq,
-    E: EdgeWeight,
-    Ix: IndexType,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
+    E: EdgeWeight + Send + Sync,
+    Ix: IndexType + Send + Sync,
 {
     use scirs2_core::parallel_ops::*;
     use std::sync::Mutex;
@@ -318,9 +318,9 @@ where
 /// Find feed-forward loop motifs (3 nodes with specific directed pattern)
 fn find_feed_forward_loops<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
-    N: Node + Clone + Hash + Eq,
-    E: EdgeWeight,
-    Ix: IndexType,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
+    E: EdgeWeight + Send + Sync,
+    Ix: IndexType + Send + Sync,
 {
     use scirs2_core::parallel_ops::*;
     use std::sync::Mutex;
@@ -362,9 +362,9 @@ where
 /// Find bi-directional motifs (mutual connections between pairs of nodes)
 fn find_bidirectional_motifs<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
-    N: Node + Clone + Hash + Eq,
-    E: EdgeWeight,
-    Ix: IndexType,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
+    E: EdgeWeight + Send + Sync,
+    Ix: IndexType + Send + Sync,
 {
     use scirs2_core::parallel_ops::*;
     use std::sync::Mutex;
@@ -394,9 +394,9 @@ where
 /// Returns a map of motif patterns to their occurrence counts
 pub fn count_motif_frequencies<N, E, Ix>(graph: &Graph<N, E, Ix>) -> HashMap<MotifType, usize>
 where
-    N: Node + Clone + Hash + Eq,
-    E: EdgeWeight,
-    Ix: IndexType,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
+    E: EdgeWeight + Send + Sync,
+    Ix: IndexType + Send + Sync,
 {
     use scirs2_core::parallel_ops::*;
 
@@ -413,9 +413,9 @@ where
 
     motif_types
         .par_iter()
-        .map(|&motif_type| {
-            let count = find_motifs(graph, motif_type).len();
-            (motif_type, count)
+        .map(|motif_type| {
+            let count = find_motifs(graph, *motif_type).len();
+            (*motif_type, count)
         })
         .collect()
 }
@@ -428,13 +428,13 @@ pub fn sample_motif_frequencies<N, E, Ix>(
     rng: &mut impl rand::Rng,
 ) -> HashMap<MotifType, f64>
 where
-    N: Node + Clone + Hash + Eq,
-    E: EdgeWeight,
-    Ix: IndexType,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
+    E: EdgeWeight + Send + Sync,
+    Ix: IndexType + Send + Sync,
 {
     use rand::seq::SliceRandom;
 
-    let all_nodes: Vec<_> = graph.nodes().cloned().collect();
+    let all_nodes: Vec<_> = graph.nodes().into_iter().cloned().collect();
     if all_nodes.len() <= sample_size {
         // If graph is small, do exact counting
         return count_motif_frequencies(graph)
@@ -451,9 +451,7 @@ where
     // Create subgraph from sampled nodes
     let mut subgraph = crate::generators::create_graph::<N, E>();
     for node in &sampled_nodes {
-        if let Err(_) = subgraph.add_node(node.clone()) {
-            continue;
-        }
+        let _ = subgraph.add_node(node.clone());
     }
 
     // Add edges between sampled nodes

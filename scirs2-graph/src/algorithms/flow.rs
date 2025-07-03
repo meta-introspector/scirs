@@ -25,7 +25,7 @@ use std::hash::Hash;
 /// O(n) for storing the partition and temporary data structures.
 pub fn minimum_cut<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<(f64, Vec<bool>)>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone,
     Ix: IndexType,
 {
@@ -69,7 +69,7 @@ where
 
 fn calculate_cut_value<N, E, Ix>(graph: &Graph<N, E, Ix>, nodes: &[N], partition: &[bool]) -> f64
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64>,
     Ix: IndexType,
 {
@@ -95,7 +95,7 @@ where
 
 fn minimum_cut_heuristic<N, E, Ix>(graph: &Graph<N, E, Ix>, nodes: &[N]) -> Result<(f64, Vec<bool>)>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone,
     Ix: IndexType,
 {
@@ -157,7 +157,7 @@ where
 /// and performs particularly well on networks with unit capacities.
 pub fn dinic_max_flow<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<f64>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone + std::ops::Sub<Output = E> + num_traits::Zero + PartialOrd,
     Ix: IndexType,
 {
@@ -209,7 +209,7 @@ struct DinicResidualGraph<N: Node> {
     current: HashMap<N, usize>,
 }
 
-impl<N: Node + Clone + Hash + Eq> DinicResidualGraph<N> {
+impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> DinicResidualGraph<N> {
     fn new<E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone,
@@ -350,7 +350,7 @@ pub fn push_relabel_max_flow<N, E, Ix>(
     sink: &N,
 ) -> Result<f64>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone,
     Ix: IndexType,
 {
@@ -484,7 +484,7 @@ pub fn ford_fulkerson_max_flow<N, E, Ix>(
     sink: &N,
 ) -> Result<f64>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone + std::ops::Sub<Output = E> + num_traits::Zero + PartialOrd,
     Ix: IndexType,
 {
@@ -529,7 +529,7 @@ pub fn edmonds_karp_max_flow<N, E, Ix>(
     sink: &N,
 ) -> Result<f64>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone + std::ops::Sub<Output = E> + num_traits::Zero + PartialOrd,
     Ix: IndexType,
 {
@@ -569,7 +569,7 @@ where
 /// O(V + E) for the residual graph and distance labels
 pub fn isap_max_flow<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<f64>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone + std::ops::Sub<Output = E> + num_traits::Zero + PartialOrd,
     Ix: IndexType,
 {
@@ -605,7 +605,7 @@ pub fn capacity_scaling_max_flow<N, E, Ix>(
     sink: &N,
 ) -> Result<f64>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone + std::ops::Sub<Output = E> + num_traits::Zero + PartialOrd,
     Ix: IndexType,
 {
@@ -648,7 +648,7 @@ pub fn min_cost_max_flow<N, E, Ix, F>(
     cost_fn: F,
 ) -> Result<(f64, f64)>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone + std::ops::Sub<Output = E> + num_traits::Zero + PartialOrd,
     Ix: IndexType,
     F: Fn(&E) -> f64,
@@ -686,7 +686,7 @@ pub fn parallel_max_flow<N, E, Ix>(
     num_threads: usize,
 ) -> Result<f64>
 where
-    N: Node + Clone + Hash + Eq + Send + Sync,
+    N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug,
     E: EdgeWeight
         + Into<f64>
         + Clone
@@ -736,7 +736,7 @@ pub fn multi_source_multi_sink_max_flow<N, E, Ix>(
     sinks: &[N],
 ) -> Result<f64>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug + From<&'static str>,
     E: EdgeWeight + Into<f64> + Clone + std::ops::Sub<Output = E> + num_traits::Zero + PartialOrd,
     Ix: IndexType,
 {
@@ -770,7 +770,7 @@ struct FordFulkersonResidualGraph<N: Node> {
     original_capacity: HashMap<(N, N), f64>,
 }
 
-impl<N: Node + Clone + Hash + Eq> FordFulkersonResidualGraph<N> {
+impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FordFulkersonResidualGraph<N> {
     fn new<E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone,
@@ -844,10 +844,10 @@ impl<N: Node + Clone + Hash + Eq> FordFulkersonResidualGraph<N> {
         path.push(current.clone());
 
         if let Some(neighbors) = self.adj.get(current) {
-            for (neighbor, &capacity) in neighbors {
-                if !visited.contains(neighbor) && capacity > 0.0 {
+            for (neighbor, capacity) in neighbors {
+                if !visited.contains(neighbor) && *capacity > 0.0 {
                     let bottleneck =
-                        self.dfs_helper(neighbor, sink, visited, path, min_capacity.min(capacity));
+                        self.dfs_helper(neighbor, sink, visited, path, min_capacity.min(*capacity));
                     if bottleneck > 0.0 {
                         return bottleneck;
                     }
@@ -872,7 +872,7 @@ impl<N: Node + Clone + Hash + Eq> FordFulkersonResidualGraph<N> {
             if &current == sink {
                 // Reconstruct path
                 let mut path = Vec::new();
-                let mut node = current;
+                let mut node = current.clone();
                 while let Some(Some(p)) = parent.get(&node) {
                     path.push(node.clone());
                     node = p.clone();
@@ -885,8 +885,8 @@ impl<N: Node + Clone + Hash + Eq> FordFulkersonResidualGraph<N> {
             }
 
             if let Some(neighbors) = self.adj.get(&current) {
-                for (neighbor, &capacity) in neighbors {
-                    if !parent.contains_key(neighbor) && capacity > 0.0 {
+                for (neighbor, capacity) in neighbors {
+                    if !parent.contains_key(neighbor) && *capacity > 0.0 {
                         parent.insert(neighbor.clone(), Some(current.clone()));
                         queue.push_back(neighbor.clone());
                     }
@@ -905,9 +905,9 @@ impl<N: Node + Clone + Hash + Eq> FordFulkersonResidualGraph<N> {
             let to = &window[1];
 
             if let Some(neighbors) = self.adj.get(from) {
-                for (neighbor, &capacity) in neighbors {
+                for (neighbor, capacity) in neighbors {
                     if neighbor == to {
-                        bottleneck = bottleneck.min(capacity);
+                        bottleneck = bottleneck.min(*capacity);
                         break;
                     }
                 }
@@ -955,7 +955,7 @@ struct ISAPGraph<N: Node> {
     n: usize,
 }
 
-impl<N: Node + Clone + Hash + Eq> ISAPGraph<N> {
+impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> ISAPGraph<N> {
     fn new<E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone,
@@ -1170,14 +1170,14 @@ struct CapacityScalingGraph<N: Node> {
     delta: f64, // Current scaling parameter
 }
 
-impl<N: Node + Clone + Hash + Eq> CapacityScalingGraph<N> {
+impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> CapacityScalingGraph<N> {
     fn new<E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone,
         Ix: IndexType,
     {
         let mut adj: HashMap<N, Vec<(N, f64)>> = HashMap::new();
-        let mut max_capacity = 0.0;
+        let mut max_capacity: f64 = 0.0;
 
         // Build residual graph and find maximum capacity
         for node in graph.nodes() {
@@ -1238,7 +1238,7 @@ impl<N: Node + Clone + Hash + Eq> CapacityScalingGraph<N> {
             if &current == sink {
                 // Reconstruct path
                 let mut path = Vec::new();
-                let mut node = current;
+                let mut node = current.clone();
                 while let Some(Some(p)) = parent.get(&node) {
                     path.push(node.clone());
                     node = p.clone();
@@ -1251,8 +1251,8 @@ impl<N: Node + Clone + Hash + Eq> CapacityScalingGraph<N> {
             }
 
             if let Some(neighbors) = self.adj.get(&current) {
-                for (neighbor, &capacity) in neighbors {
-                    if !visited.contains(neighbor) && capacity >= self.delta {
+                for (neighbor, capacity) in neighbors {
+                    if !visited.contains(neighbor) && *capacity >= self.delta {
                         parent.insert(neighbor.clone(), Some(current.clone()));
                         visited.insert(neighbor.clone());
                         queue.push_back(neighbor.clone());
@@ -1272,9 +1272,9 @@ impl<N: Node + Clone + Hash + Eq> CapacityScalingGraph<N> {
             let to = &window[1];
 
             if let Some(neighbors) = self.adj.get(from) {
-                for (neighbor, &capacity) in neighbors {
+                for (neighbor, capacity) in neighbors {
                     if neighbor == to {
-                        bottleneck = bottleneck.min(capacity);
+                        bottleneck = bottleneck.min(*capacity);
                         break;
                     }
                 }
@@ -1317,7 +1317,7 @@ struct MinCostMaxFlowGraph<N: Node> {
     adj: HashMap<N, Vec<(N, f64, f64)>>, // (neighbor, capacity, cost)
 }
 
-impl<N: Node + Clone + Hash + Eq> MinCostMaxFlowGraph<N> {
+impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> MinCostMaxFlowGraph<N> {
     fn new<E, Ix, F>(graph: &DiGraph<N, E, Ix>, cost_fn: F) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone,
@@ -1638,7 +1638,7 @@ impl<N: Node + Clone + Hash + Eq + Send + Sync> ParallelFlowGraph<N> {
             if &current == sink {
                 // Reconstruct path
                 let mut path = Vec::new();
-                let mut node = current;
+                let mut node = current.clone();
                 while let Some(Some(p)) = parent.get(&node) {
                     path.push(node.clone());
                     node = p.clone();
@@ -1653,9 +1653,9 @@ impl<N: Node + Clone + Hash + Eq + Send + Sync> ParallelFlowGraph<N> {
                     let to = &window[1];
 
                     if let Some(neighbors) = subgraph.get(from) {
-                        for (neighbor, &capacity) in neighbors {
-                            if neighbor == to && capacity > 0.0 {
-                                bottleneck = bottleneck.min(capacity);
+                        for (neighbor, capacity) in neighbors {
+                            if neighbor == to && *capacity > 0.0 {
+                                bottleneck = bottleneck.min(*capacity);
                                 break;
                             }
                         }
@@ -1668,8 +1668,8 @@ impl<N: Node + Clone + Hash + Eq + Send + Sync> ParallelFlowGraph<N> {
             }
 
             if let Some(neighbors) = subgraph.get(&current) {
-                for (neighbor, &capacity) in neighbors {
-                    if !visited.contains(neighbor) && capacity > 0.0 {
+                for (neighbor, capacity) in neighbors {
+                    if !visited.contains(neighbor) && *capacity > 0.0 {
                         parent.insert(neighbor.clone(), Some(current.clone()));
                         visited.insert(neighbor.clone());
                         queue.push_back(neighbor.clone());
@@ -1707,7 +1707,7 @@ struct MultiSourceSinkGraph<N: Node> {
     super_sink: N,
 }
 
-impl<N: Node + Clone + Hash + Eq> MultiSourceSinkGraph<N> {
+impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> MultiSourceSinkGraph<N> {
     fn new<E, Ix>(graph: &DiGraph<N, E, Ix>, sources: &[N], sinks: &[N]) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone,
@@ -1787,7 +1787,7 @@ impl<N: Node + Clone + Hash + Eq> MultiSourceSinkGraph<N> {
             if &current == &self.super_sink {
                 // Reconstruct path
                 let mut path = Vec::new();
-                let mut node = current;
+                let mut node = current.clone();
                 while let Some(Some(p)) = parent.get(&node) {
                     path.push(node.clone());
                     node = p.clone();
@@ -1803,8 +1803,8 @@ impl<N: Node + Clone + Hash + Eq> MultiSourceSinkGraph<N> {
             }
 
             if let Some(neighbors) = self.adj.get(&current) {
-                for (neighbor, &capacity) in neighbors {
-                    if !visited.contains(neighbor) && capacity > 0.0 {
+                for (neighbor, capacity) in neighbors {
+                    if !visited.contains(neighbor) && *capacity > 0.0 {
                         parent.insert(neighbor.clone(), Some(current.clone()));
                         visited.insert(neighbor.clone());
                         queue.push_back(neighbor.clone());
@@ -1825,9 +1825,9 @@ impl<N: Node + Clone + Hash + Eq> MultiSourceSinkGraph<N> {
             let to = &window[1];
 
             if let Some(neighbors) = self.adj.get(from) {
-                for (neighbor, &capacity) in neighbors {
+                for (neighbor, capacity) in neighbors {
                     if neighbor == to {
-                        bottleneck = bottleneck.min(capacity);
+                        bottleneck = bottleneck.min(*capacity);
                         break;
                     }
                 }

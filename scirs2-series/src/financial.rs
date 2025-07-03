@@ -437,7 +437,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
                 let p = *order;
                 if returns.len() <= p {
                     return Err(TimeSeriesError::InsufficientData {
-                        message: format!("Need more than {} observations for AR({}) model", p, p),
+                        message: format!("Need more than {p} observations for AR({p}) model"),
                         required: p + 1,
                         actual: returns.len(),
                     });
@@ -3415,6 +3415,13 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
             fitted: false,
         }
     }
+}
+
+impl<F: Float + Debug + Clone + std::iter::Sum> Default for GjrGarchModel<F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
     /// Fit GJR-GARCH model to returns data
     pub fn fit(&mut self, returns: &Array1<F>) -> Result<GjrGarchResult<F>> {
@@ -3595,6 +3602,13 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
             fitted: false,
         }
     }
+}
+
+impl<F: Float + Debug + Clone + std::iter::Sum> Default for AparchModel<F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
     /// Fit APARCH model to returns data
     pub fn fit(&mut self, returns: &Array1<F>) -> Result<AparchResult<F>> {

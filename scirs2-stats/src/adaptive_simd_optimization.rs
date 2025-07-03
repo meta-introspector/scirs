@@ -104,7 +104,7 @@ pub struct HardwareCapabilities {
 }
 
 /// SIMD instruction sets
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SimdInstructionSet {
     /// SSE (128-bit)
     SSE,

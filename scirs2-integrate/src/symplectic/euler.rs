@@ -209,7 +209,7 @@ mod tests {
         // Energy should be conserved to within a small error
         // First-order methods will have linear drift, but it should still be small
         if let Some(error) = result.energy_relative_error {
-            assert!(error < 0.1, "Energy error too large: {}", error);
+            assert!(error < 0.1, "Energy error too large: {error}");
         }
 
         // Phase space trajectory should follow an ellipse for harmonic oscillator

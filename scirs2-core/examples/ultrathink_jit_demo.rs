@@ -279,8 +279,8 @@ impl UltrathinkJitDemo {
         ];
 
         for (name, description, kernel_code) in math_kernels {
-            println!("\n📝 Compiling {} kernel...", name);
-            println!("   Description: {}", description);
+            println!("\n📝 Compiling {name} kernel...");
+            println!("   Description: {description}");
 
             let optimization_hints = vec![
                 "mathematical_function".to_string(),
@@ -294,7 +294,7 @@ impl UltrathinkJitDemo {
                     .compile_kernel(name, kernel_code, &optimization_hints)?;
             let compilation_time = start_time.elapsed();
 
-            println!("✅ {} compiled successfully", name);
+            println!("✅ {name} compiled successfully");
             println!(
                 "   - Compilation time: {:.2} ms",
                 compilation_time.as_millis()
@@ -324,7 +324,7 @@ impl UltrathinkJitDemo {
         let matrix_sizes = vec![64, 256, 1024];
 
         for size in matrix_sizes {
-            println!("\n📊 Optimizing {}x{} matrix operations...", size, size);
+            println!("\n📊 Optimizing {size}x{size} matrix operations...");
 
             // Generate matrix multiplication kernel for specific size
             let kernel_code = self.generate_matrix_kernel(size);
@@ -336,12 +336,12 @@ impl UltrathinkJitDemo {
             ];
 
             let compiled_kernel = self.compiler.compile_kernel(
-                &format!("matmul_{}x{}", size, size),
+                &format!("matmul_{size}x{size}"),
                 &kernel_code,
                 &optimization_hints,
             )?;
 
-            println!("✅ Matrix kernel compiled for {}x{}", size, size);
+            println!("✅ Matrix kernel compiled for {size}x{size}");
             println!(
                 "   - Vectorization: {:.1}%",
                 compiled_kernel.performance.vectorization_utilization * 100.0
@@ -391,8 +391,8 @@ impl UltrathinkJitDemo {
         ];
 
         for (kernel_name, description) in signal_kernels {
-            println!("\n🎵 Compiling {} kernel...", kernel_name);
-            println!("   Description: {}", description);
+            println!("\n🎵 Compiling {kernel_name} kernel...");
+            println!("   Description: {description}");
 
             // Generate signal processing kernel
             let kernel_code = self.generate_signal_kernel(kernel_name);
@@ -407,7 +407,7 @@ impl UltrathinkJitDemo {
                 self.compiler
                     .compile_kernel(kernel_name, &kernel_code, &optimization_hints)?;
 
-            println!("✅ {} kernel compiled", kernel_name);
+            println!("✅ {kernel_name} kernel compiled");
             println!("   - Real-time performance: Optimized");
             println!(
                 "   - SIMD utilization: {:.1}%",
@@ -431,10 +431,7 @@ impl UltrathinkJitDemo {
                 0.001 // Default 1ms if no data
             };
             let estimated_throughput = 1.0 / avg_execution_time;
-            println!(
-                "   - Estimated throughput: {:.0} operations/sec",
-                estimated_throughput
-            );
+            println!("   - Estimated throughput: {estimated_throughput:.0} operations/sec");
         }
 
         Ok(())
@@ -590,7 +587,7 @@ impl UltrathinkJitDemo {
         );
 
         let speedup = time1.as_secs_f64() / time2.as_secs_f64();
-        println!("📊 Cache speedup: {:.1}x faster", speedup);
+        println!("📊 Cache speedup: {speedup:.1}x faster");
 
         println!("\n🧹 Cache Management Features:");
         println!("   - LRU eviction policy for memory efficiency");
@@ -626,7 +623,7 @@ impl UltrathinkJitDemo {
 
         println!("\n💡 Key Insights:");
         for recommendation in &analytics.recommendations {
-            println!("   - {}", recommendation);
+            println!("   - {recommendation}");
         }
 
         println!("\n🚀 Advanced Capabilities Demonstrated:");
@@ -654,9 +651,9 @@ impl UltrathinkJitDemo {
     fn generate_matrix_kernel(&self, size: usize) -> String {
         format!(
             r#"
-        define void @matmul_{}x{}(double* %a, double* %b, double* %c) {{
+        define void @matmul_{size}x{size}(double* %a, double* %b, double* %c) {{
         entry:
-            ; Optimized matrix multiplication for {}x{} matrices
+            ; Optimized matrix multiplication for {size}x{size} matrices
             ; Uses tiled approach for cache efficiency
             
             ; Tile size optimized for L1 cache
@@ -667,17 +664,17 @@ impl UltrathinkJitDemo {
             
         loop_i:
             %i = phi i32 [ 0, %entry ], [ %i_next, %loop_i_end ]
-            %i_cmp = icmp slt i32 %i, {}
+            %i_cmp = icmp slt i32 %i, {size}
             br i1 %i_cmp, label %loop_j, label %exit
             
         loop_j:
             %j = phi i32 [ 0, %loop_i ], [ %j_next, %loop_j_end ]
-            %j_cmp = icmp slt i32 %j, {}
+            %j_cmp = icmp slt i32 %j, {size}
             br i1 %j_cmp, label %loop_k, label %loop_i_end
             
         loop_k:
             %k = phi i32 [ 0, %loop_j ], [ %k_next, %loop_k_body ]
-            %k_cmp = icmp slt i32 %k, {}
+            %k_cmp = icmp slt i32 %k, {size}
             br i1 %k_cmp, label %loop_k_body, label %loop_j_end
             
         loop_k_body:
@@ -713,8 +710,7 @@ impl UltrathinkJitDemo {
         exit:
             ret void
         }}
-        "#,
-            size, size, size, size, size, size, size
+        "#
         )
     }
 

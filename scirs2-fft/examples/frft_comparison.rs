@@ -38,7 +38,7 @@ fn test_additivity_property() {
     let test_cases = vec![(0.3, 0.4), (0.5, 0.7), (0.8, 0.9), (1.2, 0.6)];
 
     for (alpha1, alpha2) in test_cases {
-        println!("α₁ = {}, α₂ = {}", alpha1, alpha2);
+        println!("α₁ = {alpha1}, α₂ = {alpha2}");
 
         // Original algorithm
         let direct_orig = frft(&signal, alpha1 + alpha2, None).unwrap();
@@ -107,7 +107,7 @@ fn test_energy_conservation() {
         .collect();
 
     let input_energy: f64 = signal.iter().map(|&x| x * x).sum();
-    println!("Input signal energy: {:.6}\n", input_energy);
+    println!("Input signal energy: {input_energy:.6}\n");
 
     let alphas = vec![0.1, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5];
 
@@ -128,14 +128,7 @@ fn test_energy_conservation() {
         let deviation_dft = ((energy_dft - input_energy) / input_energy * 100.0).abs();
 
         println!(
-            "{:.1}    {:.6}   {:.6}   {:.6}   {:8.2}   {:8.2}   {:7.2}",
-            alpha,
-            energy_orig,
-            energy_ozaktas,
-            energy_dft,
-            deviation_orig,
-            deviation_ozaktas,
-            deviation_dft
+            "{alpha:.1}    {energy_orig:.6}   {energy_ozaktas:.6}   {energy_dft:.6}   {deviation_orig:8.2}   {deviation_ozaktas:8.2}   {deviation_dft:7.2}"
         );
     }
     println!();
@@ -153,10 +146,7 @@ fn test_cascaded_transforms() {
     let alpha = 0.1;
     let num_iterations = 10;
 
-    println!(
-        "Applying {} transforms with α = {} each",
-        num_iterations, alpha
-    );
+    println!("Applying {num_iterations} transforms with α = {alpha} each");
     println!("Total effective α = {}\n", alpha * num_iterations as f64);
 
     // Original algorithm
@@ -192,16 +182,16 @@ fn test_cascaded_transforms() {
     let energy_direct_ozaktas: f64 = direct_ozaktas.iter().map(|c| c.norm_sqr()).sum();
 
     println!("Original algorithm:");
-    println!("  Cascaded energy: {:.6}", energy_orig);
-    println!("  Direct energy:   {:.6}", energy_direct_orig);
+    println!("  Cascaded energy: {energy_orig:.6}");
+    println!("  Direct energy:   {energy_direct_orig:.6}");
     println!(
         "  Ratio:           {:.6}\n",
         energy_orig / energy_direct_orig
     );
 
     println!("Ozaktas algorithm:");
-    println!("  Cascaded energy: {:.6}", energy_ozaktas);
-    println!("  Direct energy:   {:.6}", energy_direct_ozaktas);
+    println!("  Cascaded energy: {energy_ozaktas:.6}");
+    println!("  Direct energy:   {energy_direct_ozaktas:.6}");
     println!(
         "  Ratio:           {:.6}\n",
         energy_ozaktas / energy_direct_ozaktas
@@ -223,6 +213,6 @@ fn test_cascaded_transforms() {
         .unwrap();
 
     println!("Peak preservation:");
-    println!("  Original algorithm peak at: {}", peak_orig);
-    println!("  Ozaktas algorithm peak at:  {}", peak_ozaktas);
+    println!("  Original algorithm peak at: {peak_orig}");
+    println!("  Ozaktas algorithm peak at:  {peak_ozaktas}");
 }

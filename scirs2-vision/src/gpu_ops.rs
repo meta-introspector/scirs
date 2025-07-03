@@ -37,10 +37,7 @@ impl GpuVisionContext {
         // Try preferred backend first
         match GpuContext::new(preferred_backend) {
             Ok(context) => {
-                eprintln!(
-                    "Successfully created GPU context with backend: {:?}",
-                    preferred_backend
-                );
+                eprintln!("Successfully created GPU context with backend: {preferred_backend:?}");
                 Ok(Self {
                     context,
                     backend: preferred_backend,
@@ -48,8 +45,7 @@ impl GpuVisionContext {
             }
             Err(preferred_error) => {
                 eprintln!(
-                    "Failed to create GPU context with preferred backend {:?}: {}",
-                    preferred_backend, preferred_error
+                    "Failed to create GPU context with preferred backend {preferred_backend:?}: {preferred_error}"
                 );
 
                 // Try fallback backends in order of preference
@@ -69,8 +65,7 @@ impl GpuVisionContext {
                     match GpuContext::new(fallback_backend) {
                         Ok(context) => {
                             eprintln!(
-                                "Successfully created GPU context with fallback backend: {:?}",
-                                fallback_backend
+                                "Successfully created GPU context with fallback backend: {fallback_backend:?}"
                             );
                             return Ok(Self {
                                 context,
@@ -79,8 +74,7 @@ impl GpuVisionContext {
                         }
                         Err(fallback_error) => {
                             eprintln!(
-                                "Fallback backend {:?} also failed: {}",
-                                fallback_backend, fallback_error
+                                "Fallback backend {fallback_backend:?} also failed: {fallback_error}"
                             );
                         }
                     }
@@ -421,7 +415,7 @@ fn conv2d_vision(@builtin(global_invocation_id) global_id: vec3<u32>) {
                     }
                 };
 
-                eprintln!("GPU Error Details: {}", error_details);
+                eprintln!("GPU Error Details: {error_details}");
 
                 // Fall back to SIMD implementation
                 crate::simd_ops::simd_convolve_2d(image, kernel)
@@ -1405,7 +1399,7 @@ fn batch_conv2d(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
                     let result_array = Array2::from_shape_vec((height, width), image_data.to_vec())
                         .map_err(|e| {
-                            VisionError::Other(format!("Failed to reshape output: {}", e))
+                            VisionError::Other(format!("Failed to reshape output: {e}"))
                         })?;
 
                     results.push(result_array);

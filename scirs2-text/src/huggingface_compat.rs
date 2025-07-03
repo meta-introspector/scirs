@@ -316,12 +316,11 @@ impl HfModelAdapter {
         let transformer_config = if config_file.exists() {
             #[cfg(feature = "serde-support")]
             {
-                let file = fs::File::open(&config_file).map_err(|e| {
-                    TextError::IoError(format!("Failed to open config file: {}", e))
-                })?;
+                let file = fs::File::open(&config_file)
+                    .map_err(|e| TextError::IoError(format!("Failed to open config file: {e}")))?;
                 let reader = BufReader::new(file);
                 let hf_config: HfConfig = serde_json::from_reader(reader).map_err(|e| {
-                    TextError::InvalidInput(format!("Failed to deserialize config: {}", e))
+                    TextError::InvalidInput(format!("Failed to deserialize config: {e}"))
                 })?;
                 hf_config.to_transformer_config()?
             }
@@ -337,7 +336,7 @@ impl HfModelAdapter {
 
         // Create vocabulary (simplified - would load from tokenizer.json)
         let vocabulary: Vec<String> = (0..transformer_config.vocab_size)
-            .map(|i| format!("[TOKEN_{}]", i))
+            .map(|i| format!("[TOKEN_{i}]"))
             .collect();
 
         // Create transformer model
@@ -354,51 +353,48 @@ impl HfModelAdapter {
 
         // Create output directory
         std::fs::create_dir_all(output_path)
-            .map_err(|e| TextError::IoError(format!("Failed to create directory: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to create directory: {e}")))?;
 
         // Save configuration
         #[cfg(feature = "serde-support")]
         {
             let config_file = fs::File::create(output_path.join("config.json"))
-                .map_err(|e| TextError::IoError(format!("Failed to create config file: {}", e)))?;
+                .map_err(|e| TextError::IoError(format!("Failed to create config file: {e}")))?;
             let writer = BufWriter::new(config_file);
-            serde_json::to_writer_pretty(writer, &self.config).map_err(|e| {
-                TextError::InvalidInput(format!("Failed to serialize config: {}", e))
-            })?;
+            serde_json::to_writer_pretty(writer, &self.config)
+                .map_err(|e| TextError::InvalidInput(format!("Failed to serialize config: {e}")))?;
         }
 
         #[cfg(not(feature = "serde-support"))]
         {
             let config_json = format!("{:#?}", self.config);
             fs::write(output_path.join("config.json"), config_json)
-                .map_err(|e| TextError::IoError(format!("Failed to write config: {}", e)))?;
+                .map_err(|e| TextError::IoError(format!("Failed to write config: {e}")))?;
         }
 
         // Save model weights in binary format
         let model_data = self.serialize_model_weights(_model)?;
         fs::write(output_path.join("pytorch_model.bin"), model_data)
-            .map_err(|e| TextError::IoError(format!("Failed to write model: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to write model: {e}")))?;
 
         // Save tokenizer configuration
         let tokenizer_config = HfTokenizerConfig::default();
 
         #[cfg(feature = "serde-support")]
         {
-            let tokenizer_file =
-                fs::File::create(output_path.join("tokenizer.json")).map_err(|e| {
-                    TextError::IoError(format!("Failed to create tokenizer file: {}", e))
-                })?;
+            let tokenizer_file = fs::File::create(output_path.join("tokenizer.json"))
+                .map_err(|e| TextError::IoError(format!("Failed to create tokenizer file: {e}")))?;
             let writer = BufWriter::new(tokenizer_file);
             serde_json::to_writer_pretty(writer, &tokenizer_config).map_err(|e| {
-                TextError::InvalidInput(format!("Failed to serialize tokenizer config: {}", e))
+                TextError::InvalidInput(format!("Failed to serialize tokenizer config: {e}"))
             })?;
         }
 
         #[cfg(not(feature = "serde-support"))]
         {
-            let tokenizer_json = format!("{:#?}", tokenizer_config);
+            let tokenizer_json = format!("{tokenizer_config:#?}");
             fs::write(output_path.join("tokenizer.json"), tokenizer_json)
-                .map_err(|e| TextError::IoError(format!("Failed to write tokenizer: {}", e)))?;
+                .map_err(|e| TextError::IoError(format!("Failed to write tokenizer: {e}")))?;
         }
 
         Ok(())
@@ -426,10 +422,7 @@ impl HfModelAdapter {
             "token-classification" => Ok(HfPipeline::TokenClassification(
                 TokenClassificationPipeline::new(),
             )),
-            _ => Err(TextError::InvalidInput(format!(
-                "Unsupported task: {}",
-                task
-            ))),
+            _ => Err(TextError::InvalidInput(format!("Unsupported task: {task}"))),
         }
     }
 
@@ -541,8 +534,7 @@ impl HfModelAdapter {
 
         if version != 1 {
             return Err(TextError::InvalidInput(format!(
-                "Unsupported model format version: {}",
-                version
+                "Unsupported model format version: {version}"
             )));
         }
 
@@ -1202,7 +1194,7 @@ impl HfHub {
 
         if !model_path.exists() {
             std::fs::create_dir_all(&model_path)
-                .map_err(|e| TextError::IoError(format!("Failed to create cache dir: {}", e)))?;
+                .map_err(|e| TextError::IoError(format!("Failed to create cache dir: {e}")))?;
 
             // Download model files
             self.download_model_files(model_id, &model_path)?;
@@ -1227,7 +1219,7 @@ impl HfHub {
             if let Ok(content) = self.download_file(model_id, file) {
                 let file_path = cache_path.join(file);
                 std::fs::write(&file_path, content)
-                    .map_err(|e| TextError::IoError(format!("Failed to write {}: {}", file, e)))?;
+                    .map_err(|e| TextError::IoError(format!("Failed to write {file}: {e}")))?;
             }
         }
 
@@ -1237,7 +1229,7 @@ impl HfHub {
     /// Download a specific file from model repository
     fn download_file(&self, model_id: &str, filename: &str) -> Result<Vec<u8>> {
         // Construct the URL for the file
-        let url = format!("{}/{}/resolve/main/{}", self.api_base, model_id, filename);
+        let url = format!("{}/{model_id}/resolve/main/{filename}", self.api_base);
 
         // Try to download the actual file using HTTP
         match self.perform_http_download(&url) {
@@ -1261,7 +1253,7 @@ impl HfHub {
 
         // Create a temporary file for the download
         let temp_file = NamedTempFile::new()
-            .map_err(|e| TextError::IoError(format!("Failed to create temp file: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to create temp file: {e}")))?;
 
         let temp_path = temp_file.path();
 
@@ -1287,7 +1279,7 @@ impl HfHub {
         if download_success {
             // Read the downloaded content
             fs::read(temp_path)
-                .map_err(|e| TextError::IoError(format!("Failed to read downloaded file: {}", e)))
+                .map_err(|e| TextError::IoError(format!("Failed to read downloaded file: {e}")))
         } else {
             // If both curl and wget fail, try a basic HTTP implementation
             self.basic_http_get(url)
@@ -1308,7 +1300,8 @@ impl HfHub {
         let parts: Vec<&str> = url_without_protocol.splitn(2, '/').collect();
         let host = parts[0];
         let path = if parts.len() > 1 {
-            format!("/{}", parts[1])
+            let path_part = parts[1];
+            format!("/{path_part}")
         } else {
             "/".to_string()
         };
@@ -1322,24 +1315,21 @@ impl HfHub {
         }
 
         // Connect to the server (HTTP only)
-        let mut stream = TcpStream::connect(format!("{}:80", host))
-            .map_err(|e| TextError::IoError(format!("Failed to connect: {}", e)))?;
+        let mut stream = TcpStream::connect(format!("{host}:80"))
+            .map_err(|e| TextError::IoError(format!("Failed to connect: {e}")))?;
 
         // Send HTTP request
-        let request = format!(
-            "GET {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n",
-            path, host
-        );
+        let request = format!("GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n");
 
         stream
             .write_all(request.as_bytes())
-            .map_err(|e| TextError::IoError(format!("Failed to send request: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to send request: {e}")))?;
 
         // Read response
         let mut response = Vec::new();
         stream
             .read_to_end(&mut response)
-            .map_err(|e| TextError::IoError(format!("Failed to read response: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to read response: {e}")))?;
 
         // Parse HTTP response to extract body
         let response_str = String::from_utf8_lossy(&response);
@@ -1407,7 +1397,7 @@ impl HfHub {
             "vocab.txt" => {
                 // Mock vocabulary
                 (0..1000)
-                    .map(|i| format!("[TOKEN_{}]", i))
+                    .map(|i| format!("[TOKEN_{i}]"))
                     .collect::<Vec<_>>()
                     .join("\n")
                     .into_bytes()
@@ -1495,7 +1485,7 @@ impl HfHub {
         models
             .into_iter()
             .find(|model| model.id == model_id)
-            .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {}", model_id)))
+            .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {model_id}")))
     }
 
     /// Search models by query
@@ -2103,7 +2093,7 @@ impl TokenClassificationPipeline {
                 result
                     .tags
                     .into_iter()
-                    .map(|tag| format!("{:?}", tag))
+                    .map(|tag| format!("{tag:?}"))
                     .collect::<Vec<String>>(),
             ),
             Err(_) => None,

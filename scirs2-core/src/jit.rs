@@ -687,7 +687,7 @@ impl JitCompiler {
     ) -> Result<(), JitError> {
         // Get compiled kernel from cache
         let kernel = {
-            let mut cache = self.cache.write().unwrap();
+            let cache = self.cache.read().unwrap();
             cache
                 .get(kernel_id)
                 .ok_or_else(|| JitError::CacheError(format!("{kernel_id}")))?

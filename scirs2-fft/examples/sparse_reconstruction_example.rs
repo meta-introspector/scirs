@@ -13,10 +13,7 @@ fn main() {
 
     // Create a signal with a few frequency components plus some noise
     let n = 1024;
-    println!(
-        "Creating a signal with n = {} samples and 3 frequency components",
-        n
-    );
+    println!("Creating a signal with n = {n} samples and 3 frequency components");
 
     // Parameters for our frequency components
     let frequencies = vec![(3, 1.0), (7, 0.5), (15, 0.25)];
@@ -53,17 +50,11 @@ fn main() {
 
     // Compute error between original clean signal and reconstruction
     let clean_error = compute_error(&clean_signal, &reconstructed);
-    println!(
-        "Error between original clean signal and reconstruction: {:.6}",
-        clean_error
-    );
+    println!("Error between original clean signal and reconstruction: {clean_error:.6}");
 
     // Compute error between noisy signal and reconstruction
     let noisy_error = compute_error(&noisy_signal, &reconstructed);
-    println!(
-        "Error between noisy signal and reconstruction: {:.6}",
-        noisy_error
-    );
+    println!("Error between noisy signal and reconstruction: {noisy_error:.6}");
     println!("(Lower error with clean signal shows noise reduction effect)");
 
     // 3. High-resolution reconstruction
@@ -71,7 +62,7 @@ fn main() {
     let target_length = n * 2;
     let high_res = reconstruct_high_resolution(&sparse_result, n, target_length).unwrap();
 
-    println!("Original signal length: {}", n);
+    println!("Original signal length: {n}");
     println!("High-resolution signal length: {}", high_res.len());
 
     // 4. Filtered reconstruction - demonstrating low-pass filter

@@ -766,8 +766,7 @@ where
 
     if p <= zero || p >= one {
         return Err(SpecialError::ValueError(format!(
-            "logit requires p in (0, 1), got {:?}",
-            p
+            "logit requires p in (0, 1), got {p:?}"
         )));
     }
 

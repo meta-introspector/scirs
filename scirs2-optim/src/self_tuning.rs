@@ -4,7 +4,7 @@
 //! tune hyperparameters, select optimizers, and adjust configurations based
 //! on training dynamics and problem characteristics.
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::optimizers::*;
 use crate::schedulers::*;
 use ndarray::{Array, Dimension, ScalarOperand};

@@ -10,7 +10,7 @@ where
     let start = Instant::now();
     let result = f();
     let elapsed = start.elapsed();
-    println!("{}: {:?}", name, elapsed);
+    println!("{name}: {elapsed:?}");
     result
 }
 

@@ -55,8 +55,7 @@ impl WordTokenizer {
                 pattern: Some(regex),
             }),
             Err(e) => Err(TextError::TokenizationError(format!(
-                "Invalid regex pattern: {}",
-                e
+                "Invalid regex pattern: {e}"
             ))),
         }
     }
@@ -118,8 +117,7 @@ impl SentenceTokenizer {
                 pattern: Some(regex),
             }),
             Err(e) => Err(TextError::TokenizationError(format!(
-                "Invalid regex pattern: {}",
-                e
+                "Invalid regex pattern: {e}"
             ))),
         }
     }
@@ -318,8 +316,7 @@ impl RegexTokenizer {
                 gaps,
             }),
             Err(e) => Err(TextError::TokenizationError(format!(
-                "Invalid regex pattern: {}",
-                e
+                "Invalid regex pattern: {e}"
             ))),
         }
     }

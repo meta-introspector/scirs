@@ -27,14 +27,14 @@ const CACHE_DIR_ENV: &str = "SCIRS2_CACHE_DIR";
 pub fn sha256_hash_file(path: &Path) -> std::result::Result<String, String> {
     use sha2::{Digest, Sha256};
 
-    let mut file = File::open(path).map_err(|e| format!("Failed to open file: {}", e))?;
+    let mut file = File::open(path).map_err(|e| format!("Failed to open file: {e}"))?;
     let mut hasher = Sha256::new();
     let mut buffer = [0; 8192];
 
     loop {
         let bytes_read = file
             .read(&mut buffer)
-            .map_err(|e| format!("Failed to read file: {}", e))?;
+            .map_err(|e| format!("Failed to read file: {e}"))?;
         if bytes_read == 0 {
             break;
         }
@@ -78,7 +78,7 @@ pub fn get_cache_dir() -> Result<PathBuf> {
     // Fallback to home directory
     let home_dir = dirs::home_dir()
         .ok_or_else(|| DatasetsError::CacheError("Could not find home directory".to_string()))?;
-    let cache_dir = home_dir.join(format!(".{}", CACHE_DIR_NAME));
+    let cache_dir = home_dir.join(format!(".{CACHE_DIR_NAME}"));
     ensure_directory_exists(&cache_dir)?;
 
     Ok(cache_dir)
@@ -109,7 +109,7 @@ fn get_platform_cache_dir() -> Option<PathBuf> {
 fn ensure_directory_exists(dir: &Path) -> Result<()> {
     if !dir.exists() {
         fs::create_dir_all(dir).map_err(|e| {
-            DatasetsError::CacheError(format!("Failed to create cache directory: {}", e))
+            DatasetsError::CacheError(format!("Failed to create cache directory: {e}"))
         })?;
     }
     Ok(())
@@ -139,7 +139,7 @@ pub fn fetch_data(
     // Get the cache directory
     let cache_dir = match get_cache_dir() {
         Ok(dir) => dir,
-        Err(e) => return Err(format!("Failed to get cache directory: {}", e)),
+        Err(e) => return Err(format!("Failed to get cache directory: {e}")),
     };
 
     // Check if file exists in cache
@@ -151,42 +151,42 @@ pub fn fetch_data(
     // If not in cache, fetch from the URL
     let entry = match registry_entry {
         Some(entry) => entry,
-        None => return Err(format!("No registry entry found for {}", filename)),
+        None => return Err(format!("No registry entry found for {filename}")),
     };
 
     // Create a temporary file to download to
-    let temp_dir = tempfile::tempdir().map_err(|e| format!("Failed to create temp dir: {}", e))?;
+    let temp_dir = tempfile::tempdir().map_err(|e| format!("Failed to create temp dir: {e}"))?;
     let temp_file = temp_dir.path().join(filename);
 
     // Download the file
     let response = ureq::get(entry.url)
         .call()
-        .map_err(|e| format!("Failed to download {}: {}", filename, e))?;
+        .map_err(|e| format!("Failed to download {filename}: {e}"))?;
 
     let mut reader = response.into_reader();
     let mut file = std::fs::File::create(&temp_file)
-        .map_err(|e| format!("Failed to create temp file: {}", e))?;
+        .map_err(|e| format!("Failed to create temp file: {e}"))?;
 
-    std::io::copy(&mut reader, &mut file).map_err(|e| format!("Failed to download file: {}", e))?;
+    std::io::copy(&mut reader, &mut file).map_err(|e| format!("Failed to download file: {e}"))?;
 
     // Verify the SHA256 hash of the downloaded file if provided
     if !entry.sha256.is_empty() {
         let computed_hash = sha256_hash_file(&temp_file)?;
         if computed_hash != entry.sha256 {
             return Err(format!(
-                "SHA256 hash mismatch for {}: expected {}, got {}",
-                filename, entry.sha256, computed_hash
+                "SHA256 hash mismatch for {filename}: expected {}, got {computed_hash}",
+                entry.sha256
             ));
         }
     }
 
     // Move the file to the cache
-    fs::create_dir_all(&cache_dir).map_err(|e| format!("Failed to create cache dir: {}", e))?;
+    fs::create_dir_all(&cache_dir).map_err(|e| format!("Failed to create cache dir: {e}"))?;
     if let Some(parent) = cache_path.parent() {
-        fs::create_dir_all(parent).map_err(|e| format!("Failed to create cache dir: {}", e))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Failed to create cache dir: {e}"))?;
     }
 
-    fs::copy(&temp_file, &cache_path).map_err(|e| format!("Failed to copy to cache: {}", e))?;
+    fs::copy(&temp_file, &cache_path).map_err(|e| format!("Failed to copy to cache: {e}"))?;
 
     Ok(cache_path)
 }
@@ -343,7 +343,7 @@ impl DatasetCache {
     pub fn ensure_cache_dir(&self) -> Result<()> {
         if !self.cache_dir.exists() {
             fs::create_dir_all(&self.cache_dir).map_err(|e| {
-                DatasetsError::CacheError(format!("Failed to create cache directory: {}", e))
+                DatasetsError::CacheError(format!("Failed to create cache directory: {e}"))
             })?;
         }
         Ok(())
@@ -381,17 +381,16 @@ impl DatasetCache {
         let path = self.get_cached_path(name);
         if !path.exists() {
             return Err(DatasetsError::CacheError(format!(
-                "Cached file does not exist: {}",
-                name
+                "Cached file does not exist: {name}"
             )));
         }
 
         let mut file = File::open(path)
-            .map_err(|e| DatasetsError::CacheError(format!("Failed to open cached file: {}", e)))?;
+            .map_err(|e| DatasetsError::CacheError(format!("Failed to open cached file: {e}")))?;
 
         let mut buffer = Vec::new();
         file.read_to_end(&mut buffer)
-            .map_err(|e| DatasetsError::CacheError(format!("Failed to read cached file: {}", e)))?;
+            .map_err(|e| DatasetsError::CacheError(format!("Failed to read cached file: {e}")))?;
 
         // Update memory cache
         self.mem_cache.borrow_mut().insert(key, buffer.clone());
@@ -415,12 +414,11 @@ impl DatasetCache {
 
         // Write to file system cache
         let path = self.get_cached_path(name);
-        let mut file = File::create(path).map_err(|e| {
-            DatasetsError::CacheError(format!("Failed to create cache file: {}", e))
-        })?;
+        let mut file = File::create(path)
+            .map_err(|e| DatasetsError::CacheError(format!("Failed to create cache file: {e}")))?;
 
         file.write_all(data).map_err(|e| {
-            DatasetsError::CacheError(format!("Failed to write to cache file: {}", e))
+            DatasetsError::CacheError(format!("Failed to write to cache file: {e}"))
         })?;
 
         // Update memory cache
@@ -435,7 +433,7 @@ impl DatasetCache {
         // Clear file system cache
         if self.cache_dir.exists() {
             fs::remove_dir_all(&self.cache_dir)
-                .map_err(|e| DatasetsError::CacheError(format!("Failed to clear cache: {}", e)))?;
+                .map_err(|e| DatasetsError::CacheError(format!("Failed to clear cache: {e}")))?;
         }
 
         // Clear memory cache
@@ -450,7 +448,7 @@ impl DatasetCache {
         let path = self.get_cached_path(name);
         if path.exists() {
             fs::remove_file(path).map_err(|e| {
-                DatasetsError::CacheError(format!("Failed to remove cached file: {}", e))
+                DatasetsError::CacheError(format!("Failed to remove cached file: {e}"))
             })?;
         }
 
@@ -473,12 +471,12 @@ impl DatasetCache {
 
         if self.cache_dir.exists() {
             let entries = fs::read_dir(&self.cache_dir).map_err(|e| {
-                DatasetsError::CacheError(format!("Failed to read cache directory: {}", e))
+                DatasetsError::CacheError(format!("Failed to read cache directory: {e}"))
             })?;
 
             for entry in entries {
                 let entry = entry.map_err(|e| {
-                    DatasetsError::CacheError(format!("Failed to read directory entry: {}", e))
+                    DatasetsError::CacheError(format!("Failed to read directory entry: {e}"))
                 })?;
 
                 if let Ok(metadata) = entry.metadata() {
@@ -516,12 +514,12 @@ impl DatasetCache {
 
         if self.cache_dir.exists() {
             let entries = fs::read_dir(&self.cache_dir).map_err(|e| {
-                DatasetsError::CacheError(format!("Failed to read cache directory: {}", e))
+                DatasetsError::CacheError(format!("Failed to read cache directory: {e}"))
             })?;
 
             for entry in entries {
                 let entry = entry.map_err(|e| {
-                    DatasetsError::CacheError(format!("Failed to read directory entry: {}", e))
+                    DatasetsError::CacheError(format!("Failed to read directory entry: {e}"))
                 })?;
 
                 if let Ok(metadata) = entry.metadata() {
@@ -552,7 +550,7 @@ impl DatasetCache {
 
             // Remove file
             if let Err(e) = fs::remove_file(&path) {
-                eprintln!("Warning: Failed to remove cache file {:?}: {}", path, e);
+                eprintln!("Warning: Failed to remove cache file {path:?}: {e}");
             } else {
                 freed_size += size;
             }
@@ -594,12 +592,12 @@ impl DatasetCache {
 
         if self.cache_dir.exists() {
             let entries = fs::read_dir(&self.cache_dir).map_err(|e| {
-                DatasetsError::CacheError(format!("Failed to read cache directory: {}", e))
+                DatasetsError::CacheError(format!("Failed to read cache directory: {e}"))
             })?;
 
             for entry in entries {
                 let entry = entry.map_err(|e| {
-                    DatasetsError::CacheError(format!("Failed to read directory entry: {}", e))
+                    DatasetsError::CacheError(format!("Failed to read directory entry: {e}"))
                 })?;
 
                 if let Ok(metadata) = entry.metadata() {
@@ -646,21 +644,19 @@ pub fn download_data(url: &str, force_download: bool) -> Result<Vec<u8>> {
     }
 
     // Download the data
-    let response = reqwest::blocking::get(url).map_err(|e| {
-        DatasetsError::DownloadError(format!("Failed to download from {}: {}", url, e))
-    })?;
+    let response = reqwest::blocking::get(url)
+        .map_err(|e| DatasetsError::DownloadError(format!("Failed to download from {url}: {e}")))?;
 
     if !response.status().is_success() {
         return Err(DatasetsError::DownloadError(format!(
-            "Failed to download from {}: HTTP status {}",
-            url,
+            "Failed to download from {url}: HTTP status {}",
             response.status()
         )));
     }
 
-    let data = response.bytes().map_err(|e| {
-        DatasetsError::DownloadError(format!("Failed to read response data: {}", e))
-    })?;
+    let data = response
+        .bytes()
+        .map_err(|e| DatasetsError::DownloadError(format!("Failed to read response data: {e}")))?;
 
     let data_vec = data.to_vec();
 
@@ -728,15 +724,13 @@ impl CacheManager {
                                 .borrow_mut()
                                 .remove(&FileCacheKey(name.clone()));
                             Err(DatasetsError::CacheError(format!(
-                                "Failed to deserialize cached dataset: {}",
-                                e
+                                "Failed to deserialize cached dataset: {e}"
                             )))
                         }
                     }
                 }
                 Err(e) => Err(DatasetsError::CacheError(format!(
-                    "Failed to read cached data: {}",
-                    e
+                    "Failed to read cached data: {e}"
                 ))),
             }
         } else {
@@ -749,14 +743,13 @@ impl CacheManager {
         let name = key.as_string();
 
         // Serialize the dataset to JSON bytes for caching
-        let serialized = serde_json::to_vec(dataset).map_err(|e| {
-            DatasetsError::CacheError(format!("Failed to serialize dataset: {}", e))
-        })?;
+        let serialized = serde_json::to_vec(dataset)
+            .map_err(|e| DatasetsError::CacheError(format!("Failed to serialize dataset: {e}")))?;
 
         // Write the serialized data to cache
         self.cache
             .write_cached(&name, &serialized)
-            .map_err(|e| DatasetsError::CacheError(format!("Failed to write to cache: {}", e)))
+            .map_err(|e| DatasetsError::CacheError(format!("Failed to write to cache: {e}")))
     }
 
     /// Create a cache manager with comprehensive configuration
@@ -851,12 +844,12 @@ impl CacheManager {
 
         if cache_dir.exists() {
             let entries = fs::read_dir(cache_dir).map_err(|e| {
-                DatasetsError::CacheError(format!("Failed to read cache directory: {}", e))
+                DatasetsError::CacheError(format!("Failed to read cache directory: {e}"))
             })?;
 
             for entry in entries {
                 let entry = entry.map_err(|e| {
-                    DatasetsError::CacheError(format!("Failed to read directory entry: {}", e))
+                    DatasetsError::CacheError(format!("Failed to read directory entry: {e}"))
                 })?;
 
                 if let Some(filename) = entry.file_name().to_str() {
@@ -1009,11 +1002,11 @@ impl CacheFileInfo {
                         let mins = (diff_secs % 3600) / 60;
 
                         if days > 0 {
-                            format!("{} days ago", days)
+                            format!("{days} days ago")
                         } else if hours > 0 {
-                            format!("{} hours ago", hours)
+                            format!("{hours} hours ago")
                         } else if mins > 0 {
-                            format!("{} minutes ago", mins)
+                            format!("{mins} minutes ago")
                         } else {
                             "Just now".to_string()
                         }
@@ -1033,7 +1026,7 @@ impl CacheFileInfo {
 fn format_bytes(bytes: u64) -> String {
     let size = bytes as f64;
     if size < 1024.0 {
-        format!("{} B", size)
+        format!("{size} B")
     } else if size < 1024.0 * 1024.0 {
         format!("{:.1} KB", size / 1024.0)
     } else if size < 1024.0 * 1024.0 * 1024.0 {
@@ -1169,7 +1162,7 @@ impl BatchOperations {
             for &(_, name) in urls_and_names {
                 result
                     .failures
-                    .push((name.to_string(), format!("Cache setup failed: {}", e)));
+                    .push((name.to_string(), format!("Cache setup failed: {e}")));
             }
             return;
         }
@@ -1208,17 +1201,16 @@ impl BatchOperations {
                                             break;
                                         }
                                         Err(e) => {
-                                            last_error =
-                                                format!("Failed to write cache file: {}", e);
+                                            last_error = format!("Failed to write cache file: {e}");
                                         }
                                     },
                                     Err(e) => {
-                                        last_error = format!("Failed to create cache file: {}", e);
+                                        last_error = format!("Failed to create cache file: {e}");
                                     }
                                 }
                             }
                             Err(e) => {
-                                last_error = format!("Download failed: {}", e);
+                                last_error = format!("Download failed: {e}");
                                 if attempt < max_retries {
                                     thread::sleep(retry_delay);
                                 }
@@ -1277,11 +1269,11 @@ impl BatchOperations {
                             break;
                         }
                         Err(e) => {
-                            last_error = format!("Cache write failed: {}", e);
+                            last_error = format!("Cache write failed: {e}");
                         }
                     },
                     Err(e) => {
-                        last_error = format!("Download failed: {}", e);
+                        last_error = format!("Download failed: {e}");
                         if attempt < self.max_retries {
                             std::thread::sleep(self.retry_delay);
                         }
@@ -1317,8 +1309,7 @@ impl BatchOperations {
                             result.failures.push((
                                 filename.to_string(),
                                 format!(
-                                    "Hash mismatch: expected {}, got {}",
-                                    expected_hash, actual_hash
+                                    "Hash mismatch: expected {expected_hash}, got {actual_hash}"
                                 ),
                             ));
                         }
@@ -1327,7 +1318,7 @@ impl BatchOperations {
                         result.failure_count += 1;
                         result.failures.push((
                             filename.to_string(),
-                            format!("Hash computation failed: {}", e),
+                            format!("Hash computation failed: {e}"),
                         ));
                     }
                 },
@@ -1395,7 +1386,7 @@ impl BatchOperations {
                             result.failure_count += 1;
                             result
                                 .failures
-                                .push((filename, format!("Removal failed: {}", e)));
+                                .push((filename, format!("Removal failed: {e}")));
                         }
                     }
                 }
@@ -1448,7 +1439,7 @@ impl BatchOperations {
                     result.failure_count += 1;
                     result
                         .failures
-                        .push((name.clone(), format!("Cache read failed: {}", e)));
+                        .push((name.clone(), format!("Cache read failed: {e}")));
                 }
             }
         }
@@ -1476,7 +1467,7 @@ impl BatchOperations {
                         Err(e) => {
                             let mut r = result_clone.lock().unwrap();
                             r.failure_count += 1;
-                            r.failures.push((name, format!("Processing failed: {}", e)));
+                            r.failures.push((name, format!("Processing failed: {e}")));
                         }
                     })
                 })
@@ -1515,14 +1506,14 @@ impl BatchOperations {
                         result.failure_count += 1;
                         result
                             .failures
-                            .push((name.clone(), format!("Processing failed: {}", e)));
+                            .push((name.clone(), format!("Processing failed: {e}")));
                     }
                 },
                 Err(e) => {
                     result.failure_count += 1;
                     result
                         .failures
-                        .push((name.clone(), format!("Cache read failed: {}", e)));
+                        .push((name.clone(), format!("Cache read failed: {e}")));
                 }
             }
         }
@@ -1571,7 +1562,7 @@ impl BatchOperations {
                     result.failure_count += 1;
                     result
                         .failures
-                        .push((filename, format!("Metadata read failed: {}", e)));
+                        .push((filename, format!("Metadata read failed: {e}")));
                 }
             }
         }

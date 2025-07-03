@@ -14,7 +14,7 @@ fn main() {
 
     // Check for SIMD support
     let simd_available = simd_support_available();
-    println!("SIMD support available: {}", simd_available);
+    println!("SIMD support available: {simd_available}");
 
     if !simd_available {
         println!("SIMD support not detected. Skipping SIMD benchmarks.");
@@ -136,7 +136,7 @@ fn run_benchmark<F, G>(
     let speedup = standard_time.as_secs_f64() / simd_time.as_secs_f64();
 
     // Print results
-    println!("  {}: {} runs", name, iterations);
+    println!("  {name}: {iterations} runs");
     println!(
         "    Standard implementation: {:.6} ms",
         standard_time.as_secs_f64() * 1000.0
@@ -145,7 +145,7 @@ fn run_benchmark<F, G>(
         "    SIMD implementation:     {:.6} ms",
         simd_time.as_secs_f64() * 1000.0
     );
-    println!("    Speedup:                 {:.2}x", speedup);
+    println!("    Speedup:                 {speedup:.2}x");
 
     // Record benchmark
     record_benchmark(results, name, size_desc, standard_time, simd_time);
@@ -163,7 +163,7 @@ fn run_1d_benchmarks(results: &mut Vec<BenchmarkResult>) {
         run_benchmark(
             results,
             "1D FFT",
-            &format!("{}p", size),
+            &format!("{size}p"),
             iterations,
             standard_fn,
             simd_fn,
@@ -181,7 +181,7 @@ fn run_1d_benchmarks(results: &mut Vec<BenchmarkResult>) {
         run_benchmark(
             results,
             "1D FFT (complex)",
-            &format!("{}p", size),
+            &format!("{size}p"),
             iterations,
             standard_fn,
             simd_fn,
@@ -211,7 +211,7 @@ fn run_2d_benchmarks(results: &mut Vec<BenchmarkResult>) {
         run_benchmark(
             results,
             "2D FFT",
-            &format!("{}x{}", size, size),
+            &format!("{size}x{size}"),
             iterations,
             standard_fn,
             simd_fn,
@@ -249,7 +249,7 @@ fn run_nd_benchmarks(results: &mut Vec<BenchmarkResult>) {
         run_benchmark(
             results,
             "3D FFT",
-            &format!("{}x{}x{}", width, height, depth),
+            &format!("{width}x{height}x{depth}"),
             iterations,
             standard_fn,
             simd_fn,
@@ -285,7 +285,7 @@ fn run_nd_benchmarks(results: &mut Vec<BenchmarkResult>) {
         run_benchmark(
             results,
             "4D FFT",
-            &format!("{}x{}x{}x{}", dim1, dim2, dim3, dim4),
+            &format!("{dim1}x{dim2}x{dim3}x{dim4}"),
             iterations,
             standard_fn,
             simd_fn,

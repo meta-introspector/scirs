@@ -123,8 +123,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     constraint_violations.push(violation_general);
 
     println!("  Time: {:.6} seconds", elapsed_general.as_secs_f64());
-    println!("  Error: {:.6e}", error_general);
-    println!("  Constraint violation: {:.6e}", violation_general);
+    println!("  Error: {error_general:.6e}");
+    println!("  Constraint violation: {violation_general:.6e}");
     println!("  Steps: {}", result_general.n_steps);
 
     // 2. Run solver using standard ODE solver with constraints solved at each step
@@ -197,8 +197,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     constraint_violations.push(violation_ode);
 
     println!("  Time: {:.6} seconds", elapsed_ode.as_secs_f64());
-    println!("  Error: {:.6e}", error_ode);
-    println!("  Constraint violation: {:.6e}", violation_ode);
+    println!("  Error: {error_ode:.6e}");
+    println!("  Constraint violation: {violation_ode:.6e}");
     println!("  Steps: {}", result_ode.n_steps);
 
     // 3. Run solver using specialized BDF method for DAEs
@@ -226,8 +226,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     constraint_violations.push(violation_bdf);
 
     println!("  Time: {:.6} seconds", elapsed_bdf.as_secs_f64());
-    println!("  Error: {:.6e}", error_bdf);
-    println!("  Constraint violation: {:.6e}", violation_bdf);
+    println!("  Error: {error_bdf:.6e}");
+    println!("  Constraint violation: {violation_bdf:.6e}");
     println!("  Steps: {}", result_bdf.n_steps);
 
     // Print performance comparison

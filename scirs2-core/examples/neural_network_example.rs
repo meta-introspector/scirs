@@ -33,10 +33,10 @@ fn main() {
 
     // Create a linear layer
     let weights = Array2::<f64>::eye(3);
-    println!("Weights: {:?}", weights);
+    println!("Weights: {weights:?}");
 
     let bias = Array1::<f64>::ones(3);
-    println!("Bias: {:?}", bias);
+    println!("Bias: {bias:?}");
 
     let linear = Linear::new(
         "linear1",
@@ -49,7 +49,7 @@ fn main() {
 
     // Create a random input
     let input = Array2::<f64>::ones((1, 3));
-    println!("Input: {:?}", input);
+    println!("Input: {input:?}");
 
     // Forward pass through linear layer
     let input_wrapped = NdarrayWrapper::new(input.clone());
@@ -61,7 +61,7 @@ fn main() {
                 println!("Output is not of expected type");
             }
         }
-        Err(e) => println!("Error in forward pass: {}", e),
+        Err(e) => println!("Error in forward pass: {e}"),
     }
 
     // Create a convolutional layer
@@ -98,7 +98,7 @@ fn main() {
                 println!("Output is not of expected type");
             }
         }
-        Err(e) => println!("Error in convolutional forward pass: {}", e),
+        Err(e) => println!("Error in convolutional forward pass: {e}"),
     }
 
     // Part 2: Creating and Using a Sequential Model
@@ -198,7 +198,7 @@ fn main() {
                 println!("Model output is not of expected type");
             }
         }
-        Err(e) => println!("Error in model forward pass: {}", e),
+        Err(e) => println!("Error in model forward pass: {e}"),
     }
 
     // Part 3: Using the model builder function
@@ -239,7 +239,7 @@ fn main() {
     // Forward pass with GPU array
     match model.forward(&gpu_input) {
         Ok(_) => println!("Successfully ran forward pass with GPU array"),
-        Err(e) => println!("Error in GPU forward pass: {}", e),
+        Err(e) => println!("Error in GPU forward pass: {e}"),
     }
 
     // Part 5: Evaluation mode
@@ -260,6 +260,6 @@ fn main() {
     let input_wrapped = NdarrayWrapper::new(input_4d.clone());
     match model.forward(&input_wrapped) {
         Ok(_) => println!("Successfully ran forward pass in evaluation mode"),
-        Err(e) => println!("Error in evaluation mode forward pass: {}", e),
+        Err(e) => println!("Error in evaluation mode forward pass: {e}"),
     }
 }

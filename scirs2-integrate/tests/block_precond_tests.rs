@@ -318,14 +318,11 @@ fn test_block_ilu_preconditioner() {
     // Verify that preconditioner reduces iteration count
     assert!(
         iter_ilu < iter_no_precond,
-        "Block ILU preconditioner didn't reduce iteration count: {} vs {}",
-        iter_ilu,
-        iter_no_precond
+        "Block ILU preconditioner didn't reduce iteration count: {iter_ilu} vs {iter_no_precond}"
     );
 
     println!(
-        "Block ILU preconditioner test succeeded: reduced iterations from {} to {}",
-        iter_no_precond, iter_ilu
+        "Block ILU preconditioner test succeeded: reduced iterations from {iter_no_precond} to {iter_ilu}"
     );
 }
 
@@ -409,14 +406,11 @@ fn test_block_jacobi_preconditioner() {
     // Verify that preconditioner reduces iteration count
     assert!(
         iter_jacobi < iter_no_precond,
-        "Block Jacobi preconditioner didn't reduce iteration count: {} vs {}",
-        iter_jacobi,
-        iter_no_precond
+        "Block Jacobi preconditioner didn't reduce iteration count: {iter_jacobi} vs {iter_no_precond}"
     );
 
     println!(
-        "Block Jacobi preconditioner test succeeded: reduced iterations from {} to {}",
-        iter_no_precond, iter_jacobi
+        "Block Jacobi preconditioner test succeeded: reduced iterations from {iter_no_precond} to {iter_jacobi}"
     );
 }
 
@@ -454,18 +448,9 @@ fn test_preconditioner_performance() {
     let duration_ilu = start.elapsed();
 
     // Print performance comparison
-    println!(
-        "Performance comparison for problem size n_x={}, n_y={}:",
-        n_x, n_y
-    );
-    println!(
-        "  No preconditioning:  {:?}, iterations: {}",
-        duration_no_precond, iter_no_precond
-    );
-    println!(
-        "  Block ILU:           {:?}, iterations: {}",
-        duration_ilu, iter_ilu
-    );
+    println!("Performance comparison for problem size n_x={n_x}, n_y={n_y}:");
+    println!("  No preconditioning:  {duration_no_precond:?}, iterations: {iter_no_precond}");
+    println!("  Block ILU:           {duration_ilu:?}, iterations: {iter_ilu}");
     println!(
         "  Block ILU speedup:   {:.2}x",
         duration_no_precond.as_secs_f64() / duration_ilu.as_secs_f64()

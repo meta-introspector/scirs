@@ -7,7 +7,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{rngs::StdRng, rng, Rng, SeedableRng};
 use scirs2_core::{
     parallel_ops::*,
     simd_ops::SimdUnifiedOps,
@@ -145,7 +145,7 @@ where
     pub fn new(config: PropertyTestConfig) -> Self {
         let rng = match config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => StdRng::from_rng(&mut rng()).unwrap(),
         };
 
         Self {

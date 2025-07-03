@@ -11,7 +11,7 @@ use std::collections::{HashMap, VecDeque};
 use super::forward_mode::ForwardModeEngine;
 use super::higher_order::{HessianConfig, HigherOrderEngine};
 use super::reverse_mode::ReverseModeEngine;
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 
 /// Meta-gradient computation engine
 pub struct MetaGradientEngine<T: Float> {

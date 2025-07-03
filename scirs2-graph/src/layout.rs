@@ -240,7 +240,7 @@ where
 /// Uses the second and third smallest eigenvectors of the Laplacian matrix.
 pub fn spectral_layout<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, Position>>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + num_traits::One + PartialOrd + Copy,
     Ix: petgraph::graph::IndexType,
 {

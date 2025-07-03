@@ -597,11 +597,7 @@ impl ConvexHull {
                 .build_from_iter(points_vec)
             {
                 Ok(qh) => qh,
-                Err(e) => {
-                    return Err(SpatialError::ComputationError(format!(
-                        "Qhull error: {e}"
-                    )))
-                }
+                Err(e) => return Err(SpatialError::ComputationError(format!("Qhull error: {e}"))),
             };
 
             // No equations for special case
@@ -643,11 +639,7 @@ impl ConvexHull {
                 .build_from_iter(points_vec)
             {
                 Ok(qh) => qh,
-                Err(e) => {
-                    return Err(SpatialError::ComputationError(format!(
-                        "Qhull error: {e}"
-                    )))
-                }
+                Err(e) => return Err(SpatialError::ComputationError(format!("Qhull error: {e}"))),
             };
 
             // No equations for special case
@@ -688,11 +680,7 @@ impl ConvexHull {
                 .build_from_iter(points_vec)
             {
                 Ok(qh) => qh,
-                Err(e) => {
-                    return Err(SpatialError::ComputationError(format!(
-                        "Qhull error: {e}"
-                    )))
-                }
+                Err(e) => return Err(SpatialError::ComputationError(format!("Qhull error: {e}"))),
             };
 
             // No equations for special case
@@ -1679,11 +1667,7 @@ mod tests {
         let square_points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
         let square_hull = ConvexHull::new(&square_points.view()).unwrap();
         let area = square_hull.volume().unwrap();
-        assert!(
-            (area - 1.0).abs() < 1e-10,
-            "Expected area 1.0, got {}",
-            area
-        );
+        assert!((area - 1.0).abs() < 1e-10, "Expected area 1.0, got {area}");
 
         // Test 2D triangle area
         let triangle_points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
@@ -1691,16 +1675,14 @@ mod tests {
         let triangle_area = triangle_hull.volume().unwrap();
         assert!(
             (triangle_area - 0.5).abs() < 1e-10,
-            "Expected area 0.5, got {}",
-            triangle_area
+            "Expected area 0.5, got {triangle_area}"
         );
 
         // Test 2D perimeter
         let perimeter = square_hull.area().unwrap();
         assert!(
             (perimeter - 4.0).abs() < 1e-10,
-            "Expected perimeter 4.0, got {}",
-            perimeter
+            "Expected perimeter 4.0, got {perimeter}"
         );
     }
 
@@ -1723,8 +1705,7 @@ mod tests {
         // The volume should be close to 1.0 (allowing for numerical precision)
         assert!(
             volume > 0.9 && volume < 1.1,
-            "Expected volume ~1.0, got {}",
-            volume
+            "Expected volume ~1.0, got {volume}"
         );
     }
 

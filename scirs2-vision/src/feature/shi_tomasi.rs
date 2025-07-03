@@ -68,17 +68,17 @@ pub fn shi_tomasi_corners(
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
             // Sobel X
-            let gx = -1.0 * array[[y - 1, x - 1]]
+            let gx = -array[[y - 1, x - 1]]
                 + 1.0 * array[[y - 1, x + 1]]
                 + -2.0 * array[[y, x - 1]]
                 + 2.0 * array[[y, x + 1]]
-                + -1.0 * array[[y + 1, x - 1]]
+                + -array[[y + 1, x - 1]]
                 + 1.0 * array[[y + 1, x + 1]];
 
             // Sobel Y
-            let gy = -1.0 * array[[y - 1, x - 1]]
+            let gy = -array[[y - 1, x - 1]]
                 + -2.0 * array[[y - 1, x]]
-                + -1.0 * array[[y - 1, x + 1]]
+                + -array[[y - 1, x + 1]]
                 + 1.0 * array[[y + 1, x - 1]]
                 + 2.0 * array[[y + 1, x]]
                 + 1.0 * array[[y + 1, x + 1]];
@@ -242,16 +242,16 @@ pub fn good_features_to_track(
     // Calculate gradients
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
-            let gx = -1.0 * array[[y - 1, x - 1]]
+            let gx = -array[[y - 1, x - 1]]
                 + 1.0 * array[[y - 1, x + 1]]
                 + -2.0 * array[[y, x - 1]]
                 + 2.0 * array[[y, x + 1]]
-                + -1.0 * array[[y + 1, x - 1]]
+                + -array[[y + 1, x - 1]]
                 + 1.0 * array[[y + 1, x + 1]];
 
-            let gy = -1.0 * array[[y - 1, x - 1]]
+            let gy = -array[[y - 1, x - 1]]
                 + -2.0 * array[[y - 1, x]]
-                + -1.0 * array[[y - 1, x + 1]]
+                + -array[[y - 1, x + 1]]
                 + 1.0 * array[[y + 1, x - 1]]
                 + 2.0 * array[[y + 1, x]]
                 + 1.0 * array[[y + 1, x + 1]];
@@ -415,8 +415,7 @@ mod tests {
         // Should detect corners of the square
         assert!(
             corner_count >= 4,
-            "Should detect at least 4 corners, found {}",
-            corner_count
+            "Should detect at least 4 corners, found {corner_count}"
         );
     }
 

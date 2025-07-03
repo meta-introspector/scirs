@@ -85,10 +85,10 @@ pub fn calculate_output_shape(
 ) -> (usize, usize) {
     let effective_kernel_h = (kernel_size.0 - 1) * dilation.0 + 1;
     let effective_kernel_w = (kernel_size.1 - 1) * dilation.1 + 1;
-    
+
     let output_height = (input_height + 2 * padding.0 - effective_kernel_h) / stride.0 + 1;
     let output_width = (input_width + 2 * padding.1 - effective_kernel_w) / stride.1 + 1;
-    
+
     (output_height, output_width)
 }
 
@@ -114,17 +114,17 @@ mod tests {
     fn test_padding_mode_calculation() {
         let kernel_size = (3, 3);
         let dilation = (1, 1);
-        
+
         assert_eq!(
             PaddingMode::Valid.calculate_padding(kernel_size, dilation),
             (0, 0)
         );
-        
+
         assert_eq!(
             PaddingMode::Same.calculate_padding(kernel_size, dilation),
             (1, 1)
         );
-        
+
         assert_eq!(
             PaddingMode::Custom(2).calculate_padding(kernel_size, dilation),
             (2, 2)
@@ -138,13 +138,13 @@ mod tests {
             calculate_output_shape(32, 32, (3, 3), (1, 1), (0, 0), (1, 1)),
             (30, 30)
         );
-        
+
         // Same padding, stride 1
         assert_eq!(
             calculate_output_shape(32, 32, (3, 3), (1, 1), (1, 1), (1, 1)),
             (32, 32)
         );
-        
+
         // Stride 2
         assert_eq!(
             calculate_output_shape(32, 32, (3, 3), (2, 2), (1, 1), (1, 1)),

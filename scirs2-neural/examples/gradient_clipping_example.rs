@@ -47,6 +47,8 @@ fn main() -> Result<()> {
             if abs_val > max_abs {
                 max_abs = abs_val;
             }
+        }
+    }
     println!("Maximum absolute value before clipping: {:.4}", max_abs);
     if max_abs > max_value as f64 {
         println!("Applying value clipping");
@@ -99,6 +101,7 @@ fn create_sample_gradients() -> Vec<Array<f32, IxDyn>> {
     let grad4 = Array::from_shape_vec(IxDyn(&[2]), vec![0.2, -0.9]).unwrap();
     gradients.push(grad4);
     gradients
+}
 // Compute global norm of gradients
 fn compute_global_norm<A>(gradients: &[ArrayBase<OwnedRepr<A>, IxDyn>]) -> f64
 where
@@ -106,6 +109,10 @@ where
 {
     let mut global_norm_sq = 0.0;
     for grad in gradients {
+        for val in grad.iter() {
             let val_f64 = val.to_f64().unwrap_or(0.0);
             global_norm_sq += val_f64 * val_f64;
+        }
+    }
     global_norm_sq.sqrt()
+}

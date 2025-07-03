@@ -69,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let grid = &result.grid;
     let coeffs = &result.coefficients;
 
-    println!("Solution computed in {:.4} seconds", solve_time);
+    println!("Solution computed in {solve_time:.4} seconds");
     println!("Residual norm: {:.6e}", result.residual_norm);
 
     // Calculate errors
@@ -92,8 +92,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     l2_error = (l2_error / grid.len() as f64).sqrt();
 
     println!("\nError analysis:");
-    println!("  - Maximum error: {:.6e}", max_error);
-    println!("  - L2 error norm: {:.6e}", l2_error);
+    println!("  - Maximum error: {max_error:.6e}");
+    println!("  - L2 error norm: {l2_error:.6e}");
 
     // Print solution at selected points
     println!("\nSolution at selected points:");
@@ -122,10 +122,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let exact = (PI * x).sin();
         let error = (numerical - exact).abs();
 
-        println!(
-            "{:<10.4} {:<15.8e} {:<15.8e} {:<10.2e}",
-            x, numerical, exact, error
-        );
+        println!("{x:<10.4} {numerical:<15.8e} {exact:<15.8e} {error:<10.2e}");
     }
 
     // Examine the distribution of Legendre points
@@ -210,7 +207,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         l2_error = (l2_error / n as f64).sqrt();
 
-        println!("  - N = {}: L2 error = {:.6e}", n, l2_error);
+        println!("  - N = {n}: L2 error = {l2_error:.6e}");
     }
 
     // Additional example with mixed boundary conditions
@@ -269,7 +266,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let x = mixed_result.grid[idx];
         let value = mixed_result.u[idx];
 
-        println!("{:<10.4} {:<15.8e}", x, value);
+        println!("{x:<10.4} {value:<15.8e}");
     }
 
     // Compare Legendre with Chebyshev

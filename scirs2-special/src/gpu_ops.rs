@@ -733,8 +733,8 @@ fn create_gpu_context() -> Result<Arc<GpuContext>, GpuError> {
             );
 
             // Fallback to direct context creation
-            use scirs2_core::gpu::{self, GpuBackend};
-            gpu::get_or_create_context(GpuBackend::Cpu)
+            use scirs2_core::gpu::GpuBackend;
+            GpuContext::new(GpuBackend::Cpu)
         }
     }
 }
@@ -744,7 +744,7 @@ fn create_gpu_context() -> Result<Arc<GpuContext>, GpuError> {
 fn create_gpu_buffer<T>(
     ctx: &GpuContext,
     data: &[T],
-) -> SpecialResult<Arc<dyn scirs2_core::gpu::GpuBuffer>>
+) -> SpecialResult<scirs2_core::gpu::GpuBuffer<f64>>
 where
     T: Copy,
 {
@@ -757,7 +757,7 @@ where
 fn create_gpu_buffer_typed<T>(
     ctx: &GpuContext,
     data: &[T],
-) -> SpecialResult<Arc<dyn scirs2_core::gpu::GpuBuffer>>
+) -> SpecialResult<scirs2_core::gpu::GpuBuffer<f64>>
 where
     T: num_traits::Float + 'static,
 {
@@ -789,7 +789,7 @@ where
 fn create_empty_gpu_buffer(
     ctx: &GpuContext,
     size: usize,
-) -> SpecialResult<Arc<dyn scirs2_core::gpu::GpuBuffer>> {
+) -> SpecialResult<scirs2_core::gpu::GpuBuffer<f64>> {
     let byte_size = size * std::mem::size_of::<f32>();
     ctx.create_buffer(byte_size)
         .map_err(|e| SpecialError::ComputationError(format!("Failed to create GPU buffer: {}", e)))
@@ -800,7 +800,7 @@ fn create_empty_gpu_buffer(
 fn create_empty_gpu_buffer_typed<T>(
     ctx: &GpuContext,
     size: usize,
-) -> SpecialResult<Arc<dyn scirs2_core::gpu::GpuBuffer>>
+) -> SpecialResult<scirs2_core::gpu::GpuBuffer<f64>>
 where
     T: 'static,
 {
@@ -823,7 +823,7 @@ where
 fn create_compute_pipeline(
     ctx: &GpuContext,
     shader_source: &str,
-) -> SpecialResult<Arc<dyn scirs2_core::gpu::ComputePipeline>> {
+) -> SpecialResult<scirs2_core::gpu::GpuKernelHandle> {
     ctx.create_compute_pipeline(shader_source).map_err(|e| {
         SpecialError::ComputationError(format!("Failed to create compute pipeline: {}", e))
     })
@@ -833,9 +833,9 @@ fn create_compute_pipeline(
 #[cfg(feature = "gpu")]
 fn execute_compute_shader(
     ctx: &GpuContext,
-    pipeline: &dyn scirs2_core::gpu::ComputePipeline,
-    input_buffer: &dyn scirs2_core::gpu::GpuBuffer,
-    output_buffer: &dyn scirs2_core::gpu::GpuBuffer,
+    pipeline: &scirs2_core::gpu::GpuKernelHandle,
+    input_buffer: &scirs2_core::gpu::GpuBuffer<f64>,
+    output_buffer: &scirs2_core::gpu::GpuBuffer<f64>,
     array_len: usize,
 ) -> SpecialResult<()> {
     // Calculate workgroup count (assuming workgroup size of 256)
@@ -854,9 +854,9 @@ fn execute_compute_shader(
 #[cfg(feature = "gpu")]
 fn execute_compute_shader_enhanced(
     ctx: &GpuContext,
-    pipeline: &dyn scirs2_core::gpu::ComputePipeline,
-    input_buffer: &dyn scirs2_core::gpu::GpuBuffer,
-    output_buffer: &dyn scirs2_core::gpu::GpuBuffer,
+    pipeline: &scirs2_core::gpu::GpuKernelHandle,
+    input_buffer: &scirs2_core::gpu::GpuBuffer<f64>,
+    output_buffer: &scirs2_core::gpu::GpuBuffer<f64>,
     array_len: usize,
 ) -> SpecialResult<()> {
     // Adaptive workgroup sizing based on array length
@@ -894,7 +894,7 @@ fn execute_compute_shader_enhanced(
 #[cfg(feature = "gpu")]
 fn read_gpu_buffer_to_array<T>(
     ctx: &GpuContext,
-    buffer: &dyn scirs2_core::gpu::GpuBuffer,
+    buffer: &scirs2_core::gpu::GpuBuffer<f64>,
     output: &mut [T],
 ) -> SpecialResult<()>
 where
@@ -919,7 +919,7 @@ where
 #[cfg(feature = "gpu")]
 fn read_gpu_buffer_to_array_typed<T>(
     ctx: &GpuContext,
-    buffer: &dyn scirs2_core::gpu::GpuBuffer,
+    buffer: &scirs2_core::gpu::GpuBuffer<f64>,
     output: &mut [T],
 ) -> SpecialResult<()>
 where
@@ -948,9 +948,9 @@ where
 /// Advanced buffer cache for GPU operations with intelligent memory management
 #[cfg(feature = "gpu")]
 struct GpuBufferCache {
-    input_buffers: Mutex<HashMap<(usize, usize), Arc<dyn scirs2_core::gpu::GpuBuffer>>>, // (size, type_id)
-    output_buffers: Mutex<HashMap<(usize, usize), Arc<dyn scirs2_core::gpu::GpuBuffer>>>,
-    shader_pipelines: Mutex<HashMap<String, Arc<dyn scirs2_core::gpu::ComputePipeline>>>,
+    input_buffers: Mutex<HashMap<(usize, usize), scirs2_core::gpu::GpuBuffer<f64>>>, // (size, type_id)
+    output_buffers: Mutex<HashMap<(usize, usize), scirs2_core::gpu::GpuBuffer<f64>>>,
+    shader_pipelines: Mutex<HashMap<String, scirs2_core::gpu::GpuKernelHandle>>,
 }
 
 #[cfg(feature = "gpu")]
@@ -970,7 +970,7 @@ fn get_buffer_cache() -> &'static GpuBufferCache {
 fn create_gpu_buffer_with_caching<T>(
     ctx: &GpuContext,
     data: &[T],
-) -> SpecialResult<Arc<dyn scirs2_core::gpu::GpuBuffer>>
+) -> SpecialResult<scirs2_core::gpu::GpuBuffer<f64>>
 where
     T: 'static,
 {
@@ -1023,7 +1023,7 @@ where
 fn create_empty_gpu_buffer_with_caching<T>(
     ctx: &GpuContext,
     size: usize,
-) -> SpecialResult<Arc<dyn scirs2_core::gpu::GpuBuffer>>
+) -> SpecialResult<scirs2_core::gpu::GpuBuffer<f64>>
 where
     T: 'static,
 {
@@ -1070,7 +1070,7 @@ fn get_or_create_shader_pipeline(
     ctx: &GpuContext,
     shader_name: &str,
     shader_source: &str,
-) -> SpecialResult<Arc<dyn scirs2_core::gpu::ComputePipeline>> {
+) -> SpecialResult<scirs2_core::gpu::GpuKernelHandle> {
     let cache = get_buffer_cache();
 
     // Try to get cached pipeline
@@ -1106,9 +1106,9 @@ fn get_or_create_shader_pipeline(
 #[cfg(feature = "gpu")]
 fn execute_compute_shader_with_validation(
     ctx: &GpuContext,
-    pipeline: &dyn scirs2_core::gpu::ComputePipeline,
-    input_buffer: &dyn scirs2_core::gpu::GpuBuffer,
-    output_buffer: &dyn scirs2_core::gpu::GpuBuffer,
+    pipeline: &scirs2_core::gpu::GpuKernelHandle,
+    input_buffer: &scirs2_core::gpu::GpuBuffer<f64>,
+    output_buffer: &scirs2_core::gpu::GpuBuffer<f64>,
     array_len: usize,
     function_name: &str,
 ) -> SpecialResult<()> {
@@ -1195,7 +1195,7 @@ fn execute_compute_shader_with_validation(
 #[cfg(feature = "gpu")]
 fn read_gpu_buffer_with_validation<T>(
     ctx: &GpuContext,
-    buffer: &dyn scirs2_core::gpu::GpuBuffer,
+    buffer: &scirs2_core::gpu::GpuBuffer<f64>,
     output: &mut [T],
 ) -> SpecialResult<()>
 where

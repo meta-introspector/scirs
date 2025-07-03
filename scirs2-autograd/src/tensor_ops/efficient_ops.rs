@@ -295,8 +295,7 @@ impl<F: Float> Op<F> for EfficientConcatOp {
             for (i, (&dim1, &dim2)) in first_shape.iter().zip(shape.iter()).enumerate() {
                 if i != axis && dim1 != dim2 {
                     return Err(OpError::IncompatibleShape(format!(
-                        "All inputs must have the same size except in axis {}",
-                        axis
+                        "All inputs must have the same size except in axis {axis}"
                     )));
                 }
             }

@@ -45,7 +45,7 @@ impl<N: Node, E: EdgeWeight> LargeGraphIterator<N, E> {
     /// Create a new iterator for large graphs
     pub fn new<Ix>(graph: &Graph<N, E, Ix>, chunk_size: usize) -> Self
     where
-        N: Clone,
+        N: Clone + std::fmt::Debug,
         E: Clone,
         Ix: petgraph::graph::IndexType,
     {
@@ -91,7 +91,7 @@ pub fn parallel_degree_computation<N, E, Ix>(
     config: &ParallelConfig,
 ) -> Result<HashMap<N, usize>>
 where
-    N: Node + Clone + Send + Sync,
+    N: Node + Clone + Send + Sync + std::fmt::Debug,
     E: EdgeWeight + Send + Sync,
     Ix: petgraph::graph::IndexType + Send + Sync,
 {
@@ -169,7 +169,7 @@ where
 /// Cache-friendly adjacency matrix computation for large graphs
 pub fn cache_friendly_adjacency_matrix<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<Vec<Vec<E>>>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone + num_traits::Zero + Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -875,10 +875,10 @@ pub trait LargeGraphOps<N: Node, E: EdgeWeight> {
     fn cache_friendly_matrix(&self) -> Result<Vec<Vec<E>>>;
 }
 
-impl<N: Node, E: EdgeWeight, Ix: petgraph::graph::IndexType + Send + Sync> LargeGraphOps<N, E>
-    for Graph<N, E, Ix>
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: petgraph::graph::IndexType + Send + Sync>
+    LargeGraphOps<N, E> for Graph<N, E, Ix>
 where
-    N: Clone + Send + Sync,
+    N: Clone + Send + Sync + std::fmt::Debug,
     E: Clone + Send + Sync + num_traits::Zero + Copy,
 {
     fn parallel_degrees(&self, config: &ParallelConfig) -> Result<HashMap<N, usize>> {
@@ -1185,7 +1185,7 @@ mod tests {
 
     #[test]
     fn test_lazy_graph_metric_error() {
-        let lazy_metric =
+        let lazy_metric: LazyGraphMetric<String> =
             LazyGraphMetric::new(|| Err(GraphError::AlgorithmError("Test error".to_string())));
 
         // Should propagate the error

@@ -96,8 +96,7 @@ where
 
     if window_length >= n {
         return Err(TimeSeriesError::DecompositionError(format!(
-            "Window length ({}) must be less than time series length ({})",
-            window_length, n
+            "Window length ({window_length}) must be less than time series length ({n})"
         )));
     }
 
@@ -139,12 +138,12 @@ where
             None,
         )
         .map_err(|e| {
-            TimeSeriesError::DecompositionError(format!("Randomized SVD computation failed: {}", e))
+            TimeSeriesError::DecompositionError(format!("Randomized SVD computation failed: {e}"))
         })?
     } else {
         // Use standard SVD for small matrices
         svd(&trajectory_matrix_f64.view(), true, None).map_err(|e| {
-            TimeSeriesError::DecompositionError(format!("SVD computation failed: {}", e))
+            TimeSeriesError::DecompositionError(format!("SVD computation failed: {e}"))
         })?
     };
 

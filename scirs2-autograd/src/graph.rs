@@ -306,7 +306,7 @@ impl<T: Float> fmt::Debug for Graph<T> {
         for node in set {
             buf += format!("{node}\n").as_str();
         }
-        write!(f, "{}", buf)
+        write!(f, "{buf}")
     }
 }
 

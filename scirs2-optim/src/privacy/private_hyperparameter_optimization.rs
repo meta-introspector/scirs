@@ -4,7 +4,7 @@
 //! optimization, ensuring that the choice of hyperparameters does not leak
 //! sensitive information about the training data.
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::privacy::moment_accountant::MomentsAccountant;
 use crate::privacy::{DifferentialPrivacyConfig, PrivacyBudget};
 use ndarray::{Array1, Array2};

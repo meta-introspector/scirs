@@ -17,12 +17,12 @@ fn main() {
 
     // Check for SIMD support
     let simd_available = simd_support_available();
-    println!("SIMD support available: {}", simd_available);
+    println!("SIMD support available: {simd_available}");
 
     // Image dimensions (small test image)
     let width = 128;
     let height = 128;
-    println!("\nGenerating test image ({} x {})", width, height);
+    println!("\nGenerating test image ({width} x {height})");
 
     // Generate a test image with various frequency components
     let test_image = generate_test_image(width, height);
@@ -32,43 +32,40 @@ fn main() {
     let start = Instant::now();
     let _filtered_image = frequency_domain_filter(&test_image, width, height, "lowpass");
     let lowpass_time = start.elapsed();
-    println!("Lowpass filter processing time: {:?}", lowpass_time);
+    println!("Lowpass filter processing time: {lowpass_time:?}");
 
     // Apply frequency domain filtering with a highpass filter
     println!("\nApplying frequency domain filtering with a highpass filter...");
     let start = Instant::now();
     let _filtered_image = frequency_domain_filter(&test_image, width, height, "highpass");
     let highpass_time = start.elapsed();
-    println!("Highpass filter processing time: {:?}", highpass_time);
+    println!("Highpass filter processing time: {highpass_time:?}");
 
     // Apply frequency domain filtering with a bandpass filter
     println!("\nApplying frequency domain filtering with a bandpass filter...");
     let start = Instant::now();
     let _filtered_image = frequency_domain_filter(&test_image, width, height, "bandpass");
     let bandpass_time = start.elapsed();
-    println!("Bandpass filter processing time: {:?}", bandpass_time);
+    println!("Bandpass filter processing time: {bandpass_time:?}");
 
     // Performance comparison with larger images
     println!("\nPerformance comparison with larger images:");
 
     for &size in &[256, 512] {
-        println!("\nGenerating test image ({} x {})", size, size);
+        println!("\nGenerating test image ({size} x {size})");
         let large_image = generate_test_image(size, size);
 
         // Standard processing
         let start = Instant::now();
         let _filtered = frequency_domain_filter(&large_image, size, size, "lowpass");
         let time = start.elapsed();
-        println!("Processing time for {} x {} image: {:?}", size, size, time);
+        println!("Processing time for {size} x {size} image: {time:?}");
 
         // Run another filter type to show performance consistency
         let start = Instant::now();
         let _filtered = frequency_domain_filter(&large_image, size, size, "highpass");
         let highpass_time = start.elapsed();
-        println!(
-            "Highpass filter time for {} x {} image: {:?}",
-            size, size, highpass_time
-        );
+        println!("Highpass filter time for {size} x {size} image: {highpass_time:?}");
     }
 }
 

@@ -6,17 +6,16 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::error_standardization::ErrorMessages;
-use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
-use num_traits::{Float, NumCast, One, Zero};
+use ndarray::{s, Array2, ArrayBase, Data, Ix1};
+use num_traits::{Float, NumCast, Zero};
 use scirs2_core::{
     parallel_ops::*,
-    simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps},
+    simd_ops::{PlatformCapabilities, SimdUnifiedOps},
 };
-// Parallel operations provided by scirs2_core::parallel_ops
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 /// Ultra-Think SIMD Configuration with Intelligent Adaptation
 #[derive(Debug, Clone)]

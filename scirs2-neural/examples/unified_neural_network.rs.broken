@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 
 use ndarray::{s, Array, Array1, Array2, Array3, Array4, Axis};
-use rand::rng;
-use rand::Rng;
+use rand::{rngs::ThreadRng, thread_rng, Rng};
 use std::f32;
 use std::fmt::Debug;
 // Trait for all neural network layers
@@ -45,23 +44,40 @@ impl Tensor {
     }
     // Create a 2D tensor
     fn new_2d(data: Array2<f32>) -> Self {
+        let shape = data.shape();
         let mut tensor_data = Array4::<f32>::zeros((shape[0], 1, 1, shape[1]));
+        for i in 0..shape[0] {
             for j in 0..shape[1] {
                 tensor_data[[i, 0, 0, j]] = data[[i, j]];
             }
+        }
+        Tensor {
+            data: tensor_data,
             dim: TensorDim::Dim2(shape[0], shape[1]),
+        }
     // Create a 3D tensor
     fn new_3d(data: Array3<f32>) -> Self {
+        let shape = data.shape();
         let mut tensor_data = Array4::<f32>::zeros((shape[0], 1, shape[1], shape[2]));
+        for i in 0..shape[0] {
+            for j in 0..shape[1] {
                 for k in 0..shape[2] {
                     tensor_data[[i, 0, j, k]] = data[[i, j, k]];
                 }
+            }
+        }
+        Tensor {
+            data: tensor_data,
             dim: TensorDim::Dim3(shape[0], shape[1], shape[2]),
+        }
     // Create a 4D tensor
     fn new_4d(data: Array4<f32>) -> Self {
         let shape = data.shape().to_vec();
+        Tensor {
             data,
             dim: TensorDim::Dim4(shape[0], shape[1], shape[2], shape[3]),
+        }
+    }
     // Get the underlying data as a view appropriate for the dimension
     fn as_1d(&self) -> Array1<f32> {
         match self.dim {
@@ -70,31 +86,55 @@ impl Tensor {
                 for i in 0..size {
                     result[i] = self.data[[0, 0, 0, i]];
                 result
+            }
             _ => panic!("Cannot convert tensor to 1D: incompatible dimensions"),
+        }
+    }
     fn as_2d(&self) -> Array2<f32> {
+        match self.dim {
             TensorDim::Dim2(dim1, dim2) => {
                 let mut result = Array2::<f32>::zeros((dim1, dim2));
                 for i in 0..dim1 {
                     for j in 0..dim2 {
                         result[[i, j]] = self.data[[i, 0, 0, j]];
                     }
+                }
+                result
+            }
             _ => panic!("Cannot convert tensor to 2D: incompatible dimensions"),
+        }
+    }
     fn as_3d(&self) -> Array3<f32> {
+        match self.dim {
             TensorDim::Dim3(dim1, dim2, dim3) => {
                 let mut result = Array3::<f32>::zeros((dim1, dim2, dim3));
+                for i in 0..dim1 {
+                    for j in 0..dim2 {
                         for k in 0..dim3 {
                             result[[i, j, k]] = self.data[[i, 0, j, k]];
                         }
+                    }
+                }
+                result
+            }
             _ => panic!("Cannot convert tensor to 3D: incompatible dimensions"),
+        }
+    }
     fn as_4d(&self) -> Array4<f32> {
+        match self.dim {
             TensorDim::Dim4(_, _, _, _) => self.data.clone(),
             _ => panic!("Cannot convert tensor to 4D: incompatible dimensions"),
+        }
+    }
     // Get shape based on dimensions
     fn shape(&self) -> Vec<usize> {
+        match self.dim {
             TensorDim::Dim1(d1) => vec![d1],
             TensorDim::Dim2(d1, d2) => vec![d1, d2],
             TensorDim::Dim3(d1, d2, d3) => vec![d1, d2, d3],
             TensorDim::Dim4(d1, d2, d3, d4) => vec![d1, d2, d3, d4],
+        }
+    }
     // Reshape tensor to new dimensions
     fn reshape(&self, new_dim: TensorDim) -> Self {
         // Check if total size is compatible

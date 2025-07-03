@@ -17,14 +17,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let signal: Array1<Complex<f64>> = Array1::linspace(0.0, 1.0, n)
         .mapv(|x| Complex::new((2.0 * std::f64::consts::PI * 10.0 * x).sin(), 0.0));
 
-    println!("Original signal length: {} (prime number)", n);
+    println!("Original signal length: {n} (prime number)");
 
     // Benchmark without padding
     println!("\n1. FFT without padding:");
     let start = Instant::now();
     let _result_no_pad = fft(&signal.to_vec(), None)?;
     let time_no_pad = start.elapsed();
-    println!("   Time: {:?}", time_no_pad);
+    println!("   Time: {time_no_pad:?}");
 
     // Test different padding strategies
     let padding_configs = vec![
@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (name, config) in padding_configs {
-        println!("\n2. FFT with {}:", name);
+        println!("\n2. FFT with {name}:");
 
         // Apply automatic padding
         let padded = auto_pad_complex(&signal, &config)?;
@@ -52,11 +52,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let start = Instant::now();
         let result_padded = fft(&padded.to_vec(), None)?;
         let time_padded = start.elapsed();
-        println!("   Time: {:?}", time_padded);
+        println!("   Time: {time_padded:?}");
 
         // Calculate speedup
         let speedup = time_no_pad.as_secs_f64() / time_padded.as_secs_f64();
-        println!("   Speedup: {:.2}x", speedup);
+        println!("   Speedup: {speedup:.2}x");
 
         // Remove padding from result if needed
         let result_unpadded = Array1::from_vec(result_padded);
@@ -87,7 +87,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let config = AutoPadConfig::new(mode).with_min_pad(5);
         let padded = auto_pad_complex(&small_signal, &config)?;
 
-        print!("   {}: [", name);
+        print!("   {name}: [");
         for (i, val) in padded.iter().enumerate() {
             if i > 0 {
                 print!(", ");

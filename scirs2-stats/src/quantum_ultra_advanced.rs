@@ -831,7 +831,7 @@ where
         &mut self,
         data: &ArrayView2<F>,
     ) -> StatsResult<VQEResults<F>> {
-        let n_features = data.ncols();
+        let _n_features = data.ncols();
 
         // Simplified VQE for matrix eigenvalue problem
         let min_eigenvalue = F::from(-1.5).unwrap(); // Lowest eigenvalue found
@@ -1688,8 +1688,8 @@ where
     fn compute_quantum_model_weight(
         &self,
         model: &QuantumModel<F>,
-        data: &ArrayView2<F>,
-        labels: &ArrayView1<F>,
+        _data: &ArrayView2<F>,
+        _labels: &ArrayView1<F>,
     ) -> StatsResult<F> {
         // Weight based on training fidelity and quantum advantages
         let base_weight = model.training_fidelity;
@@ -1870,7 +1870,7 @@ impl<F: Float + NumCast + std::fmt::Display> UltraQuantumAnalyzer<F> {
     pub fn quantum_teleportation_transfer(
         &mut self,
         source_data: &ArrayView2<F>,
-        target_encoding: QuantumFeatureEncoding,
+        _target_encoding: QuantumFeatureEncoding,
     ) -> StatsResult<Array2<F>> {
         let (n_samples, n_features) = source_data.dim();
         let mut transferred_data = Array2::zeros((n_samples, n_features));

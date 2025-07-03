@@ -3,7 +3,7 @@
 //! This script validates that all advanced modules are properly enabled
 //! and functional by testing basic operations from each module.
 
-use ndarray::array;
+use ndarray::{array, Array1};
 use scirs2_spatial::{
     ai_driven_optimization::AIAlgorithmSelector,
     distance::euclidean,
@@ -208,16 +208,22 @@ async fn test_hybrid_algorithms(
         .with_quantum_classical_coupling(0.7)
         .with_adaptive_switching(true);
 
+    // Create a simple spatial objective function for testing
+    let objective_function = |params: &Array1<f64>| {
+        // Simple quadratic function for testing
+        params.iter().map(|&x| x * x).sum::<f64>()
+    };
+
     let optimization_result = hybrid_optimizer
-        .optimize_spatial_function(&points.view())
+        .optimize_spatial_function(objective_function)
         .await?;
 
     if optimization_result.iterations == 0 {
         return Err("Hybrid optimizer reported zero iterations".into());
     }
 
-    if optimization_result.final_cost < 0.0 {
-        return Err("Hybrid optimizer reported negative cost".into());
+    if optimization_result.optimal_value < 0.0 {
+        return Err("Hybrid optimizer reported negative value".into());
     }
 
     // Test hybrid clustering
@@ -225,7 +231,7 @@ async fn test_hybrid_algorithms(
         .with_quantum_exploration_ratio(0.7)
         .with_classical_refinement(true);
 
-    let (centers, labels, _metrics) = hybrid_clusterer.fit(&points.view()).await?;
+    let (_centers, labels, _metrics) = hybrid_clusterer.fit(&points.view()).await?;
 
     if labels.len() != points.nrows() {
         return Err("Hybrid clustering returned wrong number of labels".into());

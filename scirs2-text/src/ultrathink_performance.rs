@@ -579,7 +579,10 @@ impl UltrathinkPerformanceMonitor {
             bottlenecks.push(BottleneckAnalysis {
                 component: "Memory Usage".to_string(),
                 severity: "High".to_string(),
-                description: format!("Average memory usage is {} MB", avg_memory / (1024 * 1024)),
+                description: {
+                    let avg_memory_mb = avg_memory / (1024 * 1024);
+                    format!("Average memory usage is {avg_memory_mb} MB")
+                },
                 recommendations: vec![
                     "Implement memory pooling".to_string(),
                     "Use streaming processing".to_string(),
@@ -934,8 +937,7 @@ impl OptimizationEngine {
             Ok(())
         } else {
             Err(TextError::InvalidInput(format!(
-                "Optimization not found: {}",
-                optimization_id
+                "Optimization not found: {optimization_id}"
             )))
         }
     }

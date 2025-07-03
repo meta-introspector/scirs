@@ -11,7 +11,7 @@ pub mod pod_coordination;
 pub mod tpu_backend;
 pub mod xla_compilation;
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// TPU configuration for optimization

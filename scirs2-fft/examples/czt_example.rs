@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             max_diff = diff;
         }
     }
-    println!("Maximum difference between CZT and FFT: {:.2e}", max_diff);
+    println!("Maximum difference between CZT and FFT: {max_diff:.2e}");
 
     println!("\n2. Using Zoom FFT to analyze a specific frequency range");
 
@@ -146,7 +146,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let prime_czt = CZT::new(prime_n, None, None, None)?;
     let prime_result = prime_czt.transform(&prime_signal, None)?;
 
-    println!("Computed {}-point FFT (prime length) using CZT", prime_n);
+    println!("Computed {prime_n}-point FFT (prime length) using CZT");
     println!("Result length: {}", prime_result.len());
 
     Ok(())

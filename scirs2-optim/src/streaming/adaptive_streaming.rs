@@ -10,7 +10,7 @@ use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
 use super::{StreamingConfig, StreamingDataPoint};
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// Adaptive streaming optimizer with automatic parameter tuning

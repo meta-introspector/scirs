@@ -65,10 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a batch of test signals
     let batch_size = 20;
-    println!(
-        "Creating {} test signals with varying parameters...",
-        batch_size
-    );
+    println!("Creating {batch_size} test signals with varying parameters...");
     let signals = create_test_batch(batch_size);
 
     // 1. Sequential CPU processing (baseline)
@@ -269,9 +266,9 @@ fn analyze_results(
         / spectral_results.len() as f64;
 
     println!("Average components found:");
-    println!("  Sequential: {:.1}", seq_avg);
-    println!("  Parallel batch: {:.1}", par_avg);
-    println!("  Spectral flatness: {:.1}", spec_avg);
+    println!("  Sequential: {seq_avg:.1}");
+    println!("  Parallel batch: {par_avg:.1}");
+    println!("  Spectral flatness: {spec_avg:.1}");
 
     // Calculate average computation time
     let seq_time = sequential_results
@@ -291,7 +288,7 @@ fn analyze_results(
         / spectral_results.len() as f64;
 
     println!("Average per-signal processing time (ms):");
-    println!("  Sequential: {:.3}", seq_time);
-    println!("  Parallel batch: {:.3}", par_time);
-    println!("  Spectral flatness: {:.3}", spec_time);
+    println!("  Sequential: {seq_time:.3}");
+    println!("  Parallel batch: {par_time:.3}");
+    println!("  Spectral flatness: {spec_time:.3}");
 }

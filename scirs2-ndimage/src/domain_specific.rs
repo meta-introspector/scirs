@@ -32,12 +32,12 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
-use crate::filters::{gaussian_filter, median_filter, uniform_filter};
+use crate::filters::{gaussian_filter, median_filter};
 use crate::interpolation::{zoom, InterpolationOrder};
 use crate::measurements::{center_of_mass, moments};
 use crate::morphology::label;
 use crate::morphology::{
-    binary_closing, binary_opening, grey_dilation, grey_erosion, grey_opening,
+    binary_closing, binary_opening, grey_opening,
 };
 
 /// Medical imaging functions

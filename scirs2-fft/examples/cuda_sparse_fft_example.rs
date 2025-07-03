@@ -42,10 +42,7 @@ fn main() {
 
     // 1. Create a signal with a few frequency components
     let n = 1024;
-    println!(
-        "\nCreating a signal with n = {} samples and 3 frequency components",
-        n
-    );
+    println!("\nCreating a signal with n = {n} samples and 3 frequency components");
     let frequencies = vec![(3, 1.0), (7, 0.5), (15, 0.25)];
     let signal = create_sparse_signal(n, &frequencies);
 
@@ -179,8 +176,8 @@ fn main() {
     .unwrap();
     let cuda_elapsed = cuda_start.elapsed();
 
-    println!("  CPU  elapsed time: {:?}", cpu_elapsed);
-    println!("  CUDA elapsed time: {:?}", cuda_elapsed);
+    println!("  CPU  elapsed time: {cpu_elapsed:?}");
+    println!("  CUDA elapsed time: {cuda_elapsed:?}");
 
     if cuda_elapsed < cpu_elapsed {
         println!(

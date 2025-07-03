@@ -11,16 +11,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Example 1: Basic Hartley transform
     println!("1. Basic Hartley Transform:");
     let signal = array![1.0, 2.0, 3.0, 4.0];
-    println!("   Input signal: {:?}", signal);
+    println!("   Input signal: {signal:?}");
 
     let hartley = dht(&signal)?;
-    println!("   Hartley transform: {:?}", hartley);
+    println!("   Hartley transform: {hartley:?}");
 
     let recovered = idht(&hartley)?;
-    println!("   Recovered signal: {:?}", recovered);
+    println!("   Recovered signal: {recovered:?}");
 
     let error: f64 = (&signal - &recovered).mapv(|x| x.abs()).sum();
-    println!("   Recovery error: {:.2e}", error);
+    println!("   Recovery error: {error:.2e}");
     println!();
 
     // Example 2: Hartley transform of a sinusoidal signal
@@ -47,10 +47,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!("   Signal frequency: {} cycles", freq);
+    println!("   Signal frequency: {freq} cycles");
     println!("   Detected peaks (bin, magnitude):");
     for (bin, mag) in peaks {
-        println!("      Bin {}: {:.3}", bin, mag);
+        println!("      Bin {bin}: {mag:.3}");
     }
     println!();
 
@@ -59,24 +59,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let image = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
     println!("   Input image:");
     for row in image.outer_iter() {
-        println!("      {:?}", row);
+        println!("      {row:?}");
     }
 
     let hartley_2d = dht2(&image, None)?;
     println!("   2D Hartley transform:");
     for row in hartley_2d.outer_iter() {
-        println!("      {:?}", row);
+        println!("      {row:?}");
     }
     println!();
 
     // Example 4: Comparing Hartley with FFT
     println!("4. Hartley vs FFT Relationship:");
     let test_signal = array![1.0, 0.0, -1.0, 0.0];
-    println!("   Test signal: {:?}", test_signal);
+    println!("   Test signal: {test_signal:?}");
 
     // Compute Hartley transform
     let hartley_result = dht(&test_signal)?;
-    println!("   Hartley transform: {:?}", hartley_result);
+    println!("   Hartley transform: {hartley_result:?}");
 
     // Compute FFT and derive Hartley from it
     use num_complex::Complex64;
@@ -93,12 +93,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         hartley_from_fft[i] = fft_result[i].re - fft_result[i].im;
     }
 
-    println!("   Hartley from FFT: {:?}", hartley_from_fft);
+    println!("   Hartley from FFT: {hartley_from_fft:?}");
 
     let diff: f64 = (&hartley_result - &hartley_from_fft)
         .mapv(|x| x.abs())
         .sum();
-    println!("   Difference: {:.2e}", diff);
+    println!("   Difference: {diff:.2e}");
     println!();
 
     // Example 5: Properties of Hartley transform

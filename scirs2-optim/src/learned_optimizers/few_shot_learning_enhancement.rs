@@ -1336,7 +1336,7 @@ impl<T: Float> FewShotLearningEnhancement<T> {
         let start_time = Instant::now();
 
         // Analyze task distribution
-        let task_analysis = self.task_analyzer.analyze_task(&support_set)?;
+        let _task_analysis = self.task_analyzer.analyze_task(&support_set)?;
 
         // Find similar tasks
         let similar_tasks = self

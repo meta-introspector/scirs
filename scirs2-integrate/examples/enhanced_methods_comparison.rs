@@ -75,7 +75,7 @@ fn problem_settings(problem: &TestProblem) -> ([f64; 2], Array1<f64>) {
 fn problem_description(problem: &TestProblem) -> String {
     match problem {
         TestProblem::VanDerPol(mu) => {
-            format!("Van der Pol oscillator (mu={})", mu)
+            format!("Van der Pol oscillator (mu={mu})")
         }
         TestProblem::Robertson => "Robertson chemical kinetics".to_string(),
         TestProblem::Oregonator => "Oregonator chemical oscillator".to_string(),
@@ -194,7 +194,7 @@ fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResul
             _ => "Unknown method",
         };
 
-        print!("{:20}: ", method_name);
+        print!("{method_name:20}: ");
 
         match run_solver(&problem, method, rtol, atol) {
             Ok((result, time)) => {
@@ -205,7 +205,7 @@ fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResul
                 succeeded.push((method, result, time));
             }
             Err(e) => {
-                println!("Failed: {}", e);
+                println!("Failed: {e}");
             }
         }
     }
@@ -242,7 +242,7 @@ fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResul
                     _ => "Unknown",
                 };
 
-                println!("  {:20}: max diff = {:.2e}", method_name, max_diff);
+                println!("  {method_name:20}: max diff = {max_diff:.2e}");
             }
         }
 
@@ -265,12 +265,12 @@ fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResul
         // Calculate speedups if both standard and enhanced versions ran
         if bdf_time > 0.0 && enhanced_bdf_time > 0.0 {
             let speedup = bdf_time / enhanced_bdf_time;
-            println!("\nEnhanced BDF speedup: {:.2}x", speedup);
+            println!("\nEnhanced BDF speedup: {speedup:.2}x");
         }
 
         if lsoda_time > 0.0 && enhanced_lsoda_time > 0.0 {
             let speedup = lsoda_time / enhanced_lsoda_time;
-            println!("Enhanced LSODA speedup: {:.2}x", speedup);
+            println!("Enhanced LSODA speedup: {speedup:.2}x");
         }
     }
 

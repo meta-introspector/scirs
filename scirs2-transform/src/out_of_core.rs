@@ -67,7 +67,7 @@ impl ChunkedArrayReader {
     /// Create a new chunked array reader
     pub fn new<P: AsRef<Path>>(path: P, shape: (usize, usize), chunk_size: usize) -> Result<Self> {
         let file = File::open(path).map_err(|e| {
-            TransformError::TransformationError(format!("Failed to open file: {}", e))
+            TransformError::TransformationError(format!("Failed to open file: {e}"))
         })?;
 
         // Pre-allocate buffer pool for maximum chunk size
@@ -107,7 +107,7 @@ impl ChunkedArrayReader {
         self.file
             .read_exact(&mut self.buffer_pool[..total_bytes])
             .map_err(|e| {
-                TransformError::TransformationError(format!("Failed to read data: {}", e))
+                TransformError::TransformationError(format!("Failed to read data: {e}"))
             })?;
 
         // Convert bytes to f64 values efficiently using chunks iterator
@@ -164,7 +164,7 @@ impl ChunkedArrayWriter {
     pub fn new<P: AsRef<Path>>(path: P, shape: (usize, usize)) -> Result<Self> {
         let path_str = path.as_ref().to_string_lossy().to_string();
         let file = File::create(&path).map_err(|e| {
-            TransformError::TransformationError(format!("Failed to create file: {}", e))
+            TransformError::TransformationError(format!("Failed to create file: {e}"))
         })?;
 
         // Pre-allocate write buffer for typical chunk sizes (e.g., 1000 rows)
@@ -214,7 +214,7 @@ impl ChunkedArrayWriter {
 
         // Write all bytes at once
         self.file.write_all(&self.write_buffer).map_err(|e| {
-            TransformError::TransformationError(format!("Failed to write data: {}", e))
+            TransformError::TransformationError(format!("Failed to write data: {e}"))
         })?;
 
         self.rows_written += chunk.shape()[0];
@@ -224,7 +224,7 @@ impl ChunkedArrayWriter {
     /// Finalize the writer and flush data
     pub fn finalize(mut self) -> Result<String> {
         self.file.flush().map_err(|e| {
-            TransformError::TransformationError(format!("Failed to flush data: {}", e))
+            TransformError::TransformationError(format!("Failed to flush data: {e}"))
         })?;
 
         if self.rows_written != self.shape.0 {
@@ -537,7 +537,7 @@ pub fn csv_chunks<P: AsRef<Path>>(
     has_header: bool,
 ) -> Result<impl Iterator<Item = Result<Array2<f64>>>> {
     let file = File::open(path).map_err(|e| {
-        TransformError::TransformationError(format!("Failed to open CSV file: {}", e))
+        TransformError::TransformationError(format!("Failed to open CSV file: {e}"))
     })?;
 
     Ok(CsvChunkIterator::new(
@@ -592,7 +592,7 @@ impl Iterator for CsvChunkIterator {
                 .split(',')
                 .map(|s| {
                     s.trim().parse::<f64>().map_err(|e| {
-                        TransformError::ParseError(format!("Failed to parse number: {}", e))
+                        TransformError::ParseError(format!("Failed to parse number: {e}"))
                     })
                 })
                 .collect();

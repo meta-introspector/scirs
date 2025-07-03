@@ -17,7 +17,7 @@ where
     let start = Instant::now();
     let result = f();
     let elapsed = start.elapsed();
-    println!("{}: {:?}", name, elapsed);
+    println!("{name}: {elapsed:?}");
     result
 }
 
@@ -30,7 +30,7 @@ fn main() {
     // Analytical result
     let exact_result_1d = 1.0 / 3.0;
     println!("Integrating f(x) = x^2 over [0,1]");
-    println!("Exact result: {}", exact_result_1d);
+    println!("Exact result: {exact_result_1d}");
     println!("\nPerformance and accuracy comparison:");
 
     // Test different methods
@@ -99,7 +99,7 @@ fn main() {
             ..options_base.clone()
         };
 
-        let monte_result = time_integration(&format!("Monte Carlo (n={})", n_samples), || {
+        let monte_result = time_integration(&format!("Monte Carlo (n={n_samples})"), || {
             monte_carlo(
                 |x: ArrayView1<f64>| x[0] * x[0],
                 &[(0.0, 1.0)],
@@ -197,12 +197,12 @@ fn main() {
                 );
                 if method == ODEMethod::LSODA || method == ODEMethod::Radau {
                     if let Some(msg) = res.message {
-                        println!("  Message: {}", msg);
+                        println!("  Message: {msg}");
                     }
                 }
             }
             Err(e) => {
-                println!("  Failed: {}", e);
+                println!("  Failed: {e}");
                 if method == ODEMethod::LSODA || method == ODEMethod::Radau {
                     println!("  Note: This method is still experimental");
                 }

@@ -30,7 +30,7 @@ fn test_lsoda_basic() {
 
     // Print the message if available
     if let Some(msg) = &result.message {
-        println!("LSODA info: {}", msg);
+        println!("LSODA info: {msg}");
     }
 
     // We don't strictly require success as long as we got a reasonable result
@@ -40,11 +40,8 @@ fn test_lsoda_basic() {
     let exact = (-2.0f64).exp();
     let computed = result.y.last().unwrap()[0];
     let relative_error = (computed - exact).abs() / exact;
-    println!(
-        "Computed: {}, Exact: {}, Relative error: {}",
-        computed, exact, relative_error
-    );
-    assert!(relative_error < 2e-2, "Error too large: {}", relative_error);
+    println!("Computed: {computed}, Exact: {exact}, Relative error: {relative_error}");
+    assert!(relative_error < 2e-2, "Error too large: {relative_error}");
 }
 
 #[test]
@@ -80,7 +77,7 @@ fn test_lsoda_with_stiffness_change() {
 
     // Print debug info
     if let Some(msg) = &result.message {
-        println!("LSODA info: {}", msg);
+        println!("LSODA info: {msg}");
     }
 
     // Check if we reached the end of integration
@@ -138,7 +135,7 @@ fn test_lsoda_method_switching() {
 
     // Print debug info
     if let Some(msg) = &result.message {
-        println!("LSODA varying stiffness info: {}", msg);
+        println!("LSODA varying stiffness info: {msg}");
     }
 
     // We don't strictly require success - the test might reach max_steps
@@ -154,10 +151,9 @@ fn test_lsoda_method_switching() {
                 if let Ok(num_switches) = num_switch_str.parse::<usize>() {
                     assert!(
                         num_switches > 0,
-                        "Expected at least one method switch but found {}",
-                        num_switches
+                        "Expected at least one method switch but found {num_switches}"
                     );
-                    println!("Method switched {} times", num_switches);
+                    println!("Method switched {num_switches} times");
                 }
             }
         }
@@ -168,10 +164,9 @@ fn test_lsoda_method_switching() {
     // Basic accuracy check - value should be very small at t=10
     // But be more lenient since we may not have fully converged
     let final_value = result.y.last().unwrap()[0];
-    println!("Final value at t=10: {}", final_value);
+    println!("Final value at t=10: {final_value}");
     assert!(
         final_value.abs() < 1e-2,
-        "Final value should be close to zero, got {}",
-        final_value
+        "Final value should be close to zero, got {final_value}"
     );
 }

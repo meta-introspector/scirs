@@ -1,7 +1,6 @@
 //! Basic Recurrent Neural Network (RNN) implementation
 
 use crate::error::{NeuralError, Result};
-use rand::rng;
 use crate::layers::{Layer, ParamLayer};
 use ndarray::{Array, ArrayView, Ix2, IxDyn, ScalarOperand};
 use num_traits::Float;
@@ -135,7 +134,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> RNN<F> {
         // Initialize input-to-hidden weights
         let mut weight_ih_vec: Vec<F> = Vec::with_capacity(hidden_size * input_size);
         for _ in 0..(hidden_size * input_size) {
-            let rand_val = rng.random_range(-1.0..1.0);
+            let rand_val = rng.gen_range(-1.0..1.0);
             let val = F::from(rand_val).ok_or_else(|| {
                 NeuralError::InvalidArchitecture("Failed to convert random value".to_string())
             })?;
@@ -148,7 +147,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> RNN<F> {
         // Initialize hidden-to-hidden weights
         let mut weight_hh_vec: Vec<F> = Vec::with_capacity(hidden_size * hidden_size);
         for _ in 0..(hidden_size * hidden_size) {
-            let rand_val = rng.random_range(-1.0..1.0);
+            let rand_val = rng.gen_range(-1.0..1.0);
             let val = F::from(rand_val).ok_or_else(|| {
                 NeuralError::InvalidArchitecture("Failed to convert random value".to_string())
             })?;
@@ -359,21 +358,21 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for RNN<
 }
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for RNN<F> {
-    fn get_parameters(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
+    fn get_parameters(&self) -> Vec<Array<F, ndarray::IxDyn>> {
         vec![
-            &self.weight_ih,
-            &self.weight_hh,
-            &self.bias_ih,
-            &self.bias_hh,
+            self.weight_ih.clone(),
+            self.weight_hh.clone(),
+            self.bias_ih.clone(),
+            self.bias_hh.clone(),
         ]
     }
 
-    fn get_gradients(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
+    fn get_gradients(&self) -> Vec<Array<F, ndarray::IxDyn>> {
         vec![
-            &self.dweight_ih,
-            &self.dweight_hh,
-            &self.dbias_ih,
-            &self.dbias_hh,
+            self.dweight_ih.clone(),
+            self.dweight_hh.clone(),
+            self.dbias_ih.clone(),
+            self.dbias_hh.clone(),
         ]
     }
     fn set_parameters(&mut self, params: Vec<Array<F, ndarray::IxDyn>>) -> Result<()> {
@@ -383,7 +382,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
                 params.len()
             )));
         }
-        
+
         // Check shapes
         if params[0].shape() != self.weight_ih.shape() {
             return Err(NeuralError::InvalidArchitecture(format!(
@@ -413,12 +412,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
                 params[3].shape()
             )));
         }
-        
+
         self.weight_ih = params[0].clone();
         self.weight_hh = params[1].clone();
         self.bias_ih = params[2].clone();
         self.bias_hh = params[3].clone();
-        
+
         Ok(())
     }
 }
@@ -431,7 +430,7 @@ mod tests {
     #[test]
     fn test_rnn_shape() {
         // Create an RNN layer
-        let mut rng = rand::rng();
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
         let rnn = RNN::<f64>::new(
             10,                        // input_size
             20,                        // hidden_size

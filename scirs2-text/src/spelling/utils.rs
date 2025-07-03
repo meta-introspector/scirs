@@ -70,14 +70,14 @@ where
     T: Default,
 {
     let file =
-        File::open(path).map_err(|e| TextError::IoError(format!("Failed to open file: {}", e)))?;
+        File::open(path).map_err(|e| TextError::IoError(format!("Failed to open file: {e}")))?;
 
     let reader = BufReader::new(file);
     let mut result = T::default();
 
     for line in reader.lines() {
         let line =
-            line.map_err(|e| TextError::IoError(format!("Failed to read line from file: {}", e)))?;
+            line.map_err(|e| TextError::IoError(format!("Failed to read line from file: {e}")))?;
 
         // Skip empty lines
         if line.trim().is_empty() {

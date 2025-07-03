@@ -365,10 +365,9 @@ impl StreamingQuantileTracker {
     pub fn new(n_features: usize, quantiles: Vec<f64>) -> Result<Self> {
         // Validate quantiles
         for &q in &quantiles {
-            if q < 0.0 || q > 1.0 {
+            if !(0.0..=1.0).contains(&q) {
                 return Err(TransformError::InvalidInput(format!(
-                    "Quantile {} must be between 0 and 1",
-                    q
+                    "Quantile {q} must be between 0 and 1"
                 )));
             }
         }
@@ -572,7 +571,7 @@ impl StreamingPCA {
     fn compute_pca(&mut self) -> Result<()> {
         // Perform proper eigendecomposition of covariance matrix
         let (eigenvalues, eigenvectors) = eigh(&self.cov_matrix.view(), None).map_err(|e| {
-            TransformError::ComputationError(format!("Eigendecomposition failed: {}", e))
+            TransformError::ComputationError(format!("Eigendecomposition failed: {e}"))
         })?;
 
         // Sort by eigenvalues in descending order

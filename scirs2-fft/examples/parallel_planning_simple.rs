@@ -71,7 +71,7 @@ fn main() {
     executor.execute(&input, &mut output).unwrap();
     let elapsed = start.elapsed();
 
-    println!("FFT of size {} executed in {:?}", size, elapsed);
+    println!("FFT of size {size} executed in {elapsed:?}");
     println!("First few output values: {:?}", &output[..4]);
 }
 

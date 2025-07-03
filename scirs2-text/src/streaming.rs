@@ -60,12 +60,12 @@ impl MemoryMappedCorpus {
     /// Create a new memory-mapped corpus from a file
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path)
-            .map_err(|e| TextError::IoError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to open file: {e}")))?;
 
         let mmap = unsafe {
             MmapOptions::new()
                 .map(&file)
-                .map_err(|e| TextError::IoError(format!("Failed to memory map file: {}", e)))?
+                .map_err(|e| TextError::IoError(format!("Failed to memory map file: {e}")))?
         };
 
         // Build line offset index
@@ -100,8 +100,7 @@ impl MemoryMappedCorpus {
     pub fn get_document(&self, index: usize) -> Result<&str> {
         if index >= self.num_documents() {
             return Err(TextError::InvalidInput(format!(
-                "Document index {} out of range",
-                index
+                "Document index {index} out of range"
             )));
         }
 
@@ -114,7 +113,7 @@ impl MemoryMappedCorpus {
 
         let data = &self.mmap[start..end];
         std::str::from_utf8(data)
-            .map_err(|e| TextError::IoError(format!("Invalid UTF-8 in document: {}", e)))
+            .map_err(|e| TextError::IoError(format!("Invalid UTF-8 in document: {e}")))
     }
 
     /// Iterate over all documents
@@ -201,7 +200,7 @@ impl<T: Tokenizer> StreamingTextProcessor<T> {
         F: FnMut(&str, usize) -> Result<Option<R>>,
     {
         let file = File::open(path)
-            .map_err(|e| TextError::IoError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to open file: {e}")))?;
 
         let reader = BufReader::with_capacity(self.buffer_size, file);
         self.process_reader_lines(reader, processor)
@@ -219,8 +218,8 @@ impl<T: Tokenizer> StreamingTextProcessor<T> {
         let mut results = Vec::new();
 
         for (line_num, line_result) in reader.lines().enumerate() {
-            let line = line_result
-                .map_err(|e| TextError::IoError(format!("Error reading line: {}", e)))?;
+            let line =
+                line_result.map_err(|e| TextError::IoError(format!("Error reading line: {e}")))?;
 
             if let Some(result) = processor(&line, line_num)? {
                 results.push(result);
@@ -296,12 +295,11 @@ impl StreamingVectorizer {
         let mut builder = SparseMatrixBuilder::new(self.vocabulary.len());
 
         let file = std::fs::File::open(path)
-            .map_err(|e| TextError::IoError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to open file: {e}")))?;
         let reader = std::io::BufReader::new(file);
 
         for line in reader.lines() {
-            let line =
-                line.map_err(|e| TextError::IoError(format!("Error reading line: {}", e)))?;
+            let line = line.map_err(|e| TextError::IoError(format!("Error reading line: {e}")))?;
             let tokens = tokenizer.tokenize(&line)?;
             let sparse_vec = self.tokens_to_sparse_vector(&tokens)?;
             builder.add_row(sparse_vec)?;
@@ -343,11 +341,11 @@ impl ChunkedCorpusReader {
     /// Create a new chunked reader
     pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize) -> Result<Self> {
         let file = File::open(path)
-            .map_err(|e| TextError::IoError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to open file: {e}")))?;
 
         let file_size = file
             .metadata()
-            .map_err(|e| TextError::IoError(format!("Failed to get file metadata: {}", e)))?
+            .map_err(|e| TextError::IoError(format!("Failed to get file metadata: {e}")))?
             .len();
 
         Ok(Self {
@@ -366,13 +364,13 @@ impl ChunkedCorpusReader {
 
         self.file
             .seek(SeekFrom::Start(self.position))
-            .map_err(|e| TextError::IoError(format!("Failed to seek: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to seek: {e}")))?;
 
         let mut buffer = vec![0u8; self.chunk_size];
         let bytes_read = self
             .file
             .read(&mut buffer)
-            .map_err(|e| TextError::IoError(format!("Failed to read chunk: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to read chunk: {e}")))?;
 
         if bytes_read == 0 {
             return Ok(None);
@@ -395,7 +393,7 @@ impl ChunkedCorpusReader {
         };
 
         let chunk_str = std::str::from_utf8(&buffer[..chunk_end])
-            .map_err(|e| TextError::IoError(format!("Invalid UTF-8: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Invalid UTF-8: {e}")))?;
 
         let lines: Vec<String> = chunk_str.lines().map(|s| s.to_string()).collect();
 
@@ -409,7 +407,7 @@ impl ChunkedCorpusReader {
         self.position = 0;
         self.file
             .seek(SeekFrom::Start(0))
-            .map_err(|e| TextError::IoError(format!("Failed to seek: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to seek: {e}")))?;
         Ok(())
     }
 }
@@ -453,8 +451,7 @@ impl MultiFileCorpus {
     pub fn get_document(&self, global_index: usize) -> Result<&str> {
         if global_index >= self.total_documents {
             return Err(TextError::InvalidInput(format!(
-                "Document index {} out of range",
-                global_index
+                "Document index {global_index} out of range"
             )));
         }
 
@@ -1289,7 +1286,7 @@ mod tests {
     fn test_chunked_reader() {
         let mut file = NamedTempFile::new().unwrap();
         for i in 0..100 {
-            writeln!(file, "Line {}", i).unwrap();
+            writeln!(file, "Line {i}").unwrap();
         }
         file.flush().unwrap();
 
@@ -1354,13 +1351,13 @@ mod tests {
     fn test_multi_file_random_sampling() {
         let mut file1 = NamedTempFile::new().unwrap();
         for i in 0..10 {
-            writeln!(file1, "File1 Doc {}", i).unwrap();
+            writeln!(file1, "File1 Doc {i}").unwrap();
         }
         file1.flush().unwrap();
 
         let mut file2 = NamedTempFile::new().unwrap();
         for i in 0..10 {
-            writeln!(file2, "File2 Doc {}", i).unwrap();
+            writeln!(file2, "File2 Doc {i}").unwrap();
         }
         file2.flush().unwrap();
 
@@ -1379,7 +1376,7 @@ mod tests {
     fn test_cached_corpus() {
         let mut file = NamedTempFile::new().unwrap();
         for i in 0..10 {
-            writeln!(file, "Document {}", i).unwrap();
+            writeln!(file, "Document {i}").unwrap();
         }
         file.flush().unwrap();
 
@@ -1466,7 +1463,8 @@ mod tests {
 
         let results = processor
             .process_corpus_parallel(&corpus, |doc, idx| {
-                Ok(format!("Processed doc {}: {}", idx, doc.len()))
+                let doc_len = doc.len();
+                Ok(format!("Processed doc {idx}: {doc_len}"))
             })
             .unwrap();
 

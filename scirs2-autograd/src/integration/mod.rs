@@ -154,10 +154,10 @@ impl IntegrationRegistry {
         module2: &str,
     ) -> Result<bool, IntegrationError> {
         let mod1 = self.modules.get(module1).ok_or_else(|| {
-            IntegrationError::ModuleCompatibility(format!("Module {} not found", module1))
+            IntegrationError::ModuleCompatibility(format!("Module {module1} not found"))
         })?;
         let mod2 = self.modules.get(module2).ok_or_else(|| {
-            IntegrationError::ModuleCompatibility(format!("Module {} not found", module2))
+            IntegrationError::ModuleCompatibility(format!("Module {module2} not found"))
         })?;
 
         // Simple version compatibility check

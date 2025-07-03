@@ -3136,6 +3136,7 @@ pub struct UltraFusionIntelligence<F: Float + Debug + ndarray::ScalarOperand> {
     /// Self-evolving architecture manager
     evolution_manager: ArchitectureEvolutionManager<F>,
     /// Distributed processing coordinator
+    #[allow(dead_code)]
     distributed_coordinator: DistributedQuantumCoordinator<F>,
     /// Consciousness simulation module
     consciousness_simulator: ConsciousnessSimulator<F>,
@@ -3151,6 +3152,7 @@ pub struct UltraFusionIntelligence<F: Float + Debug + ndarray::ScalarOperand> {
 #[derive(Debug)]
 pub struct QuantumNeuromorphicCore<F: Float + Debug> {
     /// Core identifier
+    #[allow(dead_code)]
     core_id: usize,
     /// Quantum processing unit
     quantum_unit: QuantumProcessingUnit<F>,
@@ -3168,14 +3170,18 @@ pub struct QuantumNeuromorphicCore<F: Float + Debug> {
 #[derive(Debug)]
 pub struct QuantumProcessingUnit<F: Float + Debug> {
     /// Number of logical qubits
+    #[allow(dead_code)]
     logical_qubits: usize,
     /// Quantum error correction system
     error_correction: QuantumErrorCorrectionAdvanced,
     /// Quantum algorithm library
+    #[allow(dead_code)]
     algorithm_library: QuantumAlgorithmLibrary,
     /// Quantum coherence optimization
+    #[allow(dead_code)]
     coherence_optimizer: QuantumCoherenceOptimizer,
     /// Quantum entanglement network
+    #[allow(dead_code)]
     entanglement_network: QuantumEntanglementNetwork,
     /// Type parameter marker for consistency with other processing units
     _phantom: std::marker::PhantomData<F>,
@@ -3185,14 +3191,19 @@ pub struct QuantumProcessingUnit<F: Float + Debug> {
 #[derive(Debug)]
 pub struct NeuromorphicProcessingUnit<F: Float + Debug> {
     /// Spiking neural networks
+    #[allow(dead_code)]
     snn_layers: Vec<AdvancedSpikingLayer<F>>,
     /// Dendritic computation trees
+    #[allow(dead_code)]
     dendritic_trees: Vec<AdvancedDendriticTree<F>>,
     /// Synaptic plasticity manager
+    #[allow(dead_code)]
     plasticity_manager: SynapticPlasticityManager<F>,
     /// Neuronal adaptation system
+    #[allow(dead_code)]
     adaptation_system: NeuronalAdaptationSystem<F>,
     /// Homeostatic regulation
+    #[allow(dead_code)]
     homeostatic_controller: HomeostaticController<F>,
 }
 
@@ -3200,12 +3211,16 @@ pub struct NeuromorphicProcessingUnit<F: Float + Debug> {
 #[derive(Debug)]
 pub struct QuantumNeuromorphicInterface<F: Float + Debug> {
     /// Quantum-to-spike converters
+    #[allow(dead_code)]
     quantum_to_spike: Vec<QuantumSpikeConverter<F>>,
     /// Spike-to-quantum converters
+    #[allow(dead_code)]
     spike_to_quantum: Vec<SpikeQuantumConverter<F>>,
     /// Coherence preservation protocols
+    #[allow(dead_code)]
     coherence_protocols: CoherencePreservationProtocols<F>,
     /// Information encoding schemes
+    #[allow(dead_code)]
     encoding_schemes: InformationEncodingSchemes<F>,
 }
 
@@ -3217,6 +3232,7 @@ pub struct MetaLearningController<F: Float + Debug> {
     /// Learning strategy library
     strategy_library: LearningStrategyLibrary<F>,
     /// Performance evaluation system
+    #[allow(dead_code)]
     evaluation_system: LearningEvaluationSystem<F>,
     /// Adaptation mechanism
     adaptation_mechanism: MetaAdaptationMechanism<F>,
@@ -3238,6 +3254,7 @@ pub struct ArchitectureEvolutionManager<F: Float + Debug> {
     /// Crossover operators
     crossover_operators: Vec<CrossoverOperator>,
     /// Selection strategies
+    #[allow(dead_code)]
     selection_strategies: Vec<SelectionStrategy>,
 }
 
@@ -3245,14 +3262,19 @@ pub struct ArchitectureEvolutionManager<F: Float + Debug> {
 #[derive(Debug)]
 pub struct DistributedQuantumCoordinator<F: Float + Debug> {
     /// Network topology
+    #[allow(dead_code)]
     network_topology: QuantumNetworkTopology,
     /// Node managers
+    #[allow(dead_code)]
     node_managers: HashMap<usize, QuantumNodeManager<F>>,
     /// Task scheduler
+    #[allow(dead_code)]
     task_scheduler: DistributedTaskScheduler<F>,
     /// Communication protocols
+    #[allow(dead_code)]
     communication_protocols: QuantumCommunicationProtocols<F>,
     /// Load balancer
+    #[allow(dead_code)]
     load_balancer: QuantumLoadBalancer<F>,
 }
 
@@ -3294,12 +3316,16 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedQuantumCoordinator<F> 
 #[derive(Debug)]
 pub struct ConsciousnessSimulator<F: Float + Debug> {
     /// Attention mechanism
+    #[allow(dead_code)]
     attention_system: ConsciousAttentionSystem<F>,
     /// Working memory
+    #[allow(dead_code)]
     working_memory: ConsciousWorkingMemory<F>,
     /// Global workspace
+    #[allow(dead_code)]
     global_workspace: GlobalWorkspace<F>,
     /// Self-awareness module
+    #[allow(dead_code)]
     self_awareness: SelfAwarenessModule<F>,
     /// Metacognitive controller
     metacognitive_controller: MetacognitiveController<F>,
@@ -3309,14 +3335,19 @@ pub struct ConsciousnessSimulator<F: Float + Debug> {
 #[derive(Debug)]
 pub struct TemporalHypercomputingEngine<F: Float + Debug> {
     /// Multi-timeline processor
+    #[allow(dead_code)]
     timeline_processor: MultiTimelineProcessor<F>,
     /// Causal analysis engine
+    #[allow(dead_code)]
     causal_engine: CausalAnalysisEngine<F>,
     /// Temporal paradox resolver
+    #[allow(dead_code)]
     paradox_resolver: TemporalParadoxResolver<F>,
     /// Time-space mapping system
+    #[allow(dead_code)]
     spacetime_mapper: SpacetimeMapper<F>,
     /// Temporal prediction protocols
+    #[allow(dead_code)]
     temporal_prediction: TemporalPredictionProtocols<F>,
 }
 
@@ -3324,14 +3355,19 @@ pub struct TemporalHypercomputingEngine<F: Float + Debug> {
 #[derive(Debug)]
 pub struct AutonomousDiscoverySystem<F: Float + Debug> {
     /// Pattern discovery engine
+    #[allow(dead_code)]
     pattern_engine: PatternDiscoveryEngine<F>,
     /// Hypothesis generator
+    #[allow(dead_code)]
     hypothesis_generator: HypothesisGenerator<F>,
     /// Proof assistant
+    #[allow(dead_code)]
     proof_assistant: AutomatedProofAssistant<F>,
     /// Mathematical insight tracker
+    #[allow(dead_code)]
     insight_tracker: MathematicalInsightTracker<F>,
     /// Knowledge synthesis system
+    #[allow(dead_code)]
     synthesis_system: KnowledgeSynthesisSystem<F>,
 }
 
@@ -3339,14 +3375,19 @@ pub struct AutonomousDiscoverySystem<F: Float + Debug> {
 #[derive(Debug)]
 pub struct UltraPredictiveCore<F: Float + Debug> {
     /// Chaos prediction system
+    #[allow(dead_code)]
     chaos_predictor: ChaosPredictionSystem<F>,
     /// Butterfly effect analyzer
+    #[allow(dead_code)]
     butterfly_analyzer: ButterflyEffectAnalyzer<F>,
     /// Quantum uncertainty processor
+    #[allow(dead_code)]
     uncertainty_processor: QuantumUncertaintyProcessor<F>,
     /// Impossible event detector
+    #[allow(dead_code)]
     impossible_detector: ImpossibleEventDetector<F>,
     /// Prediction confidence estimator
+    #[allow(dead_code)]
     confidence_estimator: PredictionConfidenceEstimator<F>,
 }
 
@@ -3371,22 +3412,28 @@ pub struct CorePerformanceMetrics<F: Float> {
 #[derive(Debug)]
 pub struct EnergyConsumptionTracker<F: Float + Debug> {
     /// Current power consumption (watts)
+    #[allow(dead_code)]
     current_power: F,
     /// Total energy consumed (joules)
     total_energy: F,
     /// Energy efficiency history
+    #[allow(dead_code)]
     efficiency_history: VecDeque<F>,
     /// Optimization targets
+    #[allow(dead_code)]
     optimization_targets: EnergyOptimizationTargets<F>,
 }
 
 #[derive(Debug, Clone)]
 pub struct EnergyOptimizationTargets<F: Float> {
     /// Target power consumption
+    #[allow(dead_code)]
     target_power: F,
     /// Maximum allowed energy
+    #[allow(dead_code)]
     max_energy: F,
     /// Efficiency threshold
+    #[allow(dead_code)]
     efficiency_threshold: F,
 }
 

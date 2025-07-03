@@ -5,10 +5,10 @@
 //! numa-aware scheduling, and intelligent load balancing for optimal
 //! performance on large-scale statistical computations.
 
-use crate::error::{StatsError, StatsResult};
+use crate::error::StatsResult;
 use crate::error_standardization::ErrorMessages;
 use crate::ultrathink_error_enhancements::{UltrathinkContextBuilder, UltrathinkErrorMessages};
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2, Zip};
+use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::{num_threads, par_chunks, parallel_map, ParallelIterator};
 use std::sync::atomic::{AtomicUsize, Ordering};

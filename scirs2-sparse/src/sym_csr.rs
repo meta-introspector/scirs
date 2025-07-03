@@ -99,8 +99,7 @@ where
         if let Some(&last) = indptr.last() {
             if last != nnz {
                 return Err(SparseError::ValueError(format!(
-                    "Last indptr value ({}) must equal nnz ({})",
-                    last, nnz
+                    "Last indptr value ({last}) must equal nnz ({nnz})"
                 )));
             }
         }

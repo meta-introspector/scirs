@@ -340,16 +340,12 @@ mod tests {
         // Higher-order methods should be more accurate
         assert!(
             gl4_error < verlet_error,
-            "GL4 error ({}) should be smaller than Verlet error ({})",
-            gl4_error,
-            verlet_error
+            "GL4 error ({gl4_error}) should be smaller than Verlet error ({verlet_error})"
         );
 
         assert!(
             gl6_error < gl4_error,
-            "GL6 error ({}) should be smaller than GL4 error ({})",
-            gl6_error,
-            gl4_error
+            "GL6 error ({gl6_error}) should be smaller than GL4 error ({gl4_error})"
         );
     }
 
@@ -391,9 +387,7 @@ mod tests {
             // Higher-order method should have better energy conservation
             assert!(
                 gl4_error < verlet_error,
-                "GL4 energy error ({}) should be smaller than Verlet error ({})",
-                gl4_error,
-                verlet_error
+                "GL4 energy error ({gl4_error}) should be smaller than Verlet error ({verlet_error})"
             );
         }
     }

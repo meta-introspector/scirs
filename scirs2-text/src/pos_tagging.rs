@@ -1203,7 +1203,7 @@ impl PosTagger {
         let results = parallel_ops::parallel_map_result(texts, move |text| {
             tagger.tag_text(text, &*tokenizer_boxed).map_err(|e| {
                 scirs2_core::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(
-                    format!("POS tagging error: {}", e),
+                    format!("POS tagging error: {e}"),
                 ))
             })
         })?;

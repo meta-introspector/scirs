@@ -51,7 +51,7 @@ fn main() {
             println!("Accepted: {}, Rejected: {}", res.n_accepted, res.n_rejected);
 
             if let Some(msg) = &res.message {
-                println!("{}", msg);
+                println!("{msg}");
             }
 
             // Save detailed results for visualization
@@ -158,7 +158,7 @@ fn main() {
             println!("A plotting guide has been saved to lsoda_visualization_plotting_guide.txt");
         }
         Err(e) => {
-            println!("Integration failed: {}", e);
+            println!("Integration failed: {e}");
         }
     }
 
@@ -203,7 +203,7 @@ fn main() {
             println!("Accepted: {}, Rejected: {}", res.n_accepted, res.n_rejected);
 
             if let Some(msg) = &res.message {
-                println!("{}", msg);
+                println!("{msg}");
             }
 
             // Save solution trajectory
@@ -229,7 +229,7 @@ fn main() {
             println!("- LSODA should switch to BDF method during the stiff phase");
         }
         Err(e) => {
-            println!("Integration failed: {}", e);
+            println!("Integration failed: {e}");
         }
     }
 

@@ -111,10 +111,7 @@ where
         }
 
         if iter == max_iter - 1 {
-            eprintln!(
-                "Warning: Robust decomposition did not converge in {} iterations",
-                max_iter
-            );
+            eprintln!("Warning: Robust decomposition did not converge in {max_iter} iterations");
         }
     }
 
@@ -263,8 +260,7 @@ where
 
         if iter == max_iter - 1 {
             eprintln!(
-                "Warning: M-estimator decomposition did not converge in {} iterations",
-                max_iter
+                "Warning: M-estimator decomposition did not converge in {max_iter} iterations"
             );
         }
     }
@@ -315,7 +311,7 @@ where
     let window = period;
 
     for i in 0..n {
-        let start = if i >= window / 2 { i - window / 2 } else { 0 };
+        let start = i.saturating_sub(window / 2);
         let end = if i + window / 2 < n {
             i + window / 2 + 1
         } else {
@@ -387,7 +383,7 @@ where
     let mut trend = Array1::zeros(n);
 
     for i in 0..n {
-        let start = if i >= window / 2 { i - window / 2 } else { 0 };
+        let start = i.saturating_sub(window / 2);
         let end = if i + window / 2 < n {
             i + window / 2 + 1
         } else {
@@ -419,11 +415,7 @@ where
     .max(1);
 
     for i in 0..n {
-        let start = if i >= window_size / 2 {
-            i - window_size / 2
-        } else {
-            0
-        };
+        let start = i.saturating_sub(window_size / 2);
         let end = if i + window_size / 2 < n {
             i + window_size / 2 + 1
         } else {
@@ -465,11 +457,7 @@ where
     .max(1);
 
     for i in 0..n {
-        let start = if i >= window_size / 2 {
-            i - window_size / 2
-        } else {
-            0
-        };
+        let start = i.saturating_sub(window_size / 2);
         let end = if i + window_size / 2 < n {
             i + window_size / 2 + 1
         } else {
@@ -617,7 +605,7 @@ where
     let mut trend = Array1::zeros(n);
 
     for i in 0..n {
-        let start = if i >= window / 2 { i - window / 2 } else { 0 };
+        let start = i.saturating_sub(window / 2);
         let end = if i + window / 2 < n {
             i + window / 2 + 1
         } else {

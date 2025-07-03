@@ -96,7 +96,7 @@ fn bench_system_characterization(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(
                     "memory_performance",
-                    format!("{}x{}_({:.1}KB)", size, dim, data_size_kb),
+                    format!("{size}x{dim}_({data_size_kb:.1}KB)"),
                 ),
                 &(size, dim),
                 |b, _| {

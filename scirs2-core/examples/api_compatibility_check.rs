@@ -33,7 +33,7 @@ fn main() {
 
     match check_apis_available(&required_apis) {
         Ok(()) => println!("✓ All required APIs are available"),
-        Err(e) => println!("✗ Some APIs are missing: {}", e),
+        Err(e) => println!("✗ Some APIs are missing: {e}"),
     }
     println!();
 
@@ -47,7 +47,7 @@ fn main() {
 
     match checker.check() {
         Ok(()) => println!("✓ All compatibility requirements met"),
-        Err(e) => println!("✗ Compatibility check failed: {}", e),
+        Err(e) => println!("✗ Compatibility check failed: {e}"),
     }
 
     // Check with missing API
@@ -58,14 +58,14 @@ fn main() {
 
     match checker_fail.check() {
         Ok(()) => println!("✓ All compatibility requirements met"),
-        Err(e) => println!("✗ Compatibility check failed: {}", e),
+        Err(e) => println!("✗ Compatibility check failed: {e}"),
     }
 }
 
 fn check_api(name: &str, module: &str) {
     if is_api_available(name, module) {
-        println!("✓ {}::{} is available", module, name);
+        println!("✓ {module}::{name} is available");
     } else {
-        println!("✗ {}::{} is NOT available", module, name);
+        println!("✗ {module}::{name} is NOT available");
     }
 }

@@ -131,8 +131,7 @@ fn test_time_dependent_mass_matrix() -> IntegrateResult<()> {
     let rel_energy_change = (final_energy - initial_energy).abs() / initial_energy;
     assert!(
         rel_energy_change < 0.15, // Allow up to 15% energy change for a 10% mass variation
-        "Energy changed too much: {}",
-        rel_energy_change
+        "Energy changed too much: {rel_energy_change}"
     );
 
     Ok(())

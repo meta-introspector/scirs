@@ -139,9 +139,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let var_99 = metrics.var_estimates.get(&99).unwrap_or(&0.0);
         let es_95 = metrics.expected_shortfall.get(&95).unwrap_or(&0.0);
 
-        println!("  VaR (95%): ${:.0}", var_95);
-        println!("  VaR (99%): ${:.0}", var_99);
-        println!("  Expected Shortfall (95%): ${:.0}", es_95);
+        println!("  VaR (95%): ${var_95:.0}");
+        println!("  VaR (99%): ${var_99:.0}");
+        println!("  Expected Shortfall (95%): ${es_95:.0}");
         println!("  Maximum Drawdown: {:.2}%", metrics.max_drawdown * 100.0);
         println!("  Portfolio Volatility: {:.2}%", metrics.volatility * 100.0);
         println!("  Sharpe Ratio: {:.3}", metrics.sharpe_ratio);

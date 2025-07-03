@@ -3,7 +3,7 @@
 //! This module provides comprehensive memory leak detection capabilities,
 //! memory profiling, and optimization recommendations for optimization algorithms.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};

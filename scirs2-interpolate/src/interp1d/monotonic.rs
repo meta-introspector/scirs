@@ -64,7 +64,9 @@ impl<F: Float> MonotonicInterpolator<F> {
     }
 }
 
-impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
+impl<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>
+    MonotonicInterpolator<F>
+{
     /// Create a new monotonic interpolator
     ///
     /// # Arguments
@@ -698,7 +700,9 @@ impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
 ///     true
 /// ).unwrap();
 /// ```
-pub fn monotonic_interpolate<F: Float + FromPrimitive + Debug>(
+pub fn monotonic_interpolate<
+    F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat,
+>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     x_new: &ArrayView1<F>,
@@ -734,7 +738,7 @@ pub fn monotonic_interpolate<F: Float + FromPrimitive + Debug>(
 ///
 /// let y_interp = hyman_interpolate(&x.view(), &y.view(), &x_new.view(), true).unwrap();
 /// ```
-pub fn hyman_interpolate<F: Float + FromPrimitive + Debug>(
+pub fn hyman_interpolate<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     x_new: &ArrayView1<F>,
@@ -768,7 +772,7 @@ pub fn hyman_interpolate<F: Float + FromPrimitive + Debug>(
 ///
 /// let y_interp = steffen_interpolate(&x.view(), &y.view(), &x_new.view(), true).unwrap();
 /// ```
-pub fn steffen_interpolate<F: Float + FromPrimitive + Debug>(
+pub fn steffen_interpolate<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     x_new: &ArrayView1<F>,
@@ -802,7 +806,9 @@ pub fn steffen_interpolate<F: Float + FromPrimitive + Debug>(
 ///
 /// let y_interp = modified_akima_interpolate(&x.view(), &y.view(), &x_new.view(), true).unwrap();
 /// ```
-pub fn modified_akima_interpolate<F: Float + FromPrimitive + Debug>(
+pub fn modified_akima_interpolate<
+    F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat,
+>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     x_new: &ArrayView1<F>,

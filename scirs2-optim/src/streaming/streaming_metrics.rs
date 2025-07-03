@@ -7,7 +7,7 @@ use num_traits::Float;
 use std::collections::{BTreeMap, HashMap};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 
 /// Streaming metrics collector and analyzer
 #[derive(Debug)]

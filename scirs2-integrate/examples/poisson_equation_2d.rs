@@ -88,11 +88,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nResults:");
     println!("SOR method:");
     println!("  - Iterations: {}", sor_result.num_iterations);
-    println!("  - Time: {:.4} seconds", sor_time);
+    println!("  - Time: {sor_time:.4} seconds");
     println!("  - Residual norm: {:.6e}", sor_result.residual_norm);
 
     println!("Direct method:");
-    println!("  - Time: {:.4} seconds", direct_time);
+    println!("  - Time: {direct_time:.4} seconds");
     println!("  - Residual norm: {:.6e}", direct_result.residual_norm);
 
     // Calculate errors
@@ -130,12 +130,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\nError analysis:");
     println!("SOR method:");
-    println!("  - Maximum error: {:.6e}", max_error_sor);
-    println!("  - L2 error norm: {:.6e}", l2_error_sor);
+    println!("  - Maximum error: {max_error_sor:.6e}");
+    println!("  - L2 error norm: {l2_error_sor:.6e}");
 
     println!("Direct method:");
-    println!("  - Maximum error: {:.6e}", max_error_direct);
-    println!("  - L2 error norm: {:.6e}", l2_error_direct);
+    println!("  - Maximum error: {max_error_direct:.6e}");
+    println!("  - L2 error norm: {l2_error_direct:.6e}");
 
     // Print solution at selected points
     println!("\nSolution values at selected points:");
@@ -154,8 +154,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let exact = (PI * x).sin() * (PI * y).sin();
 
             println!(
-                "{:<10.4} {:<10.4} {:<15.8e} {:<15.8e} {:<15.8e}",
-                x, y, numerical_sor, numerical_direct, exact
+                "{x:<10.4} {y:<10.4} {numerical_sor:<15.8e} {numerical_direct:<15.8e} {exact:<15.8e}"
             );
         }
     }
@@ -173,25 +172,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let rate_middle = history[n / 2] / history[n / 2 - 10];
             let rate_late = history[n - 1] / history[n - 10];
 
-            println!(
-                "  - Convergence rate (early): {:.6e} per 10 iterations",
-                rate_early
-            );
-            println!(
-                "  - Convergence rate (middle): {:.6e} per 10 iterations",
-                rate_middle
-            );
-            println!(
-                "  - Convergence rate (late): {:.6e} per 10 iterations",
-                rate_late
-            );
+            println!("  - Convergence rate (early): {rate_early:.6e} per 10 iterations");
+            println!("  - Convergence rate (middle): {rate_middle:.6e} per 10 iterations");
+            println!("  - Convergence rate (late): {rate_late:.6e} per 10 iterations");
         }
 
         // Print residual norm every 1000 iterations
         println!("\nResidual norm progression:");
         for (i, residual) in history.iter().enumerate() {
             if i % 1000 == 0 || i == history.len() - 1 {
-                println!("  - Iteration {}: {:.6e}", i, residual);
+                println!("  - Iteration {i}: {residual:.6e}");
             }
         }
     }

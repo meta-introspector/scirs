@@ -182,16 +182,12 @@ impl CZT {
                 .to_owned()
                 .into_shape_with_order(x.len())
                 .map_err(|e| {
-                    FFTError::ComputationError(format!(
-                        "Failed to reshape input array to 1D: {}",
-                        e
-                    ))
+                    FFTError::ComputationError(format!("Failed to reshape input array to 1D: {e}"))
                 })?
                 .into_dimensionality()
                 .map_err(|e| {
                     FFTError::ComputationError(format!(
-                        "Failed to convert array dimensionality: {}",
-                        e
+                        "Failed to convert array dimensionality: {e}"
                     ))
                 })?;
             let y = self.transform_1d(&x_1d)?;
@@ -205,10 +201,7 @@ impl CZT {
                 .to_owned()
                 .into_shape_with_order(x_slice.len())
                 .map_err(|e| {
-                    FFTError::ComputationError(format!(
-                        "Failed to reshape slice to 1D array: {}",
-                        e
-                    ))
+                    FFTError::ComputationError(format!("Failed to reshape slice to 1D array: {e}"))
                 })?;
             let y = self.transform_1d(&x_1d)?;
 

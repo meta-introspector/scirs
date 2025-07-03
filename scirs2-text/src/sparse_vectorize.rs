@@ -219,8 +219,7 @@ impl SparseTfidfVectorizer {
                 }
                 _ => {
                     return Err(TextError::InvalidInput(format!(
-                        "Unknown normalization type: {}",
-                        norm_type
+                        "Unknown normalization type: {norm_type}"
                     )));
                 }
             }
@@ -400,7 +399,10 @@ mod tests {
     fn test_memory_efficiency_large() {
         // Create a large corpus with sparse content
         let texts: Vec<String> = (0..100)
-            .map(|i| format!("document {} contains word{}", i, i % 10))
+            .map(|i| {
+                let word_idx = i % 10;
+                format!("document {i} contains word{word_idx}")
+            })
             .collect();
 
         let text_refs: Vec<&str> = texts.iter().map(|s| s.as_ref()).collect();

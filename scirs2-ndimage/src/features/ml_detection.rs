@@ -3,7 +3,7 @@
 //! This module provides ML-powered feature detection algorithms including
 //! learned edge detectors, keypoint detectors, and semantic feature extraction.
 
-use ndarray::{Array1, Array2, Array3, Array4, ArrayView2, ArrayView3, Axis};
+use ndarray::{Array1, Array2, Array3, Array4, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;

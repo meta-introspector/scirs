@@ -84,6 +84,11 @@ pub enum SparseError {
     #[error("I/O error: {0}")]
     IoError(#[from] std::io::Error),
 
+    /// GPU error
+    #[cfg(feature = "gpu")]
+    #[error("GPU error: {0}")]
+    GpuError(#[from] scirs2_core::GpuError),
+
     /// Compression error
     #[error("Compression error: {0}")]
     CompressionError(String),

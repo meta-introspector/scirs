@@ -136,9 +136,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Drop
                     ))
                 }
             };
-            
+
             for elem in mask.iter_mut() {
-                if (**rng_guard).random::<f64>() < self.p.to_f64().unwrap() {
+                if F::from((**rng_guard).gen::<f64>()).unwrap() < self.p {
                     *elem = zero;
                 }
             }
@@ -181,7 +181,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Drop
                     ))
                 }
             };
-            
+
             match cache.as_ref() {
                 Some(mask) => mask.clone(),
                 None => {

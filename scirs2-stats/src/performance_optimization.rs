@@ -270,11 +270,7 @@ impl OptimizedLinearDiscriminantAnalysis {
                 for &idx in &class_indices {
                     let row = x.row(idx);
                     if n_features > 16 {
-                        if let Some(simd_result) = f64::simd_add(&sum.view(), &row) {
-                            sum = simd_result;
-                        } else {
-                            sum += &row;
-                        }
+                        sum = f64::simd_add(&sum.view(), &row);
                     } else {
                         sum += &row;
                     }
@@ -364,7 +360,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
                     // SIMD-optimized difference computation
                     let diff = if n_features >= self.config.simd_threshold {
-                        f64::simd_sub(&sample, &class_mean).unwrap_or_else(|| &sample - &class_mean)
+                        f64::simd_sub(&sample, &class_mean)
                     } else {
                         &sample - &class_mean
                     };
@@ -386,7 +382,6 @@ impl OptimizedLinearDiscriminantAnalysis {
 
             let diff = if n_features >= self.config.simd_threshold {
                 f64::simd_sub(&class_mean, &overall_mean.view())
-                    .unwrap_or_else(|| &class_mean - &overall_mean)
             } else {
                 &class_mean - &overall_mean
             };
@@ -488,10 +483,7 @@ impl OptimizedLinearDiscriminantAnalysis {
                 let row = x.row(i);
                 for j in 0..n_components {
                     let column = result.scalings.column(j);
-                    transformed[[i, j]] =
-                        f64::simd_dot(&row, &column.view()).unwrap_or_else(|| {
-                            row.iter().zip(column.iter()).map(|(&a, &b)| a * b).sum()
-                        });
+                    transformed[[i, j]] = f64::simd_dot(&row, &column.view());
                 }
             }
 

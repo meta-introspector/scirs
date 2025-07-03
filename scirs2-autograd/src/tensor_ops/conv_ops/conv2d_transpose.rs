@@ -58,14 +58,12 @@ fn conv2d_transpose_extract_params<F: Float>(
 
     if gy_shape.len() != 4 {
         return Err(op::OpError::IncompatibleShape(format!(
-            "conv2d_transpose: Input must be 4D (got {:?})",
-            gy_shape
+            "conv2d_transpose: Input must be 4D (got {gy_shape:?})"
         )));
     }
     if f_shape.len() != 4 {
         return Err(op::OpError::IncompatibleShape(format!(
-            "conv2d_transpose: Filter must be 4D (got {:?})",
-            f_shape
+            "conv2d_transpose: Filter must be 4D (got {f_shape:?})"
         )));
     }
     if ych != f_shape[0] {

@@ -31,7 +31,7 @@ fn main() {
         }),
     )
     .unwrap_or_else(|e| {
-        println!("LSODA method failed unexpectedly on simple problem: {}.", e);
+        println!("LSODA method failed unexpectedly on simple problem: {e}.");
         println!("Using DOP853 as fallback...");
         solve_ivp(decay, [0.0, 5.0], array![1.0], None).unwrap()
     });
@@ -54,7 +54,7 @@ fn main() {
     );
 
     if let Some(msg) = &result.message {
-        println!("  {}", msg);
+        println!("  {msg}");
     }
 
     // Now demonstrate the Van der Pol oscillator with different stiffness parameters
@@ -68,7 +68,7 @@ fn main() {
     let mu_values = [1.0, 10.0, 100.0];
 
     for &mu in &mu_values {
-        println!("\nSolving with μ = {}", mu);
+        println!("\nSolving with μ = {mu}");
 
         // Define the Van der Pol oscillator with the current mu value
         let van_der_pol = move |_t: f64, y: ArrayView1<f64>| {
@@ -91,7 +91,7 @@ fn main() {
             }),
         )
         .unwrap_or_else(|e| {
-            println!("LSODA method failed with error: {}.", e);
+            println!("LSODA method failed with error: {e}.");
             println!("Note: This is expected as LSODA implementation is still experimental.");
             println!("Using a more stable solver (DOP853) instead...");
 
@@ -125,7 +125,7 @@ fn main() {
 
         // LSODA now returns method switching statistics in the message
         if let Some(msg) = &result.message {
-            println!("  {}", msg);
+            println!("  {msg}");
         }
     }
 

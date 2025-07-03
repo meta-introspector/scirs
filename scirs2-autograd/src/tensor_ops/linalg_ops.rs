@@ -52,7 +52,7 @@ impl<F: Float> Op<F> for TraceOp {
         }
 
         // For debugging
-        println!("Calculated trace of {:?}: result = {:?}", shape, trace);
+        println!("Calculated trace of {shape:?}: result = {trace:?}");
 
         // Create a proper scalar output
         ctx.append_output(ndarray::arr0(trace).into_dyn());

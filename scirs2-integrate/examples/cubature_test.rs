@@ -24,7 +24,7 @@ fn main() {
             println!("Converged: {}", result.converged);
         }
         Err(e) => {
-            println!("Error: {:?}", e);
+            println!("Error: {e:?}");
         }
     }
 

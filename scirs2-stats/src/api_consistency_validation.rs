@@ -14,6 +14,7 @@
 use crate::error::StatsResult;
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
+use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
@@ -91,7 +92,7 @@ pub enum FunctionCategory {
 }
 
 /// Results of API validation
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationResults {
     /// Overall validation status
     pub overall_status: ValidationStatus,
@@ -106,7 +107,7 @@ pub struct ValidationResults {
 }
 
 /// Validation status
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ValidationStatus {
     /// All checks passed
     Passed,
@@ -119,7 +120,7 @@ pub enum ValidationStatus {
 }
 
 /// Individual validation check
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationCheck {
     /// Name of the check
     pub name: String,
@@ -168,7 +169,7 @@ pub enum Severity {
 }
 
 /// API inconsistency detected
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct APIInconsistency {
     /// Type of inconsistency
     pub inconsistency_type: InconsistencyType,
@@ -202,7 +203,7 @@ pub enum InconsistencyType {
 }
 
 /// Validation warning (non-critical issue)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationWarning {
     /// Warning message
     pub message: String,
@@ -215,7 +216,7 @@ pub struct ValidationWarning {
 }
 
 /// Summary of validation results
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationSummary {
     /// Total number of checks performed
     pub total_checks: usize,

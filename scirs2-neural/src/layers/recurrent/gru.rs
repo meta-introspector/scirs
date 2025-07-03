@@ -6,7 +6,6 @@ use crate::layers::{Layer, ParamLayer};
 use ndarray::{Array, ArrayView, Ix2, IxDyn, ScalarOperand};
 use ndarray_rand::rand_distr::{Distribution, Uniform};
 use num_traits::Float;
-use ndarray_rand::rand::Rng;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 /// Configuration for GRU layers
@@ -108,7 +107,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
         let scale_hh = F::from(1.0 / (hidden_size as f64).sqrt()).ok_or_else(|| {
             NeuralError::InvalidArchitecture("Failed to convert hidden size scale".to_string())
         })?;
-        
+
         // Helper function to create weight matrices
         let mut create_weight_matrix = |rows: usize,
                                         cols: usize,
@@ -227,7 +226,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
                     r_sum = r_sum + self.weight_hr[[i, j]] * h[[b, j]];
                 }
                 r_gate[[b, i]] = F::one() / (F::one() + (-r_sum).exp()); // sigmoid
-                
+
                 // Update gate (z_t)
                 let mut z_sum = self.bias_iz[i] + self.bias_hz[i];
                 for j in 0..self.input_size {
@@ -237,7 +236,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
                     z_sum = z_sum + self.weight_hz[[i, j]] * h[[b, j]];
                 }
                 z_gate[[b, i]] = F::one() / (F::one() + (-z_sum).exp()); // sigmoid
-                
+
                 // New gate (n_t)
                 let mut n_sum = self.bias_in[i];
                 for j in 0..self.input_size {
@@ -249,7 +248,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
                     hn_sum = hn_sum + self.weight_hn[[i, j]] * h[[b, j]];
                 }
                 n_gate[[b, i]] = (n_sum + r_gate[[b, i]] * hn_sum).tanh(); // tanh
-                
+
                 // New hidden state (h_t)
                 new_h[[b, i]] =
                     (F::one() - z_gate[[b, i]]) * n_gate[[b, i]] + z_gate[[b, i]] * h[[b, i]];
@@ -260,10 +259,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
         let r_gate_dyn = r_gate.into_dyn();
         let z_gate_dyn = z_gate.into_dyn();
         let n_gate_dyn = n_gate.into_dyn();
-        Ok(GruForwardOutput {
-            hidden_state: new_h_dyn,
-            gates: (r_gate_dyn, z_gate_dyn, n_gate_dyn),
-        })
+        Ok((new_h_dyn, (r_gate_dyn, z_gate_dyn, n_gate_dyn)))
     }
 }
 
@@ -309,8 +305,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for GRU<
             let x_t_view = x_t.view().into_dyn();
             let h_view = h.view().into_dyn();
             let step_result = self.step(&x_t_view, &h_view)?;
-            let new_h = step_result.hidden_state;
-            let gates = step_result.gates;
+            let new_h = step_result.0;
+            let gates = step_result.1;
             // Convert back from dynamic dimension
             h = new_h.into_dimensionality::<Ix2>().unwrap();
             all_gates.push(gates);
@@ -382,30 +378,30 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for GRU<
 }
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for GRU<F> {
-    fn get_parameters(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
+    fn get_parameters(&self) -> Vec<Array<F, ndarray::IxDyn>> {
         vec![
-            &self.weight_ir,
-            &self.weight_hr,
-            &self.bias_ir,
-            &self.bias_hr,
-            &self.weight_iz,
-            &self.weight_hz,
-            &self.bias_iz,
-            &self.bias_hz,
-            &self.weight_in,
-            &self.weight_hn,
-            &self.bias_in,
-            &self.bias_hn,
+            self.weight_ir.clone(),
+            self.weight_hr.clone(),
+            self.bias_ir.clone(),
+            self.bias_hr.clone(),
+            self.weight_iz.clone(),
+            self.weight_hz.clone(),
+            self.bias_iz.clone(),
+            self.bias_hz.clone(),
+            self.weight_in.clone(),
+            self.weight_hn.clone(),
+            self.bias_in.clone(),
+            self.bias_hn.clone(),
         ]
     }
-    
-    fn get_gradients(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
+
+    fn get_gradients(&self) -> Vec<Array<F, ndarray::IxDyn>> {
         // This is a placeholder implementation until proper gradient access is implemented
         // Return an empty vector as we can't get references to the gradients inside the RwLock
         // The actual gradient update logic is handled in the backward method
         Vec::new()
     }
-    
+
     fn set_parameters(&mut self, params: Vec<Array<F, ndarray::IxDyn>>) -> Result<()> {
         if params.len() != 12 {
             return Err(NeuralError::InvalidArchitecture(format!(
@@ -413,7 +409,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
                 params.len()
             )));
         }
-        
+
         let expected_shapes = [
             self.weight_ir.shape(),
             self.weight_hr.shape(),
@@ -428,7 +424,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
             self.bias_in.shape(),
             self.bias_hn.shape(),
         ];
-        
+
         for (i, (param, expected)) in params.iter().zip(expected_shapes.iter()).enumerate() {
             if param.shape() != *expected {
                 return Err(NeuralError::InvalidArchitecture(format!(
@@ -439,7 +435,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
                 )));
             }
         }
-        
+
         // Set parameters
         self.weight_ir = params[0].clone();
         self.weight_hr = params[1].clone();
@@ -453,7 +449,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
         self.weight_hn = params[9].clone();
         self.bias_in = params[10].clone();
         self.bias_hn = params[11].clone();
-        
+
         Ok(())
     }
 }
@@ -462,12 +458,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
 mod tests {
     use super::*;
     use ndarray::Array3;
-    use rand::rng;
+    use rand::rngs::SmallRng;
+    use rand::SeedableRng;
 
     #[test]
     fn test_gru_shape() {
         // Create a GRU layer
-        let mut rng = rng();
+        let mut rng = SmallRng::seed_from_u64(42);
         let gru = GRU::<f64>::new(
             10, // input_size
             20, // hidden_size

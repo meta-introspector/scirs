@@ -633,11 +633,11 @@ impl VulnerabilityAssessment {
                     id: format!("{}", dep.name),
                     severity: SecuritySeverity::High,
                     category: SecurityCategory::DependencyVuln,
-                    title: format!("{dep.name}"),
+                    title: format!("{}", dep.name),
                     description: dep.description,
                     affected_component: dep.name.clone(),
                     cve_id: dep.cve_id,
-                    mitigation: format!("{dep.name, dep.fixed_version}"),
+                    mitigation: format!("{}, {}", dep.name, dep.fixed_version),
                 });
             }
         }

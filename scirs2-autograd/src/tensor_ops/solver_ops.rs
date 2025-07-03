@@ -14,10 +14,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LinearSolveOp {
         let a_shape = a.shape();
         let b_shape = b.shape();
 
-        println!(
-            "Solving linear system: A({:?}) * x = b({:?})",
-            a_shape, b_shape
-        );
+        println!("Solving linear system: A({a_shape:?}) * x = b({b_shape:?})");
 
         if a_shape.len() != 2 || a_shape[0] != a_shape[1] {
             return Err(OpError::IncompatibleShape(
@@ -159,7 +156,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LinearSolveOp {
             match solve_transpose_system(&a_2d, &grad_x_1d) {
                 Ok(result) => result.into_dyn(),
                 Err(e) => {
-                    println!("Error solving transpose system (1D): {:?}", e);
+                    println!("Error solving transpose system (1D): {e:?}");
                     // Use regularized system instead
                     let n = a_2d.shape()[0];
                     let eps = F::epsilon() * F::from(10.0).unwrap();
@@ -168,7 +165,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LinearSolveOp {
                     match solve_transpose_system(&regularized.view(), &grad_x_1d) {
                         Ok(result) => result.into_dyn(),
                         Err(e2) => {
-                            println!("Error solving regularized system: {:?}", e2);
+                            println!("Error solving regularized system: {e2:?}");
                             // Return zero gradient as fallback
                             Array1::<F>::zeros(grad_x_1d.len()).into_dyn()
                         }
@@ -191,7 +188,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LinearSolveOp {
             match solve_transpose_system_2d(&a_2d, &grad_x_2d) {
                 Ok(result) => result.into_dyn(),
                 Err(e) => {
-                    println!("Error solving transpose system (2D): {:?}", e);
+                    println!("Error solving transpose system (2D): {e:?}");
                     // Use regularized system instead
                     let n = a_2d.shape()[0];
                     let eps = F::epsilon() * F::from(10.0).unwrap();
@@ -200,7 +197,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LinearSolveOp {
                     match solve_transpose_system_2d(&regularized.view(), &grad_x_2d) {
                         Ok(result) => result.into_dyn(),
                         Err(e2) => {
-                            println!("Error solving regularized system: {:?}", e2);
+                            println!("Error solving regularized system: {e2:?}");
                             // Return zero gradient as fallback
                             Array2::<F>::zeros(grad_x_2d.raw_dim()).into_dyn()
                         }
@@ -226,7 +223,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LinearSolveOp {
                 arr.mapv(|v| -v)
             }
             Err(e) => {
-                println!("Error computing outer product: {:?}", e);
+                println!("Error computing outer product: {e:?}");
                 // Return zero gradient as fallback
                 Array2::<F>::zeros((a_2d.shape()[0], a_2d.shape()[1])).into_dyn()
             }

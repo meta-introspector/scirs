@@ -1056,7 +1056,7 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
     /// Update LSTM network statistics
     fn update_lstm_stats(&mut self) {
         // Update gate activation statistics
-        for (i, layer) in self.lstm_network.layers.iter().enumerate() {
+        for (_i, layer) in self.lstm_network.layers.iter().enumerate() {
             let hidden_stats = self.compute_state_stats(&layer.hidden_state);
             let cell_stats = self.compute_state_stats(&layer.cell_state);
 
@@ -1286,7 +1286,7 @@ impl<T: Float + Default + Clone> LSTMNetwork<T> {
     }
 }
 
-impl<T: Float + Default + Clone> LSTMLayer<T> {
+impl<T: Float + Default + Clone + 'static> LSTMLayer<T> {
     /// Create new LSTM layer
     fn new(input_size: usize, hidden_size: usize) -> Result<Self> {
         // Xavier initialization

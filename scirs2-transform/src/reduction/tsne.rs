@@ -1119,7 +1119,7 @@ impl TSNE {
                                 dot_product += normalized_x[[i, k]] * normalized_x[[j, k]];
                             }
                             // Cosine distance = 1 - cosine similarity
-                            let cosine_dist = 1.0 - dot_product.max(-1.0).min(1.0);
+                            let cosine_dist = 1.0 - dot_product.clamp(-1.0, 1.0);
                             distances[[i, j]] = cosine_dist;
                             distances[[j, i]] = cosine_dist;
                         }
@@ -1139,7 +1139,7 @@ impl TSNE {
                                 dot_product += normalized_x[[i, k]] * normalized_x[[j, k]];
                             }
                             // Cosine distance = 1 - cosine similarity
-                            1.0 - dot_product.max(-1.0).min(1.0)
+                            1.0 - dot_product.clamp(-1.0, 1.0)
                         })
                         .collect();
 
@@ -1846,8 +1846,7 @@ where
 
     if metric != "euclidean" {
         return Err(TransformError::InvalidInput(format!(
-            "Metric '{}' not implemented. Currently only 'euclidean' is supported",
-            metric
+            "Metric '{metric}' not implemented. Currently only 'euclidean' is supported"
         )));
     }
 

@@ -20,10 +20,7 @@ impl<F: Float> Op<F> for QROp {
         let n = shape[1];
         let k = m.min(n);
 
-        println!(
-            "Computing QR decomposition for matrix of shape: [{}, {}]",
-            m, n
-        );
+        println!("Computing QR decomposition for matrix of shape: [{m}, {n}]");
 
         let input_2d = input
             .view()
@@ -144,7 +141,7 @@ impl<F: Float> Op<F> for QRExtractOp {
             .into_dimensionality::<Ix2>()
             .map_err(|_| OpError::IncompatibleShape("Failed to convert to 2D array".into()))?;
 
-        println!("Input matrix for QR:\n{:?}", input_2d);
+        println!("Input matrix for QR:\n{input_2d:?}");
 
         // Re-run the QR computation
         let mut q = Array2::<F>::zeros((m, k));
@@ -194,8 +191,8 @@ impl<F: Float> Op<F> for QRExtractOp {
         }
 
         // Debug: Print final Q and R
-        println!("Final Q:\n{:?}", q);
-        println!("Final R:\n{:?}", r);
+        println!("Final Q:\n{q:?}");
+        println!("Final R:\n{r:?}");
 
         // Extract the requested component
         match self.component {
@@ -234,8 +231,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for SVDOp {
 
         if shape.len() != 2 {
             return Err(OpError::IncompatibleShape(format!(
-                "SVD requires 2D matrix, got shape {:?}",
-                shape
+                "SVD requires 2D matrix, got shape {shape:?}"
             )));
         }
 
@@ -243,14 +239,11 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for SVDOp {
         let n = shape[1];
         let k = m.min(n);
 
-        println!(
-            "SVD: Computing decomposition for matrix of shape [{}, {}], k={}",
-            m, n, k
-        );
+        println!("SVD: Computing decomposition for matrix of shape [{m}, {n}], k={k}");
 
         // Convert input to 2D matrix
         let input_2d = input.view().into_dimensionality::<Ix2>().map_err(|e| {
-            OpError::IncompatibleShape(format!("Failed to convert input to 2D: {:?}", e))
+            OpError::IncompatibleShape(format!("Failed to convert input to 2D: {e:?}"))
         })?;
 
         // Initialize output matrices with correct shapes
@@ -606,10 +599,7 @@ impl<F: Float> Op<F> for CholeskyOp {
 
         let n = shape[0];
 
-        println!(
-            "Computing Cholesky decomposition for matrix of shape: [{}, {}]",
-            n, n
-        );
+        println!("Computing Cholesky decomposition for matrix of shape: [{n}, {n}]");
 
         let input_2d = input
             .view()
@@ -780,10 +770,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for SymmetricEigenOp {
 
         let n = shape[0];
 
-        println!(
-            "Computing symmetric eigendecomposition for matrix of shape: [{}, {}]",
-            n, n
-        );
+        println!("Computing symmetric eigendecomposition for matrix of shape: [{n}, {n}]");
 
         let input_2d = input
             .view()
@@ -1268,8 +1255,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LUOp {
 
         if shape.len() != 2 {
             return Err(OpError::IncompatibleShape(format!(
-                "LU decomposition requires 2D matrix, got shape {:?}",
-                shape
+                "LU decomposition requires 2D matrix, got shape {shape:?}"
             )));
         }
 

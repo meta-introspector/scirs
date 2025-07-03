@@ -9,6 +9,7 @@
 //! - Semantic SLAM with object-level understanding
 
 #![allow(dead_code)]
+#![allow(missing_docs)]
 
 use crate::error::{Result, VisionError};
 use crate::scene_understanding::SceneAnalysisResult;

@@ -223,8 +223,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         0.5 * theta_dot * theta_dot + g / l * (1.0 - theta.cos())
     };
 
-    println!("   Initial total energy: {:.6} J/kg", initial_energy);
-    println!("   Final total energy: {:.6} J/kg", final_energy);
+    println!("   Initial total energy: {initial_energy:.6} J/kg");
+    println!("   Final total energy: {final_energy:.6} J/kg");
     println!(
         "   Energy conservation error: {:.2e}",
         (final_energy - initial_energy).abs()

@@ -1015,14 +1015,14 @@ where
                     let block_col = self.indices[k][0];
                     let block = &self.data[k];
 
-                    writeln!(f, "Block at ({}, {}): ", block_row, block_col)?;
+                    writeln!(f, "Block at ({block_row}, {block_col}): ")?;
                     for row in block {
                         write!(f, "  [")?;
                         for (j, &val) in row.iter().enumerate() {
                             if j > 0 {
                                 write!(f, ", ")?;
                             }
-                            write!(f, "{:?}", val)?;
+                            write!(f, "{val:?}")?;
                         }
                         writeln!(f, "]")?;
                     }

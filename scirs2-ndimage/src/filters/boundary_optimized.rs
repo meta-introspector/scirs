@@ -6,14 +6,14 @@
 //! - Minimal branching in inner loops
 //! - Cache-friendly memory access patterns
 
-use ndarray::{Array, Array1, Array2, Array3, ArrayView1, ArrayView2, ArrayView3, Dimension};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Dimension};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 
 use super::BorderMode;
-use crate::error::{NdimageError, NdimageResult};
+use crate::error::NdimageResult;
 
 /// Trait for optimized boundary value computation
 pub trait OptimizedBoundaryOps<T> {

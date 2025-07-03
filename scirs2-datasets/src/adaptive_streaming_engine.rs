@@ -346,13 +346,16 @@ pub struct QualityThresholds {
     pub min_consistency: f64,
 }
 
+/// Alert callback function type alias
+type AlertCallback = Box<dyn Fn(&QualityAlert) + Send + Sync>;
+
 /// Alert system for quality issues
 #[allow(dead_code)]
 pub struct AlertSystem {
     /// Active alerts
     active_alerts: Arc<Mutex<Vec<QualityAlert>>>,
     /// Alert callbacks
-    callbacks: Arc<Mutex<Vec<Box<dyn Fn(&QualityAlert) + Send + Sync>>>>,
+    callbacks: Arc<Mutex<Vec<AlertCallback>>>,
 }
 
 /// Quality alert
@@ -692,7 +695,7 @@ impl AdaptiveStreamingEngine {
 
         Ok(TrendIndicators {
             linear_slope,
-            trend_strength: trend_strength.max(0.0).min(1.0),
+            trend_strength: trend_strength.clamp(0.0, 1.0),
             direction,
             seasonality,
         })
@@ -1017,9 +1020,8 @@ pub enum AnnealingSchedule {
     Adaptive,
 }
 
-impl QuantumInspiredOptimizer {
-    /// Create new quantum-inspired optimizer
-    pub fn new() -> Self {
+impl Default for QuantumInspiredOptimizer {
+    fn default() -> Self {
         let num_states = 16; // Quantum register size
         let quantum_states = (0..num_states)
             .map(|_| QuantumOptimizationState::random())
@@ -1039,6 +1041,13 @@ impl QuantumInspiredOptimizer {
                 tunneling_probability: 0.3,
             },
         }
+    }
+}
+
+impl QuantumInspiredOptimizer {
+    /// Create new quantum-inspired optimizer
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Perform quantum optimization step
@@ -1190,10 +1199,10 @@ impl QuantumOptimizationState {
         let config_superposition = (0..4)
             .map(|_| ConfigurationAmplitude {
                 config: OptimizationConfig {
-                    optimal_batch_size: rng().gen_range(500..2000),
-                    optimal_buffer_size: rng().gen_range(5000..20000),
-                    num_workers: rng().gen_range(1..9),
-                    memory_strategy: match rng().gen_range(0..4) {
+                    optimal_batch_size: rng().random_range(500..2000),
+                    optimal_buffer_size: rng().random_range(5000..20000),
+                    num_workers: rng().random_range(1..9),
+                    memory_strategy: match rng().random_range(0..4) {
                         0 => MemoryStrategy::Conservative,
                         1 => MemoryStrategy::Balanced,
                         2 => MemoryStrategy::Aggressive,
@@ -1208,7 +1217,7 @@ impl QuantumOptimizationState {
         Self {
             config_superposition,
             energy: rng().random::<f64>() * 10.0,
-            coherence_time: Duration::from_millis(rng().gen_range(100..1000)),
+            coherence_time: Duration::from_millis(rng().random_range(100..1000)),
             entanglement_degree: rng().random::<f64>(),
         }
     }
@@ -1426,9 +1435,8 @@ pub struct PredictionModelParams {
     noise_variance: f64,
 }
 
-impl NeuralAdaptiveSystem {
-    /// Create new neural adaptive system
-    pub fn new() -> Self {
+impl Default for NeuralAdaptiveSystem {
+    fn default() -> Self {
         Self {
             neural_network: AdaptiveNeuralNetwork::new(),
             learning_history: VecDeque::with_capacity(10000),
@@ -1441,6 +1449,13 @@ impl NeuralAdaptiveSystem {
             },
             prediction_model: PerformancePredictionModel::new(),
         }
+    }
+}
+
+impl NeuralAdaptiveSystem {
+    /// Create new neural adaptive system
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Learn from streaming data and adapt
@@ -1531,7 +1546,7 @@ impl NeuralAdaptiveSystem {
             }
             ChangeType::ModifyLayerSize => {
                 if !self.neural_network.layers.is_empty() {
-                    let layer_idx = rng().gen_range(0..self.neural_network.layers.len());
+                    let layer_idx = rng().random_range(0..self.neural_network.layers.len());
                     self.neural_network.modify_layer_size(layer_idx, 32);
                 }
             }
@@ -1775,7 +1790,7 @@ impl AdaptiveNeuralNetwork {
 
         // Clamp learning rate
         self.learning_rate_schedule.current_rate =
-            self.learning_rate_schedule.current_rate.max(1e-6).min(1.0);
+            self.learning_rate_schedule.current_rate.clamp(1e-6, 1.0);
     }
 }
 
@@ -1938,10 +1953,10 @@ impl PerformancePredictionModel {
         Ok(PerformancePredictionPoint {
             features: Array1::zeros(1),
             actual_performance: 0.0,
-            predicted_performance: prediction.max(0.0).min(1.0),
+            predicted_performance: prediction.clamp(0.0, 1.0),
             confidence_interval: (
-                (prediction - confidence_width).max(0.0),
-                (prediction + confidence_width).min(1.0),
+                (prediction - confidence_width).clamp(0.0, f64::MAX),
+                (prediction + confidence_width).clamp(0.0, 1.0),
             ),
             timestamp: Instant::now(),
         })
@@ -1952,14 +1967,12 @@ impl PerformancePredictionModel {
 impl AdaptiveStreamingEngine {
     /// Create ultra-advanced streaming engine with quantum and neural optimization
     pub fn with_quantum_neural_optimization(config: AdaptiveStreamConfig) -> Self {
-        let engine = Self::new(config);
-
         // In a full implementation, this would integrate:
         // - QuantumInspiredOptimizer for parameter optimization
         // - NeuralAdaptiveSystem for pattern learning
         // - Advanced prediction models
 
-        engine
+        Self::new(config)
     }
 
     /// Optimize using quantum-inspired algorithms

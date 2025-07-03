@@ -168,10 +168,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let total = y0[0] + y0[1];
     let a_eq = total / (1.0 + k_eq);
     let b_eq = total - a_eq;
-    println!(
-        "   Theoretical equilibrium: [A]={:.3}, [B]={:.3}",
-        a_eq, b_eq
-    );
+    println!("   Theoretical equilibrium: [A]={a_eq:.3}, [B]={b_eq:.3}");
     println!();
 
     // Example 2: Michaelis-Menten Enzyme Kinetics

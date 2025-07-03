@@ -89,8 +89,7 @@ where
         if !self.is_in_band(row, col) {
             if !value.is_zero() {
                 return Err(crate::error::SparseError::ValueError(format!(
-                    "Cannot set non-zero element at ({}, {}) outside band structure",
-                    row, col
+                    "Cannot set non-zero element at ({row}, {col}) outside band structure"
                 )));
             }
             return Ok(());

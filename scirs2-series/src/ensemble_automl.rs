@@ -206,6 +206,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> LinearRegressionMeta<F> {
     }
 }
 
+impl<F: Float + Debug + Clone + FromPrimitive> Default for LinearRegressionMeta<F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<F: Float + Debug + Clone + FromPrimitive> MetaModel<F> for LinearRegressionMeta<F> {
     fn train(&mut self, predictions: &Array2<F>, targets: &Array1<F>) -> Result<()> {
         let (n_samples, n_models) = predictions.dim();
@@ -530,6 +536,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Train a single model
+    #[allow(dead_code)]
     fn train_single_model(
         &self,
         model_wrapper: &mut BaseModelWrapper<F>,
@@ -618,13 +625,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             model_wrapper
                 .model_state
                 .parameters
-                .insert(format!("ar_{}", i), coeff);
+                .insert(format!("ar_{i}"), coeff);
         }
         for (i, &coeff) in ma_coeffs.iter().enumerate() {
             model_wrapper
                 .model_state
                 .parameters
-                .insert(format!("ma_{}", i), coeff);
+                .insert(format!("ma_{i}"), coeff);
         }
 
         model_wrapper.model_state.state_variables.insert(
@@ -949,10 +956,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
                 // AR component
                 for i in 0..p {
-                    if let Some(&ar_coeff) = model_wrapper
-                        .model_state
-                        .parameters
-                        .get(&format!("ar_{}", i))
+                    if let Some(&ar_coeff) =
+                        model_wrapper.model_state.parameters.get(&format!("ar_{i}"))
                     {
                         if i < extended_data.len() {
                             let lag_index = extended_data.len() - 1 - i;
@@ -963,10 +968,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
                 // MA component (simplified - assume zero residuals for future)
                 for i in 0..q {
-                    if let Some(&ma_coeff) = model_wrapper
-                        .model_state
-                        .parameters
-                        .get(&format!("ma_{}", i))
+                    if let Some(&ma_coeff) =
+                        model_wrapper.model_state.parameters.get(&format!("ma_{i}"))
                     {
                         // Simplified: assume residuals decay to zero
                         let residual_weight = F::from(0.95_f64.powi(i as i32 + 1)).unwrap();

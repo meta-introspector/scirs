@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Simple analytical approximation for weak acid
     let h_analytical = (ka * initial_acid).sqrt();
     let ph_analytical = -h_analytical.log10();
-    println!("   Analytical pH approximation: {:.2}", ph_analytical);
+    println!("   Analytical pH approximation: {ph_analytical:.2}");
 
     // Test 2: Buffer system setup
     println!("\n2. Testing buffer equilibrium setup");
@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Henderson-Hasselbalch equation for equal concentrations
     let pka = -ka.log10();
     let ph_hh = pka; // pH = pKa when [A-] = [HA]
-    println!("   Henderson-Hasselbalch pH: {:.2}", ph_hh);
+    println!("   Henderson-Hasselbalch pH: {ph_hh:.2}");
 
     // Test 3: Complex formation setup
     println!("\n3. Testing complex formation setup");
@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ligand = 0.01; // L
     let alpha = 1.0 / (1.0 + k_formation * ligand);
     let fraction_free = alpha * 100.0;
-    println!("   Estimated fraction of free metal: {:.1}%", fraction_free);
+    println!("   Estimated fraction of free metal: {fraction_free:.1}%");
 
     // Test 4: Solubility equilibrium setup
     println!("\n4. Testing solubility equilibrium setup");
@@ -66,7 +66,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Analytical solubility for 1:1 salt
     let solubility_analytical = ksp.sqrt();
-    println!("   Analytical solubility: {:.3e} M", solubility_analytical);
+    println!("   Analytical solubility: {solubility_analytical:.3e} M");
     println!(
         "   Solubility in mg/L: {:.2}",
         solubility_analytical * 143.32

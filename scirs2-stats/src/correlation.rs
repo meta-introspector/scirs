@@ -6,8 +6,8 @@
 // Import the intraclass correlation module
 pub mod intraclass;
 
-use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::{ErrorMessages, ErrorValidator};
+use crate::error::StatsResult;
+use crate::error_standardization::ErrorMessages;
 use crate::{mean, std};
 use ndarray::{s, Array1, Array2, ArrayBase, Data, Dimension, Ix1, Ix2};
 use num_traits::{Float, NumCast};

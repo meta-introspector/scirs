@@ -93,7 +93,7 @@ where
     let t_end = t_span[1];
     let exact_value = exact_func(t_end);
 
-    println!("\nComparison for {}:", problem_name);
+    println!("\nComparison for {problem_name}:");
     println!("Method\\t\\t\\tFinal Value\\t\\tError\\t\\t\\tSteps\\tFunc Evals");
     println!("{}", "-".repeat(80));
 
@@ -109,7 +109,7 @@ where
     let step_sizes = vec![0.1, 0.05, 0.01];
 
     for step_size in step_sizes {
-        println!("\nStep size h = {}", step_size);
+        println!("\nStep size h = {step_size}");
 
         for (method_name, method_id) in &methods {
             let opts = ODEOptions {
@@ -166,7 +166,7 @@ where
                     );
                 }
                 Err(e) => {
-                    println!("{:<20}\\tFAILED: {}", method_name, e);
+                    println!("{method_name:<20}\\tFAILED: {e}");
                 }
             }
         }
@@ -222,7 +222,7 @@ where
                 );
             }
             Err(e) => {
-                println!("{:<20}\\tFAILED: {}", method_name, e);
+                println!("{method_name:<20}\\tFAILED: {e}");
             }
         }
     }

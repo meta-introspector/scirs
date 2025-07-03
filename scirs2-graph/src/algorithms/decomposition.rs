@@ -13,7 +13,7 @@ use std::hash::Hash;
 /// the node belongs to the k-core).
 pub fn k_core_decomposition<N, E, Ix>(graph: &Graph<N, E, Ix>) -> HashMap<N, usize>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {

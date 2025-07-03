@@ -229,8 +229,7 @@ impl RegexFilter {
                 keep_matching,
             }),
             Err(e) => Err(TextError::InvalidInput(format!(
-                "Invalid regex pattern: {}",
-                e
+                "Invalid regex pattern: {e}"
             ))),
         }
     }

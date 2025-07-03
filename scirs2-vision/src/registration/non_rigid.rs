@@ -182,11 +182,11 @@ impl ThinPlateSpline {
 
         // Use scirs2-linalg's least squares solver
         let result_x = lstsq(&k_matrix.view(), &target_x.view(), None)
-            .map_err(|e| VisionError::OperationError(format!("TPS solve failed for x: {}", e)))?;
+            .map_err(|e| VisionError::OperationError(format!("TPS solve failed for x: {e}")))?;
         let weights_x = result_x.x;
 
         let result_y = lstsq(&k_matrix.view(), &target_y.view(), None)
-            .map_err(|e| VisionError::OperationError(format!("TPS solve failed for y: {}", e)))?;
+            .map_err(|e| VisionError::OperationError(format!("TPS solve failed for y: {e}")))?;
         let weights_y = result_y.x;
 
         // Extract weights and affine parameters

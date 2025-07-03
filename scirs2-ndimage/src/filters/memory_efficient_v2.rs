@@ -206,7 +206,9 @@ where
 /// Helper processor for Gaussian filter
 struct GaussianProcessorV2;
 
-impl<T: Float, D: Dimension> crate::chunked_v2::ChunkProcessorV2<T, D> for GaussianProcessorV2 {
+impl<T: Float + Send + Sync, D: Dimension> crate::chunked_v2::ChunkProcessorV2<T, D>
+    for GaussianProcessorV2
+{
     fn create_processor(
         &self,
     ) -> Box<
@@ -348,7 +350,7 @@ where
 /// Helper processor for bilateral filter
 struct BilateralProcessorV2;
 
-impl<T: Float> crate::chunked_v2::ChunkProcessorV2<T, Ix2> for BilateralProcessorV2 {
+impl<T: Float + Send + Sync> crate::chunked_v2::ChunkProcessorV2<T, Ix2> for BilateralProcessorV2 {
     fn create_processor(
         &self,
     ) -> Box<

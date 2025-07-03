@@ -1044,8 +1044,7 @@ impl EigenvalueMethod {
             "inverse" | "inverse_iteration" => Ok(Self::InverseIteration),
             "subspace" | "subspace_iteration" => Ok(Self::SubspaceIteration),
             _ => Err(SparseError::ValueError(format!(
-                "Unknown eigenvalue method: {}",
-                s
+                "Unknown eigenvalue method: {s}"
             ))),
         }
     }
@@ -2532,8 +2531,7 @@ where
         }
         _ => {
             return Err(SparseError::ValueError(format!(
-                "Unknown 'which' parameter: {}. Use 'LA', 'SA', 'LM', 'SM', or 'BE'",
-                which
+                "Unknown 'which' parameter: {which}. Use 'LA', 'SA', 'LM', 'SM', or 'BE'"
             )));
         }
     }
@@ -2938,8 +2936,7 @@ where
             solve_generalized_cayley(a_matrix, b_matrix, sigma, k, which, &opts)
         }
         _ => Err(SparseError::ValueError(format!(
-            "Unknown mode: '{}'. Use 'standard', 'shift_invert', 'buckling', or 'cayley'",
-            mode
+            "Unknown mode: '{mode}'. Use 'standard', 'shift_invert', 'buckling', or 'cayley'"
         ))),
     }
 }

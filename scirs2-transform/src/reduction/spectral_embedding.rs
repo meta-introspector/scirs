@@ -179,6 +179,7 @@ impl SpectralEmbedding {
                     neighbors_with_dist.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
                     // Connect to k nearest neighbors
+                    #[allow(clippy::needless_range_loop)]
                     for k in 0..self.n_neighbors.min(neighbors_with_dist.len()) {
                         let neighbor = neighbors_with_dist[k].1;
                         let weight = 1.0; // Binary weights for KNN

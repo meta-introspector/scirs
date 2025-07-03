@@ -133,7 +133,7 @@ fn test_constant_mass_with_events() -> IntegrateResult<()> {
     eprintln!("\nTest without events:");
     eprintln!("Success: {:?}", test_result.is_ok());
     if let Err(e) = &test_result {
-        eprintln!("Error: {:?}", e);
+        eprintln!("Error: {e:?}");
     }
 
     // Verify basic solution properties

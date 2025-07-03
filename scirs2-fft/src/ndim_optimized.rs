@@ -112,8 +112,7 @@ fn validate_axes(axes: &[usize], ndim: usize) -> FFTResult<()> {
     for &axis in axes {
         if axis >= ndim {
             return Err(FFTError::ValueError(format!(
-                "Axis {} is out of bounds for array with {} dimensions",
-                axis, ndim
+                "Axis {axis} is out of bounds for array with {ndim} dimensions"
             )));
         }
     }

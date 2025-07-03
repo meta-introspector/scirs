@@ -819,10 +819,13 @@ pub struct QuantumNeuralNetwork<F: Float + Debug> {
     /// Layers of the quantum neural network
     layers: Vec<QuantumLayer<F>>,
     /// Number of qubits per layer
+    #[allow(dead_code)]
     qubits_per_layer: usize,
     /// Input dimension
+    #[allow(dead_code)]
     input_dim: usize,
     /// Output dimension
+    #[allow(dead_code)]
     output_dim: usize,
 }
 
@@ -1383,10 +1386,13 @@ pub struct QuantumTensorNetwork<F: Float + Debug> {
     /// Tensor network nodes
     nodes: Vec<TensorNode<F>>,
     /// Connection topology
+    #[allow(dead_code)]
     connections: Vec<TensorConnection>,
     /// Virtual bond dimensions
+    #[allow(dead_code)]
     bond_dimensions: HashMap<usize, usize>,
     /// Maximum entanglement entropy
+    #[allow(dead_code)]
     max_entanglement: F,
 }
 
@@ -1394,14 +1400,18 @@ pub struct QuantumTensorNetwork<F: Float + Debug> {
 #[derive(Debug, Clone)]
 pub struct TensorNode<F: Float + Debug> {
     /// Node identifier
+    #[allow(dead_code)]
     id: usize,
     /// Tensor data
     tensor: Array3<Complex<F>>,
     /// Physical bonds (to data)
+    #[allow(dead_code)]
     physical_bonds: Vec<usize>,
     /// Virtual bonds (to other tensors)
+    #[allow(dead_code)]
     virtual_bonds: Vec<usize>,
     /// Node position in network
+    #[allow(dead_code)]
     position: (usize, usize),
 }
 
@@ -1409,12 +1419,16 @@ pub struct TensorNode<F: Float + Debug> {
 #[derive(Debug, Clone)]
 pub struct TensorConnection {
     /// Source node
+    #[allow(dead_code)]
     from_node: usize,
     /// Target node  
+    #[allow(dead_code)]
     to_node: usize,
     /// Bond dimension
+    #[allow(dead_code)]
     bond_dim: usize,
     /// Connection strength
+    #[allow(dead_code)]
     strength: f64,
 }
 
@@ -1611,8 +1625,10 @@ pub struct QuantumErrorCorrection<F: Float + Debug> {
     /// Number of physical qubits
     physical_qubits: usize,
     /// Number of logical qubits
+    #[allow(dead_code)]
     logical_qubits: usize,
     /// Error rates
+    #[allow(dead_code)]
     error_rates: ErrorRates<F>,
     /// Syndrome detection results
     syndromes: Vec<SyndromeResult<F>>,
@@ -1800,6 +1816,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumErrorCorrection<F> {
 #[derive(Debug)]
 pub struct QuantumAdvantagePredictor<F: Float + Debug> {
     /// Quantum feature map
+    #[allow(dead_code)]
     feature_map: QuantumFeatureMap<F>,
     /// Quantum machine learning model
     qml_model: QuantumMLModel<F>,
@@ -1813,10 +1830,13 @@ pub struct QuantumAdvantagePredictor<F: Float + Debug> {
 #[derive(Debug)]
 pub struct QuantumFeatureMap<F: Float + Debug> {
     /// Encoding strategy
+    #[allow(dead_code)]
     encoding: QuantumEncoding,
     /// Number of qubits for encoding
+    #[allow(dead_code)]
     num_qubits: usize,
     /// Feature transformation parameters
+    #[allow(dead_code)]
     parameters: Array2<F>,
 }
 
@@ -1839,8 +1859,10 @@ pub struct QuantumMLModel<F: Float + Debug> {
     /// Variational quantum circuit
     vqc: VariationalQuantumCircuit<F>,
     /// Quantum kernels
+    #[allow(dead_code)]
     kernels: Vec<QuantumKernel<F>>,
     /// Model parameters
+    #[allow(dead_code)]
     parameters: Array1<F>,
 }
 
@@ -1850,8 +1872,10 @@ pub struct ClassicalBaseline<F: Float + Debug> {
     /// Linear regression coefficients
     linear_weights: Array1<F>,
     /// Neural network weights (simplified)
+    #[allow(dead_code)]
     nn_weights: Array2<F>,
     /// Performance metrics
+    #[allow(dead_code)]
     performance: PerformanceMetrics<F>,
 }
 

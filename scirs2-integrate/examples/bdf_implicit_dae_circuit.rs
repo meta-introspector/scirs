@@ -26,8 +26,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let damping = r / (2.0 * (l / c).sqrt());
 
     println!("RLC Circuit parameters:");
-    println!("  Resonant frequency: {:.6} rad/s", omega_res);
-    println!("  Damping coefficient: {:.6}", damping);
+    println!("  Resonant frequency: {omega_res:.6} rad/s");
+    println!("  Damping coefficient: {damping:.6}");
 
     // Initial conditions
     let v0 = 0.0; // Initial voltage across capacitor
@@ -94,7 +94,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Success: {}", result.success);
 
     if let Some(msg) = &result.message {
-        println!("  Message: {}", msg);
+        println!("  Message: {msg}");
     }
 
     // Calculate the input voltage and total energy at each time point

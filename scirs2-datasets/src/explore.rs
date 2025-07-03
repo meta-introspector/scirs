@@ -362,7 +362,7 @@ impl DatasetExplorer {
                 .as_ref()
                 .and_then(|names| names.get(i))
                 .cloned()
-                .unwrap_or_else(|| format!("feature_{}", i));
+                .unwrap_or_else(|| format!("feature_{i}"));
 
             let stats = self.compute_single_feature_stats(&name, i, &column)?;
             features.push(stats);
@@ -574,7 +574,7 @@ impl DatasetExplorer {
                 .as_ref()
                 .and_then(|names| names.get(i))
                 .cloned()
-                .unwrap_or_else(|| format!("feature_{}", i));
+                .unwrap_or_else(|| format!("feature_{i}"));
 
             let missing_percentage = missing_count as f64 / n_samples as f64 * 100.0;
             feature_missing.push((feature_name, missing_count, missing_percentage));
@@ -654,7 +654,7 @@ impl DatasetExplorer {
                 .as_ref()
                 .and_then(|names| names.get(i))
                 .cloned()
-                .unwrap_or_else(|| format!("feature_{}", i));
+                .unwrap_or_else(|| format!("feature_{i}"));
 
             let correlation = self.compute_correlation(&column, &target_column);
             correlations_with_features.push((feature_name, correlation));
@@ -734,7 +734,7 @@ impl DatasetExplorer {
                     if correlations[[i, j]].abs() > 0.9 {
                         let name_i = statistics.features[i].name.clone();
                         let name_j = statistics.features[j].name.clone();
-                        high_corr_pairs.push(format!("{} - {}", name_i, name_j));
+                        high_corr_pairs.push(format!("{name_i} - {name_j}"));
                     }
                 }
             }
@@ -1115,7 +1115,7 @@ impl DatasetExplorer {
         io::stdin().read_line(&mut input).unwrap();
         let format = input.trim();
 
-        let filename = format!("dataset_summary.{}", format);
+        let filename = format!("dataset_summary.{format}");
 
         let content = match format {
             "json" => serde_json::to_string_pretty(summary)

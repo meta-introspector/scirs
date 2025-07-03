@@ -5,7 +5,7 @@
 //! interquartile range, and range.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::{ErrorMessages, ErrorValidator};
+use crate::error_standardization::ErrorMessages;
 use crate::{mean, median};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};

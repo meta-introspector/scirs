@@ -117,11 +117,7 @@ where
     let window_size = (n / 16).max(3).min(n);
 
     for i in 0..n {
-        let start = if i >= window_size / 2 {
-            i - window_size / 2
-        } else {
-            0
-        };
+        let start = i.saturating_sub(window_size / 2);
         let end = (i + window_size / 2 + 1).min(n);
 
         let window_mags = &magnitudes[start..end];

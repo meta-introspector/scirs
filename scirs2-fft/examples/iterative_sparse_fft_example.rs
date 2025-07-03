@@ -84,9 +84,9 @@ fn evaluate_accuracy(
 /// Run sparse FFT with multiple algorithms and compare results
 fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
     println!("\nRunning algorithm comparison:");
-    println!("  Signal size: {}", n);
-    println!("  Expected sparsity: {}", sparsity);
-    println!("  Noise level: {:.3}", noise_level);
+    println!("  Signal size: {n}");
+    println!("  Expected sparsity: {sparsity}");
+    println!("  Noise level: {noise_level:.3}");
 
     // Create a sparse signal with known frequencies
     let frequencies = vec![
@@ -206,7 +206,7 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
 
         let freq_trace = Scatter::new(indices, amplitudes)
             .mode(Mode::Markers)
-            .name(format!("{:?} Algorithm", algorithm));
+            .name(format!("{algorithm:?} Algorithm"));
 
         frequency_domain_plot.add_trace(freq_trace);
 
@@ -447,10 +447,7 @@ fn run_iteration_comparison() {
         // Evaluate accuracy
         let (_, recall, true_positives) = evaluate_accuracy(&result, &frequencies, n);
 
-        println!(
-            "{:<15} {:<15} {:<15.3} {:<20}",
-            iterations, true_positives, recall, elapsed
-        );
+        println!("{iterations:<15} {true_positives:<15} {recall:<15.3} {elapsed:<20}");
 
         // Calculate reconstruction error
         let reconstructed = reconstruct_time_domain(&result, n).unwrap();
@@ -468,13 +465,13 @@ fn run_iteration_comparison() {
         )
         .mode(Mode::Markers)
         .marker(plotly::common::Marker::new().size(10 + 2 * iterations))
-        .name(format!("{} iterations (RMSE: {:.5})", iterations, error));
+        .name(format!("{iterations} iterations (RMSE: {error:.5})"));
 
         plot.add_trace(trace);
 
         // Print found components (top 10)
         if iterations == 1 || iterations == *iterations_to_test.last().unwrap() {
-            println!("\n  With {} iterations, found components:", iterations);
+            println!("\n  With {iterations} iterations, found components:");
 
             // Sort by magnitude
             let mut components: Vec<(usize, Complex64)> = result
@@ -555,7 +552,7 @@ fn run_iteration_comparison() {
         error += sample_error * sample_error;
     }
     error = (error / n as f64).sqrt();
-    println!("Sublinear reconstruction RMSE: {:.6}", error);
+    println!("Sublinear reconstruction RMSE: {error:.6}");
 
     // Print found components (top 10)
     println!("\n  Sublinear algorithm found components:");

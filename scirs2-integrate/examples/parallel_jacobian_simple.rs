@@ -149,7 +149,7 @@ fn main() {
     let system_sizes = [10, 100, 500];
 
     for &n in &system_sizes {
-        println!("\nTesting with system size: {}", n);
+        println!("\nTesting with system size: {n}");
 
         // Create a random initial state
         let mut y = Array1::zeros(n);
@@ -164,18 +164,18 @@ fn main() {
         let serial_start = Instant::now();
         let _serial_jac = finite_difference_jacobian(&large_ode_system, t, &y, &f_y, 1.0);
         let serial_time = serial_start.elapsed();
-        println!("  Serial computation: {:?}", serial_time);
+        println!("  Serial computation: {serial_time:?}");
 
         // Parallel computation (uses serial if feature is disabled)
         let parallel_start = Instant::now();
         let _parallel_jac =
             parallel_finite_difference_jacobian(&large_ode_system, t, &y, &f_y, 1.0);
         let parallel_time = parallel_start.elapsed();
-        println!("  Parallel computation: {:?}", parallel_time);
+        println!("  Parallel computation: {parallel_time:?}");
 
         // Calculate speedup
         let speedup = serial_time.as_secs_f64() / parallel_time.as_secs_f64();
-        println!("  Speedup: {:.2}x", speedup);
+        println!("  Speedup: {speedup:.2}x");
     }
 
     println!("\nNote: For best performance, compile with --release flag");

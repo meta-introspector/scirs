@@ -11,7 +11,7 @@
 #![allow(dead_code)]
 
 use crate::error::{MetricsError, Result};
-use ndarray::{Array1, Array2};
+use ndarray::{s, Array1, Array2};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
@@ -980,7 +980,9 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F>
     }
 }
 
-impl<F: Float + std::fmt::Debug + Send + Sync> ConceptDriftDetector<F> for AdwinDetector<F> {
+impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> ConceptDriftDetector<F>
+    for AdwinDetector<F>
+{
     fn update(&mut self, _prediction_correct: bool, error: F) -> Result<DriftDetectionResult> {
         self.samples_count += 1;
 
@@ -1442,9 +1444,17 @@ impl<F: Float + std::fmt::Debug + Send + Sync> AdaptiveWindowManager<F> {
         }
 
         // Simple trend analysis: check if performance is consistently declining
-        let recent = &self.performance_history[self.performance_history.len() - 5..];
-        let older = &self.performance_history
-            [self.performance_history.len() - 10..self.performance_history.len() - 5];
+        let hist_len = self.performance_history.len();
+        let recent: Vec<_> = self
+            .performance_history
+            .range((hist_len - 5)..)
+            .cloned()
+            .collect();
+        let older: Vec<_> = self
+            .performance_history
+            .range((hist_len - 10)..(hist_len - 5))
+            .cloned()
+            .collect();
 
         let recent_avg = recent
             .iter()
@@ -2001,7 +2011,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<
         let recent_scores: Vec<_> = self.anomaly_scores.iter().rev().take(window).collect();
         let anomaly_count = recent_scores
             .iter()
-            .filter(|&&score| score > self.threshold)
+            .filter(|&&score| score > &self.threshold)
             .count();
 
         anomaly_count as f64 / window as f64
@@ -2162,7 +2172,7 @@ impl AlertsManager {
 ///
 /// This system uses neural networks and reinforcement learning to automatically
 /// tune streaming parameters for optimal performance across different data patterns.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NeuralAdaptiveStreaming<F: Float + std::fmt::Debug + Send + Sync> {
     /// Neural parameter optimizer
     parameter_optimizer: NeuralParameterOptimizer<F>,
@@ -2392,7 +2402,7 @@ pub enum ActivationFunction {
 }
 
 /// Neural parameter optimizer using deep learning
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NeuralParameterOptimizer<F: Float + std::fmt::Debug> {
     /// Input layer size (number of input features)
     input_size: usize,
@@ -2445,7 +2455,7 @@ pub struct BatchNormParams<F: Float + std::fmt::Debug> {
 }
 
 /// Neural network optimizers
-pub trait NeuralOptimizer<F: Float> {
+pub trait NeuralOptimizer<F: Float + std::fmt::Debug>: std::fmt::Debug {
     /// Update parameters based on gradients
     fn update_parameters(
         &mut self,
@@ -2478,7 +2488,9 @@ pub struct AdamOptimizer<F: Float + std::fmt::Debug> {
     t: usize,
 }
 
-impl<F: Float + std::fmt::Debug + Send + Sync> NeuralOptimizer<F> for AdamOptimizer<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> NeuralOptimizer<F>
+    for AdamOptimizer<F>
+{
     fn update_parameters(
         &mut self,
         gradients: &[Array2<F>],
@@ -2542,6 +2554,15 @@ pub struct TrainingMetrics<F: Float + std::fmt::Debug> {
     pub timestamp: Instant,
 }
 
+/// Training record for neural parameter optimizer
+#[derive(Debug, Clone)]
+pub struct TrainingRecord<F: Float + std::fmt::Debug> {
+    pub loss: F,
+    pub learning_rate: F,
+    pub gradient_norm: F,
+    pub timestamp: Instant,
+}
+
 /// Regularization configuration
 #[derive(Debug, Clone)]
 pub struct RegularizationConfig<F: Float + std::fmt::Debug> {
@@ -2558,7 +2579,6 @@ pub struct RegularizationConfig<F: Float + std::fmt::Debug> {
 }
 
 /// Reinforcement learning agent for adaptive control
-#[derive(Debug, Clone)]
 pub struct AdaptiveControlAgent<F: Float + std::fmt::Debug> {
     /// Current state representation
     current_state: Array1<F>,
@@ -2578,6 +2598,103 @@ pub struct AdaptiveControlAgent<F: Float + std::fmt::Debug> {
     reward_function: Box<dyn RewardFunction<F> + Send + Sync>,
     /// Training metrics
     training_metrics: Vec<RLTrainingMetrics<F>>,
+}
+
+impl<F: Float + std::fmt::Debug> AdaptiveControlAgent<F> {
+    /// Get training metrics
+    pub fn get_training_metrics(&self) -> HashMap<String, F> {
+        let mut metrics = HashMap::new();
+
+        if let Some(latest) = self.training_metrics.last() {
+            metrics.insert("total_reward".to_string(), latest.total_reward);
+            metrics.insert("average_reward".to_string(), latest.average_reward);
+            metrics.insert("exploration_rate".to_string(), latest.exploration_rate);
+            metrics.insert("loss".to_string(), latest.loss);
+        }
+
+        metrics.insert(
+            "total_episodes".to_string(),
+            F::from(self.training_metrics.len()).unwrap_or(F::zero()),
+        );
+        metrics
+    }
+
+    /// Adapt to drift (placeholder implementation)
+    pub fn adapt_to_drift(&mut self, _drift_magnitude: F) -> Result<()> {
+        // Placeholder implementation
+        Ok(())
+    }
+
+    /// Update experience in the RL agent
+    pub fn update_experience(
+        &mut self,
+        state: &Array1<F>,
+        action: &Array1<F>,
+        reward: F,
+        _performance_metrics: &HashMap<String, F>,
+    ) -> Result<()> {
+        // Update training metrics
+        let metrics = RLTrainingMetrics {
+            total_reward: reward,
+            average_reward: reward,
+            exploration_rate: F::from(0.1).unwrap(),
+            loss: F::zero(),
+            timestamp: Instant::now(),
+        };
+
+        self.training_metrics.push(metrics);
+
+        // Keep history manageable
+        if self.training_metrics.len() > 1000 {
+            self.training_metrics.remove(0);
+        }
+
+        Ok(())
+    }
+
+    /// Select action based on features
+    pub fn select_action(
+        &mut self,
+        features: &Array1<F>,
+        _performance_metrics: &HashMap<String, F>,
+    ) -> Result<Array1<F>> {
+        // Simple action selection - return a placeholder action
+        let action_size = std::cmp::min(features.len(), 5);
+        let mut action = Array1::zeros(action_size);
+
+        // Simple policy: select actions proportional to features
+        for (i, &feature) in features.iter().enumerate() {
+            if i < action_size {
+                action[i] = feature.abs() % F::one();
+            }
+        }
+
+        Ok(action)
+    }
+}
+
+impl<F: Float + std::fmt::Debug> std::fmt::Debug for AdaptiveControlAgent<F> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AdaptiveControlAgent")
+            .field("current_state", &self.current_state)
+            .field("action_space", &self.action_space)
+            .field("q_network", &self.q_network)
+            .field("target_network", &self.target_network)
+            .field("replay_buffer", &self.replay_buffer)
+            .field("policy", &self.policy)
+            .field("exploration_strategy", &self.exploration_strategy)
+            .field("reward_function", &"<function>")
+            .field("training_metrics", &self.training_metrics)
+            .finish()
+    }
+}
+
+impl<F: Float + std::fmt::Debug> Clone for AdaptiveControlAgent<F> {
+    fn clone(&self) -> Self {
+        // Note: Cannot clone the reward function trait object
+        // This is a limitation of the current design
+        panic!("AdaptiveControlAgent cannot be cloned due to trait object")
+    }
 }
 
 /// Action space for reinforcement learning
@@ -2707,7 +2824,6 @@ pub struct RLTrainingMetrics<F: Float + std::fmt::Debug> {
 }
 
 /// Online learning system for pattern recognition and adaptation
-#[derive(Debug, Clone)]
 pub struct OnlineLearningSystem<F: Float + std::fmt::Debug + Send + Sync> {
     /// Current model parameters
     model_parameters: Array1<F>,
@@ -2725,6 +2841,73 @@ pub struct OnlineLearningSystem<F: Float + std::fmt::Debug + Send + Sync> {
     adaptation_history: Vec<AdaptationEvent<F>>,
     /// Performance tracker
     performance_tracker: OnlinePerformanceTracker<F>,
+}
+
+impl<F: Float + std::fmt::Debug + Send + Sync> OnlineLearningSystem<F> {
+    /// Get performance metrics
+    pub fn get_performance_metrics(&self) -> HashMap<String, F> {
+        let mut metrics = HashMap::new();
+        // Return basic performance metrics
+        metrics.insert(
+            "adaptation_events".to_string(),
+            F::from(self.adaptation_history.len()).unwrap_or(F::zero()),
+        );
+        metrics.insert(
+            "buffer_size".to_string(),
+            F::from(self.feature_buffer.len()).unwrap_or(F::zero()),
+        );
+        metrics.insert(
+            "model_parameters".to_string(),
+            F::from(self.model_parameters.len()).unwrap_or(F::zero()),
+        );
+        metrics
+    }
+
+    /// Adapt to drift (placeholder implementation)
+    pub fn adapt_to_drift(&mut self, _drift_magnitude: F) -> Result<()> {
+        // Placeholder implementation
+        Ok(())
+    }
+
+    /// Update the online learning system with new data
+    pub fn update(
+        &mut self,
+        features: &Array1<F>,
+        _performance_metrics: &HashMap<String, F>,
+    ) -> Result<()> {
+        // Add features to buffer
+        self.feature_buffer.push_back(features.clone());
+
+        // Keep buffer size manageable
+        if self.feature_buffer.len() > 1000 {
+            self.feature_buffer.pop_front();
+        }
+
+        // Placeholder implementation
+        Ok(())
+    }
+}
+
+impl<F: Float + std::fmt::Debug + Send + Sync> std::fmt::Debug for OnlineLearningSystem<F> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("OnlineLearningSystem")
+            .field("model_parameters", &self.model_parameters)
+            .field("feature_buffer", &self.feature_buffer)
+            .field("target_buffer", &self.target_buffer)
+            .field("optimizer", &"<function>")
+            .field("drift_detector", &"<function>")
+            .field("model_ensemble", &self.model_ensemble)
+            .field("adaptation_history", &self.adaptation_history)
+            .finish()
+    }
+}
+
+impl<F: Float + std::fmt::Debug + Send + Sync> Clone for OnlineLearningSystem<F> {
+    fn clone(&self) -> Self {
+        // Note: Cannot clone the trait objects
+        // This is a limitation of the current design
+        panic!("OnlineLearningSystem cannot be cloned due to trait objects")
+    }
 }
 
 /// Online optimizer trait
@@ -2833,6 +3016,24 @@ pub enum TrendDirection {
     Unknown,
 }
 
+/// Prediction record for performance tracking
+#[derive(Debug, Clone)]
+pub struct PredictionRecord<F: Float + std::fmt::Debug> {
+    pub features: Array1<F>,
+    pub predicted_performance: F,
+    pub actual_performance: F,
+    pub is_correct: bool,
+    pub timestamp: Instant,
+}
+
+/// Performance prediction result
+#[derive(Debug, Clone)]
+pub struct PerformancePrediction<F: Float + std::fmt::Debug> {
+    pub predicted_performance: F,
+    pub confidence: F,
+    pub timestamp: Instant,
+}
+
 /// Performance predictor using neural networks
 #[derive(Debug, Clone)]
 pub struct PerformancePredictor<F: Float + std::fmt::Debug> {
@@ -2846,6 +3047,71 @@ pub struct PerformancePredictor<F: Float + std::fmt::Debug> {
     confidence_estimator: ConfidenceEstimator<F>,
     /// Uncertainty quantification
     uncertainty_quantifier: UncertaintyQuantifier<F>,
+}
+
+impl<F: Float + std::fmt::Debug> PerformancePredictor<F> {
+    /// Get accuracy from prediction history
+    pub fn get_accuracy(&self) -> F {
+        if self.prediction_history.is_empty() {
+            return F::zero();
+        }
+
+        // Calculate accuracy from prediction history
+        let correct_predictions = self
+            .prediction_history
+            .iter()
+            .filter(|record| record.is_correct)
+            .count();
+
+        F::from(correct_predictions).unwrap() / F::from(self.prediction_history.len()).unwrap()
+    }
+
+    /// Adapt to drift (placeholder implementation)
+    pub fn adapt_to_drift(&mut self, _drift_magnitude: F) -> Result<()> {
+        // Placeholder implementation
+        Ok(())
+    }
+
+    /// Update the performance predictor with new data
+    pub fn update(&mut self, features: &Array1<F>, performance: F) -> Result<()> {
+        // Add to prediction history
+        let record = PredictionRecord {
+            features: features.clone(),
+            predicted_performance: performance,
+            actual_performance: performance,
+            is_correct: true, // Placeholder
+            timestamp: std::time::Instant::now(),
+        };
+
+        self.prediction_history.push_back(record);
+
+        // Keep history manageable
+        if self.prediction_history.len() > 1000 {
+            self.prediction_history.pop_front();
+        }
+
+        Ok(())
+    }
+
+    /// Predict performance based on features
+    pub fn predict(&self, features: &Array1<F>, _parameters: &Array1<F>) -> Result<F> {
+        // Simple prediction based on history
+        if self.prediction_history.is_empty() {
+            return Ok(F::zero());
+        }
+
+        // Average of recent performance
+        let recent_performance: F = self
+            .prediction_history
+            .iter()
+            .rev()
+            .take(10)
+            .map(|record| record.actual_performance)
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(std::cmp::min(10, self.prediction_history.len())).unwrap();
+
+        Ok(recent_performance)
+    }
 }
 
 /// Feature preprocessor for performance prediction
@@ -2879,18 +3145,6 @@ pub enum FeatureEngineeringFunction {
     Trigonometric,
     Interaction,
     RollingStatistics { window_size: usize },
-}
-
-/// Prediction record
-#[derive(Debug, Clone)]
-pub struct PredictionRecord<F: Float + std::fmt::Debug> {
-    pub timestamp: Instant,
-    pub features: Array1<F>,
-    pub predicted_performance: F,
-    pub actual_performance: Option<F>,
-    pub prediction_error: Option<F>,
-    pub confidence: F,
-    pub uncertainty: F,
 }
 
 /// Confidence estimator for predictions
@@ -3068,6 +3322,64 @@ pub struct RegretTracker<F: Float + std::fmt::Debug> {
     pub theoretical_bound: F,
 }
 
+impl<F: Float + std::fmt::Debug> MultiArmedBandit<F> {
+    /// Get the cumulative regret
+    pub fn get_cumulative_regret(&self) -> F {
+        self.regret_tracker.cumulative_regret
+    }
+
+    /// Increase exploration (placeholder implementation)
+    pub fn increase_exploration(&mut self, _drift_magnitude: F) -> Result<()> {
+        // Placeholder implementation
+        Ok(())
+    }
+
+    /// Update rewards for the bandit
+    pub fn update_rewards(&mut self, action: usize, reward: F) -> Result<()> {
+        // Ensure the action index is valid
+        if action >= self.arms.len() {
+            return Err(MetricsError::InvalidInput(format!(
+                "Invalid action index: {}",
+                action
+            )));
+        }
+
+        // Update reward history for the specific arm
+        if action < self.reward_history.len() {
+            self.reward_history[action].push_back(reward);
+
+            // Keep history manageable
+            if self.reward_history[action].len() > 1000 {
+                self.reward_history[action].pop_front();
+            }
+        }
+
+        // Update regret tracker
+        self.regret_tracker.cumulative_regret += reward;
+
+        Ok(())
+    }
+
+    /// Select arm based on features
+    pub fn select_arm(&mut self, _features: &Array1<F>) -> Result<Array1<F>> {
+        // Simple arm selection - return parameters from the best arm
+        if let Some(best_idx) = self.best_arm {
+            if best_idx < self.arms.len() {
+                return Ok(self.arms[best_idx].parameters.clone());
+            }
+        }
+
+        // Fallback: return random arm
+        let arm_idx = 0; // Simple selection
+        if !self.arms.is_empty() {
+            Ok(self.arms[arm_idx].parameters.clone())
+        } else {
+            // Return default parameters
+            Ok(Array1::zeros(5))
+        }
+    }
+}
+
 /// Neural feature extractor
 #[derive(Debug, Clone)]
 pub struct NeuralFeatureExtractor<F: Float + std::fmt::Debug> {
@@ -3165,6 +3477,44 @@ pub struct AdaptiveLearningScheduler<F: Float + std::fmt::Debug> {
     adaptation_params: SchedulerAdaptationParams<F>,
 }
 
+impl<F: Float + std::fmt::Debug> AdaptiveLearningScheduler<F> {
+    /// Get the current learning rate
+    pub fn get_current_lr(&self) -> F {
+        self.current_lr
+    }
+
+    /// Adapt learning rate based on performance
+    pub fn adapt_learning_rate(&mut self, performance: F) -> Result<()> {
+        // Add performance to history
+        self.performance_history.push_back(performance);
+
+        // Keep history manageable
+        if self.performance_history.len() > 100 {
+            self.performance_history.pop_front();
+        }
+
+        // Simple adaptation logic: increase LR if performance is improving
+        if self.performance_history.len() >= 2 {
+            let prev_perf = self.performance_history[self.performance_history.len() - 2];
+            let adaptation_factor = if performance > prev_perf {
+                F::from(1.1).unwrap() // Increase LR
+            } else {
+                F::from(0.9).unwrap() // Decrease LR
+            };
+
+            self.current_lr = self.current_lr * adaptation_factor;
+            self.lr_history.push_back(self.current_lr);
+
+            // Keep LR history manageable
+            if self.lr_history.len() > 100 {
+                self.lr_history.pop_front();
+            }
+        }
+
+        Ok(())
+    }
+}
+
 /// Learning rate scheduler types
 #[derive(Debug, Clone)]
 pub enum SchedulerType<F: Float> {
@@ -3197,6 +3547,38 @@ pub struct SchedulerAdaptationParams<F: Float + std::fmt::Debug> {
     pub adaptation_speed: F,
     /// Performance monitoring window
     pub monitoring_window: usize,
+}
+
+impl<F: Float + std::fmt::Debug> NeuralFeatureExtractor<F> {
+    /// Get feature importance from attention mechanism
+    pub fn get_feature_importance(&self) -> Array1<F> {
+        // Return attention weights as feature importance
+        // This is a placeholder - a real implementation would extract from attention mechanism
+        Array1::zeros(10) // Placeholder implementation
+    }
+
+    /// Extract features from input state
+    pub fn extract_features(&self, state: &Array1<F>) -> Result<Array1<F>> {
+        // Simple feature extraction - in practice this would use the neural networks
+        let mut features = state.clone();
+
+        // Apply some basic transformations as placeholder
+        features.mapv_inplace(|x| x.abs().sqrt());
+
+        // Ensure consistent feature size
+        if features.len() > 10 {
+            features = features.slice(s![..10]).to_owned();
+        } else if features.len() < 10 {
+            let mut expanded = Array1::zeros(10);
+            let len = std::cmp::min(features.len(), 10);
+            expanded
+                .slice_mut(s![..len])
+                .assign(&features.slice(s![..len]));
+            features = expanded;
+        }
+
+        Ok(features)
+    }
 }
 
 // Implementation methods for NeuralAdaptiveStreaming
@@ -3286,17 +3668,23 @@ impl<F: Float + std::fmt::Debug + Send + Sync> NeuralAdaptiveStreaming<F> {
 
         // Update reinforcement learning agent
         let reward = self.compute_reward(performance);
+        // Convert action HashMap to Array1 for the RL agent
+        let action_array = Array1::from_vec(action.values().cloned().collect());
         self.rl_agent
-            .update_experience(state, action, reward, performance)?;
+            .update_experience(state, &action_array, reward, performance)?;
 
         // Update online learning system
         self.online_learner.update(&features, performance)?;
 
         // Update performance predictor
-        self.performance_predictor.update(&features, performance)?;
+        let target_performance = self.compute_overall_performance(performance);
+        self.performance_predictor
+            .update(&features, target_performance)?;
 
         // Update multi-armed bandit
-        self.parameter_bandit.update_rewards(action, reward)?;
+        // Extract action index from action HashMap (simplified approach)
+        let action_index = action.len() % 10; // Placeholder logic
+        self.parameter_bandit.update_rewards(action_index, reward)?;
 
         Ok(())
     }
@@ -3308,7 +3696,18 @@ impl<F: Float + std::fmt::Debug + Send + Sync> NeuralAdaptiveStreaming<F> {
         parameters: &HashMap<String, F>,
     ) -> Result<PerformancePrediction<F>> {
         let features = self.feature_extractor.extract_features(state)?;
-        let prediction = self.performance_predictor.predict(&features, parameters)?;
+        // Convert parameters HashMap to Array1 for prediction
+        let param_array = Array1::from_vec(parameters.values().cloned().collect());
+        let prediction_value = self
+            .performance_predictor
+            .predict(&features, &param_array)?;
+
+        // Create a PerformancePrediction (placeholder struct)
+        let prediction = PerformancePrediction {
+            predicted_performance: prediction_value,
+            confidence: F::from(0.5).unwrap(),
+            timestamp: Instant::now(),
+        };
         Ok(prediction)
     }
 
@@ -3396,16 +3795,6 @@ impl<F: Float + std::fmt::Debug + Send + Sync> NeuralAdaptiveStreaming<F> {
     }
 }
 
-/// Performance prediction result
-#[derive(Debug, Clone)]
-pub struct PerformancePrediction<F: Float + std::fmt::Debug> {
-    pub predicted_performance: HashMap<String, F>,
-    pub confidence: F,
-    pub uncertainty: F,
-    pub prediction_interval: (F, F),
-    pub feature_importance: Array1<F>,
-}
-
 /// Neural-adaptive system statistics
 #[derive(Debug, Clone)]
 pub struct NeuralAdaptiveStatistics<F: Float + std::fmt::Debug> {
@@ -3480,6 +3869,83 @@ impl Default for NeuralAdaptiveConfig {
                 enable_visualization: false,
             },
         }
+    }
+}
+
+impl<F: Float + std::fmt::Debug> NeuralParameterOptimizer<F> {
+    /// Get performance metrics for neural parameter optimizer
+    pub fn get_performance_metrics(&self) -> HashMap<String, F> {
+        let mut metrics = HashMap::new();
+
+        if let Some(latest_metrics) = self.training_history.last() {
+            metrics.insert("loss".to_string(), latest_metrics.loss);
+            metrics.insert("learning_rate".to_string(), latest_metrics.learning_rate);
+            metrics.insert("gradient_norm".to_string(), latest_metrics.gradient_norm);
+        }
+
+        metrics.insert(
+            "training_epochs".to_string(),
+            F::from(self.training_history.len()).unwrap_or(F::zero()),
+        );
+        metrics
+    }
+
+    /// Adapt to concept drift
+    pub fn adapt_to_drift(&mut self, drift_magnitude: F) -> Result<()> {
+        // Increase learning rate based on drift magnitude
+        // This is a simple adaptation strategy
+        let adaptation_factor = F::one() + drift_magnitude * F::from(0.1).unwrap();
+
+        // Add a training record indicating adaptation
+        let adaptation_record = TrainingMetrics {
+            epoch: 0,
+            loss: drift_magnitude,
+            accuracy: F::zero(),
+            learning_rate: adaptation_factor,
+            gradient_norm: F::zero(),
+            timestamp: std::time::Instant::now(),
+        };
+
+        self.training_history.push(adaptation_record);
+
+        // Keep history manageable
+        if self.training_history.len() > 1000 {
+            self.training_history.remove(0);
+        }
+
+        Ok(())
+    }
+
+    /// Train the neural parameter optimizer
+    pub fn train(&mut self, features: &Array1<F>, target_performance: F) -> Result<()> {
+        // Simple training step placeholder
+        let prediction = self.predict(features)?;
+        let loss = (prediction - target_performance).abs();
+
+        // Add training record
+        let record = TrainingMetrics {
+            epoch: 0,
+            loss,
+            accuracy: F::zero(),
+            learning_rate: self.learning_rate,
+            gradient_norm: F::zero(),
+            timestamp: Instant::now(),
+        };
+
+        self.training_history.push(record);
+
+        // Keep history manageable
+        if self.training_history.len() > 1000 {
+            self.training_history.remove(0);
+        }
+
+        Ok(())
+    }
+
+    /// Predict using the neural parameter optimizer
+    fn predict(&self, _features: &Array1<F>) -> Result<F> {
+        // Placeholder prediction
+        Ok(F::from(0.5).unwrap())
     }
 }
 

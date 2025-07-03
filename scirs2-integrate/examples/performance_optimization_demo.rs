@@ -300,7 +300,7 @@ fn benchmark_memory_efficiency() -> IntegrateResult<()> {
         let metrics = profiler.finalize();
         let report = PerformanceAnalyzer::generate_report(&metrics);
 
-        println!("   {}: ", scenario_name);
+        println!("   {scenario_name}: ");
         println!(
             "     Peak memory: {:.1} MB",
             metrics.memory_stats.peak_memory as f64 / (1024.0 * 1024.0)
@@ -327,7 +327,7 @@ fn print_method_performance(
     method_name: &str,
     metrics: &scirs2_integrate::performance_monitor::PerformanceMetrics,
 ) {
-    println!("   {}: ", method_name);
+    println!("   {method_name}: ");
     println!("     Time: {:.3}s", metrics.total_time.as_secs_f64());
     println!(
         "     Function evaluations: {}",
@@ -335,7 +335,7 @@ fn print_method_performance(
     );
 
     if let Some(eval_rate) = metrics.algorithm_metrics.get("evaluations_per_second") {
-        println!("     Evaluation rate: {:.1} evals/sec", eval_rate);
+        println!("     Evaluation rate: {eval_rate:.1} evals/sec");
     }
 
     println!(
@@ -346,7 +346,7 @@ fn print_method_performance(
     // Print convergence information if available
     if !metrics.convergence_history.is_empty() {
         let final_residual = metrics.convergence_history.last().unwrap();
-        println!("     Final residual: {:.2e}", final_residual);
+        println!("     Final residual: {final_residual:.2e}");
     }
 
     println!();

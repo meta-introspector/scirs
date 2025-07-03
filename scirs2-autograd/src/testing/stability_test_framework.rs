@@ -677,8 +677,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
 
         if failed_tests > 0 {
             recommendations.push(format!(
-                "Consider reviewing {} failed stability tests for potential improvements",
-                failed_tests
+                "Consider reviewing {failed_tests} failed stability tests for potential improvements"
             ));
         }
 
@@ -917,7 +916,7 @@ impl TestSummary {
 
         println!("\nStability Grade Distribution:");
         for (grade, count) in &self.stability_distribution {
-            println!("  {:?}: {}", grade, count);
+            println!("  {grade:?}: {count}");
         }
 
         if !self.performance_summary.average_analysis_duration.is_zero() {
@@ -940,7 +939,7 @@ impl TestSummary {
 
         println!("\nRecommendations:");
         for recommendation in &self.recommendations {
-            println!("  • {}", recommendation);
+            println!("  • {recommendation}");
         }
         println!("==========================================\n");
     }

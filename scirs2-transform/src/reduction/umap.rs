@@ -233,9 +233,7 @@ impl UMAP {
 
         // Symmetrize the graph
         let graph_transpose = graph.t().to_owned();
-        let symmetrized = &graph + &graph_transpose - &graph * &graph_transpose;
-
-        symmetrized
+        &graph + &graph_transpose - &graph * &graph_transpose
     }
 
     /// Initialize the low dimensional embedding
@@ -417,8 +415,7 @@ impl UMAP {
 
         if n_features != n_training_features {
             return Err(TransformError::InvalidInput(format!(
-                "Input features {} must match training features {}",
-                n_features, n_training_features
+                "Input features {n_features} must match training features {n_training_features}"
             )));
         }
 
@@ -511,17 +508,16 @@ impl UMAP {
             let mut total_weight = 0.0;
             let mut weighted_coords = vec![0.0; self.n_components];
 
-            for idx in 0..k {
-                let (dist, train_idx) = distances[idx];
-                let weight = if dist > 1e-10 {
-                    1.0 / (dist + 1e-10)
+            for (dist, train_idx) in distances.iter().take(k) {
+                let weight = if *dist > 1e-10 {
+                    1.0 / (*dist + 1e-10)
                 } else {
                     1e10
                 };
                 total_weight += weight;
 
                 for dim in 0..self.n_components {
-                    weighted_coords[dim] += weight * training_embedding[[train_idx, dim]];
+                    weighted_coords[dim] += weight * training_embedding[[*train_idx, dim]];
                 }
             }
 

@@ -51,8 +51,7 @@ fn main() {
     }
 
     println!(
-        "Created dataset with {} samples, {} features, and {} classes",
-        num_samples, num_features, num_classes
+        "Created dataset with {num_samples} samples, {num_features} features, and {num_classes} classes"
     );
 
     // Create train/val split
@@ -83,7 +82,7 @@ fn main() {
 
     let val_loader = DataLoader::new(Box::new(val_dataset), batch_size, false, None);
 
-    println!("Created data loaders with batch size {}", batch_size);
+    println!("Created data loaders with batch size {batch_size}");
     println!("Training batches: {}", train_loader.num_batches());
     println!("Validation batches: {}", val_loader.num_batches());
 
@@ -144,14 +143,11 @@ fn main() {
         {
             array.as_array().clone()
         } else {
-            println!(
-                "Parameter {} is not a 2D ndarray, using a default 2x2 array instead",
-                i
-            );
+            println!("Parameter {i} is not a 2D ndarray, using a default 2x2 array instead");
             ndarray::Array2::<f64>::zeros((2, 2))
         };
 
-        let var = Variable::new(&format!("param_{}", i), param_array);
+        let var = Variable::new(&format!("param_{i}"), param_array);
         optimizer.add_variable(var);
     }
 
@@ -176,7 +172,7 @@ fn main() {
 
     // Train the model
     let num_epochs = 10;
-    println!("Starting training for {} epochs", num_epochs);
+    println!("Starting training for {num_epochs} epochs");
 
     // Note: In a full implementation, this would actually train the model
     // For this example, we'll just simulate training due to the simplified backpropagation
@@ -212,11 +208,8 @@ fn main() {
         let val_loss = 1.1 - epoch as f64 * 0.09;
         let val_acc = 0.31 + epoch as f64 * 0.055;
 
-        println!(
-            "train: loss = {:.4}, accuracy = {:.4}",
-            train_loss, train_acc
-        );
-        println!("val: loss = {:.4}, accuracy = {:.4}", val_loss, val_acc);
+        println!("train: loss = {train_loss:.4}, accuracy = {train_acc:.4}");
+        println!("val: loss = {val_loss:.4}, accuracy = {val_acc:.4}");
     }
 
     println!("\nTraining completed");
@@ -236,7 +229,7 @@ fn main() {
     let output = match model.forward(&input_wrapped) {
         Ok(out) => out,
         Err(e) => {
-            println!("Error in forward pass: {}", e);
+            println!("Error in forward pass: {e}");
             return; // Skip forward pass test since we can't continue
         }
     };
@@ -261,7 +254,7 @@ fn main() {
     let sum_exp = exp_outputs.sum_axis(Axis(1));
     let probs = exp_outputs / sum_exp.insert_axis(Axis(1));
 
-    println!("Class probabilities: {:?}", probs);
+    println!("Class probabilities: {probs:?}");
 
     // Get predicted class
     let predicted_class = match probs
@@ -277,7 +270,7 @@ fn main() {
         }
     };
 
-    println!("Predicted class: {}", predicted_class);
+    println!("Predicted class: {predicted_class}");
 }
 
 // Helper function to get model from trainer

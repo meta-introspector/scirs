@@ -3456,7 +3456,7 @@ mod tests {
 
         // Check that samples are in [0, 1] range
         for &value in samples.iter() {
-            assert!(value >= 0.0 && value <= 1.0);
+            assert!((0.0..=1.0).contains(&value));
         }
     }
 
@@ -3509,7 +3509,7 @@ mod tests {
 
         // Should not generate alerts for reasonable returns
         assert!(
-            alerts.len() == 0
+            alerts.is_empty()
                 || alerts
                     .iter()
                     .all(|a| matches!(a.severity, AlertSeverity::Info | AlertSeverity::Warning))

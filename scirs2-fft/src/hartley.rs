@@ -142,8 +142,7 @@ where
 
     if axes.0 >= 2 || axes.1 >= 2 {
         return Err(FFTError::ValueError(format!(
-            "Axes out of bounds: {:?}",
-            axes
+            "Axes out of bounds: {axes:?}"
         )));
     }
 

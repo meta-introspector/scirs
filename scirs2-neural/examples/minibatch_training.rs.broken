@@ -31,6 +31,7 @@ impl ActivationFunction {
     }
     /// Compute the derivative of the activation function
     fn derivative(&self, x: &Array2<f32>) -> Array2<f32> {
+        match self {
             ActivationFunction::ReLU => x.mapv(|v| if v > 0.0 { 1.0 } else { 0.0 }),
             ActivationFunction::Sigmoid => {
                 let sigmoid = x.mapv(|v| 1.0 / (1.0 + (-v).exp()));
@@ -39,24 +40,35 @@ impl ActivationFunction {
             ActivationFunction::Tanh => {
                 let tanh = x.mapv(|v| v.tanh());
                 tanh.mapv(|t| 1.0 - t * t)
+            }
             ActivationFunction::Linear => Array2::ones(x.dim()),
+        }
+    }
     /// Get a string representation of the activation function
     fn to_string(&self) -> &str {
+        match self {
             ActivationFunction::ReLU => "ReLU",
             ActivationFunction::Sigmoid => "Sigmoid",
             ActivationFunction::Tanh => "Tanh",
             ActivationFunction::Linear => "Linear",
+        }
+    }
+}
 /// Loss function type
 enum LossFunction {
     MSE,
     BinaryCrossEntropy,
+}
+
 impl LossFunction {
     /// Compute the loss between predictions and targets
     fn compute(&self, predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
+        match self {
             LossFunction::MSE => {
                 let diff = predictions - targets;
                 let squared = diff.mapv(|v| v * v);
                 squared.sum() / (predictions.len() as f32)
+            }
             LossFunction::BinaryCrossEntropy => {
                 let epsilon = 1e-15; // To avoid log(0)
                 let mut sum = 0.0;
@@ -65,21 +77,38 @@ impl LossFunction {
                     sum += y_true * y_pred_safe.ln() + (1.0 - y_true) * (1.0 - y_pred_safe).ln();
                 }
                 -sum / (predictions.len() as f32)
+            }
+        }
+    }
     /// Compute the derivative of the loss function with respect to predictions
     fn derivative(&self, predictions: &Array2<f32>, targets: &Array2<f32>) -> Array2<f32> {
+        match self {
+            LossFunction::MSE => {
                 // d(MSE)/dŷ = 2(ŷ - y)/n
                 let n = predictions.len() as f32;
                 (predictions - targets) * (2.0 / n)
+            }
+            LossFunction::BinaryCrossEntropy => {
                 // d(BCE)/dŷ = ((1-y)/(1-ŷ) - y/ŷ)/n
                 let epsilon = 1e-15;
+                let n = predictions.len() as f32;
                 Array2::from_shape_fn(predictions.dim(), |(i, j)| {
                     let y_pred = predictions[(i, j)].max(epsilon).min(1.0 - epsilon);
                     let y_true = targets[(i, j)];
                     ((1.0 - y_true) / (1.0 - y_pred) - y_true / y_pred) / n
                 })
+            }
+        }
+    }
+
     /// Get a string representation of the loss function
+    fn to_string(&self) -> &str {
+        match self {
             LossFunction::MSE => "Mean Squared Error",
             LossFunction::BinaryCrossEntropy => "Binary Cross Entropy",
+        }
+    }
+}
 /// A layer in the neural network
 struct Layer {
     weights: Array2<f32>,

@@ -75,17 +75,14 @@ fn benchmark_solvers(
     upper: Option<usize>,
     num_trials: usize,
 ) -> IntegrateResult<()> {
-    println!(
-        "\n=== Benchmarking {} matrix (size {}x{}) ===",
-        matrix_type, n, n
-    );
+    println!("\n=== Benchmarking {matrix_type} matrix (size {n}x{n}) ===");
 
     // Create test matrix based on type
     let a = match matrix_type {
         "banded" => {
             let l = lower.unwrap_or(1);
             let u = upper.unwrap_or(1);
-            println!("  (bandwidths: lower={}, upper={})", l, u);
+            println!("  (bandwidths: lower={l}, upper={u})");
             create_banded_matrix(n, l, u)
         }
         "structured" => create_structured_matrix(n),

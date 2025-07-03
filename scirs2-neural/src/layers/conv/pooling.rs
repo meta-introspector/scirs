@@ -1,10 +1,11 @@
 //! Pooling layer implementations (minimal stub)
 
-use crate::error::{NeuralError, Result};
+use crate::error::Result;
 use crate::layers::Layer;
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
 use std::fmt::Debug;
+use std::marker::PhantomData;
 
 /// 2D Max Pooling layer
 #[derive(Debug)]
@@ -12,6 +13,7 @@ pub struct MaxPool2D<F: Float + Debug + Send + Sync> {
     pool_size: (usize, usize),
     stride: (usize, usize),
     name: Option<String>,
+    _phantom: PhantomData<F>,
 }
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> MaxPool2D<F> {
@@ -24,6 +26,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> MaxPool2D<F> {
             pool_size,
             stride,
             name: name.map(String::from),
+            _phantom: PhantomData,
         })
     }
 }
@@ -49,8 +52,31 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for MaxP
     fn name(&self) -> Option<&str> {
         self.name.as_deref()
     }
+
+    fn backward(
+        &self,
+        _input: &Array<F, ndarray::IxDyn>,
+        grad_output: &Array<F, ndarray::IxDyn>,
+    ) -> Result<Array<F, ndarray::IxDyn>> {
+        // Placeholder implementation - return gradient as-is
+        Ok(grad_output.clone())
+    }
+
+    fn update(&mut self, _learning_rate: F) -> Result<()> {
+        // Placeholder implementation
+        Ok(())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
 }
 
+/*
 /// Adaptive Average Pooling 2D
 #[derive(Debug)]
 pub struct AdaptiveAvgPool2D<F: Float + Debug + Send + Sync> {
@@ -279,6 +305,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Adap
 pub struct AdaptiveMaxPool3D<F: Float + Debug + Send + Sync> {
     output_size: (usize, usize, usize),
     name: Option<String>,
+    _phantom: PhantomData<F>,
 }
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> AdaptiveMaxPool3D<F> {
@@ -286,6 +313,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> AdaptiveMaxPool3D
         Ok(Self {
             output_size,
             name: name.map(String::from),
+            _phantom: PhantomData,
         })
     }
 }
@@ -310,17 +338,39 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Adap
     fn name(&self) -> Option<&str> {
         self.name.as_deref()
     }
+
+    fn backward(
+        &self,
+        _input: &Array<F, ndarray::IxDyn>,
+        grad_output: &Array<F, ndarray::IxDyn>,
+    ) -> Result<Array<F, ndarray::IxDyn>> {
+        // Placeholder implementation - return gradient as-is
+        Ok(grad_output.clone())
+    }
+
+    fn update(&mut self, _learning_rate: F) -> Result<()> {
+        // Placeholder implementation
+        Ok(())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
 }
 
 // Add ParamLayer implementation for layers that have parameters
 use crate::layers::ParamLayer;
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F> for MaxPool2D<F> {
-    fn parameter_count(&self) -> usize {
-        0
+    fn get_parameters(&self) -> Vec<Array<F, IxDyn>> {
+        vec![]
     }
 
-    fn get_parameters(&self) -> Vec<Array<F, IxDyn>> {
+    fn get_gradients(&self) -> Vec<Array<F, ndarray::IxDyn>> {
         vec![]
     }
 
@@ -329,12 +379,14 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F> for
     }
 }
 
-impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F> for AdaptiveAvgPool2D<F> {
-    fn parameter_count(&self) -> usize {
-        0
+impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F>
+    for AdaptiveAvgPool2D<F>
+{
+    fn get_parameters(&self) -> Vec<Array<F, IxDyn>> {
+        vec![]
     }
 
-    fn get_parameters(&self) -> Vec<Array<F, IxDyn>> {
+    fn get_gradients(&self) -> Vec<Array<F, ndarray::IxDyn>> {
         vec![]
     }
 
@@ -343,12 +395,14 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F> for
     }
 }
 
-impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F> for AdaptiveMaxPool2D<F> {
-    fn parameter_count(&self) -> usize {
-        0
+impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F>
+    for AdaptiveMaxPool2D<F>
+{
+    fn get_parameters(&self) -> Vec<Array<F, IxDyn>> {
+        vec![]
     }
 
-    fn get_parameters(&self) -> Vec<Array<F, IxDyn>> {
+    fn get_gradients(&self) -> Vec<Array<F, ndarray::IxDyn>> {
         vec![]
     }
 
@@ -357,12 +411,14 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F> for
     }
 }
 
-impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F> for GlobalAvgPool2D<F> {
-    fn parameter_count(&self) -> usize {
-        0
+impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F>
+    for GlobalAvgPool2D<F>
+{
+    fn get_parameters(&self) -> Vec<Array<F, IxDyn>> {
+        vec![]
     }
 
-    fn get_parameters(&self) -> Vec<Array<F, IxDyn>> {
+    fn get_gradients(&self) -> Vec<Array<F, ndarray::IxDyn>> {
         vec![]
     }
 
@@ -370,3 +426,4 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F> for
         Ok(())
     }
 }
+*/

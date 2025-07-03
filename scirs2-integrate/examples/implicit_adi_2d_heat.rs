@@ -82,7 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Number of linear solves: {}", result.num_linear_solves);
 
     if let Some(info) = result.info {
-        println!("{}", info);
+        println!("{info}");
     }
 
     Ok(())
@@ -131,9 +131,9 @@ fn compare_with_analytical(
     }
     avg_error /= (nx * ny) as f64;
 
-    println!("\nError analysis at t = {:.4}:", final_time);
-    println!("Maximum absolute error: {:.6e}", max_error);
-    println!("Average absolute error: {:.6e}", avg_error);
+    println!("\nError analysis at t = {final_time:.4}:");
+    println!("Maximum absolute error: {max_error:.6e}");
+    println!("Average absolute error: {avg_error:.6e}");
 
     // Print solution at selected points
     println!("\nSolution values at selected points:");
@@ -148,10 +148,7 @@ fn compare_with_analytical(
             let num_val = numerical[[i, j]];
             let error = (ana_val - num_val).abs();
 
-            println!(
-                "({:.2},{:.2}) | {:.8} | {:.8} | {:.2e}",
-                x, y, ana_val, num_val, error
-            );
+            println!("({x:.2},{y:.2}) | {ana_val:.8} | {num_val:.8} | {error:.2e}");
         }
     }
 
@@ -180,10 +177,7 @@ fn compare_with_analytical(
         let num_val = result.u[idx][[i_center, j_center, 0]];
         let error = (ana_val - num_val).abs();
 
-        println!(
-            " {:.4} | {:.8} | {:.8} | {:.2e}",
-            t, ana_val, num_val, error
-        );
+        println!(" {t:.4} | {ana_val:.8} | {num_val:.8} | {error:.2e}");
     }
 
     Ok(())

@@ -68,7 +68,7 @@ fn main() -> CoreResult<()> {
     let to_version = Version::parse("1.1.0")?;
 
     let compatibility = version_manager.check_compatibility(&from_version, &to_version)?;
-    println!("  🔄 1.0.0 → 1.1.0: {:?}", compatibility);
+    println!("  🔄 1.0.0 → 1.1.0: {compatibility:?}");
 
     let report = version_manager.get_compatibility_report(&from_version, &to_version)?;
     println!("    New features: {:?}", report.new_features);
@@ -77,7 +77,7 @@ fn main() -> CoreResult<()> {
     // Check major version upgrade
     let major_upgrade =
         version_manager.check_compatibility(&from_version, &Version::parse("2.0.0")?)?;
-    println!("  🔄 1.0.0 → 2.0.0: {:?}", major_upgrade);
+    println!("  🔄 1.0.0 → 2.0.0: {major_upgrade:?}");
 
     let major_report =
         version_manager.get_compatibility_report(&from_version, &Version::parse("2.0.0")?)?;
@@ -86,7 +86,7 @@ fn main() -> CoreResult<()> {
         major_report.breaking_changes.len()
     );
     if let Some(effort) = major_report.estimated_migration_effort {
-        println!("    Estimated migration effort: {} hours", effort);
+        println!("    Estimated migration effort: {effort} hours");
     }
 
     // Migration planning

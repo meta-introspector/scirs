@@ -180,8 +180,7 @@ pub mod properties {
             // Test bounds: 0 < σ(x) < 1 (allowing for numerical precision at extremes)
             if logistic_x < 0.0 || (logistic_x >= 1.0 && x < 20.0) {
                 errors.push(format!(
-                    "Logistic function out of bounds for x={}: σ({})={}",
-                    x, x, logistic_x
+                    "Logistic function out of bounds for x={x}: σ({x})={logistic_x}"
                 ));
             }
 
@@ -309,8 +308,7 @@ pub mod regression {
             let gamma_val = crate::gamma::gamma(x);
             if (gamma_val - expected).abs() > 1e-12 * expected.abs() {
                 errors.push(format!(
-                    "Gamma regression test failed: Γ({}) = {}, expected {}",
-                    x, gamma_val, expected
+                    "Gamma regression test failed: Γ({x}) = {gamma_val}, expected {expected}"
                 ));
             }
         }

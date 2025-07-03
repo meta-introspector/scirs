@@ -779,7 +779,7 @@ mod tests {
             // Backend should be one of the supported types
             match backend {
                 crate::gpu_ops::GpuBackend::Cuda
-                | crate::gpu_ops::GpuBackend::OpenCl
+                | crate::gpu_ops::GpuBackend::OpenCL
                 | crate::gpu_ops::GpuBackend::Metal
                 | crate::gpu_ops::GpuBackend::Cpu => {}
             }

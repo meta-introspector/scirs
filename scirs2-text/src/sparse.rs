@@ -656,8 +656,7 @@ impl BlockSparseMatrix {
     pub fn set(&mut self, row: usize, col: usize, value: f64) -> Result<()> {
         if row >= self.n_rows || col >= self.n_cols {
             return Err(TextError::InvalidInput(format!(
-                "Index ({}, {}) out of bounds",
-                row, col
+                "Index ({row}, {col}) out of bounds"
             )));
         }
 
@@ -742,8 +741,7 @@ impl HierarchicalSparseMatrix {
     pub fn set(&mut self, row: usize, col: usize, value: f64) -> Result<()> {
         if row >= self.n_rows || col >= self.n_cols {
             return Err(TextError::InvalidInput(format!(
-                "Index ({}, {}) out of bounds",
-                row, col
+                "Index ({row}, {col}) out of bounds"
             )));
         }
 

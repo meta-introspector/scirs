@@ -938,7 +938,7 @@ impl<T: Float> FewShotLearningSystem<T> {
         adaptation_config: AdaptationConfig,
     ) -> Result<AdaptationResult<T>> {
         // Comprehensive few-shot learning implementation
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // 1. Extract task representation using prototypical network
         let task_representation = self.prototype_network.encode_task(&task_data)?;
@@ -978,7 +978,7 @@ impl<T: Float> FewShotLearningSystem<T> {
     fn select_adaptation_strategy(
         &self,
         task_data: &TaskData<T>,
-        similar_tasks: &[MemoryEpisode<T>],
+        _similar_tasks: &[MemoryEpisode<T>],
     ) -> Result<AdaptationStrategyType> {
         // Strategy selection based on task characteristics and historical performance
         match task_data.domain_info.difficulty_level {
@@ -1101,7 +1101,7 @@ impl<T: Float> FastAdaptationEngine<T> {
     fn adapt_fast(
         &mut self,
         _optimizer: &mut dyn FewShotOptimizer<T>,
-        task_data: &TaskData<T>,
+        _task_data: &TaskData<T>,
         _strategy: AdaptationStrategyType,
         _config: &AdaptationConfig,
     ) -> Result<AdaptationResult<T>> {

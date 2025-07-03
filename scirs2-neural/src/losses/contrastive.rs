@@ -72,13 +72,19 @@ impl<F: Float + Debug> Loss<F> for ContrastiveLoss {
         }
         // Verify targets shape: should be (batch_size, 1)
         if targets.ndim() != 2 || targets.shape()[1] != 1 {
+            return Err(NeuralError::InferenceError(format!(
                 "Expected targets shape (batch_size, 1), got {:?}",
                 targets.shape()
+            )));
+        }
         // Verify batch sizes match
         if predictions.shape()[0] != targets.shape()[0] {
+            return Err(NeuralError::InferenceError(format!(
                 "Batch size mismatch: predictions {} vs targets {}",
                 predictions.shape()[0],
                 targets.shape()[0]
+            )));
+        }
         let batch_size = predictions.shape()[0];
         let embedding_dim = predictions.shape()[2];
         let margin = F::from(self.margin).ok_or_else(|| {
@@ -87,6 +93,7 @@ impl<F: Float + Debug> Loss<F> for ContrastiveLoss {
         let mut total_loss = F::zero();
         let n = F::from(batch_size).ok_or_else(|| {
             NeuralError::InferenceError("Could not convert batch size to float".to_string())
+        })?;
         for i in 0..batch_size {
             // Extract pair of embeddings
             let x1 = predictions.slice(ndarray::s![i, 0, ..]);
@@ -111,6 +118,7 @@ impl<F: Float + Debug> Loss<F> for ContrastiveLoss {
                 margin_term * margin_term
             };
             total_loss = total_loss + pair_loss;
+        }
         // Average loss over the batch
         let loss = total_loss / n;
         Ok(loss)
@@ -127,9 +135,8 @@ impl<F: Float + Debug> Loss<F> for ContrastiveLoss {
         let n = F::from(batch_size).ok_or_else(|| {
             NeuralError::ComputationError("Failed to convert batch size".to_string())
         })?;
-        let margin = F::from(self.margin).ok_or_else(|| {
-            NeuralError::ComputationError("Failed to convert margin".to_string())
-        })?;
+        let margin = F::from(self.margin)
+            .ok_or_else(|| NeuralError::ComputationError("Failed to convert margin".to_string()))?;
 
         // Initialize gradients with zeros
         let mut gradients = Array::zeros(predictions.raw_dim());

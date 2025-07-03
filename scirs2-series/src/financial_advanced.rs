@@ -666,8 +666,8 @@ impl BlackScholes {
                 ));
             }
 
-            vol = vol - price_diff / (option_price.vega * 100.0);
-            vol = vol.max(0.001).min(5.0); // Clamp volatility to reasonable range
+            vol -= price_diff / (option_price.vega * 100.0);
+            vol = vol.clamp(0.001, 5.0); // Clamp volatility to reasonable range
         }
 
         Err(TimeSeriesError::ComputationError(

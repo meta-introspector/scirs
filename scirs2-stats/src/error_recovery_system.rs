@@ -446,7 +446,7 @@ impl ErrorRecoverySystem {
     }
 
     /// Infer data characteristics from error
-    fn infer_data_characteristics(&self, error: &StatsError) -> DataCharacteristics {
+    fn infer_data_characteristics(&self, _error: &StatsError) -> DataCharacteristics {
         // This would analyze the error to infer data properties
         DataCharacteristics {
             size_info: None,
@@ -497,7 +497,11 @@ impl ErrorRecoverySystem {
     }
 
     /// Infer computation state
-    fn infer_computation_state(&self, error: &StatsError, function_name: &str) -> ComputationState {
+    fn infer_computation_state(
+        &self,
+        _error: &StatsError,
+        function_name: &str,
+    ) -> ComputationState {
         ComputationState {
             algorithm: function_name.to_string(),
             iteration: None,
@@ -552,7 +556,7 @@ impl ErrorRecoverySystem {
     /// Generate suggestions for invalid argument errors
     fn generate_invalid_argument_suggestions(
         &self,
-        msg: &str,
+        _msg: &str,
         _context: &ErrorContext,
     ) -> Vec<RecoverySuggestion> {
         vec![RecoverySuggestion {
@@ -574,7 +578,7 @@ impl ErrorRecoverySystem {
     /// Generate suggestions for dimension mismatch errors
     fn generate_dimension_mismatch_suggestions(
         &self,
-        msg: &str,
+        _msg: &str,
         _context: &ErrorContext,
     ) -> Vec<RecoverySuggestion> {
         vec![RecoverySuggestion {
@@ -598,7 +602,7 @@ impl ErrorRecoverySystem {
     fn generate_computation_error_suggestions(
         &self,
         msg: &str,
-        context: &ErrorContext,
+        _context: &ErrorContext,
     ) -> Vec<RecoverySuggestion> {
         let mut suggestions = Vec::new();
 
@@ -639,7 +643,7 @@ impl ErrorRecoverySystem {
     /// Generate suggestions for convergence errors
     fn generate_convergence_error_suggestions(
         &self,
-        msg: &str,
+        _msg: &str,
         _context: &ErrorContext,
     ) -> Vec<RecoverySuggestion> {
         vec![RecoverySuggestion {
@@ -690,7 +694,7 @@ impl ErrorRecoverySystem {
     /// Generate example code snippets
     fn generate_example_snippets(
         &self,
-        error: &StatsError,
+        _error: &StatsError,
         suggestions: &[RecoverySuggestion],
     ) -> Vec<CodeSnippet> {
         let mut snippets = Vec::new();

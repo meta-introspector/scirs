@@ -94,7 +94,7 @@ fn test_pendulum_dae() -> IntegrateResult<()> {
 
     // Energy should be approximately conserved
     let energy_error = (final_energy - initial_energy).abs() / initial_energy;
-    assert!(energy_error < 5e-2, "Energy error: {}", energy_error);
+    assert!(energy_error < 5e-2, "Energy error: {energy_error}");
 
     Ok(())
 }
@@ -175,8 +175,8 @@ fn test_linear_dae() -> IntegrateResult<()> {
         let x_error = (x_numerical - x_analytical).abs();
         let y_error = (y_numerical - y_analytical).abs();
 
-        assert!(x_error < 3e-2, "X error at t={}: {}", t, x_error);
-        assert!(y_error < 2e-1, "Y error at t={}: {}", t, y_error);
+        assert!(x_error < 3e-2, "X error at t={t}: {x_error}");
+        assert!(y_error < 2e-1, "Y error at t={t}: {y_error}");
     }
 
     Ok(())
@@ -247,16 +247,14 @@ fn test_implicit_linear_dae() -> IntegrateResult<()> {
         let y_error = (y_numerical - y_analytical).abs();
 
         // Use a slightly larger tolerance for the implicit solver
-        assert!(x_error < 2.5e-1, "X error at t={}: {}", t, x_error);
-        assert!(y_error < 2e-1, "Y error at t={}: {}", t, y_error);
+        assert!(x_error < 2.5e-1, "X error at t={t}: {x_error}");
+        assert!(y_error < 2e-1, "Y error at t={t}: {y_error}");
 
         // Verify that the algebraic constraint is satisfied
         let constraint_value = x_numerical + y_numerical - 1.0;
         assert!(
             constraint_value.abs() < 3e-3,
-            "Constraint error at t={}: {}",
-            t,
-            constraint_value
+            "Constraint error at t={t}: {constraint_value}"
         );
     }
 
@@ -348,9 +346,7 @@ fn test_higher_index_dae() -> IntegrateResult<()> {
                     // Looser tolerance since we're using projection
                     assert!(
                         constraint_value < tolerance,
-                        "Constraint violation at t={}: {}",
-                        t,
-                        constraint_value
+                        "Constraint violation at t={t}: {constraint_value}"
                     );
 
                     // If we can access y_i, check it too
@@ -360,11 +356,7 @@ fn test_higher_index_dae() -> IntegrateResult<()> {
 
                         assert!(
                             y_error < tolerance,
-                            "Y error at t={}: {} (expected {}, got {})",
-                            t,
-                            y_error,
-                            y_analytical,
-                            y_numerical
+                            "Y error at t={t}: {y_error} (expected {y_analytical}, got {y_numerical})"
                         );
                     }
                 }

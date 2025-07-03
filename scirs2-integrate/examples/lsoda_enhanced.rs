@@ -162,21 +162,21 @@ fn main() {
             // Print method switching information from enhanced LSODA
             if let Some(msg) = &enh_res.message {
                 println!("\nEnhanced LSODA Method Switching Information:");
-                println!("{}", msg);
+                println!("{msg}");
             }
         }
         (Ok(_), Err(e)) => {
             println!("Standard: Completed successfully");
-            println!("Enhanced: Failed with error: {}", e);
+            println!("Enhanced: Failed with error: {e}");
         }
         (Err(e), Ok(_)) => {
-            println!("Standard: Failed with error: {}", e);
+            println!("Standard: Failed with error: {e}");
             println!("Enhanced: Completed successfully");
         }
         (Err(e1), Err(e2)) => {
             println!("Both solvers failed:");
-            println!("Standard error: {}", e1);
-            println!("Enhanced error: {}", e2);
+            println!("Standard error: {e1}");
+            println!("Enhanced error: {e2}");
         }
     }
     println!("--------------------------------------------------");

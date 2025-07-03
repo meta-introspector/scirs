@@ -194,7 +194,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let c = 1e-6_f64;
     let f_res = 1.0_f64 / (2.0 * PI * (l * c).sqrt());
 
-    println!("   Resonant frequency: {:.0} Hz", f_res);
+    println!("   Resonant frequency: {f_res:.0} Hz");
     println!("   Drive frequency: {:.0} Hz", 1000.0 / (2.0 * PI));
     println!(
         "   Final capacitor voltage: {:.3} V",

@@ -39,7 +39,7 @@ pub struct Interp2d<F> {
 
 impl<F> Interp2d<F>
 where
-    F: Float + FromPrimitive + Debug + Clone,
+    F: Float + FromPrimitive + Debug + Clone + crate::traits::InterpolationFloat,
 {
     /// Create a new 2D interpolator
     ///
@@ -352,7 +352,7 @@ pub fn interp2d<F>(
     kind: Interp2dKind,
 ) -> InterpolateResult<Interp2d<F>>
 where
-    F: Float + FromPrimitive + Debug + Clone,
+    F: Float + FromPrimitive + Debug + Clone + crate::traits::InterpolationFloat,
 {
     Interp2d::new(x, y, z, kind)
 }

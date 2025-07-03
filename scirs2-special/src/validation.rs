@@ -14,7 +14,7 @@ where
     T: Float + std::fmt::Display + Copy + Zero,
 {
     validation::check_positive(value, name)
-        .map_err(|_| SpecialError::DomainError(format!("{} must be positive, got {}", name, value)))
+        .map_err(|_| SpecialError::DomainError(format!("{name} must be positive, got {value}")))
 }
 
 /// Check if a value is non-negative (>= 0)
@@ -22,9 +22,8 @@ pub fn check_non_negative<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy + Zero,
 {
-    validation::check_non_negative(value, name).map_err(|_| {
-        SpecialError::DomainError(format!("{} must be non-negative, got {}", name, value))
-    })
+    validation::check_non_negative(value, name)
+        .map_err(|_| SpecialError::DomainError(format!("{name} must be non-negative, got {value}")))
 }
 
 /// Check if a value is finite
@@ -33,7 +32,7 @@ where
     T: Float + std::fmt::Display + Copy,
 {
     validation::check_finite(value, name)
-        .map_err(|_| SpecialError::DomainError(format!("{} must be finite, got {}", name, value)))
+        .map_err(|_| SpecialError::DomainError(format!("{name} must be finite, got {value}")))
 }
 
 /// Check if a value is within bounds (inclusive)
@@ -43,10 +42,7 @@ where
     T: PartialOrd + std::fmt::Display + Copy,
 {
     validation::check_in_bounds(value, min, max, name).map_err(|_| {
-        SpecialError::DomainError(format!(
-            "{} must be in [{}, {}], got {}",
-            name, min, max, value
-        ))
+        SpecialError::DomainError(format!("{name} must be in [{min}, {max}], got {value}"))
     })
 }
 
@@ -55,9 +51,8 @@ pub fn check_probability<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,
 {
-    validation::check_probability(value, name).map_err(|_| {
-        SpecialError::DomainError(format!("{} must be in [0, 1], got {}", name, value))
-    })
+    validation::check_probability(value, name)
+        .map_err(|_| SpecialError::DomainError(format!("{name} must be in [0, 1], got {value}")))
 }
 
 /// Check if all values in an array are finite
@@ -69,7 +64,7 @@ where
     S::Elem: Float + std::fmt::Display,
 {
     validation::check_array_finite(array, name)
-        .map_err(|_| SpecialError::DomainError(format!("{} must contain only finite values", name)))
+        .map_err(|_| SpecialError::DomainError(format!("{name} must contain only finite values")))
 }
 
 /// Check if an array is not empty
@@ -80,7 +75,7 @@ where
     D: Dimension,
 {
     validation::check_not_empty(array, name)
-        .map_err(|_| SpecialError::ValueError(format!("{} cannot be empty", name)))
+        .map_err(|_| SpecialError::ValueError(format!("{name} cannot be empty")))
 }
 
 /// Check if two arrays have the same shape
@@ -124,8 +119,7 @@ where
 pub fn check_degree(l: i32, name: &str) -> SpecialResult<i32> {
     if l < 0 {
         return Err(SpecialError::DomainError(format!(
-            "{} must be non-negative, got {}",
-            name, l
+            "{name} must be non-negative, got {l}"
         )));
     }
     Ok(l)
@@ -136,8 +130,7 @@ pub fn check_degree(l: i32, name: &str) -> SpecialResult<i32> {
 pub fn check_order_m(l: i32, m: i32) -> SpecialResult<i32> {
     if m.abs() > l {
         return Err(SpecialError::DomainError(format!(
-            "|m| must be <= l, got |{}| > {}",
-            m, l
+            "|m| must be <= l, got |{m}| > {l}"
         )));
     }
     Ok(m)
@@ -157,15 +150,14 @@ pub fn check_convergence_params(max_iter: usize, tolerance: f64) -> SpecialResul
 #[allow(dead_code)]
 pub fn convergence_error(function: &str, iterations: usize) -> SpecialError {
     SpecialError::ConvergenceError(format!(
-        "{} did not converge after {} iterations",
-        function, iterations
+        "{function} did not converge after {iterations} iterations"
     ))
 }
 
 /// Helper to convert not implemented features to NotImplementedError
 #[allow(dead_code)]
 pub fn not_implemented(feature: &str) -> SpecialError {
-    SpecialError::NotImplementedError(format!("{} is not yet implemented", feature))
+    SpecialError::NotImplementedError(format!("{feature} is not yet implemented"))
 }
 
 #[cfg(test)]

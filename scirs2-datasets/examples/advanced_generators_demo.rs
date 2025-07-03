@@ -246,12 +246,19 @@ fn demonstrate_multitask_learning() -> Result<(), Box<dyn std::error::Error>> {
             i + 1,
             task.n_samples(),
             task.n_features(),
-            task.metadata.task_type
+            task.metadata
+                .get("task_type")
+                .unwrap_or(&"unknown".to_string())
         );
 
         // Analyze task characteristics
         if let Some(target) = &task.target {
-            match task.metadata.task_type.as_str() {
+            match task
+                .metadata
+                .get("task_type")
+                .map(|s| s.as_str())
+                .unwrap_or("unknown")
+            {
                 "classification" => {
                     let n_classes = analyze_classification_target(target);
                     println!("      Classes: {}", n_classes);
@@ -508,7 +515,7 @@ fn analyze_regression_target(target: &ndarray::Array1<f64>) -> (f64, f64) {
 }
 
 fn analyze_ordinal_target(target: &ndarray::Array1<f64>) -> usize {
-    let max_level = target.iter().fold(0.0, |a, &b| a.max(b)) as usize;
+    let max_level = target.iter().fold(0.0f64, |a, &b| a.max(b)) as usize;
     max_level + 1
 }
 
@@ -628,7 +635,7 @@ fn get_continual_learning_strategies(drift_strength: f64) -> &'static str {
 }
 
 fn simulate_catastrophic_forgetting() -> Result<(), Box<dyn std::error::Error>> {
-    let dataset = make_continual_learning_dataset(3, 200, 10, 3, 0.8)?;
+    let _dataset = make_continual_learning_dataset(3, 200, 10, 3, 0.8)?;
 
     println!("  Simulating catastrophic forgetting:");
     println!("    📉 Task 1 performance after Task 2: ~60% (typical drop)");
@@ -704,7 +711,7 @@ fn demonstrate_federated_learning_setup() -> Result<(), Box<dyn std::error::Erro
         domain_data.n_source_domains
     );
 
-    for (i, (domain_name, dataset)) in domain_data.domains.iter().enumerate() {
+    for (i, (_domain_name, dataset)) in domain_data.domains.iter().enumerate() {
         if i < domain_data.n_source_domains {
             println!(
                 "    Client {}: {} samples (private data)",

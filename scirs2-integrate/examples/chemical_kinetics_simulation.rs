@@ -220,7 +220,7 @@ fn run_simulation<F>(
 where
     F: Fn(f64, ArrayView1<f64>) -> Array1<f64> + Copy,
 {
-    println!("\n=== {} Model Simulation ===", model_name);
+    println!("\n=== {model_name} Model Simulation ===");
 
     // Standard tolerances
     let rtol = 1e-6;
@@ -229,7 +229,7 @@ where
     // Print initial conditions
     println!("Initial state:");
     for (i, &val) in y0.iter().enumerate() {
-        println!("  y[{}] = {:.6}", i, val);
+        println!("  y[{i}] = {val:.6}");
     }
 
     // Run each method, measure time and record diagnostic info
@@ -246,7 +246,7 @@ where
             _ => "Unknown method",
         };
 
-        print!("{:20}: ", method_name);
+        print!("{method_name:20}: ");
 
         // Set solver options
         let options = ODEOptions {
@@ -275,7 +275,7 @@ where
                 method_results.push((method_name, elapsed, ode_result));
             }
             Err(e) => {
-                println!("Failed: {}", e);
+                println!("Failed: {e}");
             }
         }
     }
@@ -285,7 +285,7 @@ where
         println!("\nFinal state:");
         let final_y = ref_result.y.last().unwrap();
         for (i, &val) in final_y.iter().enumerate() {
-            println!("  y[{}] = {:.6}", i, val);
+            println!("  y[{i}] = {val:.6}");
         }
 
         // Calculate relative speeds
@@ -304,7 +304,7 @@ where
             // Print relative performance
             for (name, time, _) in &method_results {
                 let relative = time.as_secs_f64() / best_time;
-                println!("  {:20}: {:.2}x", name, relative);
+                println!("  {name:20}: {relative:.2}x");
             }
         }
     }

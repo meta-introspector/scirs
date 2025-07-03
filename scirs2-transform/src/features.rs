@@ -144,8 +144,7 @@ impl PolynomialFeatures {
         // Prevent excessive memory usage
         if n_output_features > 100_000 {
             return Err(TransformError::MemoryError(format!(
-                "Output would have {} features, which exceeds the limit of 100,000. Consider reducing degree or using interaction_only=true",
-                n_output_features
+                "Output would have {n_output_features} features, which exceeds the limit of 100,000. Consider reducing degree or using interaction_only=true"
             )));
         }
 
@@ -210,8 +209,7 @@ impl PolynomialFeatures {
                                     // Check for overflow/underflow
                                     if !powered.is_finite() {
                                         return Err(TransformError::ComputationError(format!(
-                                            "Numerical overflow detected when computing {}^{} at sample {}, feature {}",
-                                            base, p, i, j
+                                            "Numerical overflow detected when computing {base}^{p} at sample {i}, feature {j}"
                                         )));
                                     }
 
@@ -220,8 +218,7 @@ impl PolynomialFeatures {
                                     // Additional overflow check after multiplication
                                     if !val.is_finite() {
                                         return Err(TransformError::ComputationError(format!(
-                                            "Numerical overflow detected during polynomial feature computation at sample {}",
-                                            i
+                                            "Numerical overflow detected during polynomial feature computation at sample {i}"
                                         )));
                                     }
                                 }
@@ -282,8 +279,7 @@ impl PolynomialFeatures {
         let max_output_value = result.iter().map(|&x| x.abs()).fold(0.0, f64::max);
         if max_output_value > 1e15 {
             return Err(TransformError::DataValidationError(format!(
-                "Output contains extremely large values (max: {:.2e}). Consider scaling input data or reducing polynomial degree.",
-                max_output_value
+                "Output contains extremely large values (max: {max_output_value:.2e}). Consider scaling input data or reducing polynomial degree."
             )));
         }
 
@@ -719,8 +715,7 @@ where
 
     if method != "box-cox" && method != "yeo-johnson" {
         return Err(TransformError::InvalidInput(format!(
-            "Unknown method: {}. Supported methods are 'box-cox' and 'yeo-johnson'",
-            method
+            "Unknown method: {method}. Supported methods are 'box-cox' and 'yeo-johnson'"
         )));
     }
 
@@ -807,12 +802,8 @@ fn estimate_optimal_lambda(data: &[f64], method: &str) -> Result<f64> {
         }
     }
 
-    // Define search range for lambda
-    let lambda_range = if method == "box-cox" {
-        vec![-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0]
-    } else {
-        vec![-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0]
-    };
+    // Define search range for lambda (same for both box-cox and yeo-johnson)
+    let lambda_range = vec![-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0];
 
     let mut best_lambda = 0.0;
     let mut best_log_likelihood = f64::NEG_INFINITY;
@@ -881,8 +872,7 @@ fn compute_log_likelihood(data: &[f64], lambda: f64, method: &str) -> Result<f64
             }
             _ => {
                 return Err(TransformError::InvalidInput(format!(
-                    "Unknown method: {}",
-                    method
+                    "Unknown method: {method}"
                 )))
             }
         };

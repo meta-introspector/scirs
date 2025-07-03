@@ -298,7 +298,7 @@ pub mod gpu {
     /// Advanced GPU buffer for array data with memory management
     pub struct GpuBuffer {
         #[cfg(feature = "gpu")]
-        buffer: Option<std::sync::Arc<dyn scirs2_core::gpu::GpuBuffer>>,
+        buffer: Option<std::sync::Arc<scirs2_core::gpu::GpuBuffer<f64>>>,
         size: usize,
         element_size: usize,
         shape: Vec<usize>,
@@ -353,10 +353,8 @@ pub mod gpu {
         #[cfg(feature = "gpu")]
         context: Option<std::sync::Arc<scirs2_core::gpu::GpuContext>>,
         #[cfg(feature = "gpu")]
-        pipelines: std::collections::HashMap<
-            String,
-            std::sync::Arc<dyn scirs2_core::gpu::ComputePipeline>,
-        >,
+        pipelines:
+            std::collections::HashMap<String, std::sync::Arc<scirs2_core::gpu::GpuKernelHandle>>,
         cache_enabled: bool,
         performance_stats:
             std::sync::Mutex<std::collections::HashMap<String, (u64, std::time::Duration)>>,
@@ -577,8 +575,8 @@ pub mod gpu {
     {
         #[cfg(feature = "gpu")]
         {
-            let pipeline = GpuPipeline::new().await?;
-            pipeline.gamma_gpu(input).await
+            let pipeline = GpuPipeline::new()?;
+            pipeline.gamma_gpu(input)
         }
         #[cfg(not(feature = "gpu"))]
         {

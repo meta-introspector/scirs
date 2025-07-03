@@ -502,11 +502,8 @@ impl LatentDirichletAllocation {
         topic_word_prior: f64,
     ) -> Result<()> {
         let (n_samples, n_features) = doc_term_matrix.dim();
-        self.vocabulary.get_or_insert_with(|| {
-            (0..n_features)
-                .map(|i| (i, format!("word_{}", i)))
-                .collect()
-        });
+        self.vocabulary
+            .get_or_insert_with(|| (0..n_features).map(|i| (i, format!("word_{i}"))).collect());
         self.bound.get_or_insert_with(Vec::new);
 
         // Initialize topic-word distribution if not already done

@@ -9,13 +9,15 @@
 
 #[cfg(feature = "metrics_integration")]
 use ndarray::Array2;
-use rand::rng;
+use rand::{rngs::StdRng, SeedableRng};
 // This example requires the metrics_integration feature
 #[cfg(not(feature = "metrics_integration"))]
 fn main() {
     println!("This example requires the 'metrics_integration' feature.");
     println!("Run it with: cargo run --example metrics_integration_example --features metrics_integration");
 }
+
+#[cfg(feature = "metrics_integration")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_metrics::integration::neural::NeuralMetricAdapter;
     use scirs2_neural::activations::relu::ReLU;
@@ -28,6 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_neural::losses::mse::MeanSquaredError;
     use scirs2_neural::models::sequential::Sequential;
     use scirs2_neural::optimizers::sgd::SGD;
+    use std::collections::HashMap;
     println!("Neural Network with Metrics Integration Example");
     println!("---------------------------------------------");
     // Create a simple synthetic dataset for binary classification
@@ -68,6 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         metrics: Vec::new(),
         history: &HashMap::new(),
         stop_training: false,
+    };
     println!(
         "\nStart training for {} epochs with batch size {}:",
         num_epochs, batch_size
@@ -121,9 +125,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             for (name, value) in cb.epoch_results() {
                 println!("  {}: {:.4}", name, value);
             }
+        }
     }
     println!("\nTraining completed successfully!");
     Ok(())
+}
+
+#[cfg(feature = "metrics_integration")]
 fn generate_binary_classification_data(
     n_samples: usize,
     n_features: usize,
@@ -138,19 +146,31 @@ fn generate_binary_classification_data(
         // Generate random features
         for j in 0..n_features {
             x[[i, j]] = rng.random_range(-1.0..1.0);
+        }
         // Simple decision boundary: x1 + x2 > 0
         let sum = x[[i, 0]] + x[[i, 1]];
         y[[i, 0]] = if sum > 0.0 { 1.0 } else { 0.0 };
+    }
     Ok((x, y))
+}
+
+#[cfg(feature = "metrics_integration")]
 fn shuffle_indices(mut indices: Vec<usize>) -> Vec<usize> {
-    let mut rng = rand::rng();
+    use rand::rngs::ThreadRng;
+    let mut rng = rand::thread_rng();
     rand::seq::SliceRandom::shuffle(&mut indices, &mut rng);
     indices
+}
+
+#[cfg(feature = "metrics_integration")]
 fn create_batch(data: &Array2<f64>, indices: &[usize]) -> Array2<f64> {
     let n_samples = indices.len();
     let n_features = data.shape()[1];
     let mut batch = Array2::zeros((n_samples, n_features));
     for (i, &idx) in indices.iter().enumerate() {
+        for j in 0..n_features {
             batch[[i, j]] = data[[idx, j]];
+        }
+    }
     batch
-use std::collections::HashMap;
+}

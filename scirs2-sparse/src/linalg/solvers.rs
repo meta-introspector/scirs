@@ -124,7 +124,7 @@ where
             let sum_squares: F = a.data.iter().map(|v| *v * *v).sum();
             Ok(sum_squares.sqrt())
         }
-        _ => Err(SparseError::ValueError(format!("Unknown norm: {}", ord))),
+        _ => Err(SparseError::ValueError(format!("Unknown norm: {ord}"))),
     }
 }
 

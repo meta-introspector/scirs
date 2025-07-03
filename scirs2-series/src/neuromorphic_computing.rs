@@ -327,6 +327,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
     }
 
     /// Update individual neuron based on its model
+    #[allow(dead_code)]
     fn update_neuron(&self, state: &mut NeuronState<F>, model: &NeuronModel) -> Result<bool> {
         // Check refractory period
         if state.refractory > 0.0 {
@@ -924,10 +925,12 @@ pub struct MemristiveNetwork<F: Float + Debug> {
     /// Memristive crossbar array
     crossbar: Array2<MemristorState<F>>,
     /// Network topology
+    #[allow(dead_code)]
     topology: NetworkTopology,
     /// Learning parameters
     learning_params: MemristiveLearningParams<F>,
     /// Current state
+    #[allow(dead_code)]
     current_state: Array1<F>,
 }
 
@@ -1152,8 +1155,10 @@ pub struct DendriticComputationUnit<F: Float + Debug> {
     /// Synaptic inputs along dendrites
     synaptic_inputs: Vec<SynapticInput<F>>,
     /// Dendritic spine dynamics
+    #[allow(dead_code)]
     spine_dynamics: Vec<SpineDynamics<F>>,
     /// Active dendritic currents
+    #[allow(dead_code)]
     active_currents: HashMap<DendriticCurrent, F>,
     /// Calcium concentration dynamics
     calcium_dynamics: CalciumDynamics<F>,
@@ -1169,6 +1174,7 @@ pub struct DendriticTree<F: Float + Debug> {
     /// Somatic distance for each segment
     soma_distances: Array1<F>,
     /// Segment diameters
+    #[allow(dead_code)]
     diameters: Array1<F>,
 }
 
@@ -1176,12 +1182,15 @@ pub struct DendriticTree<F: Float + Debug> {
 #[derive(Debug, Clone)]
 pub struct DendriticSegment<F: Float + Debug> {
     /// Segment ID
+    #[allow(dead_code)]
     id: usize,
     /// Membrane potential
     voltage: F,
     /// Length of segment
+    #[allow(dead_code)]
     length: F,
     /// Surface area
+    #[allow(dead_code)]
     surface_area: F,
     /// Ion channel densities
     channel_densities: HashMap<IonChannel, F>,
@@ -1199,6 +1208,7 @@ pub struct DendriticConnection {
     /// Axial resistance
     resistance: f64,
     /// Connection strength
+    #[allow(dead_code)]
     coupling_strength: f64,
 }
 
@@ -1248,17 +1258,22 @@ pub struct SynapticInput<F: Float + Debug> {
     /// Input location on dendritic tree
     segment_id: usize,
     /// Distance from soma
+    #[allow(dead_code)]
     soma_distance: F,
     /// Synaptic weight
+    #[allow(dead_code)]
     weight: F,
     /// Synaptic conductance
     conductance: F,
     /// Reversal potential
     reversal_potential: F,
     /// Synaptic time constants
+    #[allow(dead_code)]
     tau_rise: F,
+    #[allow(dead_code)]
     tau_decay: F,
     /// NMDA/AMPA ratio
+    #[allow(dead_code)]
     nmda_ampa_ratio: F,
 }
 
@@ -1266,14 +1281,19 @@ pub struct SynapticInput<F: Float + Debug> {
 #[derive(Debug, Clone)]
 pub struct SpineDynamics<F: Float + Debug> {
     /// Spine head volume
+    #[allow(dead_code)]
     head_volume: F,
     /// Spine neck resistance
+    #[allow(dead_code)]
     neck_resistance: F,
     /// Calcium compartmentalization
+    #[allow(dead_code)]
     calcium_compartment: F,
     /// Plasticity state variables
+    #[allow(dead_code)]
     plasticity_variables: PlasticityVariables<F>,
     /// Spine maturation state
+    #[allow(dead_code)]
     maturation_level: F,
 }
 
@@ -1281,12 +1301,16 @@ pub struct SpineDynamics<F: Float + Debug> {
 #[derive(Debug, Clone)]
 pub struct PlasticityVariables<F: Float + Debug> {
     /// CaMKII autophosphorylation level
+    #[allow(dead_code)]
     camkii_phosphorylation: F,
     /// Protein synthesis activity
+    #[allow(dead_code)]
     protein_synthesis: F,
     /// AMPA receptor trafficking
+    #[allow(dead_code)]
     ampa_trafficking: F,
     /// Spine size scaling factor
+    #[allow(dead_code)]
     size_scaling: F,
 }
 
@@ -1296,10 +1320,13 @@ pub struct CalciumDynamics<F: Float + Debug> {
     /// Intracellular calcium concentration
     ca_concentration: Array1<F>,
     /// Calcium buffer concentrations
+    #[allow(dead_code)]
     buffer_concentrations: HashMap<CalciumBuffer, Array1<F>>,
     /// Calcium pumps and exchangers
+    #[allow(dead_code)]
     pump_activities: HashMap<CalciumPump, F>,
     /// Calcium diffusion coefficients
+    #[allow(dead_code)]
     diffusion_coefficients: Array1<F>,
 }
 
@@ -1748,8 +1775,10 @@ pub struct VesicleReplenishmentRates<F: Float> {
     /// Recycling to RRP rate
     recycling_to_rrp: F,
     /// Endocytosis rate
+    #[allow(dead_code)]
     endocytosis_rate: F,
     /// Exocytosis rate
+    #[allow(dead_code)]
     exocytosis_rate: F,
 }
 
@@ -1883,6 +1912,7 @@ pub struct LoihiStyleNeuromorphicChip<F: Float + Debug> {
     /// Spike routing fabric
     spike_router: SpikeRouter,
     /// On-chip learning engines
+    #[allow(dead_code)]
     learning_engines: Vec<OnChipLearningEngine<F>>,
     /// Power management
     power_manager: PowerManager<F>,
@@ -1896,12 +1926,14 @@ pub struct NeuromorphicCore<F: Float + Debug> {
     /// Compartments (neurons)
     compartments: Vec<LoihiCompartment<F>>,
     /// Synaptic memory
+    #[allow(dead_code)]
     synaptic_memory: Array2<F>,
     /// Dendrite accumulators
     dendrite_accumulators: Array1<F>,
     /// Axon outputs
     axon_outputs: Vec<bool>,
     /// Learning traces
+    #[allow(dead_code)]
     learning_traces: HashMap<usize, LearningTrace<F>>,
 }
 
@@ -1931,8 +1963,10 @@ pub struct SpikeRouter {
     /// Routing table
     routing_table: HashMap<(usize, usize), Vec<(usize, usize)>>, // (src_core, src_axon) -> [(dst_core, dst_compartment)]
     /// Spike buffers
+    #[allow(dead_code)]
     spike_buffers: HashMap<usize, Vec<SpikePacket>>,
     /// Routing latency
+    #[allow(dead_code)]
     routing_latency: usize,
 }
 
@@ -1950,6 +1984,7 @@ pub struct SpikePacket {
     /// Spike weight
     weight: i16,
     /// Timestamp
+    #[allow(dead_code)]
     timestamp: u64,
 }
 
@@ -1961,6 +1996,7 @@ pub struct OnChipLearningEngine<F: Float + Debug> {
     /// Learning parameters
     parameters: HashMap<String, F>,
     /// Trace storage
+    #[allow(dead_code)]
     traces: HashMap<usize, LearningTrace<F>>,
 }
 
@@ -1981,10 +2017,13 @@ pub enum OnChipLearningRule {
 #[derive(Debug, Clone)]
 pub struct LearningTrace<F: Float> {
     /// Trace value
+    #[allow(dead_code)]
     value: F,
     /// Decay time constant
+    #[allow(dead_code)]
     tau: F,
     /// Last update time
+    #[allow(dead_code)]
     last_update: u64,
 }
 

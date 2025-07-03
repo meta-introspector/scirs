@@ -4,7 +4,7 @@
 //! computation, enabling privacy-preserving federated optimization without relying
 //! solely on differential privacy noise.
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use ndarray::Array1;
 use num_traits::Float;
 use rand::Rng;

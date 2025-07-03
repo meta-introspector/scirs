@@ -4,7 +4,7 @@
 //! functionality and performance across different operating systems, architectures,
 //! and runtime environments.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;

@@ -107,10 +107,7 @@ fn benchmark_distance_calculations() -> Result<(), Box<dyn std::error::Error>> {
 
         let speedup = scalar_time as f64 / simd_time as f64;
 
-        println!(
-            "  {:>8} {:>8} {:>12} {:>12} {:>10.2}x",
-            size, dim, scalar_time, simd_time, speedup
-        );
+        println!("  {size:>8} {dim:>8} {scalar_time:>12} {simd_time:>12} {speedup:>10.2}x");
     }
 
     Ok(())
@@ -139,10 +136,7 @@ fn benchmark_distance_matrices() -> Result<(), Box<dyn std::error::Error>> {
 
         let speedup = sequential_time as f64 / parallel_time as f64;
 
-        println!(
-            "  {:>8} {:>15} {:>15} {:>10.2}x",
-            size, sequential_time, parallel_time, speedup
-        );
+        println!("  {size:>8} {sequential_time:>15} {parallel_time:>15} {speedup:>10.2}x");
     }
 
     Ok(())
@@ -172,7 +166,7 @@ fn benchmark_spatial_structures() -> Result<(), Box<dyn std::error::Error>> {
         }
         let query_time = start.elapsed().as_millis();
 
-        println!("  {:>8} {:>15} {:>15}", size, build_time, query_time);
+        println!("  {size:>8} {build_time:>15} {query_time:>15}");
     }
 
     Ok(())
@@ -201,8 +195,7 @@ fn analyze_memory_scaling() -> Result<(), Box<dyn std::error::Error>> {
         let efficiency = (size * (size - 1) / 2) as f64 / elapsed as f64;
 
         println!(
-            "  {:>8} {:>12.2} {:>15.2} {:>15.0} ops/ms",
-            size, data_size_mb, dist_matrix_size_mb, efficiency
+            "  {size:>8} {data_size_mb:>12.2} {dist_matrix_size_mb:>15.2} {efficiency:>15.0} ops/ms"
         );
     }
 

@@ -47,7 +47,7 @@ fn compare_methods<Func>(
 where
     Func: Fn(f64, ArrayView1<f64>) -> Array1<f64> + Copy,
 {
-    println!("\n=== {} ===", name);
+    println!("\n=== {name} ===");
 
     // Standard BDF
     let start = Instant::now();
@@ -105,8 +105,7 @@ where
         (result_std.n_jac as f64 - result_enh.n_jac as f64) / result_std.n_jac as f64 * 100.0;
 
     println!(
-        "Performance: {:.2}x speedup, {:.1}% fewer steps, {:.1}% fewer Jacobian evaluations",
-        speedup, step_reduction, jac_reduction
+        "Performance: {speedup:.2}x speedup, {step_reduction:.1}% fewer steps, {jac_reduction:.1}% fewer Jacobian evaluations"
     );
 
     // Compare last values to ensure accuracy
@@ -123,10 +122,7 @@ where
         .map(|(a, b)| (a - b).abs())
         .fold(0.0_f64, |acc, x| acc.max(x));
 
-    println!(
-        "Solution difference: {:.2e} (maximum absolute)",
-        max_abs_diff
-    );
+    println!("Solution difference: {max_abs_diff:.2e} (maximum absolute)");
 
     Ok(())
 }

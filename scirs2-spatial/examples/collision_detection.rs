@@ -53,20 +53,14 @@ fn main() {
     );
     for (point, description) in &points_2d {
         let collision = point_circle_collision(point, &circle);
-        println!(
-            "  Point {:?} ({}) collides with circle: {}",
-            point, description, collision
-        );
+        println!("  Point {point:?} ({description}) collides with circle: {collision}");
     }
 
     // Test point-box2d collision
     println!("\nBox2D from {:?} to {:?}", box2d.min, box2d.max);
     for (point, description) in &points_2d {
         let collision = point_box2d_collision(point, &box2d);
-        println!(
-            "  Point {:?} ({}) collides with box2d: {}",
-            point, description, collision
-        );
+        println!("  Point {point:?} ({description}) collides with box2d: {collision}");
     }
 
     // Test point-sphere collision
@@ -83,20 +77,14 @@ fn main() {
     );
     for (point, description) in &points_3d {
         let collision = point_sphere_collision(point, &sphere);
-        println!(
-            "  Point {:?} ({}) collides with sphere: {}",
-            point, description, collision
-        );
+        println!("  Point {point:?} ({description}) collides with sphere: {collision}");
     }
 
     // Test point-box3d collision
     println!("\nBox3D from {:?} to {:?}", box3d.min, box3d.max);
     for (point, description) in &points_3d {
         let collision = point_box3d_collision(point, &box3d);
-        println!(
-            "  Point {:?} ({}) collides with box3d: {}",
-            point, description, collision
-        );
+        println!("  Point {point:?} ({description}) collides with box3d: {collision}");
     }
 
     // Example 2: Shape-Shape collision tests
@@ -198,14 +186,8 @@ fn main() {
     let ray_origin2 = [5.0, 2.0, 0.0];
     let ray_direction2 = [-1.0, 0.0, 0.0];
 
-    println!(
-        "Ray1: origin {:?}, direction {:?}",
-        ray_origin1, ray_direction1
-    );
-    println!(
-        "Ray2: origin {:?}, direction {:?}",
-        ray_origin2, ray_direction2
-    );
+    println!("Ray1: origin {ray_origin1:?}, direction {ray_direction1:?}");
+    println!("Ray2: origin {ray_origin2:?}, direction {ray_direction2:?}");
 
     // Test ray-sphere collision
     let ray_sphere = Sphere {
@@ -219,12 +201,12 @@ fn main() {
     );
 
     match ray_sphere_collision(&ray_origin1, &ray_direction1, &ray_sphere) {
-        Some(distance) => println!("  Ray1 intersects sphere at distance {:.2?}", distance),
+        Some(distance) => println!("  Ray1 intersects sphere at distance {distance:.2?}"),
         None => println!("  Ray1 does not intersect sphere"),
     }
 
     match ray_sphere_collision(&ray_origin2, &ray_direction2, &ray_sphere) {
-        Some(distance) => println!("  Ray2 intersects sphere at distance {:.2?}", distance),
+        Some(distance) => println!("  Ray2 intersects sphere at distance {distance:.2?}"),
         None => println!("  Ray2 does not intersect sphere"),
     }
 
@@ -240,12 +222,12 @@ fn main() {
     );
 
     match ray_box3d_collision(&ray_origin1, &ray_direction1, &ray_box) {
-        Some(distance) => println!("  Ray1 intersects box at distance {:.2?}", distance),
+        Some(distance) => println!("  Ray1 intersects box at distance {distance:.2?}"),
         None => println!("  Ray1 does not intersect box"),
     }
 
     match ray_box3d_collision(&ray_origin2, &ray_direction2, &ray_box) {
-        Some(distance) => println!("  Ray2 intersects box at distance {:.2?}", distance),
+        Some(distance) => println!("  Ray2 intersects box at distance {distance:.2?}"),
         None => println!("  Ray2 does not intersect box"),
     }
 

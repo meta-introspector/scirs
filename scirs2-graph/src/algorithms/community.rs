@@ -373,7 +373,7 @@ fn label_propagation_internal<N, E, Ix>(
     max_iterations: usize,
 ) -> HashMap<N, usize>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -473,7 +473,7 @@ pub fn label_propagation<N, E, Ix>(
     max_iterations: usize,
 ) -> HashMap<N, usize>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -518,7 +518,7 @@ pub fn label_propagation_result<N, E, Ix>(
     max_iterations: usize,
 ) -> CommunityResult<N>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -634,7 +634,7 @@ pub fn modularity_optimization<N, E, Ix>(
     max_iterations: usize,
 ) -> CommunityStructure<N>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -776,7 +776,7 @@ pub fn greedy_modularity_optimization<N, E, Ix>(
     max_iterations: usize,
 ) -> CommunityStructure<N>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -909,7 +909,7 @@ pub fn infomap_communities<N, E, Ix>(
     tolerance: f64,
 ) -> InfomapResult<N>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -1272,7 +1272,7 @@ pub fn fluid_communities<N, E, Ix>(
     max_iterations: usize,
 ) -> CommunityStructure<N>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -1416,7 +1416,7 @@ pub fn hierarchical_communities<N, E, Ix>(
     linkage: &str,
 ) -> Vec<CommunityStructure<N>>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -1714,7 +1714,7 @@ pub fn fluid_communities_result<N, E, Ix>(
     max_iterations: usize,
 ) -> CommunityResult<N>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -1765,7 +1765,7 @@ pub fn hierarchical_communities_result<N, E, Ix>(
     linkage: &str,
 ) -> Vec<CommunityResult<N>>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -2637,10 +2637,10 @@ mod tests {
 #[allow(dead_code)]
 pub fn parallel_louvain_communities<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
-    max_iterations: usize,
+    _max_iterations: usize,
 ) -> CommunityStructure<N>
 where
-    N: Node + Send + Sync,
+    N: Node + Send + Sync + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Send + Sync + Copy,
     Ix: IndexType + Send + Sync,
 {
@@ -2695,7 +2695,7 @@ where
     // Convert communities to NodeIndex-based map for modularity calculation
     let mut communities_by_index: HashMap<petgraph::graph::NodeIndex<Ix>, usize> = HashMap::new();
     for (node, community) in &communities {
-        if let Some(&node_idx) = graph.node_indices.get(node) {
+        if let Some(node_idx) = graph.node_index(node) {
             communities_by_index.insert(node_idx, *community);
         }
     }
@@ -2749,7 +2749,7 @@ pub fn modularity_optimization_result<N, E, Ix>(
     max_iterations: usize,
 ) -> CommunityResult<N>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -2794,7 +2794,7 @@ pub fn greedy_modularity_optimization_result<N, E, Ix>(
     max_iterations: usize,
 ) -> CommunityResult<N>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
@@ -2839,7 +2839,7 @@ pub fn parallel_louvain_communities_result<N, E, Ix>(
     max_iterations: usize,
 ) -> CommunityResult<N>
 where
-    N: Node + Send + Sync + Clone + Hash + Eq,
+    N: Node + Send + Sync + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Send + Sync + Copy,
     Ix: IndexType + Send + Sync,
 {

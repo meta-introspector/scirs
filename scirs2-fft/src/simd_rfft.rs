@@ -367,7 +367,7 @@ mod tests {
         // Check recovery
         for (i, (&orig, &rec)) in signal.iter().zip(recovered.iter()).enumerate() {
             if (orig - rec).abs() > 1e-10 {
-                panic!("Mismatch at index {}: {} != {}", i, orig, rec);
+                panic!("Mismatch at index {i}: {orig} != {rec}");
             }
         }
     }

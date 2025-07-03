@@ -1004,8 +1004,7 @@ mod tests {
         let normalized_3pi = ReedsSheppPlanner::normalize_angle(3.0 * PI);
         assert!(
             (normalized_3pi - PI).abs() < 1e-10 || (normalized_3pi - (-PI)).abs() < 1e-10,
-            "Expected ±π, got {}",
-            normalized_3pi
+            "Expected ±π, got {normalized_3pi}"
         );
     }
 

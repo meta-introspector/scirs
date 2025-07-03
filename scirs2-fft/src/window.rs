@@ -70,7 +70,7 @@ impl FromStr for Window {
             "barthann" => Ok(Window::Barthann),
             "cosine" | "cos" => Ok(Window::Cosine),
             "exponential" | "exp" => Ok(Window::Exponential),
-            _ => Err(FFTError::ValueError(format!("Unknown window type: {}", s))),
+            _ => Err(FFTError::ValueError(format!("Unknown window type: {s}"))),
         }
     }
 }

@@ -152,8 +152,7 @@ fn analyze_broadcast_impl(
             right_reduce_axes.push(i);
         } else {
             return Err(OpError::IncompatibleShape(format!(
-                "Cannot broadcast shapes {:?} and {:?}: dimension {} incompatible ({} vs {})",
-                left_shape, right_shape, i, left_dim, right_dim
+                "Cannot broadcast shapes {left_shape:?} and {right_shape:?}: dimension {i} incompatible ({left_dim} vs {right_dim})"
             )));
         }
     }

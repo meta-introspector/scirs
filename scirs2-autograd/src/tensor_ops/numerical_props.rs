@@ -24,8 +24,7 @@ impl<F: Float> Op<F> for RankOp<F> {
 
         if shape.len() != 2 {
             return Err(OpError::IncompatibleShape(format!(
-                "Rank requires 2D matrix, got shape {:?}",
-                shape
+                "Rank requires 2D matrix, got shape {shape:?}"
             )));
         }
 
@@ -218,8 +217,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for CondOp {
 
         if shape.len() != 2 {
             return Err(OpError::IncompatibleShape(format!(
-                "Condition number requires 2D matrix, got shape {:?}",
-                shape
+                "Condition number requires 2D matrix, got shape {shape:?}"
             )));
         }
 
@@ -385,8 +383,7 @@ impl<F: Float> Op<F> for LogDetOp {
 
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(OpError::IncompatibleShape(format!(
-                "LogDet requires square 2D matrix, got shape {:?}",
-                shape
+                "LogDet requires square 2D matrix, got shape {shape:?}"
             )));
         }
 
@@ -506,8 +503,7 @@ impl<F: Float> Op<F> for SLogDetOp {
 
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(OpError::IncompatibleShape(format!(
-                "SLogDet requires square 2D matrix, got shape {:?}",
-                shape
+                "SLogDet requires square 2D matrix, got shape {shape:?}"
             )));
         }
 

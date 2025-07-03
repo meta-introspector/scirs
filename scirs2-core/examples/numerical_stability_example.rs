@@ -70,14 +70,11 @@ fn demo_stable_summation() -> CoreResult<()> {
     values.extend(vec![small; n]);
     let neumaier_result = neumaier_sum(&values);
 
-    println!(
-        "Adding {} small values ({}) to a large value ({}):",
-        n, small, large
-    );
+    println!("Adding {n} small values ({small}) to a large value ({large}):");
     println!("Expected result: {}", large + (n as f64) * small);
-    println!("Naive sum:       {}", naive_sum);
+    println!("Naive sum:       {naive_sum}");
     println!("Kahan sum:       {}", kahan.sum());
-    println!("Neumaier sum:    {}", neumaier_result);
+    println!("Neumaier sum:    {neumaier_result}");
     println!(
         "Error (naive):   {}",
         (naive_sum - (large + (n as f64) * small)).abs()
@@ -101,8 +98,8 @@ fn demo_stable_summation() -> CoreResult<()> {
     let stable = pairwise_sum(&alternating);
 
     println!("Expected: 0.0");
-    println!("Naive sum: {}", naive);
-    println!("Pairwise sum: {}", stable);
+    println!("Naive sum: {naive}");
+    println!("Pairwise sum: {stable}");
 
     Ok(())
 }
@@ -135,17 +132,14 @@ fn demo_stable_variance() -> CoreResult<()> {
     // Two-pass stable algorithm
     let stable_var = stable_variance(&data, 1)?;
 
-    println!(
-        "Dataset: {} points with large mean ({}) and small variance",
-        n, mean
-    );
+    println!("Dataset: {n} points with large mean ({mean}) and small variance");
     println!("Expected variance: ~{}", std * std);
-    println!("Naive single-pass variance: {}", naive_var);
+    println!("Naive single-pass variance: {naive_var}");
     println!(
         "Welford's algorithm variance: {}",
         welford.variance().unwrap()
     );
-    println!("Two-pass stable variance: {}", stable_var);
+    println!("Two-pass stable variance: {stable_var}");
 
     Ok(())
 }
@@ -155,7 +149,7 @@ fn demo_log_sum_exp() -> CoreResult<()> {
     let large_values: Vec<f64> = vec![700.0, 701.0, 702.0, 703.0, 704.0];
 
     println!("Large values that would overflow with naive exp:");
-    println!("Values: {:?}", large_values);
+    println!("Values: {large_values:?}");
 
     // Naive computation would overflow
     let mut naive_overflow = false;
@@ -176,15 +170,15 @@ fn demo_log_sum_exp() -> CoreResult<()> {
     }
 
     let stable_result = log_sum_exp(&large_values);
-    println!("Stable log-sum-exp: {}", stable_result);
+    println!("Stable log-sum-exp: {stable_result}");
 
     // Case 2: Softmax with extreme values
     println!("\nSoftmax with extreme values:");
     let extreme_values = vec![1000.0, 0.0, -1000.0];
     let softmax_result = stable_softmax(&extreme_values);
 
-    println!("Input: {:?}", extreme_values);
-    println!("Stable softmax: {:?}", softmax_result);
+    println!("Input: {extreme_values:?}");
+    println!("Stable softmax: {softmax_result:?}");
     println!(
         "Sum of probabilities: {}",
         softmax_result.iter().sum::<f64>()
@@ -204,7 +198,7 @@ fn demo_stable_matrix_ops() -> CoreResult<()> {
     }
 
     println!("Hilbert matrix (ill-conditioned):");
-    println!("{:?}", hilbert);
+    println!("{hilbert:?}");
 
     // Test with a simple right-hand side
     let b = Array1::ones(n);
@@ -212,15 +206,15 @@ fn demo_stable_matrix_ops() -> CoreResult<()> {
     // Gaussian elimination with partial pivoting
     match gaussian_elimination_stable(&hilbert.view(), &b.view()) {
         Ok(x) => {
-            println!("\nGaussian elimination solution: {:?}", x);
+            println!("\nGaussian elimination solution: {x:?}");
 
             // Check residual
             let residual = &b - &hilbert.dot(&x);
             let residual_norm = stable_norm_2(&residual.to_vec());
-            println!("Residual norm: {}", residual_norm);
+            println!("Residual norm: {residual_norm}");
         }
         Err(e) => {
-            println!("\nGaussian elimination failed: {}", e);
+            println!("\nGaussian elimination failed: {e}");
         }
     }
 
@@ -302,8 +296,8 @@ fn demo_numerical_differentiation() -> CoreResult<()> {
     let true_derivative = f_prime(x);
 
     println!("Function: f(x) = sin(x) * exp(x)");
-    println!("Point: x = {}", x);
-    println!("True derivative: {}", true_derivative);
+    println!("Point: x = {x}");
+    println!("True derivative: {true_derivative}");
 
     // Compare different orders of Richardson extrapolation
     println!("\nRichardson extrapolation with different orders:");
@@ -311,7 +305,7 @@ fn demo_numerical_differentiation() -> CoreResult<()> {
         let h = 0.1;
         let approx = richardson_derivative(f, x, h, order)?;
         let error = (approx - true_derivative).abs();
-        println!("  Order {}: {} (error: {})", order, approx, error);
+        println!("  Order {order}: {approx} (error: {error})");
     }
 
     // Demonstrate adaptive integration
@@ -326,10 +320,7 @@ fn demo_numerical_differentiation() -> CoreResult<()> {
     for &tol in &tolerances {
         let result = adaptive_simpson(g, a, b, tol, 20)?;
         let error = (result - true_integral).abs();
-        println!(
-            "  Tolerance {}: result = {} (error: {})",
-            tol, result, error
-        );
+        println!("  Tolerance {tol}: result = {result} (error: {error})");
     }
 
     Ok(())
@@ -350,13 +341,13 @@ fn demo_condition_number() -> CoreResult<()> {
 
     let cond_well = condition_number_estimate(&well_conditioned.view())?;
     println!("\nWell-conditioned matrix:");
-    println!("{:?}", well_conditioned);
-    println!("Estimated condition number: {}", cond_well);
+    println!("{well_conditioned:?}");
+    println!("Estimated condition number: {cond_well}");
 
     let cond_ill = condition_number_estimate(&ill_conditioned.view())?;
     println!("\nIll-conditioned matrix:");
-    println!("{:?}", ill_conditioned);
-    println!("Estimated condition number: {}", cond_ill);
+    println!("{ill_conditioned:?}");
+    println!("Estimated condition number: {cond_ill}");
 
     println!("\nInterpretation:");
     println!("- Condition number close to 1: well-conditioned");
@@ -377,10 +368,10 @@ fn demo_stable_special_functions() -> CoreResult<()> {
         let stable = log1p_stable(x);
         let true_value = x - x * x / 2.0 + x * x * x / 3.0; // Taylor series
 
-        println!("\nx = {}:", x);
-        println!("  Naive log(1+x): {}", naive);
-        println!("  Stable log1p:   {}", stable);
-        println!("  Taylor approx:  {}", true_value);
+        println!("\nx = {x}:");
+        println!("  Naive log(1+x): {naive}");
+        println!("  Stable log1p:   {stable}");
+        println!("  Taylor approx:  {true_value}");
         println!(
             "  Relative error (naive): {}",
             ((naive - true_value) / true_value).abs()
@@ -397,7 +388,7 @@ fn demo_stable_special_functions() -> CoreResult<()> {
 
     for (x, y) in test_cases {
         let stable = hypot_stable(x, y);
-        println!("\nhypot({}, {}) = {}", x, y, stable);
+        println!("\nhypot({x}, {y}) = {stable}");
 
         // Check if naive computation would work
         let naive_sq: f64 = x * x + y * y;
@@ -414,9 +405,9 @@ fn demo_stable_special_functions() -> CoreResult<()> {
     let targets = vec![1.0, 0.0, 1.0];
 
     let loss = cross_entropy_stable(&predictions, &targets)?;
-    println!("Predictions: {:?}", predictions);
-    println!("Targets: {:?}", targets);
-    println!("Cross-entropy loss: {}", loss);
+    println!("Predictions: {predictions:?}");
+    println!("Targets: {targets:?}");
+    println!("Cross-entropy loss: {loss}");
 
     Ok(())
 }

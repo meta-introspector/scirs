@@ -103,7 +103,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for &ti in &time_indices {
         let time = t[ti];
-        println!("Time t = {:.4}", time);
+        println!("Time t = {time:.4}");
         println!("{:<10} {:<15}", "x", "u(x,t)");
 
         // Print solution at regular intervals
@@ -111,7 +111,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let x = xi as f64 * dx;
             let value = u[[ti, xi]];
 
-            println!("{:<10.4} {:<15.8e}", x, value);
+            println!("{x:<10.4} {value:<15.8e}");
         }
         println!(); // Empty line between time points
     }
@@ -138,8 +138,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         final_mass += 0.5 * h * (uf_i + uf_i1);
     }
 
-    println!("Initial total mass: {:.8}", initial_mass);
-    println!("Final total mass: {:.8}", final_mass);
+    println!("Initial total mass: {initial_mass:.8}");
+    println!("Final total mass: {final_mass:.8}");
     println!(
         "Relative change: {:.2e}%",
         100.0 * (final_mass - initial_mass) / initial_mass
@@ -173,11 +173,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Theoretical front position for pure advection would be x0 + v*t
             let theoretical_advection = 0.1 + velocity * time;
             println!(
-                "Time t = {:.4}: Front at x = {:.4} (pure advection would be at x = {:.4})",
-                time, front_position, theoretical_advection
+                "Time t = {time:.4}: Front at x = {front_position:.4} (pure advection would be at x = {theoretical_advection:.4})"
             );
         } else {
-            println!("Time t = {:.4}: Front not detected", time);
+            println!("Time t = {time:.4}: Front not detected");
         }
     }
 
@@ -200,8 +199,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         println!(
-            "Time t = {:.4}: Max gradient {:.4e} at x = {:.4}",
-            time, max_gradient, max_gradient_position
+            "Time t = {time:.4}: Max gradient {max_gradient:.4e} at x = {max_gradient_position:.4}"
         );
     }
 

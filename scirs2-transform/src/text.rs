@@ -76,7 +76,7 @@ impl CountVectorizer {
     /// Set custom token pattern
     pub fn with_token_pattern(mut self, pattern: &str) -> Result<Self> {
         self.token_pattern = Regex::new(pattern)
-            .map_err(|e| TransformError::InvalidInput(format!("Invalid regex pattern: {}", e)))?;
+            .map_err(|e| TransformError::InvalidInput(format!("Invalid regex pattern: {e}")))?;
         Ok(self)
     }
 
@@ -439,7 +439,7 @@ impl HashingVectorizer {
                 let row = result.row(i).to_owned();
                 let norm_value = match norm_type.as_str() {
                     "l1" => row.iter().map(|v: &f64| v.abs()).sum::<f64>(),
-                    "l2" => (row.dot(&row) as f64).sqrt(),
+                    "l2" => row.dot(&row).sqrt(),
                     _ => continue,
                 };
 

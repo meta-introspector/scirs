@@ -111,7 +111,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mol_result = solver.solve()?;
     let solve_time = start_time.elapsed().as_secs_f64();
 
-    println!("Solution computed in {:.4} seconds", solve_time);
+    println!("Solution computed in {solve_time:.4} seconds");
     println!("Time steps: {}", mol_result.t.len());
     println!(
         "ODE solver info: {}",
@@ -133,7 +133,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let nt = t_values.len();
 
     println!("\nSolution grid dimensions:");
-    println!("  - nx = {}, ny = {}, nz = {}, nt = {}", nx, ny, nz, nt);
+    println!("  - nx = {nx}, ny = {ny}, nz = {nz}, nt = {nt}");
 
     // Extract solution at the final time step
     let final_time_idx = nt - 1;
@@ -141,7 +141,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let final_solution = &pde_solution.values[final_time_idx];
 
     // Calculate error compared to the exact solution
-    println!("\nError analysis at t = {:.4}:", final_time);
+    println!("\nError analysis at t = {final_time:.4}:");
 
     // Function for the exact solution
     let exact_solution = |x: f64, y: f64, z: f64, t: f64| -> f64 {
@@ -156,7 +156,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         (0.25, 0.5, 0.75),  // Mixed point
     ];
 
-    println!("\nComparison at selected points (t = {:.4}):", final_time);
+    println!("\nComparison at selected points (t = {final_time:.4}):");
     println!(
         "{:<6} {:<6} {:<6} {:<15} {:<15} {:<10}",
         "x", "y", "z", "Numerical", "Exact", "Rel. Error"
@@ -185,10 +185,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             0.0
         };
 
-        println!(
-            "{:<6.2} {:<6.2} {:<6.2} {:<15.8e} {:<15.8e} {:<10.2e}",
-            x, y, z, numerical, exact, rel_error
-        );
+        println!("{x:<6.2} {y:<6.2} {z:<6.2} {numerical:<15.8e} {exact:<15.8e} {rel_error:<10.2e}");
 
         max_rel_error = max_rel_error.max(rel_error);
     }
@@ -216,8 +213,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     l2_error = (l2_error / l2_norm).sqrt();
 
     println!("\nOverall error metrics:");
-    println!("  - Maximum relative error: {:.6e}", max_rel_error);
-    println!("  - Normalized L2 error: {:.6e}", l2_error);
+    println!("  - Maximum relative error: {max_rel_error:.6e}");
+    println!("  - Normalized L2 error: {l2_error:.6e}");
 
     // Plot temperature evolution at the center of the domain
     let center_x = find_closest_index(x_grid, 0.5);
@@ -244,10 +241,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             0.0
         };
 
-        println!(
-            "{:<10.4} {:<15.8e} {:<15.8e} {:<10.2e}",
-            t, u_numerical, u_exact, rel_error
-        );
+        println!("{t:<10.4} {u_numerical:<15.8e} {u_exact:<15.8e} {rel_error:<10.2e}");
     }
 
     // Plot convergence for different grid resolutions

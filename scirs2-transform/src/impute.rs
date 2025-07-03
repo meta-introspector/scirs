@@ -97,8 +97,7 @@ impl SimpleImputer {
 
             if feature_data.is_empty() {
                 return Err(TransformError::InvalidInput(format!(
-                    "All values are missing in feature {}",
-                    j
+                    "All values are missing in feature {j}"
                 )));
             }
 
@@ -672,8 +671,7 @@ impl KNNImputer {
 
         if values.is_empty() {
             return Err(TransformError::TransformationError(format!(
-                "No valid neighbors found for feature {} imputation",
-                feature_idx
+                "No valid neighbors found for feature {feature_idx} imputation"
             )));
         }
 
@@ -1008,8 +1006,7 @@ impl IterativeImputer {
 
             if feature_data.is_empty() {
                 return Err(TransformError::InvalidInput(format!(
-                    "All values are missing in feature {}",
-                    feature_idx
+                    "All values are missing in feature {feature_idx}"
                 )));
             }
 

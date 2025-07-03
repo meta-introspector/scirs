@@ -762,6 +762,7 @@ pub mod feature_engineering {
         /// Feature history for temporal features
         feature_history: VecDeque<Array1<F>>,
         /// Update frequency for expensive features
+        #[allow(dead_code)]
         update_frequency: usize,
         /// Current update counter
         update_counter: usize,

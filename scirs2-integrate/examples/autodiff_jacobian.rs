@@ -17,7 +17,7 @@ fn main() -> IntegrateResult<()> {
     // Check if autodiff feature is available
     let autodiff_available = is_autodiff_available();
 
-    println!("Autodiff feature available: {}", autodiff_available);
+    println!("Autodiff feature available: {autodiff_available}");
 
     if !autodiff_available {
         println!("\nTo enable autodiff, rebuild with: cargo run --example autodiff_jacobian --features autodiff");
@@ -56,11 +56,11 @@ fn main() -> IntegrateResult<()> {
     for (strategy, name) in strategies {
         // Skip AutoDiff strategy if not available
         if strategy == JacobianStrategy::AutoDiff && !autodiff_available {
-            println!("\nSkipping {} strategy (feature not enabled)", name);
+            println!("\nSkipping {name} strategy (feature not enabled)");
             continue;
         }
 
-        println!("\nSolving with {} strategy...", name);
+        println!("\nSolving with {name} strategy...");
 
         // BDF method is well-suited for stiff problems
         let options = ODEOptions {
@@ -78,7 +78,7 @@ fn main() -> IntegrateResult<()> {
         let elapsed = start_time.elapsed();
 
         // Print statistics
-        println!("  Completed in: {:.2?}", elapsed);
+        println!("  Completed in: {elapsed:.2?}");
         println!("  Function evaluations: {}", result.n_eval);
         println!("  Jacobian evaluations: {}", result.n_jac);
         println!(

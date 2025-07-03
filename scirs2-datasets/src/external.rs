@@ -303,7 +303,7 @@ impl ExternalClient {
             Some("csv") | None => {
                 // Try CSV parsing
                 let csv_data = String::from_utf8(data.to_vec())
-                    .map_err(|e| DatasetsError::FormatError(format!("Invalid UTF-8: {}", e)))?;
+                    .map_err(|e| DatasetsError::FormatError(format!("Invalid UTF-8: {e}")))?;
 
                 // Write to temporary file for CSV parsing
                 let temp_file =
@@ -317,10 +317,10 @@ impl ExternalClient {
             Some("json") => {
                 // Try JSON parsing
                 let json_str = String::from_utf8(data.to_vec())
-                    .map_err(|e| DatasetsError::FormatError(format!("Invalid UTF-8: {}", e)))?;
+                    .map_err(|e| DatasetsError::FormatError(format!("Invalid UTF-8: {e}")))?;
 
                 serde_json::from_str(&json_str)
-                    .map_err(|e| DatasetsError::FormatError(format!("Invalid JSON: {}", e)))
+                    .map_err(|e| DatasetsError::FormatError(format!("Invalid JSON: {e}")))
             }
             Some("arff") => {
                 // Basic ARFF parsing (simplified)
@@ -335,7 +335,7 @@ impl ExternalClient {
 
     fn parse_arff_data(&self, data: &[u8]) -> Result<Dataset> {
         let content = String::from_utf8(data.to_vec())
-            .map_err(|e| DatasetsError::FormatError(format!("Invalid UTF-8: {}", e)))?;
+            .map_err(|e| DatasetsError::FormatError(format!("Invalid UTF-8: {e}")))?;
 
         let lines = content.lines();
         let mut attributes = Vec::new();
@@ -369,7 +369,7 @@ impl ExternalClient {
                 .map(|s| {
                     s.trim()
                         .parse::<f64>()
-                        .map_err(|_| DatasetsError::FormatError(format!("Invalid number: {}", s)))
+                        .map_err(|_| DatasetsError::FormatError(format!("Invalid number: {s}")))
                 })
                 .collect();
 
@@ -431,7 +431,7 @@ impl ExternalClient {
 
     fn auto_detect_and_parse(&self, data: &[u8]) -> Result<Dataset> {
         let content = String::from_utf8(data.to_vec())
-            .map_err(|e| DatasetsError::FormatError(format!("Invalid UTF-8: {}", e)))?;
+            .map_err(|e| DatasetsError::FormatError(format!("Invalid UTF-8: {e}")))?;
 
         // Try JSON first
         if content.trim().starts_with('{') || content.trim().starts_with('[') {

@@ -931,7 +931,7 @@ impl Default for MonitoringConfig {
 }
 
 /// Pipeline execution metrics
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct PipelineMetrics {
     /// Total samples processed
     pub samples_processed: u64,
@@ -947,6 +947,20 @@ pub struct PipelineMetrics {
     pub node_metrics: HashMap<String, HashMap<String, f64>>,
     /// Last update timestamp
     pub last_updated: SystemTime,
+}
+
+impl Default for PipelineMetrics {
+    fn default() -> Self {
+        Self {
+            samples_processed: 0,
+            total_processing_time: Duration::default(),
+            error_count: 0,
+            success_rate: 0.0,
+            throughput: 0.0,
+            node_metrics: HashMap::default(),
+            last_updated: SystemTime::UNIX_EPOCH,
+        }
+    }
 }
 
 impl MLPipeline {
@@ -1000,7 +1014,7 @@ impl MLPipeline {
 
                         // Update node metrics
                         let node_time = node_start.elapsed();
-                        self.update_node_metrics(node_name, node_time, batch.size());
+                        self.update_node_metrics(&node_name, node_time, batch.size());
                     }
                     Err(e) => match &self.config.error_strategy {
                         ErrorStrategy::FailFast => return Err(e),

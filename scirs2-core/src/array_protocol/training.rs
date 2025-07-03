@@ -1159,7 +1159,7 @@ mod tests {
                 }
             }
             Err(e) => {
-                println!("MSE Loss forward not fully implemented: {}", e);
+                println!("MSE Loss forward not fully implemented: {e}");
             }
         }
     }

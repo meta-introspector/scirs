@@ -253,7 +253,7 @@ fn main() -> IntegrateResult<()> {
     // Analyze target height events
     let height_events = result.events.get_events("target_height");
     if !height_events.is_empty() {
-        println!("\nTarget height events (z = {:.4} m):", target_height);
+        println!("\nTarget height events (z = {target_height:.4} m):");
         println!("  Time (s)\tRadius (m)\tVelocity (m/s)");
 
         for (i, event) in height_events.iter().enumerate() {
@@ -276,9 +276,9 @@ fn main() -> IntegrateResult<()> {
 
             println!("\nTerminal event (maximum radius reached):");
             println!("  Time: {:.4} s", terminal_event.time);
-            println!("  Final radius: {:.4} m", r);
-            println!("  Final velocity: {:.4} m/s", v);
-            println!("  Height at termination: {:.4} m", height);
+            println!("  Final radius: {r:.4} m");
+            println!("  Final velocity: {v:.4} m/s");
+            println!("  Height at termination: {height:.4} m");
 
             // Calculate energy at termination
             let kinetic_energy = 0.5 * m * v * v;
@@ -287,13 +287,10 @@ fn main() -> IntegrateResult<()> {
             let total_energy = kinetic_energy + potential_energy + rotational_energy;
 
             println!("  Energy components at termination:");
-            println!("    Kinetic energy: {:.4} J", kinetic_energy);
-            println!(
-                "    Gravitational potential energy: {:.4} J",
-                potential_energy
-            );
-            println!("    Rotational energy: {:.4} J", rotational_energy);
-            println!("    Total energy: {:.4} J", total_energy);
+            println!("    Kinetic energy: {kinetic_energy:.4} J");
+            println!("    Gravitational potential energy: {potential_energy:.4} J");
+            println!("    Rotational energy: {rotational_energy:.4} J");
+            println!("    Total energy: {total_energy:.4} J");
         }
     }
 

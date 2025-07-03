@@ -161,6 +161,9 @@ pub trait Loss<F: Float + Debug> {
     /// // For our example: [2*(1-0)/2, 2*(2-1)/2] = [1.0, 1.0]
     /// assert_eq!(gradients.as_slice().unwrap(), &[1.0, 1.0]);
     fn backward(
+        &self,
+        predictions: &Array<F, ndarray::IxDyn>,
+        targets: &Array<F, ndarray::IxDyn>,
     ) -> Result<Array<F, ndarray::IxDyn>>;
 }
 mod contrastive;

@@ -483,8 +483,8 @@ pub fn run_comprehensive_edge_case_tests(config: &EdgeCaseConfig) -> SpecialResu
 
     println!("\n📈 Overall Summary");
     println!("==================");
-    println!("Total tests: {}", total_tests);
-    println!("Passed: {}", total_passed);
+    println!("Total tests: {total_tests}");
+    println!("Passed: {total_passed}");
     println!("Failed: {}", total_tests - total_passed);
     println!(
         "Success rate: {:.1}%",
@@ -539,12 +539,11 @@ pub fn test_numerical_precision() -> SpecialResult<()> {
         max_relative_error = max_relative_error.max(relative_error);
 
         println!(
-            "γ({:.1}) = {:.10} (expected: {:.10}, rel_error: {:.2e})",
-            input, computed, expected, relative_error
+            "γ({input:.1}) = {computed:.10} (expected: {expected:.10}, rel_error: {relative_error:.2e})"
         );
     }
 
-    println!("Maximum relative error: {:.2e}", max_relative_error);
+    println!("Maximum relative error: {max_relative_error:.2e}");
 
     if max_relative_error > 1e-10 {
         println!("⚠️  Warning: Relative error exceeds 1e-10");

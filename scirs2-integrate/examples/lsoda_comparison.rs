@@ -36,7 +36,7 @@ fn main() {
 
     // Run all methods and compare
     for method in &methods {
-        let method_name = format!("{:?}", method);
+        let method_name = format!("{method:?}");
 
         // Measure execution time
         let start = Instant::now();
@@ -77,13 +77,12 @@ fn main() {
                 ));
 
                 // Save solution trajectory for this method
-                save_trajectory(&res, &format!("non_stiff_oscillatory_{}.csv", method_name));
+                save_trajectory(&res, &format!("non_stiff_oscillatory_{method_name}.csv"));
             }
             Err(e) => {
-                println!("{:<12} | Failed: {}", method_name, e);
+                println!("{method_name:<12} | Failed: {e}");
                 results_table.push_str(&format!(
-                    "Non-stiff Oscillatory,{},Failed,Failed,Failed,Failed\n",
-                    method_name
+                    "Non-stiff Oscillatory,{method_name},Failed,Failed,Failed,Failed\n"
                 ));
             }
         }
@@ -100,7 +99,7 @@ fn main() {
     println!("--------------------------------------------------------");
 
     for method in &methods {
-        let method_name = format!("{:?}", method);
+        let method_name = format!("{method:?}");
 
         let start = Instant::now();
 
@@ -137,13 +136,12 @@ fn main() {
                     method_name, res.n_steps, res.n_eval, elapsed, error
                 ));
 
-                save_trajectory(&res, &format!("stiff_system_{}.csv", method_name));
+                save_trajectory(&res, &format!("stiff_system_{method_name}.csv"));
             }
             Err(e) => {
-                println!("{:<12} | Failed: {}", method_name, e);
+                println!("{method_name:<12} | Failed: {e}");
                 results_table.push_str(&format!(
-                    "Stiff System,{},Failed,Failed,Failed,Failed\n",
-                    method_name
+                    "Stiff System,{method_name},Failed,Failed,Failed,Failed\n"
                 ));
             }
         }
@@ -167,7 +165,7 @@ fn main() {
     println!("--------------------------------------------------------");
 
     for method in &methods {
-        let method_name = format!("{:?}", method);
+        let method_name = format!("{method:?}");
 
         let start = Instant::now();
 
@@ -204,13 +202,12 @@ fn main() {
                     method_name, res.n_steps, res.n_eval, elapsed, error
                 ));
 
-                save_trajectory(&res, &format!("varying_stiffness_{}.csv", method_name));
+                save_trajectory(&res, &format!("varying_stiffness_{method_name}.csv"));
             }
             Err(e) => {
-                println!("{:<12} | Failed: {}", method_name, e);
+                println!("{method_name:<12} | Failed: {e}");
                 results_table.push_str(&format!(
-                    "Time-varying Stiffness,{},Failed,Failed,Failed,Failed\n",
-                    method_name
+                    "Time-varying Stiffness,{method_name},Failed,Failed,Failed,Failed\n"
                 ));
             }
         }
@@ -235,7 +232,7 @@ fn main() {
     println!("--------------------------------------------------------");
 
     for method in &methods {
-        let method_name = format!("{:?}", method);
+        let method_name = format!("{method:?}");
 
         let start = Instant::now();
 
@@ -272,13 +269,12 @@ fn main() {
                     method_name, res.n_steps, res.n_eval, elapsed, mass_error
                 ));
 
-                save_trajectory(&res, &format!("robertson_{}.csv", method_name));
+                save_trajectory(&res, &format!("robertson_{method_name}.csv"));
             }
             Err(e) => {
-                println!("{:<12} | Failed: {}", method_name, e);
+                println!("{method_name:<12} | Failed: {e}");
                 results_table.push_str(&format!(
-                    "Robertson Chemical,{},Failed,Failed,Failed,Failed\n",
-                    method_name
+                    "Robertson Chemical,{method_name},Failed,Failed,Failed,Failed\n"
                 ));
             }
         }
@@ -306,7 +302,7 @@ fn main() {
     println!("--------------------------------------------------------");
 
     for method in &methods {
-        let method_name = format!("{:?}", method);
+        let method_name = format!("{method:?}");
 
         let start = Instant::now();
 
@@ -342,13 +338,12 @@ fn main() {
                     method_name, res.n_steps, res.n_eval, elapsed, error
                 ));
 
-                save_trajectory(&res, &format!("lotka_volterra_{}.csv", method_name));
+                save_trajectory(&res, &format!("lotka_volterra_{method_name}.csv"));
             }
             Err(e) => {
-                println!("{:<12} | Failed: {}", method_name, e);
+                println!("{method_name:<12} | Failed: {e}");
                 results_table.push_str(&format!(
-                    "Lotka-Volterra,{},Failed,Failed,Failed,Failed\n",
-                    method_name
+                    "Lotka-Volterra,{method_name},Failed,Failed,Failed,Failed\n"
                 ));
             }
         }
@@ -407,6 +402,6 @@ fn save_trajectory(result: &ODEResult<f64>, filename: &str) {
             .collect::<Vec<_>>()
             .join(",");
 
-        writeln!(&mut file, "{:.10e},{}", t, y_values).unwrap();
+        writeln!(&mut file, "{t:.10e},{y_values}").unwrap();
     }
 }

@@ -143,7 +143,7 @@ impl GPUSparseFFT {
             .iter()
             .map(|&val| {
                 let val_f64 = NumCast::from(val).ok_or_else(|| {
-                    FFTError::ValueError(format!("Could not convert {:?} to f64", val))
+                    FFTError::ValueError(format!("Could not convert {val:?} to f64"))
                 })?;
                 Ok(Complex64::new(val_f64, 0.0))
             })

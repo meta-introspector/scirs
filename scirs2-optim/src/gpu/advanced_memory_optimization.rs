@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 use ndarray::{Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::Float;
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::gpu::GpuOptimError;
 
 #[cfg(feature = "gpu")]

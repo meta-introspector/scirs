@@ -14,6 +14,10 @@ use scirs2_integrate::{
 };
 use std::f64::consts::PI;
 
+use scirs2_integrate::IntegrateError;
+
+type SolverFunction = Box<dyn Fn(&[f64]) -> Result<f64, IntegrateError>>;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Advanced Method of Manufactured Solutions Verification ===\n");
 
@@ -80,10 +84,7 @@ fn exponential_ode_verification() -> Result<(), Box<dyn std::error::Error>> {
         let exact_final = problem.exact_at(1.0);
         let error = (numerical_final - exact_final).abs();
 
-        println!(
-            "{:8.4}   {:11.2e}   Numerical: {:.6}",
-            h, error, numerical_final
-        );
+        println!("{h:8.4}   {error:11.2e}   Numerical: {numerical_final:.6}");
         errors.push(error);
     }
 
@@ -131,7 +132,7 @@ fn combined_solution_verification() -> Result<(), Box<dyn std::error::Error>> {
     for &t in &test_points {
         let exact_val = problem.exact_at(t);
         let derivative = problem.source_term(t);
-        println!("{:4.1}    {:10.6}   {:10.6}", t, exact_val, derivative);
+        println!("{t:4.1}    {exact_val:10.6}   {derivative:10.6}");
     }
 
     println!("\n✅ Combined solutions enable verification of methods on diverse function types");
@@ -162,7 +163,7 @@ fn three_d_pde_verification() -> Result<(), Box<dyn std::error::Error>> {
         let source = problem.source_term(&coords);
         let exact_val = problem.exact_at_3d(coords[0], coords[1], coords[2]);
 
-        println!("{:8.2}   {:15.6}", h, source);
+        println!("{h:8.2}   {source:15.6}");
 
         // Verify source term: should be 3π²u
         let expected_source = 3.0 * PI * PI * exact_val;
@@ -187,7 +188,7 @@ fn helmholtz_verification() -> Result<(), Box<dyn std::error::Error>> {
     let problem = MMSPDEProblem::new_helmholtz_2d(exact_solution, [0.0, 1.0], [0.0, 1.0], k);
 
     println!("Exact solution: u(x,y) = sin(2πx) * cos(πy)");
-    println!("Helmholtz equation: ∇²u + {}²u = f", k);
+    println!("Helmholtz equation: ∇²u + {k}²u = f");
     println!("Applications: acoustics, electromagnetics, quantum mechanics");
 
     // Calculate theoretical source term
@@ -266,16 +267,25 @@ fn automated_workflow_example() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Mock solvers with different orders of accuracy
-    let solvers: Vec<(&str, Box<dyn Fn(&[f64]) -> Result<f64, _>>)> = vec![
-        ("First-order", Box::new(|h: &[f64]| Ok(0.1 * h[0]))), // O(h)
-        ("Second-order", Box::new(|h: &[f64]| Ok(0.1 * h[0] * h[0]))), // O(h²)
-        ("Fourth-order", Box::new(|h: &[f64]| Ok(0.1 * h[0].powi(4)))), // O(h⁴)
+    let solvers: Vec<(&str, SolverFunction)> = vec![
+        (
+            "First-order",
+            Box::new(|h: &[f64]| -> Result<f64, IntegrateError> { Ok(0.1 * h[0]) }),
+        ), // O(h)
+        (
+            "Second-order",
+            Box::new(|h: &[f64]| -> Result<f64, IntegrateError> { Ok(0.1 * h[0] * h[0]) }),
+        ), // O(h²)
+        (
+            "Fourth-order",
+            Box::new(|h: &[f64]| -> Result<f64, IntegrateError> { Ok(0.1 * h[0].powi(4)) }),
+        ), // O(h⁴)
     ];
 
     println!("Running automated verification workflow...\n");
 
     for (i, (solver_name, solver)) in solvers.iter().enumerate() {
-        println!("Testing {}", solver_name);
+        println!("Testing {solver_name}");
 
         // Run verification for this solver on the corresponding test case
         let single_case_workflow = VerificationWorkflow {
@@ -295,10 +305,10 @@ fn automated_workflow_example() -> Result<(), Box<dyn std::error::Error>> {
                 }
             );
             if let Some(order) = result.computed_order {
-                println!("  Computed order: {:.2}", order);
+                println!("  Computed order: {order:.2}");
             }
             if let Some(ref error) = result.error_message {
-                println!("  Error: {}", error);
+                println!("  Error: {error}");
             }
             println!();
         }

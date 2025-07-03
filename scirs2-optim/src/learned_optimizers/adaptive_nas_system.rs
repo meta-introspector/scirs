@@ -2154,7 +2154,7 @@ impl<T: Float> Default for AdaptiveNASConfig<T> {
     }
 }
 
-impl<T: Float> AdaptiveNASSystem<T> {
+impl<T: Float + 'static> AdaptiveNASSystem<T> {
     /// Create new adaptive NAS system
     pub fn new(config: AdaptiveNASConfig<T>) -> Result<Self> {
         Ok(Self {
@@ -3946,7 +3946,7 @@ impl<T: Float> DynamicSearchSpaceManager<T> {
     }
 }
 
-impl<T: Float> PerformancePredictorEnsemble<T> {
+impl<T: Float + 'static> PerformancePredictorEnsemble<T> {
     fn new(config: &AdaptiveNASConfig<T>) -> Result<Self> {
         let mut predictors: Vec<Box<dyn ArchitecturePerformancePredictor<T>>> = Vec::new();
 

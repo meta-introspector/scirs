@@ -759,7 +759,7 @@ where
 
 impl<T> GpuBuffer<T> for CpuFallbackBuffer<T>
 where
-    T: Clone + Default + 'static,
+    T: Clone + Default + Send + Sync + 'static,
 {
     fn size(&self) -> usize {
         self.data.len()

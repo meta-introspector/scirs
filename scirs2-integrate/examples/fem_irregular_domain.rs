@@ -79,7 +79,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mesh = &result.mesh;
 
     println!("\nResults:");
-    println!("  - Computation time: {:.4} seconds", solve_time);
+    println!("  - Computation time: {solve_time:.4} seconds");
     println!("  - Residual norm: {:.6e}", result.residual_norm);
 
     // Find maximum solution value and its location
@@ -96,8 +96,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("\nSolution analysis:");
-    println!("  - Maximum solution value: {:.6e}", max_u);
-    println!("  - Location of maximum: ({:.4}, {:.4})", max_u_x, max_u_y);
+    println!("  - Maximum solution value: {max_u:.6e}");
+    println!("  - Location of maximum: ({max_u_x:.4}, {max_u_y:.4})");
 
     // Print solution at selected points (e.g., along a diagonal)
     println!("\nSolution along y = x diagonal:");

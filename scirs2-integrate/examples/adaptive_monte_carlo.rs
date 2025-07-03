@@ -88,7 +88,7 @@ where
     let samples_per_region = (n_samples_total - n_initial_samples) / n_subregions;
     let domain_volume: f64 = ranges.iter().map(|&(a, b)| b - a).product();
 
-    println!("Identified {} high-contribution regions", n_top_points);
+    println!("Identified {n_top_points} high-contribution regions");
 
     // Process each subregion
     for (idx, &point_idx) in value_indices.iter().take(n_top_points).enumerate() {
@@ -135,10 +135,7 @@ where
         let adjusted_samples =
             min_samples + ((samples_per_region - min_samples) as f64 * sample_weight) as usize;
 
-        println!(
-            "  Volume ratio = {:.6}, Samples = {}",
-            volume_ratio, adjusted_samples
-        );
+        println!("  Volume ratio = {volume_ratio:.6}, Samples = {adjusted_samples}");
 
         // Clone the necessary data for the closures
         let center_point_clone = center_point.clone();
@@ -228,7 +225,7 @@ where
         ..Default::default()
     };
 
-    println!("Sampling remainder with {} samples", remaining_samples);
+    println!("Sampling remainder with {remaining_samples} samples");
 
     let remainder_result = monte_carlo(&f, ranges, Some(options)).unwrap();
 
@@ -327,7 +324,7 @@ where
     let n_top_points = n_subregions.min(value_indices.len());
     let mut subregion_results = Vec::with_capacity(n_top_points);
 
-    println!("Identified {} high-contribution regions", n_top_points);
+    println!("Identified {n_top_points} high-contribution regions");
 
     // Keep track of the total volume of all subregions to avoid double-counting
     let mut total_subregion_volume = 0.0;
@@ -375,10 +372,7 @@ where
             .max(subregion_points / 4)
             .min(subregion_points * 2);
 
-        println!(
-            "  Volume: {:.6}, Points: {}",
-            subregion_volume, points_to_use
-        );
+        println!("  Volume: {subregion_volume:.6}, Points: {points_to_use}");
 
         // Integrate the subregion using QMC with Sobol sequence for better convergence
         let subregion_qrng = Sobol::new(dim, seed.map(|s| s + idx as u64 * 1000));
@@ -412,9 +406,9 @@ where
     let cv = std_dev / mean_value;
 
     println!("Function smoothness analysis:");
-    println!("  Mean value: {:.6e}", mean_value);
-    println!("  Std deviation: {:.6e}", std_dev);
-    println!("  Coefficient of variation: {:.6}", cv);
+    println!("  Mean value: {mean_value:.6e}");
+    println!("  Std deviation: {std_dev:.6e}");
+    println!("  Coefficient of variation: {cv:.6}");
 
     // Check if the function is smooth or has singularities/peaks
     // Smooth functions have lower coefficient of variation
@@ -488,12 +482,12 @@ where
         }
 
         refined_integral += total_correction;
-        println!("Total correction: {:.8}", total_correction);
+        println!("Total correction: {total_correction:.8}");
 
         (refined_integral, refined_variance.sqrt())
     };
 
-    println!("Combined estimate: {:.8}", total_integral);
+    println!("Combined estimate: {total_integral:.8}");
     (total_integral, total_error)
 }
 
@@ -538,8 +532,8 @@ fn main() {
         Some(12345), // Seed for reproducibility
     );
 
-    println!("  Integral estimate: {:.8}", adaptive_value);
-    println!("  Error estimate: {:.8}", adaptive_error);
+    println!("  Integral estimate: {adaptive_value:.8}");
+    println!("  Error estimate: {adaptive_error:.8}");
 
     // The singularity at (1,0) makes the integral unbounded
     // But we can compute a reference value for a slightly shifted domain
@@ -585,12 +579,12 @@ fn main() {
         Some(12345),
     );
 
-    println!("  Integral estimate: {:.8}", adaptive_qmc_value);
-    println!("  Error estimate: {:.8}", adaptive_qmc_error);
+    println!("  Integral estimate: {adaptive_qmc_value:.8}");
+    println!("  Error estimate: {adaptive_qmc_error:.8}");
 
     // Reference value computed with high-precision adaptive methods
     let reference_value = 0.244662;
-    println!("\nReference value: {:.8}", reference_value);
+    println!("\nReference value: {reference_value:.8}");
     println!(
         "Standard QMC error: {:.8}",
         (standard_qmc.integral - reference_value).abs()
@@ -666,14 +660,14 @@ fn main() {
     );
 
     println!("\nAdaptive QMC result:");
-    println!("  Integral estimate: {:.8}", adaptive_smooth);
-    println!("  Error estimate: {:.8}", adaptive_smooth_error);
+    println!("  Integral estimate: {adaptive_smooth:.8}");
+    println!("  Error estimate: {adaptive_smooth_error:.8}");
     println!(
         "  Absolute error: {:.8}",
         (adaptive_smooth - exact_value).abs()
     );
 
-    println!("\nExact value: {:.8} (4/π²)", exact_value);
+    println!("\nExact value: {exact_value:.8} (4/π²)");
     println!("\nFor this smooth, well-behaved function, standard QMC usually");
     println!("performs very well, while adaptive methods may not offer as much improvement");
     println!("as they do for functions with singularities or sharp features.");

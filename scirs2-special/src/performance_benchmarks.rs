@@ -161,13 +161,13 @@ impl GammaBenchmarks {
         println!("Running comprehensive gamma function benchmarks...");
         println!("System: {}", system_info.cpu_info);
         if let Some(ref gpu_info) = system_info.gpu_info {
-            println!("GPU: {}", gpu_info);
+            println!("GPU: {gpu_info}");
         }
         println!("Features: {:?}", system_info.feature_flags);
         println!();
 
         for &array_size in &config.array_sizes {
-            println!("Testing array size: {}", array_size);
+            println!("Testing array size: {array_size}");
 
             // Generate test data
             let test_data = Array1::linspace(0.1, 10.0, array_size);
@@ -726,7 +726,7 @@ impl BenchmarkSuite {
                 let time_ms = result.average_time.as_millis();
                 let throughput = format!("{:.1e} ops/s", result.throughput_ops_per_sec);
                 let speedup = match result.speedup_factor {
-                    Some(factor) => format!("{:.2}x", factor),
+                    Some(factor) => format!("{factor:.2}x"),
                     None => "baseline".to_string(),
                 };
                 let status = if result.success { "OK" } else { "FAIL" };
@@ -737,7 +737,7 @@ impl BenchmarkSuite {
                 ));
 
                 if let Some(ref error) = result.error_message {
-                    report.push_str(&format!("             Error: {}\n", error));
+                    report.push_str(&format!("             Error: {error}\n"));
                 }
             }
 

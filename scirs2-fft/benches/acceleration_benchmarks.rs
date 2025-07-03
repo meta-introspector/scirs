@@ -114,7 +114,7 @@ fn bench_gpu_sparse_fft(c: &mut Criterion) {
         for (backend_name, backend, available) in &backends {
             if *available {
                 group.bench_with_input(
-                    BenchmarkId::new(format!("{}_sublinear", backend_name), signal_size),
+                    BenchmarkId::new(format!("{backend_name}_sublinear"), signal_size),
                     &signal,
                     |b, signal| {
                         b.iter(|| {
@@ -131,7 +131,7 @@ fn bench_gpu_sparse_fft(c: &mut Criterion) {
                 );
 
                 group.bench_with_input(
-                    BenchmarkId::new(format!("{}_compressed_sensing", backend_name), signal_size),
+                    BenchmarkId::new(format!("{backend_name}_compressed_sensing"), signal_size),
                     &signal,
                     |b, signal| {
                         b.iter(|| {
@@ -292,7 +292,7 @@ fn bench_algorithm_comparison(c: &mut Criterion) {
     for algorithm in &algorithms {
         // CPU implementation
         group.bench_with_input(
-            BenchmarkId::new("cpu", format!("{:?}", algorithm)),
+            BenchmarkId::new("cpu", format!("{algorithm:?}")),
             &signal,
             |b, signal| {
                 b.iter(|| {
@@ -309,7 +309,7 @@ fn bench_algorithm_comparison(c: &mut Criterion) {
 
         // Multi-GPU implementation
         group.bench_with_input(
-            BenchmarkId::new("multi_gpu", format!("{:?}", algorithm)),
+            BenchmarkId::new("multi_gpu", format!("{algorithm:?}")),
             &signal,
             |b, signal| {
                 b.iter(|| {
@@ -333,7 +333,7 @@ fn bench_algorithm_comparison(c: &mut Criterion) {
         };
 
         group.bench_with_input(
-            BenchmarkId::new("specialized_hardware", format!("{:?}", algorithm)),
+            BenchmarkId::new("specialized_hardware", format!("{algorithm:?}")),
             &signal,
             |b, signal| {
                 b.iter(|| {

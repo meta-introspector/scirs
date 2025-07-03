@@ -112,7 +112,7 @@ fn bench_frft(c: &mut Criterion) {
         // Different fractional orders
         for &alpha in [0.25, 0.5, 0.75, 1.0].iter() {
             group.bench_with_input(
-                BenchmarkId::new(format!("alpha_{}", alpha), size),
+                BenchmarkId::new(format!("alpha_{alpha}"), size),
                 &signal,
                 |b, signal| b.iter(|| frft(black_box(signal), alpha, None)),
             );

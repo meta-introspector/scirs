@@ -341,7 +341,7 @@ where
     let window = 5;
     let mut smoothed_acf = Vec::new();
     for i in 0..acf.len() {
-        let start = if i >= window / 2 { i - window / 2 } else { 0 };
+        let start = i.saturating_sub(window / 2);
         let end = (i + window / 2 + 1).min(acf.len());
         let slice = acf.slice(ndarray::s![start..end]);
         let sum: F = slice.iter().fold(F::zero(), |acc, &x| acc + x);
@@ -456,11 +456,7 @@ where
     let window_size = periods.iter().max().unwrap_or(&12) * 2 + 1;
 
     for i in 0..n {
-        let start = if i >= window_size / 2 {
-            i - window_size / 2
-        } else {
-            0
-        };
+        let start = i.saturating_sub(window_size / 2);
         let end = if i + window_size / 2 < n {
             i + window_size / 2 + 1
         } else {

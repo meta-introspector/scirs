@@ -10,6 +10,7 @@ use scirs2_neural::models::{sequential::Sequential, Model};
 use scirs2_neural::optimizers::{Adam, Optimizer};
 use scirs2_neural::utils::visualization::{
     analyze_training_history, export_history_to_csv, PlotOptions,
+};
 use std::collections::HashMap;
 use std::f32::consts::PI;
 
@@ -62,6 +63,8 @@ fn create_regression_model(input_dim: usize, rng: &mut SmallRng) -> Result<Seque
     let dense3 = Dense::new(8, 1, None, rng)?;
     model.add_layer(dense3);
     Ok(model)
+}
+
 fn main() -> Result<()> {
     println!("Training Visualization Example");
     println!("==============================\n");
@@ -93,6 +96,7 @@ fn main() -> Result<()> {
         30,   // Step size
         ScheduleMethod::Epoch,
         1e-4, // Min learning rate
+    );
     // Add visualization callback
     let mut visualization_cb =
         VisualizationCallback::new(5) // Show every 5 epochs
@@ -210,5 +214,7 @@ fn main() -> Result<()> {
             y_val[[i, 0]],
             predictions[[i, 0]]
         );
+    }
     println!("\nVisualization demonstration complete!");
     Ok(())
+}

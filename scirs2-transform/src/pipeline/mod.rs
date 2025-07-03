@@ -83,13 +83,12 @@ impl Pipeline {
 
         for (name, transformer) in &mut self.steps {
             transformer.fit(&x_transformed).map_err(|e| {
-                TransformError::TransformationError(format!("Failed to fit step '{}': {}", name, e))
+                TransformError::TransformationError(format!("Failed to fit step '{name}': {e}"))
             })?;
 
             x_transformed = transformer.transform(&x_transformed).map_err(|e| {
                 TransformError::TransformationError(format!(
-                    "Failed to transform in step '{}': {}",
-                    name, e
+                    "Failed to transform in step '{name}': {e}"
                 ))
             })?;
         }
@@ -121,8 +120,7 @@ impl Pipeline {
         for (name, transformer) in &self.steps {
             x_transformed = transformer.transform(&x_transformed).map_err(|e| {
                 TransformError::TransformationError(format!(
-                    "Failed to transform in step '{}': {}",
-                    name, e
+                    "Failed to transform in step '{name}': {e}"
                 ))
             })?;
         }
@@ -250,8 +248,7 @@ impl ColumnTransformer {
             for &col in columns {
                 if col >= n_features {
                     return Err(TransformError::InvalidInput(format!(
-                        "Column index {} in transformer '{}' exceeds number of features {}",
-                        col, name, n_features
+                        "Column index {col} in transformer '{name}' exceeds number of features {n_features}"
                     )));
                 }
             }
@@ -264,8 +261,7 @@ impl ColumnTransformer {
 
             transformer.fit(&subset).map_err(|e| {
                 TransformError::TransformationError(format!(
-                    "Failed to fit transformer '{}': {}",
-                    name, e
+                    "Failed to fit transformer '{name}': {e}"
                 ))
             })?;
         }
@@ -311,8 +307,7 @@ impl ColumnTransformer {
             let subset = extract_columns(&x_f64, columns);
             let transformed = transformer.transform(&subset).map_err(|e| {
                 TransformError::TransformationError(format!(
-                    "Failed to transform with '{}': {}",
-                    name, e
+                    "Failed to transform with '{name}': {e}"
                 ))
             })?;
 

@@ -35,11 +35,11 @@ impl ConfigManager {
     /// Load configuration from file
     pub fn load_from_file<P: AsRef<Path>>(&mut self, path: P) -> Result<(), IntegrationError> {
         let content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            IntegrationError::ConfigMismatch(format!("Failed to read config file: {}", e))
+            IntegrationError::ConfigMismatch(format!("Failed to read config file: {e}"))
         })?;
 
         let file_config: FileConfig = toml::from_str(&content).map_err(|e| {
-            IntegrationError::ConfigMismatch(format!("Failed to parse config file: {}", e))
+            IntegrationError::ConfigMismatch(format!("Failed to parse config file: {e}"))
         })?;
 
         // Merge file configuration
@@ -145,11 +145,11 @@ impl ConfigManager {
     pub fn export_to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), IntegrationError> {
         let file_config = self.to_file_config();
         let content = toml::to_string_pretty(&file_config).map_err(|e| {
-            IntegrationError::ConfigMismatch(format!("Failed to serialize config: {}", e))
+            IntegrationError::ConfigMismatch(format!("Failed to serialize config: {e}"))
         })?;
 
         std::fs::write(path.as_ref(), content).map_err(|e| {
-            IntegrationError::ConfigMismatch(format!("Failed to write config file: {}", e))
+            IntegrationError::ConfigMismatch(format!("Failed to write config file: {e}"))
         })?;
 
         Ok(())
@@ -197,8 +197,7 @@ impl ConfigManager {
                 "auto_convert_tensors" => {
                     let val = value.parse::<bool>().map_err(|_| {
                         IntegrationError::ConfigMismatch(format!(
-                            "Invalid boolean value for {}: {}",
-                            key, value
+                            "Invalid boolean value for {key}: {value}"
                         ))
                     })?;
                     self.config.integration.auto_convert_tensors = val;
@@ -206,8 +205,7 @@ impl ConfigManager {
                 "strict_compatibility" => {
                     let val = value.parse::<bool>().map_err(|_| {
                         IntegrationError::ConfigMismatch(format!(
-                            "Invalid boolean value for {}: {}",
-                            key, value
+                            "Invalid boolean value for {key}: {value}"
                         ))
                     })?;
                     self.config.integration.strict_compatibility = val;
@@ -220,8 +218,7 @@ impl ConfigManager {
                         "adaptive" => PrecisionLevel::Adaptive,
                         _ => {
                             return Err(IntegrationError::ConfigMismatch(format!(
-                                "Invalid precision level: {}",
-                                value
+                                "Invalid precision level: {value}"
                             )))
                         }
                     };
@@ -234,8 +231,7 @@ impl ConfigManager {
                         "adaptive" => MemoryStrategy::Adaptive,
                         _ => {
                             return Err(IntegrationError::ConfigMismatch(format!(
-                                "Invalid memory strategy: {}",
-                                value
+                                "Invalid memory strategy: {value}"
                             )))
                         }
                     };
@@ -272,8 +268,7 @@ impl ConfigManager {
                 "adaptive" => PrecisionLevel::Adaptive,
                 _ => {
                     return Err(IntegrationError::ConfigMismatch(format!(
-                        "Invalid precision level: {}",
-                        precision
+                        "Invalid precision level: {precision}"
                     )))
                 }
             };
@@ -287,8 +282,7 @@ impl ConfigManager {
                 "adaptive" => MemoryStrategy::Adaptive,
                 _ => {
                     return Err(IntegrationError::ConfigMismatch(format!(
-                        "Invalid memory strategy: {}",
-                        strategy
+                        "Invalid memory strategy: {strategy}"
                     )))
                 }
             };

@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::Float;
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::gpu::{GpuOptimError, GpuOptimizerConfig};
 
 #[cfg(feature = "gpu")]

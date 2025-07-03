@@ -83,8 +83,7 @@ where
         "lil" => LilArray::from_triplets(&rows, &cols, &data, (n, n))
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr', 'coo', 'dok', and 'lil'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr', 'coo', 'dok', and 'lil'"
         ))),
     }
 }
@@ -180,8 +179,7 @@ where
         "lil" => LilArray::from_triplets(&rows, &cols, &data, (m, n))
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr', 'coo', 'dok', and 'lil'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr', 'coo', 'dok', and 'lil'"
         ))),
     }
 }
@@ -299,8 +297,7 @@ where
         "lil" => LilArray::from_triplets(&rows, &cols, &data, shape)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr', 'coo', 'dok', and 'lil'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr', 'coo', 'dok', and 'lil'"
         ))),
     }
 }
@@ -436,8 +433,7 @@ where
         "lil" => LilArray::from_triplets(&rows, &cols, &data, shape)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr', 'coo', 'dok', and 'lil'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr', 'coo', 'dok', and 'lil'"
         ))),
     }
 }
@@ -605,8 +601,7 @@ where
         "lil" => LilArray::from_triplets(&all_rows, &all_cols, &all_data, shape)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr', 'coo', 'dok', and 'lil'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr', 'coo', 'dok', and 'lil'"
         ))),
     }
 }

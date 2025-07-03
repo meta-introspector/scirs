@@ -99,7 +99,7 @@ pub fn random_oversample(
         if class_size < max_class_size {
             let samples_needed = max_class_size - class_size;
             for _ in 0..samples_needed {
-                let random_idx = rng.gen_range(0..class_size);
+                let random_idx = rng.random_range(0..class_size);
                 resampled_indices.push(indices[random_idx]);
             }
         }
@@ -284,7 +284,7 @@ pub fn generate_synthetic_samples(
 
     for i in 0..n_synthetic {
         // Randomly select a sample from the target class
-        let base_idx = class_indices[rng.gen_range(0..class_indices.len())];
+        let base_idx = class_indices[rng.random_range(0..class_indices.len())];
         let base_sample = data.row(base_idx);
 
         // Find k nearest neighbors within the same class
@@ -307,11 +307,11 @@ pub fn generate_synthetic_samples(
         let k_nearest = &distances[0..k_neighbors.min(distances.len())];
 
         // Select a random neighbor from the k nearest
-        let neighbor_idx = k_nearest[rng.gen_range(0..k_nearest.len())].0;
+        let neighbor_idx = k_nearest[rng.random_range(0..k_nearest.len())].0;
         let neighbor_sample = data.row(neighbor_idx);
 
         // Generate synthetic sample by interpolation
-        let alpha = rng.gen_range(0.0..1.0);
+        let alpha = rng.random_range(0.0..1.0);
         for (j, synthetic_feature) in synthetic_data.row_mut(i).iter_mut().enumerate() {
             *synthetic_feature = base_sample[j] + alpha * (neighbor_sample[j] - base_sample[j]);
         }

@@ -693,8 +693,7 @@ impl Normalizer {
 
         if expected_size != actual_size {
             return Err(TransformError::InvalidInput(format!(
-                "Expected {} features, got {}",
-                expected_size, actual_size
+                "Expected {expected_size} features, got {actual_size}"
             )));
         }
 

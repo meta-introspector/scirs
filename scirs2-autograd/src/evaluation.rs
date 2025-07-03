@@ -155,8 +155,7 @@ impl<'c, 'g, F: Float> Evaluator<'c, 'g, F> {
                             placeholders.insert(tid, array);
                         } else {
                             ret.push(Err(EvalError::VariableError(format!(
-                                "Placeholder not found: {:?}",
-                                name
+                                "Placeholder not found: {name:?}"
                             ))));
                             return ret;
                         }

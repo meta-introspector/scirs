@@ -567,8 +567,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             "inf" => self.compute_inf_norm(input),
             _ => {
                 return Err(IntegrationError::ModuleCompatibility(format!(
-                    "Unsupported norm type: {}",
-                    norm_type
+                    "Unsupported norm type: {norm_type}"
                 )))
             }
         };

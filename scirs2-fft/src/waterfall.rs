@@ -875,8 +875,7 @@ mod tests {
                 for &component in row {
                     assert!(
                         -epsilon <= component && component <= 1.0 + epsilon,
-                        "Color component out of range: {}",
-                        component
+                        "Color component out of range: {component}"
                     );
                 }
             }

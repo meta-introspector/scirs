@@ -1363,20 +1363,12 @@ pub mod advanced {
             let data_len = data.len();
 
             // Short-term: use recent data
-            let short_start = if data_len > self.config.short_term_window * 10 {
-                data_len - self.config.short_term_window * 10
-            } else {
-                0
-            };
+            let short_start = data_len.saturating_sub(self.config.short_term_window * 10);
             let short_data = data.slice(s![short_start..]).to_owned();
             self.short_term.fit(&short_data)?;
 
             // Medium-term: use more data but downsample if necessary
-            let medium_start = if data_len > self.config.medium_term_window * 5 {
-                data_len - self.config.medium_term_window * 5
-            } else {
-                0
-            };
+            let medium_start = data_len.saturating_sub(self.config.medium_term_window * 5);
             let medium_data = data.slice(s![medium_start..]).to_owned();
             self.medium_term.fit(&medium_data)?;
 

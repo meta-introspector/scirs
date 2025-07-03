@@ -7,7 +7,7 @@ use super::{
     Spike, SpikeTrain, NeuromorphicMetrics, STDPConfig, MembraneDynamicsConfig,
     PlasticityModel, NeuromorphicEvent, EventPriority
 };
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 use ndarray::{Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;

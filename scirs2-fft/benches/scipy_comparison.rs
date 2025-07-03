@@ -125,7 +125,7 @@ fn bench_fft_multidim(c: &mut Criterion) {
         let data_nd = data.into_shape_with_order(shape.as_slice()).unwrap();
 
         group.bench_with_input(
-            BenchmarkId::new("fftn", format!("{:?}", shape)),
+            BenchmarkId::new("fftn", format!("{shape:?}")),
             &data_nd,
             |b, data| {
                 b.iter(|| {
@@ -157,7 +157,7 @@ fn bench_specialized_transforms(c: &mut Criterion) {
         // DCT benchmarks
         for &dct_type in &[1, 2, 3, 4] {
             group.bench_with_input(
-                BenchmarkId::new(format!("dct_type_{}", dct_type), size),
+                BenchmarkId::new(format!("dct_type_{dct_type}"), size),
                 &signal,
                 |b, signal| {
                     b.iter(|| {
@@ -180,7 +180,7 @@ fn bench_specialized_transforms(c: &mut Criterion) {
         // DST benchmarks
         for &dst_type in &[1, 2, 3, 4] {
             group.bench_with_input(
-                BenchmarkId::new(format!("dst_type_{}", dst_type), size),
+                BenchmarkId::new(format!("dst_type_{dst_type}"), size),
                 &signal,
                 |b, signal| {
                     b.iter(|| {
@@ -203,7 +203,7 @@ fn bench_specialized_transforms(c: &mut Criterion) {
         // FrFT benchmarks
         for &alpha in &config.frft_orders {
             group.bench_with_input(
-                BenchmarkId::new(format!("frft_alpha_{}", alpha), size),
+                BenchmarkId::new(format!("frft_alpha_{alpha}"), size),
                 &signal,
                 |b, signal| b.iter(|| frft(black_box(signal), alpha, None)),
             );

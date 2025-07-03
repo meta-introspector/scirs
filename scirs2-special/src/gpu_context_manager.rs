@@ -164,10 +164,10 @@ impl GpuContextPool {
 
     /// Probe WebGPU device capabilities
     fn probe_webgpu_device(&self) -> SpecialResult<GpuDeviceInfo> {
-        use scirs2_core::gpu;
+        // use scirs2_core::gpu;
 
-        match gpu::get_or_create_context(GpuBackend::Wgpu) {
-            Ok(context) => {
+        match GpuContext::new(GpuBackend::Wgpu) {
+            Ok(_context) => {
                 let info = GpuDeviceInfo {
                     device_id: 0,
                     device_name: "WebGPU Device".to_string(),
@@ -195,13 +195,13 @@ impl GpuContextPool {
 
     /// Probe OpenCL device capabilities with advanced detection
     fn probe_opencl_device(&self) -> SpecialResult<GpuDeviceInfo> {
-        use scirs2_core::gpu;
+        // use scirs2_core::gpu;
 
         #[cfg(feature = "gpu")]
         log::debug!("Probing OpenCL devices...");
 
         // Try to create OpenCL context to test availability
-        match gpu::get_or_create_context(GpuBackend::OpenCL) {
+        match GpuContext::new(GpuBackend::OpenCL) {
             Ok(context) => {
                 // Query OpenCL device properties if possible
                 let info = self.query_opencl_device_info(&context).unwrap_or_else(|_| {
@@ -239,13 +239,13 @@ impl GpuContextPool {
 
     /// Probe CUDA device capabilities with NVIDIA GPU detection
     fn probe_cuda_device(&self) -> SpecialResult<GpuDeviceInfo> {
-        use scirs2_core::gpu;
+        // use scirs2_core::gpu;
 
         #[cfg(feature = "gpu")]
         log::debug!("Probing CUDA devices...");
 
         // Try to create CUDA context to test availability
-        match gpu::get_or_create_context(GpuBackend::Cuda) {
+        match GpuContext::new(GpuBackend::Cuda) {
             Ok(context) => {
                 // Query CUDA device properties if possible
                 let info = self.query_cuda_device_info(&context).unwrap_or_else(|_| {
@@ -289,7 +289,7 @@ impl GpuContextPool {
 
         for (&backend_type, info) in device_info.iter() {
             if info.is_available {
-                match scirs2_core::gpu::get_or_create_context(backend_type) {
+                match GpuContext::new(backend_type) {
                     Ok(context) => {
                         contexts.insert(backend_type, context);
                         stats.insert(backend_type, GpuPerformanceStats::default());

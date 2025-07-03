@@ -102,23 +102,23 @@ fn write_solution_csv(
     // Write header
     let mut header = String::from("t");
     for &idx in component_indices {
-        header.push_str(&format!(",y{}", idx));
+        header.push_str(&format!(",y{idx}"));
     }
-    writeln!(file, "{}", header)
+    writeln!(file, "{header}")
         .map_err(|e| scirs2_integrate::error::IntegrateError::ComputationError(e.to_string()))?;
 
     // Write data
     for (i, t) in times.iter().enumerate() {
-        let mut line = format!("{}", t);
+        let mut line = format!("{t}");
         for &idx in component_indices {
             line.push_str(&format!(",{}", values[i][idx]));
         }
-        writeln!(file, "{}", line).map_err(|e| {
+        writeln!(file, "{line}").map_err(|e| {
             scirs2_integrate::error::IntegrateError::ComputationError(e.to_string())
         })?;
     }
 
-    println!("Wrote solution to {}", filename);
+    println!("Wrote solution to {filename}");
     Ok(())
 }
 
@@ -177,8 +177,8 @@ fn pendulum_simulation() -> IntegrateResult<()> {
         .fold(0.0_f64, |max, &e| max.max((e - mean_energy).abs()));
 
     println!("Energy analysis:");
-    println!("  Mean energy: {:.8}", mean_energy);
-    println!("  Maximum deviation: {:.8e}", max_deviation);
+    println!("  Mean energy: {mean_energy:.8}");
+    println!("  Maximum deviation: {max_deviation:.8e}");
     println!("  Relative error: {:.8e}", max_deviation / mean_energy);
 
     // Write solution to CSV for visualization
@@ -241,8 +241,8 @@ fn two_body_simulation() -> IntegrateResult<()> {
         .fold(0.0_f64, |max, &l| max.max((l - mean_l).abs()));
 
     println!("Angular momentum analysis:");
-    println!("  Mean angular momentum: {:.10}", mean_l);
-    println!("  Maximum deviation: {:.10e}", max_deviation);
+    println!("  Mean angular momentum: {mean_l:.10}");
+    println!("  Maximum deviation: {max_deviation:.10e}");
     println!("  Relative error: {:.10e}", max_deviation / mean_l);
 
     // Write solution to CSV for visualization
@@ -329,10 +329,7 @@ fn van_der_pol_simulation() -> IntegrateResult<()> {
         t_at
     };
 
-    println!(
-        "Closest solution points: t = {:.6}, {:.6}, {:.6}",
-        t_before, t_at, t_after
-    );
+    println!("Closest solution points: t = {t_before:.6}, {t_at:.6}, {t_after:.6}");
 
     // Create dense solutions with different interpolation methods
     let linear_solution = create_dense_solution(

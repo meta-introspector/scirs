@@ -18,7 +18,7 @@ const DATASET_BASE_URL: &str = "https://raw.githubusercontent.com/cool-japan/sci
 /// Load the California Housing dataset
 #[cfg(feature = "download")]
 pub fn load_california_housing(force_download: bool) -> Result<Dataset> {
-    let url = format!("{}/california_housing.csv", DATASET_BASE_URL);
+    let url = format!("{DATASET_BASE_URL}/california_housing.csv");
 
     // Download or load from cache
     let data = download_data(&url, force_download)?;
@@ -104,7 +104,7 @@ pub fn load_california_housing(_force_download: bool) -> Result<Dataset> {
 /// Load the Wine dataset
 #[cfg(feature = "download")]
 pub fn load_wine(force_download: bool) -> Result<Dataset> {
-    let url = format!("{}/wine.csv", DATASET_BASE_URL);
+    let url = format!("{DATASET_BASE_URL}/wine.csv");
 
     // Download or load from cache
     let data = download_data(&url, force_download)?;
@@ -191,14 +191,14 @@ pub fn load_wine(_force_download: bool) -> Result<Dataset> {
 /// Sample data fetcher - retrieves a list of available datasets
 #[cfg(feature = "download")]
 pub fn get_available_datasets() -> Result<Vec<String>> {
-    let url = format!("{}/datasets_index.txt", DATASET_BASE_URL);
+    let url = format!("{DATASET_BASE_URL}/datasets_index.txt");
 
     // Download or load from cache
     let data = download_data(&url, true)?;
 
     // Parse the list of datasets
     let content = String::from_utf8(data).map_err(|e| {
-        DatasetsError::InvalidFormat(format!("Failed to parse datasets index: {}", e))
+        DatasetsError::InvalidFormat(format!("Failed to parse datasets index: {e}"))
     })?;
 
     let datasets = content

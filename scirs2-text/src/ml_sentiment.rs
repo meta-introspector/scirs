@@ -208,7 +208,7 @@ impl MLSentimentAnalyzer {
                 self.label_map
                     .get(label)
                     .copied()
-                    .ok_or_else(|| TextError::InvalidInput(format!("Unknown label: {}", label)))
+                    .ok_or_else(|| TextError::InvalidInput(format!("Unknown label: {label}")))
             })
             .collect()
     }

@@ -272,9 +272,9 @@ pub fn load_digits() -> Result<Dataset> {
     let mut dataset = Dataset::new(data, Some(target));
 
     // Create feature names
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("pixel_{}", i)).collect();
+    let feature_names: Vec<String> = (0..n_features).map(|i| format!("pixel_{i}")).collect();
 
-    let target_names: Vec<String> = (0..10).map(|i| format!("{}", i)).collect();
+    let target_names: Vec<String> = (0..10).map(|i| format!("{i}")).collect();
 
     let description = "Optical recognition of handwritten digits dataset
     
@@ -597,8 +597,7 @@ mod tests {
                 assert_eq!(
                     dataset.data.nrows(),
                     target.len(),
-                    "Dataset '{}' has inconsistent sample counts",
-                    name
+                    "Dataset '{name}' has inconsistent sample counts"
                 );
             }
 
@@ -607,8 +606,7 @@ mod tests {
                 assert_eq!(
                     dataset.data.ncols(),
                     feature_names.len(),
-                    "Dataset '{}' has inconsistent feature count",
-                    name
+                    "Dataset '{name}' has inconsistent feature count"
                 );
             }
 
@@ -617,16 +615,14 @@ mod tests {
                 assert_eq!(
                     dataset.data.ncols(),
                     feature_descriptions.len(),
-                    "Dataset '{}' has inconsistent feature description count",
-                    name
+                    "Dataset '{name}' has inconsistent feature description count"
                 );
             }
 
             // Check that dataset has a description
             assert!(
                 dataset.description.is_some(),
-                "Dataset '{}' missing description",
-                name
+                "Dataset '{name}' missing description"
             );
         }
     }

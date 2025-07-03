@@ -339,7 +339,7 @@ pub(crate) fn cubic_interp<F: Float + FromPrimitive>(
 /// assert!(diff1 < 1e-10);  // Nearest value to x=1.5 is y=1.0
 /// assert!(diff2 < 1e-10);  // Nearest value to x=2.5 is y=4.0
 /// ```
-pub fn nearest_interpolate<F: Float + FromPrimitive + Debug>(
+pub fn nearest_interpolate<F: Float + FromPrimitive + Debug + std::fmt::Display>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     x_new: &ArrayView1<F>,

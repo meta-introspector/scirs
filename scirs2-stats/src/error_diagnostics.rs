@@ -403,7 +403,7 @@ impl ErrorMonitor {
     fn generate_recommendations(
         &self,
         stats: &ErrorStatistics,
-        issues: &[CriticalIssue],
+        _issues: &[CriticalIssue],
     ) -> Vec<Recommendation> {
         let mut recommendations = Vec::new();
 

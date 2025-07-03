@@ -7,7 +7,7 @@ use num_traits::Float;
 use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 
 /// Types of concept drift detection algorithms
 #[derive(Debug, Clone, Copy, PartialEq)]

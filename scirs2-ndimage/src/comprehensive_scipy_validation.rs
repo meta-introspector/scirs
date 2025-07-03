@@ -5,14 +5,13 @@
 //! module. It includes precision testing, edge case validation, and regression
 //! testing to ensure numerical correctness and compatibility.
 
-use crate::error::NdimageResult;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 use crate::filters::*;
 use crate::interpolation::*;
 use crate::measurements::*;
 use crate::morphology::*;
-use approx::{assert_abs_diff_eq, AbsDiffEq};
+use approx::assert_abs_diff_eq;
 use ndarray::{Array2, ArrayView2};
 use std::collections::HashMap;
 

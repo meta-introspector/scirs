@@ -569,9 +569,7 @@ impl WorkStealingPool {
                 #[cfg(target_os = "linux")]
                 {
                     if let Err(e) = Self::set_numa_affinity_linux(numa_node) {
-                        eprintln!(
-                            "Warning: Failed to set NUMA affinity for node {numa_node}: {e}"
-                        );
+                        eprintln!("Warning: Failed to set NUMA affinity for node {numa_node}: {e}");
                     }
                 }
                 #[cfg(target_os = "windows")]
@@ -1231,9 +1229,7 @@ pub fn report_ultra_parallel_capabilities() {
 
     for (node, &cores) in topology.cores_per_node.iter().enumerate() {
         let memory_gb = topology.memory_per_node[node] as f64 / (1024.0 * 1024.0 * 1024.0);
-        println!(
-            "    Node {node}: {cores} cores, {memory_gb:.1} GB memory"
-        );
+        println!("    Node {node}: {cores} cores, {memory_gb:.1} GB memory");
     }
 
     println!("  Work-stealing: Available");
@@ -1378,7 +1374,7 @@ mod tests {
 
         for (linear_idx, expected) in expected_pairs.iter().enumerate() {
             let result = WorkStealingPool::linear_to_matrix_indices(linear_idx, n);
-            assert_eq!(result, *expected, "Failed for linear index {}", linear_idx);
+            assert_eq!(result, *expected, "Failed for linear index {linear_idx}");
         }
     }
 

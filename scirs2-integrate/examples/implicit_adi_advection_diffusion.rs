@@ -88,15 +88,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Parameters:");
     println!("  Domain: [0,2]×[0,2], t ∈ [0,1.0]");
     println!("  Grid: 101×101 points");
-    println!(
-        "  Diffusion: D_x = {}, D_y = {}",
-        diffusion_coeff_x, diffusion_coeff_y
-    );
-    println!(
-        "  Advection velocities: v_x = {}, v_y = {}",
-        velocity_x, velocity_y
-    );
-    println!("  Time step: dt = {:.5} (CFL condition)", cfl_dt);
+    println!("  Diffusion: D_x = {diffusion_coeff_x}, D_y = {diffusion_coeff_y}");
+    println!("  Advection velocities: v_x = {velocity_x}, v_y = {velocity_y}");
+    println!("  Time step: dt = {cfl_dt:.5} (CFL condition)");
 
     let adi_solver = ADI2D::new(
         domain.clone(),
@@ -120,7 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Number of linear solves: {}", result.num_linear_solves);
 
     if let Some(info) = result.info {
-        println!("{}", info);
+        println!("{info}");
     }
 
     Ok(())
@@ -192,8 +186,7 @@ fn analyze_solution(
         let diff_total = (diff_x.powi(2) + diff_y.powi(2)).sqrt();
 
         println!(
-            " {:.4} | ({:.3},{:.3}) | ({:.3},{:.3}) | {:.4e}",
-            t, x_peak, y_peak, x_expected, y_expected, diff_total
+            " {t:.4} | ({x_peak:.3},{y_peak:.3}) | ({x_expected:.3},{y_expected:.3}) | {diff_total:.4e}"
         );
     }
 
@@ -209,7 +202,7 @@ fn analyze_solution(
         let max_val = find_max_value(&result.u[idx]);
         let decay_factor = max_val / initial_max;
 
-        println!(" {:.4} | {:.6} | {:.6}", t, max_val, decay_factor);
+        println!(" {t:.4} | {max_val:.6} | {decay_factor:.6}");
     }
 
     // Compute the total mass (integral of solution) over time
@@ -228,7 +221,7 @@ fn analyze_solution(
         let mass = compute_total_mass(&result.u[idx], cell_area);
         let rel_change = (mass - initial_mass) / initial_mass;
 
-        println!(" {:.4} | {:.6} | {:.3e}", t, mass, rel_change);
+        println!(" {t:.4} | {mass:.6} | {rel_change:.3e}");
     }
 
     // Check CFL condition
@@ -245,16 +238,10 @@ fn analyze_solution(
     let diffusive_cfl = dt * f64::max(diffusion_coeff_x, diffusion_coeff_y) / (dx * dx);
 
     println!("\nStability analysis:");
-    println!(
-        "  Advective CFL number: {:.4} (should be < 1)",
-        advective_cfl
-    );
-    println!(
-        "  Diffusive CFL number: {:.4} (should be < 0.5 for explicit schemes)",
-        diffusive_cfl
-    );
-    println!("  Grid spacing (dx): {:.4}", dx);
-    println!("  Time step (dt): {:.4}", dt);
+    println!("  Advective CFL number: {advective_cfl:.4} (should be < 1)");
+    println!("  Diffusive CFL number: {diffusive_cfl:.4} (should be < 0.5 for explicit schemes)");
+    println!("  Grid spacing (dx): {dx:.4}");
+    println!("  Time step (dt): {dt:.4}");
 
     Ok(())
 }

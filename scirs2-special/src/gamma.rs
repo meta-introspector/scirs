@@ -474,8 +474,7 @@ where
     // Validate output
     if result.is_nan() && !x.is_nan() {
         return Err(SpecialError::ComputationError(format!(
-            "Gamma function computation failed for x = {}",
-            x
+            "Gamma function computation failed for x = {x}"
         )));
     }
 
@@ -917,8 +916,7 @@ where
         let nearest_int = x_f64.round() as i32;
         if nearest_int <= 0 && (x_f64 - nearest_int as f64).abs() < 1e-14 {
             return Err(SpecialError::DomainError(format!(
-                "Digamma function has a pole at x = {}",
-                x
+                "Digamma function has a pole at x = {x}"
             )));
         }
     }
@@ -929,8 +927,7 @@ where
     // Validate output
     if result.is_nan() && !x.is_nan() {
         return Err(SpecialError::ComputationError(format!(
-            "Digamma function computation failed for x = {}",
-            x
+            "Digamma function computation failed for x = {x}"
         )));
     }
 
@@ -1257,8 +1254,7 @@ where
     // Validate output
     if result.is_nan() {
         return Err(SpecialError::ComputationError(format!(
-            "Beta function computation failed for a = {}, b = {}",
-            a, b
+            "Beta function computation failed for a = {a}, b = {b}"
         )));
     }
 
@@ -2105,8 +2101,7 @@ fn validate_gamma_computation<F: Float + FromPrimitive + Debug + std::ops::AddAs
         let nearest_int = x_f64.round() as i32;
         if nearest_int <= 0 && (x_f64 - nearest_int as f64).abs() < 1e-14 {
             return Err(SpecialError::DomainError(format!(
-                "Gamma function has a pole at x = {}",
-                x_f64
+                "Gamma function has a pole at x = {x_f64}"
             )));
         }
     }
@@ -2114,8 +2109,7 @@ fn validate_gamma_computation<F: Float + FromPrimitive + Debug + std::ops::AddAs
     // Enhanced result validation with condition number estimation
     if result.is_nan() && !x.is_nan() {
         return Err(SpecialError::ComputationError(format!(
-            "Gamma computation failed for x = {}, result is NaN",
-            x_f64
+            "Gamma computation failed for x = {x_f64}, result is NaN"
         )));
     }
 
@@ -2129,8 +2123,7 @@ fn validate_gamma_computation<F: Float + FromPrimitive + Debug + std::ops::AddAs
             return Ok(result);
         } else {
             return Err(SpecialError::ComputationError(format!(
-                "Unexpected overflow in gamma computation for x = {}",
-                x_f64
+                "Unexpected overflow in gamma computation for x = {x_f64}"
             )));
         }
     }
@@ -2138,8 +2131,7 @@ fn validate_gamma_computation<F: Float + FromPrimitive + Debug + std::ops::AddAs
     // Check for potential underflow
     if result.is_zero() && x_f64 > 0.0 && x_f64 < 171.0 {
         return Err(SpecialError::ComputationError(format!(
-            "Unexpected underflow in gamma computation for x = {}",
-            x_f64
+            "Unexpected underflow in gamma computation for x = {x_f64}"
         )));
     }
 

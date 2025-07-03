@@ -153,8 +153,7 @@ pub fn reconstruct_high_resolution(
 ) -> FFTResult<Vec<Complex64>> {
     if target_length < original_length {
         return Err(FFTError::DimensionError(format!(
-            "Target length {} must be greater than or equal to original length {}",
-            target_length, original_length
+            "Target length {target_length} must be greater than or equal to original length {original_length}"
         )));
     }
 
@@ -327,8 +326,7 @@ mod tests {
             // The value should be non-zero at this index
             assert!(
                 spectrum[index].norm() > 1e-10,
-                "Expected non-zero value at index {}",
-                index
+                "Expected non-zero value at index {index}"
             );
         }
     }

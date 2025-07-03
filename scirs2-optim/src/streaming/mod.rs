@@ -23,7 +23,6 @@ pub use enhanced_adaptive_lr::{
 pub use low_latency::{LowLatencyConfig, LowLatencyMetrics, LowLatencyOptimizer};
 pub use streaming_metrics::{MetricsSample, MetricsSummary, StreamingMetricsCollector};
 
-use crate::error::Result;
 use crate::optimizers::Optimizer;
 
 /// Streaming optimization configuration

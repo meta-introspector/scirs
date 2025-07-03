@@ -497,7 +497,7 @@ impl MLPipeline {
 
             if samples_needed > 0 {
                 for _ in 0..samples_needed {
-                    let random_idx = rng.gen_range(0..indices.len());
+                    let random_idx = rng.random_range(0..indices.len());
                     all_indices.push(indices[random_idx]);
                 }
             }

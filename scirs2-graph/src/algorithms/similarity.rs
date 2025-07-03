@@ -13,7 +13,7 @@ use std::hash::Hash;
 /// of the neighbor sets.
 pub fn jaccard_similarity<N, E, Ix>(graph: &Graph<N, E, Ix>, node1: &N, node2: &N) -> Result<f64>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -45,7 +45,7 @@ where
 /// Compute the cosine similarity between two nodes based on their adjacency vectors
 pub fn cosine_similarity<N, E, Ix>(graph: &Graph<N, E, Ix>, node1: &N, node2: &N) -> Result<f64>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64>,
     Ix: IndexType,
 {

@@ -1,6 +1,6 @@
 use ndarray::{Array, ArrayBase, Data, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
-use rand::prelude::*;
+use rand::{rng, Rng};
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};
@@ -57,7 +57,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             p,
             alpha_range: (neg_one, one),
             beta_range: (zero, one),
-            rng: rand::thread_rng(),
+            rng: rand::rng(),
         }
     }
 
@@ -77,7 +77,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             p,
             alpha_range,
             beta_range,
-            rng: rand::thread_rng(),
+            rng: rand::rng(),
         }
     }
 
@@ -92,7 +92,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             return min;
         }
 
-        let random_val = self.rng.gen_range(min_f..max_f);
+        let random_val = self.rng.random_range(min_f..max_f);
         A::from_f64(random_val).unwrap()
     }
 

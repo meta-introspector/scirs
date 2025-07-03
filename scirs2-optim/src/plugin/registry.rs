@@ -4,7 +4,7 @@
 //! including registration, discovery, loading, and version management.
 
 use super::core::*;
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;

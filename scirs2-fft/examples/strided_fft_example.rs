@@ -10,7 +10,7 @@ fn main() {
     // Create a 2D test array of random values
     let rows = 256;
     let cols = 512;
-    println!("Creating a {}x{} 2D array", rows, cols);
+    println!("Creating a {rows}x{cols} 2D array");
 
     let mut arr = Array2::zeros((rows, cols));
     for i in 0..rows {
@@ -28,17 +28,17 @@ fn main() {
     let start = Instant::now();
     let result_standard = perform_standard_fft_axis0(&arr);
     let standard_time = start.elapsed();
-    println!("Standard FFT time: {:?}", standard_time);
+    println!("Standard FFT time: {standard_time:?}");
 
     // Strided FFT
     let start = Instant::now();
     let result_strided = fft_strided(&arr, 0).unwrap();
     let strided_time = start.elapsed();
-    println!("Strided FFT time: {:?}", strided_time);
+    println!("Strided FFT time: {strided_time:?}");
 
     // Calculate maximum difference
     let max_diff = calculate_max_diff(&result_standard, &result_strided);
-    println!("Maximum difference between approaches: {}", max_diff);
+    println!("Maximum difference between approaches: {max_diff}");
 
     // Compare performance of standard vs strided FFT (along second axis)
     println!("\nPerforming FFT along second axis (axis 1):");
@@ -47,17 +47,17 @@ fn main() {
     let start = Instant::now();
     let result_standard = perform_standard_fft_axis1(&arr);
     let standard_time = start.elapsed();
-    println!("Standard FFT time: {:?}", standard_time);
+    println!("Standard FFT time: {standard_time:?}");
 
     // Strided FFT
     let start = Instant::now();
     let result_strided = fft_strided(&arr, 1).unwrap();
     let strided_time = start.elapsed();
-    println!("Strided FFT time: {:?}", strided_time);
+    println!("Strided FFT time: {strided_time:?}");
 
     // Calculate maximum difference
     let max_diff = calculate_max_diff(&result_standard, &result_strided);
-    println!("Maximum difference between approaches: {}", max_diff);
+    println!("Maximum difference between approaches: {max_diff}");
 
     // Demonstrate round-trip accuracy
     println!("\nTesting round-trip accuracy (forward + inverse FFT):");
@@ -85,7 +85,7 @@ fn main() {
         }
     }
 
-    println!("Maximum round-trip error: {}", max_error);
+    println!("Maximum round-trip error: {max_error}");
 }
 
 // Implement standard FFT along axis 0 (for comparison)

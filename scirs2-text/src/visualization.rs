@@ -327,7 +327,7 @@ impl WordCloud {
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let svg_content = self.to_svg()?;
         fs::write(path, svg_content)
-            .map_err(|e| TextError::IoError(format!("Failed to save word cloud: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to save word cloud: {e}")))?;
         Ok(())
     }
 }
@@ -426,9 +426,8 @@ impl AttentionVisualizer {
             let y = 50 + matrix_height + 20;
 
             svg.push_str(&format!(
-                r#"<text x="{}" y="{}" font-family="Arial, sans-serif" font-size="12" 
-                   text-anchor="middle" dominant-baseline="middle" transform="rotate(-45 {} {})">{}</text>"#,
-                x, y, x, y, token
+                r#"<text x="{x}" y="{y}" font-family="Arial, sans-serif" font-size="12" 
+                   text-anchor="middle" dominant-baseline="middle" transform="rotate(-45 {x} {y})">{token}</text>"#
             ));
         }
 
@@ -438,9 +437,8 @@ impl AttentionVisualizer {
             let y = 50 + i * cell_height + cell_height / 2;
 
             svg.push_str(&format!(
-                r#"<text x="{}" y="{}" font-family="Arial, sans-serif" font-size="12" 
-                   text-anchor="end" dominant-baseline="middle">{}</text>"#,
-                x, y, token
+                r#"<text x="{x}" y="{y}" font-family="Arial, sans-serif" font-size="12" 
+                   text-anchor="end" dominant-baseline="middle">{token}</text>"#
             ));
         }
 
@@ -459,7 +457,7 @@ impl AttentionVisualizer {
         let svg_content =
             self.attention_heatmap(attention_weights, source_tokens, target_tokens)?;
         fs::write(path, svg_content)
-            .map_err(|e| TextError::IoError(format!("Failed to save attention heatmap: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to save attention heatmap: {e}")))?;
         Ok(())
     }
 }
@@ -666,7 +664,7 @@ impl EmbeddingVisualizer {
     ) -> Result<()> {
         let svg_content = self.visualize_embeddings(word_vectors, words_to_plot)?;
         fs::write(path, svg_content).map_err(|e| {
-            TextError::IoError(format!("Failed to save embedding visualization: {}", e))
+            TextError::IoError(format!("Failed to save embedding visualization: {e}"))
         })?;
         Ok(())
     }
@@ -876,7 +874,7 @@ impl SentimentVisualizer {
     ) -> Result<()> {
         let svg_content = self.sentiment_distribution(sentiment_results, labels)?;
         fs::write(path, svg_content).map_err(|e| {
-            TextError::IoError(format!("Failed to save sentiment visualization: {}", e))
+            TextError::IoError(format!("Failed to save sentiment visualization: {e}"))
         })?;
         Ok(())
     }
@@ -911,8 +909,7 @@ impl TopicVisualizer {
 
         // SVG header
         svg.push_str(&format!(
-            r#"<svg width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">"#,
-            chart_width, chart_height
+            r#"<svg width="{chart_width}" height="{chart_height}" xmlns="http://www.w3.org/2000/svg">"#
         ));
 
         // Background
@@ -1021,9 +1018,8 @@ impl TopicVisualizer {
         path: P,
     ) -> Result<()> {
         let svg_content = self.topic_words_chart(topics, top_n)?;
-        fs::write(path, svg_content).map_err(|e| {
-            TextError::IoError(format!("Failed to save topic visualization: {}", e))
-        })?;
+        fs::write(path, svg_content)
+            .map_err(|e| TextError::IoError(format!("Failed to save topic visualization: {e}")))?;
         Ok(())
     }
 }
@@ -1094,23 +1090,22 @@ impl TextAnalyticsDashboard {
         html.push_str(&format!(
             r#"
                 <div class="stat">
-                    <div class="stat-value">{}</div>
+                    <div class="stat-value">{total_docs}</div>
                     <div class="stat-label">Documents</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value">{}</div>
+                    <div class="stat-value">{total_words}</div>
                     <div class="stat-label">Total Words</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value">{}</div>
+                    <div class="stat-value">{avg_words}</div>
                     <div class="stat-label">Avg Words/Doc</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value">{}</div>
+                    <div class="stat-value">{unique_words}</div>
                     <div class="stat-label">Unique Words</div>
                 </div>
-"#,
-            total_docs, total_words, avg_words, unique_words
+"#
         ));
 
         html.push_str("</div></div>");
@@ -1122,24 +1117,25 @@ impl TextAnalyticsDashboard {
         html.push_str(&format!(
             r#"<div class="widget">
             <h3>Word Cloud</h3>
-            {}
-        </div>"#,
-            word_cloud_svg
+            {word_cloud_svg}
+        </div>"#
         ));
 
         // Sentiment analysis widget
         let sentiment_viz = SentimentVisualizer::new(self.config.clone());
         let labels: Vec<String> = (0..sentiment_results.len())
-            .map(|i| format!("Doc {}", i + 1))
+            .map(|i| {
+                let doc_num = i + 1;
+                format!("Doc {doc_num}")
+            })
             .collect();
         let sentiment_svg = sentiment_viz.sentiment_distribution(sentiment_results, &labels)?;
 
         html.push_str(&format!(
             r#"<div class="widget">
             <h3>Sentiment Distribution</h3>
-            {}
-        </div>"#,
-            sentiment_svg
+            {sentiment_svg}
+        </div>"#
         ));
 
         // Topic modeling widget
@@ -1150,9 +1146,8 @@ impl TextAnalyticsDashboard {
             html.push_str(&format!(
                 r#"<div class="widget full-width">
                 <h3>Topic Analysis</h3>
-                {}
-            </div>"#,
-                topic_svg
+                {topic_svg}
+            </div>"#
             ));
         }
 
@@ -1179,7 +1174,7 @@ impl TextAnalyticsDashboard {
         let html_content =
             self.generate_dashboard(text_data, sentiment_results, topics, word_frequencies)?;
         fs::write(path, html_content)
-            .map_err(|e| TextError::IoError(format!("Failed to save dashboard: {}", e)))?;
+            .map_err(|e| TextError::IoError(format!("Failed to save dashboard: {e}")))?;
         Ok(())
     }
 }

@@ -124,8 +124,7 @@ fn main() -> IntegrateResult<()> {
             let velocity_before = impact.state[1];
             if velocity_before >= 0.0 {
                 println!(
-                    "Warning: Velocity before impact should be negative, got {}",
-                    velocity_before
+                    "Warning: Velocity before impact should be negative, got {velocity_before}"
                 );
             }
 
@@ -140,8 +139,7 @@ fn main() -> IntegrateResult<()> {
             y = array![0.0, velocity_after];
 
             println!(
-                "Bounce at t = {:.4}: velocity before = {:.4}, velocity after = {:.4}",
-                t, velocity_before, velocity_after
+                "Bounce at t = {t:.4}: velocity before = {velocity_before:.4}, velocity after = {velocity_after:.4}"
             );
         } else {
             // No more impacts, we're done
@@ -206,11 +204,11 @@ fn save_results_to_csv(
     bounce_times: &[f64],
 ) -> IntegrateResult<()> {
     let mut file = File::create("bouncing_ball_results.csv")
-        .map_err(|e| IntegrateError::ComputationError(format!("Failed to create file: {}", e)))?;
+        .map_err(|e| IntegrateError::ComputationError(format!("Failed to create file: {e}")))?;
 
     // Write header
     writeln!(file, "time,height,velocity,is_bounce")
-        .map_err(|e| IntegrateError::ComputationError(format!("Failed to write header: {}", e)))?;
+        .map_err(|e| IntegrateError::ComputationError(format!("Failed to write header: {e}")))?;
 
     // Write data
     for i in 0..times.len() {
@@ -220,7 +218,7 @@ fn save_results_to_csv(
             "{},{},{},{}",
             times[i], heights[i], velocities[i], is_bounce as i32
         )
-        .map_err(|e| IntegrateError::ComputationError(format!("Failed to write data: {}", e)))?;
+        .map_err(|e| IntegrateError::ComputationError(format!("Failed to write data: {e}")))?;
     }
 
     Ok(())

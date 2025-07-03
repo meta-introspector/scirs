@@ -45,12 +45,14 @@ fn main() -> Result<()> {
         &cnn,
         Some(vec![32, 28, 28, 1]), // Input shape (batch_size, height, width, channels)
         Some("CNN Neural Network"),
-            color_options,
+        color_options,
+    );
     println!("{}", cnn_summary);
     let cnn_dataflow = sequential_model_dataflow(
         vec![32, 28, 28, 1], // Input shape
         Some("CNN Data Flow"),
-            show_properties: false,
+        show_properties: false,
+    );
     println!("\n{}", cnn_dataflow);
     // Example 3: RNN (Recurrent Neural Network) Architecture
     println!("\n--- Example 3: RNN (LSTM) Architecture ---\n");
@@ -76,8 +78,11 @@ fn create_mlp_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let dense4 = Dense::new(128, 10, Some("softmax"), rng)?;
     model.add_layer(dense4);
     Ok(model)
+}
+
 // Create a simple CNN model for MNIST
 fn create_cnn_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
+    let mut model = Sequential::new();
     // First convolutional block
     let conv1 = Conv2D::new(
         1,                      // input channels
@@ -86,6 +91,7 @@ fn create_cnn_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
         (1, 1),                 // stride
         PaddingMode::Custom(1), // padding mode
         rng,
+    )?;
     model.add_layer(conv1);
     let batch_norm1 = BatchNorm::new(32, 0.99, 1e-5, rng)?;
     model.add_layer(batch_norm1);
@@ -93,7 +99,11 @@ fn create_cnn_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let conv2 = Conv2D::new(
         32,                     // input channels
         64,                     // output channels
+        (3, 3),                 // kernel size
         (2, 2),                 // stride (downsampling)
+        PaddingMode::Custom(1), // padding mode
+        rng,
+    )?;
     model.add_layer(conv2);
     let batch_norm2 = BatchNorm::new(64, 0.99, 1e-5, rng)?;
     model.add_layer(batch_norm2);
@@ -103,8 +113,14 @@ fn create_cnn_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     // model.add_layer(flatten);
     // Dense layers
     let dense1 = Dense::new(64 * 14 * 14, 128, Some("relu"), rng)?;
+    model.add_layer(dense1);
     let dropout2 = Dropout::new(0.5, rng)?;
+    model.add_layer(dropout2);
     let dense2 = Dense::new(128, 10, Some("softmax"), rng)?;
+    model.add_layer(dense2);
+    Ok(model)
+}
+
 // Create a simple RNN (LSTM) model - Currently disabled due to thread safety constraints
 /*
 fn create_rnn_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {

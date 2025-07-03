@@ -133,22 +133,22 @@ pub fn laplacian_zero_crossing(img: &DynamicImage, use_diagonal: bool) -> Result
         for x in 1..(width - 1) {
             laplacian[[y, x]] = if use_diagonal {
                 // 8-connected Laplacian
-                -1.0 * array[[y - 1, x - 1]]
-                    + -1.0 * array[[y - 1, x]]
-                    + -1.0 * array[[y - 1, x + 1]]
-                    + -1.0 * array[[y, x - 1]]
+                -array[[y - 1, x - 1]]
+                    + -array[[y - 1, x]]
+                    + -array[[y - 1, x + 1]]
+                    + -array[[y, x - 1]]
                     + 8.0 * array[[y, x]]
-                    + -1.0 * array[[y, x + 1]]
-                    + -1.0 * array[[y + 1, x - 1]]
-                    + -1.0 * array[[y + 1, x]]
-                    + -1.0 * array[[y + 1, x + 1]]
+                    + -array[[y, x + 1]]
+                    + -array[[y + 1, x - 1]]
+                    + -array[[y + 1, x]]
+                    + -array[[y + 1, x + 1]]
             } else {
                 // 4-connected Laplacian
-                -1.0 * array[[y - 1, x]]
-                    + -1.0 * array[[y, x - 1]]
+                -array[[y - 1, x]]
+                    + -array[[y, x - 1]]
                     + 4.0 * array[[y, x]]
-                    + -1.0 * array[[y, x + 1]]
-                    + -1.0 * array[[y + 1, x]]
+                    + -array[[y, x + 1]]
+                    + -array[[y + 1, x]]
             };
         }
     }

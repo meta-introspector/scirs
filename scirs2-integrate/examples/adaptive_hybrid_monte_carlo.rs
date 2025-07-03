@@ -120,9 +120,9 @@ where
     let cv = std_dev / mean_value;
 
     println!("Function analysis:");
-    println!("  Mean value: {:.6e}", mean_value);
-    println!("  Std deviation: {:.6e}", std_dev);
-    println!("  Coefficient of variation: {:.6}", cv);
+    println!("  Mean value: {mean_value:.6e}");
+    println!("  Std deviation: {std_dev:.6e}");
+    println!("  Coefficient of variation: {cv:.6}");
 
     // Sort values to identify the highest-contribution regions
     let mut value_indices: Vec<_> = (0..values.len()).collect();
@@ -135,7 +135,7 @@ where
 
     // Step 4: Create subregions for adaptive integration
     let n_top_points = n_subregions.min(value_indices.len());
-    println!("Identified {} high-contribution regions", n_top_points);
+    println!("Identified {n_top_points} high-contribution regions");
 
     // If function is very smooth, just use the global QMC result
     if cv < 0.3 {
@@ -174,10 +174,7 @@ where
         if dim == 2 && scale_factor.is_some() && cv > 10.0 {
             let scale = scale_factor.unwrap();
             let theoretical_total = PI / scale;
-            println!(
-                "Using theoretical value for Gaussian peak: {:.8}",
-                theoretical_total
-            );
+            println!("Using theoretical value for Gaussian peak: {theoretical_total:.8}");
             return (theoretical_total, theoretical_total * 1e-5);
         }
 
@@ -296,7 +293,7 @@ where
                 ..Default::default()
             };
 
-            println!("  Using {} samples for this peak", samples_for_peak);
+            println!("  Using {samples_for_peak} samples for this peak");
 
             // Sample just this peak region with importance sampling
             let peak_result =
@@ -310,7 +307,7 @@ where
             peak_variance += peak_result.std_error.powi(2);
         }
 
-        println!("Extreme peaked function total: {:.8}", peak_integral);
+        println!("Extreme peaked function total: {peak_integral:.8}");
         return (peak_integral, peak_variance.sqrt());
     }
 
@@ -381,10 +378,7 @@ where
         );
 
         if relative_error > 0.01 && center_value > 10.0 * mean_value {
-            println!(
-                "  High relative error ({:.6}), using importance sampling",
-                relative_error
-            );
+            println!("  High relative error ({relative_error:.6}), using importance sampling");
 
             // Key innovation: For important regions with high error, use importance sampling
             let center_point_clone = center_point.clone();
@@ -528,7 +522,7 @@ where
         let remainder_integral = remainder_result.integral * remainder_volume_ratio;
         let remainder_error = remainder_result.standard_error * remainder_volume_ratio;
 
-        println!("  Remainder contribution: {:.8}", remainder_integral);
+        println!("  Remainder contribution: {remainder_integral:.8}");
 
         // Add to total
         total_integral += remainder_integral;
@@ -536,10 +530,7 @@ where
     }
 
     let elapsed = start_time.elapsed();
-    println!(
-        "Hybrid adaptive QMC with importance sampling completed in {:.2?}",
-        elapsed
-    );
+    println!("Hybrid adaptive QMC with importance sampling completed in {elapsed:.2?}");
 
     (total_integral, total_variance.sqrt())
 }
@@ -556,7 +547,7 @@ fn main() {
     // Analytical solution: For a normalized 2D Gaussian, the integral over all space is 1
     // For this specific Gaussian with scale factor 200, the value is approximately 0.0157
     let exact_value = PI / 200.0;
-    println!("Exact value: {:.8} (π/200)", exact_value);
+    println!("Exact value: {exact_value:.8} (π/200)");
 
     // Try standard QMC
     let a = Array1::from_vec(vec![0.0, 0.0]);
@@ -597,8 +588,8 @@ fn main() {
     );
 
     println!("\nHybrid adaptive QMC with importance sampling:");
-    println!("  Result: {:.8}", hybrid_result);
-    println!("  Error estimate: {:.8}", hybrid_error);
+    println!("  Result: {hybrid_result:.8}");
+    println!("  Error estimate: {hybrid_error:.8}");
     println!("  Actual error: {:.8}", (hybrid_result - exact_value).abs());
 
     // Example 2: Multiple peaks function
@@ -620,7 +611,7 @@ fn main() {
     .unwrap();
 
     let reference_value = reference_qmc.integral;
-    println!("Reference value (high-res QMC): {:.8}", reference_value);
+    println!("Reference value (high-res QMC): {reference_value:.8}");
 
     // Standard QMC with moderate resolution
     let standard_multi_qmc = qmc_quad(
@@ -654,8 +645,8 @@ fn main() {
     );
 
     println!("\nHybrid adaptive QMC with importance sampling:");
-    println!("  Result: {:.8}", hybrid_multi_result);
-    println!("  Error estimate: {:.8}", hybrid_multi_error);
+    println!("  Result: {hybrid_multi_result:.8}");
+    println!("  Error estimate: {hybrid_multi_error:.8}");
     println!(
         "  Actual error: {:.8}",
         (hybrid_multi_result - reference_value).abs()

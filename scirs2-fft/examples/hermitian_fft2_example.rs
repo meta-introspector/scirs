@@ -48,10 +48,10 @@ fn main() {
                     max_error = max_error.max(error);
                 }
             }
-            println!("\nMaximum reconstruction error: {:.6e}", max_error);
+            println!("\nMaximum reconstruction error: {max_error:.6e}");
         }
         Err(e) => {
-            println!("\nError in reconstruction: {:?}", e);
+            println!("\nError in reconstruction: {e:?}");
         }
     }
 }

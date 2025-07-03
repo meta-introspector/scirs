@@ -1383,8 +1383,7 @@ mod tests {
         // Energy should be reasonably conserved (within a few percent)
         assert!(
             relative_drift < 0.1,
-            "Energy drift too large: {}",
-            relative_drift
+            "Energy drift too large: {relative_drift}"
         );
     }
 }

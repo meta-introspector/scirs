@@ -832,7 +832,26 @@ impl DistributedSpatialCluster {
             {
                 let mut node = primary_node.write().await;
                 node.assigned_partitions.push(partition.partition_id);
-                node.local_data = Some(partition.data.clone());
+
+                // Append partition data to existing data instead of overwriting
+                if let Some(ref existing_data) = node.local_data {
+                    // Concatenate existing data with new partition data
+                    let (existing_rows, cols) = existing_data.dim();
+                    let (new_rows, _) = partition.data.dim();
+                    let total_rows = existing_rows + new_rows;
+
+                    let mut combined_data = Array2::zeros((total_rows, cols));
+                    combined_data
+                        .slice_mut(s![..existing_rows, ..])
+                        .assign(existing_data);
+                    combined_data
+                        .slice_mut(s![existing_rows.., ..])
+                        .assign(&partition.data);
+                    node.local_data = Some(combined_data);
+                } else {
+                    node.local_data = Some(partition.data.clone());
+                }
+
                 node.load_metrics.partition_count += 1;
             }
 
@@ -841,10 +860,26 @@ impl DistributedSpatialCluster {
                 let replica_node = &self.nodes[replica_node_id];
                 let mut node = replica_node.write().await;
                 node.assigned_partitions.push(partition.partition_id);
-                // Note: Replicas share the same data for fault tolerance
-                if node.local_data.is_none() {
+
+                // Append partition data to existing data instead of overwriting
+                if let Some(ref existing_data) = node.local_data {
+                    // Concatenate existing data with new partition data
+                    let (existing_rows, cols) = existing_data.dim();
+                    let (new_rows, _) = partition.data.dim();
+                    let total_rows = existing_rows + new_rows;
+
+                    let mut combined_data = Array2::zeros((total_rows, cols));
+                    combined_data
+                        .slice_mut(s![..existing_rows, ..])
+                        .assign(existing_data);
+                    combined_data
+                        .slice_mut(s![existing_rows.., ..])
+                        .assign(&partition.data);
+                    node.local_data = Some(combined_data);
+                } else {
                     node.local_data = Some(partition.data.clone());
                 }
+
                 node.load_metrics.partition_count += 1;
             }
         }

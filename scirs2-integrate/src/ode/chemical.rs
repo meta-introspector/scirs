@@ -966,11 +966,7 @@ mod tests {
 
         // All concentrations should be non-negative
         for &conc in result.state.concentrations.iter() {
-            assert!(
-                conc >= 0.0,
-                "Concentration should be non-negative: {}",
-                conc
-            );
+            assert!(conc >= 0.0, "Concentration should be non-negative: {conc}");
         }
     }
 

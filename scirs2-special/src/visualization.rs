@@ -400,8 +400,12 @@ pub mod surface_plots {
             }
         }
 
+        // Create iterators for x and y coordinates
+        let x_range: Vec<f64> = (0..51).map(|i| -5.0 + i as f64 * 0.2).collect();
+        let y_range: Vec<f64> = (0..51).map(|i| -5.0 + i as f64 * 0.2).collect();
+        
         chart.draw_series(
-            SurfaceSeries::xoz((-5.0..5.0).step(0.2), (-5.0..5.0).step(0.2), |x, y| f(x, y))
+            SurfaceSeries::xoz(x_range, y_range, |x, y| f(x, y))
                 .style(&BLUE.mix(0.5)),
         )?;
 
@@ -1071,7 +1075,7 @@ pub mod export {
                 // Generate PDF using plotters
                 let mut pdf_data = Vec::new();
                 {
-                    let backend = plotters::backend::PdfBackend::new(&mut pdf_data, (800, 600))
+                    let backend = plotters::backend::SVGBackend::new(&mut pdf_data, (800, 600))
                         .map_err(|e| format!("Failed to create PDF backend: {}", e))?;
                     let root = backend.into_drawing_area();
                     root.fill(&plotters::style::colors::WHITE)

@@ -188,7 +188,7 @@ impl UltraGpuOptimizer {
         // Check performance cache first
         let cache_key = format!(
             "{}_{}_{}_{}",
-            gpu_context.backend().to_string(),
+            gpu_context.backend(),
             operation,
             data_shape.0,
             data_shape.1
@@ -510,7 +510,7 @@ impl UltraGpuOptimizer {
 
         // Kernel parameters optimization
         let block_size = config.block_size.min(1024); // CUDA max block size
-        let _grid_size = (total_elements + block_size - 1) / block_size;
+        let _grid_size = total_elements.div_ceil(block_size);
 
         // Execute distribution-specific kernel
         let kernel_name = match distribution {
@@ -582,7 +582,7 @@ impl UltraGpuOptimizer {
         duration: std::time::Duration,
     ) {
         if let Ok(mut cache) = self.performance_cache.lock() {
-            let key = format!("{}_{}", operation, elements);
+            let key = format!("{operation}_{elements}");
             let profile = GpuPerformanceProfile {
                 optimal_block_size: self.calculate_optimal_block_size(elements),
                 memory_bandwidth: self.calculate_memory_bandwidth(elements, duration),
@@ -684,8 +684,7 @@ impl UltraGpuOptimizer {
 
         // OpenCL work group optimization
         let work_group_size = config.block_size.min(256); // OpenCL typical max
-        let _global_work_size =
-            (total_elements + work_group_size - 1) / work_group_size * work_group_size;
+        let _global_work_size = total_elements.div_ceil(work_group_size) * work_group_size;
 
         // Distribution-specific OpenCL kernel selection
         let _kernel_source = self.generate_opencl_kernel_source(distribution);
@@ -749,7 +748,15 @@ impl UltraGpuOptimizer {
             }
             _ => {
                 // Default to uniform
-                self.generate_opencl_kernel_source("uniform")
+                r#"
+                __kernel void generate_uniform(__global float* output, uint seed, uint n) {
+                    int gid = get_global_id(0);
+                    if (gid >= n) return;
+                    
+                    uint rng_state = seed + gid;
+                    output[gid] = uniform_random(&rng_state);
+                }
+                "#.to_string()
             }
         }
     }
@@ -849,7 +856,7 @@ impl UltraGpuOptimizer {
             .collect();
 
         Array2::from_shape_vec((rows, cols), data)
-            .map_err(|e| DatasetsError::Other(format!("Failed to create array: {}", e)))
+            .map_err(|e| DatasetsError::Other(format!("Failed to create array: {e}")))
     }
 
     /// Benchmark GPU vs CPU performance
@@ -1006,12 +1013,12 @@ pub fn benchmark_ultra_performance(
     optimizer.benchmark_performance(gpu_context, operation, data_shapes)
 }
 
-impl ToString for GpuBackend {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for GpuBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GpuBackend::Cuda { .. } => "cuda".to_string(),
-            GpuBackend::OpenCl { .. } => "opencl".to_string(),
-            GpuBackend::Cpu => "cpu".to_string(),
+            GpuBackend::Cuda { .. } => write!(f, "cuda"),
+            GpuBackend::OpenCl { .. } => write!(f, "opencl"),
+            GpuBackend::Cpu => write!(f, "cpu"),
         }
     }
 }
@@ -1112,7 +1119,7 @@ impl AIPerformancePredictor {
             .sum();
 
         // Apply sigmoid activation and clamp to [0, 1]
-        (1.0 / (1.0 + (-prediction).exp())).max(0.0).min(1.0)
+        (1.0 / (1.0 + (-prediction).exp())).clamp(0.0, 1.0)
     }
 
     /// Retrain the model using accumulated data
@@ -1129,23 +1136,22 @@ impl AIPerformancePredictor {
         let epochs = 100;
 
         for _ in 0..epochs {
-            let mut gradients = vec![0.0; 5];
+            let mut gradients = [0.0; 5];
 
             for data_point in &self.training_data {
                 let prediction = self.predict_performance(&data_point.features);
                 let error = prediction - data_point.target_performance;
 
                 // Calculate gradients
-                for i in 0..4 {
-                    gradients[i] +=
-                        error * data_point.features[i] / self.training_data.len() as f64;
+                for (i, gradient) in gradients.iter_mut().enumerate().take(4) {
+                    *gradient += error * data_point.features[i] / self.training_data.len() as f64;
                 }
                 gradients[4] += error / self.training_data.len() as f64; // Bias term
             }
 
             // Update weights
-            for i in 0..self.model_weights.len() {
-                self.model_weights[i] -= learning_rate * gradients[i];
+            for (weight, gradient) in self.model_weights.iter_mut().zip(gradients.iter()) {
+                *weight -= learning_rate * gradient;
             }
         }
 
@@ -1351,10 +1357,16 @@ impl Default for MonitoringConfig {
     }
 }
 
+impl Default for RealTimePerformanceMonitor {
+    fn default() -> Self {
+        Self::with_config(MonitoringConfig::default())
+    }
+}
+
 impl RealTimePerformanceMonitor {
     /// Create a new real-time performance monitor
     pub fn new() -> Self {
-        Self::with_config(MonitoringConfig::default())
+        Self::default()
     }
 
     /// Create with custom configuration
@@ -1563,9 +1575,8 @@ impl Default for PerformanceStats {
 impl UltraGpuOptimizer {
     /// Create optimizer with AI-driven optimization and real-time monitoring
     pub fn with_ai_monitoring() -> Self {
-        let optimizer = Self::new();
         // In a full implementation, this would integrate the AI predictor and monitor
-        optimizer
+        Self::new()
     }
 
     /// Predict optimal configuration using AI
@@ -1626,7 +1637,7 @@ mod tests {
     fn test_performance_calculation() {
         let optimizer = UltraGpuOptimizer::new();
         let score = optimizer.calculate_performance_score(256, 1e6, 0.8);
-        assert!(score >= 0.0 && score <= 1.0);
+        assert!((0.0..=1.0).contains(&score));
     }
 
     #[test]

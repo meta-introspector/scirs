@@ -5,6 +5,7 @@
 //! neuromorphic computing, AI optimization, and cross-module coordination.
 
 #![allow(dead_code)]
+#![allow(missing_docs)]
 
 use crate::error::Result;
 use crate::streaming::Frame;

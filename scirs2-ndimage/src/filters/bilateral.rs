@@ -1379,7 +1379,7 @@ where
     let one_minus_alpha = T::one() - alpha;
     let mut result = Array::zeros(a.raw_dim());
 
-    for (((aa, bb), rr)) in a.iter().zip(b.iter()).zip(result.iter_mut()) {
+    for ((aa, bb), rr) in a.iter().zip(b.iter()).zip(result.iter_mut()) {
         *rr = *aa * alpha + *bb * one_minus_alpha;
     }
 

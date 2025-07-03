@@ -47,8 +47,7 @@ impl PatchExtractor {
 
         if patch_height > img_height || patch_width > img_width {
             return Err(TransformError::InvalidInput(format!(
-                "Patch size ({}, {}) exceeds image size ({}, {})",
-                patch_height, patch_width, img_height, img_width
+                "Patch size ({patch_height}, {patch_width}) exceeds image size ({img_height}, {img_width})"
             )));
         }
 
@@ -104,8 +103,7 @@ impl PatchExtractor {
 
         if patch_height > img_height || patch_width > img_width {
             return Err(TransformError::InvalidInput(format!(
-                "Patch size ({}, {}) exceeds image size ({}, {})",
-                patch_height, patch_width, img_height, img_width
+                "Patch size ({patch_height}, {patch_width}) exceeds image size ({img_height}, {img_width})"
             )));
         }
 

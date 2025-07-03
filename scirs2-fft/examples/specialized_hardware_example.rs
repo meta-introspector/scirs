@@ -48,7 +48,7 @@ fn test_hardware_discovery() -> FFTResult<()> {
 
     println!("Discovered {} accelerator(s):", discovered.len());
     for id in &discovered {
-        println!("  - {}", id);
+        println!("  - {id}");
     }
 
     // Initialize all accelerators
@@ -57,7 +57,7 @@ fn test_hardware_discovery() -> FFTResult<()> {
     // Show detailed information for each accelerator
     for id in &discovered {
         if let Some(info) = manager.get_accelerator_info(id) {
-            println!("\nAccelerator: {}", id);
+            println!("\nAccelerator: {id}");
             println!("  Type: {}", info.accelerator_type);
             println!("  Name: {}", info.name);
             println!("  Vendor: {}", info.vendor);
@@ -95,7 +95,7 @@ fn test_hardware_discovery() -> FFTResult<()> {
             if !info.capabilities.custom_features.is_empty() {
                 println!("  Custom features:");
                 for (feature, value) in &info.capabilities.custom_features {
-                    println!("    {}: {}", feature, value);
+                    println!("    {feature}: {value}");
                 }
             }
         }
@@ -113,7 +113,7 @@ fn test_performance_comparison() -> FFTResult<()> {
 
     for signal_size in signal_sizes {
         for &sparsity in &sparsity_levels {
-            println!("\nSignal size: {}, Sparsity: {}", signal_size, sparsity);
+            println!("\nSignal size: {signal_size}, Sparsity: {sparsity}");
 
             let signal = create_test_signal(signal_size);
             let config = SparseFFTConfig {
@@ -130,13 +130,13 @@ fn test_performance_comparison() -> FFTResult<()> {
                     let elapsed = start.elapsed();
                     let throughput = signal_size as f64 / elapsed.as_secs_f64();
 
-                    println!("  Specialized Hardware: {:?}", elapsed);
-                    println!("    Throughput: {:.0} samples/sec", throughput);
+                    println!("  Specialized Hardware: {elapsed:?}");
+                    println!("    Throughput: {throughput:.0} samples/sec");
                     println!("    Found components: {}", result.values.len());
                     println!("    Execution time: {:?}", result.computation_time);
                 }
                 Err(e) => {
-                    println!("  Specialized Hardware: Failed ({})", e);
+                    println!("  Specialized Hardware: Failed ({e})");
                 }
             }
         }
@@ -152,7 +152,7 @@ fn test_signal_size_scaling() -> FFTResult<()> {
     let signal_sizes = vec![1024, 4096, 16384, 65536, 262144];
     let sparsity = 16;
 
-    println!("Testing scaling with sparsity = {}", sparsity);
+    println!("Testing scaling with sparsity = {sparsity}");
     println!("Signal Size\tExecution Time\tThroughput (samples/sec)\tEfficiency");
     println!("===========\t==============\t=======================\t==========");
 
@@ -172,13 +172,10 @@ fn test_signal_size_scaling() -> FFTResult<()> {
                 let throughput = signal_size as f64 / elapsed.as_secs_f64();
                 let efficiency = throughput / (signal_size as f64); // Relative efficiency
 
-                println!(
-                    "{}\t\t{:?}\t\t{:.0}\t\t\t{:.3}",
-                    signal_size, elapsed, throughput, efficiency
-                );
+                println!("{signal_size}\t\t{elapsed:?}\t\t{throughput:.0}\t\t\t{efficiency:.3}");
             }
             Err(e) => {
-                println!("{}\t\tFailed: {}", signal_size, e);
+                println!("{signal_size}\t\tFailed: {e}");
             }
         }
     }

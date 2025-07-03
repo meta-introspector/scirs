@@ -247,10 +247,10 @@ fn create_comparison_table(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>>
             item.size,
             item.time_ms,
             item.memory_kb
-                .map(|m| format!("{:.1}", m))
+                .map(|m| format!("{m:.1}"))
                 .unwrap_or_else(|| "N/A".to_string()),
             item.accuracy
-                .map(|a| format!("{:.2e}", a))
+                .map(|a| format!("{a:.2e}"))
                 .unwrap_or_else(|| "N/A".to_string())
         ));
     }

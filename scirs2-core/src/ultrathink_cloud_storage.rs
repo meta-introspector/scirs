@@ -3359,8 +3359,8 @@ mod tests {
     #[test]
     fn test_cloud_storage_coordinator_creation() {
         let coordinator = UltrathinkCloudStorageCoordinator::new();
-        assert_eq!(coordinator.config.enable_multi_cloud, true);
-        assert_eq!(coordinator.config.enable_adaptive_streaming, true);
+        assert!(coordinator.config.enable_multi_cloud);
+        assert!(coordinator.config.enable_adaptive_streaming);
     }
 
     #[test]

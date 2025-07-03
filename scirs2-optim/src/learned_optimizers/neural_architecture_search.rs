@@ -728,6 +728,9 @@ pub struct EvolutionarySearchState<T: Float> {
     /// Generation number
     pub generation: usize,
 
+    /// Phantom data for type parameter
+    _phantom: std::marker::PhantomData<T>,
+
     /// Fitness history
     pub fitness_history: Vec<Vec<f64>>,
 
@@ -1182,7 +1185,10 @@ pub struct MultiObjectiveState<T: Float> {
     pub fronts: Vec<Vec<usize>>,
 }
 
-impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
+impl<
+        T: Float + Default + Clone + Send + Sync + std::iter::Sum<T> + for<'a> std::iter::Sum<&'a T>,
+    > NeuralArchitectureSearch<T>
+{
     /// Create a new NAS instance
     pub fn new(config: NASConfig, search_space: ArchitectureSearchSpace) -> Result<Self> {
         let search_strategy = SearchStrategy::new(config.search_strategy, &config)?;
@@ -2524,7 +2530,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
             .population_manager
             .get_best_architectures(1)
             .ok()
-            .and_then(|v| v.first())
+            .and_then(|v| v.first().cloned())
         {
             let performance =
                 T::from(best_arch.performance.optimization_performance).unwrap_or_else(T::zero);
@@ -3192,7 +3198,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         for &logit in logits {
             // Add Gumbel noise: -log(-log(uniform))
             let uniform1 = T::from(rand::rng().random::<f64>().max(1e-10)).unwrap();
-            let uniform2 = T::from(rand::rng().random::<f64>().max(1e-10)).unwrap();
+            let _uniform2 = T::from(rand::rng().random::<f64>().max(1e-10)).unwrap();
             let gumbel_noise = -(-uniform1.ln()).ln();
 
             gumbel_logits.push((logit + gumbel_noise) / temperature);
@@ -3224,7 +3230,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     fn update_differentiable_temperature(&mut self, diff_state: &mut DifferentiableNASState<T>) {
         // Anneal temperature over time
         let min_temp = T::from(0.1).unwrap();
-        let max_temp = T::from(5.0).unwrap();
+        let _max_temp = T::from(5.0).unwrap();
         let decay_rate = T::from(0.99).unwrap();
 
         diff_state.temperature = (diff_state.temperature * decay_rate).max(min_temp);
@@ -3479,7 +3485,8 @@ impl ResourceManager {
         })
     }
 
-    pub fn check_constraints(&self, arch: &ArchitectureSpec) -> Result<bool> {
+    #[allow(dead_code)]
+    pub fn check_constraints(&self, _arch: &ArchitectureSpec) -> Result<bool> {
         Ok(true) // Simplified check
     }
 
@@ -3964,21 +3971,24 @@ impl ArchitectureGenerator {
         })
     }
 
-    pub fn load_architecture(&self, description: &str) -> Result<ArchitectureSpec> {
+    #[allow(dead_code)]
+    pub fn load_architecture(&self, _description: &str) -> Result<ArchitectureSpec> {
         // Simplified - would parse from description
         self.generate_random_architecture()
     }
 
+    #[allow(dead_code)]
     pub fn crossover(
         &self,
-        parent1: &ArchitectureSpec,
-        parent2: &ArchitectureSpec,
+        _parent1: &ArchitectureSpec,
+        _parent2: &ArchitectureSpec,
     ) -> Result<ArchitectureSpec> {
         // Simplified crossover - would implement proper genetic operations
         self.generate_random_architecture()
     }
 
-    pub fn mutate(&self, architecture: &mut ArchitectureSpec) -> Result<MutationRecord> {
+    #[allow(dead_code)]
+    pub fn mutate(&self, _architecture: &mut ArchitectureSpec) -> Result<MutationRecord> {
         Ok(MutationRecord {
             mutation_type: MutationType::ParameterMutation,
             affected_components: vec!["layer_0".to_string()],
@@ -3990,12 +4000,14 @@ impl ArchitectureGenerator {
 /// Search history tracker
 pub struct SearchHistory<T: Float> {
     entries: Vec<ArchitectureCandidate>,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> SearchHistory<T> {
     pub fn new() -> Self {
         Self {
             entries: Vec::new(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -4021,18 +4033,20 @@ impl<T: Float + Default + Clone> SearchHistory<T> {
             .collect()
     }
 
+    #[allow(dead_code)]
     pub fn record_iteration(
         &mut self,
-        iteration: usize,
-        population: &PopulationManager<T>,
+        _iteration: usize,
+        _population: &PopulationManager<T>,
     ) -> Result<()> {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn finalize_search(
         &mut self,
-        total_time: Duration,
-        final_best: &[ArchitectureCandidate],
+        _total_time: Duration,
+        _final_best: &[ArchitectureCandidate],
     ) -> Result<()> {
         Ok(())
     }
@@ -4157,10 +4171,11 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
         })
     }
 
+    #[allow(dead_code)]
     pub fn update_strategy(
         &mut self,
-        population: &PopulationManager<T>,
-        iteration: usize,
+        _population: &PopulationManager<T>,
+        _iteration: usize,
     ) -> Result<()> {
         Ok(())
     }

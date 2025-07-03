@@ -24,10 +24,12 @@ use std::fmt::Debug;
 /// let targets = arr2(&[
 ///     [1.0, 0.0, 0.0],  // First sample, true class is 0
 ///     [0.0, 1.0, 0.0]   // Second sample, true class is 1
+/// ]).into_dyn();
 /// // Forward pass to calculate loss
 /// let loss = ce.forward(&predictions, &targets).unwrap();
 /// // Backward pass to calculate gradients
 /// let gradients = ce.backward(&predictions, &targets).unwrap();
+/// ```
 #[derive(Debug, Clone, Copy)]
 pub struct CrossEntropyLoss {
     /// Small epsilon value to avoid log(0)
@@ -41,9 +43,14 @@ impl CrossEntropyLoss {
     pub fn new(epsilon: f64) -> Self {
         Self { epsilon }
     }
+}
+
 impl Default for CrossEntropyLoss {
     fn default() -> Self {
         Self::new(1e-10)
+    }
+}
+
 impl<F: Float + Debug> Loss<F> for CrossEntropyLoss {
     fn forward(
         &self,
@@ -68,6 +75,7 @@ impl<F: Float + Debug> Loss<F> for CrossEntropyLoss {
         })
         .ok_or_else(|| {
             NeuralError::InferenceError("Could not convert batch size to float".to_string())
+        })?;
         // Calculate cross-entropy loss
         let mut loss = F::zero();
         // If we have a batch (first dimension is batch size)
@@ -86,16 +94,43 @@ impl<F: Float + Debug> Loss<F> for CrossEntropyLoss {
             }
             // Average over batch
             loss = loss / n;
+        } else {
             // Single sample case
             Zip::from(predictions).and(targets).for_each(|&p, &t| {
                 let p_safe = p.max(epsilon).min(F::one() - epsilon);
                 if t > F::zero() {
                     loss = loss - t * p_safe.ln();
+                }
             });
+        }
         Ok(loss)
+    }
     fn backward(
+        &self,
+        predictions: &Array<F, ndarray::IxDyn>,
+        targets: &Array<F, ndarray::IxDyn>,
     ) -> Result<Array<F, ndarray::IxDyn>> {
+        // Check shape compatibility
+        if predictions.shape() != targets.shape() {
+            return Err(NeuralError::InferenceError(format!(
                 "Shape mismatch in CrossEntropy gradient: predictions {:?} vs targets {:?}",
+                predictions.shape(),
+                targets.shape()
+            )));
+        }
+
+        let epsilon = F::from(self.epsilon).ok_or_else(|| {
+            NeuralError::InferenceError("Could not convert epsilon to float".to_string())
+        })?;
+        let n = F::from(if predictions.ndim() > 1 {
+            predictions.shape()[0]
+        } else {
+            1
+        })
+        .ok_or_else(|| {
+            NeuralError::InferenceError("Could not convert batch size to float".to_string())
+        })?;
+
         // For cross-entropy with softmax, the gradient is (p - t)
         let mut gradients = predictions.clone();
         Zip::from(&mut gradients).and(targets).for_each(|grad, &t| {
@@ -104,3 +139,5 @@ impl<F: Float + Debug> Loss<F> for CrossEntropyLoss {
             *grad = (*grad - t) / n;
         });
         Ok(gradients)
+    }
+}

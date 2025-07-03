@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     for &(element_type, type_name) in &element_types {
-        println!("=== {} Elements ===", type_name);
+        println!("=== {type_name} Elements ===");
         println!("Mesh Size\\tNodes\\t\\tL2 Error\\t\\tMax Error\\t\\tRate");
 
         let mut prev_error: Option<f64> = None;
@@ -119,8 +119,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let n_nodes = result.u.len();
 
             println!(
-                "{}x{}\\t\\t{}\\t\\t{:.2e}\\t\\t{:.2e}\\t\\t{:.2}",
-                nx, nx, n_nodes, l2_error, max_error, rate
+                "{nx}x{nx}\\t\\t{n_nodes}\\t\\t{l2_error:.2e}\\t\\t{max_error:.2e}\\t\\t{rate:.2}"
             );
 
             prev_error = Some(l2_error);

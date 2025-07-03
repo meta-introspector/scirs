@@ -39,7 +39,7 @@ impl std::fmt::Display for AcceleratorType {
             AcceleratorType::VPU => write!(f, "VPU"),
             AcceleratorType::TPU => write!(f, "TPU"),
             AcceleratorType::QPU => write!(f, "QPU"),
-            AcceleratorType::Custom(id) => write!(f, "Custom({})", id),
+            AcceleratorType::Custom(id) => write!(f, "Custom({id})"),
         }
     }
 }
@@ -586,7 +586,7 @@ impl SpecializedHardwareManager {
     pub fn initialize_all(&mut self) -> FFTResult<()> {
         for (id, accelerator) in &mut self.accelerators {
             if let Err(e) = accelerator.initialize() {
-                eprintln!("Failed to initialize accelerator {}: {}", id, e);
+                eprintln!("Failed to initialize accelerator {id}: {e}");
             }
         }
         Ok(())
@@ -619,7 +619,7 @@ impl SpecializedHardwareManager {
             .iter()
             .map(|&val| {
                 let val_f64 = NumCast::from(val).ok_or_else(|| {
-                    FFTError::ValueError(format!("Could not convert {:?} to f64", val))
+                    FFTError::ValueError(format!("Could not convert {val:?} to f64"))
                 })?;
                 Ok(Complex64::new(val_f64, 0.0))
             })

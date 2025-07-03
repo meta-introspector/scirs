@@ -65,7 +65,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> SpaiPreconditioner<F> {
             let mut pattern = vec![j];
 
             // Add neighbors within distance 2
-            let start = if j >= 2 { j - 2 } else { 0 };
+            let start = j.saturating_sub(2);
             let end = (j + 3).min(n);
 
             for k in start..end {

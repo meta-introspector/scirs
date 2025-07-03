@@ -154,17 +154,17 @@ pub fn sobel_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
             // Horizontal Sobel kernel: [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]
-            let gx = -1.0 * array[[y - 1, x - 1]]
+            let gx = -array[[y - 1, x - 1]]
                 + 1.0 * array[[y - 1, x + 1]]
                 + -2.0 * array[[y, x - 1]]
                 + 2.0 * array[[y, x + 1]]
-                + -1.0 * array[[y + 1, x - 1]]
+                + -array[[y + 1, x - 1]]
                 + 1.0 * array[[y + 1, x + 1]];
 
             // Vertical Sobel kernel: [[-1, -2, -1], [0, 0, 0], [1, 2, 1]]
-            let gy = -1.0 * array[[y - 1, x - 1]]
+            let gy = -array[[y - 1, x - 1]]
                 + -2.0 * array[[y - 1, x]]
-                + -1.0 * array[[y - 1, x + 1]]
+                + -array[[y - 1, x + 1]]
                 + 1.0 * array[[y + 1, x - 1]]
                 + 2.0 * array[[y + 1, x]]
                 + 1.0 * array[[y + 1, x + 1]];

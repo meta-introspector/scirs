@@ -45,7 +45,7 @@ fn main() {
     // The integral over the unit sphere should be 4π (the surface area)
     let constant_result: f64 = lebedev_integrate(|_, _, _| 1.0, LebedevOrder::Order14).unwrap();
     println!("Integrating f(x,y,z) = 1:");
-    println!("  Result: {:.10}", constant_result);
+    println!("  Result: {constant_result:.10}");
     println!("  Expected: {:.10} (4π)", 4.0 * PI);
     println!("  Error: {:.10e}", (constant_result - 4.0 * PI).abs());
 
@@ -53,7 +53,7 @@ fn main() {
     // Here we use f(x,y,z) = x^2, which should integrate to 4π/3
     let x2_result: f64 = lebedev_integrate(|x, _, _| x * x, LebedevOrder::Order14).unwrap();
     println!("\nIntegrating f(x,y,z) = x²:");
-    println!("  Result: {:.10}", x2_result);
+    println!("  Result: {x2_result:.10}");
     println!("  Expected: {:.10} (4π/3)", 4.0 * PI / 3.0);
     println!("  Error: {:.10e}", (x2_result - 4.0 * PI / 3.0).abs());
 
@@ -62,7 +62,7 @@ fn main() {
     let xyz_result: f64 =
         lebedev_integrate(|x, y, z| x * x * y * y * z * z, LebedevOrder::Order26).unwrap();
     println!("\nIntegrating f(x,y,z) = x² * y² * z²:");
-    println!("  Result: {:.10}", xyz_result);
+    println!("  Result: {xyz_result:.10}");
     println!("  Expected: {:.10} (4π/15)", 4.0 * PI / 15.0);
     println!("  Error: {:.10e}", (xyz_result - 4.0 * PI / 15.0).abs());
 
@@ -75,21 +75,21 @@ fn main() {
     // Y₁₀ ∝ z
     let y10_result: f64 = lebedev_integrate(|_, _, z| z, LebedevOrder::Order14).unwrap();
     println!("Integrating Y₁₀ ∝ z:");
-    println!("  Result: {:.10e}", y10_result);
+    println!("  Result: {y10_result:.10e}");
     println!("  Expected: 0 (by orthogonality)");
 
     // Y₂₀ ∝ (3z² - 1)
     let y20_result: f64 =
         lebedev_integrate(|_, _, z| 3.0 * z * z - 1.0, LebedevOrder::Order14).unwrap();
     println!("\nIntegrating Y₂₀ ∝ (3z² - 1):");
-    println!("  Result: {:.10e}", y20_result);
+    println!("  Result: {y20_result:.10e}");
     println!("  Expected: 0 (by orthogonality)");
 
     // Y₂₂ ∝ (x² - y²)
     let y22_result: f64 =
         lebedev_integrate(|x, y, _| x * x - y * y, LebedevOrder::Order14).unwrap();
     println!("\nIntegrating Y₂₂ ∝ (x² - y²):");
-    println!("  Result: {:.10e}", y22_result);
+    println!("  Result: {y22_result:.10e}");
     println!("  Expected: 0 (by orthogonality)");
 
     // Example 4: Comparison of different Lebedev orders
@@ -102,7 +102,7 @@ fn main() {
     let expected = 3.0 / 5.0 * 4.0 * PI;
 
     println!("Integrating f(x,y,z) = x⁴ + y⁴ + z⁴:");
-    println!("Expected result: {:.10} (3/5 * 4π)", expected);
+    println!("Expected result: {expected:.10} (3/5 * 4π)");
 
     for &order in &[
         LebedevOrder::Order6,
@@ -159,7 +159,7 @@ fn main() {
         "  Observation point: ({}, {}, {})",
         observation_point[0], observation_point[1], observation_point[2]
     );
-    println!("  Calculated potential: {:.10}", potential);
+    println!("  Calculated potential: {potential:.10}");
     println!("  Expected potential: {:.10} (1/2)", 0.5);
     println!(
         "  Relative error: {:.10e}",

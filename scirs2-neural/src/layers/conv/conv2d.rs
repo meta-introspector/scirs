@@ -1,6 +1,6 @@
 //! 2D Convolutional layer implementation (minimal stub)
 
-use super::common::{PaddingMode, validate_conv_params};
+use super::common::{validate_conv_params, PaddingMode};
 use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
 use ndarray::{Array, IxDyn, ScalarOperand};
@@ -35,7 +35,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Conv2D<F> {
 
         let weights_shape = vec![out_channels, in_channels, kernel_size.0, kernel_size.1];
         let weights = Array::zeros(IxDyn(&weights_shape));
-        
+
         let bias = Some(Array::zeros(IxDyn(&[out_channels])));
 
         Ok(Self {
@@ -73,15 +73,31 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Conv
     fn name(&self) -> Option<&str> {
         self.name.as_deref()
     }
+
+    fn backward(
+        &self,
+        _input: &Array<F, ndarray::IxDyn>,
+        grad_output: &Array<F, ndarray::IxDyn>,
+    ) -> Result<Array<F, ndarray::IxDyn>> {
+        // Placeholder implementation - return gradient as-is
+        Ok(grad_output.clone())
+    }
+
+    fn update(&mut self, _learning_rate: F) -> Result<()> {
+        // Placeholder implementation
+        Ok(())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
 }
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F> for Conv2D<F> {
-    fn parameter_count(&self) -> usize {
-        let weight_params = self.weights.len();
-        let bias_params = self.bias.as_ref().map_or(0, |b| b.len());
-        weight_params + bias_params
-    }
-
     fn get_parameters(&self) -> Vec<Array<F, IxDyn>> {
         let mut params = vec![self.weights.clone()];
         if let Some(ref bias) = self.bias {
@@ -108,5 +124,10 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F> for
             }
         }
         Ok(())
+    }
+
+    fn get_gradients(&self) -> Vec<Array<F, ndarray::IxDyn>> {
+        // Placeholder implementation - return empty vector
+        Vec::new()
     }
 }

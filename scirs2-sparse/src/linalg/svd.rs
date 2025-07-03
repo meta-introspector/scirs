@@ -37,10 +37,7 @@ impl SVDMethod {
             "randomized" | "random" => Ok(Self::Randomized),
             "power" => Ok(Self::Power),
             "cross" | "cross_approximation" => Ok(Self::CrossApproximation),
-            _ => Err(SparseError::ValueError(format!(
-                "Unknown SVD method: {}",
-                s
-            ))),
+            _ => Err(SparseError::ValueError(format!("Unknown SVD method: {s}"))),
         }
     }
 }

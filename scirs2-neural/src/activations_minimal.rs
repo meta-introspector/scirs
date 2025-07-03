@@ -9,7 +9,7 @@ use std::fmt::Debug;
 pub trait Activation<F> {
     /// Forward pass of the activation function
     fn forward(&self, input: &Array<F, ndarray::IxDyn>) -> Result<Array<F, ndarray::IxDyn>>;
-    
+
     /// Backward pass of the activation function
     fn backward(
         &self,
@@ -28,7 +28,7 @@ impl GELU {
     pub fn new() -> Self {
         Self { fast: false }
     }
-    
+
     pub fn fast() -> Self {
         Self { fast: true }
     }
@@ -43,13 +43,13 @@ impl Default for GELU {
 impl<F: Float + Debug> Activation<F> for GELU {
     fn forward(&self, input: &Array<F, ndarray::IxDyn>) -> Result<Array<F, ndarray::IxDyn>> {
         let mut output = input.clone();
-        
+
         if self.fast {
             let sqrt_2_over_pi = F::from(0.7978845608028654).unwrap();
             let coeff = F::from(0.044715).unwrap();
             let half = F::from(0.5).unwrap();
             let one = F::one();
-            
+
             Zip::from(&mut output).for_each(|x| {
                 let x3 = *x * *x * *x;
                 let inner = sqrt_2_over_pi * (*x + coeff * x3);
@@ -60,14 +60,14 @@ impl<F: Float + Debug> Activation<F> for GELU {
             let coeff = F::from(0.044715).unwrap();
             let half = F::from(0.5).unwrap();
             let one = F::one();
-            
+
             Zip::from(&mut output).for_each(|x| {
                 let x2 = *x * *x;
                 let inner = sqrt_pi_over_2 * *x * (one + coeff * x2);
                 *x = half * *x * (one + inner.tanh());
             });
         }
-        
+
         Ok(output)
     }
 
@@ -77,14 +77,14 @@ impl<F: Float + Debug> Activation<F> for GELU {
         input: &Array<F, ndarray::IxDyn>,
     ) -> Result<Array<F, ndarray::IxDyn>> {
         let mut grad_input = Array::zeros(grad_output.raw_dim());
-        
+
         if self.fast {
             let sqrt_2_over_pi = F::from(0.7978845608028654).unwrap();
             let coeff = F::from(0.044715).unwrap();
             let half = F::from(0.5).unwrap();
             let one = F::one();
             let three = F::from(3.0).unwrap();
-            
+
             Zip::from(&mut grad_input)
                 .and(grad_output)
                 .and(input)
@@ -104,7 +104,7 @@ impl<F: Float + Debug> Activation<F> for GELU {
             let half = F::from(0.5).unwrap();
             let one = F::one();
             let three = F::from(3.0).unwrap();
-            
+
             Zip::from(&mut grad_input)
                 .and(grad_output)
                 .and(input)
@@ -118,7 +118,7 @@ impl<F: Float + Debug> Activation<F> for GELU {
                     *grad_in = grad_out * dgelu_dx;
                 });
         }
-        
+
         Ok(grad_input)
     }
 }
@@ -154,7 +154,7 @@ impl<F: Float + Debug> Activation<F> for Tanh {
         input: &Array<F, ndarray::IxDyn>,
     ) -> Result<Array<F, ndarray::IxDyn>> {
         let mut grad_input = Array::zeros(grad_output.raw_dim());
-        
+
         Zip::from(&mut grad_input)
             .and(grad_output)
             .and(input)
@@ -201,7 +201,7 @@ impl<F: Float + Debug> Activation<F> for Sigmoid {
     ) -> Result<Array<F, ndarray::IxDyn>> {
         let mut grad_input = Array::zeros(grad_output.raw_dim());
         let one = F::one();
-        
+
         Zip::from(&mut grad_input)
             .and(grad_output)
             .and(input)
@@ -225,7 +225,7 @@ impl ReLU {
     pub fn new() -> Self {
         Self { alpha: 0.0 }
     }
-    
+
     pub fn leaky(alpha: f64) -> Self {
         Self { alpha }
     }
@@ -242,7 +242,7 @@ impl<F: Float + Debug> Activation<F> for ReLU {
         let mut output = input.clone();
         let zero = F::zero();
         let alpha = F::from(self.alpha).unwrap_or(zero);
-        
+
         Zip::from(&mut output).for_each(|x| {
             if *x < zero {
                 *x = alpha * *x;
@@ -260,7 +260,7 @@ impl<F: Float + Debug> Activation<F> for ReLU {
         let zero = F::zero();
         let one = F::one();
         let alpha = F::from(self.alpha).unwrap_or(zero);
-        
+
         Zip::from(&mut grad_input)
             .and(grad_output)
             .and(input)
@@ -294,26 +294,26 @@ impl Default for Softmax {
 impl<F: Float + Debug> Activation<F> for Softmax {
     fn forward(&self, input: &Array<F, ndarray::IxDyn>) -> Result<Array<F, ndarray::IxDyn>> {
         let mut output = input.clone();
-        
+
         // Simple softmax implementation for the last axis
         if self.axis == -1 || self.axis as usize == input.ndim() - 1 {
             // For 1D case or applying to last axis
             let max_val = input.fold(F::neg_infinity(), |acc, &x| if x > acc { x } else { acc });
-            
+
             // Subtract max for numerical stability
             Zip::from(&mut output).for_each(|x| {
                 *x = (*x - max_val).exp();
             });
-            
+
             // Sum all exponentials
             let sum = output.sum();
-            
+
             // Normalize
             Zip::from(&mut output).for_each(|x| {
                 *x = *x / sum;
             });
         }
-        
+
         Ok(output)
     }
 
@@ -325,12 +325,12 @@ impl<F: Float + Debug> Activation<F> for Softmax {
         // Forward pass to get softmax output
         let softmax_output = self.forward(input)?;
         let mut grad_input = Array::zeros(grad_output.raw_dim());
-        
+
         // For softmax: grad = softmax * (grad_out - (softmax * grad_out).sum())
         let sum_grad = Zip::from(&softmax_output)
             .and(grad_output)
             .fold(F::zero(), |acc, &s, &g| acc + s * g);
-        
+
         Zip::from(&mut grad_input)
             .and(&softmax_output)
             .and(grad_output)

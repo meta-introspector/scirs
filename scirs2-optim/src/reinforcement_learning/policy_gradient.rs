@@ -8,7 +8,7 @@ use super::{
     PolicyNetwork, RLOptimizationMetrics, RLOptimizerConfig, RLScheduler, ScheduleType,
     TrajectoryBatch, ValueNetwork,
 };
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;

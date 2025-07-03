@@ -7,6 +7,7 @@
 use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView2};
 use scirs2_sparse::csr_array::CsrArray;
+use scirs2_sparse::SparseArray;
 use std::collections::{HashMap, HashSet};
 
 /// Type alias for the return type of compress_jacobian_pattern
@@ -363,8 +364,8 @@ pub fn reconstruct_hessian_central_diff(
     }
 
     // Create sparse Hessian
-    CsrArray::from_triplets(row_indices, col_indices, values, (n, n))
-        .map_err(|_| OptimizeError::InvalidInput("Failed to create sparse Hessian".to_string()))
+    CsrArray::from_triplets(&row_indices, &col_indices, &values, (n, n), false)
+        .map_err(|_| OptimizeError::ValueError("Failed to create sparse Hessian".to_string()))
 }
 
 /// Simplified version of Hessian reconstruction for single gradient input

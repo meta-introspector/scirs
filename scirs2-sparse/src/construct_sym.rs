@@ -93,8 +93,7 @@ where
             Ok(Box::new(SymCooArray::new(sym_coo)))
         }
         _ => Err(crate::error::SparseError::ValueError(format!(
-            "Unknown format: {}. Supported formats are 'csr' and 'coo'",
-            format
+            "Unknown format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
 }
@@ -263,8 +262,7 @@ where
             Ok(Box::new(SymCooArray::new(sym_coo)))
         }
         _ => Err(crate::error::SparseError::ValueError(format!(
-            "Unknown format: {}. Supported formats are 'csr' and 'coo'",
-            format
+            "Unknown format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
 }
@@ -334,9 +332,7 @@ where
         let expected_len = n - i;
         if diag.len() != expected_len {
             return Err(crate::error::SparseError::ValueError(format!(
-                "Diagonal {} should have length {}, got {}",
-                i,
-                expected_len,
+                "Diagonal {i} should have length {expected_len}, got {}",
                 diag.len()
             )));
         }
@@ -406,8 +402,7 @@ where
             Ok(Box::new(SymCsrArray::new(sym_csr)))
         }
         _ => Err(crate::error::SparseError::ValueError(format!(
-            "Unknown format: {}. Supported formats are 'csr' and 'coo'",
-            format
+            "Unknown format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
 }
@@ -476,10 +471,7 @@ where
 
     // Convert to COO for easier manipulation
     let coo = random_array.to_coo().map_err(|e| {
-        crate::error::SparseError::ValueError(format!(
-            "Failed to convert random array to COO: {}",
-            e
-        ))
+        crate::error::SparseError::ValueError(format!("Failed to convert random array to COO: {e}"))
     })?;
 
     // Extract triplets
@@ -504,8 +496,7 @@ where
             }
         }
         _ => Err(crate::error::SparseError::ValueError(format!(
-            "Unknown format: {}. Supported formats are 'csr' and 'coo'",
-            format
+            "Unknown format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
 }
@@ -649,7 +640,7 @@ mod tests {
             Ok(array) => array,
             Err(e) => {
                 // If it fails, just skip the test
-                println!("Warning: Random generation failed with error: {}", e);
+                println!("Warning: Random generation failed with error: {e}");
                 return; // Skip the test if random generation fails
             }
         };

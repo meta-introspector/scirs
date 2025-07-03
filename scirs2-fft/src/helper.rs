@@ -499,16 +499,13 @@ mod tests {
             // Just assert that the output is valid, not a specific value
             assert!(
                 result >= target,
-                "Result should be >= target: {} >= {}",
-                result,
-                target
+                "Result should be >= target: {result} >= {target}"
             );
 
             // Check that result is a product of allowed prime factors
             assert!(
                 is_fast_length(result, false),
-                "Result {} should be a product of efficient prime factors",
-                result
+                "Result {result} should be a product of efficient prime factors"
             );
         }
 
@@ -518,16 +515,13 @@ mod tests {
             // Just assert that the output is valid, not a specific value
             assert!(
                 result >= target,
-                "Result should be >= target: {} >= {}",
-                result,
-                target
+                "Result should be >= target: {result} >= {target}"
             );
 
             // Check that result is a product of allowed prime factors
             assert!(
                 is_fast_length(result, true),
-                "Result {} should be a product of efficient real prime factors",
-                result
+                "Result {result} should be a product of efficient real prime factors"
             );
         }
     }
@@ -542,16 +536,13 @@ mod tests {
             // Just assert that the output is valid, not a specific value
             assert!(
                 result <= target,
-                "Result should be <= target: {} <= {}",
-                result,
-                target
+                "Result should be <= target: {result} <= {target}"
             );
 
             // Check that result is a product of allowed prime factors
             assert!(
                 is_fast_length(result, false),
-                "Result {} should be a product of efficient prime factors",
-                result
+                "Result {result} should be a product of efficient prime factors"
             );
         }
 
@@ -561,16 +552,13 @@ mod tests {
             // Just assert that the output is valid, not a specific value
             assert!(
                 result <= target,
-                "Result should be <= target: {} <= {}",
-                result,
-                target
+                "Result should be <= target: {result} <= {target}"
             );
 
             // Check that result is a product of efficient real prime factors
             assert!(
                 is_fast_length(result, true),
-                "Result {} should be a product of efficient real prime factors",
-                result
+                "Result {result} should be a product of efficient real prime factors"
             );
         }
     }

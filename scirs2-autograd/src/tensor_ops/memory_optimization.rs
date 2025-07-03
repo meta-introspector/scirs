@@ -647,21 +647,21 @@ impl MemoryOptimizer {
         if !tracking_stats.current_usage.is_empty() {
             println!("Current Memory Usage by Operation:");
             for (op, usage) in &tracking_stats.current_usage {
-                println!("  {}: {} bytes", op, usage);
+                println!("  {op}: {usage} bytes");
             }
         }
 
         if !tracking_stats.peak_usage.is_empty() {
             println!("Peak Memory Usage by Operation:");
             for (op, usage) in &tracking_stats.peak_usage {
-                println!("  {}: {} bytes", op, usage);
+                println!("  {op}: {usage} bytes");
             }
         }
 
         if !tracking_stats.total_allocations.is_empty() {
             println!("Total Allocations by Operation:");
             for (op, total) in &tracking_stats.total_allocations {
-                println!("  {}: {} bytes", op, total);
+                println!("  {op}: {total} bytes");
             }
         }
     }

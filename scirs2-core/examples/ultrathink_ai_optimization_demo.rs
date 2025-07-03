@@ -62,7 +62,7 @@ fn demonstrate_scientific_computing_optimization(
     ];
 
     for (name, context) in scenarios {
-        println!("\n📊 Optimizing: {}", name);
+        println!("\n📊 Optimizing: {name}");
 
         let recommendation = ai_engine.predict_optimal_strategy(&context)?;
 
@@ -85,7 +85,7 @@ fn demonstrate_scientific_computing_optimization(
         );
 
         if let Some(params) = recommendation.optimal_hyperparameters.get("chunk_size") {
-            println!("   Optimal Chunk Size: {:.0}", params);
+            println!("   Optimal Chunk Size: {params:.0}");
         }
 
         if let Some(ref solution) = recommendation.multi_objective_solution {
@@ -112,7 +112,7 @@ fn demonstrate_real_time_learning(ai_engine: &AIOptimizationEngine) -> CoreResul
     let base_context = create_execution_context(10_000, "f64", "vector_operations", 0.4, 0.5);
 
     for iteration in 1..=10 {
-        println!("\nIteration {}/10:", iteration);
+        println!("\nIteration {iteration}/10:");
 
         // Get recommendation
         let recommendation = ai_engine.predict_optimal_strategy(&base_context)?;
@@ -165,7 +165,7 @@ fn demonstrate_multi_objective_optimization(ai_engine: &AIOptimizationEngine) ->
     ];
 
     for (scenario, context) in contexts {
-        println!("\n📊 Scenario: {}", scenario);
+        println!("\n📊 Scenario: {scenario}");
 
         let recommendation = ai_engine.predict_optimal_strategy(&context)?;
 
@@ -182,10 +182,10 @@ fn demonstrate_multi_objective_optimization(ai_engine: &AIOptimizationEngine) ->
 
         println!("   Learning Recommendations:");
         for area in &recommendation.learning_recommendation.focus_areas {
-            println!("     - Focus on: {}", area);
+            println!("     - Focus on: {area}");
         }
         for experiment in &recommendation.learning_recommendation.suggested_experiments {
-            println!("     - Try: {}", experiment);
+            println!("     - Try: {experiment}");
         }
     }
 
@@ -230,7 +230,7 @@ fn demonstrate_analytics_and_insights(ai_engine: &AIOptimizationEngine) -> CoreR
 
     println!("\nStrategy Performance:");
     for (strategy, performance) in &analytics.strategy_performance {
-        println!("   {:?}: {:.3}", strategy, performance);
+        println!("   {strategy:?}: {performance:.3}");
     }
 
     println!("\nKey Insights:");

@@ -1272,8 +1272,7 @@ mod tests {
             let optimizer = QuantumOptimizer::new(2, strategy, Some(10));
             assert!(
                 optimizer.is_ok(),
-                "Failed to create optimizer for strategy {:?}",
-                strategy
+                "Failed to create optimizer for strategy {strategy:?}"
             );
         }
     }

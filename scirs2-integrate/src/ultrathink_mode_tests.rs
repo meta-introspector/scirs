@@ -77,9 +77,9 @@ mod gpu_acceleration_tests {
         assert!(new_h > 0.0, "New step size should be positive");
 
         if accepted {
-            println!("Step accepted with new h = {}", new_h);
+            println!("Step accepted with new h = {new_h}");
         } else {
-            println!("Step rejected, suggested h = {}", new_h);
+            println!("Step rejected, suggested h = {new_h}");
         }
     }
 
@@ -102,7 +102,7 @@ mod gpu_acceleration_tests {
         let mut current_t = t;
 
         for _ in 0..10 {
-            let result = accelerator.ultra_rk4_step(current_t, &current_y.view(), h, &ode_func);
+            let result = accelerator.ultra_rk4_step(current_t, &current_y.view(), h, ode_func);
             assert!(result.is_ok(), "Memory pool test failed at step");
 
             current_y = result.unwrap();
@@ -292,9 +292,7 @@ mod simd_acceleration_tests {
         let diff = (computed - expected).abs();
         assert!(
             diff < 1e-12,
-            "Dot product result incorrect: got {}, expected {}",
-            computed,
-            expected
+            "Dot product result incorrect: got {computed}, expected {expected}"
         );
     }
 
@@ -313,9 +311,7 @@ mod simd_acceleration_tests {
         let diff = (computed - expected).abs();
         assert!(
             diff < 1e-12,
-            "Reduce sum result incorrect: got {}, expected {}",
-            computed,
-            expected
+            "Reduce sum result incorrect: got {computed}, expected {expected}"
         );
     }
 
@@ -345,8 +341,7 @@ mod simd_acceleration_tests {
 
         assert!(
             energy_error < 0.01,
-            "Energy conservation error too large: {}",
-            energy_error
+            "Energy conservation error too large: {energy_error}"
         );
     }
 }
@@ -520,7 +515,7 @@ mod integration_tests {
         // Verify correctness
         assert!((simd_result - scalar_result).abs() < 1e-10);
 
-        println!("SIMD time: {:?}, Scalar time: {:?}", simd_time, scalar_time);
+        println!("SIMD time: {simd_time:?}, Scalar time: {scalar_time:?}");
 
         // Performance improvement is hardware-dependent, so we just verify it doesn't regress significantly
         assert!(

@@ -149,7 +149,7 @@ fn perform_acceleration_comparison(signal: &[f64]) -> FFTResult<()> {
         ..SparseFFTConfig::default()
     };
 
-    println!("  Sparsity level: {}", sparsity);
+    println!("  Sparsity level: {sparsity}");
     println!("  Algorithm: {:?}", config.algorithm);
 
     // 1. CPU Reference Implementation
@@ -212,7 +212,7 @@ fn demonstrate_multi_gpu_processing(signal: &[f64]) -> FFTResult<()> {
     ];
 
     for (strategy_name, _strategy) in &strategies {
-        print_performance_result(&format!("Multi-GPU ({})", strategy_name), || {
+        print_performance_result(&format!("Multi-GPU ({strategy_name})"), || {
             multi_gpu_sparse_fft(signal, sparsity, Some(SparseFFTAlgorithm::Sublinear), None)
         });
     }
@@ -278,7 +278,7 @@ where
             );
         }
         Err(e) => {
-            println!("    ❌ {:<20}: Failed ({})", name, e);
+            println!("    ❌ {name:<20}: Failed ({e})");
         }
     }
 }
@@ -328,7 +328,7 @@ fn display_hardware_capabilities() -> FFTResult<()> {
                 manager.initialize_all().ok();
                 for id in discovered {
                     if let Some(info) = manager.get_accelerator_info(&id) {
-                        println!("  {}:", id);
+                        println!("  {id}:");
                         println!("    Type: {}", info.accelerator_type);
                         println!(
                             "    Peak Performance: {:.1} GFLOPS",
@@ -348,7 +348,7 @@ fn display_hardware_capabilities() -> FFTResult<()> {
             }
         }
         Err(e) => {
-            println!("  Error discovering accelerators: {}", e);
+            println!("  Error discovering accelerators: {e}");
         }
     }
 

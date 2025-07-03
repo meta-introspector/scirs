@@ -114,7 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let t = &result.t;
     let u = &result.u; // Solution values [time, y, x]
 
-    println!("Solution computed in {:.4} seconds", solve_time);
+    println!("Solution computed in {solve_time:.4} seconds");
     println!("ODE solver info: {:?}", result.ode_info);
 
     // Print solution at selected times
@@ -182,14 +182,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let actual_x = max_i as f64 * dx;
     let actual_y = max_j as f64 * dy;
 
-    println!(
-        "Expected final center with pure advection: ({:.2}, {:.2})",
-        expected_x, expected_y
-    );
-    println!(
-        "Actual final maximum location: ({:.2}, {:.2})",
-        actual_x, actual_y
-    );
+    println!("Expected final center with pure advection: ({expected_x:.2}, {expected_y:.2})");
+    println!("Actual final maximum location: ({actual_x:.2}, {actual_y:.2})");
     println!(
         "Difference due to diffusion: ({:.2}, {:.2})",
         actual_x - expected_x,
@@ -197,10 +191,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Print solution profile along x-axis at final time (y=0.5)
-    println!(
-        "\nSolution profile along x-axis (y=0.5) at final time (t = {:.4}):",
-        final_time
-    );
+    println!("\nSolution profile along x-axis (y=0.5) at final time (t = {final_time:.4}):");
     println!("{:<10} {:<15}", "x", "u(x,0.5,t)");
 
     let j = ny / 2; // y=0.5
@@ -208,14 +199,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let x = i as f64 * dx;
         let numerical = u[[nt - 1, j, i]];
 
-        println!("{:<10.4} {:<15.8e}", x, numerical);
+        println!("{x:<10.4} {numerical:<15.8e}");
     }
 
     // Print solution profile along y-axis at final time (x=0.5)
-    println!(
-        "\nSolution profile along y-axis (x=0.5) at final time (t = {:.4}):",
-        final_time
-    );
+    println!("\nSolution profile along y-axis (x=0.5) at final time (t = {final_time:.4}):");
     println!("{:<10} {:<15}", "y", "u(0.5,y,t)");
 
     let i = nx / 2; // x=0.5
@@ -223,7 +211,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let y = j as f64 * dy;
         let numerical = u[[nt - 1, j, i]];
 
-        println!("{:<10.4} {:<15.8e}", y, numerical);
+        println!("{y:<10.4} {numerical:<15.8e}");
     }
 
     // Calculate mass conservation
@@ -253,8 +241,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!("Initial total mass: {:.8}", initial_mass);
-    println!("Final total mass: {:.8}", final_mass);
+    println!("Initial total mass: {initial_mass:.8}");
+    println!("Final total mass: {final_mass:.8}");
     println!(
         "Relative change: {:.2e}%",
         100.0 * (final_mass - initial_mass) / initial_mass

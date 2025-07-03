@@ -286,7 +286,7 @@ impl<F: Float> AutogradOptimizer<F> for SGDOptimizer<'_, F> {
 
     fn initialize(&mut self, parameters: &[&Tensor<F>]) -> Result<(), IntegrationError> {
         for (i, _param) in parameters.iter().enumerate() {
-            let param_id = format!("param_{}", i);
+            let param_id = format!("param_{i}");
             let param_state = ParameterState::new();
             // Skip shape-based initialization to avoid lazy evaluation issues
             self.state.set_param_state(param_id, param_state);
@@ -308,7 +308,7 @@ impl<F: Float> AutogradOptimizer<F> for SGDOptimizer<'_, F> {
         // Collect parameter states first to avoid borrowing conflicts
         let mut param_updates = Vec::new();
         for (i, (param, grad)) in parameters.iter_mut().zip(gradients.iter()).enumerate() {
-            let param_id = format!("param_{}", i);
+            let param_id = format!("param_{i}");
             param_updates.push((param, grad, param_id));
         }
 
@@ -434,7 +434,7 @@ impl<F: Float> AutogradOptimizer<F> for AdamOptimizer<'_, F> {
 
     fn initialize(&mut self, parameters: &[&Tensor<F>]) -> Result<(), IntegrationError> {
         for (i, _param) in parameters.iter().enumerate() {
-            let param_id = format!("param_{}", i);
+            let param_id = format!("param_{i}");
             let param_state = ParameterState::new();
             // Skip shape-based initialization to avoid lazy evaluation issues
             self.state.set_param_state(param_id, param_state);
@@ -454,7 +454,7 @@ impl<F: Float> AutogradOptimizer<F> for AdamOptimizer<'_, F> {
         }
 
         for (i, (param, grad)) in parameters.iter_mut().zip(gradients.iter()).enumerate() {
-            let param_id = format!("param_{}", i);
+            let param_id = format!("param_{i}");
 
             if let Some(param_state) = self.state.param_state.get_mut(&param_id) {
                 Self::update_parameter_adam(&self.config, param, grad, param_state)?;

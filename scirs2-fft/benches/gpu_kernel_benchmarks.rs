@@ -125,7 +125,7 @@ fn bench_window_functions(c: &mut Criterion) {
 
     for window in windows {
         c.bench_with_input(
-            BenchmarkId::new("gpu_kernel_window", format!("{:?}", window)),
+            BenchmarkId::new("gpu_kernel_window", format!("{window:?}")),
             &window,
             |b, window| {
                 b.iter(|| {
@@ -235,7 +235,7 @@ fn bench_gpu_algorithms(c: &mut Criterion) {
 
     for algorithm in algorithms {
         c.bench_with_input(
-            BenchmarkId::new("gpu_algorithm", format!("{:?}", algorithm)),
+            BenchmarkId::new("gpu_algorithm", format!("{algorithm:?}")),
             &algorithm,
             |b, algorithm| {
                 b.iter(|| {

@@ -100,7 +100,7 @@ impl<F: Float + ScalarOperand> Op<F> for CholeskyOp {
         };
 
         let n = l.shape()[0];
-        println!("Cholesky gradient computation for matrix of size: {}", n);
+        println!("Cholesky gradient computation for matrix of size: {n}");
 
         // Initialize gradient matrix
         let mut grad = Array2::<F>::zeros((n, n));
@@ -282,10 +282,7 @@ impl<F: Float> Op<F> for LowerTriangularOp {
         let mut lower = matrix.to_owned();
         let (rows, cols) = (lower.shape()[0], lower.shape()[1]);
 
-        println!(
-            "Processing lower triangular matrix: {} rows x {} columns",
-            rows, cols
-        );
+        println!("Processing lower triangular matrix: {rows} rows x {cols} columns");
 
         // Zero out elements above the specified diagonal
         for i in 0..rows {
@@ -378,10 +375,7 @@ impl<F: Float> Op<F> for UpperTriangularOp {
         let mut upper = matrix.to_owned();
         let (rows, cols) = (upper.shape()[0], upper.shape()[1]);
 
-        println!(
-            "Processing upper triangular matrix: {} rows x {} columns",
-            rows, cols
-        );
+        println!("Processing upper triangular matrix: {rows} rows x {cols} columns");
 
         // Zero out elements below the specified diagonal
         for i in 0..rows {
@@ -475,7 +469,7 @@ impl<F: Float> Op<F> for BandMatrixOp {
         let mut band = matrix.to_owned();
         let (rows, cols) = (band.shape()[0], band.shape()[1]);
 
-        println!("Processing band matrix: {} rows x {} columns", rows, cols);
+        println!("Processing band matrix: {rows} rows x {cols} columns");
 
         // Zero out elements outside the band
         for i in 0..rows {

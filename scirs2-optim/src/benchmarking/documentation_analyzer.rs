@@ -3,7 +3,7 @@
 //! This module provides tools for analyzing API documentation completeness,
 //! verifying examples, and ensuring documentation quality standards.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};

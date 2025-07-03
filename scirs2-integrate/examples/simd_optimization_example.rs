@@ -44,7 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "-".repeat(80));
 
     for &n in &system_sizes {
-        println!("\\n--- System Size: {} equations ---", n);
+        println!("\\n--- System Size: {n} equations ---");
 
         // Create a large system of coupled oscillators
         // d²x_i/dt² + ω_i² * x_i + c * (x_i - x_{i-1}) = 0
@@ -214,7 +214,7 @@ fn demonstrate_simd_operations() -> Result<(), Box<dyn std::error::Error>> {
     let sizes = vec![1000, 10000, 100000];
 
     for &size in &sizes {
-        println!("\\nVector size: {}", size);
+        println!("\\nVector size: {size}");
 
         // Create test vectors
         let a = Array1::from_iter((0..size).map(|i| (i as f64).sin()));
@@ -296,7 +296,7 @@ fn demonstrate_simd_operations() -> Result<(), Box<dyn std::error::Error>> {
             let std_time = start.elapsed();
 
             let speedup = std_time.as_nanos() as f64 / simd_time.as_nanos() as f64;
-            println!("  {:<20}: {:.1}x speedup", op_name, speedup);
+            println!("  {op_name:<20}: {speedup:.1}x speedup");
         }
     }
 
@@ -374,16 +374,12 @@ fn analyze_scalability() -> Result<(), Box<dyn std::error::Error>> {
         #[cfg(feature = "simd")]
         {
             let speedup = std_time.as_nanos() as f64 / simd_time.as_nanos() as f64;
-            println!("Size {}: {:.1}x speedup with SIMD", n, speedup);
+            println!("Size {n}: {speedup:.1}x speedup with SIMD");
         }
 
         #[cfg(not(feature = "simd"))]
         {
-            println!(
-                "Size {}: {:.2} ms (standard method)",
-                n,
-                std_time.as_millis()
-            );
+            println!("Size {n}: {:.2} ms (standard method)", std_time.as_millis());
         }
     }
 

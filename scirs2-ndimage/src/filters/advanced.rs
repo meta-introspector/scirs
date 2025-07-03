@@ -4,7 +4,7 @@
 //! steerable filters, and other specialized convolution operations that are
 //! commonly used in computer vision and signal processing.
 
-use ndarray::{Array, Array2, ArrayView2, Axis, Dimension, Ix2};
+use ndarray::{Array2, ArrayView2, Dimension};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;

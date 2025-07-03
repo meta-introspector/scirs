@@ -69,6 +69,7 @@ impl SyntheticImageDataset {
             images,
             labels,
             num_classes,
+        }
     }
     /// Split dataset into train and validation sets
     fn train_val_split(&self, val_ratio: f32) -> (Self, Self) {
@@ -87,10 +88,16 @@ impl SyntheticImageDataset {
         let val_dataset = Self {
             images: val_images,
             labels: val_labels,
+            num_classes: self.num_classes,
+        };
         (train_dataset, val_dataset)
+    }
+}
+
 impl Dataset<f32> for SyntheticImageDataset {
     fn len(&self) -> usize {
         self.images.shape()[0]
+    }
     fn get(&self, index: usize) -> scirs2_neural::error::Result<(ArrayD<f32>, ArrayD<f32>)> {
         if index >= self.len() {
             return Err(scirs2_neural::error::NeuralError::InvalidArgument(format!(
@@ -98,6 +105,7 @@ impl Dataset<f32> for SyntheticImageDataset {
                 index,
                 self.len()
             )));
+        }
         let (_, channels, height, width) = self.images.dim();
         let mut image = Array4::zeros((1, channels, height, width));
         let mut label = Array::zeros((1, self.num_classes));
@@ -106,14 +114,23 @@ impl Dataset<f32> for SyntheticImageDataset {
             for h in 0..height {
                 for w in 0..width {
                     image[[0, c, h, w]] = self.images[[index, c, h, w]];
+                }
+            }
+        }
         // One-hot encode label
         label[[0, self.labels[index]]] = 1.0;
         Ok((image.into_dyn(), label.into_dyn()))
+    }
+
     fn box_clone(&self) -> Box<dyn Dataset<f32> + Send + Sync> {
         Box::new(self.clone())
+    }
+}
+
 /// Build a CNN model for image classification
 fn build_cnn_model(
     input_channels: usize,
+    num_classes: usize,
     rng: &mut SmallRng,
 ) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
@@ -131,6 +148,8 @@ fn build_cnn_model(
     // Output layer
     model.add(Dense::new(128, num_classes, Some("softmax"), rng)?);
     Ok(model)
+}
+
 /// Create training configuration with modern techniques
 fn create_training_config() -> TrainingConfig {
     TrainingConfig {
@@ -148,6 +167,9 @@ fn create_training_config() -> TrainingConfig {
         gradient_accumulation: None,
         mixed_precision: None,
         num_workers: 0,
+    }
+}
+
 /// Calculate accuracy from predictions and targets
 fn calculate_accuracy(predictions: &ArrayD<f32>, targets: &ArrayD<f32>) -> f32 {
     let batch_size = predictions.shape()[0];
@@ -163,9 +185,19 @@ fn calculate_accuracy(predictions: &ArrayD<f32>, targets: &ArrayD<f32>) -> f32 {
             .map(|(i, _)| i)
             .unwrap_or(0);
         let target_class = target_row
+            .iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .map(|(i, _)| i)
+            .unwrap_or(0);
+
         if pred_class == target_class {
             correct += 1;
+        }
+    }
     correct as f32 / batch_size as f32
+}
+
 /// Main training function
 fn train_image_classifier() -> Result<()> {
     println!("🚀 Starting Image Classification Training Example");
@@ -222,13 +254,16 @@ fn train_image_classifier() -> Result<()> {
     let training_session = trainer.train(&train_dataset, Some(&val_dataset))?;
     println!("\n✅ Training completed!");
     println!("   - Epochs trained: {}", training_session.epochs_trained);
+    println!(
         "   - Final learning rate: {:.6}",
         training_session.initial_learning_rate
+    );
     // Evaluate on validation set
     println!("\n📊 Final Evaluation:");
     let val_metrics = trainer.validate(&val_dataset)?;
     for (metric, value) in &val_metrics {
         println!("   - {}: {:.4}", metric, value);
+    }
     // Test predictions on a few samples
     println!("\n🔍 Sample Predictions:");
     let sample_indices = vec![0, 1, 2, 3, 4];
@@ -239,17 +274,33 @@ fn train_image_classifier() -> Result<()> {
         let (img, target) = val_dataset.get(idx)?;
         batch_images.push(img);
         batch_targets.push(target);
+    }
     // Concatenate into batch arrays
     let sample_images = ndarray::concatenate(
         Axis(0),
         &batch_images.iter().map(|a| a.view()).collect::<Vec<_>>(),
     )?;
     let sample_targets = ndarray::concatenate(
+        Axis(0),
         &batch_targets.iter().map(|a| a.view()).collect::<Vec<_>>(),
+    )?;
     let model = trainer.get_model();
     let predictions = model.forward(&sample_images)?;
     for i in 0..sample_indices.len() {
+        let pred_row = predictions.slice(s![i, ..]);
         let target_row = sample_targets.slice(s![i, ..]);
+        let pred_class = pred_row
+            .iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .map(|(i, _)| i)
+            .unwrap_or(0);
+        let target_class = target_row
+            .iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .map(|(i, _)| i)
+            .unwrap_or(0);
         let confidence = pred_row[pred_class];
         println!(
             "   Sample {}: Predicted={}, Actual={}, Confidence={:.3}",
@@ -258,6 +309,7 @@ fn train_image_classifier() -> Result<()> {
             target_class,
             confidence
         );
+    }
     // Calculate overall accuracy
     let overall_predictions = trainer.get_model().forward(&sample_images)?;
     let accuracy = calculate_accuracy(&overall_predictions, &sample_targets);
@@ -272,12 +324,20 @@ fn train_image_classifier() -> Result<()> {
                 "   - Final loss: {:.4}",
                 loss_history[loss_history.len() - 1]
             );
+        }
+    }
     if let Some(val_loss_history) = session.get_metric("val_loss") {
         if !val_loss_history.is_empty() {
+            println!(
                 "   - Final validation loss: {:.4}",
                 val_loss_history[val_loss_history.len() - 1]
+            );
+        }
+    }
     println!("\n🎉 Image classification example completed successfully!");
     Ok(())
+}
+
 /// Demonstrate data augmentation techniques
 fn demonstrate_augmentation() -> Result<()> {
     println!("\n🔄 Data Augmentation Demo:");
@@ -296,6 +356,9 @@ fn demonstrate_augmentation() -> Result<()> {
     println!("   - Original shape: {:?}", sample_image.shape());
     println!("   - Augmentation functionality available (API being finalized)");
     println!("   ✅ Augmentation framework initialized successfully");
+    Ok(())
+}
+
 /// Demonstrate model saving and loading
 fn demonstrate_model_persistence() -> Result<()> {
     println!("\n💾 Model Persistence Demo:");
@@ -303,9 +366,14 @@ fn demonstrate_model_persistence() -> Result<()> {
     // Create a simple model
     let model = build_cnn_model(3, 5, &mut rng)?;
     // Save model (would save to file in real scenario)
+    println!(
         "   - Model created with {} parameters",
         model.params().iter().map(|p| p.len()).sum::<usize>()
+    );
     println!("   ✅ Model persistence simulation completed");
+    Ok(())
+}
+
 /// Main function
 fn main() -> Result<()> {
     // Main training example
@@ -319,6 +387,9 @@ fn main() -> Result<()> {
     println!("   - Experiment with different architectures");
     println!("   - Add more sophisticated augmentations");
     println!("   - Implement custom loss functions");
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -330,9 +401,15 @@ mod tests {
         let (train, val) = dataset.train_val_split(0.2);
         assert_eq!(train.len(), 80);
         assert_eq!(val.len(), 20);
+    }
+    #[test]
     fn test_model_creation() -> Result<()> {
+        let mut rng = SmallRng::seed_from_u64(42);
         let model = build_cnn_model(3, 10, &mut rng)?;
         assert!(!model.is_empty());
+        Ok(())
+    }
+    #[test]
     fn test_accuracy_calculation() {
         let predictions = Array::from_shape_vec(
             (2, 3),
@@ -344,7 +421,15 @@ mod tests {
         .unwrap()
         .into_dyn();
         let targets = Array::from_shape_vec(
+            (2, 3),
+            vec![
                 0.0, 1.0, 0.0, // Class 1
                 1.0, 0.0, 0.0, // Class 0
+            ],
+        )
+        .unwrap()
+        .into_dyn();
         let accuracy = calculate_accuracy(&predictions, &targets);
         assert_eq!(accuracy, 1.0); // Both predictions are correct
+    }
+}

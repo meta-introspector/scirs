@@ -231,8 +231,7 @@ impl OneHotEncoder {
 
             if n_output_cats == 0 {
                 return Err(TransformError::InvalidInput(format!(
-                    "Feature {} has only one category after dropping",
-                    j
+                    "Feature {j} has only one category after dropping"
                 )));
             }
 
@@ -292,8 +291,7 @@ impl OneHotEncoder {
 
                         if !is_dropped_category && self.handle_unknown == "error" {
                             return Err(TransformError::InvalidInput(format!(
-                                "Found unknown category {} in feature {}",
-                                value, j
+                                "Found unknown category {value} in feature {j}"
                             )));
                         }
                         // If it's a dropped category or handle_unknown == "ignore", we don't add anything (sparse)
@@ -329,8 +327,7 @@ impl OneHotEncoder {
 
                         if !is_dropped_category && self.handle_unknown == "error" {
                             return Err(TransformError::InvalidInput(format!(
-                                "Found unknown category {} in feature {}",
-                                value, j
+                                "Found unknown category {value} in feature {j}"
                             )));
                         }
                         // If it's a dropped category or handle_unknown == "ignore", we just leave it as 0
@@ -418,10 +415,10 @@ impl OneHotEncoder {
                 if j < names.len() {
                     names[j].clone()
                 } else {
-                    format!("x{}", j)
+                    format!("x{j}")
                 }
             } else {
-                format!("x{}", j)
+                format!("x{j}")
             };
 
             let n_cats = feature_categories.len();
@@ -438,7 +435,7 @@ impl OneHotEncoder {
                 .skip(start_idx)
                 .take(n_output_cats)
             {
-                feature_names.push(format!("{}_cat_{}", feature_name, category));
+                feature_names.push(format!("{feature_name}_cat_{category}"));
             }
         }
 
@@ -1235,8 +1232,7 @@ impl BinaryEncoder {
                     match self.handle_unknown.as_str() {
                         "error" => {
                             return Err(TransformError::InvalidInput(format!(
-                                "Unknown category {} in feature {}",
-                                category, j
+                                "Unknown category {category} in feature {j}"
                             )));
                         }
                         "ignore" => {
@@ -1461,8 +1457,7 @@ impl FrequencyEncoder {
                     match self.handle_unknown.as_str() {
                         "error" => {
                             return Err(TransformError::InvalidInput(format!(
-                                "Unknown category {} in feature {}",
-                                category, j
+                                "Unknown category {category} in feature {j}"
                             )));
                         }
                         "ignore" => {
@@ -1733,8 +1728,7 @@ impl WOEEncoder {
                     match self.handle_unknown.as_str() {
                         "error" => {
                             return Err(TransformError::InvalidInput(format!(
-                                "Unknown category {} in feature {}",
-                                category, j
+                                "Unknown category {category} in feature {j}"
                             )));
                         }
                         "global_woe" => {
@@ -2509,7 +2503,7 @@ mod tests {
         let mut encoder_sparse = OneHotEncoder::new(None, "error", true).unwrap();
         let result_sparse = encoder_sparse.fit_transform(&data).unwrap();
 
-        match result_sparse {
+        match &result_sparse {
             EncodedOutput::Sparse(sparse) => {
                 assert_eq!(sparse.shape, (4, 5)); // 3 categories + 2 categories = 5 features
                 assert_eq!(sparse.nnz(), 8); // 4 samples * 2 features = 8 non-zeros

@@ -84,7 +84,7 @@ impl CloudStorageProvider for MockS3Provider {
 
         println!("📤 S3 Upload completed:");
         println!("   - Object: {}", request.key);
-        println!("   - Size: {} bytes", upload_size);
+        println!("   - Size: {upload_size} bytes");
         println!("   - Upload time: {:.2} ms", processing_time.as_millis());
 
         Ok(UploadResponse {
@@ -270,7 +270,7 @@ impl CloudStorageProvider for MockGCSProvider {
 
         println!("📤 GCS Upload completed:");
         println!("   - Object: {}", request.key);
-        println!("   - Size: {} bytes", upload_size);
+        println!("   - Size: {upload_size} bytes");
         println!("   - Upload time: {:.2} ms", processing_time.as_millis());
 
         Ok(UploadResponse {
@@ -749,7 +749,7 @@ impl UltrathinkCloudStorageDemo {
                     }
                 }
                 Err(e) => {
-                    println!("   Stream error: {}", e);
+                    println!("   Stream error: {e}");
                     break;
                 }
             }
@@ -759,7 +759,7 @@ impl UltrathinkCloudStorageDemo {
         stream.close()?;
 
         println!("📊 Streaming Performance:");
-        println!("   - Total data read: {} bytes", total_read);
+        println!("   - Total data read: {total_read} bytes");
         println!("   - Streaming time: {:.2} ms", stream_duration.as_millis());
         println!(
             "   - Effective throughput: {:.1} MB/s",
@@ -872,7 +872,7 @@ impl UltrathinkCloudStorageDemo {
             total_data_size += size;
 
             let upload_request = UploadRequest {
-                key: format!("performance-test/{}", filename),
+                key: format!("performance-test/{filename}"),
                 bucket: "ultrathink-performance".to_string(),
                 data: test_data,
                 content_type: Some("application/octet-stream".to_string()),
@@ -1093,7 +1093,7 @@ impl UltrathinkCloudStorageDemo {
 
         println!("\n💡 Recommendations for Production:");
         for recommendation in &analytics.recommendations {
-            println!("   • {}", recommendation);
+            println!("   • {recommendation}");
         }
 
         println!("\n🚀 Ultrathink Cloud Storage Framework Demo Complete!");

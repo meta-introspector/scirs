@@ -472,7 +472,7 @@ impl PatternExtractor {
                 // Add numbered groups
                 for i in 1..caps.len() {
                     if let Some(group) = caps.get(i) {
-                        groups.insert(format!("group{}", i), group.as_str().to_string());
+                        groups.insert(format!("group{i}"), group.as_str().to_string());
                     }
                 }
 
@@ -697,7 +697,7 @@ impl TemporalExtractor {
             for mat in pattern.find_iter(text) {
                 entities.push(Entity {
                     text: mat.as_str().to_string(),
-                    entity_type: EntityType::Custom(format!("temporal_{}", pattern_type)),
+                    entity_type: EntityType::Custom(format!("temporal_{pattern_type}")),
                     start: mat.start(),
                     end: mat.end(),
                     confidence: 0.85,

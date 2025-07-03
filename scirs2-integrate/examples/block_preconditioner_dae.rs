@@ -89,13 +89,13 @@ fn main() {
             println!("  Success: {}", res.success);
             println!("  Number of steps: {}", res.n_steps);
             println!("  Number of Jacobian evaluations: {}", res.n_jac);
-            println!("  Time taken: {:?}", duration1);
+            println!("  Time taken: {duration1:?}");
             if let Some(msg) = &res.message {
-                println!("  Message: {}", msg);
+                println!("  Message: {msg}");
             }
         }
         Err(e) => {
-            println!("  Error: {:?}", e);
+            println!("  Error: {e:?}");
         }
     }
     println!();
@@ -118,13 +118,13 @@ fn main() {
             println!("  Success: {}", res.success);
             println!("  Number of steps: {}", res.n_steps);
             println!("  Number of Jacobian evaluations: {}", res.n_jac);
-            println!("  Time taken: {:?}", duration2);
+            println!("  Time taken: {duration2:?}");
             if let Some(msg) = &res.message {
-                println!("  Message: {}", msg);
+                println!("  Message: {msg}");
             }
         }
         Err(e) => {
-            println!("  Error: {:?}", e);
+            println!("  Error: {e:?}");
         }
     }
     println!();
@@ -150,8 +150,8 @@ fn main() {
     // Output summary
     println!("Performance Summary:");
     println!("------------------");
-    println!("No preconditioning:        {:?}", duration1);
-    println!("Diagonal preconditioning:  {:?}", duration2);
+    println!("No preconditioning:        {duration1:?}");
+    println!("Diagonal preconditioning:  {duration2:?}");
     println!(
         "Block preconditioning:     ~{:?} (estimated)",
         duration2 / 2

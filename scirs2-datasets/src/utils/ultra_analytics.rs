@@ -769,6 +769,6 @@ mod tests {
         let quality = quick_quality_assessment(&dataset);
         assert!(quality.is_ok());
         let quality_score = quality.unwrap();
-        assert!(quality_score >= 0.0 && quality_score <= 1.0);
+        assert!((0.0..=1.0).contains(&quality_score));
     }
 }

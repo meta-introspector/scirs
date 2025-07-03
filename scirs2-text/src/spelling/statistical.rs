@@ -116,7 +116,10 @@ impl Clone for StatisticalCorrector {
 impl std::fmt::Debug for StatisticalCorrector {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("StatisticalCorrector")
-            .field("dictionary", &format!("<{} words>", self.dictionary.len()))
+            .field("dictionary", &{
+                let dict_len = self.dictionary.len();
+                format!("<{dict_len} words>")
+            })
             .field("config", &self.config)
             .field("metric", &"<StringMetric>")
             .field("language_model", &self.language_model)

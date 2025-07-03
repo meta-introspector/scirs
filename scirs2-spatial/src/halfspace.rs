@@ -1080,10 +1080,10 @@ mod tests {
         // These halfspaces have no intersection
         let result = HalfspaceIntersection::new(&halfspaces, None);
         // This should either fail or return empty intersection
-        match result {
-            Ok(intersection) => assert!(!intersection.is_feasible()),
-            Err(_) => {} // Also acceptable
+        if let Ok(intersection) = result {
+            assert!(!intersection.is_feasible())
         }
+        // Also acceptable if Err
     }
 
     #[test]

@@ -406,10 +406,10 @@ pub fn wright_omega_optimized(z: Complex64, tol: Option<f64>) -> SpecialResult<C
         }
 
         // Try the real version if z is almost real
-        match wright_omega_real_optimized(z.re, Some(tolerance)) {
-            Ok(w_real) => return Ok(Complex64::new(w_real, 0.0)),
-            Err(_) => {} // Continue with complex calculation
+        if let Ok(w_real) = wright_omega_real_optimized(z.re, Some(tolerance)) {
+            return Ok(Complex64::new(w_real, 0.0));
         }
+        // Continue with complex calculation
     }
 
     // Optimized initial guess based on domain knowledge
@@ -490,18 +490,18 @@ pub fn wright_omega_optimized(z: Complex64, tol: Option<f64>) -> SpecialResult<C
 fn wright_omega_fallback_methods(z: Complex64, tolerance: f64) -> SpecialResult<Complex64> {
     // Method 1: Series expansion for small |z|
     if z.norm() < 0.5 {
-        match wright_omega_series_expansion(z, tolerance) {
-            Ok(w) => return Ok(w),
-            Err(_) => {} // Continue to next method
+        if let Ok(w) = wright_omega_series_expansion(z, tolerance) {
+            return Ok(w);
         }
+        // Continue to next method
     }
 
     // Method 2: Asymptotic expansion for large |z|
     if z.norm() > 10.0 {
-        match wright_omega_asymptotic(z, tolerance) {
-            Ok(w) => return Ok(w),
-            Err(_) => {} // Continue to next method
+        if let Ok(w) = wright_omega_asymptotic(z, tolerance) {
+            return Ok(w);
         }
+        // Continue to next method
     }
 
     // Method 3: Multiple initial guesses with enhanced Newton method
@@ -515,18 +515,18 @@ fn wright_omega_fallback_methods(z: Complex64, tolerance: f64) -> SpecialResult<
     ];
 
     for initial_guess in initial_guesses {
-        match wright_omega_enhanced_newton(z, initial_guess, tolerance) {
-            Ok(w) => return Ok(w),
-            Err(_) => {} // Continue with next guess
+        if let Ok(w) = wright_omega_enhanced_newton(z, initial_guess, tolerance) {
+            return Ok(w);
         }
+        // Continue with next guess
     }
 
     // Method 4: Branch-aware computation for values near singularities
     if (z.re + 1.0).abs() < 2.0 && z.im.abs() < 2.0 * PI {
-        match wright_omega_branch_aware(z, tolerance) {
-            Ok(w) => return Ok(w),
-            Err(_) => {} // Continue
+        if let Ok(w) = wright_omega_branch_aware(z, tolerance) {
+            return Ok(w);
         }
+        // Continue
     }
 
     // Method 5: Last resort - very relaxed tolerance with simple approximation

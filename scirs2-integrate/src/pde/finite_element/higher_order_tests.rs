@@ -145,8 +145,7 @@ mod tests {
 
             assert!(
                 solver_result.is_ok(),
-                "Failed to create solver for {:?}",
-                element_type
+                "Failed to create solver for {element_type:?}"
             );
         }
     }

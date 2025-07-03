@@ -6971,7 +6971,7 @@ pub mod ml_bifurcation_prediction {
             assert!(features.is_ok());
 
             let feature_vec = features.unwrap();
-            assert!(feature_vec.len() > 0);
+            assert!(!feature_vec.is_empty());
         }
 
         #[test]

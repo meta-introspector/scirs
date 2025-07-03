@@ -43,11 +43,16 @@ fn create_xor_dataset() -> (Array2<f32>, Array2<f32>) {
     // XOR truth table outputs
     let y = Array2::from_shape_vec(
         (4, 1),
+        vec![
             0.0, // 0 XOR 0 = 0
             1.0, // 0 XOR 1 = 1
             1.0, // 1 XOR 0 = 1
             0.0, // 1 XOR 1 = 0
+        ],
+    )
+    .unwrap();
     (x, y)
+}
 // Train the model on XOR problem
 fn train_model(
     model: &mut Sequential<f32>,
@@ -73,6 +78,8 @@ fn train_model(
     }
     println!("Training completed.");
     Ok(())
+}
+
 // Evaluate model performance on XOR problem
 fn evaluate_model(model: &Sequential<f32>, x: &Array2<f32>, y: &Array2<f32>) -> Result<f32> {
     let predictions = model.forward(&x.clone().into_dyn())?;
@@ -123,6 +130,10 @@ fn create_noisy_xor_dataset(
         x[[i, 1]] = x2 + rng.random_range(-noise_level / 2.0..noise_level / 2.0);
         // Standard XOR calculation for target
         y[[i, 0]] = (x1 as i32 ^ x2 as i32) as f32;
+    }
+    (x, y)
+}
+
 fn main() -> Result<()> {
     println!("Improved Model Serialization and Loading Example");
     println!("===============================================\n");
@@ -183,10 +194,16 @@ fn main() -> Result<()> {
     let msgpack_size = std::fs::metadata(msgpack_path)?.len();
     println!("\nSerialization Format Comparison:");
     println!("  JSON:       {} bytes", json_size);
+    println!(
         "  CBOR:       {} bytes ({:.1}% of JSON)",
         cbor_size,
         (cbor_size as f64 / json_size as f64) * 100.0
+    );
+    println!(
         "  MessagePack: {} bytes ({:.1}% of JSON)",
         msgpack_size,
         (msgpack_size as f64 / json_size as f64) * 100.0
+    );
     println!("\nModel serialization and loading example completed successfully!");
+    Ok(())
+}

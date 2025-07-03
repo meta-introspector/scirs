@@ -24,7 +24,7 @@ impl<F: Float> Op<F> for MatrixInverseOp {
         let n = shape[0];
 
         // Debug information
-        println!("Computing matrix inverse of shape: {:?}", shape);
+        println!("Computing matrix inverse of shape: {shape:?}");
 
         let input_2d = input_array
             .into_dimensionality::<Ix2>()
@@ -35,7 +35,7 @@ impl<F: Float> Op<F> for MatrixInverseOp {
 
         // Verify the shape of the result
         let result_shape = inv.shape();
-        println!("Matrix inverse result shape: {:?}", result_shape);
+        println!("Matrix inverse result shape: {result_shape:?}");
 
         // No need to reshape, just use the computed inverse directly
         // but make a deep copy of it to ensure we have a clean array
@@ -218,9 +218,9 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for GeneralDeterminantOp {
             .into_dimensionality::<Ix2>()
             .map_err(|_| OpError::IncompatibleShape("Failed to convert to 2D".into()))?;
 
-        println!("Computing determinant for matrix of shape: {:?}", shape);
+        println!("Computing determinant for matrix of shape: {shape:?}");
         let det = compute_determinant_lu(&input_2d)?;
-        println!("Determinant result: {}", det);
+        println!("Determinant result: {det}");
 
         // Create a scalar (0-dimensional) array with the determinant value
         // Use explicit arr0 to ensure we get a 0-dimensional array
@@ -274,7 +274,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for GeneralDeterminantOp {
         // Access scalar values
         let grad_scalar = grad_output_array[[0]];
         let det = output_array[[0]];
-        println!("Determinant: {}, Gradient scale: {}", det, grad_scalar);
+        println!("Determinant: {det}, Gradient scale: {grad_scalar}");
 
         // Gradient of determinant: det(A) * A^{-T}
         if det.abs() > F::epsilon() {

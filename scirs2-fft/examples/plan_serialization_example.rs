@@ -8,14 +8,14 @@ fn main() {
 
     // Create a temporary file for plan database
     let db_path = std::env::temp_dir().join("fft_plan_db.json");
-    println!("Using plan database at: {:?}", db_path);
+    println!("Using plan database at: {db_path:?}");
 
     // Create plan serialization manager
     let manager = PlanSerializationManager::new(&db_path);
 
     // Detect and display architecture information
     let arch_id = PlanSerializationManager::detect_arch_id();
-    println!("Detected architecture: {}", arch_id);
+    println!("Detected architecture: {arch_id}");
 
     // Benchmark creation of FFT plans for various sizes
     benchmark_plan_creation(&manager);
@@ -24,10 +24,7 @@ fn main() {
     compare_performance(&manager);
 
     // Clean up
-    println!(
-        "\nNote: The plan database remains at {:?} for future use.",
-        db_path
-    );
+    println!("\nNote: The plan database remains at {db_path:?} for future use.");
     println!("You can remove it if no longer needed.");
 }
 
@@ -50,7 +47,7 @@ fn benchmark_plan_creation(manager: &PlanSerializationManager) {
 
         // Record this plan usage
         if let Err(e) = manager.record_plan_usage(&plan_info, creation_time_ns) {
-            eprintln!("Error recording plan usage: {}", e);
+            eprintln!("Error recording plan usage: {e}");
         }
 
         println!(
@@ -63,7 +60,7 @@ fn benchmark_plan_creation(manager: &PlanSerializationManager) {
 
     // Save database for future runs
     if let Err(e) = manager.save_database() {
-        eprintln!("Error saving plan database: {}", e);
+        eprintln!("Error saving plan database: {e}");
     }
 }
 
@@ -102,7 +99,7 @@ fn compare_performance(manager: &PlanSerializationManager) {
         "Plan creation time: {:?}",
         Duration::from_nanos(creation_time)
     );
-    println!("Total execution time: {:?}", total_time);
+    println!("Total execution time: {total_time:?}");
 
     // Second run (should use cached plan info)
     println!("\nSecond run (should use cached plan knowledge):");
@@ -120,10 +117,10 @@ fn compare_performance(manager: &PlanSerializationManager) {
         "Plan creation time: {:?}",
         Duration::from_nanos(creation_time)
     );
-    println!("Total execution time: {:?}", total_time);
+    println!("Total execution time: {total_time:?}");
 
     // Save database for future runs
     if let Err(e) = manager.save_database() {
-        eprintln!("Error saving plan database: {}", e);
+        eprintln!("Error saving plan database: {e}");
     }
 }

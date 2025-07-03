@@ -7,7 +7,9 @@
 use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_fft::{
-    create_ultrathink_coordinator, FftAlgorithmType, OptimizationStrategy, UltrathinkFftConfig,
+    create_ultrathink_fft_coordinator,
+    ultrathink_coordinator::{FftAlgorithmType, MemoryAllocationStrategy},
+    UltrathinkFftConfig,
 };
 use std::f64::consts::PI;
 use std::time::Instant;
@@ -18,8 +20,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create ultrathink coordinator with custom configuration
     let mut config = UltrathinkFftConfig::default();
-    config.enable_algorithm_selection = true;
-    config.enable_adaptive_tuning = true;
+    config.enable_method_selection = true;
+    config.enable_adaptive_optimization = true;
     config.enable_quantum_optimization = true;
     config.enable_knowledge_transfer = true;
     config.max_memory_mb = 8192; // 8GB
@@ -28,9 +30,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("📋 Configuration:");
     println!(
         "  - Algorithm Selection: {}",
-        config.enable_algorithm_selection
+        config.enable_method_selection
     );
-    println!("  - Adaptive Tuning: {}", config.enable_adaptive_tuning);
+    println!(
+        "  - Adaptive Tuning: {}",
+        config.enable_adaptive_optimization
+    );
     println!(
         "  - Quantum Optimization: {}",
         config.enable_quantum_optimization
@@ -42,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - Max Memory: {} MB", config.max_memory_mb);
     println!();
 
-    let coordinator = create_ultrathink_coordinator::<f64>()?;
+    let coordinator = create_ultrathink_fft_coordinator::<f64>()?;
     println!("✅ Ultrathink FFT Coordinator created successfully");
     println!();
 
@@ -146,7 +151,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let start_time = Instant::now();
-    let sparse_result =
+    let _sparse_result =
         coordinator.execute_optimized_fft(&sparse_signal, &sparse_recommendation)?;
     let sparse_execution_time = start_time.elapsed();
 
@@ -270,7 +275,7 @@ fn create_sparse_signal(length: usize, sparsity: f64) -> Array1<Complex64> {
         (0..length)
             .map(|_| {
                 if rng.random::<f64>() < sparsity {
-                    let magnitude = rng.random_range(-1.0..1.0);
+                    let magnitude: f64 = rng.random_range(-1.0..1.0);
                     let phase = rng.random_range(0.0..2.0 * PI);
                     Complex64::from_polar(magnitude.abs(), phase)
                 } else {
@@ -286,10 +291,10 @@ fn estimate_performance_improvement(recommendation: &scirs2_fft::FftRecommendati
     // This is a mock implementation - in reality, this would be based on
     // benchmark data and algorithm characteristics
     match recommendation.recommended_algorithm {
-        scirs2_fft::FftAlgorithmType::ChirpZTransform => 2.5,
-        scirs2_fft::FftAlgorithmType::BluesteinAlgorithm => 2.0,
-        scirs2_fft::FftAlgorithmType::GpuAcceleratedFft => 10.0,
-        scirs2_fft::FftAlgorithmType::QuantumInspiredFft => 5.0,
+        FftAlgorithmType::ChirpZTransform => 2.5,
+        FftAlgorithmType::BluesteinAlgorithm => 2.0,
+        FftAlgorithmType::GpuAcceleratedFft => 10.0,
+        FftAlgorithmType::QuantumInspiredFft => 5.0,
         _ => 1.2,
     }
 }
@@ -297,11 +302,11 @@ fn estimate_performance_improvement(recommendation: &scirs2_fft::FftRecommendati
 /// Estimate memory efficiency gain from recommendation
 fn estimate_memory_efficiency(recommendation: &scirs2_fft::FftRecommendation) -> f64 {
     // Mock implementation based on memory strategy
-    match recommendation.memory_strategy {
-        scirs2_fft::MemoryStrategy::Conservative => 3.0,
-        scirs2_fft::MemoryStrategy::Adaptive { .. } => 2.5,
-        scirs2_fft::MemoryStrategy::Balanced => 1.8,
-        scirs2_fft::MemoryStrategy::Aggressive => 1.2,
+    match recommendation.memory_strategy.allocation_strategy {
+        MemoryAllocationStrategy::Conservative => 3.0,
+        MemoryAllocationStrategy::Adaptive => 2.5,
+        MemoryAllocationStrategy::Aggressive => 1.2,
+        MemoryAllocationStrategy::Custom { .. } => 2.0,
     }
 }
 
@@ -411,13 +416,13 @@ fn demonstrate_quantum_optimization(
         "  Quantum Features Detected: {}",
         matches!(
             recommendation.recommended_algorithm,
-            scirs2_fft::FftAlgorithmType::QuantumInspiredFft
+            FftAlgorithmType::QuantumInspiredFft
         )
     );
 
     if matches!(
         recommendation.recommended_algorithm,
-        scirs2_fft::FftAlgorithmType::QuantumInspiredFft
+        FftAlgorithmType::QuantumInspiredFft
     ) {
         println!("✅ Quantum-inspired optimization activated");
         println!("  - Utilizing quantum superposition principles for parallel exploration");
@@ -517,7 +522,7 @@ mod tests {
 
     #[test]
     fn test_ultrathink_coordinator_creation() {
-        let coordinator = create_ultrathink_coordinator::<f64>();
+        let coordinator = create_ultrathink_fft_coordinator::<f64>();
         assert!(coordinator.is_ok());
     }
 }

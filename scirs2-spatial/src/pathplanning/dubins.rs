@@ -728,14 +728,13 @@ mod tests {
             if let Ok(path) = path_result {
                 assert!(
                     path.length() > 0.0,
-                    "Path length should be positive for goal {:?}",
-                    goal
+                    "Path length should be positive for goal {goal:?}"
                 );
                 assert_eq!(path.segments().len(), 3);
             } else {
                 // Some configurations might not have valid Dubins paths with the given turning radius
                 // This is acceptable behavior
-                println!("No valid path found for goal {:?}", goal);
+                println!("No valid path found for goal {goal:?}");
             }
         }
     }
@@ -750,15 +749,13 @@ mod tests {
         let normalized_3pi = DubinsPlanner::normalize_angle(3.0 * PI);
         assert!(
             (normalized_3pi - PI).abs() < 1e-10 || (normalized_3pi - (-PI)).abs() < 1e-10,
-            "Expected ±π, got {}",
-            normalized_3pi
+            "Expected ±π, got {normalized_3pi}"
         );
 
         let normalized_neg3pi = DubinsPlanner::normalize_angle(-3.0 * PI);
         assert!(
             (normalized_neg3pi - PI).abs() < 1e-10 || (normalized_neg3pi - (-PI)).abs() < 1e-10,
-            "Expected ±π, got {}",
-            normalized_neg3pi
+            "Expected ±π, got {normalized_neg3pi}"
         );
     }
 

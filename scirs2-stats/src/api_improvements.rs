@@ -6,7 +6,6 @@ use crate::error::StatsResult;
 use crate::tests::ttest::Alternative;
 use ndarray::{ArrayBase, Data, Ix1};
 use num_traits::Float;
-use scirs2_core::validation::check_not_empty;
 
 /// Standard correlation result that includes both coefficient and p-value
 #[derive(Debug, Clone, Copy)]
@@ -165,9 +164,12 @@ impl<F: Float> StatsBuilder<F> {
 
     /// Set the data with validation
     pub fn data(mut self, data: Vec<F>) -> StatsResult<Self> {
-        // Use scirs2-core validation
-        check_not_empty(&data, "data")
-            .map_err(|_| crate::error::StatsError::invalid_argument("Data cannot be empty"))?;
+        // Check if data is empty
+        if data.is_empty() {
+            return Err(crate::error::StatsError::invalid_argument(
+                "Data cannot be empty",
+            ));
+        }
 
         self.data = Some(data);
         Ok(self)
@@ -206,8 +208,11 @@ impl<F: Float> StatsBuilder<F> {
         }
 
         if let Some(ref data) = self.data {
-            check_not_empty(data, "data")
-                .map_err(|_| crate::error::StatsError::invalid_argument("Data cannot be empty"))?;
+            if data.is_empty() {
+                return Err(crate::error::StatsError::invalid_argument(
+                    "Data cannot be empty",
+                ));
+            }
         }
 
         Ok(())

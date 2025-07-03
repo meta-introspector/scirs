@@ -77,7 +77,7 @@ pub fn make_classification(
 
     for i in 0..n_centroids {
         for j in 0..n_informative {
-            centroids[[i, j]] = scale * rng.gen_range(-1.0f64..1.0f64);
+            centroids[[i, j]] = scale * rng.random_range(-1.0f64..1.0f64);
         }
     }
 
@@ -135,17 +135,16 @@ pub fn make_classification(
     let mut dataset = Dataset::new(data, Some(target));
 
     // Create feature names
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{}", i)).collect();
+    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     // Create class names
-    let class_names: Vec<String> = (0..n_classes).map(|i| format!("class_{}", i)).collect();
+    let class_names: Vec<String> = (0..n_classes).map(|i| format!("class_{i}")).collect();
 
     dataset = dataset
         .with_feature_names(feature_names)
         .with_target_names(class_names)
         .with_description(format!(
-            "Synthetic classification dataset with {} classes and {} features",
-            n_classes, n_features
+            "Synthetic classification dataset with {n_classes} classes and {n_features} features"
         ));
 
     Ok(dataset)
@@ -237,7 +236,7 @@ pub fn make_regression(
     let mut dataset = Dataset::new(data, Some(target));
 
     // Create feature names
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{}", i)).collect();
+    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     dataset = dataset
         .with_feature_names(feature_names)
@@ -292,18 +291,18 @@ pub fn make_time_series(
 
     for feature in 0..n_features {
         let trend_coef = if trend {
-            rng.gen_range(0.01f64..0.1f64)
+            rng.random_range(0.01f64..0.1f64)
         } else {
             0.0
         };
-        let seasonality_period = rng.gen_range(10..=50) as f64;
+        let seasonality_period = rng.random_range(10..=50) as f64;
         let seasonality_amplitude = if seasonality {
-            rng.gen_range(1.0f64..5.0f64)
+            rng.random_range(1.0f64..5.0f64)
         } else {
             0.0
         };
 
-        let base_value = rng.gen_range(-10.0f64..10.0f64);
+        let base_value = rng.random_range(-10.0f64..10.0f64);
 
         for i in 0..n_samples {
             let t = i as f64;
@@ -338,7 +337,7 @@ pub fn make_time_series(
     let mut dataset = Dataset::new(data, None);
 
     // Create feature names
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{}", i)).collect();
+    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     dataset = dataset
         .with_feature_names(feature_names)
@@ -400,7 +399,7 @@ pub fn make_blobs(
 
     for i in 0..centers {
         for j in 0..n_features {
-            cluster_centers[[i, j]] = rng.gen_range(-center_box..=center_box);
+            cluster_centers[[i, j]] = rng.random_range(-center_box..=center_box);
         }
     }
 
@@ -437,7 +436,7 @@ pub fn make_blobs(
     let mut dataset = Dataset::new(data, Some(target));
 
     // Create feature names
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{}", i)).collect();
+    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     dataset = dataset
         .with_feature_names(feature_names)
@@ -531,8 +530,8 @@ pub fn make_spirals(
     let mut dataset = Dataset::new(data, Some(target));
     dataset = dataset
         .with_feature_names(vec!["x".to_string(), "y".to_string()])
-        .with_target_names((0..n_spirals).map(|i| format!("spiral_{}", i)).collect())
-        .with_description(format!("Spiral dataset with {} spirals", n_spirals))
+        .with_target_names((0..n_spirals).map(|i| format!("spiral_{i}")).collect())
+        .with_description(format!("Spiral dataset with {n_spirals} spirals"))
         .with_metadata("noise", &noise.to_string());
 
     Ok(dataset)
@@ -841,7 +840,7 @@ pub fn make_anisotropic_blobs(
 
     for i in 0..centers {
         for j in 0..n_features {
-            cluster_centers[[i, j]] = rng.gen_range(-center_box..=center_box);
+            cluster_centers[[i, j]] = rng.random_range(-center_box..=center_box);
         }
     }
 
@@ -864,7 +863,7 @@ pub fn make_anisotropic_blobs(
         };
 
         // Generate a random rotation angle for this cluster
-        let rotation_angle = rng.gen_range(0.0..(2.0 * PI));
+        let rotation_angle = rng.random_range(0.0..(2.0 * PI));
 
         for _ in 0..n_samples_center {
             // Generate point with anisotropic distribution (elongated along first axis)
@@ -902,7 +901,7 @@ pub fn make_anisotropic_blobs(
     }
 
     let mut dataset = Dataset::new(data, Some(target));
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{}", i)).collect();
+    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     dataset = dataset
         .with_feature_names(feature_names)
@@ -978,7 +977,7 @@ pub fn make_hierarchical_clusters(
 
     for i in 0..n_main_clusters {
         for j in 0..n_features {
-            main_centers[[i, j]] = rng.gen_range(-center_box..=center_box);
+            main_centers[[i, j]] = rng.random_range(-center_box..=center_box);
         }
     }
 
@@ -1032,7 +1031,7 @@ pub fn make_hierarchical_clusters(
     }
 
     let mut dataset = Dataset::new(data, Some(main_target));
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{}", i)).collect();
+    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     dataset = dataset
         .with_feature_names(feature_names)
@@ -1103,7 +1102,7 @@ pub fn inject_missing_data(
             // Missing Completely at Random - uniform probability
             for i in 0..n_samples {
                 for j in 0..n_features {
-                    if rng.gen_range(0.0f64..1.0) < missing_rate {
+                    if rng.random_range(0.0f64..1.0) < missing_rate {
                         missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
@@ -1119,7 +1118,7 @@ pub fn inject_missing_data(
 
                 for j in 1..n_features {
                     // Skip first feature
-                    if rng.gen_range(0.0f64..1.0) < adjusted_rate {
+                    if rng.random_range(0.0f64..1.0) < adjusted_rate {
                         missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
@@ -1134,7 +1133,7 @@ pub fn inject_missing_data(
                     let normalized_val = (value + 10.0) / 20.0; // Normalize roughly to [0,1]
                     let adjusted_rate = missing_rate * normalized_val.clamp(0.1, 3.0);
 
-                    if rng.gen_range(0.0f64..1.0) < adjusted_rate {
+                    if rng.random_range(0.0f64..1.0) < adjusted_rate {
                         missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
@@ -1147,8 +1146,8 @@ pub fn inject_missing_data(
             let n_blocks = (missing_rate * n_samples as f64).ceil() as usize;
 
             for _ in 0..n_blocks {
-                let start_row = rng.gen_range(0..n_samples);
-                let start_col = rng.gen_range(0..n_features.saturating_sub(block_size));
+                let start_row = rng.random_range(0..n_samples);
+                let start_col = rng.random_range(0..n_features.saturating_sub(block_size));
 
                 for i in start_row..n_samples.min(start_row + block_size) {
                     for j in start_col..n_features.min(start_col + block_size) {
@@ -1219,12 +1218,12 @@ pub fn inject_outliers(
         OutlierType::Point => {
             // Point outliers - individual anomalous points
             for _ in 0..n_outliers {
-                let outlier_idx = rng.gen_range(0..n_samples);
+                let outlier_idx = rng.random_range(0..n_samples);
                 outlier_mask[outlier_idx] = true;
 
                 // Modify each feature to be an outlier
                 for j in 0..n_features {
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -1237,17 +1236,17 @@ pub fn inject_outliers(
         OutlierType::Contextual => {
             // Contextual outliers - anomalous in specific feature combinations
             for _ in 0..n_outliers {
-                let outlier_idx = rng.gen_range(0..n_samples);
+                let outlier_idx = rng.random_range(0..n_samples);
                 outlier_mask[outlier_idx] = true;
 
                 // Only modify a subset of features to create contextual anomaly
-                let n_features_to_modify = rng.gen_range(1..=(n_features / 2).max(1));
+                let n_features_to_modify = rng.random_range(1..=(n_features / 2).max(1));
                 let mut features_to_modify: Vec<usize> = (0..n_features).collect();
                 features_to_modify.shuffle(&mut rng);
                 features_to_modify.truncate(n_features_to_modify);
 
                 for &j in &features_to_modify {
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -1266,7 +1265,7 @@ pub fn inject_outliers(
                 // Generate cluster center for this collective outlier
                 let mut outlier_center = vec![0.0; n_features];
                 for j in 0..n_features {
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -1277,11 +1276,11 @@ pub fn inject_outliers(
 
                 // Generate points around this center
                 for _ in 0..outliers_per_group {
-                    let outlier_idx = rng.gen_range(0..n_samples);
+                    let outlier_idx = rng.random_range(0..n_samples);
                     outlier_mask[outlier_idx] = true;
 
                     for j in 0..n_features {
-                        let noise = rng.gen_range(-0.5f64..0.5f64) * feature_stds[j];
+                        let noise = rng.random_range(-0.5f64..0.5f64) * feature_stds[j];
                         data[[outlier_idx, j]] = outlier_center[j] + noise;
                     }
                 }
@@ -1323,10 +1322,10 @@ pub fn add_time_series_noise(
                 // Add random spikes (impulse noise)
                 let n_spikes = (n_samples as f64 * strength * 0.1).ceil() as usize;
                 for _ in 0..n_spikes {
-                    let spike_idx = rng.gen_range(0..n_samples);
-                    let feature_idx = rng.gen_range(0..n_features);
-                    let spike_magnitude = rng.gen_range(5.0..=15.0) * strength;
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let spike_idx = rng.random_range(0..n_samples);
+                    let feature_idx = rng.random_range(0..n_features);
+                    let spike_magnitude = rng.random_range(5.0..=15.0) * strength;
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -1597,7 +1596,7 @@ fn make_classification_gpu_impl(
         use_fast_math: false,
         random_seed: None,
     })
-    .map_err(|e| DatasetsError::Other(format!("Failed to create GPU context: {}", e)))?;
+    .map_err(|e| DatasetsError::Other(format!("Failed to create GPU context: {e}")))?;
 
     // Generate data in chunks to avoid memory issues
     let chunk_size = std::cmp::min(gpu_config.chunk_size, n_samples);
@@ -1629,7 +1628,7 @@ fn make_classification_gpu_impl(
 
     // Convert to ndarray
     let data = Array2::from_shape_vec((n_samples, n_features), all_data)
-        .map_err(|e| DatasetsError::Other(format!("Failed to create data array: {}", e)))?;
+        .map_err(|e| DatasetsError::Other(format!("Failed to create data array: {e}")))?;
 
     let target = Array1::from_vec(all_targets);
 
@@ -1637,8 +1636,8 @@ fn make_classification_gpu_impl(
     let mut dataset = Dataset::new(data, Some(target));
 
     // Add metadata
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{}", i)).collect();
-    let class_names: Vec<String> = (0..n_classes).map(|i| format!("class_{}", i)).collect();
+    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
+    let class_names: Vec<String> = (0..n_classes).map(|i| format!("class_{i}")).collect();
 
     dataset = dataset
         .with_feature_names(feature_names)
@@ -1675,7 +1674,7 @@ fn generate_classification_chunk_gpu(
 
     for i in 0..n_centroids {
         for j in 0..n_informative {
-            centroids[i * n_informative + j] = 2.0 * rng.gen_range(-1.0f64..1.0f64);
+            centroids[i * n_informative + j] = 2.0 * rng.random_range(-1.0f64..1.0f64);
         }
     }
 
@@ -1873,7 +1872,7 @@ fn make_regression_gpu_impl(
         use_fast_math: false,
         random_seed: None,
     })
-    .map_err(|e| DatasetsError::Other(format!("Failed to create GPU context: {}", e)))?;
+    .map_err(|e| DatasetsError::Other(format!("Failed to create GPU context: {e}")))?;
 
     let seed = random_seed.unwrap_or(42);
     let mut rng = StdRng::seed_from_u64(seed);
@@ -1881,7 +1880,7 @@ fn make_regression_gpu_impl(
     // Generate coefficient matrix on GPU
     let mut coefficients = vec![0.0; n_informative];
     for i in 0..n_informative {
-        coefficients[i] = rng.gen_range(-2.0f64..2.0f64);
+        coefficients[i] = rng.random_range(-2.0f64..2.0f64);
     }
 
     // Generate data matrix in chunks
@@ -1913,7 +1912,7 @@ fn make_regression_gpu_impl(
 
     // Convert to ndarray
     let data = Array2::from_shape_vec((n_samples, n_features), all_data)
-        .map_err(|e| DatasetsError::Other(format!("Failed to create data array: {}", e)))?;
+        .map_err(|e| DatasetsError::Other(format!("Failed to create data array: {e}")))?;
 
     let target = Array1::from_vec(all_targets);
 
@@ -1921,7 +1920,7 @@ fn make_regression_gpu_impl(
     let mut dataset = Dataset::new(data, Some(target));
 
     // Add metadata
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{}", i)).collect();
+    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     dataset = dataset
         .with_feature_names(feature_names)
@@ -2091,7 +2090,7 @@ fn make_blobs_gpu_impl(
         use_fast_math: false,
         random_seed: None,
     })
-    .map_err(|e| DatasetsError::Other(format!("Failed to create GPU context: {}", e)))?;
+    .map_err(|e| DatasetsError::Other(format!("Failed to create GPU context: {e}")))?;
 
     let seed = random_seed.unwrap_or(42);
     let mut rng = StdRng::seed_from_u64(seed);
@@ -2160,8 +2159,8 @@ fn make_blobs_gpu_impl(
     let mut dataset = Dataset::new(data, Some(target));
 
     // Add metadata
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{}", i)).collect();
-    let center_names: Vec<String> = (0..n_centers).map(|i| format!("center_{}", i)).collect();
+    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
+    let center_names: Vec<String> = (0..n_centers).map(|i| format!("center_{i}")).collect();
 
     dataset = dataset
         .with_feature_names(feature_names)
@@ -2336,7 +2335,7 @@ pub fn gpu_is_available() -> bool {
 /// Get GPU device information
 pub fn get_gpu_info() -> Result<Vec<GpuDeviceInfo>> {
     crate::gpu::list_gpu_devices()
-        .map_err(|e| DatasetsError::Other(format!("Failed to get GPU info: {}", e)))
+        .map_err(|e| DatasetsError::Other(format!("Failed to get GPU info: {e}")))
 }
 
 /// Benchmark GPU vs CPU performance for data generation
@@ -2669,7 +2668,7 @@ pub fn make_helix(
     let mut dataset = Dataset::new(data, Some(color));
     dataset = dataset
         .with_feature_names(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
-        .with_description(format!("Helix manifold with {} turns in 3D space", n_turns));
+        .with_description(format!("Helix manifold with {n_turns} turns in 3D space"));
 
     Ok(dataset)
 }

@@ -729,7 +729,7 @@ impl UltrathinkTextCoordinator {
         // Step 2: Apply performance optimizations
         let performance_optimizer = self.performance_optimizer.lock().unwrap();
         let optimal_strategy = performance_optimizer.determine_optimal_strategy(texts)?;
-        optimizations_applied.push(format!("Performance strategy: {:?}", optimal_strategy));
+        optimizations_applied.push(format!("Performance strategy: {optimal_strategy:?}"));
         drop(performance_optimizer);
 
         // Step 3: Neural ensemble processing
@@ -1394,7 +1394,11 @@ impl NeuralProcessingEnsemble {
             .chars()
             .collect::<Vec<_>>()
             .windows(2)
-            .map(|w| format!("{}{}", w[0], w[1]))
+            .map(|w| {
+                let w0 = &w[0];
+                let w1 = &w[1];
+                format!("{w0}{w1}")
+            })
             .collect();
         let bigram_diversity = bigrams.len() as f64;
 

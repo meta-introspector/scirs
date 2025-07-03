@@ -3,7 +3,7 @@
 //! This module provides the MetricOptimizer which uses metrics to guide optimization.
 
 #[cfg(feature = "metrics_integration")]
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 #[cfg(feature = "metrics_integration")]
 use ndarray::{Array, Dimension, ScalarOperand};

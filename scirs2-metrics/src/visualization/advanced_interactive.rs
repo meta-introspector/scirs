@@ -1590,7 +1590,7 @@ pub struct Bookmark {
 }
 
 /// Conflict resolver trait
-pub trait ConflictResolver {
+pub trait ConflictResolver: std::fmt::Debug {
     /// Resolve conflicts between different versions
     fn resolve_conflict(
         &self,
@@ -2743,6 +2743,7 @@ impl CollaborationManager {
 }
 
 /// Default conflict resolver
+#[derive(Debug)]
 pub struct DefaultConflictResolver;
 
 impl DefaultConflictResolver {

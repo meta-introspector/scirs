@@ -375,7 +375,7 @@ impl KeywordExtractor {
                 let term = if i < all_words.len() {
                     all_words[i].clone()
                 } else {
-                    format!("term_{}", i)
+                    format!("term_{i}")
                 };
                 (term, score)
             })

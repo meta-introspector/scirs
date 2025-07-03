@@ -124,7 +124,7 @@ fn demonstrate_evolutionary_nas() -> CoreResult<()> {
     let search_time = start_time.elapsed();
 
     println!("\n📊 Search Results:");
-    println!("   - Search completed in {:?}", search_time);
+    println!("   - Search completed in {search_time:?}");
     if let Some((best_arch, performance)) = &search_results.best_architecture {
         println!(
             "   - Best architecture found with fitness: {:.4}",
@@ -141,10 +141,10 @@ fn demonstrate_evolutionary_nas() -> CoreResult<()> {
 
     // Analyze architecture composition
     if let Some((best_arch, _)) = &search_results.best_architecture {
-        let layer_counts = count_layer_types(&best_arch);
+        let layer_counts = count_layer_types(best_arch);
         println!("\n🏗️  Architecture Composition:");
         for (layer_type, count) in layer_counts {
-            println!("   - {:?}: {}", layer_type, count);
+            println!("   - {layer_type:?}: {count}");
         }
     }
 
@@ -193,7 +193,7 @@ fn demonstrate_quantum_enhanced_nas() -> CoreResult<()> {
     let search_time = start_time.elapsed();
 
     println!("\n⚡ Quantum Search Results:");
-    println!("   - Enhanced exploration completed in {:?}", search_time);
+    println!("   - Enhanced exploration completed in {search_time:?}");
     if let Some((best_arch, performance)) = &search_results.best_architecture {
         println!(
             "   - Quantum-optimized architecture found with fitness: {:.4}",
@@ -270,7 +270,7 @@ fn demonstrate_progressive_nas() -> CoreResult<()> {
     let search_time = start_time.elapsed();
 
     println!("\n📊 Progressive Search Results:");
-    println!("   - Complexity progression completed in {:?}", search_time);
+    println!("   - Complexity progression completed in {search_time:?}");
     if let Some((best_arch, performance)) = &search_results.best_architecture {
         println!(
             "   - Final architecture complexity: {} layers",
@@ -299,11 +299,11 @@ fn demonstrate_progressive_nas() -> CoreResult<()> {
         let improvement = (final_fitness - initial_fitness) / initial_fitness * 100.0;
 
         println!("\n📈 Progression Analysis:");
-        println!("   - Initial fitness: {:.3}", initial_fitness);
-        println!("   - Final fitness: {:.3}", final_fitness);
-        println!("   - Improvement: {:.1}%", improvement);
+        println!("   - Initial fitness: {initial_fitness:.3}");
+        println!("   - Final fitness: {final_fitness:.3}");
+        println!("   - Improvement: {improvement:.1}%");
         if let Some(convergence_gen) = search_results.statistics.convergence_generation {
-            println!("   - Convergence generation: {}", convergence_gen);
+            println!("   - Convergence generation: {convergence_gen}");
         }
     }
 
@@ -359,7 +359,7 @@ fn demonstrate_multi_objective_optimization() -> CoreResult<()> {
     let constraints = HardwareConstraints::default();
 
     for (scenario_name, objectives) in scenarios {
-        println!("\n🔍 Optimizing for: {}", scenario_name);
+        println!("\n🔍 Optimizing for: {scenario_name}");
 
         // Create search configuration for multi-objective optimization
         let config = SearchConfig {
@@ -395,7 +395,7 @@ fn demonstrate_multi_objective_optimization() -> CoreResult<()> {
 
         // Analyze optimization focus
         if let Some((best_arch, _)) = &search_results.best_architecture {
-            let layer_counts = count_layer_types(&best_arch);
+            let layer_counts = count_layer_types(best_arch);
             let has_attention = layer_counts.contains_key(&LayerType::Attention);
             let has_conv = layer_counts.contains_key(&LayerType::Convolution2D);
 
@@ -464,7 +464,7 @@ fn demonstrate_hardware_aware_search() -> CoreResult<()> {
     let objectives = OptimizationObjectives::default();
 
     for (platform_name, constraints) in hardware_scenarios {
-        println!("\n🔧 Optimizing for: {}", platform_name);
+        println!("\n🔧 Optimizing for: {platform_name}");
         println!("   - Platform: {:?}", constraints.target_platform);
         println!(
             "   - Max memory: {} MB",
@@ -514,10 +514,10 @@ fn demonstrate_hardware_aware_search() -> CoreResult<()> {
 
         // Analyze hardware-specific optimizations
         if let Some((best_arch, _)) = &search_results.best_architecture {
-            let layer_counts = count_layer_types(&best_arch);
+            let layer_counts = count_layer_types(best_arch);
             println!("     * Layer distribution:");
             for (layer_type, count) in layer_counts {
-                println!("       - {:?}: {}", layer_type, count);
+                println!("       - {layer_type:?}: {count}");
             }
         }
     }
@@ -579,7 +579,7 @@ fn demonstrate_meta_learning() -> CoreResult<()> {
     println!("🔬 Building meta-knowledge across domains:");
 
     for (domain_name, search_space) in domains {
-        println!("\n📚 Learning from {} domain:", domain_name);
+        println!("\n📚 Learning from {domain_name} domain:");
 
         // Create search configuration for meta-learning
         let config = SearchConfig {
@@ -608,10 +608,10 @@ fn demonstrate_meta_learning() -> CoreResult<()> {
 
         // Analyze domain patterns
         if let Some((best_arch, _)) = &search_results.best_architecture {
-            let layer_counts = count_layer_types(&best_arch);
+            let layer_counts = count_layer_types(best_arch);
             println!("   - Dominant patterns discovered:");
             for (layer_type, count) in layer_counts.iter().take(3) {
-                println!("     * {:?}: {} instances", layer_type, count);
+                println!("     * {layer_type:?}: {count} instances");
             }
         }
 
@@ -669,7 +669,7 @@ fn analyze_search_results(results: &SearchResults) -> CoreResult<()> {
         results.statistics.successful_evaluations
     );
     if let Some(convergence_gen) = results.statistics.convergence_generation {
-        println!("   - Convergence generation: {}", convergence_gen);
+        println!("   - Convergence generation: {convergence_gen}");
     }
 
     // Resource usage
@@ -691,18 +691,15 @@ fn analyze_search_results(results: &SearchResults) -> CoreResult<()> {
         let improvement = (final_fitness - initial_fitness) / initial_fitness * 100.0;
 
         println!("\n📉 Convergence Analysis:");
-        println!("   - Initial best fitness: {:.4}", initial_fitness);
-        println!("   - Final best fitness: {:.4}", final_fitness);
-        println!("   - Total improvement: {:.1}%", improvement);
+        println!("   - Initial best fitness: {initial_fitness:.4}");
+        println!("   - Final best fitness: {final_fitness:.4}");
+        println!("   - Total improvement: {improvement:.1}%");
         println!("   - Progress points: {}", results.progress_history.len());
 
         // Show fitness evolution
         let initial_avg = results.progress_history[0].avg_fitness;
         let final_avg = results.progress_history.last().unwrap().avg_fitness;
-        println!(
-            "   - Average fitness: {:.3} → {:.3}",
-            initial_avg, final_avg
-        );
+        println!("   - Average fitness: {initial_avg:.3} → {final_avg:.3}");
     }
 
     // Meta-knowledge insights

@@ -5,17 +5,15 @@
 //! overflow/underflow monitoring, and automated numerical stability assessment for ensuring
 //! robust statistical computing operations across all numerical conditions.
 
-use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::ErrorMessages;
+use crate::error::StatsResult;
 use crate::property_based_validation::ValidationReport;
-use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
+use ndarray::{Array1, ArrayBase, ArrayView1, Data, Ix1};
 use num_traits::{Bounded, Float, NumCast, One, Signed, Zero};
 use rand::Rng;
 use scirs2_core::parallel_ops::*;
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant, SystemTime};
 
 /// Ultra-Think Numerical Stability Configuration
@@ -2258,7 +2256,6 @@ pub fn test_variance_stability() -> StatsResult<ComprehensiveStabilityResult> {
 
 /// Test numerical stability of correlation function specifically
 pub fn test_correlation_stability() -> StatsResult<ValidationReport> {
-    use crate::correlation::pearson_r;
     use crate::property_based_validation::{
         CorrelationBounds, PropertyBasedValidator, PropertyTestConfig,
     };

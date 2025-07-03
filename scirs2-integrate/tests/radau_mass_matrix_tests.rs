@@ -59,15 +59,9 @@ fn test_radau_constant_mass_matrix() -> IntegrateResult<()> {
     let v_analytical = -f64::sqrt(2.0) * (omega * t_final).sin();
 
     // Check that numerical solution matches analytical solution
-    println!("Radau solution at t = {}", t_final);
-    println!(
-        "x_numerical = {}, x_analytical = {}",
-        x_numerical, x_analytical
-    );
-    println!(
-        "v_numerical = {}, v_analytical = {}",
-        v_numerical, v_analytical
-    );
+    println!("Radau solution at t = {t_final}");
+    println!("x_numerical = {x_numerical}, x_analytical = {x_analytical}");
+    println!("v_numerical = {v_numerical}, v_analytical = {v_analytical}");
     println!(
         "Error: x = {}, v = {}",
         (x_numerical - x_analytical).abs(),
@@ -211,7 +205,7 @@ fn test_radau_time_dependent_mass_matrix() -> IntegrateResult<()> {
     let diff_v = (time_dep_final[1] - standard_final[1]).abs();
 
     println!("Difference between time-dependent and standard mass matrix:");
-    println!("  Δx = {}, Δv = {}", diff_x, diff_v);
+    println!("  Δx = {diff_x}, Δv = {diff_v}");
 
     // The difference should be non-negligible but not huge
     assert!(
@@ -263,7 +257,7 @@ fn test_radau_debug() -> IntegrateResult<()> {
                 result.n_steps, result.n_eval
             );
         }
-        Err(e) => println!("  Failed: {:?}", e),
+        Err(e) => println!("  Failed: {e:?}"),
     }
 
     println!("\nTesting Radau with identity mass matrix (should work):");
@@ -285,7 +279,7 @@ fn test_radau_debug() -> IntegrateResult<()> {
                 result.n_steps, result.n_eval
             );
         }
-        Err(e) => println!("  Failed: {:?}", e),
+        Err(e) => println!("  Failed: {e:?}"),
     }
 
     println!("\nTesting Radau with non-identity mass matrix (currently fails):");
@@ -310,7 +304,7 @@ fn test_radau_debug() -> IntegrateResult<()> {
                 result.n_steps, result.n_eval
             );
         }
-        Err(e) => println!("  Failed: {:?}", e),
+        Err(e) => println!("  Failed: {e:?}"),
     }
 
     Ok(())
@@ -370,7 +364,7 @@ fn test_radau_vs_explicit_mass_matrix() -> IntegrateResult<()> {
     // Find the state at t_final in RK45 result
     let rk45_final = rk45_result.y.last().unwrap();
 
-    println!("Comparison at t = {}:", t_final);
+    println!("Comparison at t = {t_final}:");
     println!("  Radau: x = {}, v = {}", radau_final[0], radau_final[1]);
     println!("  RK45: x = {}, v = {}", rk45_final[0], rk45_final[1]);
     println!(

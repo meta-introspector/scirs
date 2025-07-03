@@ -4,7 +4,6 @@
 //! using the GNU MPFR library through the rug crate. This allows for computations
 //! with user-specified precision beyond the limitations of f64.
 
-#![cfg(feature = "high-precision")]
 #![allow(dead_code)]
 
 use crate::error::{SpecialError, SpecialResult};
@@ -137,7 +136,7 @@ pub mod gamma {
 
     /// Stirling's approximation for Gamma function
     fn stirling_gamma(x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
-        let two_pi = ctx.pi() * 2.0;
+        let two_pi = ctx.pi() * Float::with_val(ctx.precision, 2.0);
         let sqrt_2pi = two_pi.sqrt();
         let e = ctx.e();
 
@@ -153,8 +152,8 @@ pub mod gamma {
 
         correction += ctx.float(1.0) / (12.0 * x);
         correction += ctx.float(1.0) / (288.0 * &x2);
-        correction -= ctx.float(139.0) / (51840.0 * &x3);
-        correction -= ctx.float(571.0) / (2488320.0 * &x4);
+        correction -= ctx.float(139.0) / (ctx.float(51840.0) * &x3);
+        correction -= ctx.float(571.0) / (ctx.float(2488320.0) * &x4);
 
         Ok(term1 * term2 * correction)
     }
@@ -176,7 +175,7 @@ pub mod gamma {
         ];
 
         let g = ctx.float(LANCZOS_G);
-        let sqrt_2pi = (ctx.pi() * 2.0).sqrt();
+        let sqrt_2pi = (ctx.pi() * ctx.float(2.0)).sqrt();
 
         let mut ag = ctx.float(LANCZOS_COEFFS[0]);
         for i in 1..LANCZOS_COEFFS.len() {
@@ -230,7 +229,7 @@ pub mod gamma {
 
     /// Stirling's approximation for log(Gamma(x))
     fn stirling_log_gamma(x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
-        let two_pi = ctx.pi() * 2.0;
+        let two_pi = ctx.pi() * Float::with_val(ctx.precision, 2.0);
         let ln_2pi = two_pi.ln();
 
         // log Γ(x) ≈ (x - 1/2) log x - x + log(2π)/2 + 1/(12x) - ...
@@ -239,11 +238,11 @@ pub mod gamma {
         // Add correction terms
         let x2 = x.clone() * x;
         let x3 = &x2 * x;
-        let x5 = &x3 * &x2;
+        let x5 = (&x3).clone() * &x2;
         let x7 = &x5 * &x2;
 
         result += ctx.float(1.0) / (12.0 * x);
-        result -= ctx.float(1.0) / (360.0 * &x3);
+        result -= ctx.float(1.0) / (ctx.float(360.0) * &x3);
         result += ctx.float(1.0) / (1260.0 * &x5);
         result -= ctx.float(1.0) / (1680.0 * &x7);
 
@@ -557,7 +556,7 @@ pub fn to_f64(x: &Float) -> f64 {
 
 /// Convert arbitrary precision Complex to num_complex::Complex64
 pub fn to_complex64(z: &Complex) -> num_complex::Complex64 {
-    let (re, im) = z.into_real_imag();
+    let (re, im) = z.clone().into_real_imag();
     num_complex::Complex64::new(re.to_f64(), im.to_f64())
 }
 

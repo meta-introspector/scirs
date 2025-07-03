@@ -192,8 +192,7 @@ impl FftGpuContext {
 
         if host_size_bytes > device_size_bytes {
             return Err(FFTError::DimensionError(format!(
-                "Host buffer size ({} bytes) exceeds device buffer size ({} bytes)",
-                host_size_bytes, device_size_bytes
+                "Host buffer size ({host_size_bytes} bytes) exceeds device buffer size ({device_size_bytes} bytes)"
             )));
         }
 
@@ -214,8 +213,7 @@ impl FftGpuContext {
 
         if device_size_bytes > host_size_bytes {
             return Err(FFTError::DimensionError(format!(
-                "Device buffer size ({} bytes) exceeds host buffer size ({} bytes)",
-                device_size_bytes, host_size_bytes
+                "Device buffer size ({device_size_bytes} bytes) exceeds host buffer size ({host_size_bytes} bytes)"
             )));
         }
 
@@ -322,7 +320,7 @@ impl GpuSparseFFT {
             .iter()
             .map(|&val| {
                 let val_f64 = NumCast::from(val).ok_or_else(|| {
-                    FFTError::ValueError(format!("Could not convert {:?} to f64", val))
+                    FFTError::ValueError(format!("Could not convert {val:?} to f64"))
                 })?;
                 Ok(Complex64::new(val_f64, 0.0))
             })

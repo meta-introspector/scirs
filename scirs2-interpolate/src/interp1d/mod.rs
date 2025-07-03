@@ -61,7 +61,7 @@ pub struct Interp1d<F: Float> {
     extrapolate: ExtrapolateMode,
 }
 
-impl<F: Float + FromPrimitive + Debug> Interp1d<F> {
+impl<F: Float + FromPrimitive + Debug + std::fmt::Display> Interp1d<F> {
     /// Create a new interpolation object
     ///
     /// # Arguments
@@ -164,7 +164,7 @@ impl<F: Float + FromPrimitive + Debug> Interp1d<F> {
                         self.x[0],
                         self.x[self.x.len() - 1],
                         "1D interpolation evaluation",
-                        format!("Use ExtrapolateMode::Extrapolate for linear extrapolation, ExtrapolateMode::Nearest for constant extrapolation, or ensure query points are within the data range [{}, {}]", 
+                        format!("Use ExtrapolateMode::Extrapolate for linear extrapolation, ExtrapolateMode::Nearest for constant extrapolation, or ensure query points are within the data range [{:?}, {:?}]", 
                                self.x[0], self.x[self.x.len() - 1])
                     ));
                 }

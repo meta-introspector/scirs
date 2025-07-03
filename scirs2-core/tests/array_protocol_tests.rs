@@ -107,7 +107,7 @@ fn test_gpu_array() {
                 assert_eq!(cpu_array.shape(), arr.shape());
             }
         }
-        Err(e) => panic!("Failed to convert GPU array to CPU: {}", e),
+        Err(e) => panic!("Failed to convert GPU array to CPU: {e}"),
     }
 }
 
@@ -333,7 +333,7 @@ fn test_array_interoperability() {
         }
         Err(e) => {
             // If we get an error, mark the test as skipped rather than failing
-            println!("Skipping dot product test - operation failed: {}", e);
+            println!("Skipping dot product test - operation failed: {e}");
             // Add assert to make it pass even if the operation fails
             // Test passed
         }
@@ -365,10 +365,7 @@ fn test_array_operations() {
             }
         }
         Err(e) => {
-            println!(
-                "Skipping matrix multiplication test - operation failed: {}",
-                e
-            );
+            println!("Skipping matrix multiplication test - operation failed: {e}");
         }
     }
 
@@ -382,7 +379,7 @@ fn test_array_operations() {
             }
         }
         Err(e) => {
-            println!("Skipping addition test - operation failed: {}", e);
+            println!("Skipping addition test - operation failed: {e}");
         }
     }
 
@@ -396,7 +393,7 @@ fn test_array_operations() {
             }
         }
         Err(e) => {
-            println!("Skipping multiplication test - operation failed: {}", e);
+            println!("Skipping multiplication test - operation failed: {e}");
         }
     }
 
@@ -410,7 +407,7 @@ fn test_array_operations() {
             }
         }
         Err(e) => {
-            println!("Skipping sum test - operation failed: {}", e);
+            println!("Skipping sum test - operation failed: {e}");
         }
     }
 
@@ -424,7 +421,7 @@ fn test_array_operations() {
             }
         }
         Err(e) => {
-            println!("Skipping transpose test - operation failed: {}", e);
+            println!("Skipping transpose test - operation failed: {e}");
         }
     }
 
@@ -455,10 +452,7 @@ fn test_array_operations() {
             );
         }
         Err(e) => {
-            println!(
-                "Skipping GPU matrix multiplication test - operation failed: {}",
-                e
-            );
+            println!("Skipping GPU matrix multiplication test - operation failed: {e}");
         }
     }
 
@@ -477,7 +471,7 @@ fn test_array_operations() {
             );
         }
         Err(e) => {
-            println!("Skipping GPU addition test - operation failed: {}", e);
+            println!("Skipping GPU addition test - operation failed: {e}");
         }
     }
 }
@@ -565,7 +559,7 @@ fn test_mixed_array_types() {
         }
         Err(e) => {
             // If we get an error, print it but don't fail the test
-            println!("Skipping Regular + GPU add test: {}", e);
+            println!("Skipping Regular + GPU add test: {e}");
         }
     }
 
@@ -597,7 +591,7 @@ fn test_mixed_array_types() {
         }
         Err(e) => {
             // If we get an error, print it but don't fail the test
-            println!("Skipping GPU + Distributed add test: {}", e);
+            println!("Skipping GPU + Distributed add test: {e}");
         }
     }
 
@@ -629,7 +623,7 @@ fn test_mixed_array_types() {
         }
         Err(e) => {
             // If we get an error, print it but don't fail the test
-            println!("Skipping Regular + Distributed add test: {}", e);
+            println!("Skipping Regular + Distributed add test: {e}");
         }
     }
 }

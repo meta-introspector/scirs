@@ -502,7 +502,7 @@ impl TraceSessionId {
         use std::sync::atomic::{AtomicU64, Ordering};
         static COUNTER: AtomicU64 = AtomicU64::new(0);
         let id = COUNTER.fetch_add(1, Ordering::SeqCst);
-        Self(format!("session_{}", id))
+        Self(format!("session_{id}"))
     }
 }
 
@@ -515,7 +515,7 @@ impl RecordingId {
         use std::sync::atomic::{AtomicU64, Ordering};
         static COUNTER: AtomicU64 = AtomicU64::new(0);
         let id = COUNTER.fetch_add(1, Ordering::SeqCst);
-        Self(format!("recording_{}", id))
+        Self(format!("recording_{id}"))
     }
 }
 

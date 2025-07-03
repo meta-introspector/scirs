@@ -3256,8 +3256,7 @@ mod tests {
             let error_msg = error.to_string();
             assert!(
                 error_msg.contains("No suitable nodes available"),
-                "Expected 'No suitable nodes available' error, got: {}",
-                error_msg
+                "Expected 'No suitable nodes available' error, got: {error_msg}"
             );
         }
     }

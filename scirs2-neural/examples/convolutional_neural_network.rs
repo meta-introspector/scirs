@@ -6,11 +6,11 @@
 
 #![allow(dead_code)]
 
+use ndarray::{s, Array, Array1, Array2, Array4, ArrayView1, Axis};
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::SliceRandom;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
-use ndarray::{s, Array, Array1, Array2, Array4, ArrayView1, Axis};
 use scirs2_neural::error::Result;
 use serde::{Deserialize, Serialize};
 use std::f32;
@@ -297,6 +297,7 @@ impl Conv2D {
                                     }
                                 }
                             }
+                        }
                         // Add bias
                         val += self.biases[f];
                         // Store result
@@ -320,15 +321,16 @@ impl Conv2D {
         let input_channels = input.shape()[1];
         let input_height = input.shape()[2];
         let input_width = input.shape()[3];
-        
+
         // Calculate padding
         let (pad_top, pad_bottom, pad_left, pad_right) = self.calculate_padding(input.shape());
-        
+
         // Apply padding to input if needed
         let padded_input = if pad_top > 0 || pad_bottom > 0 || pad_left > 0 || pad_right > 0 {
             let padded_height = input_height + pad_top + pad_bottom;
             let padded_width = input_width + pad_left + pad_right;
-            let mut padded = Array4::zeros([batch_size, input_channels, padded_height, padded_width]);
+            let mut padded =
+                Array4::zeros([batch_size, input_channels, padded_height, padded_width]);
             for b in 0..batch_size {
                 for c in 0..input_channels {
                     for h in 0..input_height {
@@ -342,7 +344,7 @@ impl Conv2D {
         } else {
             input.clone()
         };
-        
+
         // Initialize gradients for weights and biases
         let mut dweights = Array4::zeros(self.weights.dim());
         let mut dbiases = Array1::zeros(self.filters);
@@ -448,7 +450,7 @@ impl Conv2D {
                 }
             }
         }
-        
+
         // Store gradients
         self.dweights = Some(dweights);
         self.dbiases = Some(dbiases);
@@ -502,7 +504,7 @@ impl Layer for Conv2D {
             self.activation.as_str()
         )
     }
-    
+
     fn num_parameters(&self) -> usize {
         self.weights.len() + self.biases.len()
     }
@@ -588,20 +590,20 @@ impl Layer for MaxPool2D {
             .max_indices
             .as_ref()
             .expect("Forward pass must be called first");
-        
+
         let output_shape = grad_output.shape();
         let batch_size = output_shape[0];
         let channels = output_shape[1];
         let output_height = output_shape[2];
         let output_width = output_shape[3];
-        
+
         // Calculate input dimensions from output and pooling parameters
         let input_height = (output_height - 1) * self.stride.0 + self.pool_size.0;
         let input_width = (output_width - 1) * self.stride.1 + self.pool_size.1;
-        
+
         // Initialize gradient with respect to input
         let mut dinput = Array4::zeros([batch_size, channels, input_height, input_width]);
-        
+
         // Distribute gradients to max locations
         for b in 0..batch_size {
             for c in 0..channels {
@@ -618,14 +620,14 @@ impl Layer for MaxPool2D {
     fn update_parameters(&mut self, _learning_rate: f32) {
         // MaxPool has no parameters to update
     }
-    
+
     fn get_description(&self) -> String {
         format!(
             "MaxPool2D: {}x{} pool size, stride {:?}",
             self.pool_size.0, self.pool_size.1, self.stride
         )
     }
-    
+
     fn num_parameters(&self) -> usize {
         0 // No trainable parameters
     }
@@ -672,11 +674,11 @@ impl Layer for Flatten {
     fn update_parameters(&mut self, _learning_rate: f32) {
         // Flatten has no parameters to update
     }
-    
+
     fn get_description(&self) -> String {
         "Flatten".to_string()
     }
-    
+
     fn num_parameters(&self) -> usize {
         0 // No trainable parameters
     }
@@ -755,7 +757,10 @@ impl Layer for Dense {
         output
     }
     fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
-        let input = self.input.as_ref().expect("Forward pass must be called first");
+        let input = self
+            .input
+            .as_ref()
+            .expect("Forward pass must be called first");
         let z = self.z.as_ref().expect("Forward pass must be called first");
         let batch_size = input.shape()[0];
         // Reshape arrays to 2D
@@ -797,7 +802,7 @@ impl Layer for Dense {
             self.dbiases = None;
         }
     }
-    
+
     fn get_description(&self) -> String {
         format!(
             "Dense: {} -> {}, activation {}",
@@ -806,7 +811,7 @@ impl Layer for Dense {
             self.activation.as_str()
         )
     }
-    
+
     fn num_parameters(&self) -> usize {
         self.weights.len() + self.biases.len()
     }
@@ -830,7 +835,7 @@ impl Sequential {
         self.layers.push(Box::new(layer));
         self
     }
-    
+
     /// Forward pass through all layers
     fn forward(&mut self, x: &Array4<f32>) -> Array4<f32> {
         let mut output = x.clone();
@@ -984,16 +989,13 @@ fn create_synthetic_dataset(
     // Create synthetic patterns for each class
     let mut class_patterns = Vec::with_capacity(num_classes);
     for _ in 0..num_classes {
-        let pattern =
-            Array2::from_shape_fn(
-                image_size,
-                |_| {
-                    if rng.random::<f32>() > 0.7 {
-                        1.0
-                    } else {
-                        0.0
-                    }
-                });
+        let pattern = Array2::from_shape_fn(image_size, |_| {
+            if rng.random::<f32>() > 0.7 {
+                1.0
+            } else {
+                0.0
+            }
+        });
         class_patterns.push(pattern);
     }
     // Generate samples with noise

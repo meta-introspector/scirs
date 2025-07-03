@@ -276,7 +276,7 @@ impl PrecipitationAnalysis {
 
         for &precip in self.precipitation.iter() {
             let category = match precip {
-                x if x == 0.0 => "No Rain",
+                0.0 => "No Rain",
                 x if x < 2.5 => "Light",
                 x if x < 7.6 => "Moderate",
                 x if x < 35.0 => "Heavy",
@@ -345,7 +345,7 @@ impl AtmosphericAnalysis {
                     "Wind direction contains non-finite values".to_string(),
                 ));
             }
-            if dir.iter().any(|&x| x < 0.0 || x >= 360.0) {
+            if dir.iter().any(|&x| !(0.0..360.0).contains(&x)) {
                 return Err(TimeSeriesError::InvalidInput(
                     "Wind direction must be between 0 and 360 degrees".to_string(),
                 ));
@@ -524,7 +524,7 @@ impl ClimateIndices {
 
             // Water balance
             soil_moisture += precipitation[i] - pet;
-            soil_moisture = soil_moisture.max(-100.0).min(100.0);
+            soil_moisture = soil_moisture.clamp(-100.0, 100.0);
 
             // Simplified PDSI calculation
             pdsi[i] = soil_moisture / 25.0;
@@ -553,6 +553,13 @@ impl EnvironmentalAnalysis {
             atmospheric: None,
         }
     }
+}
+
+impl Default for EnvironmentalAnalysis {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
     /// Add temperature data
     pub fn with_temperature(mut self, analysis: TemperatureAnalysis) -> Self {

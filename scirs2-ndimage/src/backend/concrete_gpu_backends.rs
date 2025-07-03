@@ -10,7 +10,6 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use ndarray::{Array, ArrayView2, Ix2};
-use num_traits::{Float, FromPrimitive};
 
 #[cfg(any(feature = "cuda", feature = "opencl"))]
 use crate::backend::gpu_acceleration_framework::{

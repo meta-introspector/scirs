@@ -257,26 +257,26 @@ impl MigrationGuide {
 
         for &func in scipy_functions {
             if let Some(mapping) = self.get_mapping(func) {
-                report.push_str(&format!("## {}\n", func));
+                report.push_str(&format!("## {func}\n"));
                 report.push_str(&format!("SciRS2 equivalent: `{}`\n", mapping.module_path));
 
                 if !mapping.signature_changes.is_empty() {
                     report.push_str("\nSignature changes:\n");
                     for change in &mapping.signature_changes {
-                        report.push_str(&format!("- {}\n", change));
+                        report.push_str(&format!("- {change}\n"));
                     }
                 }
 
                 if !mapping.notes.is_empty() {
                     report.push_str("\nNotes:\n");
                     for note in &mapping.notes {
-                        report.push_str(&format!("- {}\n", note));
+                        report.push_str(&format!("- {note}\n"));
                     }
                 }
 
                 report.push('\n');
             } else {
-                report.push_str(&format!("## {}\n", func));
+                report.push_str(&format!("## {func}\n"));
                 report.push_str(
                     "⚠️  No direct mapping found. May require custom implementation.\n\n",
                 );
@@ -360,7 +360,7 @@ pub mod codegen {
                     let funcs = func_match.as_str();
                     for func in funcs.split(',') {
                         let func = func.trim();
-                        let full_name = format!("{}{}", prefix, func);
+                        let full_name = format!("{prefix}{func}");
                         if let Some(mapping) = guide.get_mapping(&full_name) {
                             found_functions.push((func.to_string(), mapping.clone()));
                             imports.insert(mapping.module_path.clone());
@@ -372,7 +372,7 @@ pub mod codegen {
 
         // Generate imports
         for import in &imports {
-            rust_code.push_str(&format!("use {};\n", import));
+            rust_code.push_str(&format!("use {import};\n"));
         }
 
         if !imports.is_empty() {
@@ -386,23 +386,21 @@ pub mod codegen {
             code_lines.push(format!("// {} -> {}", scipy_func, mapping.scirs2_name));
 
             // Simple replacement (this is a simplified example)
-            transformed = transformed.replace(
-                &format!("scipy.special.{}", scipy_func),
-                &mapping.scirs2_name,
-            );
             transformed =
-                transformed.replace(&format!("special.{}", scipy_func), &mapping.scirs2_name);
+                transformed.replace(&format!("scipy.special.{scipy_func}"), &mapping.scirs2_name);
+            transformed =
+                transformed.replace(&format!("special.{scipy_func}"), &mapping.scirs2_name);
         }
 
         // Add transformation notes
         if !found_functions.is_empty() {
             rust_code.push_str("// Transformed code:\n");
-            rust_code.push_str(&format!("// {}\n", transformed));
+            rust_code.push_str(&format!("// {transformed}\n"));
 
             rust_code.push_str("\n// Notes:\n");
             for (_, mapping) in &found_functions {
                 for note in &mapping.notes {
-                    rust_code.push_str(&format!("// - {}\n", note));
+                    rust_code.push_str(&format!("// - {note}\n"));
                 }
             }
         }
@@ -422,15 +420,14 @@ pub mod codegen {
         let known_functions = vec!["gamma", "erf", "j0", "j1", "beta", "gammaln"];
 
         for func in known_functions {
-            let scipy_pattern = format!("scipy.special.{}", func);
+            let scipy_pattern = format!("scipy.special.{func}");
             if scipy_code.contains(&scipy_pattern) {
-                let full_name = format!("scipy.special.{}", func);
+                let full_name = format!("scipy.special.{func}");
                 if let Some(mapping) = guide.get_mapping(&full_name) {
-                    rust_code.push_str(&format!("use {};\n", mapping.module_path));
-                    rust_code.push_str(&format!(
-                        "// Replace {} with {}\n",
-                        scipy_pattern, mapping.scirs2_name
-                    ));
+                    let module_path = &mapping.module_path;
+                    rust_code.push_str(&format!("use {module_path};\n"));
+                    let scirs2_name = &mapping.scirs2_name;
+                    rust_code.push_str(&format!("// Replace {scipy_pattern} with {scirs2_name}\n"));
                 }
             }
         }

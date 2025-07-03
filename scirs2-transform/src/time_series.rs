@@ -73,7 +73,7 @@ impl FourierFeatures {
         }
 
         // Compute FFT
-        let _ = fft(&mut complex_data, None);
+        let _ = fft(&complex_data, None);
 
         // Extract features (only positive frequencies due to symmetry)
         let n_freq = (n / 2).min(self.n_components);
@@ -191,8 +191,7 @@ impl LagFeatures {
 
         if max_lag >= n {
             return Err(TransformError::InvalidInput(format!(
-                "Maximum lag {} must be less than series length {}",
-                max_lag, n
+                "Maximum lag {max_lag} must be less than series length {n}"
             )));
         }
 
@@ -378,7 +377,7 @@ impl WaveletFeatures {
                 let g = vec![
                     0.0,
                     0.35355339059327373,
-                    -0.7071067811865476,
+                    -std::f64::consts::FRAC_1_SQRT_2,
                     0.35355339059327373,
                     0.0,
                 ];

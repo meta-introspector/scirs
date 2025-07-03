@@ -14,10 +14,7 @@ fn main() {
 
     // 1. Create a signal with a few frequency components
     let n = 1024;
-    println!(
-        "Creating a signal with n = {} samples and 3 frequency components",
-        n
-    );
+    println!("Creating a signal with n = {n} samples and 3 frequency components");
     let frequencies = vec![(3, 1.0), (7, 0.5), (15, 0.25)];
     let signal = create_sparse_signal(n, &frequencies);
 
@@ -46,7 +43,7 @@ fn main() {
 
     // We'll actually only run the CPU fallback as the other backends are simulated
     for &backend in &backends[0..1] {
-        println!("\n* Using {:?} backend", backend);
+        println!("\n* Using {backend:?} backend");
         let gpu_start = std::time::Instant::now();
         let gpu_result = gpu_sparse_fft(
             &signal,

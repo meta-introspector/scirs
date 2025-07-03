@@ -1938,8 +1938,7 @@ mod tests {
         for i in 0..5 {
             assert!(
                 sampler.should_sample(&context, "test"),
-                "Sample {} should be accepted",
-                i
+                "Sample {i} should be accepted"
             );
         }
 

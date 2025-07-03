@@ -85,7 +85,7 @@ where
             &local_size,
             config,
         ),
-        GpuBackend::OpenCl => execute_opencl_spmv(
+        GpuBackend::OpenCL => execute_opencl_spmv(
             device,
             kernel,
             rows,
@@ -160,7 +160,7 @@ where
             &local_size,
             config,
         ),
-        GpuBackend::OpenCl => execute_opencl_symmetric_spmv(
+        GpuBackend::OpenCL => execute_opencl_symmetric_spmv(
             device,
             kernel,
             rows,
@@ -210,7 +210,7 @@ fn calculate_optimal_dimensions(
             let warp_aligned = workgroup_size[0].div_ceil(32) * 32;
             [warp_aligned.min(1024), 1, 1] // Max 1024 threads per block
         }
-        GpuBackend::OpenCl => {
+        GpuBackend::OpenCL => {
             // Generic OpenCL workgroup size
             [
                 workgroup_size[0].min(256),
@@ -627,7 +627,7 @@ where
             // Use warp-level parallelism for CUDA
             ([32], [32]) // One warp per triangular solve
         }
-        GpuBackend::OpenCl => {
+        GpuBackend::OpenCL => {
             // Use wavefront-level parallelism for OpenCL
             ([64], [64])
         }
@@ -781,7 +781,7 @@ impl GpuMemoryManager {
 
         let alignment_preference = match backend {
             GpuBackend::Cuda => 128,  // CUDA prefers 128-byte alignment
-            GpuBackend::OpenCl => 64, // OpenCL prefers 64-byte alignment
+            GpuBackend::OpenCL => 64, // OpenCL prefers 64-byte alignment
             GpuBackend::Metal => 16,  // Metal prefers 16-byte alignment
             GpuBackend::Cpu => 8,     // CPU standard alignment
         };
@@ -899,7 +899,7 @@ impl GpuMemoryManager {
     pub fn transfer_data_optimized<T>(
         &mut self,
         host_data: &[T],
-        _priority: TransferPriority,
+        priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: crate::gpu_ops::GpuDataType + Copy,
@@ -913,7 +913,7 @@ impl GpuMemoryManager {
                 self.transfer_data_cuda_optimized(host_data, transfer_size, priority)
             }
             #[cfg(feature = "gpu")]
-            GpuBackend::OpenCl => {
+            GpuBackend::OpenCL => {
                 self.transfer_data_opencl_optimized(host_data, transfer_size, priority)
             }
             #[cfg(feature = "gpu")]
@@ -942,7 +942,7 @@ impl GpuMemoryManager {
         &self,
         host_data: &[T],
         transfer_size: usize,
-        _priority: TransferPriority,
+        priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: crate::gpu_ops::GpuDataType + Copy,
@@ -968,7 +968,7 @@ impl GpuMemoryManager {
         &self,
         host_data: &[T],
         transfer_size: usize,
-        _priority: TransferPriority,
+        priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: crate::gpu_ops::GpuDataType + Copy,
@@ -987,7 +987,7 @@ impl GpuMemoryManager {
         &self,
         host_data: &[T],
         transfer_size: usize,
-        _priority: TransferPriority,
+        priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: crate::gpu_ops::GpuDataType + Copy,
@@ -1088,7 +1088,7 @@ impl GpuMemoryManager {
                 let alignment = 128 / std::mem::size_of::<usize>();
                 size.div_ceil(alignment) * alignment
             }
-            GpuBackend::OpenCl => {
+            GpuBackend::OpenCL => {
                 // OpenCL typically prefers 64-byte alignment
                 let alignment = 64 / std::mem::size_of::<usize>();
                 size.div_ceil(alignment) * alignment
@@ -1146,7 +1146,7 @@ pub fn optimize_memory_bandwidth(
             MemoryStrategy::Coalesced
         }
         (GpuBackend::Cuda, AccessPattern::Random, _) => MemoryStrategy::TextureMemory,
-        (GpuBackend::OpenCl, AccessPattern::Blocked, _) => MemoryStrategy::SharedMemory,
+        (GpuBackend::OpenCL, AccessPattern::Blocked, _) => MemoryStrategy::SharedMemory,
         (GpuBackend::Metal, _, size) if size > 512 * 1024 => {
             MemoryStrategy::SharedMemory // Unified memory architecture
         }
@@ -1178,7 +1178,7 @@ pub fn calculate_adaptive_workgroup_size(
                 [512, 1, 1] // Larger workgroups for dense-ish matrices
             }
         }
-        GpuBackend::OpenCl => {
+        GpuBackend::OpenCL => {
             // Conservative sizing for compatibility
             if avg_nnz_per_row < 20 {
                 [64, 1, 1]
@@ -1380,7 +1380,7 @@ impl GpuPerformanceProfiler {
                             ));
                         }
                     }
-                    GpuBackend::OpenCl => {
+                    GpuBackend::OpenCL => {
                         if avg_time > 15.0 {
                             recommendations.push(format!(
                                 "OpenCL performance for {} could be improved with memory optimization (current avg: {:.2}ms)",

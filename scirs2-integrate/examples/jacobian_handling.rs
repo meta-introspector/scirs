@@ -51,10 +51,10 @@ fn main() {
             println!("  Number of steps: {}", res.n_steps);
             println!("  Number of function evaluations: {}", res.n_eval);
             println!("  Number of Jacobian evaluations: {}", res.n_jac);
-            println!("  Execution time: {:?}", duration);
+            println!("  Execution time: {duration:?}");
             println!("  Final state: {:?}", res.y.last().unwrap());
         }
-        Err(e) => println!("  Error: {:?}", e),
+        Err(e) => println!("  Error: {e:?}"),
     }
     println!();
 
@@ -87,10 +87,10 @@ fn main() {
             println!("  Number of steps: {}", res.n_steps);
             println!("  Number of function evaluations: {}", res.n_eval);
             println!("  Number of Jacobian evaluations: {}", res.n_jac);
-            println!("  Execution time: {:?}", duration);
+            println!("  Execution time: {duration:?}");
             println!("  Final state: {:?}", res.y.last().unwrap());
         }
-        Err(e) => println!("  Error: {:?}", e),
+        Err(e) => println!("  Error: {e:?}"),
     }
     println!();
 
@@ -138,10 +138,10 @@ fn main() {
             println!("  Number of steps: {}", res.n_steps);
             println!("  Number of function evaluations: {}", res.n_eval);
             println!("  Number of Jacobian evaluations: {}", res.n_jac);
-            println!("  Execution time: {:?}", duration);
+            println!("  Execution time: {duration:?}");
             println!("  Final state: {:?}", res.y.last().unwrap());
         }
-        Err(e) => println!("  Error: {:?}", e),
+        Err(e) => println!("  Error: {e:?}"),
     }
     println!();
 

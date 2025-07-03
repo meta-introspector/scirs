@@ -738,10 +738,7 @@ mod tests {
         let temp_dir = match tempdir() {
             Ok(dir) => dir,
             Err(e) => {
-                println!(
-                    "Skipping test_model_serializer (temp dir creation failed): {}",
-                    e
-                );
+                println!("Skipping test_model_serializer (temp dir creation failed): {e}");
                 return;
             }
         };
@@ -790,10 +787,7 @@ mod tests {
         let temp_dir = match tempdir() {
             Ok(dir) => dir,
             Err(e) => {
-                println!(
-                    "Skipping test_save_load_checkpoint (temp dir creation failed): {}",
-                    e
-                );
+                println!("Skipping test_save_load_checkpoint (temp dir creation failed): {e}");
                 return;
             }
         };
@@ -822,14 +816,14 @@ mod tests {
         let checkpoint_path = temp_dir.path().join("checkpoint");
         let result = save_checkpoint(&model, &optimizer, &checkpoint_path, 10, metrics.clone());
         if let Err(e) = result {
-            println!("Skipping test_save_load_checkpoint (save failed): {}", e);
+            println!("Skipping test_save_load_checkpoint (save failed): {e}");
             return;
         }
 
         // Load checkpoint
         let result = load_checkpoint(&checkpoint_path);
         if let Err(e) = result {
-            println!("Skipping test_save_load_checkpoint (load failed): {}", e);
+            println!("Skipping test_save_load_checkpoint (load failed): {e}");
             return;
         }
 

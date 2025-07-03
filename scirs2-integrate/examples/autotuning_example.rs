@@ -162,15 +162,15 @@ fn benchmark_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
     let base_profile = tuner.tune_for_problem_size(1000 * 1000);
     let base_time = benchmark_fn(&base_profile);
 
-    println!("Base configuration: {:.2?}", base_time);
+    println!("Base configuration: {base_time:.2?}");
 
     let optimized_profile = tuner.benchmark_tune::<f64>("matvec", benchmark_fn, 1000 * 1000);
     let optimized_time = benchmark_fn(&optimized_profile);
 
-    println!("Optimized configuration: {:.2?}", optimized_time);
+    println!("Optimized configuration: {optimized_time:.2?}");
 
     let speedup = base_time.as_nanos() as f64 / optimized_time.as_nanos() as f64;
-    println!("Speedup: {:.2}x", speedup);
+    println!("Speedup: {speedup:.2}x");
 
     println!("Optimized parameters:");
     println!("  Threads: {}", optimized_profile.num_threads);
@@ -237,7 +237,7 @@ fn memory_optimization_example() -> Result<(), Box<dyn std::error::Error>> {
 
         let efficiency = baseline_time.unwrap().as_nanos() as f64 / elapsed.as_nanos() as f64;
 
-        println!("{:10}   {:8.2?}   {:6.2}x", name, elapsed, efficiency);
+        println!("{name:10}   {elapsed:8.2?}   {efficiency:6.2}x");
     }
 
     // Demonstrate Monte Carlo integration tuning

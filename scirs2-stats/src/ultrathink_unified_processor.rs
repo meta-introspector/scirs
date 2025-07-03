@@ -17,11 +17,10 @@ use crate::ultrathink_parallel_enhancements::{
     UltraParallelProcessor, UltrathinkParallelConfig,
 };
 use crate::ultrathink_simd_optimizations::{
-    ultra_batch_statistics, ultra_matrix_operations, ultra_moving_window_stats,
-    ultra_quantiles_simd, MatrixOperation, MovingWindowResult, UltraBatchStats,
-    UltrathinkSimdConfig,
+    ultra_batch_statistics, ultra_matrix_operations, ultra_moving_window_stats, MatrixOperation,
+    MovingWindowResult, UltraBatchStats, UltrathinkSimdConfig,
 };
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
+use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::collections::HashMap;

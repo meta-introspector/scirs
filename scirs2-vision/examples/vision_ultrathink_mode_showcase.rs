@@ -309,10 +309,7 @@ fn ai_optimization_demo(frames: &[Frame]) -> Result<()> {
         predictive_scaler.record_workload(workload);
 
         if i % 3 == 0 {
-            println!(
-                "    Optimization step {}: Reward={:.3}, Performance trend=improving",
-                i, reward
-            );
+            println!("    Optimization step {i}: Reward={reward:.3}, Performance trend=improving");
         }
     }
 
@@ -335,7 +332,7 @@ fn ai_optimization_demo(frames: &[Frame]) -> Result<()> {
     for gen in 0..5 {
         let converged = genetic_optimizer.evolve_generation();
         if converged {
-            println!("    Genetic algorithm converged at generation {}", gen);
+            println!("    Genetic algorithm converged at generation {gen}");
             break;
         }
     }
@@ -480,18 +477,12 @@ fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
 
     println!("  ✅ Integrated ultrathink processing complete:");
     println!("     🌌 Quantum Processing:");
-    println!(
-        "        - {} quantum decisions optimized pipeline flow",
-        total_quantum_decisions
-    );
+    println!("        - {total_quantum_decisions} quantum decisions optimized pipeline flow");
     println!("        - Interference patterns reduced noise artifacts");
     println!("        - Superposition enabled parallel processing paths");
 
     println!("     🧠 Neuromorphic Computing:");
-    println!(
-        "        - {} total spike events processed",
-        total_spike_events
-    );
+    println!("        - {total_spike_events} total spike events processed");
     println!(
         "        - {:.1}% sparsity achieved ultra-low power consumption",
         efficiency_stats.sparsity * 100.0
@@ -499,10 +490,7 @@ fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
     println!("        - Adaptive spiking networks learned input patterns");
 
     println!("     🤖 AI Optimization:");
-    println!(
-        "        - Average reward: {:.3} (performance improved over time)",
-        avg_reward
-    );
+    println!("        - Average reward: {avg_reward:.3} (performance improved over time)");
     println!("        - Real-time parameter adaptation");
     println!("        - Multi-objective optimization balanced competing goals");
 
@@ -601,10 +589,7 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
 
     println!("  ✅ Neural-Quantum Hybrid Processing Complete:");
     println!("     🔮 Quantum Processing:");
-    println!(
-        "        - Average quantum advantage: {:.3}x speedup",
-        avg_quantum_advantage
-    );
+    println!("        - Average quantum advantage: {avg_quantum_advantage:.3}x speedup");
     println!("        - Quantum coherence maintained throughout processing");
     println!("        - Superposition-based parallel path optimization achieved");
 
@@ -617,18 +602,12 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
     println!("        - Event-driven processing reduced computational overhead");
 
     println!("     🔗 Neural-Quantum Fusion:");
-    println!(
-        "        - Fusion quality score: {:.3} (excellent coherence)",
-        avg_fusion_quality
-    );
+    println!("        - Fusion quality score: {avg_fusion_quality:.3} (excellent coherence)");
     println!("        - Seamless integration of quantum and biological paradigms");
     println!("        - Adaptive weight balancing optimized performance");
 
     println!("     🌟 Emergent Intelligence:");
-    println!(
-        "        - {} emergent behaviors detected across sequence",
-        total_emergent_behaviors
-    );
+    println!("        - {total_emergent_behaviors} emergent behaviors detected across sequence");
     println!("        - Complex pattern recognition beyond traditional algorithms");
     println!("        - Self-organizing behavior adaptation observed");
 

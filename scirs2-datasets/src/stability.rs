@@ -327,8 +327,12 @@ mod tests {
 
     #[test]
     fn test_api_version() {
-        assert!(!ApiVersion::CURRENT.is_empty());
-        assert!(!ApiVersion::MIN_SUPPORTED.is_empty());
-        assert!(!ApiVersion::NEXT_PLANNED.is_empty());
+        // Test that version strings are properly formatted (non-empty and contain dots)
+        assert!(ApiVersion::CURRENT.contains('.'));
+        assert!(ApiVersion::MIN_SUPPORTED.contains('.'));
+        assert!(ApiVersion::NEXT_PLANNED.contains('.'));
+
+        // Test that versions are properly ordered (basic check)
+        assert!(ApiVersion::CURRENT >= ApiVersion::MIN_SUPPORTED);
     }
 }

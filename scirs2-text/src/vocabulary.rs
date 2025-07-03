@@ -112,7 +112,7 @@ impl Vocabulary {
 
         // Write each token on a new line
         for (_, token) in tokens {
-            writeln!(&mut file, "{}", token).map_err(|e| TextError::IoError(e.to_string()))?;
+            writeln!(&mut file, "{token}").map_err(|e| TextError::IoError(e.to_string()))?;
         }
 
         Ok(())

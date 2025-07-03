@@ -12,11 +12,11 @@ fn main() {
     let report = generate_frozen_api_report();
 
     // Print the report
-    println!("{}", report);
+    println!("{report}");
 
     // Also write to file
     if let Err(e) = std::fs::write("frozen_api_report.md", &report) {
-        eprintln!("Failed to write report to file: {}", e);
+        eprintln!("Failed to write report to file: {e}");
     } else {
         println!("\nReport also written to frozen_api_report.md");
     }

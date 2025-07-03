@@ -68,9 +68,7 @@ fn test_simple_function() -> Result<(), Box<dyn std::error::Error>> {
 
     println!(
         "Sequential MC: value = {:.6}, error = {:.2e}, time = {:.2} ms",
-        seq_result.value,
-        seq_result.std_error,
-        seq_time.as_millis()
+        seq_result.value, seq_result.std_error, seq_time.as_millis()
     );
 
     // Parallel Monte Carlo (if available)
@@ -92,23 +90,19 @@ fn test_simple_function() -> Result<(), Box<dyn std::error::Error>> {
 
         println!(
             "Parallel MC:   value = {:.6}, error = {:.2e}, time = {:.2} ms",
-            par_result.value,
-            par_result.std_error,
-            par_time.as_millis()
+            par_result.value, par_result.std_error, par_time.as_millis()
         );
 
         let speedup = seq_time.as_nanos() as f64 / par_time.as_nanos() as f64;
-        println!("Speedup: {:.2}x", speedup);
+        println!("Speedup: {speedup:.2}x");
 
         // Verify results are consistent
         let value_diff = (seq_result.value - par_result.value).abs();
-        println!(
-            "Value difference: {:.2e} (should be small due to randomness)",
-            value_diff
-        );
+        println!("Value difference: {value_diff:.2e} (should be small due to randomness)");
     }
 
-    println!("Expected value: {:.6}", 2.0 / 3.0);
+    let expected = 2.0 / 3.0;
+    println!("Expected value: {expected:.6}");
 
     Ok(())
 }
@@ -145,9 +139,7 @@ fn test_expensive_function() -> Result<(), Box<dyn std::error::Error>> {
 
     println!(
         "Sequential MC: value = {:.6}, error = {:.2e}, time = {:.2} ms",
-        seq_result.value,
-        seq_result.std_error,
-        seq_time.as_millis()
+        seq_result.value, seq_result.std_error, seq_time.as_millis()
     );
 
     // Parallel Monte Carlo (if available)
@@ -169,16 +161,11 @@ fn test_expensive_function() -> Result<(), Box<dyn std::error::Error>> {
 
         println!(
             "Parallel MC:   value = {:.6}, error = {:.2e}, time = {:.2} ms",
-            par_result.value,
-            par_result.std_error,
-            par_time.as_millis()
+            par_result.value, par_result.std_error, par_time.as_millis()
         );
 
         let speedup = seq_time.as_nanos() as f64 / par_time.as_nanos() as f64;
-        println!(
-            "Speedup: {:.2}x (should be higher for expensive functions)",
-            speedup
-        );
+        println!("Speedup: {speedup:.2}x (should be higher for expensive functions)");
     }
 
     Ok(())
@@ -212,9 +199,7 @@ fn test_multidimensional_integration() -> Result<(), Box<dyn std::error::Error>>
 
     println!(
         "Sequential MC: value = {:.6}, error = {:.2e}, time = {:.2} ms",
-        seq_result.value,
-        seq_result.std_error,
-        seq_time.as_millis()
+        seq_result.value, seq_result.std_error, seq_time.as_millis()
     );
 
     // Parallel Monte Carlo (if available)
@@ -236,17 +221,15 @@ fn test_multidimensional_integration() -> Result<(), Box<dyn std::error::Error>>
 
         println!(
             "Parallel MC:   value = {:.6}, error = {:.2e}, time = {:.2} ms",
-            par_result.value,
-            par_result.std_error,
-            par_time.as_millis()
+            par_result.value, par_result.std_error, par_time.as_millis()
         );
 
         let speedup = seq_time.as_nanos() as f64 / par_time.as_nanos() as f64;
-        println!("Speedup: {:.2}x", speedup);
+        println!("Speedup: {speedup:.2}x");
 
         // The exact value for this integral is π³ ≈ 31.006
         let exact_value = std::f64::consts::PI.powi(3);
-        println!("Exact value: {:.6}", exact_value);
+        println!("Exact value: {exact_value:.6}");
         println!(
             "Sequential error: {:.2e}",
             (seq_result.value - exact_value).abs()
@@ -300,8 +283,9 @@ fn test_adaptive_parallel_integration() -> Result<(), Box<dyn std::error::Error>
         println!("  Value: {:.6}", result.value);
         println!("  Standard error: {:.2e}", result.std_error);
         println!("  Samples used: {}", result.n_evals);
-        println!("  Time: {:.2} ms", time.as_millis());
-        println!("  Target variance: {:.2e}", target_variance);
+        let time_ms = time.as_millis();
+        println!("  Time: {time_ms:.2} ms");
+        println!("  Target variance: {target_variance:.2e}");
 
         if result.std_error <= target_variance {
             println!("  ✓ Target variance achieved!");
@@ -339,7 +323,7 @@ fn print_performance_recommendations() {
             .map(|n| n.get())
             .unwrap_or(1);
         println!("\\n✓ Parallel feature is ENABLED");
-        println!("  Available CPU cores: {}", num_threads);
+        println!("  Available CPU cores: {num_threads}");
         println!(
             "  Recommended thread count: {}",
             (num_threads as f64 * 0.75) as usize

@@ -66,7 +66,7 @@ fn basic_rrt_example() -> SpatialResult<()> {
     let goal = [9.0, 5.0];
     let goal_threshold = 0.5;
 
-    println!("Finding path from {:?} to {:?}...", start, goal);
+    println!("Finding path from {start:?} to {goal:?}...");
 
     // Find a path
     let path = planner.find_path(start, goal, goal_threshold)?;
@@ -138,10 +138,7 @@ fn rrt_star_example() -> SpatialResult<()> {
     let goal = [9.0, 5.0];
     let goal_threshold = 0.5;
 
-    println!(
-        "Finding optimal path from {:?} to {:?} using RRT*...",
-        start, goal
-    );
+    println!("Finding optimal path from {start:?} to {goal:?} using RRT*...");
 
     // Find a path
     let path = planner.find_path(start, goal, goal_threshold)?;
@@ -206,10 +203,7 @@ fn bidirectional_rrt_example() -> SpatialResult<()> {
     let goal = [9.0, 9.0];
     let goal_threshold = 0.5;
 
-    println!(
-        "Finding path from {:?} to {:?} using bidirectional RRT...",
-        start, goal
-    );
+    println!("Finding path from {start:?} to {goal:?} using bidirectional RRT...");
 
     // Find a path
     let path = planner.find_path(start, goal, goal_threshold)?;
@@ -288,7 +282,7 @@ fn visualize_path(
     println!("\nPath visualization (S=Start, G=Goal, *=Path point, #=Obstacle):");
     for row in &grid {
         for &cell in row {
-            print!("{} ", cell);
+            print!("{cell} ");
         }
         println!();
     }

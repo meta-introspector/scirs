@@ -142,21 +142,21 @@ fn demonstrate_error_estimation(profiler: &mut PerformanceProfiler) -> Integrate
     let ode_fn = |_t: f64, y: &ArrayView1<f64>| Array1::from_vec(vec![-y[0], -2.0 * y[1]]);
 
     // Simulate multiple solution steps with different step sizes
-    let solutions = vec![
+    let solutions = [
         Array1::from_vec(vec![1.0, 0.5]),   // t=0.0
         Array1::from_vec(vec![0.95, 0.45]), // t=0.1
         Array1::from_vec(vec![0.90, 0.40]), // t=0.2
         Array1::from_vec(vec![0.86, 0.36]), // t=0.3
     ];
 
-    let step_sizes = vec![0.1, 0.1, 0.1];
+    let step_sizes = [0.1, 0.1, 0.1];
 
     for (i, solution) in solutions.iter().enumerate().skip(1) {
         let step_size = step_sizes[i - 1];
         let embedded_error = Some(1e-4 * (i as f64));
 
         let error_analysis =
-            error_estimator.analyze_error(solution, step_size, &ode_fn, embedded_error)?;
+            error_estimator.analyze_error(solution, step_size, ode_fn, embedded_error)?;
 
         println!(
             "   Step {}: Primary error = {:.2e}, Confidence = {:.3}",
@@ -164,10 +164,10 @@ fn demonstrate_error_estimation(profiler: &mut PerformanceProfiler) -> Integrate
         );
 
         if let Some(richardson_error) = error_analysis.richardson_error {
-            println!("            Richardson error = {:.2e}", richardson_error);
+            println!("            Richardson error = {richardson_error:.2e}");
         }
         if let Some(spectral_error) = error_analysis.spectral_error {
-            println!("            Spectral error = {:.2e}", spectral_error);
+            println!("            Spectral error = {spectral_error:.2e}");
         }
     }
 
@@ -228,7 +228,7 @@ fn demonstrate_parallel_optimization(profiler: &mut PerformanceProfiler) -> Inte
             result.dim()
         );
 
-        profiler.record_metric(&format!("{}_time_ms", name), duration.as_millis() as f64);
+        profiler.record_metric(&format!("{name}_time_ms"), duration.as_millis() as f64);
     }
 
     profiler.end_phase("parallel_optimization_demo");

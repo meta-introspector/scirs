@@ -1313,7 +1313,7 @@ impl CNNLSTMHybrid {
 
         // Reshape for LSTM input (simplified)
         let lstm_input = Array2::from_shape_vec((1, cnn_features.len()), cnn_features.to_vec())
-            .map_err(|e| TextError::InvalidInput(format!("Reshape error: {}", e)))?;
+            .map_err(|e| TextError::InvalidInput(format!("Reshape error: {e}")))?;
 
         // Process through LSTM
         let lstm_output = self.lstm.forward(lstm_input.view())?;

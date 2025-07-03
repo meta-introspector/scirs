@@ -2753,10 +2753,11 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
     }
 
     /// Update performance metrics
+    #[allow(dead_code)]
     fn update_metrics(
         &mut self,
-        gradients: &Array1<T>,
-        updates: &Array1<T>,
+        _gradients: &Array1<T>,
+        _updates: &Array1<T>,
         strategy: OptimizationStrategy,
     ) {
         // Update attention statistics
@@ -3030,7 +3031,7 @@ impl<T: Float + Default + Clone> TransformerNetwork<T> {
     }
 
     fn forward(&mut self, input: &Array2<T>) -> Result<Array2<T>> {
-        let (seq_len, _) = input.dim();
+        let (_seq_len, _) = input.dim();
 
         // Input embedding
         let mut x = self.input_embedding.forward(input)?;

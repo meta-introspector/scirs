@@ -17,8 +17,7 @@ const TOTAL_VARS: usize = N * N; // Total number of variables
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(
-        "Solving a large sparse DAE system ({} variables) using Krylov-enhanced BDF methods",
-        TOTAL_VARS
+        "Solving a large sparse DAE system ({TOTAL_VARS} variables) using Krylov-enhanced BDF methods"
     );
 
     // Grid spacing
@@ -32,8 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let y0 = Array1::zeros(n_constraints);
 
     println!(
-        "System size: {} differential variables, {} algebraic constraints",
-        TOTAL_VARS, n_constraints
+        "System size: {TOTAL_VARS} differential variables, {n_constraints} algebraic constraints"
     );
 
     // Time span
@@ -119,7 +117,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Calculate the speedup
     let speedup = elapsed_bdf.as_secs_f64() / elapsed_krylov.as_secs_f64();
-    println!("\nSpeedup: {:.2}x", speedup);
+    println!("\nSpeedup: {speedup:.2}x");
 
     // Visualize results at the final time point
     // create_solution_plot(&result_bdf, "heat_equation_bdf.png", "Standard BDF")?;

@@ -69,7 +69,7 @@ impl<T: Float> Hook<T> for Print {
 
 impl<T: Float> Hook<T> for Show {
     fn call(&self, arr: &crate::ndarray_ext::NdArrayView<T>) {
-        println!("{:?}", arr);
+        println!("{arr:?}");
     }
 }
 

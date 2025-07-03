@@ -16,7 +16,7 @@ fn main() {
     ];
 
     println!("Original array:");
-    println!("{:?}\n", a);
+    println!("{a:?}\n");
 
     // 1. Advanced Indexing Examples
     println!("Advanced Indexing Examples:");
@@ -25,8 +25,8 @@ fn main() {
     // Boolean masking
     let selected = indexing::boolean_mask_2d(a.view(), mask.view()).unwrap();
     println!("Boolean masking:");
-    println!("Mask: {:?}", mask);
-    println!("Selected elements: {:?}\n", selected);
+    println!("Mask: {mask:?}");
+    println!("Selected elements: {selected:?}\n");
 
     // Fancy indexing with explicit indices
     let row_indices = array![0, 2];
@@ -34,17 +34,17 @@ fn main() {
     let fancy_indexed =
         indexing::fancy_index_2d(a.view(), row_indices.view(), col_indices.view()).unwrap();
     println!("Fancy indexing with row_indices=[0, 2], col_indices=[0, 1]:");
-    println!("Selected elements: {:?}\n", fancy_indexed);
+    println!("Selected elements: {fancy_indexed:?}\n");
 
     // Extract a diagonal
     let main_diag = indexing::diagonal(a.view(), 0).unwrap();
     println!("Main diagonal:");
-    println!("{:?}\n", main_diag);
+    println!("{main_diag:?}\n");
 
     // Extract elements matching a condition
     let condition_result = indexing::where_2d(a.view(), |&x| x > 5.0).unwrap();
     println!("Elements > 5.0:");
-    println!("{:?}\n", condition_result);
+    println!("{condition_result:?}\n");
 
     // 2. Statistical Function Examples
     println!("Statistical Function Examples:");
@@ -124,7 +124,7 @@ fn main() {
     // Calculate the z-scores (standardize the data)
     let z_scores = standardize_array(&a);
     println!("Z-scores:");
-    println!("{:?}\n", z_scores);
+    println!("{z_scores:?}\n");
 
     // Verify the z-scores have mean 0 and standard deviation 1
     println!("Z-score statistics:");

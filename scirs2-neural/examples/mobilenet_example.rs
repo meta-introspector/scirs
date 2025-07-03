@@ -54,6 +54,7 @@ fn main() -> Result<()> {
             max_val = val;
             max_idx = i;
         }
+    }
     println!(
         "Predicted class: {} with confidence: {:.4}",
         max_idx, max_val

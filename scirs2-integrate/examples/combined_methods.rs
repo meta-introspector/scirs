@@ -197,7 +197,7 @@ fn main() {
     });
 
     println!("2D Integration - f(x,y) = sin(x) * cos(y) over [0,π] × [0,π/2]");
-    println!("Exact result: {:.10}", exact_2d);
+    println!("Exact result: {exact_2d:.10}");
     println!(
         "Monte Carlo result: {:.10} (error: {:.10}) in {}ms",
         mc_result,
