@@ -654,13 +654,6 @@ impl BiomedicalAnalysis {
             emg: None,
         }
     }
-}
-
-impl Default for BiomedicalAnalysis {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
     /// Add ECG analysis
     pub fn with_ecg(mut self, analysis: ECGAnalysis) -> Self {
@@ -750,6 +743,12 @@ impl Default for BiomedicalAnalysis {
         }
 
         Ok(sync_metrics)
+    }
+}
+
+impl Default for BiomedicalAnalysis {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

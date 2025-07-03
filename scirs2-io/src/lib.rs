@@ -33,6 +33,40 @@
 #![allow(clippy::type_complexity)] // Complex type is necessary for format validators
 
 pub mod arff;
+/// Ultra-Think Mode Coordinator - Unified Intelligence for I/O Operations
+///
+/// Provides the highest level of intelligent I/O processing by coordinating multiple advanced systems:
+/// - Neural adaptive optimization with reinforcement learning
+/// - Quantum-inspired parallel processing with superposition algorithms
+/// - GPU acceleration with multi-backend support
+/// - Advanced memory management and resource allocation
+/// - Real-time performance monitoring and self-optimization
+/// - Meta-learning for cross-domain adaptation
+/// - Emergent behavior detection and autonomous system improvement
+// TODO: Fix compilation issues
+// pub mod ultrathink_coordinator;
+/// Enhanced algorithms for Ultra-Think Mode
+///
+/// Provides advanced algorithmic enhancements for the Ultra-Think coordinator:
+/// - Advanced pattern recognition with deep learning capabilities
+/// - Multi-scale feature extraction and analysis
+/// - Emergent pattern detection and meta-pattern recognition
+/// - Sophisticated optimization recommendation systems
+/// - Self-improving algorithmic components with adaptive learning
+// TODO: Fix compilation issues
+// pub mod ultrathink_enhanced_algorithms;
+
+/// Async I/O support for streaming capabilities
+///
+/// Provides asynchronous I/O interfaces for non-blocking processing of large datasets:
+/// - Async file reading and writing with tokio
+/// - Asynchronous stream processing with backpressure
+/// - Concurrent processing with configurable concurrency levels
+/// - Network I/O support for remote data access
+/// - Cancellation support for long-running operations
+/// - Real-time progress monitoring for async operations
+#[cfg(feature = "async")]
+pub mod async_io;
 /// Data compression module
 ///
 /// Provides utilities for compressing and decompressing scientific data:
@@ -87,6 +121,17 @@ pub mod formats;
 /// - Arrays stored in column-major order (Fortran convention)
 /// - Support for all common Fortran data types
 pub mod fortran;
+/// GPU-accelerated I/O operations
+///
+/// Provides GPU-accelerated implementations of I/O operations using the scirs2-core GPU abstraction:
+/// - GPU-accelerated compression and decompression
+/// - GPU-accelerated data type conversions
+/// - GPU-accelerated matrix operations for file I/O
+/// - GPU-accelerated checksum computation
+/// - Support for multiple GPU backends (CUDA, Metal, OpenCL)
+/// - Automatic fallback to CPU when GPU is not available
+#[cfg(feature = "gpu")]
+pub mod gpu_io;
 /// Harwell-Boeing sparse matrix format module
 ///
 /// Provides functionality for reading and writing Harwell-Boeing sparse matrix files:
@@ -223,7 +268,8 @@ pub mod network;
 /// - Real-time performance feedback and learning
 /// - Ultra-high performance processing with adaptive algorithms
 /// - SIMD-accelerated neural inference for low-latency decisions
-pub mod neural_adaptive_io;
+// TODO: Fix compilation issues
+// pub mod neural_adaptive_io;
 /// Out-of-core processing for terabyte-scale datasets
 ///
 /// Provides infrastructure for processing datasets too large for memory:
@@ -243,6 +289,17 @@ pub mod out_of_core;
 /// - Progress tracking and monitoring
 /// - Caching and checkpointing for long-running pipelines
 pub mod pipeline;
+/// Real-time data streaming protocols
+///
+/// Provides infrastructure for real-time data streaming and processing:
+/// - WebSocket and Server-Sent Events support
+/// - gRPC and MQTT streaming protocols
+/// - Backpressure handling and flow control
+/// - Stream transformations and filtering
+/// - Multi-stream synchronization
+/// - Time series buffering and aggregation
+#[cfg(feature = "async")]
+pub mod realtime;
 /// Quantum-inspired I/O processing algorithms with ultrathink capabilities
 ///
 /// Provides quantum-inspired algorithms for ultra-high performance I/O:
@@ -252,7 +309,8 @@ pub mod pipeline;
 /// - Quantum interference patterns for data compression
 /// - Quantum tunneling for barrier-free processing
 /// - Quantum measurement for adaptive decision making
-pub mod quantum_inspired_io;
+// TODO: Fix compilation issues
+// pub mod quantum_inspired_io;
 /// Data serialization utilities
 ///
 /// Provides functionality for serializing and deserializing scientific data:
@@ -329,60 +387,6 @@ pub mod sparse;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 pub mod streaming;
-/// Ultra-Think Mode Coordinator - Unified Intelligence for I/O Operations
-///
-/// Provides the highest level of intelligent I/O processing by coordinating multiple advanced systems:
-/// - Neural adaptive optimization with reinforcement learning
-/// - Quantum-inspired parallel processing with superposition algorithms
-/// - GPU acceleration with multi-backend support
-/// - Advanced memory management and resource allocation
-/// - Real-time performance monitoring and self-optimization
-/// - Meta-learning for cross-domain adaptation
-/// - Emergent behavior detection and autonomous system improvement
-pub mod ultrathink_coordinator;
-/// Enhanced algorithms for Ultra-Think Mode
-///
-/// Provides advanced algorithmic enhancements for the Ultra-Think coordinator:
-/// - Advanced pattern recognition with deep learning capabilities
-/// - Multi-scale feature extraction and analysis
-/// - Emergent pattern detection and meta-pattern recognition
-/// - Sophisticated optimization recommendation systems
-/// - Self-improving algorithmic components with adaptive learning
-pub mod ultrathink_enhanced_algorithms;
-
-/// Async I/O support for streaming capabilities
-///
-/// Provides asynchronous I/O interfaces for non-blocking processing of large datasets:
-/// - Async file reading and writing with tokio
-/// - Asynchronous stream processing with backpressure
-/// - Concurrent processing with configurable concurrency levels
-/// - Network I/O support for remote data access
-/// - Cancellation support for long-running operations
-/// - Real-time progress monitoring for async operations
-#[cfg(feature = "async")]
-pub mod async_io;
-/// GPU-accelerated I/O operations
-///
-/// Provides GPU-accelerated implementations of I/O operations using the scirs2-core GPU abstraction:
-/// - GPU-accelerated compression and decompression
-/// - GPU-accelerated data type conversions
-/// - GPU-accelerated matrix operations for file I/O
-/// - GPU-accelerated checksum computation
-/// - Support for multiple GPU backends (CUDA, Metal, OpenCL)
-/// - Automatic fallback to CPU when GPU is not available
-#[cfg(feature = "gpu")]
-pub mod gpu_io;
-/// Real-time data streaming protocols
-///
-/// Provides infrastructure for real-time data streaming and processing:
-/// - WebSocket and Server-Sent Events support
-/// - gRPC and MQTT streaming protocols
-/// - Backpressure handling and flow control
-/// - Stream transformations and filtering
-/// - Multi-stream synchronization
-/// - Time series buffering and aggregation
-#[cfg(feature = "async")]
-pub mod realtime;
 /// Thread pool for parallel I/O operations
 ///
 /// Provides a high-performance thread pool optimized for I/O operations:
@@ -432,11 +436,12 @@ pub mod workflow;
 pub mod zero_copy;
 
 // Re-export commonly used functionality
-pub use ultrathink_coordinator::{
-    AdaptiveImprovements, IntelligenceLevel, PerformanceIntelligenceStats, ProcessingResult,
-    QualityMetrics, StrategyType, UltraThinkCoordinator, UltraThinkStatistics,
-};
-pub use ultrathink_enhanced_algorithms::{
-    AdvancedPatternAnalysis, AdvancedPatternRecognizer, DataCharacteristics, EmergentPattern,
-    MetaPattern, OptimizationRecommendation, SynergyType,
-};
+// TODO: Uncomment when modules are fixed
+// pub use ultrathink_coordinator::{
+//     AdaptiveImprovements, IntelligenceLevel, PerformanceIntelligenceStats, ProcessingResult,
+//     QualityMetrics, StrategyType, UltraThinkCoordinator, UltraThinkStatistics,
+// };
+// pub use ultrathink_enhanced_algorithms::{
+//     AdvancedPatternAnalysis, AdvancedPatternRecognizer, DataCharacteristics, EmergentPattern,
+//     MetaPattern, OptimizationRecommendation, SynergyType,
+// };

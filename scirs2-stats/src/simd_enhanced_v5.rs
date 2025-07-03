@@ -136,8 +136,8 @@ fn compute_window_statistics<F>(
         let sum = F::simd_sum(window);
         let sq_data = F::simd_mul(window, window);
         let sum_sq = F::simd_sum(&sq_data.view());
-        let min_val = F::simd_min(window);
-        let max_val = F::simd_max(window);
+        let min_val = F::simd_min_element(window);
+        let max_val = F::simd_max_element(window);
         (sum, sum_sq, min_val, max_val)
     } else {
         // Scalar fallback
@@ -538,7 +538,7 @@ fn compute_vector_operation<F>(
         MatrixOperation::Min => {
             if let Some(ref mut mins) = results.mins {
                 mins[idx] = if use_simd {
-                    F::simd_min(data)
+                    F::simd_min_element(&data.view())
                 } else {
                     data.iter().copied().fold(data[0], F::min)
                 };
@@ -547,7 +547,7 @@ fn compute_vector_operation<F>(
         MatrixOperation::Max => {
             if let Some(ref mut maxs) = results.maxs {
                 maxs[idx] = if use_simd {
-                    F::simd_max(data)
+                    F::simd_max_element(&data.view())
                 } else {
                     data.iter().copied().fold(data[0], F::max)
                 };
@@ -794,7 +794,7 @@ where
 
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
-        None => SeedableRng::from_entropy(),
+        None => StdRng::from_rng(&mut rand::rng()),
     };
 
     let n_data = data.len();
@@ -961,21 +961,24 @@ where
         }
         BootstrapStatistic::Min => {
             if use_simd {
-                F::simd_min(data)
+                F::simd_min_element(&data.view())
             } else {
                 data.iter().copied().fold(data[0], F::min)
             }
         }
         BootstrapStatistic::Max => {
             if use_simd {
-                F::simd_max(data)
+                F::simd_max_element(&data.view())
             } else {
                 data.iter().copied().fold(data[0], F::max)
             }
         }
         BootstrapStatistic::Range => {
             let (min_val, max_val) = if use_simd {
-                (F::simd_min(data), F::simd_max(data))
+                (
+                    F::simd_min_element(&data.view()),
+                    F::simd_max_element(&data.view()),
+                )
             } else {
                 let min_val = data.iter().copied().fold(data[0], F::min);
                 let max_val = data.iter().copied().fold(data[0], F::max);

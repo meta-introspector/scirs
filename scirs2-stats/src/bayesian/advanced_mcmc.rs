@@ -100,7 +100,7 @@ impl HamiltonianMonteCarlo {
 
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let ndim = target.ndim();
@@ -362,7 +362,7 @@ impl NoUTurnSampler {
 
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let ndim = target.ndim();
@@ -530,7 +530,7 @@ impl AdaptiveMetropolis {
 
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let ndim = target.ndim();
@@ -721,7 +721,7 @@ impl ParallelTempering {
 
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         // Initialize chains

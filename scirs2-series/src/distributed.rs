@@ -122,9 +122,13 @@ pub enum TaskType {
 /// Task priority levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TaskPriority {
+    /// Low priority
     Low = 1,
+    /// Normal priority
     Normal = 2,
+    /// High priority
     High = 3,
+    /// Critical priority
     Critical = 4,
 }
 
@@ -146,11 +150,17 @@ pub struct TaskResult<F: Float> {
 /// Task execution status
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TaskStatus {
+    /// Task is pending execution
     Pending,
+    /// Task is currently running
     Running,
+    /// Task completed successfully
     Completed,
+    /// Task failed
     Failed,
+    /// Task was cancelled
     Cancelled,
+    /// Task timed out
     Timeout,
 }
 
@@ -207,10 +217,15 @@ pub struct NodeInfo {
 /// Node status in the cluster
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NodeStatus {
+    /// Node is available for tasks
     Available,
+    /// Node is busy with tasks
     Busy,
+    /// Node is offline
     Offline,
+    /// Node is under maintenance
     Maintenance,
+    /// Node has failed
     Failed,
 }
 

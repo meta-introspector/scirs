@@ -15,7 +15,6 @@
 //!
 //! ```rust
 //! use scirs2_signal::lti::{design, systems::TransferFunction};
-//! use num_complex::Complex64;
 //!
 //! // Transfer function: H(s) = 1/(s+1)
 //! let sys1 = design::tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
@@ -118,6 +117,8 @@
 //! - [`design`] - System creation and interconnection functions
 
 // Re-export all public modules
+use num_complex::Complex64;
+use std::f64::consts::PI;
 pub mod analysis;
 pub mod design;
 pub mod robust_analysis;
@@ -179,7 +180,6 @@ pub mod system {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use num_complex::Complex64;
 
     #[test]
     fn test_module_api_compatibility() {

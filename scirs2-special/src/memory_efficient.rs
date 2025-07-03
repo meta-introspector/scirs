@@ -379,13 +379,14 @@ mod tests {
     #[test]
     fn test_chunk_size_calculation() {
         let config = ChunkedConfig::default();
-        let processor = ChunkedProcessor::new(config, ChunkedGamma::new());
+        let processor: ChunkedProcessor<f64, _> =
+            ChunkedProcessor::new(config, ChunkedGamma::new());
 
         // Small array - no chunking
-        assert_eq!(processor.calculate_chunk_size::<f64>(1000), 1000);
+        assert_eq!(processor.calculate_chunk_size(1000), 1000);
 
         // Large array - should chunk
-        let chunk_size = processor.calculate_chunk_size::<f64>(10_000_000);
+        let chunk_size = processor.calculate_chunk_size(10_000_000);
         assert!(chunk_size < 10_000_000);
         assert!(chunk_size > 0);
     }

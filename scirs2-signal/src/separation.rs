@@ -22,6 +22,7 @@ use crate::error::{SignalError, SignalResult};
 use crate::filter::{butter, lfilter, FilterType};
 use ndarray::Array1;
 #[cfg(test)]
+#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Configuration for multi-band separation

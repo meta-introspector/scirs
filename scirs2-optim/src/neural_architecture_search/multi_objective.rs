@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 use super::{
     ConstraintHandlingMethod, DiversityStrategy, EvaluationMetric, MultiObjectiveAlgorithm,
-    MultiObjectiveConfig, ObjectiveConfig, ObjectivePriority, ObjectiveType, OptimizationDirection,
+    MultiObjectiveConfig, ObjectiveConfig, ObjectiveType, OptimizationDirection,
     OptimizerArchitecture, SearchResult, UserPreferences,
 };
 use crate::error::{OptimError, Result};

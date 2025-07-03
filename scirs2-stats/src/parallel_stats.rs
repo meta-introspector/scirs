@@ -4,6 +4,7 @@
 //! that can significantly improve performance on multi-core systems.
 
 use crate::error::{StatsError, StatsResult};
+use crate::error_standardization::ErrorMessages;
 use crate::{mean, quantile, var, QuantileInterpolation};
 use ndarray::{s, Array1, ArrayBase, ArrayView1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
@@ -30,9 +31,7 @@ where
     D: Data<Elem = F> + Sync,
 {
     if x.is_empty() {
-        return Err(StatsError::invalid_argument(
-            "Cannot compute mean of empty array",
-        ));
+        return Err(ErrorMessages::empty_array("x"));
     }
 
     let n = x.len();
@@ -44,9 +43,15 @@ where
 
     // Parallel sum using chunk processing
     let chunk_size = (n / num_threads()).max(1000);
-    let sum: F = par_chunks(x.as_slice().unwrap(), chunk_size)
-        .map(|chunk| chunk.iter().fold(F::zero(), |acc, &val| acc + val))
-        .reduce(|| F::zero(), |a, b| a + b);
+    let sum: F = if let Some(slice) = x.as_slice() {
+        // Array is contiguous, use efficient parallel processing
+        par_chunks(slice, chunk_size)
+            .map(|chunk| chunk.iter().fold(F::zero(), |acc, &val| acc + val))
+            .reduce(|| F::zero(), |a, b| a + b)
+    } else {
+        // Array is not contiguous, fall back to sequential processing
+        x.iter().fold(F::zero(), |acc, &val| acc + val)
+    };
 
     Ok(sum / F::from(n).unwrap())
 }

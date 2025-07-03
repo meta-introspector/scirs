@@ -1032,7 +1032,6 @@ impl PluginLoader {
     }
 
     /// Helper methods for the enhanced TODO implementations
-
     /// Simulate git clone operation (would use git2 crate in production)
     fn simulate_git_clone(
         &self,

@@ -18,6 +18,7 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::check_finite;
 use std::arch::x86_64::*;
+#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Configuration for SIMD operations

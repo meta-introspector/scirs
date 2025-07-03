@@ -13,7 +13,6 @@
 use super::windows::dpss;
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
@@ -83,6 +82,7 @@ impl Default for MultitaperConfig {
     }
 }
 
+use num_complex::Complex64;
 /// Enhanced multitaper power spectral density estimation with SIMD and parallel processing
 ///
 /// This function provides a high-performance implementation of the multitaper method
@@ -101,16 +101,17 @@ impl Default for MultitaperConfig {
 ///
 /// ```
 /// use scirs2_signal::multitaper::enhanced::{enhanced_pmtm, MultitaperConfig};
-/// use std::f64::consts::PI;
+/// #[cfg(test)]
+use std::f64::consts::PI;
 ///
 /// // Generate test signal
 /// let n = 1024;
 /// let fs = 100.0;
 /// let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
 /// use rand::prelude::*;
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// let signal: Vec<f64> = t.iter()
-///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(0.0..1.0))
+///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.gen_range(0.0..1.0))
 ///     .collect();
 ///
 /// // Configure multitaper estimation

@@ -1630,7 +1630,6 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     }
 
     /// Helper method implementations would continue...
-
     // Helper method implementations
     fn create_search_strategy(config: &NASConfig<T>) -> Result<Box<dyn SearchStrategy<T>>> {
         match config.search_strategy {

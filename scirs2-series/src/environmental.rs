@@ -419,7 +419,7 @@ impl AtmosphericAnalysis {
 
         let mut rose_data = Array2::zeros((direction_bins, speed_bins.len() - 1));
 
-        for (_i, (&dir, &speed)) in wind_dir.iter().zip(self.wind_speed.iter()).enumerate() {
+        for (&dir, &speed) in wind_dir.iter().zip(self.wind_speed.iter()) {
             let dir_bin = ((dir / bin_size).floor() as usize).min(direction_bins - 1);
 
             for (s_bin, window) in speed_bins.windows(2).enumerate() {
@@ -553,13 +553,6 @@ impl EnvironmentalAnalysis {
             atmospheric: None,
         }
     }
-}
-
-impl Default for EnvironmentalAnalysis {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
     /// Add temperature data
     pub fn with_temperature(mut self, analysis: TemperatureAnalysis) -> Self {
@@ -675,6 +668,12 @@ impl Default for EnvironmentalAnalysis {
         }
 
         Ok(combined_stress)
+    }
+}
+
+impl Default for EnvironmentalAnalysis {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

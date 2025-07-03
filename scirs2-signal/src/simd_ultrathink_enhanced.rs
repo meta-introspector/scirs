@@ -7,8 +7,10 @@
 use crate::error::{SignalError, SignalResult};
 use crate::simd_advanced::SimdConfig;
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayViewMut1, Axis};
+use num_complex::Complex64;
 use num_complex::{Complex, Complex64};
 use num_traits::{Float, Zero};
+use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::f64::consts::PI;
 
@@ -619,8 +621,6 @@ fn process_stft_frames_parallel(
     phase: &mut Array2<f64>,
     caps: &PlatformCapabilities,
 ) -> SignalResult<()> {
-    use scirs2_core::parallel_ops::*;
-
     let num_frames = magnitude.shape()[1];
 
     // Process frames in parallel chunks

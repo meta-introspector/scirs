@@ -1321,12 +1321,12 @@ pub struct PredictiveCodingResult<T> {
 pub fn predictive_coding_hierarchy<T>(
     image: ArrayView2<T>,
     hierarchy_sizes: &[usize],
-    config: &QuantumNeuromorphicConfig,
+    _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<PredictiveCodingResult<T>>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
-    let (height, width) = image.dim();
+    let (_height, _width) = image.dim();
     let consciousness_config = ConsciousnessConfig::default();
 
     if hierarchy_sizes.is_empty() {
@@ -1421,7 +1421,7 @@ pub struct MetaCognitiveState {
 pub fn meta_cognitive_monitoring<T>(
     image: ArrayView2<T>,
     processing_history: &[Array2<f64>],
-    config: &QuantumNeuromorphicConfig,
+    _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<(Array2<T>, MetaCognitiveState)>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
@@ -1605,10 +1605,10 @@ where
 }
 
 fn attention_schema_processing(
-    pixel_value: f64,
+    _pixel_value: f64,
     perceptual_module: &Array2<f64>,
     position: (usize, usize),
-    config: &ConsciousnessConfig,
+    _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let (y, x) = position;
     let (height, width) = perceptual_module.dim();
@@ -1642,7 +1642,7 @@ fn attention_schema_processing(
 fn memory_trace_activation(
     pixel_value: f64,
     perceptual_activation: f64,
-    config: &ConsciousnessConfig,
+    _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     // Simple memory trace based on activation patterns
     let memory_strength = perceptual_activation * pixel_value;
@@ -1655,7 +1655,7 @@ fn calculate_coalition_strength(
     perceptual: f64,
     attention: f64,
     memory: f64,
-    config: &ConsciousnessConfig,
+    _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     // Coalition strength determines access to global workspace
     let coalition = perceptual * 0.4 + attention * 0.4 + memory * 0.2;
@@ -1668,7 +1668,7 @@ fn global_broadcast_influence(
     memory_module: &mut Array2<f64>,
     broadcast_source: (usize, usize),
     strength: f64,
-    config: &ConsciousnessConfig,
+    _config: &ConsciousnessConfig,
 ) -> NdimageResult<()> {
     let (height, width) = perceptual_module.dim();
     let (source_y, source_x) = broadcast_source;

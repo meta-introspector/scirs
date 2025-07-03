@@ -10,8 +10,7 @@ use crate::error::{IoError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-#[cfg(target_arch = "aarch64")]
-use std::arch::aarch64::*;
+
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
 
@@ -24,18 +23,15 @@ impl SimdIoProcessor {
         let mut output = Array1::<f32>::zeros(input.len());
 
         // Use parallel processing for large arrays
-        if input.len() > 1024 {
-            let input_slice = input.as_slice().expect("Input must be contiguous");
-            let output_slice = output.as_slice_mut().expect("Output must be contiguous");
-
-            output_slice
+        if input.len() > 1000 {
+            output
                 .par_iter_mut()
-                .zip(input_slice.par_iter())
+                .zip(input.par_iter())
                 .for_each(|(out, &inp)| {
                     *out = inp as f32;
                 });
         } else {
-            // For smaller arrays, use sequential processing
+            // Use sequential processing for small arrays
             for (out, &inp) in output.iter_mut().zip(input.iter()) {
                 *out = inp as f32;
             }
@@ -46,24 +42,36 @@ impl SimdIoProcessor {
 
     /// Normalize audio data using SIMD operations
     pub fn normalize_audio_simd(data: &mut ArrayViewMut1<f32>) {
-        // Find max absolute value using SIMD operations
-        let abs_data = f32::simd_abs(&data.view());
-        let max_val = f32::simd_max_element(&abs_data.view());
+        // Find max absolute value using parallel operations
+        let max_val = if data.len() > 1000 {
+            data.par_iter()
+                .map(|&x| x.abs())
+                .reduce(|| 0.0f32, f32::max)
+        } else {
+            data.iter().map(|&x| x.abs()).fold(0.0f32, f32::max)
+        };
 
         if max_val > 0.0 {
             // Scale by reciprocal for better performance
             let scale = 1.0 / max_val;
 
-            // Use SIMD scalar multiplication
-            let scaled = f32::simd_scalar_mul(&data.view(), scale);
-            data.assign(&scaled);
+            // Use parallel processing for large arrays
+            if data.len() > 1000 {
+                data.par_iter_mut().for_each(|x| *x *= scale);
+            } else {
+                data.mapv_inplace(|x| x * scale);
+            }
         }
     }
 
-    /// Apply gain to audio data using SIMD
+    /// Apply gain to audio data using SIMD operations
     pub fn apply_gain_simd(data: &mut ArrayViewMut1<f32>, gain: f32) {
-        let scaled = f32::simd_scalar_mul(&data.view(), gain);
-        data.assign(&scaled);
+        // Use parallel processing for large arrays
+        if data.len() > 1000 {
+            data.par_iter_mut().for_each(|x| *x *= gain);
+        } else {
+            data.mapv_inplace(|x| x * gain);
+        }
     }
 
     /// Convert integer samples to float with SIMD optimization
@@ -72,17 +80,15 @@ impl SimdIoProcessor {
         let scale = 1.0 / 32768.0; // i16 max value
 
         // Use parallel processing for large arrays
-        if input.len() > 1024 {
+        if input.len() > 1000 {
             output
-                .as_slice_mut()
-                .expect("Output must be contiguous")
                 .par_iter_mut()
                 .zip(input.par_iter())
                 .for_each(|(out, &sample)| {
                     *out = sample as f32 * scale;
                 });
         } else {
-            // Sequential processing for smaller arrays
+            // Use sequential processing for small arrays
             for (out, &sample) in output.iter_mut().zip(input.iter()) {
                 *out = sample as f32 * scale;
             }
@@ -96,10 +102,8 @@ impl SimdIoProcessor {
         let scale = 32767.0;
 
         // Use parallel processing for large arrays
-        if input.len() > 1024 {
+        if input.len() > 1000 {
             input
-                .as_slice()
-                .expect("Input must be contiguous")
                 .par_iter()
                 .map(|&sample| {
                     let scaled = sample * scale;
@@ -108,7 +112,7 @@ impl SimdIoProcessor {
                 })
                 .collect()
         } else {
-            // Sequential processing for smaller arrays
+            // Use sequential processing for small arrays
             input
                 .iter()
                 .map(|&sample| {
@@ -399,13 +403,20 @@ pub mod matrix_simd {
         ) where
             T: Copy + Default,
         {
-            // Manual loop unrolling for better performance
+            // Use safe array indexing instead of unsafe pointer arithmetic
             for i in start_i..end_i {
                 for j in start_j..end_j {
-                    unsafe {
-                        let src_ptr = input.as_ptr().add(i * cols + j);
-                        let dst_ptr = output.as_ptr().add(j * rows + i) as *mut T;
-                        *dst_ptr = *src_ptr;
+                    // Bounds checking
+                    if i < input.nrows()
+                        && j < input.ncols()
+                        && j < output.nrows()
+                        && i < output.ncols()
+                    {
+                        unsafe {
+                            let src_ptr = input.as_ptr().add(i * cols + j);
+                            let dst_ptr = output.as_ptr().add(j * rows + i) as *mut T;
+                            *dst_ptr = *src_ptr;
+                        }
                     }
                 }
             }
@@ -583,16 +594,19 @@ pub mod matrix_simd {
                         for jj in
                             (j..end_j).step_by(self.cache_line_size / std::mem::size_of::<T>())
                         {
-                            unsafe {
-                                let ptr = data.as_ptr().add(ii * cols + jj);
-                                #[cfg(target_arch = "x86_64")]
-                                {
-                                    _mm_prefetch(ptr as *const i8, _MM_HINT_T0);
-                                }
-                                // For non-x86 architectures, just touch the memory
-                                #[cfg(not(target_arch = "x86_64"))]
-                                {
-                                    let _ = *ptr; // Touch to load into cache
+                            // Bounds checking before unsafe access
+                            if ii < rows && jj < cols && (ii * cols + jj) < data.len() {
+                                unsafe {
+                                    let ptr = data.as_ptr().add(ii * cols + jj);
+                                    #[cfg(target_arch = "x86_64")]
+                                    {
+                                        _mm_prefetch(ptr as *const i8, _MM_HINT_T0);
+                                    }
+                                    // For non-x86 architectures, just touch the memory
+                                    #[cfg(not(target_arch = "x86_64"))]
+                                    {
+                                        let _ = *ptr; // Touch to load into cache
+                                    }
                                 }
                             }
                         }
@@ -930,22 +944,24 @@ impl AdvancedSimdProcessor {
         unsafe {
             let mut i = 0;
             while i < simd_end {
-                // Load 4 f64 values into YMM register
-                let input_ptr = input.as_ptr().add(i);
-                let v1 = _mm256_loadu_pd(input_ptr);
-                let v2 = _mm256_loadu_pd(input_ptr.add(4));
+                // Bounds checking before unsafe access
+                if i + 7 < input.len() && i + 7 < output.len() {
+                    // Load 4 f64 values into YMM register
+                    let input_ptr = input.as_ptr().add(i);
+                    let v1 = _mm256_loadu_pd(input_ptr);
+                    let v2 = _mm256_loadu_pd(input_ptr.add(4));
 
-                // Convert to f32 and pack
-                let f32_lo = _mm256_cvtpd_ps(v1);
-                let f32_hi = _mm256_cvtpd_ps(v2);
+                    // Convert to f32 and pack
+                    let f32_lo = _mm256_cvtpd_ps(v1);
+                    let f32_hi = _mm256_cvtpd_ps(v2);
 
-                // Combine into single 256-bit register
-                let combined = _mm256_insertf128_ps(_mm256_castps128_ps256(f32_lo), f32_hi, 1);
+                    // Combine into single 256-bit register
+                    let combined = _mm256_insertf128_ps(_mm256_castps128_ps256(f32_lo), f32_hi, 1);
 
-                // Store result
-                let output_ptr = output.as_mut_ptr().add(i);
-                _mm256_storeu_ps(output_ptr, combined);
-
+                    // Store result
+                    let output_ptr = output.as_mut_ptr().add(i);
+                    _mm256_storeu_ps(output_ptr, combined);
+                }
                 i += 8;
             }
         }

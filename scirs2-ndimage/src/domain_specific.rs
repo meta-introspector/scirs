@@ -12,10 +12,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// Helper function for safe conversion of hardcoded constants
 fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
     T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
+        NdimageError::ComputationError(format!("Failed to convert constant {value} to float type"))
     })
 }
 
@@ -29,16 +26,14 @@ fn safe_float_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
 /// Helper function for safe usize conversion
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+        NdimageError::ComputationError(format!("Failed to convert usize {value} to float type"))
     })
 }
 use crate::filters::{gaussian_filter, median_filter};
 use crate::interpolation::{zoom, InterpolationOrder};
 use crate::measurements::{center_of_mass, moments};
 use crate::morphology::label;
-use crate::morphology::{
-    binary_closing, binary_opening, grey_opening,
-};
+use crate::morphology::{binary_closing, binary_opening, grey_opening};
 
 /// Medical imaging functions
 pub mod medical {

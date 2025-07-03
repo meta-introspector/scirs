@@ -600,7 +600,7 @@ mod tests {
         let n = 100;
         let mut signal = Vec::new();
         for i in 0..n {
-            let t = i as f64 / n as f64 * 4.0 * PI;
+            let t = i as f64 / n as f64 * 4.0 * std::f64::consts::PI;
             signal.push((t).sin() + 0.5 * (2.0 * t).sin());
         }
         let x = Array::from_shape_vec((1, n), signal).unwrap();

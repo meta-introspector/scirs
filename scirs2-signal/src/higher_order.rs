@@ -47,6 +47,7 @@ use num_complex::{Complex64, ComplexFloat};
 
 use crate::error::{SignalError, SignalResult};
 use crate::window;
+use num_complex::Complex64;
 use scirs2_fft;
 
 // Type aliases for complex return types

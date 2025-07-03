@@ -262,7 +262,7 @@ impl SciPyBenchmarkSuite {
 
         // Similar benchmarks for f64 - implementation mirrors f32 version
         // For brevity, showing one example
-        let start = Instant::now();
+        let _start = Instant::now();
         for _ in 0..self.config.warmup_iterations {
             let _ = gaussian_filter(&input, 1.0, None, None)?;
         }
@@ -299,7 +299,7 @@ impl SciPyBenchmarkSuite {
             // Binary morphology
             let binary_input = Array2::from_elem((shape[0], shape[1]), true);
 
-            let start = Instant::now();
+            let _start = Instant::now();
             for _ in 0..self.config.warmup_iterations {
                 let _ = binary_erosion(&binary_input, None, None, None, None, None, None)?;
             }
@@ -323,7 +323,7 @@ impl SciPyBenchmarkSuite {
             // Grayscale morphology
             let grayscale_input = Array2::<f64>::zeros((shape[0], shape[1]));
 
-            let start = Instant::now();
+            let _start = Instant::now();
             for _ in 0..self.config.warmup_iterations {
                 let _ = grey_erosion(&grayscale_input, None, None, None, None, None)?;
             }

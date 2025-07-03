@@ -99,7 +99,7 @@ impl Arbitrary for ReasonableComplex {
 /// Helper function to run QuickCheck tests with custom configuration
 pub fn run_quickcheck_test<F, P>(prop: F, config: &TestConfig) -> bool
 where
-    F: Fn(P) -> bool + Send + Sync + 'static,
+    F: Fn(P) -> bool + Send + Sync + 'static + quickcheck::Testable,
     P: Arbitrary + Clone + Send + std::fmt::Debug + 'static,
 {
     QuickCheck::new()
@@ -112,7 +112,7 @@ where
 /// Helper function to run QuickCheck tests that return TestResult
 pub fn run_quickcheck_test_result<F, P>(prop: F, config: &TestConfig) -> bool
 where
-    F: Fn(P) -> TestResult + Send + Sync + 'static,
+    F: Fn(P) -> TestResult + Send + Sync + 'static + quickcheck::Testable,
     P: Arbitrary + Clone + Send + std::fmt::Debug + 'static,
 {
     QuickCheck::new()

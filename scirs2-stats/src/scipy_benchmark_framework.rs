@@ -642,12 +642,12 @@ impl BenchmarkReport {
         }
     }
 
-    fn average_accuracy_grade(&self, grades: &[AccuracyGrade]) -> AccuracyGrade {
+    fn average_accuracy_grade(&self, _grades: &[AccuracyGrade]) -> AccuracyGrade {
         // Simplified: just return most common grade
         AccuracyGrade::C // Placeholder
     }
 
-    fn average_performance_grade(&self, grades: &[PerformanceGrade]) -> PerformanceGrade {
+    fn average_performance_grade(&self, _grades: &[PerformanceGrade]) -> PerformanceGrade {
         // Simplified: just return most common grade
         PerformanceGrade::C // Placeholder
     }

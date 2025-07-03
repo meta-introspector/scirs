@@ -14,14 +14,12 @@ use crate::error::{SignalError, SignalResult};
 use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
 use crate::wpt_validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, Axis};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rand::prelude::*;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::time::Instant;
 
 /// Ultra-comprehensive WPT validation result
@@ -973,7 +971,7 @@ pub fn run_ultra_wpt_validation(
 // Implementation of validation functions (simplified for brevity)
 
 fn run_basic_wpt_validation(
-    config: &UltraWptValidationConfig,
+    __config: &UltraWptValidationConfig,
 ) -> SignalResult<WptValidationResult> {
     // Run basic WPT validation using existing functionality
     // This would call the original WPT validation functions
@@ -1003,7 +1001,7 @@ fn run_basic_wpt_validation(
 }
 
 fn validate_mathematical_properties_comprehensive(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<MathematicalPropertyValidation> {
     // Comprehensive mathematical property validation
     let perfect_reconstruction = validate_perfect_reconstruction_comprehensive(config)?;
@@ -1022,7 +1020,7 @@ fn validate_mathematical_properties_comprehensive(
 }
 
 fn validate_simd_implementations_comprehensive(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<SimdValidationResult> {
     // Comprehensive SIMD validation
     let caps = PlatformCapabilities::detect();
@@ -1624,7 +1622,7 @@ impl Default for RealtimeQualityResult {
 // Helper function implementations (simplified)
 
 fn validate_perfect_reconstruction_comprehensive(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<PerfectReconstructionValidation> {
     let mut max_error = 0.0;
     let mut rms_error_sum = 0.0;
@@ -1827,14 +1825,14 @@ fn validate_advanced_orthogonality(
 }
 
 fn validate_energy_conservation_comprehensive(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<EnergyConservationValidation> {
     // Energy conservation validation
     Ok(EnergyConservationValidation::default())
 }
 
 fn analyze_coefficient_distributions(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<CoefficientDistributionAnalysis> {
     // Coefficient distribution analysis
     Ok(CoefficientDistributionAnalysis::default())
@@ -1875,7 +1873,7 @@ fn validate_simd_vs_scalar_accuracy(config: &UltraWptValidationConfig) -> Signal
 }
 
 fn validate_individual_simd_operations(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<HashMap<String, SimdCorrectnessResult>> {
     let mut results = HashMap::new();
     let caps = PlatformCapabilities::detect();
@@ -1957,49 +1955,49 @@ fn validate_individual_simd_operations(
 }
 
 fn validate_simd_performance(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<SimdPerformanceValidation> {
     // SIMD performance validation
     Ok(SimdPerformanceValidation::default())
 }
 
 fn validate_architecture_consistency(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<ArchitectureConsistencyResult> {
     // Architecture consistency validation
     Ok(ArchitectureConsistencyResult::default())
 }
 
 fn validate_cross_platform_consistency_comprehensive(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<PlatformConsistencyResult> {
     // Cross-platform consistency validation
     Ok(PlatformConsistencyResult::default())
 }
 
 fn validate_statistical_properties_comprehensive(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<StatisticalValidationResult> {
     // Statistical properties validation
     Ok(StatisticalValidationResult::default())
 }
 
 fn analyze_performance_regression_comprehensive(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<PerformanceRegressionResult> {
     // Performance regression analysis
     Ok(PerformanceRegressionResult::default())
 }
 
 fn validate_memory_safety_comprehensive(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<MemorySafetyResult> {
     // Memory safety validation
     Ok(MemorySafetyResult::default())
 }
 
 fn validate_realtime_processing_comprehensive(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<RealtimeValidationResult> {
     // Real-time processing validation
     Ok(RealtimeValidationResult::default())
@@ -2040,7 +2038,7 @@ fn calculate_energy_leakage(_tree: &WaveletPacketTree) -> SignalResult<f64> {
 
 /// Analyze basis selection consistency
 fn analyze_basis_selection_consistency(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<BasisSelectionConsistency> {
     let mut consistency_scores = Vec::new();
     let mut noise_stability_scores = Vec::new();
@@ -2054,7 +2052,7 @@ fn analyze_basis_selection_consistency(
 
             // Add small noise and test stability
             let mut noisy_signal = test_signal.clone();
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             for i in 0..noisy_signal.len() {
                 noisy_signal[i] += rng.gen_range(-0.01..0.01);
             }
@@ -2085,7 +2083,7 @@ fn analyze_basis_selection_consistency(
 
 /// Validate cost functions
 fn validate_cost_functions(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<CostFunctionValidation> {
     // Test monotonicity
     let monotonicity_verified = test_cost_function_monotonicity()?;
@@ -2109,7 +2107,7 @@ fn validate_cost_functions(
 
 /// Perform statistical significance testing
 fn perform_significance_testing(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<SignificanceTestingResult> {
     let mut hypothesis_tests = Vec::new();
 
@@ -2188,21 +2186,21 @@ fn analyze_convergence_properties() -> SignalResult<ConvergenceAnalysisResult> {
 
 /// Analyze noise robustness
 fn analyze_noise_robustness(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<NoiseRobustnessResult> {
     Ok(NoiseRobustnessResult::default())
 }
 
 /// Analyze parameter robustness
 fn analyze_parameter_robustness(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<ParameterRobustnessResult> {
     Ok(ParameterRobustnessResult::default())
 }
 
 /// Analyze breakdown points
 fn analyze_breakdown_points(
-    config: &UltraWptValidationConfig,
+    _config: &UltraWptValidationConfig,
 ) -> SignalResult<BreakdownAnalysisResult> {
     Ok(BreakdownAnalysisResult::default())
 }
@@ -2229,6 +2227,7 @@ fn assess_numerical_stability(simd_result: &[f64], scalar_result: &[f64]) -> f64
 
 /// Generate test signal based on configuration
 fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> {
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     let length = config.length;
@@ -2254,14 +2253,14 @@ fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> 
         }
         TestSignalType::WhiteNoise => {
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             for i in 0..length {
                 signal[i] = amplitude * rng.gen_range(-1.0..1.0);
             }
         }
         TestSignalType::PinkNoise => {
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             // Simplified pink noise generation
             for i in 0..length {
                 signal[i] = amplitude * rng.gen_range(-1.0..1.0) * (1.0 / (i + 1) as f64).sqrt();
@@ -2302,7 +2301,7 @@ fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> 
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
             let hurst = config.parameters.get("hurst").unwrap_or(&0.5);
             // Simplified fractal noise
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             for i in 0..length {
                 signal[i] = amplitude * rng.gen_range(-1.0..1.0) * ((i + 1) as f64).powf(-hurst);
             }
@@ -2310,7 +2309,7 @@ fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> 
         TestSignalType::Composite => {
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
             // Composite of sinusoid and noise
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             for (i, &ti) in t.iter().enumerate() {
                 let sinusoid = (2.0 * PI * 0.1 * ti / length as f64).sin();
                 let noise = 0.1 * rng.gen_range(-1.0..1.0);

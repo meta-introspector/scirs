@@ -10,10 +10,15 @@ use std::fmt::Debug;
 /// 2D Convolutional layer for neural networks (minimal implementation)
 #[derive(Debug)]
 pub struct Conv2D<F: Float + Debug + Send + Sync> {
+    #[allow(dead_code)]
     in_channels: usize,
+    #[allow(dead_code)]
     out_channels: usize,
+    #[allow(dead_code)]
     kernel_size: (usize, usize),
+    #[allow(dead_code)]
     stride: (usize, usize),
+    #[allow(dead_code)]
     padding_mode: PaddingMode,
     weights: Array<F, IxDyn>,
     bias: Option<Array<F, IxDyn>>,
@@ -116,10 +121,10 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F> for
                 self.weights = params[0].clone();
             }
             _ => {
+                let expected = if self.use_bias { 2 } else { 1 };
+                let got = params.len();
                 return Err(NeuralError::InvalidArchitecture(format!(
-                    "Expected {} parameters, got {}",
-                    if self.use_bias { 2 } else { 1 },
-                    params.len()
+                    "Expected {expected} parameters, got {got}"
                 )));
             }
         }

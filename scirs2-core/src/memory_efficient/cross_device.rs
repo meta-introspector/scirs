@@ -44,7 +44,7 @@ impl DeviceType {
     pub fn name(&self) -> String {
         match self {
             DeviceType::Cpu => "CPU".to_string(),
-            DeviceType::Gpu(backend) => format!("GPU ({backend})", backend = backend),
+            DeviceType::Gpu(backend) => format!("GPU ({backend})"),
             DeviceType::Tpu => "TPU".to_string(),
         }
     }
@@ -54,7 +54,7 @@ impl std::fmt::Display for DeviceType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             DeviceType::Cpu => write!(f, "CPU"),
-            DeviceType::Gpu(backend) => write!(f, "GPU ({})", backend),
+            DeviceType::Gpu(backend) => write!(f, "GPU ({backend})"),
             DeviceType::Tpu => write!(f, "TPU"),
         }
     }
@@ -333,7 +333,7 @@ impl DeviceMemoryManager {
         // Check if the device is available
         if !self.is_device_available(device) {
             return Err(CoreError::DeviceError(
-                ErrorContext::new(format!("Device {device} is not available", device = device))
+                ErrorContext::new(format!("Device {device} is not available"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
@@ -1094,7 +1094,7 @@ impl CrossDeviceManager {
         // Check if the device is available
         if !self.is_device_available(device) {
             return Err(CoreError::DeviceError(
-                ErrorContext::new(format!("Device {device} is not available", device = device))
+                ErrorContext::new(format!("Device {device} is not available"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
@@ -1142,7 +1142,7 @@ impl CrossDeviceManager {
         // Check if the target device is available
         if !self.is_device_available(target_device) {
             return Err(CoreError::DeviceError(
-                ErrorContext::new(format!("Device {} is not available", target_device))
+                ErrorContext::new(format!("Device {target_device} is not available"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
@@ -1195,7 +1195,7 @@ impl CrossDeviceManager {
         // Check if the device is available
         if !self.is_device_available(device) {
             return Err(CoreError::DeviceError(
-                ErrorContext::new(format!("Device {device} is not available", device = device))
+                ErrorContext::new(format!("Device {device} is not available"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }

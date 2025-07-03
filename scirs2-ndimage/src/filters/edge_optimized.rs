@@ -8,7 +8,6 @@ use num_traits::{Float, FromPrimitive};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
-use std::sync::Arc;
 
 use super::BorderMode;
 use crate::error::{NdimageError, NdimageResult};

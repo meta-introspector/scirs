@@ -1567,7 +1567,7 @@ impl NetworkTopology {
 }
 
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManager<F> {
-    fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
         let mut stdp_windows = HashMap::new();
 
         // Default STDP window
@@ -1787,7 +1787,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManage
 }
 
 impl<F: Float> SpikingNeuralNetwork<F> {
-    fn new(topology: NetworkTopology, config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(topology: NetworkTopology, config: &NeuromorphicConfig) -> Result<Self> {
         // Create real neuromorphic network with proper initialization
         let mut layers = Vec::new();
 
@@ -2354,7 +2354,7 @@ impl<F: Float> SpikingNeuralNetwork<F> {
 
 // Implementations for complex subsystem types
 impl<F: Float> SynapticConnections<F> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             connections: HashMap::new(),
             delays: HashMap::new(),
@@ -2584,7 +2584,7 @@ impl<F: Float> SynapticConnections<F> {
 }
 
 impl ConnectionTopology {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             adjacency: Array2::from_elem((0, 0), false),
             distances: Array2::zeros((0, 0)),
@@ -2600,7 +2600,7 @@ impl ConnectionTopology {
 }
 
 impl SpikeHistory {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             spikes_by_neuron: HashMap::new(),
             population_spike_rate: VecDeque::new(),
@@ -2616,7 +2616,7 @@ impl SpikeHistory {
 }
 
 impl<F: Float> NetworkState<F> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             activity_levels: Array1::zeros(0),
             oscillations: NetworkOscillations {
@@ -2642,7 +2642,7 @@ impl<F: Float> NetworkState<F> {
 }
 
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningController<F> {
-    fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
         let objectives = vec![
             LearningObjective {
                 name: "accuracy".to_string(),
@@ -2767,7 +2767,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningControll
 }
 
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> HomeostaticController<F> {
-    fn new(_config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         Ok(Self {
             target_rate: F::from(10.0).unwrap(), // 10 Hz target
             current_rate: F::zero(),
@@ -2828,7 +2828,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> HomeostaticController<F>
 }
 
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> SpikePatternRecognizer<F> {
-    fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
         let pattern_templates = vec![
             SpikePattern {
                 name: "synchronous_burst".to_string(),
@@ -2932,7 +2932,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SpikePatternRecognizer<F
 }
 
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicMemory<F> {
-    fn new(_config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         let short_term_memory = ShortTermMemory {
             working_memory: VecDeque::new(),
             capacity: 20, // Working memory capacity
@@ -3109,7 +3109,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicMemory<F> {
 }
 
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicPerformanceMonitor<F> {
-    fn new(_config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         let mut metrics = HashMap::new();
         metrics.insert("accuracy".to_string(), F::zero());
         metrics.insert("efficiency".to_string(), F::zero());

@@ -413,12 +413,12 @@ min_rust_version = "1.70.0"
     }
 
     /// Create performance baseline from existing optimizer
-    pub fn create_performance_baseline<A: Float>(
+    pub fn create_performance_baseline<A>(
         optimizer: &mut dyn OptimizerPlugin<A>,
         test_data: &[(Array1<A>, Array1<A>)],
     ) -> PerformanceBaseline
     where
-        A: Debug + Send + Sync + 'static,
+        A: Float + Debug + Send + Sync + 'static,
     {
         let start_time = std::time::Instant::now();
         let mut total_memory = 0;

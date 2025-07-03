@@ -10,7 +10,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, Zero, One};
 use std::collections::HashMap;
 use std::fmt::Debug;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{rngs::StdRng, rng, Rng, SeedableRng};
 use rand_distr::{Distribution, Normal, Uniform};
 
 /// Configuration for numerical stability testing
@@ -132,7 +132,7 @@ impl NumericalStabilityTester {
     pub fn new(config: NumericalStabilityConfig) -> Self {
         let rng = match config.random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         Self {

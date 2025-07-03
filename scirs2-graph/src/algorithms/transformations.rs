@@ -19,7 +19,7 @@ use std::collections::HashSet;
 /// * A new graph representing the line graph
 pub fn line_graph<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Graph<(N, N), (), Ix>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone,
     Ix: IndexType,
 {
@@ -99,7 +99,7 @@ where
 /// * A new graph containing only the specified nodes and edges between them
 pub fn subgraph<N, E, Ix>(graph: &Graph<N, E, Ix>, nodes: &HashSet<N>) -> Graph<N, E, Ix>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone,
     Ix: IndexType,
 {

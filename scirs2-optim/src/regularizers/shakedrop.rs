@@ -1,6 +1,7 @@
 use ndarray::{Array, ArrayBase, Data, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
-use rand::{rng, Rng};
+use rand::rngs::ThreadRng;
+use rand::Rng;
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};

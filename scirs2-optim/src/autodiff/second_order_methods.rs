@@ -8,7 +8,8 @@ use num_traits::Float;
 use std::collections::VecDeque;
 
 use crate::autodiff::{AutodiffEngine, HigherOrderGradients, HessianMatrix, HessianComputationStrategy, JacobianComputationStrategy};
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 use crate::optimizers::{Optimizer, OptimizerState};
 
 /// Configuration for second-order optimization methods
@@ -45,8 +46,7 @@ pub struct SecondOrderConfig {
     pub hessian_update_frequency: usize,
     
     /// Enable curvature scaling
-    pub enable_curvature_scaling: bool,
-}
+    pub enable_curvature_scaling: bool}
 
 /// Line search configuration
 #[derive(Debug, Clone)]
@@ -67,8 +67,7 @@ pub struct LineSearchConfig {
     pub reduction_factor: f64,
     
     /// Line search method
-    pub method: LineSearchMethod,
-}
+    pub method: LineSearchMethod}
 
 /// Line search methods
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -86,8 +85,7 @@ pub enum LineSearchMethod {
     MoreThuente,
     
     /// Exact line search (for quadratic functions)
-    Exact,
-}
+    Exact}
 
 /// Newton's method optimizer with automatic differentiation
 pub struct NewtonOptimizer<T: Float> {
@@ -107,8 +105,7 @@ pub struct NewtonOptimizer<T: Float> {
     last_hessian: Option<HessianMatrix<T>>,
     
     /// Trust region state
-    trust_region_state: TrustRegionState<T>,
-}
+    trust_region_state: TrustRegionState<T>}
 
 /// Quasi-Newton optimizer (BFGS/L-BFGS)
 pub struct QuasiNewtonOptimizer<T: Float> {
@@ -125,8 +122,7 @@ pub struct QuasiNewtonOptimizer<T: Float> {
     iteration: usize,
     
     /// Convergence history
-    convergence_history: VecDeque<ConvergenceMetrics<T>>,
-}
+    convergence_history: VecDeque<ConvergenceMetrics<T>>}
 
 /// K-FAC (Kronecker-Factored Approximate Curvature) optimizer
 pub struct KFACOptimizer<T: Float> {
@@ -143,8 +139,7 @@ pub struct KFACOptimizer<T: Float> {
     iteration: usize,
     
     /// Layer information for neural networks
-    layer_info: Vec<LayerInfo>,
-}
+    layer_info: Vec<LayerInfo>}
 
 /// Natural gradient optimizer
 pub struct NaturalGradientOptimizer<T: Float> {
@@ -161,8 +156,7 @@ pub struct NaturalGradientOptimizer<T: Float> {
     iteration: usize,
     
     /// Running average of Fisher information
-    fisher_ema_decay: T,
-}
+    fisher_ema_decay: T}
 
 /// Trust region state
 #[derive(Debug, Clone)]
@@ -183,8 +177,7 @@ pub struct TrustRegionState<T: Float> {
     pub expand_factor: T,
     
     /// Shrinking factor
-    pub shrink_factor: T,
-}
+    pub shrink_factor: T}
 
 /// BFGS memory for quasi-Newton methods
 #[derive(Debug, Clone)]
@@ -202,8 +195,7 @@ pub struct BFGSMemory<T: Float> {
     pub rho_history: VecDeque<T>,
     
     /// Initial Hessian approximation scale
-    pub initial_scale: T,
-}
+    pub initial_scale: T}
 
 /// KFAC state for neural network optimization
 #[derive(Debug, Clone)]
@@ -227,8 +219,7 @@ pub struct KFACState<T: Float> {
     pub update_frequency: usize,
     
     /// EMA decay for covariance matrices
-    pub ema_decay: T,
-}
+    pub ema_decay: T}
 
 /// Layer information for KFAC
 #[derive(Debug, Clone)]
@@ -243,8 +234,7 @@ pub struct LayerInfo {
     pub output_dim: usize,
     
     /// Layer type
-    pub layer_type: LayerType,
-}
+    pub layer_type: LayerType}
 
 /// Types of neural network layers
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -259,8 +249,7 @@ pub enum LayerType {
     BatchNorm,
     
     /// Activation layer
-    Activation,
-}
+    Activation}
 
 /// Convergence metrics for optimization
 #[derive(Debug, Clone)]
@@ -287,8 +276,7 @@ pub struct ConvergenceMetrics<T: Float> {
     pub step_size: T,
     
     /// Convergence status
-    pub converged: bool,
-}
+    pub converged: bool}
 
 impl<T: Float + Default + Clone> NewtonOptimizer<T> {
     /// Create new Newton optimizer
@@ -309,8 +297,7 @@ impl<T: Float + Default + Clone> NewtonOptimizer<T> {
             expand_threshold: T::from(0.75).unwrap(),
             shrink_threshold: T::from(0.25).unwrap(),
             expand_factor: T::from(2.0).unwrap(),
-            shrink_factor: T::from(0.5).unwrap(),
-        };
+            shrink_factor: T::from(0.5).unwrap()};
         
         Self {
             config,
@@ -318,8 +305,7 @@ impl<T: Float + Default + Clone> NewtonOptimizer<T> {
             iteration: 0,
             convergence_history: VecDeque::new(),
             last_hessian: None,
-            trust_region_state,
-        }
+            trust_region_state}
     }
     
     /// Perform one optimization step
@@ -574,8 +560,7 @@ impl<T: Float + Default + Clone> NewtonOptimizer<T> {
             condition_number,
             trust_region_radius: Some(self.trust_region_state.radius),
             step_size: T::one(), // Would track actual step size
-            converged,
-        };
+            converged};
         
         self.convergence_history.push_back(metrics);
         if self.convergence_history.len() > 1000 {
@@ -613,16 +598,14 @@ impl<T: Float + Default + Clone> QuasiNewtonOptimizer<T> {
             y_history: VecDeque::new(),
             s_history: VecDeque::new(),
             rho_history: VecDeque::new(),
-            initial_scale: T::one(),
-        };
+            initial_scale: T::one()};
         
         Self {
             config,
             bfgs_memory,
             hog,
             iteration: 0,
-            convergence_history: VecDeque::new(),
-        }
+            convergence_history: VecDeque::new()}
     }
     
     /// Perform BFGS update step
@@ -765,8 +748,7 @@ impl Default for SecondOrderConfig {
             line_search_config: LineSearchConfig::default(),
             memory_size: 10,
             hessian_update_frequency: 1,
-            enable_curvature_scaling: true,
-        }
+            enable_curvature_scaling: true}
     }
 }
 
@@ -778,8 +760,7 @@ impl Default for LineSearchConfig {
             max_iterations: 20,
             initial_step: 1.0,
             reduction_factor: 0.5,
-            method: LineSearchMethod::Backtracking,
-        }
+            method: LineSearchMethod::Backtracking}
     }
 }
 
@@ -874,8 +855,7 @@ mod tests {
             y_history: VecDeque::new(),
             s_history: VecDeque::new(),
             rho_history: VecDeque::new(),
-            initial_scale: 1.0,
-        };
+            initial_scale: 1.0};
         
         assert_eq!(memory.memory_size, 5);
         assert!(memory.y_history.is_empty());
@@ -890,8 +870,7 @@ mod tests {
             expand_threshold: 0.75,
             shrink_threshold: 0.25,
             expand_factor: 2.0,
-            shrink_factor: 0.5,
-        };
+            shrink_factor: 0.5};
         
         assert_eq!(state.radius, 1.0);
         assert_eq!(state.expand_factor, 2.0);

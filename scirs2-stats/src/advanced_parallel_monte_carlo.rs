@@ -248,7 +248,7 @@ where
         // Initialize random number generator
         let mut main_rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut total_samples = 0;

@@ -159,7 +159,7 @@ where
         data: &ArrayView1<F>,
     ) -> StatsResult<ComprehensiveStatsResult<F>> {
         check_array_finite(data, "data")?;
-        check_min_length(data, 1, "data")?;
+        check_min_samples(data, 1, "data")?;
 
         let n = data.len();
 

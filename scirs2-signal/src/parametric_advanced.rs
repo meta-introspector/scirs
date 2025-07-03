@@ -17,6 +17,7 @@ use num_traits::Float;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
+#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Vector Autoregressive (VAR) model

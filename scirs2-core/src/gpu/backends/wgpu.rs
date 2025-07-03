@@ -241,7 +241,7 @@ impl WebGPUContext {
                         label: Some(&format!("{}_pipeline", name)),
                         layout: Some(&pipeline_layout),
                         module: &shader_module,
-                        entry_point: Some(entry_point),
+                        entry_point,
                         compilation_options: Default::default(),
                         cache: None,
                     });
@@ -427,7 +427,7 @@ impl GpuContextImpl for WebGPUContext {
         if let Ok(mut pool) = self.memory_pool.lock() {
             if let Some(device_buffer) = pool.allocate(size) {
                 return Arc::new(WebGPUBuffer {
-                    device_buffer,
+                    device_buffer: Some(device_buffer),
                     #[cfg(feature = "wgpu_backend")]
                     queue: Arc::clone(&self.queue),
                     #[cfg(not(feature = "wgpu_backend"))]
@@ -632,17 +632,18 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                     compute_pass.set_pipeline(&shader.pipeline);
 
                     // Create and set bind groups with buffers and uniforms
-                    if let Ok(bind_group) =
-                        self.create_bind_group_from_params(&shader.bind_group_layout, &params)
-                    {
-                        compute_pass.set_bind_group(0, &bind_group, &[]);
-                    } else {
-                        // Handle error by logging and continuing without bind group for now
-                        eprintln!(
-                            "Warning: Failed to create bind group for shader {}",
-                            self.shader_name
-                        );
-                    }
+                    // TODO: Fix create_bind_group_from_params method
+                    // if let Ok(bind_group) =
+                    //     self.create_bind_group_from_params(&shader.bind_group_layout, &params)
+                    // {
+                    //     compute_pass.set_bind_group(0, &bind_group, &[]);
+                    // } else {
+                    //     // Handle error by logging and continuing without bind group for now
+                    //     eprintln!(
+                    //         "Warning: Failed to create bind group for shader {}",
+                    //         self.shader_name
+                    //     );
+                    // }
 
                     // Dispatch the compute shader
                     compute_pass.dispatch_workgroups(

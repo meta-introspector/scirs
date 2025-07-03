@@ -23,11 +23,11 @@
 //!
 //! Run with: cargo run --example comprehensive_learning_center
 
+use rand;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet, VecDeque};
-use std::fs;
+use std::collections::{HashMap, HashSet};
 use std::io::{self, Write};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct LearningCenter {
@@ -80,7 +80,7 @@ enum DifficultyLevel {
     Intermediate, // Undergraduate level
     Advanced,     // Graduate level
     Expert,       // Research level
-    Cutting_Edge, // Current research frontiers
+    CuttingEdge,  // Current research frontiers
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -946,9 +946,9 @@ fn recommend_starting_track(
 }
 
 fn display_dashboard(learning_center: &LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n" + "=".repeat(60).as_str());
+    println!("\n{}", "=".repeat(60));
     println!("🎓 LEARNING DASHBOARD");
-    println!("=".repeat(60));
+    println!("{}", "=".repeat(60));
 
     if let Some(username) = &learning_center.current_user {
         if let Some(profile) = learning_center.user_profiles.get(username) {
@@ -1040,7 +1040,7 @@ fn display_detailed_progress(
     learning_center: &LearningCenter,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 DETAILED PROGRESS REPORT");
-    println!("=".repeat(40));
+    println!("{}", "=".repeat(40));
 
     if let Some(username) = &learning_center.current_user {
         if let Some(profile) = learning_center.user_profiles.get(username) {
@@ -1090,7 +1090,7 @@ fn display_detailed_progress(
 
 fn explore_resources(learning_center: &LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📚 RESOURCE CATALOG");
-    println!("=".repeat(30));
+    println!("{}", "=".repeat(30));
 
     println!("\n🖥️  Interactive Examples:");
     for (id, resource) in &learning_center.resource_catalog.examples {
@@ -1177,7 +1177,7 @@ fn enter_learning_track(
     let track = &learning_center.learning_tracks[track_index].clone();
 
     println!("\n🎯 Entering Learning Track: {}", track.title);
-    println!("=".repeat(track.title.len() + 25));
+    println!("{}", "=".repeat(track.title.len() + 25));
     println!("{}", track.description);
     println!(
         "\n📊 Difficulty: {:?} | Estimated Time: {:.0} hours",
@@ -1267,7 +1267,7 @@ fn start_learning_module(
     module: &LearningModule,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Starting Module: {}", module.title);
-    println!("=".repeat(module.title.len() + 18));
+    println!("{}", "=".repeat(module.title.len() + 18));
     println!("{}", module.description);
 
     println!("\n🎯 Learning Objectives:");
@@ -1326,7 +1326,8 @@ fn simulate_module_completion(
             let score = simulate_assessment(&module.assessments[0])?;
 
             // Update progress
-            if let Some(username) = &learning_center.current_user {
+            let username = learning_center.current_user.clone();
+            if let Some(ref username) = username {
                 if let Some(profile) = learning_center.user_profiles.get_mut(username) {
                     if let Some(progress) = profile.learning_progress.get_mut(&module.id) {
                         progress.completion_percentage = 1.0;
@@ -1342,12 +1343,14 @@ fn simulate_module_completion(
                     if score >= 0.8 {
                         profile.completed_modules.insert(module.id.clone());
                         println!("🎉 Module completed successfully!");
-
-                        // Check for achievements
-                        check_for_achievements(learning_center, username)?;
                     } else {
                         println!("📚 Consider reviewing the material before moving on.");
                     }
+                }
+
+                // Check for achievements after the mutable borrow is dropped
+                if score >= 0.8 {
+                    check_for_achievements(learning_center, username)?;
                 }
             }
         }
@@ -1387,7 +1390,7 @@ fn simulate_assessment(assessment: &Assessment) -> Result<f64, Box<dyn std::erro
     std::thread::sleep(Duration::from_secs(1));
 
     // Simulate a score (in real implementation, this would be actual assessment)
-    let score = 0.7 + (0.3 * fastrand::f64()); // Random score between 70-100%
+    let score = 0.7 + (0.3 * rand::random::<f64>()); // Random score between 70-100%
 
     println!("📊 Your score: {:.1}%", score * 100.0);
 
@@ -1462,7 +1465,7 @@ fn check_certification_eligibility(
     track: &LearningTrack,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎓 CERTIFICATION STATUS: {}", track.title);
-    println!("=".repeat(track.title.len() + 22));
+    println!("{}", "=".repeat(track.title.len() + 22));
 
     if let Some(username) = &learning_center.current_user {
         if let Some(profile) = learning_center.user_profiles.get(username) {
@@ -1533,7 +1536,7 @@ fn check_certification_eligibility(
 
 fn display_help() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n❓ HELP & GUIDANCE");
-    println!("=".repeat(20));
+    println!("{}", "=".repeat(20));
 
     println!("\n🎓 Learning Center Commands:");
     println!("  1-5          - Enter a learning track");
@@ -1568,7 +1571,7 @@ fn display_help() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn save_user_progress(learning_center: &LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
+fn save_user_progress(_learning_center: &LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
     // In a real implementation, this would save to persistent storage
     println!("💾 Saving progress...");
     std::thread::sleep(Duration::from_millis(500));

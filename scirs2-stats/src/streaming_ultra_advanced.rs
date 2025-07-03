@@ -614,7 +614,7 @@ where
     /// Detect anomalies in the data stream
     fn detect_anomalies(&self, value: F, timestamp: Instant) -> StatsResult<()> {
         let mut detector = self.anomaly_detector.lock().unwrap();
-        if let Some(anomaly_type) = detector.detect(value)? {
+        if let Some(_anomaly_type) = detector.detect(value)? {
             let mut stats = self.statistics.write().unwrap();
             stats.anomalies.push((timestamp, value));
         }
@@ -763,7 +763,10 @@ where
         self.window_data.push_back(value);
 
         match &self.algorithm {
-            ChangePointAlgorithm::CUSUM { drift, threshold } => {
+            ChangePointAlgorithm::CUSUM {
+                drift: _,
+                threshold,
+            } => {
                 // Implement CUSUM algorithm
                 if self.window_data.len() >= 10 {
                     let mean = self.calculate_mean()?;

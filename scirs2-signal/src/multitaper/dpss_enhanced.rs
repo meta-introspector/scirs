@@ -6,9 +6,9 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, ArrayView1, Axis};
-use num_complex::Complex64;
 use rustfft::{num_complex::Complex, FftPlanner};
 use scirs2_core::validation::{check_finite, check_positive};
+#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Enhanced DPSS computation with proper SciPy-compatible implementation

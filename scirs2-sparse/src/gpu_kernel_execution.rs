@@ -7,6 +7,16 @@
 
 use crate::gpu_ops::{GpuBackend, GpuBuffer, GpuDevice, GpuError, GpuKernelHandle};
 use num_traits::Float;
+#[cfg(feature = "gpu")]
+use scirs2_core::gpu::GpuDataType;
+#[cfg(not(feature = "gpu"))]
+pub trait GpuDataType: Copy + Send + Sync + 'static {}
+#[cfg(not(feature = "gpu"))]
+impl GpuDataType for f32 {}
+#[cfg(not(feature = "gpu"))]
+impl GpuDataType for f64 {}
+#[cfg(not(feature = "gpu"))]
+impl GpuDataType for u32 {}
 use std::fmt::Debug;
 
 /// High-performance GPU kernel configuration
@@ -60,7 +70,7 @@ pub fn execute_spmv_kernel<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     // Calculate optimal grid dimensions based on backend
     let (global_size, local_size) = calculate_optimal_dimensions(
@@ -119,6 +129,17 @@ where
             x_buffer,
             y_buffer,
         ),
+        GpuBackend::Rocm | GpuBackend::Wgpu => {
+            // For now, use CPU fallback for Rocm and Wgpu until implemented
+            execute_cpu_spmv_fallback(
+                rows,
+                indptr_buffer,
+                indices_buffer,
+                data_buffer,
+                x_buffer,
+                y_buffer,
+            )
+        }
     }
 }
 
@@ -136,7 +157,7 @@ pub fn execute_symmetric_spmv_kernel<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     // Use optimized symmetric SpMV with memory-aware scheduling
     let (global_size, local_size) = calculate_optimal_dimensions(
@@ -194,6 +215,17 @@ where
             x_buffer,
             y_buffer,
         ),
+        GpuBackend::Rocm | GpuBackend::Wgpu => {
+            // For now, use CPU fallback for Rocm and Wgpu until implemented
+            execute_cpu_symmetric_spmv_fallback(
+                rows,
+                indptr_buffer,
+                indices_buffer,
+                data_buffer,
+                x_buffer,
+                y_buffer,
+            )
+        }
     }
 }
 
@@ -227,6 +259,15 @@ fn calculate_optimal_dimensions(
             // CPU execution can use any workgroup size
             workgroup_size
         }
+        GpuBackend::Rocm => {
+            // AMD GPUs prefer multiples of 64 (wavefront size)
+            let wave_aligned = workgroup_size[0].div_ceil(64) * 64;
+            [wave_aligned.min(1024), 1, 1]
+        }
+        GpuBackend::Wgpu => {
+            // WebGPU conservative workgroup size
+            [workgroup_size[0].min(256), 1, 1]
+        }
     };
 
     let global_size =
@@ -252,7 +293,7 @@ fn execute_cuda_spmv<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     // CUDA-specific optimizations:
     // - Calculate optimal grid dimensions based on compute capability
@@ -314,7 +355,7 @@ fn execute_opencl_spmv<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     // OpenCL-specific optimizations:
     // - Calculate optimal work-group dimensions for the device
@@ -376,7 +417,7 @@ fn execute_metal_spmv<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     // Metal-specific optimizations:
     // - Calculate optimal threadgroup dimensions for Apple GPUs
@@ -437,7 +478,7 @@ fn execute_cpu_spmv_fallback<T>(
     y_buffer: &GpuBuffer<T>,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     // Convert GPU buffers to host slices
     let indptr = indptr_buffer.to_host()?;
@@ -479,7 +520,7 @@ fn execute_cuda_symmetric_spmv<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     // CUDA symmetric SpMV with optimized memory access
     device.execute_kernel_with_args(
@@ -512,7 +553,7 @@ fn execute_opencl_symmetric_spmv<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     device.execute_kernel_with_args(
         kernel,
@@ -544,7 +585,7 @@ fn execute_metal_symmetric_spmv<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     device.execute_kernel_with_args(
         kernel,
@@ -570,7 +611,7 @@ fn execute_cpu_symmetric_spmv_fallback<T>(
     y_buffer: &GpuBuffer<T>,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     let indptr = indptr_buffer.to_host()?;
     let indices = indices_buffer.to_host()?;
@@ -619,7 +660,7 @@ pub fn execute_triangular_solve_kernel<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     // Triangular solve is inherently sequential, but we can parallelize at the warp/wavefront level
     let (global_size, local_size) = match device.backend() {
@@ -638,6 +679,10 @@ where
         GpuBackend::Cpu => {
             // Sequential execution for CPU
             ([1], [1])
+        }
+        GpuBackend::Rocm | GpuBackend::Wgpu => {
+            // Use OpenCL-like settings for Rocm and Wgpu
+            ([64], [64])
         }
     };
 
@@ -676,7 +721,7 @@ fn execute_cpu_triangular_solve_fallback<T>(
     x_buffer: &GpuBuffer<T>,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     let indptr = indptr_buffer.to_host()?;
     let indices = indices_buffer.to_host()?;
@@ -784,6 +829,8 @@ impl GpuMemoryManager {
             GpuBackend::OpenCL => 64, // OpenCL prefers 64-byte alignment
             GpuBackend::Metal => 16,  // Metal prefers 16-byte alignment
             GpuBackend::Cpu => 8,     // CPU standard alignment
+            GpuBackend::Rocm => 64,   // AMD ROCm prefers 64-byte alignment
+            GpuBackend::Wgpu => 32,   // WebGPU standard alignment
         };
 
         Ok(Self {
@@ -799,7 +846,7 @@ impl GpuMemoryManager {
     /// Get an optimally-aligned buffer from the pool or create a new one with smart caching
     pub fn get_buffer<T>(&mut self, size: usize) -> Result<GpuBuffer<T>, GpuError>
     where
-        T: crate::gpu_ops::GpuDataType + Default + 'static,
+        T: GpuDataType + Default + 'static,
     {
         let aligned_size =
             self.align_size(size * std::mem::size_of::<T>()) / std::mem::size_of::<T>();
@@ -838,7 +885,7 @@ impl GpuMemoryManager {
         layout: MemoryLayout,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
-        T: crate::gpu_ops::GpuDataType + Default + 'static,
+        T: GpuDataType + Default + 'static,
     {
         match layout {
             MemoryLayout::Coalesced => {
@@ -858,7 +905,7 @@ impl GpuMemoryManager {
     /// Return a buffer to the pool for reuse with smart cleanup
     pub fn return_buffer<T>(&mut self, buffer: GpuBuffer<T>)
     where
-        T: crate::gpu_ops::GpuDataType + 'static,
+        T: GpuDataType + 'static,
     {
         let size = buffer.as_slice().len();
         let allocation_size = std::mem::size_of_val(buffer.as_slice());
@@ -899,10 +946,10 @@ impl GpuMemoryManager {
     pub fn transfer_data_optimized<T>(
         &mut self,
         host_data: &[T],
-        priority: TransferPriority,
+        _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
-        T: crate::gpu_ops::GpuDataType + Copy,
+        T: GpuDataType + Copy,
     {
         let transfer_size = std::mem::size_of_val(host_data);
         let start_time = std::time::Instant::now();
@@ -910,15 +957,15 @@ impl GpuMemoryManager {
         let buffer = match self.device.backend() {
             #[cfg(feature = "gpu")]
             GpuBackend::Cuda => {
-                self.transfer_data_cuda_optimized(host_data, transfer_size, priority)
+                self.transfer_data_cuda_optimized(host_data, transfer_size, _priority)
             }
             #[cfg(feature = "gpu")]
             GpuBackend::OpenCL => {
-                self.transfer_data_opencl_optimized(host_data, transfer_size, priority)
+                self.transfer_data_opencl_optimized(host_data, transfer_size, _priority)
             }
             #[cfg(feature = "gpu")]
             GpuBackend::Metal => {
-                self.transfer_data_metal_optimized(host_data, transfer_size, priority)
+                self.transfer_data_metal_optimized(host_data, transfer_size, _priority)
             }
             _ => {
                 // Standard transfer for CPU or when GPU not available
@@ -942,12 +989,12 @@ impl GpuMemoryManager {
         &self,
         host_data: &[T],
         transfer_size: usize,
-        priority: TransferPriority,
+        _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
-        T: crate::gpu_ops::GpuDataType + Copy,
+        T: GpuDataType + Copy,
     {
-        match (transfer_size, priority) {
+        match (transfer_size, _priority) {
             // Large high-priority transfers: use pinned memory and async transfer
             (size, TransferPriority::High | TransferPriority::Critical)
                 if size > 4 * 1024 * 1024 =>
@@ -968,10 +1015,10 @@ impl GpuMemoryManager {
         &self,
         host_data: &[T],
         transfer_size: usize,
-        priority: TransferPriority,
+        _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
-        T: crate::gpu_ops::GpuDataType + Copy,
+        T: GpuDataType + Copy,
     {
         if transfer_size > 1024 * 1024 {
             // Use mapped memory for large transfers
@@ -987,10 +1034,10 @@ impl GpuMemoryManager {
         &self,
         host_data: &[T],
         transfer_size: usize,
-        priority: TransferPriority,
+        _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
-        T: crate::gpu_ops::GpuDataType + Copy,
+        T: GpuDataType + Copy,
     {
         // Metal uses unified memory, so transfers are more efficient
         if transfer_size > 2 * 1024 * 1024 {
@@ -1020,8 +1067,8 @@ impl GpuMemoryManager {
         if batch_duration.as_millis() > 100 {
             // Log slow batches for optimization
             eprintln!(
-                "Warning: GPU batch operation took {}ms",
-                batch_duration.as_millis()
+                "Warning: GPU batch operation took {batch_duration_ms}ms",
+                batch_duration_ms = batch_duration.as_millis()
             );
         }
 
@@ -1099,6 +1146,16 @@ impl GpuMemoryManager {
                 size.div_ceil(alignment) * alignment
             }
             GpuBackend::Cpu => size,
+            GpuBackend::Rocm => {
+                // AMD ROCm prefers 64-byte alignment
+                let alignment = 64 / std::mem::size_of::<usize>();
+                size.div_ceil(alignment) * alignment
+            }
+            GpuBackend::Wgpu => {
+                // WebGPU standard alignment
+                let alignment = 32 / std::mem::size_of::<usize>();
+                size.div_ceil(alignment) * alignment
+            }
         }
     }
 }
@@ -1110,7 +1167,7 @@ pub fn prefetch_matrix_data<T>(
     access_pattern: AccessPattern,
 ) -> Result<GpuBuffer<T>, GpuError>
 where
-    T: crate::gpu_ops::GpuDataType + Copy,
+    T: GpuDataType + Copy,
 {
     let priority = match access_pattern {
         AccessPattern::Sequential => TransferPriority::Normal,
@@ -1198,6 +1255,24 @@ pub fn calculate_adaptive_workgroup_size(
             // CPU doesn't need workgroup optimization
             [1, 1, 1]
         }
+        GpuBackend::Rocm => {
+            // AMD GPUs prefer multiples of 64 (wavefront size)
+            if avg_nnz_per_row < 10 {
+                [64, 1, 1]
+            } else if avg_nnz_per_row < 50 {
+                [128, 1, 1]
+            } else {
+                [256, 1, 1]
+            }
+        }
+        GpuBackend::Wgpu => {
+            // WebGPU conservative sizing
+            if avg_nnz_per_row < 20 {
+                [32, 1, 1]
+            } else {
+                [64, 1, 1]
+            }
+        }
     };
 
     let memory_strategy = if available_memory > 512 * 1024 * 1024 {
@@ -1228,7 +1303,7 @@ pub fn execute_spmv_kernel<T>(
     _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     // Use CPU fallback when GPU feature is not available
     execute_cpu_spmv_fallback(
@@ -1254,7 +1329,7 @@ pub fn execute_symmetric_spmv_kernel<T>(
     _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     // Use CPU symmetric fallback when GPU feature is not available
     execute_cpu_symmetric_spmv_fallback(
@@ -1280,7 +1355,7 @@ pub fn execute_triangular_solve_kernel<T>(
     _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + GpuDataType,
 {
     // Use CPU triangular solve fallback when GPU feature is not available
     execute_cpu_triangular_solve_fallback(
@@ -1369,56 +1444,48 @@ impl GpuPerformanceProfiler {
                     GpuBackend::Cuda => {
                         if avg_time > 10.0 && operation.contains("spmv") {
                             recommendations.push(format!(
-                                "Consider using larger workgroup sizes for {} (current avg: {:.2}ms, variance: {:.2})",
-                                operation, avg_time, variance
+                                "Consider using larger workgroup sizes for {operation} (current avg: {avg_time:.2}ms, variance: {variance:.2})"
                             ));
                         }
                         if variance > avg_time * 0.5 {
                             recommendations.push(format!(
-                                "High timing variance for {} suggests memory bandwidth bottleneck",
-                                operation
+                                "High timing variance for {operation} suggests memory bandwidth bottleneck"
                             ));
                         }
                     }
                     GpuBackend::OpenCL => {
                         if avg_time > 15.0 {
                             recommendations.push(format!(
-                                "OpenCL performance for {} could be improved with memory optimization (current avg: {:.2}ms)",
-                                operation, avg_time
+                                "OpenCL performance for {operation} could be improved with memory optimization (current avg: {avg_time:.2}ms)"
                             ));
                         }
                         if variance > 5.0 {
                             recommendations.push(format!(
-                                "Consider using local memory optimization for {} to reduce timing variance",
-                                operation
+                                "Consider using local memory optimization for {operation} to reduce timing variance"
                             ));
                         }
                     }
                     GpuBackend::Metal => {
                         if avg_time > 8.0 && operation.contains("triangular") {
                             recommendations.push(format!(
-                                "Metal triangular solve {} may benefit from simdgroup optimization (current avg: {:.2}ms)",
-                                operation, avg_time
+                                "Metal triangular solve {operation} may benefit from simdgroup optimization (current avg: {avg_time:.2}ms)"
                             ));
                         }
                         if operation.contains("spmv") && avg_time > 5.0 {
                             recommendations.push(format!(
-                                "Consider using Metal's unified memory architecture for {} optimization",
-                                operation
+                                "Consider using Metal's unified memory architecture for {operation} optimization"
                             ));
                         }
                     }
                     GpuBackend::Cpu => {
                         if avg_time > 50.0 {
                             recommendations.push(format!(
-                                "Consider enabling GPU acceleration for {} (CPU avg: {:.2}ms)",
-                                operation, avg_time
+                                "Consider enabling GPU acceleration for {operation} (CPU avg: {avg_time:.2}ms)"
                             ));
                         }
                         if variance > 20.0 {
                             recommendations.push(format!(
-                                "High CPU timing variance for {} suggests CPU scheduling issues",
-                                operation
+                                "High CPU timing variance for {operation} suggests CPU scheduling issues"
                             ));
                         }
                     }
@@ -1427,8 +1494,7 @@ impl GpuPerformanceProfiler {
                 // General performance recommendations
                 if avg_time > 100.0 {
                     recommendations.push(format!(
-                        "Operation {} is taking very long ({:.2}ms) - consider algorithm optimization",
-                        operation, avg_time
+                        "Operation {operation} is taking very long ({avg_time:.2}ms) - consider algorithm optimization"
                     ));
                 }
             }

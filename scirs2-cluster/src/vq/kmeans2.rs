@@ -57,12 +57,21 @@ impl FromStr for MinitMethod {
     }
 }
 
-/// Methods for handling empty clusters
+/// Methods for handling empty clusters during K-means clustering
+///
+/// When a cluster becomes empty during the K-means iteration process,
+/// this enum determines how the algorithm should respond.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MissingMethod {
-    /// Give a warning and continue
+    /// Give a warning and continue with the algorithm
+    ///
+    /// The algorithm will continue execution, potentially with fewer
+    /// effective clusters than originally requested.
     Warn,
     /// Raise a ClusteringError and terminate the algorithm
+    ///
+    /// The algorithm will stop execution and return an error when
+    /// an empty cluster is encountered.
     Raise,
 }
 

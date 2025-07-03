@@ -58,6 +58,7 @@
 //! ```
 
 // Re-export all public modules
+use num_complex::Complex64;
 pub mod analysis;
 pub mod application;
 pub mod common;
@@ -210,7 +211,6 @@ mod tests {
     #[test]
     fn test_zpk_transform() {
         // Test zeros-poles-gain transformation
-        use num_complex::Complex64;
 
         let zeros = vec![Complex64::new(-1.0, 0.0)];
         let poles = vec![Complex64::new(0.5, 0.0)];

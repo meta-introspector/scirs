@@ -12,7 +12,6 @@
 use crate::error::{SignalError, SignalResult};
 use crate::window;
 use ndarray::{s, Array1, Array2};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
@@ -90,6 +89,7 @@ impl std::str::FromStr for ScalingMode {
     }
 }
 
+use num_complex::Complex64;
 /// A parametrized discrete Short-time Fourier transform (STFT)
 /// and its inverse (ISTFT).
 ///
@@ -102,7 +102,8 @@ impl std::str::FromStr for ScalingMode {
 /// use scirs2_signal::stft::{ShortTimeFft, StftConfig};
 /// use scirs2_signal::window;
 /// use ndarray::Array1;
-/// use std::f64::consts::PI;
+/// #[cfg(test)]
+use std::f64::consts::PI;
 ///
 /// // Create a signal with varying frequency
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -1358,6 +1359,8 @@ mod tests {
     use super::*;
     #[allow(unused_imports)]
     use approx::assert_relative_eq;
+    use num_complex::Complex64;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]
@@ -1938,6 +1941,8 @@ pub struct MemoryInfo {
 #[cfg(test)]
 mod memory_efficient_tests {
     use super::*;
+    use num_complex::Complex64;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

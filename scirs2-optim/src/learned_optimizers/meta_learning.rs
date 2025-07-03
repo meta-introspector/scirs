@@ -9,7 +9,8 @@ use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 use crate::optimizers::Optimizer;
 
 /// Meta-Learning Framework for Learned Optimizers
@@ -1279,22 +1280,28 @@ pub struct TransferLearningResult<T: Float> {
     pub target_task_performance: T,
 }
 
+/// Task result for meta-learning
+#[derive(Debug, Clone)]
+pub struct TaskResult<T: Float> {
+    pub task_id: String,
+    pub loss: T,
+    pub metrics: HashMap<String, T>,
+}
+
 /// Continual learning result
 #[derive(Debug, Clone)]
 pub struct ContinualLearningResult<T: Float> {
-    pub final_performance: T,
+    pub sequence_results: Vec<TaskResult<T>>,
     pub forgetting_measure: T,
-    pub plasticity_measure: T,
-    pub task_sequence_performance: Vec<T>,
+    pub adaptation_efficiency: T,
 }
 
 /// Multi-task learning result
 #[derive(Debug, Clone)]
 pub struct MultiTaskResult<T: Float> {
-    pub task_performances: HashMap<String, T>,
-    pub interference_measure: T,
-    pub shared_representation_quality: T,
-    pub task_balance_score: T,
+    pub task_results: Vec<TaskResult<T>>,
+    pub coordination_overhead: T,
+    pub convergence_status: String,
 }
 
 /// Meta-learning statistics
@@ -1609,7 +1616,7 @@ impl<T: Float + Default + Clone> ContinualLearningSystem<T> {
             // Simple sequential task processing - in a real implementation, this would
             // handle continual learning with catastrophic forgetting prevention
             let task_result = TaskResult {
-                task_id: task.task_id.clone(),
+                task_id: task.id.clone(),
                 loss: T::from(0.1).unwrap(), // Placeholder loss
                 metrics: HashMap::new(),
             };
@@ -1650,7 +1657,7 @@ impl<T: Float + Default + Clone> MultiTaskCoordinator<T> {
             // Simple task processing - in a real implementation, this would
             // coordinate learning across multiple tasks simultaneously
             let task_result = TaskResult {
-                task_id: task.task_id.clone(),
+                task_id: task.id.clone(),
                 loss: T::from(0.1).unwrap(), // Placeholder loss
                 metrics: HashMap::new(),
             };

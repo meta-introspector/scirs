@@ -15,9 +15,11 @@ use std::fmt::Debug;
 
 // Import and re-export GPU capabilities from scirs2-core (only when GPU feature is enabled)
 #[cfg(feature = "gpu")]
-pub use scirs2_core::gpu::{
-    GpuBackend, GpuBuffer, GpuContext, GpuDataType, GpuError, GpuKernelHandle,
-};
+pub use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuContext, GpuDataType, GpuKernelHandle};
+
+// Use core GPU error when available
+#[cfg(feature = "gpu")]
+pub use scirs2_core::GpuError;
 
 // Fallback types when GPU feature is not enabled
 #[cfg(not(feature = "gpu"))]
@@ -28,6 +30,8 @@ pub enum GpuBackend {
     Cuda,
     OpenCL,
     Metal,
+    Rocm,
+    Wgpu,
 }
 
 #[cfg(not(feature = "gpu"))]
@@ -2674,16 +2678,16 @@ impl GpuKernelScheduler {
     }
 
     /// Calculate optimal workgroup size for a given problem
-    pub fn calculate_optimal_workgroup(&self, rows: usize, cols: usize, nnz: usize) -> [u32; 3] {
+    pub fn calculate_optimal_workgroup(&self, _rows: usize, _cols: usize, _nnz: usize) -> [u32; 3] {
         let base_size = self.warp_size as u32;
 
         match self.backend {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => {
                 // For CUDA, optimize for tensor cores when possible
-                if rows >= 256 && cols >= 256 {
+                if _rows >= 256 && _cols >= 256 {
                     [32, 32, 1] // Tensor core friendly
-                } else if nnz > 100_000 {
+                } else if _nnz > 100_000 {
                     [base_size, 16, 1] // High parallelism
                 } else {
                     [base_size, 8, 1] // Balanced approach

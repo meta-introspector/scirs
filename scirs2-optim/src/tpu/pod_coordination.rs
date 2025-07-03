@@ -1254,7 +1254,11 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
                 BatchParallelizationStrategy::DataParallel => 0.85,
                 BatchParallelizationStrategy::ModelParallel => 0.75,
                 BatchParallelizationStrategy::PipelineParallel => 0.80,
+                BatchParallelizationStrategy::Hybrid => 0.83,
                 BatchParallelizationStrategy::HybridParallel => 0.82,
+                BatchParallelizationStrategy::TensorParallel => 0.78,
+                BatchParallelizationStrategy::ExpertParallel => 0.81,
+                BatchParallelizationStrategy::Adaptive => 0.87,
             };
 
             // Adjust based on load balancing efficiency

@@ -11,7 +11,8 @@ use std::time::{Duration, Instant};
 use std::sync::{Arc, Mutex, RwLock};
 use rand::Rng;
 
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 use super::{
     OptimizerArchitecture, SearchSpaceConfig, ParameterRange, EvaluationMetric,
     EvaluationResults, ResourceUsage, SearchResult
@@ -44,8 +45,7 @@ pub struct HyperparameterOptimizationPipeline<T: Float> {
     ensemble_optimizer: EnsembleOptimizer<T>,
     
     /// Current optimization state
-    optimization_state: OptimizationState<T>,
-}
+    optimization_state: OptimizationState<T>}
 
 /// Hyperparameter optimization configuration
 #[derive(Debug, Clone)]
@@ -81,8 +81,7 @@ pub struct HPOConfig<T: Float> {
     pub objectives: Vec<OptimizationObjective<T>>,
     
     /// Constraint functions
-    pub constraints: Vec<ConstraintFunction<T>>,
-}
+    pub constraints: Vec<ConstraintFunction<T>>}
 
 /// HPO strategy types
 #[derive(Debug, Clone, Copy)]
@@ -121,8 +120,7 @@ pub enum HPOStrategyType {
     DifferentialEvolution,
     
     /// Particle Swarm Optimization
-    ParticleSwarmOptimization,
-}
+    ParticleSwarmOptimization}
 
 /// Parameter search space definition
 #[derive(Debug, Clone)]
@@ -143,8 +141,7 @@ pub struct ParameterSearchSpace {
     pub dependencies: Vec<ParameterDependency>,
     
     /// Parameter constraints
-    pub constraints: Vec<ParameterConstraint>,
-}
+    pub constraints: Vec<ParameterConstraint>}
 
 /// Continuous parameter space
 #[derive(Debug, Clone)]
@@ -162,8 +159,7 @@ pub struct ContinuousParameterSpace {
     pub prior: Option<PriorDistribution>,
     
     /// Default value
-    pub default: Option<f64>,
-}
+    pub default: Option<f64>}
 
 /// Discrete parameter space
 #[derive(Debug, Clone)]
@@ -175,8 +171,7 @@ pub struct DiscreteParameterSpace {
     pub priors: Option<Vec<f64>>,
     
     /// Default value
-    pub default: Option<i64>,
-}
+    pub default: Option<i64>}
 
 /// Categorical parameter space
 #[derive(Debug, Clone)]
@@ -188,8 +183,7 @@ pub struct CategoricalParameterSpace {
     pub priors: Option<Vec<f64>>,
     
     /// Default category
-    pub default: Option<String>,
-}
+    pub default: Option<String>}
 
 /// Conditional parameter space
 #[derive(Debug, Clone)]
@@ -201,8 +195,7 @@ pub struct ConditionalParameterSpace {
     pub activation_condition: ParameterCondition,
     
     /// Child parameter space
-    pub child_space: Box<ParameterSearchSpace>,
-}
+    pub child_space: Box<ParameterSearchSpace>}
 
 /// Parameter dependencies
 #[derive(Debug, Clone)]
@@ -217,8 +210,7 @@ pub struct ParameterDependency {
     pub dependency_type: DependencyType,
     
     /// Dependency function
-    pub dependency_function: DependencyFunction,
-}
+    pub dependency_function: DependencyFunction}
 
 /// Parameter constraints
 #[derive(Debug, Clone)]
@@ -233,8 +225,7 @@ pub struct ParameterConstraint {
     pub expression: String,
     
     /// Violation penalty
-    pub penalty: f64,
-}
+    pub penalty: f64}
 
 /// Prior distributions for parameters
 #[derive(Debug, Clone)]
@@ -252,8 +243,7 @@ pub enum PriorDistribution {
     Beta { alpha: f64, beta: f64 },
     
     /// Gamma distribution
-    Gamma { shape: f64, scale: f64 },
-}
+    Gamma { shape: f64, scale: f64 }}
 
 /// Parameter conditions
 #[derive(Debug, Clone)]
@@ -277,8 +267,7 @@ pub enum ParameterCondition {
     LessThan(f64),
     
     /// Complex condition
-    Complex(String),
-}
+    Complex(String)}
 
 /// Dependency types
 #[derive(Debug, Clone, Copy)]
@@ -293,8 +282,7 @@ pub enum DependencyType {
     Conditional,
     
     /// Functional dependency
-    Functional,
-}
+    Functional}
 
 /// Dependency functions
 #[derive(Debug, Clone)]
@@ -309,8 +297,7 @@ pub enum DependencyFunction {
     Exponential { base: f64, scale: f64 },
     
     /// Custom function
-    Custom(String),
-}
+    Custom(String)}
 
 /// Constraint types
 #[derive(Debug, Clone, Copy)]
@@ -325,8 +312,7 @@ pub enum ConstraintType {
     Range,
     
     /// Custom constraint
-    Custom,
-}
+    Custom}
 
 /// Multi-objective settings
 #[derive(Debug, Clone)]
@@ -344,8 +330,7 @@ pub struct MultiObjectiveSettings<T: Float> {
     pub reference_point: Option<Vec<T>>,
     
     /// Weights for weighted sum
-    pub weights: Option<Vec<T>>,
-}
+    pub weights: Option<Vec<T>>}
 
 /// Objective functions
 #[derive(Debug, Clone)]
@@ -363,15 +348,13 @@ pub struct ObjectiveFunction<T: Float> {
     pub normalization: NormalizationMethod,
     
     /// Target value (for goal programming)
-    pub target: Option<T>,
-}
+    pub target: Option<T>}
 
 /// Optimization directions
 #[derive(Debug, Clone, Copy)]
 pub enum OptimizationDirection {
     Minimize,
-    Maximize,
-}
+    Maximize}
 
 /// Scalarization methods for multi-objective optimization
 #[derive(Debug, Clone, Copy)]
@@ -389,8 +372,7 @@ pub enum ScalarizationMethod {
     Achievement,
     
     /// Epsilon constraint
-    EpsilonConstraint,
-}
+    EpsilonConstraint}
 
 /// Pareto front approximation methods
 #[derive(Debug, Clone, Copy)]
@@ -405,8 +387,7 @@ pub enum ParetoApproximationMethod {
     Spacing,
     
     /// Generational distance
-    GenerationalDistance,
-}
+    GenerationalDistance}
 
 /// Normalization methods
 #[derive(Debug, Clone, Copy)]
@@ -421,8 +402,7 @@ pub enum NormalizationMethod {
     ZScore,
     
     /// Robust normalization
-    Robust,
-}
+    Robust}
 
 /// Early stopping criteria
 #[derive(Debug, Clone)]
@@ -446,8 +426,7 @@ pub struct EarlyStoppingCriteria<T: Float> {
     pub max_evaluations: Option<usize>,
     
     /// Maximum time budget
-    pub max_time: Option<Duration>,
-}
+    pub max_time: Option<Duration>}
 
 /// Multi-fidelity optimization settings
 #[derive(Debug, Clone)]
@@ -462,8 +441,7 @@ pub struct MultiFidelitySettings<T: Float> {
     pub resource_allocation: ResourceAllocationStrategy,
     
     /// Correlation model between fidelities
-    pub correlation_model: FidelityCorrelationModel<T>,
-}
+    pub correlation_model: FidelityCorrelationModel<T>}
 
 /// Fidelity levels
 #[derive(Debug, Clone)]
@@ -478,8 +456,7 @@ pub struct FidelityLevel<T: Float> {
     pub accuracy: T,
     
     /// Configuration parameters
-    pub config: HashMap<String, T>,
-}
+    pub config: HashMap<String, T>}
 
 /// Promotion criteria for multi-fidelity
 #[derive(Debug, Clone)]
@@ -494,8 +471,7 @@ pub struct PromotionCriteria<T: Float> {
     pub min_evaluations: usize,
     
     /// Promotion strategy
-    pub strategy: PromotionStrategy,
-}
+    pub strategy: PromotionStrategy}
 
 /// Resource allocation strategies
 #[derive(Debug, Clone, Copy)]
@@ -510,8 +486,7 @@ pub enum ResourceAllocationStrategy {
     Bandit,
     
     /// Adaptive allocation
-    Adaptive,
-}
+    Adaptive}
 
 /// Promotion strategies
 #[derive(Debug, Clone, Copy)]
@@ -526,8 +501,7 @@ pub enum PromotionStrategy {
     Probabilistic,
     
     /// Adaptive promotion
-    Adaptive,
-}
+    Adaptive}
 
 /// Fidelity correlation models
 #[derive(Debug, Clone)]
@@ -539,8 +513,7 @@ pub struct FidelityCorrelationModel<T: Float> {
     pub parameters: Vec<T>,
     
     /// Correlation matrix
-    pub correlation_matrix: Option<Array2<T>>,
-}
+    pub correlation_matrix: Option<Array2<T>>}
 
 /// Correlation model types
 #[derive(Debug, Clone, Copy)]
@@ -555,8 +528,7 @@ pub enum CorrelationModelType {
     PowerLaw,
     
     /// Learned correlation
-    Learned,
-}
+    Learned}
 
 /// Ensemble optimization settings
 #[derive(Debug, Clone)]
@@ -577,8 +549,7 @@ pub struct EnsembleSettings<T: Float> {
     pub adaptation_strategy: EnsembleAdaptationStrategy,
     
     /// Performance tracking window
-    pub tracking_window: usize,
-}
+    pub tracking_window: usize}
 
 /// Ensemble combination methods
 #[derive(Debug, Clone, Copy)]
@@ -596,8 +567,7 @@ pub enum EnsembleCombinationMethod {
     DynamicSelection,
     
     /// Stacking
-    Stacking,
-}
+    Stacking}
 
 /// Ensemble adaptation strategies
 #[derive(Debug, Clone, Copy)]
@@ -612,8 +582,7 @@ pub enum EnsembleAdaptationStrategy {
     Bandit,
     
     /// Contextual adaptation
-    Contextual,
-}
+    Contextual}
 
 /// Parallelization settings
 #[derive(Debug, Clone)]
@@ -628,8 +597,7 @@ pub struct ParallelizationSettings {
     pub load_balancing: LoadBalancingStrategy,
     
     /// Communication overhead limit
-    pub communication_overhead_limit: f64,
-}
+    pub communication_overhead_limit: f64}
 
 /// Synchronization strategies for parallel HPO
 #[derive(Debug, Clone, Copy)]
@@ -644,8 +612,7 @@ pub enum SynchronizationStrategy {
     BatchSynchronous,
     
     /// Hybrid synchronization
-    Hybrid,
-}
+    Hybrid}
 
 /// Load balancing strategies
 #[derive(Debug, Clone, Copy)]
@@ -660,8 +627,7 @@ pub enum LoadBalancingStrategy {
     PerformanceBased,
     
     /// Dynamic balancing
-    Dynamic,
-}
+    Dynamic}
 
 /// Resource constraints for HPO
 #[derive(Debug, Clone)]
@@ -676,8 +642,7 @@ pub struct ResourceConstraints<T: Float> {
     pub max_cost: T,
     
     /// Available compute resources
-    pub compute_resources: ComputeResources,
-}
+    pub compute_resources: ComputeResources}
 
 /// Available compute resources
 #[derive(Debug, Clone)]
@@ -692,8 +657,7 @@ pub struct ComputeResources {
     pub memory_per_device_gb: f64,
     
     /// Network bandwidth
-    pub network_bandwidth_gbps: f64,
-}
+    pub network_bandwidth_gbps: f64}
 
 /// Optimization objectives
 #[derive(Debug, Clone)]
@@ -711,8 +675,7 @@ pub struct OptimizationObjective<T: Float> {
     pub weight: T,
     
     /// Constraint bounds
-    pub bounds: Option<(T, T)>,
-}
+    pub bounds: Option<(T, T)>}
 
 /// Objective function types
 #[derive(Debug, Clone)]
@@ -730,8 +693,7 @@ pub enum ObjectiveFunctionType {
     ModelComplexity,
     
     /// Custom objective
-    Custom(String),
-}
+    Custom(String)}
 
 /// Constraint functions
 #[derive(Debug, Clone)]
@@ -749,8 +711,7 @@ pub struct ConstraintFunction<T: Float> {
     pub tolerance: T,
     
     /// Penalty weight
-    pub penalty_weight: T,
-}
+    pub penalty_weight: T}
 
 /// Constraint function types
 #[derive(Debug, Clone)]
@@ -765,8 +726,7 @@ pub enum ConstraintFunctionType {
     Resource(String),
     
     /// Custom constraint
-    Custom(String),
-}
+    Custom(String)}
 
 /// Base trait for HPO strategies
 pub trait HPOStrategy<T: Float>: Send + Sync {
@@ -805,8 +765,7 @@ pub struct ParameterConfiguration<T: Float> {
     pub source: ConfigurationSource,
     
     /// Generation metadata
-    pub metadata: ConfigurationMetadata,
-}
+    pub metadata: ConfigurationMetadata}
 
 /// Parameter values
 #[derive(Debug, Clone)]
@@ -821,8 +780,7 @@ pub enum ParameterValue {
     Categorical(String),
     
     /// Boolean value
-    Boolean(bool),
-}
+    Boolean(bool)}
 
 /// Configuration sources
 #[derive(Debug, Clone, Copy)]
@@ -843,8 +801,7 @@ pub enum ConfigurationSource {
     Transfer,
     
     /// User-defined
-    UserDefined,
-}
+    UserDefined}
 
 /// Configuration metadata
 #[derive(Debug, Clone)]
@@ -859,8 +816,7 @@ pub struct ConfigurationMetadata {
     pub acquisition_value: Option<f64>,
     
     /// Uncertainty estimate
-    pub uncertainty: Option<f64>,
-}
+    pub uncertainty: Option<f64>}
 
 /// HPO result
 #[derive(Debug, Clone)]
@@ -881,8 +837,7 @@ pub struct HPOResult<T: Float> {
     pub resource_usage: ResourceUsage<T>,
     
     /// Fidelity level
-    pub fidelity: Option<String>,
-}
+    pub fidelity: Option<String>}
 
 /// Evaluation metadata
 #[derive(Debug, Clone)]
@@ -900,8 +855,7 @@ pub struct EvaluationMetadata {
     pub error_message: Option<String>,
     
     /// Additional metrics
-    pub additional_metrics: HashMap<String, f64>,
-}
+    pub additional_metrics: HashMap<String, f64>}
 
 /// HPO strategy statistics
 #[derive(Debug, Clone)]
@@ -922,8 +876,7 @@ pub struct HPOStrategyStatistics<T: Float> {
     pub convergence_rate: Option<T>,
     
     /// Strategy-specific metrics
-    pub custom_metrics: HashMap<String, T>,
-}
+    pub custom_metrics: HashMap<String, T>}
 
 /// Parameter space manager
 #[derive(Debug)]
@@ -938,8 +891,7 @@ pub struct ParameterSpaceManager<T: Float> {
     validation_rules: Vec<ValidationRule>,
     
     /// Sampling strategies
-    sampling_strategies: HashMap<String, SamplingStrategy>,
-}
+    sampling_strategies: HashMap<String, SamplingStrategy>}
 
 /// Parameter transformations
 #[derive(Debug, Clone)]
@@ -954,8 +906,7 @@ pub enum ParameterTransformation {
     BoxCox(f64),
     
     /// Custom transformation
-    Custom(String),
-}
+    Custom(String)}
 
 /// Validation rules
 #[derive(Debug, Clone)]
@@ -970,8 +921,7 @@ pub struct ValidationRule {
     pub validator: ValidationFunction,
     
     /// Error message
-    pub error_message: String,
-}
+    pub error_message: String}
 
 /// Validation functions
 #[derive(Debug, Clone)]
@@ -986,8 +936,7 @@ pub enum ValidationFunction {
     Dependency(String),
     
     /// Custom validation
-    Custom(String),
-}
+    Custom(String)}
 
 /// Sampling strategies
 #[derive(Debug, Clone, Copy)]
@@ -1005,8 +954,7 @@ pub enum SamplingStrategy {
     Halton,
     
     /// Grid sampling
-    Grid,
-}
+    Grid}
 
 /// Evaluation scheduler
 #[derive(Debug)]
@@ -1024,8 +972,7 @@ pub struct EvaluationScheduler<T: Float> {
     config: SchedulerConfig,
     
     /// Resource monitor
-    resource_monitor: ResourceMonitor<T>,
-}
+    resource_monitor: ResourceMonitor<T>}
 
 /// Evaluation task
 #[derive(Debug, Clone)]
@@ -1043,8 +990,7 @@ pub struct EvaluationTask<T: Float> {
     pub fidelity: Option<String>,
     
     /// Estimated resource requirements
-    pub resource_requirements: ResourceRequirements<T>,
-}
+    pub resource_requirements: ResourceRequirements<T>}
 
 /// Running evaluation
 #[derive(Debug)]
@@ -1059,8 +1005,7 @@ pub struct RunningEvaluation<T: Float> {
     pub worker_id: Option<String>,
     
     /// Intermediate results
-    pub intermediate_results: Vec<IntermediateResult<T>>,
-}
+    pub intermediate_results: Vec<IntermediateResult<T>>}
 
 /// Task priorities
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -1068,8 +1013,7 @@ pub enum TaskPriority {
     Low = 1,
     Medium = 2,
     High = 3,
-    Critical = 4,
-}
+    Critical = 4}
 
 /// Resource requirements
 #[derive(Debug, Clone)]
@@ -1084,8 +1028,7 @@ pub struct ResourceRequirements<T: Float> {
     pub gpu_devices: usize,
     
     /// Estimated duration
-    pub estimated_duration: Duration,
-}
+    pub estimated_duration: Duration}
 
 /// Intermediate results during evaluation
 #[derive(Debug, Clone)]
@@ -1100,8 +1043,7 @@ pub struct IntermediateResult<T: Float> {
     pub progress: T,
     
     /// Additional metrics
-    pub metrics: HashMap<String, T>,
-}
+    pub metrics: HashMap<String, T>}
 
 /// Scheduler configuration
 #[derive(Debug, Clone)]
@@ -1116,8 +1058,7 @@ pub struct SchedulerConfig {
     pub resource_allocation: ResourceAllocationPolicy,
     
     /// Preemption policy
-    pub preemption_policy: PreemptionPolicy,
-}
+    pub preemption_policy: PreemptionPolicy}
 
 /// Scheduling strategies
 #[derive(Debug, Clone, Copy)]
@@ -1135,8 +1076,7 @@ pub enum SchedulingStrategy {
     FairShare,
     
     /// Performance-aware scheduling
-    PerformanceAware,
-}
+    PerformanceAware}
 
 /// Resource allocation policies
 #[derive(Debug, Clone, Copy)]
@@ -1151,8 +1091,7 @@ pub enum ResourceAllocationPolicy {
     Adaptive,
     
     /// Best-fit allocation
-    BestFit,
-}
+    BestFit}
 
 /// Preemption policies
 #[derive(Debug, Clone, Copy)]
@@ -1167,8 +1106,7 @@ pub enum PreemptionPolicy {
     Resource,
     
     /// Performance-based preemption
-    Performance,
-}
+    Performance}
 
 /// HPO result database
 #[derive(Debug)]
@@ -1186,8 +1124,7 @@ pub struct HPOResultDatabase<T: Float> {
     pareto_front: Vec<usize>,
     
     /// Database statistics
-    statistics: DatabaseStatistics<T>,
-}
+    statistics: DatabaseStatistics<T>}
 
 /// Ordered float wrapper for BTreeMap keys
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
@@ -1217,8 +1154,7 @@ pub struct DatabaseStatistics<T: Float> {
     pub average_objectives: HashMap<String, T>,
     
     /// Objective value distributions
-    pub objective_distributions: HashMap<String, Vec<T>>,
-}
+    pub objective_distributions: HashMap<String, Vec<T>>}
 
 /// Multi-fidelity manager
 #[derive(Debug)]
@@ -1233,8 +1169,7 @@ pub struct MultiFidelityManager<T: Float> {
     promotion_queue: VecDeque<PromotionCandidate<T>>,
     
     /// Resource usage tracker
-    resource_tracker: FidelityResourceTracker<T>,
-}
+    resource_tracker: FidelityResourceTracker<T>}
 
 /// Promotion candidate
 #[derive(Debug, Clone)]
@@ -1252,8 +1187,7 @@ pub struct PromotionCandidate<T: Float> {
     pub promotion_score: T,
     
     /// Performance history
-    pub performance_history: Vec<T>,
-}
+    pub performance_history: Vec<T>}
 
 /// Resource tracker for fidelities
 #[derive(Debug)]
@@ -1265,8 +1199,7 @@ pub struct FidelityResourceTracker<T: Float> {
     total_budget: ResourceUsage<T>,
     
     /// Used resources
-    used_resources: ResourceUsage<T>,
-}
+    used_resources: ResourceUsage<T>}
 
 /// Early stopping controller
 #[derive(Debug)]
@@ -1284,8 +1217,7 @@ pub struct EarlyStoppingController<T: Float> {
     iterations_without_improvement: usize,
     
     /// Controller state
-    state: EarlyStoppingState,
-}
+    state: EarlyStoppingState}
 
 /// Early stopping states
 #[derive(Debug, Clone, Copy)]
@@ -1297,8 +1229,7 @@ pub enum EarlyStoppingState {
     Triggered,
     
     /// Disabled
-    Disabled,
-}
+    Disabled}
 
 /// Ensemble optimizer
 #[derive(Debug)]
@@ -1316,8 +1247,7 @@ pub struct EnsembleOptimizer<T: Float> {
     weight_controller: WeightAdaptationController<T>,
     
     /// Combination engine
-    combination_engine: CombinationEngine<T>,
-}
+    combination_engine: CombinationEngine<T>}
 
 /// Strategy performance tracker
 #[derive(Debug)]
@@ -1332,8 +1262,7 @@ pub struct StrategyPerformanceTracker<T: Float> {
     average_performance: HashMap<String, T>,
     
     /// Performance trends
-    performance_trends: HashMap<String, PerformanceTrend<T>>,
-}
+    performance_trends: HashMap<String, PerformanceTrend<T>>}
 
 /// Performance trends
 #[derive(Debug, Clone)]
@@ -1345,16 +1274,14 @@ pub struct PerformanceTrend<T: Float> {
     pub magnitude: T,
     
     /// Trend confidence
-    pub confidence: T,
-}
+    pub confidence: T}
 
 /// Trend directions
 #[derive(Debug, Clone, Copy)]
 pub enum TrendDirection {
     Improving,
     Declining,
-    Stable,
-}
+    Stable}
 
 /// Weight adaptation controller
 #[derive(Debug)]
@@ -1369,8 +1296,7 @@ pub struct WeightAdaptationController<T: Float> {
     adaptation_rate: T,
     
     /// Weight constraints
-    weight_constraints: WeightConstraints<T>,
-}
+    weight_constraints: WeightConstraints<T>}
 
 /// Weight constraints
 #[derive(Debug, Clone)]
@@ -1385,8 +1311,7 @@ pub struct WeightConstraints<T: Float> {
     pub sum_constraint: Option<T>,
     
     /// Smoothness constraint
-    pub smoothness_constraint: Option<T>,
-}
+    pub smoothness_constraint: Option<T>}
 
 /// Combination engine
 #[derive(Debug)]
@@ -1398,8 +1323,7 @@ pub struct CombinationEngine<T: Float> {
     combination_history: VecDeque<CombinationResult<T>>,
     
     /// Meta-learner (for stacking)
-    meta_learner: Option<MetaLearner<T>>,
-}
+    meta_learner: Option<MetaLearner<T>>}
 
 /// Combination result
 #[derive(Debug, Clone)]
@@ -1414,8 +1338,7 @@ pub struct CombinationResult<T: Float> {
     pub weights: Vec<T>,
     
     /// Combination quality score
-    pub quality_score: T,
-}
+    pub quality_score: T}
 
 /// Meta-learner for ensemble stacking
 #[derive(Debug)]
@@ -1430,8 +1353,7 @@ pub struct MetaLearner<T: Float> {
     parameters: Array1<T>,
     
     /// Training history
-    training_history: Vec<MetaTrainingStep<T>>,
-}
+    training_history: Vec<MetaTrainingStep<T>>}
 
 /// Meta-training step
 #[derive(Debug, Clone)]
@@ -1446,8 +1368,7 @@ pub struct MetaTrainingStep<T: Float> {
     pub gradient_norm: T,
     
     /// Learning rate
-    pub learning_rate: T,
-}
+    pub learning_rate: T}
 
 /// Optimization state
 #[derive(Debug)]
@@ -1471,8 +1392,7 @@ pub struct OptimizationState<T: Float> {
     pub phase: OptimizationPhase,
     
     /// Resource usage so far
-    pub resource_usage: ResourceUsage<T>,
-}
+    pub resource_usage: ResourceUsage<T>}
 
 /// Optimization phases
 #[derive(Debug, Clone, Copy)]
@@ -1490,8 +1410,7 @@ pub enum OptimizationPhase {
     Refinement,
     
     /// Termination phase
-    Termination,
-}
+    Termination}
 
 /// Resource monitor
 #[derive(Debug)]
@@ -1506,8 +1425,7 @@ pub struct ResourceMonitor<T: Float> {
     usage_history: VecDeque<(Instant, ResourceUsage<T>)>,
     
     /// Monitoring interval
-    monitoring_interval: Duration,
-}
+    monitoring_interval: Duration}
 
 impl<T: Float> Default for HPOConfig<T> {
     fn default() -> Self {
@@ -1527,11 +1445,9 @@ impl<T: Float> Default for HPOConfig<T> {
                     function: ObjectiveFunctionType::Performance("accuracy".to_string()),
                     direction: OptimizationDirection::Maximize,
                     weight: T::one(),
-                    bounds: None,
-                }
+                    bounds: None}
             ],
-            constraints: vec![],
-        }
+            constraints: vec![]}
     }
 }
 
@@ -1543,8 +1459,7 @@ impl Default for ParameterSearchSpace {
             categorical_params: HashMap::new(),
             conditional_params: HashMap::new(),
             dependencies: Vec::new(),
-            constraints: Vec::new(),
-        }
+            constraints: Vec::new()}
     }
 }
 
@@ -1555,8 +1470,7 @@ impl<T: Float> Default for MultiObjectiveSettings<T> {
             scalarization: ScalarizationMethod::WeightedSum,
             pareto_approximation: ParetoApproximationMethod::NonDominatedSorting,
             reference_point: None,
-            weights: None,
-        }
+            weights: None}
     }
 }
 
@@ -1569,8 +1483,7 @@ impl<T: Float> Default for EarlyStoppingCriteria<T> {
             relative_improvement: T::from(0.01).unwrap(),
             target_performance: None,
             max_evaluations: Some(1000),
-            max_time: Some(Duration::from_hours(24)),
-        }
+            max_time: Some(Duration::from_hours(24))}
     }
 }
 
@@ -1582,8 +1495,7 @@ impl<T: Float> Default for EnsembleSettings<T> {
             strategy_weights: vec![],
             combination_method: EnsembleCombinationMethod::WeightedAverage,
             adaptation_strategy: EnsembleAdaptationStrategy::PerformanceBased,
-            tracking_window: 100,
-        }
+            tracking_window: 100}
     }
 }
 
@@ -1593,8 +1505,7 @@ impl Default for ParallelizationSettings {
             num_workers: 4,
             synchronization: SynchronizationStrategy::Asynchronous,
             load_balancing: LoadBalancingStrategy::Dynamic,
-            communication_overhead_limit: 0.1,
-        }
+            communication_overhead_limit: 0.1}
     }
 }
 
@@ -1604,8 +1515,7 @@ impl<T: Float> Default for ResourceConstraints<T> {
             max_memory_gb: T::from(32.0).unwrap(),
             max_time_hours: T::from(24.0).unwrap(),
             max_cost: T::from(1000.0).unwrap(),
-            compute_resources: ComputeResources::default(),
-        }
+            compute_resources: ComputeResources::default()}
     }
 }
 
@@ -1615,8 +1525,7 @@ impl Default for ComputeResources {
             cpu_cores: 8,
             gpu_devices: 1,
             memory_per_device_gb: 16.0,
-            network_bandwidth_gbps: 10.0,
-        }
+            network_bandwidth_gbps: 10.0}
     }
 }
 
@@ -1627,8 +1536,7 @@ impl<T: Float> Default for EvaluationBudget {
             max_time_seconds: 86400, // 24 hours
             max_flops: 1_000_000_000_000, // 1 TFLOP
             early_stopping_patience: 50,
-            min_evaluation_time: Duration::from_secs(60),
-        }
+            min_evaluation_time: Duration::from_secs(60)}
     }
 }
 
@@ -1659,8 +1567,7 @@ impl<T: Float> HyperparameterOptimizationPipeline<T> {
             multi_fidelity_manager,
             early_stopping,
             ensemble_optimizer,
-            optimization_state: OptimizationState::new(),
-        })
+            optimization_state: OptimizationState::new()})
     }
     
     /// Run the hyperparameter optimization
@@ -1754,8 +1661,7 @@ impl<T: Float> HyperparameterOptimizationPipeline<T> {
                 configuration: candidate,
                 priority: TaskPriority::Medium,
                 fidelity: None, // Will be set by multi-fidelity manager
-                resource_requirements: self.estimate_resource_requirements(&candidate)?,
-            };
+                resource_requirements: self.estimate_resource_requirements(&candidate)?};
             
             self.evaluation_scheduler.schedule_task(task)?;
         }
@@ -1850,8 +1756,7 @@ impl<T: Float> HyperparameterOptimizationPipeline<T> {
             pareto_front,
             all_results: self.result_database.get_all_results(),
             statistics,
-            optimization_trace: self.get_optimization_trace(),
-        })
+            optimization_trace: self.get_optimization_trace()})
     }
     
     // Helper methods would be implemented here...
@@ -1866,8 +1771,7 @@ impl<T: Float> HyperparameterOptimizationPipeline<T> {
             cpu_cores: 1,
             memory_gb: T::from(4.0).unwrap(),
             gpu_devices: 0,
-            estimated_duration: Duration::from_secs(300),
-        })
+            estimated_duration: Duration::from_secs(300)})
     }
     
     fn determine_optimization_phase(&self) -> OptimizationPhase {
@@ -1923,8 +1827,7 @@ pub struct HPOResults<T: Float> {
     pub statistics: OptimizationStatistics<T>,
     
     /// Optimization trace
-    pub optimization_trace: Vec<OptimizationTracePoint<T>>,
-}
+    pub optimization_trace: Vec<OptimizationTracePoint<T>>}
 
 /// Optimization statistics
 #[derive(Debug, Clone)]
@@ -1945,8 +1848,7 @@ pub struct OptimizationStatistics<T: Float> {
     pub convergence_iteration: Option<usize>,
     
     /// Per-strategy statistics
-    pub strategy_statistics: HashMap<String, HPOStrategyStatistics<T>>,
-}
+    pub strategy_statistics: HashMap<String, HPOStrategyStatistics<T>>}
 
 /// Optimization trace point
 #[derive(Debug, Clone)]
@@ -1964,8 +1866,7 @@ pub struct OptimizationTracePoint<T: Float> {
     pub resource_usage: ResourceUsage<T>,
     
     /// Timestamp
-    pub timestamp: Instant,
-}
+    pub timestamp: Instant}
 
 // Implementation stubs for complex components - these would be fully implemented in practice
 impl<T: Float> ParameterSpaceManager<T> {
@@ -1974,8 +1875,7 @@ impl<T: Float> ParameterSpaceManager<T> {
             space: _space,
             transformations: HashMap::new(),
             validation_rules: Vec::new(),
-            sampling_strategies: HashMap::new(),
-        })
+            sampling_strategies: HashMap::new()})
     }
     
     fn validate_configurations(&self, configs: Vec<ParameterConfiguration<T>>) -> Result<Vec<ParameterConfiguration<T>>> {
@@ -1991,8 +1891,7 @@ impl<T: Float> EvaluationScheduler<T> {
             running_evaluations: HashMap::new(),
             completed_evaluations: VecDeque::new(),
             config: _config,
-            resource_monitor: ResourceMonitor::new(_constraints),
-        })
+            resource_monitor: ResourceMonitor::new(_constraints)})
     }
     
     fn start_monitoring(&mut self) -> Result<()> {
@@ -2019,8 +1918,7 @@ impl<T: Float> HPOResultDatabase<T> {
             results_by_config: HashMap::new(),
             results_by_objective: BTreeMap::new(),
             pareto_front: Vec::new(),
-            statistics: DatabaseStatistics::default(),
-        }
+            statistics: DatabaseStatistics::default()}
     }
     
     fn add_result(&mut self, _result: HPOResult<T>) -> Result<()> {
@@ -2054,8 +1952,7 @@ impl<T: Float> MultiFidelityManager<T> {
             settings: _settings,
             fidelity_assignments: HashMap::new(),
             promotion_queue: VecDeque::new(),
-            resource_tracker: FidelityResourceTracker::new(),
-        })
+            resource_tracker: FidelityResourceTracker::new()})
     }
     
     fn assign_fidelities(&mut self, configs: Vec<ParameterConfiguration<T>>) -> Result<Vec<ParameterConfiguration<T>>> {
@@ -2074,8 +1971,7 @@ impl<T: Float> EarlyStoppingController<T> {
             performance_history: VecDeque::new(),
             best_performance: None,
             iterations_without_improvement: 0,
-            state: EarlyStoppingState::Active,
-        }
+            state: EarlyStoppingState::Active}
     }
     
     fn update(&mut self, _performance: T) {
@@ -2094,8 +1990,7 @@ impl<T: Float> EnsembleOptimizer<T> {
             strategies: Vec::new(),
             performance_tracker: StrategyPerformanceTracker::new(),
             weight_controller: WeightAdaptationController::new(),
-            combination_engine: CombinationEngine::new(),
-        })
+            combination_engine: CombinationEngine::new()})
     }
     
     fn initialize(&mut self, _config: &HPOConfig<T>) -> Result<()> {
@@ -2126,9 +2021,7 @@ impl<T: Float> OptimizationState<T> {
                 gpu_time_seconds: T::zero(),
                 energy_kwh: T::zero(),
                 cost_usd: T::zero(),
-                network_gb: T::zero(),
-            },
-        }
+                network_gb: T::zero()}}
     }
 }
 
@@ -2141,12 +2034,10 @@ impl<T: Float> ResourceMonitor<T> {
                 gpu_time_seconds: T::zero(),
                 energy_kwh: T::zero(),
                 cost_usd: T::zero(),
-                network_gb: T::zero(),
-            },
+                network_gb: T::zero()},
             limits: _constraints,
             usage_history: VecDeque::new(),
-            monitoring_interval: Duration::from_secs(60),
-        }
+            monitoring_interval: Duration::from_secs(60)}
     }
 }
 
@@ -2161,17 +2052,14 @@ impl<T: Float> FidelityResourceTracker<T> {
                 gpu_time_seconds: T::zero(),
                 energy_kwh: T::zero(),
                 cost_usd: T::zero(),
-                network_gb: T::zero(),
-            },
+                network_gb: T::zero()},
             used_resources: ResourceUsage {
                 memory_gb: T::zero(),
                 cpu_time_seconds: T::zero(),
                 gpu_time_seconds: T::zero(),
                 energy_kwh: T::zero(),
                 cost_usd: T::zero(),
-                network_gb: T::zero(),
-            },
-        }
+                network_gb: T::zero()}}
     }
 }
 
@@ -2181,8 +2069,7 @@ impl<T: Float> StrategyPerformanceTracker<T> {
             performance_history: HashMap::new(),
             success_rates: HashMap::new(),
             average_performance: HashMap::new(),
-            performance_trends: HashMap::new(),
-        }
+            performance_trends: HashMap::new()}
     }
 }
 
@@ -2192,8 +2079,7 @@ impl<T: Float> WeightAdaptationController<T> {
             current_weights: Vec::new(),
             adaptation_strategy: EnsembleAdaptationStrategy::PerformanceBased,
             adaptation_rate: T::from(0.1).unwrap(),
-            weight_constraints: WeightConstraints::default(),
-        }
+            weight_constraints: WeightConstraints::default()}
     }
 }
 
@@ -2202,8 +2088,7 @@ impl<T: Float> CombinationEngine<T> {
         Self {
             method: EnsembleCombinationMethod::WeightedAverage,
             combination_history: VecDeque::new(),
-            meta_learner: None,
-        }
+            meta_learner: None}
     }
 }
 
@@ -2214,8 +2099,7 @@ impl<T: Float> Default for DatabaseStatistics<T> {
             successful_evaluations: 0,
             best_objectives: HashMap::new(),
             average_objectives: HashMap::new(),
-            objective_distributions: HashMap::new(),
-        }
+            objective_distributions: HashMap::new()}
     }
 }
 
@@ -2225,8 +2109,7 @@ impl<T: Float> Default for WeightConstraints<T> {
             min_weight: T::from(0.01).unwrap(),
             max_weight: T::one(),
             sum_constraint: Some(T::one()),
-            smoothness_constraint: None,
-        }
+            smoothness_constraint: None}
     }
 }
 

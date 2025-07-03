@@ -201,7 +201,7 @@ impl<T: Float> ShamirSecretSharing<T> {
     }
 
     /// Share a secret value
-    pub fn share_secret(&mut self, secret: T) -> Result<Vec> {
+    pub fn share_secret(&mut self, secret: T) -> Result<Vec<T>> {
         // Generate random polynomial coefficients
         let mut rng = ChaCha20Rng::from_entropy();
         self.coefficients.clear();
@@ -321,7 +321,7 @@ impl<T: Float> CryptographicAggregator<T> {
     fn commit_inputs(
         &mut self,
         inputs: &HashMap<String, Array1<T>>,
-    ) -> Result<HashMap<String, Vec<u8>>, OptimError> {
+    ) -> Result<HashMap<String, Vec<u8>>> {
         let mut commitments = HashMap::new();
 
         for (participant_id, input) in inputs {
@@ -945,7 +945,7 @@ impl<T: Float> SMPCCoordinator<T> {
     fn share_inputs(
         &mut self,
         inputs: &HashMap<String, Array1<T>>,
-    ) -> Result<HashMap<String, Vec<(usize, T)>>, OptimError> {
+    ) -> Result<HashMap<String, Vec<(usize, T)>>> {
         let mut shared_inputs = HashMap::new();
 
         for (participant_id, input) in inputs {
@@ -968,7 +968,7 @@ impl<T: Float> SMPCCoordinator<T> {
         &self,
         shared_inputs: &HashMap<String, Vec<(usize, T)>>,
         computation: SMPCComputation,
-    ) -> Result<Vec> {
+    ) -> Result<Vec<(usize, T)>> {
         match computation {
             SMPCComputation::Sum => self.secure_sum(shared_inputs),
             SMPCComputation::Average => self.secure_average(shared_inputs),
@@ -978,7 +978,10 @@ impl<T: Float> SMPCCoordinator<T> {
     }
 
     /// Secure sum computation
-    fn secure_sum(&self, shared_inputs: &HashMap<String, Vec<(usize, T)>>) -> Result<Vec> {
+    fn secure_sum(
+        &self,
+        shared_inputs: &HashMap<String, Vec<(usize, T)>>,
+    ) -> Result<Vec<(usize, T)>> {
         // Get the first participant's shares to determine structure
         let first_shares = shared_inputs
             .values()
@@ -1000,7 +1003,10 @@ impl<T: Float> SMPCCoordinator<T> {
     }
 
     /// Secure average computation
-    fn secure_average(&self, shared_inputs: &HashMap<String, Vec<(usize, T)>>) -> Result<Vec> {
+    fn secure_average(
+        &self,
+        shared_inputs: &HashMap<String, Vec<(usize, T)>>,
+    ) -> Result<Vec<(usize, T)>> {
         let sum_shares = self.secure_sum(shared_inputs)?;
         let num_participants = T::from(shared_inputs.len()).unwrap();
 
@@ -1017,7 +1023,7 @@ impl<T: Float> SMPCCoordinator<T> {
     fn secure_weighted_sum(
         &self,
         _shared_inputs: &HashMap<String, Vec<(usize, T)>>,
-    ) -> Result<Vec> {
+    ) -> Result<Vec<(usize, T)>> {
         // Placeholder for weighted sum implementation
         Err(OptimError::InvalidConfig(
             "Weighted sum not implemented yet".to_string(),
@@ -1028,7 +1034,7 @@ impl<T: Float> SMPCCoordinator<T> {
     fn secure_custom_computation(
         &self,
         _shared_inputs: &HashMap<String, Vec<(usize, T)>>,
-    ) -> Result<Vec> {
+    ) -> Result<Vec<(usize, T)>> {
         // Placeholder for custom computation implementation
         Err(OptimError::InvalidConfig(
             "Custom computation not implemented yet".to_string(),

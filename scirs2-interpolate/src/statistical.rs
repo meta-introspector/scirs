@@ -705,7 +705,7 @@ pub fn make_bootstrap_linear_interpolator<
 }
 
 /// Create a Bayesian interpolator with default configuration
-pub fn make_bayesian_interpolator<T: Float + FromPrimitive + Debug + Display>(
+pub fn make_bayesian_interpolator<T: crate::traits::InterpolationFloat>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
 ) -> InterpolateResult<BayesianInterpolator<T>> {
@@ -721,13 +721,12 @@ where
 }
 
 /// Create a robust interpolator with default Huber tuning
-pub fn make_robust_interpolator<T: Float + FromPrimitive + Debug + Display>(
-) -> RobustInterpolator<T> {
+pub fn make_robust_interpolator<T: crate::traits::InterpolationFloat>() -> RobustInterpolator<T> {
     RobustInterpolator::new(T::from(1.345).unwrap()) // Huber's recommended value
 }
 
 /// Create a stochastic interpolator with default parameters
-pub fn make_stochastic_interpolator<T: Float + FromPrimitive + Debug + Display>(
+pub fn make_stochastic_interpolator<T: crate::traits::InterpolationFloat>(
     correlation_length: T,
 ) -> StochasticInterpolator<T> {
     StochasticInterpolator::new(correlation_length, T::one(), 100)
@@ -1565,7 +1564,7 @@ pub fn make_decreasing_isotonic_interpolator<
 }
 
 /// Convenience function to create a KDE interpolator with Gaussian kernel
-pub fn make_kde_interpolator<T: Float + FromPrimitive + Debug + Display + Copy>(
+pub fn make_kde_interpolator<T: crate::traits::InterpolationFloat + Copy>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
     bandwidth: T,

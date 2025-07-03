@@ -171,14 +171,14 @@ impl MetaLearningModel {
             let features = vec![
                 (meta_features.n_samples as f64).ln().max(0.0), // Log-scale for sample count
                 (meta_features.n_features as f64).ln().max(0.0), // Log-scale for feature count
-                meta_features.sparsity.max(0.0).min(1.0),       // Clamp to [0, 1]
-                meta_features.mean_correlation.max(-1.0).min(1.0), // Clamp to [-1, 1]
+                meta_features.sparsity.clamp(0.0, 1.0),         // Clamp to [0, 1]
+                meta_features.mean_correlation.clamp(-1.0, 1.0), // Clamp to [-1, 1]
                 meta_features.std_correlation.max(0.0),         // Non-negative
-                meta_features.mean_skewness.max(-10.0).min(10.0), // Reasonable bounds
-                meta_features.mean_kurtosis.max(-10.0).min(10.0), // Reasonable bounds
-                meta_features.missing_ratio.max(0.0).min(1.0),  // Clamp to [0, 1]
+                meta_features.mean_skewness.clamp(-10.0, 10.0), // Reasonable bounds
+                meta_features.mean_kurtosis.clamp(-10.0, 10.0), // Reasonable bounds
+                meta_features.missing_ratio.clamp(0.0, 1.0),    // Clamp to [0, 1]
                 meta_features.variance_ratio.max(0.0),          // Non-negative
-                meta_features.outlier_ratio.max(0.0).min(1.0),  // Clamp to [0, 1]
+                meta_features.outlier_ratio.clamp(0.0, 1.0),    // Clamp to [0, 1]
             ];
 
             // Validate all features are finite
@@ -194,7 +194,7 @@ impl MetaLearningModel {
             let mut scores = vec![0.0; 10]; // Number of transformation types
             for config in transformations {
                 let idx = self.transformation_type_to_index(&config.transformation_type);
-                let performance = config.expected_performance.max(0.0).min(1.0); // Clamp to [0, 1]
+                let performance = config.expected_performance.clamp(0.0, 1.0); // Clamp to [0, 1]
                 scores[idx] = scores[idx].max(performance); // Take max if multiple configs for same type
             }
             target_scores.extend(scores);
@@ -215,14 +215,14 @@ impl MetaLearningModel {
         let features = vec![
             (meta_features.n_samples as f64).ln().max(0.0),
             (meta_features.n_features as f64).ln().max(0.0),
-            meta_features.sparsity.max(0.0).min(1.0),
-            meta_features.mean_correlation.max(-1.0).min(1.0),
+            meta_features.sparsity.clamp(0.0, 1.0),
+            meta_features.mean_correlation.clamp(-1.0, 1.0),
             meta_features.std_correlation.max(0.0),
-            meta_features.mean_skewness.max(-10.0).min(10.0),
-            meta_features.mean_kurtosis.max(-10.0).min(10.0),
-            meta_features.missing_ratio.max(0.0).min(1.0),
+            meta_features.mean_skewness.clamp(-10.0, 10.0),
+            meta_features.mean_kurtosis.clamp(-10.0, 10.0),
+            meta_features.missing_ratio.clamp(0.0, 1.0),
             meta_features.variance_ratio.max(0.0),
-            meta_features.outlier_ratio.max(0.0).min(1.0),
+            meta_features.outlier_ratio.clamp(0.0, 1.0),
         ];
 
         // Validate all features are finite
@@ -262,7 +262,7 @@ impl MetaLearningModel {
                 let config = TransformationConfig {
                     transformation_type: transformation_type.clone(),
                     parameters: self.get_default_parameters_for_type(&transformation_type),
-                    expected_performance: score.max(0.0).min(1.0), // Clamp to valid range
+                    expected_performance: score.clamp(0.0, 1.0), // Clamp to valid range
                 };
                 transformations.push(config);
             }
@@ -285,7 +285,7 @@ impl MetaLearningModel {
                 let config = TransformationConfig {
                     transformation_type: transformation_type.clone(),
                     parameters: self.get_default_parameters_for_type(&transformation_type),
-                    expected_performance: score.max(0.0).min(1.0),
+                    expected_performance: score.clamp(0.0, 1.0),
                 };
                 transformations.push(config);
             }
@@ -362,6 +362,7 @@ pub struct AutoFeatureEngineer {
 
 impl AutoFeatureEngineer {
     /// Expose pearson_correlation as a public method for external use
+    #[allow(dead_code)]
     pub fn pearson_correlation(&self, x: &ArrayView1<f64>, y: &ArrayView1<f64>) -> Result<f64> {
         self.pearson_correlation_internal(x, y)
     }

@@ -50,7 +50,7 @@ pub fn kernel_ica(
     } else {
         {
             // In rand 0.9, from_rng doesn't return Result but directly returns the PRNG
-            rand::rngs::StdRng::from_rng(&mut rand::thread_rng())
+            rand::rngs::StdRng::from_rng(&mut rand::rng())
         }
     };
 

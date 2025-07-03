@@ -698,8 +698,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> BroadcastOps<
                 output_shape.push(self_dims[i]);
             } else {
                 return Err(CoreError::ValueError(ErrorContext::new(format!(
-                    "Arrays cannot be broadcast together with shapes {:?} and {:?}",
-                    self_shape, other_shape
+                    "Arrays cannot be broadcast together with shapes {self_shape:?} and {other_shape:?}"
                 ))));
             }
         }

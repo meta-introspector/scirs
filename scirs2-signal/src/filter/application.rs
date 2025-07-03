@@ -7,6 +7,7 @@
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast, Zero};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Apply a digital filter forward and backward to a signal (zero-phase filtering)

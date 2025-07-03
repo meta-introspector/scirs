@@ -15,14 +15,12 @@ use crate::parametric_enhanced::{
     enhanced_parametric_estimation, EstimationMethod, ParametricConfig,
 };
 use ndarray::{s, Array1, Array2, ArrayView1, Axis};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
 use std::f64::consts::PI;
-use std::sync::Arc;
 use std::time::Instant;
 
 /// Comprehensive optimization result for parametric methods

@@ -13,8 +13,8 @@ use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
+#[cfg(test)]
 use std::f64::consts::PI;
-use std::sync::Arc;
 
 /// Enhanced numerical robustness for system identification
 #[derive(Debug, Clone)]
@@ -745,10 +745,10 @@ fn bootstrap_resample(data: &[f64]) -> Vec<f64> {
     let n = data.len();
     let mut result = Vec::with_capacity(n);
     use rand::Rng;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for _ in 0..n {
-        let idx = rng.random_range(0..n);
+        let idx = rng.gen_range(0..n);
         result.push(data[idx]);
     }
     result
@@ -945,6 +945,8 @@ fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Array1<Complex64>> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use num_complex::Complex64;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

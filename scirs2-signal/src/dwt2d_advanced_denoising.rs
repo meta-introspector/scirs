@@ -5,16 +5,16 @@
 //! These methods are designed for production-quality image denoising with
 //! quantum-inspired optimization algorithms.
 
-use crate::dwt::{Wavelet, WaveletFilters};
-use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct, Dwt2dResult};
+use crate::dwt::Wavelet;
+use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
 use crate::dwt2d_boundary_enhanced::{dwt2d_decompose_enhanced, BoundaryMode2D};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array2, Array3, ArrayView2, ArrayViewMut2, Axis};
-use num_traits::{Float, NumCast, Zero};
+use ndarray::{s, Array2, ArrayView2};
+use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
-use std::sync::Arc;
+use scirs2_core::validation::{check_finite, check_shape};
+use std::f64::consts::PI;
 
 /// Advanced 2D wavelet denoising configuration
 #[derive(Debug, Clone)]

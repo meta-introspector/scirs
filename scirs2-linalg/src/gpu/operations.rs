@@ -1,10 +1,10 @@
 //! GPU-accelerated linear algebra operations
 
-use super::{AutoGpuSelector, GpuBuffer, GpuContext, GpuLinalgOps};
+use super::{AutoGpuSelector, GpuBuffer, GpuContext, GpuDeviceInfo, GpuLinalgOps};
 use crate::error::{LinalgError, LinalgResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumAssign, Zero};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex, RwLock};
 
@@ -367,7 +367,7 @@ where
     /// Execute CUDA matrix-vector multiplication kernel
     fn execute_cuda_matvec_kernel(
         &self,
-        ctx: &dyn GpuContext,
+        _ctx: &dyn GpuContext,
         a_buffer: &dyn GpuBuffer<T>,
         x_buffer: &dyn GpuBuffer<T>,
         y_buffer: &mut dyn GpuBuffer<T>,
@@ -660,7 +660,7 @@ where
     }
 
     /// CPU fallback for matrix-vector multiplication
-    fn cpu_matvec(&self, a: &ArrayView2<T>, x: &ArrayView1<T>) -> LinalgResult<Array1<T>> {
+    pub fn cpu_matvec(&self, a: &ArrayView2<T>, x: &ArrayView1<T>) -> LinalgResult<Array1<T>> {
         let (m, n) = a.dim();
         let mut result = Array1::zeros(m);
 
@@ -676,7 +676,7 @@ where
     }
 
     /// CPU fallback for matrix-matrix multiplication
-    fn cpu_matmul(&self, a: &ArrayView2<T>, b: &ArrayView2<T>) -> LinalgResult<Array2<T>> {
+    pub fn cpu_matmul(&self, a: &ArrayView2<T>, b: &ArrayView2<T>) -> LinalgResult<Array2<T>> {
         let (m, k) = a.dim();
         let (_, n) = b.dim();
         let mut result = Array2::zeros((m, n));
@@ -1813,7 +1813,7 @@ where
                 self.profiler.average_time(&op),
                 self.profiler.best_time(&op),
             ) {
-                stats.insert(op, (avg, best));
+                stats.insert(op.to_string(), (avg, best));
             }
         }
 
@@ -1897,9 +1897,9 @@ where
     /// Launch CUDA matrix-vector multiplication kernel (f32)
     fn launch_cuda_matvec_f32(
         &self,
-        a_ptr: *const f32,
-        x_ptr: *const f32,
-        y_ptr: *mut f32,
+        _a_ptr: *const f32,
+        _x_ptr: *const f32,
+        _y_ptr: *mut f32,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -1915,9 +1915,9 @@ where
     /// Launch CUDA matrix-vector multiplication kernel (f64)
     fn launch_cuda_matvec_f64(
         &self,
-        a_ptr: *const f64,
-        x_ptr: *const f64,
-        y_ptr: *mut f64,
+        _a_ptr: *const f64,
+        _x_ptr: *const f64,
+        _y_ptr: *mut f64,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -1929,9 +1929,9 @@ where
     /// Launch CUDA matrix multiplication kernel (f32, basic)
     fn launch_cuda_matmul_f32_basic(
         &self,
-        a_ptr: *const f32,
-        b_ptr: *const f32,
-        c_ptr: *mut f32,
+        _a_ptr: *const f32,
+        _b_ptr: *const f32,
+        _c_ptr: *mut f32,
         m: usize,
         n: usize,
         k: usize,
@@ -1944,9 +1944,9 @@ where
     /// Launch CUDA matrix multiplication kernel (f32, tiled)
     fn launch_cuda_matmul_f32_tiled(
         &self,
-        a_ptr: *const f32,
-        b_ptr: *const f32,
-        c_ptr: *mut f32,
+        _a_ptr: *const f32,
+        _b_ptr: *const f32,
+        _c_ptr: *mut f32,
         m: usize,
         n: usize,
         k: usize,
@@ -1959,9 +1959,9 @@ where
     /// Launch CUDA matrix multiplication kernel (f32, tensor core)
     fn launch_cuda_matmul_f32_tensor_core(
         &self,
-        a_ptr: *const f32,
-        b_ptr: *const f32,
-        c_ptr: *mut f32,
+        _a_ptr: *const f32,
+        _b_ptr: *const f32,
+        _c_ptr: *mut f32,
         m: usize,
         n: usize,
         k: usize,
@@ -1974,9 +1974,9 @@ where
     /// Launch CUDA matrix multiplication kernel (f32, warp shuffle)
     fn launch_cuda_matmul_f32_warp_shuffle(
         &self,
-        a_ptr: *const f32,
-        b_ptr: *const f32,
-        c_ptr: *mut f32,
+        _a_ptr: *const f32,
+        _b_ptr: *const f32,
+        _c_ptr: *mut f32,
         m: usize,
         n: usize,
         k: usize,
@@ -1989,9 +1989,9 @@ where
     /// Launch CUDA matrix multiplication kernel (f64)
     fn launch_cuda_matmul_f64(
         &self,
-        a_ptr: *const f64,
-        b_ptr: *const f64,
-        c_ptr: *mut f64,
+        _a_ptr: *const f64,
+        _b_ptr: *const f64,
+        _c_ptr: *mut f64,
         m: usize,
         n: usize,
         k: usize,
@@ -2004,10 +2004,10 @@ where
     /// Launch OpenCL matrix-vector multiplication kernel (f32)
     fn launch_opencl_matvec_f32(
         &self,
-        ctx: &dyn GpuContext,
-        a_ptr: *mut std::ffi::c_void,
-        x_ptr: *mut std::ffi::c_void,
-        y_ptr: *mut std::ffi::c_void,
+        _ctx: &dyn GpuContext,
+        _a_ptr: *mut std::ffi::c_void,
+        _x_ptr: *mut std::ffi::c_void,
+        _y_ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2024,10 +2024,10 @@ where
     /// Launch OpenCL matrix-vector multiplication kernel (f64)
     fn launch_opencl_matvec_f64(
         &self,
-        ctx: &dyn GpuContext,
-        a_ptr: *mut std::ffi::c_void,
-        x_ptr: *mut std::ffi::c_void,
-        y_ptr: *mut std::ffi::c_void,
+        _ctx: &dyn GpuContext,
+        _a_ptr: *mut std::ffi::c_void,
+        _x_ptr: *mut std::ffi::c_void,
+        _y_ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2038,10 +2038,10 @@ where
     /// Launch OpenCL matrix multiplication kernel (f32, basic)
     fn launch_opencl_matmul_f32_basic(
         &self,
-        ctx: &dyn GpuContext,
-        a_ptr: *mut std::ffi::c_void,
-        b_ptr: *mut std::ffi::c_void,
-        c_ptr: *mut std::ffi::c_void,
+        _ctx: &dyn GpuContext,
+        _a_ptr: *mut std::ffi::c_void,
+        _b_ptr: *mut std::ffi::c_void,
+        _c_ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2054,10 +2054,10 @@ where
     /// Launch OpenCL matrix multiplication kernel (f32, optimized)
     fn launch_opencl_matmul_f32_optimized(
         &self,
-        ctx: &dyn GpuContext,
-        a_ptr: *mut std::ffi::c_void,
-        b_ptr: *mut std::ffi::c_void,
-        c_ptr: *mut std::ffi::c_void,
+        _ctx: &dyn GpuContext,
+        _a_ptr: *mut std::ffi::c_void,
+        _b_ptr: *mut std::ffi::c_void,
+        _c_ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2070,10 +2070,10 @@ where
     /// Launch OpenCL matrix multiplication kernel (f32, vectorized)
     fn launch_opencl_matmul_f32_vectorized(
         &self,
-        ctx: &dyn GpuContext,
-        a_ptr: *mut std::ffi::c_void,
-        b_ptr: *mut std::ffi::c_void,
-        c_ptr: *mut std::ffi::c_void,
+        _ctx: &dyn GpuContext,
+        _a_ptr: *mut std::ffi::c_void,
+        _b_ptr: *mut std::ffi::c_void,
+        _c_ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2086,10 +2086,10 @@ where
     /// Launch OpenCL matrix multiplication kernel (f64)
     fn launch_opencl_matmul_f64(
         &self,
-        ctx: &dyn GpuContext,
-        a_ptr: *mut std::ffi::c_void,
-        b_ptr: *mut std::ffi::c_void,
-        c_ptr: *mut std::ffi::c_void,
+        _ctx: &dyn GpuContext,
+        _a_ptr: *mut std::ffi::c_void,
+        _b_ptr: *mut std::ffi::c_void,
+        _c_ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2101,10 +2101,10 @@ where
     /// Launch ROCm matrix-vector multiplication kernel (f32)
     fn launch_rocm_matvec_f32(
         &self,
-        ctx: &dyn GpuContext,
-        a_ptr: *mut std::ffi::c_void,
-        x_ptr: *mut std::ffi::c_void,
-        y_ptr: *mut std::ffi::c_void,
+        _ctx: &dyn GpuContext,
+        _a_ptr: *mut std::ffi::c_void,
+        _x_ptr: *mut std::ffi::c_void,
+        _y_ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2391,7 +2391,7 @@ where
         matrix_shape: (usize, usize),
         data_characteristics: &DataCharacteristics,
     ) -> LinalgResult<WorkloadAnalysis> {
-        let mut analyzer = self.workload_analyzer.lock().map_err(|_| {
+        let _analyzer = self.workload_analyzer.lock().map_err(|_| {
             LinalgError::ComputationError("Failed to lock workload analyzer".to_string())
         })?;
 
@@ -2406,7 +2406,7 @@ where
             compute_intensity,
             memory_requirements,
             sparsity,
-            access_pattern,
+            access_pattern: access_pattern.clone(),
             parallelization_potential: self.estimate_parallelization_potential(matrix_shape),
             cache_efficiency: self.estimate_cache_efficiency(matrix_shape, &access_pattern),
         })
@@ -2429,10 +2429,10 @@ where
         let cpu_prediction = predictor.predict_cpu_performance(operation, workload)?;
         predictions.push(PerformancePrediction {
             device_type: "CPU".to_string(),
-            estimated_time: cpu_prediction.execution_time,
-            estimated_energy: cpu_prediction.energy_consumption,
-            estimated_memory: cpu_prediction.memory_usage,
-            confidence_score: cpu_prediction.confidence,
+            estimated_time: cpu_prediction.estimated_time,
+            estimated_energy: cpu_prediction.estimated_energy,
+            estimated_memory: cpu_prediction.estimated_memory,
+            confidence_score: cpu_prediction.confidence_score,
         });
 
         // GPU predictions for each available device
@@ -2440,10 +2440,10 @@ where
             let gpu_prediction = predictor.predict_gpu_performance(operation, workload, device)?;
             predictions.push(PerformancePrediction {
                 device_type: format!("GPU_{}", idx),
-                estimated_time: gpu_prediction.execution_time,
-                estimated_energy: gpu_prediction.energy_consumption,
-                estimated_memory: gpu_prediction.memory_usage,
-                confidence_score: gpu_prediction.confidence,
+                estimated_time: gpu_prediction.estimated_time,
+                estimated_energy: gpu_prediction.estimated_energy,
+                estimated_memory: gpu_prediction.estimated_memory,
+                confidence_score: gpu_prediction.confidence_score,
             });
         }
 

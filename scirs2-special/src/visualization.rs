@@ -403,10 +403,9 @@ pub mod surface_plots {
         // Create iterators for x and y coordinates
         let x_range: Vec<f64> = (0..51).map(|i| -5.0 + i as f64 * 0.2).collect();
         let y_range: Vec<f64> = (0..51).map(|i| -5.0 + i as f64 * 0.2).collect();
-        
+
         chart.draw_series(
-            SurfaceSeries::xoz(x_range, y_range, |x, y| f(x, y))
-                .style(&BLUE.mix(0.5)),
+            SurfaceSeries::xoz(x_range, y_range, |x, y| f(x, y)).style(&BLUE.mix(0.5)),
         )?;
 
         root.present()?;

@@ -10,7 +10,6 @@ use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
 use std::fmt::Debug;
-use std::sync::Arc;
 
 /// Parallel implementation of filtfilt (zero-phase filtering)
 ///
@@ -2164,6 +2163,7 @@ fn compute_matched_filter_chunk(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

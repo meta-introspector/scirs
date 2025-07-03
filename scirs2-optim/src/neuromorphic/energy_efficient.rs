@@ -9,7 +9,7 @@ use super::{
     STDPConfig, MembraneDynamicsConfig, PlasticityModel, ThermalManagementConfig,
     SleepModeConfig, ThermalThrottlingStrategy
 };
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use crate::optimizers::Optimizer;
 use ndarray::{Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;
@@ -45,8 +45,7 @@ pub enum EnergyOptimizationStrategy {
     ThermalAwareOptimization,
     
     /// Multi-level optimization
-    MultiLevel,
-}
+    MultiLevel}
 
 /// Energy budget configuration
 #[derive(Debug, Clone)]
@@ -70,8 +69,7 @@ pub struct EnergyBudget<T: Float> {
     pub emergency_reserves: T,
     
     /// Energy monitoring frequency
-    pub monitoring_frequency: Duration,
-}
+    pub monitoring_frequency: Duration}
 
 /// Energy components for budget allocation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -98,8 +96,7 @@ pub enum EnergyComponent {
     ControlLogic,
     
     /// Thermal management
-    ThermalManagement,
-}
+    ThermalManagement}
 
 /// Energy efficiency targets
 #[derive(Debug, Clone)]
@@ -117,8 +114,7 @@ pub struct EnergyEfficiencyTargets<T: Float> {
     pub memory_bandwidth_efficiency: T,
     
     /// Thermal efficiency (performance/Watt/°C)
-    pub thermal_efficiency: T,
-}
+    pub thermal_efficiency: T}
 
 /// Energy-efficient optimizer configuration
 #[derive(Debug, Clone)]
@@ -163,8 +159,7 @@ pub struct EnergyEfficientConfig<T: Float> {
     pub energy_aware_load_balancing: bool,
     
     /// Energy optimization aggressiveness (0.0 to 1.0)
-    pub optimization_aggressiveness: T,
-}
+    pub optimization_aggressiveness: T}
 
 impl<T: Float> Default for EnergyEfficientConfig<T> {
     fn default() -> Self {
@@ -193,11 +188,9 @@ impl<T: Float> Default for EnergyEfficientConfig<T> {
                     spikes_per_joule: T::from(1e9).unwrap(), // 1 GSp/J
                     synaptic_updates_per_joule: T::from(1e10).unwrap(), // 10 GSyOp/J
                     memory_bandwidth_efficiency: T::from(1e6).unwrap(),
-                    thermal_efficiency: T::from(1e9).unwrap(),
-                },
+                    thermal_efficiency: T::from(1e9).unwrap()},
                 emergency_reserves: T::from(100.0).unwrap(), // 100 nJ reserve
-                monitoring_frequency: Duration::from_micros(100),
-            },
+                monitoring_frequency: Duration::from_micros(100)},
             adaptive_strategy_switching: true,
             strategy_switching_threshold: T::from(0.1).unwrap(), // 10% efficiency drop
             predictive_energy_management: true,
@@ -208,8 +201,7 @@ impl<T: Float> Default for EnergyEfficientConfig<T> {
             real_time_monitoring: true,
             monitoring_resolution: T::from(1.0).unwrap(), // 1 μs
             energy_aware_load_balancing: true,
-            optimization_aggressiveness: T::from(0.7).unwrap(),
-        }
+            optimization_aggressiveness: T::from(0.7).unwrap()}
     }
 }
 
@@ -241,8 +233,7 @@ struct EnergyMonitor<T: Float> {
     last_update: Instant,
     
     /// Monitoring window size
-    window_size: Duration,
-}
+    window_size: Duration}
 
 /// Efficiency metrics tracking
 #[derive(Debug, Clone)]
@@ -263,8 +254,7 @@ struct EfficiencyMetrics<T: Float> {
     thermal_efficiency: T,
     
     /// Overall efficiency score
-    overall_efficiency: T,
-}
+    overall_efficiency: T}
 
 /// Dynamic voltage and frequency scaling controller
 #[derive(Debug, Clone)]
@@ -291,8 +281,7 @@ struct DVFSController<T: Float> {
     frequency_scaling_factor: T,
     
     /// Adaptation rate
-    adaptation_rate: T,
-}
+    adaptation_rate: T}
 
 /// Performance requirements for DVFS
 #[derive(Debug, Clone)]
@@ -313,8 +302,7 @@ struct PerformanceRequirements<T: Float> {
     performance_headroom: T,
     
     /// Quality of service requirements
-    qos_requirements: QoSRequirements<T>,
-}
+    qos_requirements: QoSRequirements<T>}
 
 /// Quality of service requirements
 #[derive(Debug, Clone)]
@@ -329,8 +317,7 @@ struct QoSRequirements<T: Float> {
     min_throughput: T,
     
     /// Maximum error rate
-    max_error_rate: T,
-}
+    max_error_rate: T}
 
 /// Power gating controller
 #[derive(Debug, Clone)]
@@ -345,8 +332,7 @@ struct PowerGatingController {
     gate_overhead_time: Duration,
     
     /// Power gate overhead energy
-    gate_overhead_energy: f64,
-}
+    gate_overhead_energy: f64}
 
 /// Gated neuron group
 #[derive(Debug, Clone)]
@@ -367,8 +353,7 @@ struct GatedGroup {
     inactivity_threshold: Duration,
     
     /// Wake-up latency
-    wakeup_latency: Duration,
-}
+    wakeup_latency: Duration}
 
 /// Power gating policies
 #[derive(Debug, Clone, Copy)]
@@ -383,8 +368,7 @@ enum GatingPolicy {
     EnergyBudgetBased,
     
     /// Adaptive gating
-    Adaptive,
-}
+    Adaptive}
 
 /// Sparse computation optimizer
 #[derive(Debug, Clone)]
@@ -402,8 +386,7 @@ struct SparseComputationOptimizer<T: Float> {
     compression_algorithms: Vec<CompressionAlgorithm>,
     
     /// Dynamic sparsity adaptation
-    dynamic_adaptation: bool,
-}
+    dynamic_adaptation: bool}
 
 /// Sparse matrix representation
 #[derive(Debug, Clone)]
@@ -421,8 +404,7 @@ struct SparseMatrix<T: Float> {
     dimensions: (usize, usize),
     
     /// Sparsity ratio
-    sparsity_ratio: T,
-}
+    sparsity_ratio: T}
 
 /// Sparsity patterns
 #[derive(Debug, Clone, Copy)]
@@ -440,8 +422,7 @@ enum SparsityPattern {
     Channel,
     
     /// Magnitude-based pruning
-    MagnitudeBased,
-}
+    MagnitudeBased}
 
 /// Compression algorithms for sparse data
 #[derive(Debug, Clone, Copy)]
@@ -459,8 +440,7 @@ enum CompressionAlgorithm {
     COO,
     
     /// Dictionary of Keys (DOK)
-    DOK,
-}
+    DOK}
 
 /// Energy-efficient optimizer
 pub struct EnergyEfficientOptimizer<T: Float> {
@@ -498,8 +478,7 @@ pub struct EnergyEfficientOptimizer<T: Float> {
     system_state: EnergySystemState<T>,
     
     /// Performance metrics
-    metrics: NeuromorphicMetrics<T>,
-}
+    metrics: NeuromorphicMetrics<T>}
 
 /// Energy system state
 #[derive(Debug, Clone)]
@@ -529,16 +508,14 @@ struct EnergySystemState<T: Float> {
     gated_regions: Vec<usize>,
     
     /// Sleep mode status
-    sleep_status: SleepStatus,
-}
+    sleep_status: SleepStatus}
 
 #[derive(Debug, Clone, Copy)]
 enum SleepStatus {
     Active,
     LightSleep,
     DeepSleep,
-    Hibernation,
-}
+    Hibernation}
 
 /// Thermal manager for energy efficiency
 #[derive(Debug, Clone)]
@@ -559,8 +536,7 @@ struct ThermalManager<T: Float> {
     cooling_strategies: Vec<CoolingStrategy>,
     
     /// Active thermal throttling
-    active_throttling: Option<ThermalThrottlingStrategy>,
-}
+    active_throttling: Option<ThermalThrottlingStrategy>}
 
 /// Thermal model for prediction
 #[derive(Debug, Clone)]
@@ -575,8 +551,7 @@ struct ThermalModel<T: Float> {
     thermal_capacitance: T,
     
     /// Ambient temperature (°C)
-    ambient_temperature: T,
-}
+    ambient_temperature: T}
 
 /// Cooling strategies
 #[derive(Debug, Clone, Copy)]
@@ -594,8 +569,7 @@ enum CoolingStrategy {
     Thermoelectric,
     
     /// Phase change cooling
-    PhaseChange,
-}
+    PhaseChange}
 
 /// Sleep mode controller
 #[derive(Debug, Clone)]
@@ -613,8 +587,7 @@ struct SleepModeController<T: Float> {
     transition_history: VecDeque<(Instant, SleepStatus, SleepStatus)>,
     
     /// Wake-up triggers
-    wakeup_triggers: Vec<WakeupTrigger>,
-}
+    wakeup_triggers: Vec<WakeupTrigger>}
 
 /// Wake-up triggers for sleep mode
 #[derive(Debug, Clone, Copy)]
@@ -632,8 +605,7 @@ enum WakeupTrigger {
     TemperatureThreshold,
     
     /// Performance requirement
-    PerformanceRequirement,
-}
+    PerformanceRequirement}
 
 /// Predictive energy manager
 #[derive(Debug, Clone)]
@@ -651,8 +623,7 @@ struct PredictiveEnergyManager<T: Float> {
     prediction_accuracy: T,
     
     /// Model update frequency
-    model_update_frequency: Duration,
-}
+    model_update_frequency: Duration}
 
 /// Prediction model for energy consumption
 #[derive(Debug, Clone)]
@@ -670,8 +641,7 @@ struct PredictionModel<T: Float> {
     training_data_size: usize,
     
     /// Last update time
-    last_update: Instant,
-}
+    last_update: Instant}
 
 #[derive(Debug, Clone, Copy)]
 enum ModelType {
@@ -679,8 +649,7 @@ enum ModelType {
     Polynomial,
     Exponential,
     NeuralNetwork,
-    AutoRegressive,
-}
+    AutoRegressive}
 
 /// Workload sample for prediction
 #[derive(Debug, Clone)]
@@ -701,8 +670,7 @@ struct WorkloadSample<T: Float> {
     memory_access_pattern: MemoryAccessPattern,
     
     /// Communication overhead
-    communication_overhead: T,
-}
+    communication_overhead: T}
 
 #[derive(Debug, Clone, Copy)]
 enum MemoryAccessPattern {
@@ -710,8 +678,7 @@ enum MemoryAccessPattern {
     Random,
     Sparse,
     Burst,
-    Mixed,
-}
+    Mixed}
 
 /// Energy prediction
 #[derive(Debug, Clone)]
@@ -729,8 +696,7 @@ struct EnergyPrediction<T: Float> {
     horizon: T,
     
     /// Model used
-    model_type: ModelType,
-}
+    model_type: ModelType}
 
 impl<T: Float> EnergyEfficientOptimizer<T> {
     /// Create a new energy-efficient optimizer
@@ -755,10 +721,8 @@ impl<T: Float> EnergyEfficientOptimizer<T> {
                 current_voltage: T::from(1.0).unwrap(), // 1V
                 current_frequency: T::from(100.0).unwrap(), // 100 MHz
                 gated_regions: Vec::new(),
-                sleep_status: SleepStatus::Active,
-            },
-            metrics: NeuromorphicMetrics::default(),
-        }
+                sleep_status: SleepStatus::Active},
+            metrics: NeuromorphicMetrics::default()}
     }
     
     /// Optimize energy consumption
@@ -914,8 +878,7 @@ impl<T: Float> EnergyEfficientOptimizer<T> {
             power_reduction: T::zero(),
             performance_impact: T::zero(),
             thermal_impact: T::zero(),
-            optimization_overhead: T::zero(),
-        };
+            optimization_overhead: T::zero()};
         
         // Apply multiple strategies in sequence
         let strategies = [
@@ -938,8 +901,7 @@ impl<T: Float> EnergyEfficientOptimizer<T> {
                 EnergyOptimizationStrategy::PowerGating => {
                     self.apply_power_gating_optimization(workload)?
                 }
-                _ => continue,
-            };
+                _ => continue};
             
             // Accumulate results
             total_result.energy_saved = total_result.energy_saved + result.energy_saved;
@@ -963,8 +925,7 @@ impl<T: Float> EnergyEfficientOptimizer<T> {
             power_reduction: T::zero(),
             performance_impact: T::zero(),
             thermal_impact: T::zero(),
-            optimization_overhead: T::from(0.01).unwrap(),
-        })
+            optimization_overhead: T::from(0.01).unwrap()})
     }
     
     /// Calculate power reduction from voltage/frequency scaling
@@ -1032,8 +993,7 @@ impl<T: Float> EnergyEfficientOptimizer<T> {
             current_consumption: self.system_state.current_energy,
             remaining_budget,
             budget_utilization,
-            emergency_reserve_available: remaining_budget > self.config.energy_budget.emergency_reserves,
-        }
+            emergency_reserve_available: remaining_budget > self.config.energy_budget.emergency_reserves}
     }
     
     /// Get current metrics
@@ -1066,8 +1026,7 @@ pub struct EnergyOptimizationResult<T: Float> {
     pub thermal_impact: T,
     
     /// Optimization overhead (nJ)
-    pub optimization_overhead: T,
-}
+    pub optimization_overhead: T}
 
 /// Energy budget status
 #[derive(Debug, Clone)]
@@ -1085,8 +1044,7 @@ pub struct EnergyBudgetStatus<T: Float> {
     pub budget_utilization: T,
     
     /// Emergency reserve available
-    pub emergency_reserve_available: bool,
-}
+    pub emergency_reserve_available: bool}
 
 // Implementation of various helper structs and methods would continue here...
 // For brevity, I'm including placeholder implementations
@@ -1102,8 +1060,7 @@ impl<T: Float> EnergyMonitor<T> {
             component_energy: HashMap::new(),
             efficiency_metrics: EfficiencyMetrics::default(),
             last_update: Instant::now(),
-            window_size: Duration::from_secs(1),
-        }
+            window_size: Duration::from_secs(1)}
     }
     
     fn update(&mut self, system_state: &EnergySystemState<T>) -> Result<()> {
@@ -1143,8 +1100,7 @@ impl<T: Float> Default for EfficiencyMetrics<T> {
             current_synaptic_updates_per_joule: T::zero(),
             memory_efficiency: T::zero(),
             thermal_efficiency: T::zero(),
-            overall_efficiency: T::zero(),
-        }
+            overall_efficiency: T::zero()}
     }
 }
 

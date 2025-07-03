@@ -1652,6 +1652,7 @@ fn make_classification_gpu_impl(
 
 /// Generate a chunk of classification data on GPU
 #[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 fn generate_classification_chunk_gpu(
     gpu_context: &GpuContext,
     n_samples: usize,
@@ -1744,6 +1745,7 @@ fn generate_classification_chunk_gpu(
 }
 
 /// GPU-optimized classification data generation using buffer operations
+#[allow(clippy::too_many_arguments)]
 fn generate_classification_gpu_optimized(
     _gpu_context: &GpuContext,
     centroids: &[f64],
@@ -1991,6 +1993,7 @@ fn generate_regression_chunk_gpu(
 }
 
 /// GPU-optimized regression data generation using buffer operations and matrix multiplication
+#[allow(clippy::too_many_arguments)]
 fn generate_regression_gpu_optimized(
     _gpu_context: &GpuContext,
     data: &[f64],

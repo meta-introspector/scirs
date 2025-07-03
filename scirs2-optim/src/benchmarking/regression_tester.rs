@@ -5,7 +5,8 @@
 //! and automated CI/CD integration for continuous performance monitoring.
 
 use crate::benchmarking::BenchmarkResult;
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
@@ -1501,7 +1502,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Extract memory usage information from benchmark result
-    fn extract_memory_usage(&self, result: &BenchmarkResult<A>) -> Option<usize> {
+    fn extract_memory_usage(&self, _result: &BenchmarkResult<A>) -> Option<usize> {
         // Use system memory profiling if available
         #[cfg(target_os = "linux")]
         {
@@ -2243,7 +2244,7 @@ impl<A: Float + Debug> StatisticalAnalyzer<A> for OutlierAnalyzer {
         let std_dev = variance.sqrt();
 
         let mut outliers = Vec::new();
-        for (i, &time) in times.iter().enumerate() {
+        for (_i, &time) in times.iter().enumerate() {
             let z_score = (time - mean) / std_dev;
             if z_score.abs() > self.z_threshold {
                 outliers.push(A::from(z_score).unwrap());
@@ -2367,7 +2368,7 @@ impl AlertSystem {
             status: AlertStatus::Active,
         };
 
-        self.alert_history.push_back(alert);
+        self.alert_history.push_back(alert.clone());
 
         // Maintain alert history size
         if self.alert_history.len() > 100 {

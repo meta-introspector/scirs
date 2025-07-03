@@ -17,13 +17,11 @@ use crate::sysid_enhanced::{
     ParameterEstimate, SystemModel,
 };
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// Ultra-enhanced system identification result with comprehensive analysis
 #[derive(Debug, Clone)]
@@ -740,7 +738,8 @@ impl Default for UltraEnhancedSysIdConfig {
 /// ```
 /// use scirs2_signal::sysid_ultra_enhanced::{ultra_enhanced_system_identification, UltraEnhancedSysIdConfig};
 /// use ndarray::Array1;
-/// use std::f64::consts::PI;
+/// #[cfg(test)]
+use std::f64::consts::PI;
 ///
 /// // Generate system input/output data
 /// let n = 1000;
@@ -1427,6 +1426,7 @@ fn select_best_base_model(models: &[WeightedModel]) -> SignalResult<EnhancedSysI
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

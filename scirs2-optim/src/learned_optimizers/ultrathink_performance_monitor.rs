@@ -11,7 +11,8 @@ use std::time::{Duration, Instant, SystemTime};
 
 use super::ultrathink_coordinator::{UltraThinkCoordinator, UltraThinkConfig};
 use super::{LearnedOptimizerMetrics, NeuralOptimizerMetrics, PerformanceMetrics};
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 
 /// UltraThink Performance Monitor
 pub struct UltraThinkPerformanceMonitor<T: Float> {
@@ -37,8 +38,7 @@ pub struct UltraThinkPerformanceMonitor<T: Float> {
     config: PerformanceMonitorConfig<T>,
 
     /// Historical data storage
-    historical_data: PerformanceDataStorage<T>,
-}
+    historical_data: PerformanceDataStorage<T>}
 
 /// Performance monitoring configuration
 #[derive(Debug, Clone)]
@@ -71,8 +71,7 @@ pub struct PerformanceMonitorConfig<T: Float> {
     pub enable_convergence_prediction: bool,
 
     /// Alert thresholds
-    pub alert_thresholds: HashMap<String, T>,
-}
+    pub alert_thresholds: HashMap<String, T>}
 
 /// Real-time metrics collector
 #[derive(Debug)]
@@ -90,8 +89,7 @@ pub struct RealTimeMetricsCollector<T: Float> {
     last_collection: Instant,
 
     /// Collection frequency stats
-    collection_stats: CollectionStatistics<T>,
-}
+    collection_stats: CollectionStatistics<T>}
 
 /// Comprehensive UltraThink metrics
 #[derive(Debug, Clone)]
@@ -115,8 +113,7 @@ pub struct UltraThinkMetrics<T: Float> {
     pub meta_learning_metrics: MetaLearningMetrics<T>,
 
     /// System health metrics
-    pub system_health: SystemHealthMetrics<T>,
-}
+    pub system_health: SystemHealthMetrics<T>}
 
 /// Optimizer performance metrics
 #[derive(Debug, Clone)]
@@ -143,8 +140,7 @@ pub struct OptimizerPerformanceMetrics<T: Float> {
     pub step_efficiency: T,
 
     /// Optimization stability
-    pub stability_score: T,
-}
+    pub stability_score: T}
 
 /// Learning progress metrics
 #[derive(Debug, Clone)]
@@ -165,8 +161,7 @@ pub struct LearningProgressMetrics<T: Float> {
     pub progress_velocity: T,
 
     /// Adaptation speed
-    pub adaptation_speed: T,
-}
+    pub adaptation_speed: T}
 
 /// Resource utilization metrics
 #[derive(Debug, Clone)]
@@ -190,8 +185,7 @@ pub struct ResourceUtilizationMetrics<T: Float> {
     pub disk_io_bps: T,
 
     /// Energy consumption in watts
-    pub energy_consumption: Option<T>,
-}
+    pub energy_consumption: Option<T>}
 
 /// Architecture metrics
 #[derive(Debug, Clone)]
@@ -209,8 +203,7 @@ pub struct ArchitectureMetrics<T: Float> {
     pub architecture_efficiency: T,
 
     /// Parallelization effectiveness
-    pub parallelization_effectiveness: T,
-}
+    pub parallelization_effectiveness: T}
 
 /// Meta-learning metrics
 #[derive(Debug, Clone)]
@@ -228,8 +221,7 @@ pub struct MetaLearningMetrics<T: Float> {
     pub generalization_gap: T,
 
     /// Few-shot learning performance
-    pub few_shot_performance: T,
-}
+    pub few_shot_performance: T}
 
 /// System health metrics
 #[derive(Debug, Clone)]
@@ -247,8 +239,7 @@ pub struct SystemHealthMetrics<T: Float> {
     pub recovery_time: Option<Duration>,
 
     /// System load
-    pub system_load: T,
-}
+    pub system_load: T}
 
 /// ML-based performance predictor
 #[derive(Debug)]
@@ -263,8 +254,7 @@ pub struct MLPerformancePredictor<T: Float> {
     prediction_cache: HashMap<String, PredictionResult<T>>,
 
     /// Model performance tracker
-    model_performance: ModelPerformanceTracker<T>,
-}
+    model_performance: ModelPerformanceTracker<T>}
 
 /// Prediction model interface
 pub trait PredictionModel<T: Float> {
@@ -300,8 +290,7 @@ pub struct ModelMetadata {
     pub version: String,
     pub training_samples: usize,
     pub last_updated: SystemTime,
-    pub accuracy: f64,
-}
+    pub accuracy: f64}
 
 /// Prediction result
 #[derive(Debug, Clone)]
@@ -310,8 +299,7 @@ pub struct PredictionResult<T: Float> {
     pub confidence: T,
     pub uncertainty: T,
     pub timestamp: SystemTime,
-    pub features_used: Vec<String>,
-}
+    pub features_used: Vec<String>}
 
 /// Anomaly detection engine
 #[derive(Debug)]
@@ -326,8 +314,7 @@ pub struct AnomalyDetectionEngine<T: Float> {
     thresholds: HashMap<String, T>,
 
     /// False positive tracker
-    false_positive_tracker: FalsePositiveTracker<T>,
-}
+    false_positive_tracker: FalsePositiveTracker<T>}
 
 /// Anomaly detector interface
 pub trait AnomalyDetector<T: Float> {
@@ -353,8 +340,7 @@ pub struct AnomalyEvent<T: Float> {
     pub confidence: T,
     pub affected_metrics: Vec<String>,
     pub description: String,
-    pub suggested_actions: Vec<String>,
-}
+    pub suggested_actions: Vec<String>}
 
 /// Anomaly types
 #[derive(Debug, Clone)]
@@ -366,8 +352,7 @@ pub enum AnomalyType {
     LearningStagnation,
     SystemInstability,
     ParameterExplosion,
-    GradientVanishing,
-}
+    GradientVanishing}
 
 /// Anomaly severity
 #[derive(Debug, Clone)]
@@ -375,8 +360,7 @@ pub enum AnomalySeverity {
     Low,
     Medium,
     High,
-    Critical,
-}
+    Critical}
 
 /// Resource usage tracker
 #[derive(Debug)]
@@ -391,8 +375,7 @@ pub struct ResourceUsageTracker<T: Float> {
     peak_usage: PeakUsageTracker<T>,
 
     /// Resource efficiency analyzer
-    efficiency_analyzer: ResourceEfficiencyAnalyzer<T>,
-}
+    efficiency_analyzer: ResourceEfficiencyAnalyzer<T>}
 
 /// Resource snapshot
 #[derive(Debug, Clone)]
@@ -401,8 +384,7 @@ pub struct ResourceSnapshot<T: Float> {
     pub cpu_usage: T,
     pub memory_usage: T,
     pub gpu_usage: Option<T>,
-    pub energy_consumption: Option<T>,
-}
+    pub energy_consumption: Option<T>}
 
 /// Performance trend analyzer
 #[derive(Debug)]
@@ -414,8 +396,7 @@ pub struct PerformanceTrendAnalyzer<T: Float> {
     trend_history: VecDeque<TrendAnalysis<T>>,
 
     /// Trend predictions
-    trend_predictions: HashMap<String, TrendPrediction<T>>,
-}
+    trend_predictions: HashMap<String, TrendPrediction<T>>}
 
 /// Trend analyzer interface
 pub trait TrendAnalyzer<T: Float> {
@@ -433,8 +414,7 @@ pub struct TrendAnalysis<T: Float> {
     pub trend_strength: T,
     pub volatility: T,
     pub seasonal_patterns: Vec<SeasonalPattern<T>>,
-    pub change_points: Vec<ChangePoint<T>>,
-}
+    pub change_points: Vec<ChangePoint<T>>}
 
 /// Trend direction
 #[derive(Debug, Clone)]
@@ -442,8 +422,7 @@ pub enum TrendDirection {
     Improving,
     Stable,
     Degrading,
-    Volatile,
-}
+    Volatile}
 
 /// Alert manager
 #[derive(Debug)]
@@ -458,8 +437,7 @@ pub struct AlertManager<T: Float> {
     alert_history: VecDeque<Alert<T>>,
 
     /// Alert channels
-    alert_channels: Vec<Box<dyn AlertChannel>>,
-}
+    alert_channels: Vec<Box<dyn AlertChannel>>}
 
 /// Alert rule
 #[derive(Debug, Clone)]
@@ -468,8 +446,7 @@ pub struct AlertRule<T: Float> {
     pub condition: AlertCondition<T>,
     pub severity: AlertSeverity,
     pub cooldown_period: Duration,
-    pub enabled: bool,
-}
+    pub enabled: bool}
 
 /// Alert condition
 #[derive(Debug, Clone)]
@@ -478,8 +455,7 @@ pub enum AlertCondition<T: Float> {
     RateOfChange { metric: String, rate_threshold: T },
     AnomalyDetected { confidence_threshold: T },
     TrendChange { trend_type: TrendDirection },
-    ResourceExhaustion { resource: String, threshold: T },
-}
+    ResourceExhaustion { resource: String, threshold: T }}
 
 /// Alert
 #[derive(Debug, Clone)]
@@ -490,8 +466,7 @@ pub struct Alert<T: Float> {
     pub message: String,
     pub metrics_snapshot: UltraThinkMetrics<T>,
     pub suggested_actions: Vec<String>,
-    pub acknowledged: bool,
-}
+    pub acknowledged: bool}
 
 /// Alert severity
 #[derive(Debug, Clone)]
@@ -499,8 +474,7 @@ pub enum AlertSeverity {
     Info,
     Warning,
     Error,
-    Critical,
-}
+    Critical}
 
 /// Alert channel interface
 pub trait AlertChannel {
@@ -530,8 +504,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
             trend_analyzer,
             alert_manager,
             config,
-            historical_data,
-        })
+            historical_data})
     }
 
     /// Start monitoring
@@ -581,8 +554,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
             trend_analysis,
             predictions,
             alerts,
-            overall_health_score: self.calculate_health_score(&recent_metrics)?,
-        })
+            overall_health_score: self.calculate_health_score(&recent_metrics)?})
     }
 
     /// Extract comprehensive metrics from coordinator
@@ -614,8 +586,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
             resource_utilization,
             architecture_metrics,
             meta_learning_metrics,
-            system_health,
-        })
+            system_health})
     }
 
     /// Initialize performance baseline
@@ -649,8 +620,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
             update_norm: T::from(0.01).unwrap(),
             learning_rate: T::from(0.001).unwrap(),
             step_efficiency: T::from(0.95).unwrap(),
-            stability_score: T::from(0.85).unwrap(),
-        })
+            stability_score: T::from(0.85).unwrap()})
     }
 
     /// Extract learning progress metrics
@@ -661,8 +631,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
             estimated_time_to_convergence: Some(Duration::from_secs(300)),
             learning_curve_smoothness: T::from(0.8).unwrap(),
             progress_velocity: T::from(0.02).unwrap(),
-            adaptation_speed: T::from(0.15).unwrap(),
-        })
+            adaptation_speed: T::from(0.15).unwrap()})
     }
 
     /// Extract resource utilization metrics
@@ -675,8 +644,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
             gpu_memory_mb: Some(T::from(8192.0).unwrap()),
             network_io_bps: T::from(1024.0).unwrap(),
             disk_io_bps: T::from(512.0).unwrap(),
-            energy_consumption: Some(T::from(150.0).unwrap()),
-        })
+            energy_consumption: Some(T::from(150.0).unwrap())})
     }
 
     /// Extract architecture metrics
@@ -686,8 +654,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
             parameter_count: 1000000,
             capacity_utilization: T::from(0.8).unwrap(),
             architecture_efficiency: T::from(0.85).unwrap(),
-            parallelization_effectiveness: T::from(0.9).unwrap(),
-        })
+            parallelization_effectiveness: T::from(0.9).unwrap()})
     }
 
     /// Extract meta-learning metrics
@@ -697,8 +664,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
             task_adaptation_speed: T::from(0.2).unwrap(),
             transfer_efficiency: T::from(0.75).unwrap(),
             generalization_gap: T::from(0.1).unwrap(),
-            few_shot_performance: T::from(0.85).unwrap(),
-        })
+            few_shot_performance: T::from(0.85).unwrap()})
     }
 
     /// Extract system health metrics
@@ -708,8 +674,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
             performance_stability: T::from(0.88).unwrap(),
             error_rate: T::from(0.001).unwrap(),
             recovery_time: Some(Duration::from_millis(250)),
-            system_load: T::from(0.6).unwrap(),
-        })
+            system_load: T::from(0.6).unwrap()})
     }
 
     /// Detect anomalies in metrics
@@ -782,8 +747,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
             anomaly_summary,
             trend_summary,
             resource_summary,
-            recommendations: self.generate_recommendations(&recent_metrics)?,
-        })
+            recommendations: self.generate_recommendations(&recent_metrics)?})
     }
 
     /// Generate optimization recommendations
@@ -797,8 +761,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
                     category: RecommendationCategory::ResourceOptimization,
                     priority: RecommendationPriority::High,
                     description: "High CPU usage detected. Consider reducing batch size or enabling CPU-GPU load balancing.".to_string(),
-                    estimated_impact: T::from(0.2).unwrap(),
-                });
+                    estimated_impact: T::from(0.2).unwrap()});
             }
             
             // Check for poor convergence
@@ -807,8 +770,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
                     category: RecommendationCategory::AlgorithmTuning,
                     priority: RecommendationPriority::Medium,
                     description: "Slow convergence detected. Consider adjusting learning rate or trying different optimizer architecture.".to_string(),
-                    estimated_impact: T::from(0.3).unwrap(),
-                });
+                    estimated_impact: T::from(0.3).unwrap()});
             }
             
             // Check for instability
@@ -817,8 +779,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> UltraThinkPerforman
                     category: RecommendationCategory::StabilityImprovement,
                     priority: RecommendationPriority::High,
                     description: "Performance instability detected. Enable gradient clipping and consider using more conservative learning rates.".to_string(),
-                    estimated_impact: T::from(0.25).unwrap(),
-                });
+                    estimated_impact: T::from(0.25).unwrap()});
             }
         }
         
@@ -833,8 +794,7 @@ pub struct PerformanceAnalysisResult<T: Float> {
     pub trend_analysis: Vec<TrendAnalysis<T>>,
     pub predictions: Vec<PredictionResult<T>>,
     pub alerts: Vec<Alert<T>>,
-    pub overall_health_score: T,
-}
+    pub overall_health_score: T}
 
 /// Performance report
 #[derive(Debug)]
@@ -846,8 +806,7 @@ pub struct PerformanceReport<T: Float> {
     pub anomaly_summary: AnomalySummary<T>,
     pub trend_summary: TrendSummary<T>,
     pub resource_summary: ResourceSummary<T>,
-    pub recommendations: Vec<OptimizationRecommendation>,
-}
+    pub recommendations: Vec<OptimizationRecommendation>}
 
 /// Optimization recommendation
 #[derive(Debug, Clone)]
@@ -855,8 +814,7 @@ pub struct OptimizationRecommendation {
     pub category: RecommendationCategory,
     pub priority: RecommendationPriority,
     pub description: String,
-    pub estimated_impact: f64,
-}
+    pub estimated_impact: f64}
 
 /// Recommendation categories
 #[derive(Debug, Clone)]
@@ -865,8 +823,7 @@ pub enum RecommendationCategory {
     AlgorithmTuning,
     ArchitectureImprovement,
     StabilityImprovement,
-    PerformanceBoost,
-}
+    PerformanceBoost}
 
 /// Recommendation priorities
 #[derive(Debug, Clone)]
@@ -874,8 +831,7 @@ pub enum RecommendationPriority {
     Low,
     Medium,
     High,
-    Critical,
-}
+    Critical}
 
 // Placeholder implementations for complex components
 impl<T: Float + Default + Clone> RealTimeMetricsCollector<T> {
@@ -885,8 +841,7 @@ impl<T: Float + Default + Clone> RealTimeMetricsCollector<T> {
             metrics_buffer: VecDeque::new(),
             start_time: Instant::now(),
             last_collection: Instant::now(),
-            collection_stats: CollectionStatistics::default(),
-        })
+            collection_stats: CollectionStatistics::default()})
     }
 
     fn start_collection(&mut self) -> Result<()> {
@@ -927,8 +882,7 @@ impl<T: Float + Default> Default for UltraThinkMetrics<T> {
             resource_utilization: ResourceUtilizationMetrics::default(),
             architecture_metrics: ArchitectureMetrics::default(),
             meta_learning_metrics: MetaLearningMetrics::default(),
-            system_health: SystemHealthMetrics::default(),
-        }
+            system_health: SystemHealthMetrics::default()}
     }
 }
 
@@ -942,8 +896,7 @@ impl<T: Float + Default> Default for OptimizerPerformanceMetrics<T> {
             update_norm: T::from(0.01).unwrap(),
             learning_rate: T::from(0.001).unwrap(),
             step_efficiency: T::from(0.95).unwrap(),
-            stability_score: T::from(0.85).unwrap(),
-        }
+            stability_score: T::from(0.85).unwrap()}
     }
 }
 
@@ -977,8 +930,7 @@ pub struct MLPerformancePredictor<T: Float> {
     prediction_models: HashMap<String, Box<dyn PredictionModel<T>>>,
     feature_extractors: Vec<Box<dyn FeatureExtractor<T>>>,
     prediction_cache: HashMap<String, PredictionResult<T>>,
-    model_performance: ModelPerformanceTracker<T>,
-}
+    model_performance: ModelPerformanceTracker<T>}
 
 impl<T: Float> MLPerformancePredictor<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
@@ -996,8 +948,7 @@ pub struct AnomalyDetectionEngine<T: Float> {
     detectors: Vec<Box<dyn AnomalyDetector<T>>>,
     anomaly_history: VecDeque<AnomalyEvent<T>>,
     thresholds: HashMap<String, T>,
-    false_positive_tracker: FalsePositiveTracker<T>,
-}
+    false_positive_tracker: FalsePositiveTracker<T>}
 
 impl<T: Float> AnomalyDetectionEngine<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
@@ -1023,8 +974,7 @@ pub struct ResourceUsageTracker<T: Float> {
     current_usage: ResourceUtilizationMetrics<T>,
     usage_history: VecDeque<ResourceSnapshot<T>>,
     peak_usage: PeakUsageTracker<T>,
-    efficiency_analyzer: ResourceEfficiencyAnalyzer<T>,
-}
+    efficiency_analyzer: ResourceEfficiencyAnalyzer<T>}
 
 impl<T: Float> ResourceUsageTracker<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
@@ -1045,8 +995,7 @@ impl<T: Float> ResourceUsageTracker<T> {
 pub struct PerformanceTrendAnalyzer<T: Float> {
     analyzers: Vec<Box<dyn TrendAnalyzer<T>>>,
     trend_history: VecDeque<TrendAnalysis<T>>,
-    trend_predictions: HashMap<String, TrendPrediction<T>>,
-}
+    trend_predictions: HashMap<String, TrendPrediction<T>>}
 
 impl<T: Float> PerformanceTrendAnalyzer<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
@@ -1067,8 +1016,7 @@ pub struct AlertManager<T: Float> {
     alert_rules: Vec<AlertRule<T>>,
     active_alerts: HashMap<String, Alert<T>>,
     alert_history: VecDeque<Alert<T>>,
-    alert_channels: Vec<Box<dyn AlertChannel>>,
-}
+    alert_channels: Vec<Box<dyn AlertChannel>>}
 
 impl<T: Float> AlertManager<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
@@ -1082,8 +1030,7 @@ impl<T: Float> AlertManager<T> {
 
 #[derive(Debug, Default)]
 pub struct PerformanceDataStorage<T: Float> {
-    data: Vec<UltraThinkMetrics<T>>,
-}
+    data: Vec<UltraThinkMetrics<T>>}
 
 impl<T: Float> PerformanceDataStorage<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
@@ -1100,47 +1047,39 @@ impl<T: Float> PerformanceDataStorage<T> {
 #[derive(Debug, Default)]
 pub struct CollectionStatistics<T: Float> {
     pub total_collections: usize,
-    pub average_interval: T,
-}
+    pub average_interval: T}
 
 #[derive(Debug, Default)]
 pub struct ModelPerformanceTracker<T: Float> {
-    pub accuracy_history: Vec<T>,
-}
+    pub accuracy_history: Vec<T>}
 
 #[derive(Debug, Default)]
 pub struct FalsePositiveTracker<T: Float> {
-    pub false_positive_rate: T,
-}
+    pub false_positive_rate: T}
 
 #[derive(Debug, Default)]
 pub struct PeakUsageTracker<T: Float> {
     pub peak_cpu: T,
-    pub peak_memory: T,
-}
+    pub peak_memory: T}
 
 #[derive(Debug, Default)]
 pub struct ResourceEfficiencyAnalyzer<T: Float> {
-    pub efficiency_score: T,
-}
+    pub efficiency_score: T}
 
 #[derive(Debug, Default)]
 pub struct SeasonalPattern<T: Float> {
     pub period: Duration,
-    pub amplitude: T,
-}
+    pub amplitude: T}
 
 #[derive(Debug, Default)]
 pub struct ChangePoint<T: Float> {
     pub timestamp: SystemTime,
-    pub magnitude: T,
-}
+    pub magnitude: T}
 
 #[derive(Debug, Default)]
 pub struct TrendPrediction<T: Float> {
     pub predicted_direction: TrendDirection,
-    pub confidence: T,
-}
+    pub confidence: T}
 
 impl Default for TrendDirection {
     fn default() -> Self {
@@ -1152,21 +1091,18 @@ impl Default for TrendDirection {
 pub struct AnomalySummary<T: Float> {
     pub total_anomalies: usize,
     pub critical_anomalies: usize,
-    pub false_positive_rate: T,
-}
+    pub false_positive_rate: T}
 
 #[derive(Debug, Default)]
 pub struct TrendSummary<T: Float> {
     pub overall_trend: TrendDirection,
-    pub trend_strength: T,
-}
+    pub trend_strength: T}
 
 #[derive(Debug, Default)]
 pub struct ResourceSummary<T: Float> {
     pub average_cpu_usage: T,
     pub peak_memory_usage: T,
-    pub efficiency_score: T,
-}
+    pub efficiency_score: T}
 
 impl<T: Float + Default> Default for PerformanceMonitorConfig<T> {
     fn default() -> Self {
@@ -1185,8 +1121,7 @@ impl<T: Float + Default> Default for PerformanceMonitorConfig<T> {
             enable_gpu_monitoring: true,
             enable_memory_leak_detection: true,
             enable_convergence_prediction: true,
-            alert_thresholds,
-        }
+            alert_thresholds}
     }
 }
 

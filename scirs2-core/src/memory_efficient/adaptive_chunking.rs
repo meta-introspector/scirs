@@ -370,8 +370,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                         if new_size >= params.min_chunk_size {
                             chunk_size = new_size;
                             decision_factors.push(format!(
-                                "2D array: Adjusted chunk size to {} (multiple of row length {})",
-                                chunk_size, row_length
+                                "2D array: Adjusted chunk size to {chunk_size} (multiple of row length {row_length})"
                             ));
                         }
                     }
@@ -381,14 +380,12 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                     if row_length <= params.max_chunk_size {
                         chunk_size = row_length;
                         decision_factors.push(format!(
-                            "2D array: Adjusted chunk size to row length {}",
-                            row_length
+                            "2D array: Adjusted chunk size to row length {row_length}"
                         ));
                     } else {
                         // Row length exceeds max chunk size, keep original chunk size
                         decision_factors.push(format!(
-                            "2D array: Row length {} exceeds max chunk size, keeping chunk size {}",
-                            row_length, chunk_size
+                            "2D array: Row length {row_length} exceeds max chunk size, keeping chunk size {chunk_size}"
                         ));
                     }
                 }
@@ -412,8 +409,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                     if new_size >= params.min_chunk_size {
                         chunk_size = new_size;
                         decision_factors.push(format!(
-                            "3D array: Adjusted chunk size to {} (multiple of plane size {})",
-                            chunk_size, plane_size
+                            "3D array: Adjusted chunk size to {chunk_size} (multiple of plane size {plane_size})"
                         ));
                     }
                 } else if chunk_size >= row_length && chunk_size % row_length != 0 {
@@ -424,17 +420,13 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                     if new_size >= params.min_chunk_size {
                         chunk_size = new_size;
                         decision_factors.push(format!(
-                            "3D array: Adjusted chunk size to {} (multiple of row length {})",
-                            chunk_size, row_length
+                            "3D array: Adjusted chunk size to {chunk_size} (multiple of row length {row_length})"
                         ));
                     }
                 }
             }
             n => {
-                decision_factors.push(format!(
-                    "{n}D array: Using default chunking strategy",
-                    n = n
-                ));
+                decision_factors.push(format!("{n}D array: Using default chunking strategy"));
             }
         }
 
@@ -468,8 +460,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                 // Use the ideal chunk size for parallel processing
                 chunk_size = ideal_chunk_size;
                 decision_factors.push(format!(
-                    "Parallel optimization: Adjusted chunk size to {} for {} workers",
-                    chunk_size, num_workers
+                    "Parallel optimization: Adjusted chunk size to {chunk_size} for {num_workers} workers"
                 ));
             } else if ideal_chunk_size < params.min_chunk_size {
                 // If ideal size is too small, use minimum size
@@ -481,8 +472,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                         0
                     };
                 decision_factors.push(format!(
-                    "Parallel optimization: Using minimum chunk size {}, resulting in {} chunks for {} workers",
-                    chunk_size, actual_chunks, num_workers
+                    "Parallel optimization: Using minimum chunk size {chunk_size}, resulting in {actual_chunks} chunks for {num_workers} workers"
                 ));
             }
         } else {

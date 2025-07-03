@@ -11,6 +11,7 @@ use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
+#[cfg(test)]
 use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -544,7 +545,7 @@ fn compute_parallel_bootstrap_ci(
     let bootstrap_powers: Vec<Vec<f64>> = (0..n_bootstrap)
         .into_par_iter()
         .map(|iter| {
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             let times_ref = times_arc.clone();
             let values_ref = values_arc.clone();
             let frequencies_ref = frequencies_arc.clone();
@@ -555,7 +556,7 @@ fn compute_parallel_bootstrap_ci(
             let mut resampled_values = vec![0.0; n];
 
             for i in 0..n {
-                let idx = rng.random_range(0..n);
+                let idx = rng.gen_range(0..n);
                 resampled_times[i] = times_ref[idx];
                 resampled_values[i] = values_ref[idx];
             }

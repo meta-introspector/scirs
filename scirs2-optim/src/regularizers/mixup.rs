@@ -7,7 +7,6 @@
 use ndarray::{Array, Array2, Array4, Dimension, ScalarOperand};
 use ndarray_rand::rand;
 use ndarray_rand::rand::seq::SliceRandom;
-use ndarray_rand::rand::Rng;
 use ndarray_rand::rand::SeedableRng;
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;

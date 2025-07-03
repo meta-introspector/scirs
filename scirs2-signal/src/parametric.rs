@@ -36,10 +36,10 @@
 //! ```
 
 use ndarray::{s, Array1, Array2};
-use num_complex::Complex64;
 use std::f64::consts::PI;
 
 use crate::error::{SignalError, SignalResult};
+use num_complex::Complex64;
 
 /// Method for estimating AR model parameters
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

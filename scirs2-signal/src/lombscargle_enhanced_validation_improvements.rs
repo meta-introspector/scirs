@@ -17,6 +17,7 @@ use num_traits::{Float, NumCast};
 use rand::prelude::*;
 use rand::Rng;
 use scirs2_core::validation::{check_finite, check_positive};
+#[cfg(test)]
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -112,7 +113,7 @@ pub fn validate_bootstrap_confidence_intervals(
         ));
     }
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let n = signal.len();
     let mut successful_iterations = 0;
     let mut bootstrap_powers = Vec::new();
@@ -124,7 +125,7 @@ pub fn validate_bootstrap_confidence_intervals(
         let mut bootstrap_time = vec![0.0; n];
 
         for i in 0..n {
-            let idx = rng.random_range(0..n);
+            let idx = rng.gen_range(0..n);
             bootstrap_signal[i] = signal[idx];
             bootstrap_time[i] = time[idx];
         }
@@ -261,8 +262,8 @@ pub fn analyze_memory_performance(
 
     for &size in signal_sizes {
         // Generate test signal
-        let mut rng = rand::thread_rng();
-        let signal: Vec<f64> = (0..size).map(|_| rng.random_range(-1.0..1.0)).collect();
+        let mut rng = rand::rng();
+        let signal: Vec<f64> = (0..size).map(|_| rng.gen_range(-1.0..1.0)).collect();
         let time: Vec<f64> = (0..size).map(|i| i as f64).collect();
 
         for iter in 0..test_iterations {
@@ -327,7 +328,7 @@ pub fn analyze_statistical_power(
     let mut power_curve = Vec::new();
     let mut type_i_errors = 0;
     let mut type_ii_errors = 0;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for &snr_db in snr_range_db {
         let snr_linear = 10.0_f64.powf(snr_db / 10.0);
@@ -343,7 +344,7 @@ pub fn analyze_statistical_power(
                 .iter()
                 .map(|&t| {
                     signal_amplitude * (2.0 * PI * target_frequency * t).sin()
-                        + noise_std * rng.random_range(-1.0..1.0)
+                        + noise_std * rng.gen_range(-1.0..1.0)
                 })
                 .collect();
 
@@ -911,6 +912,7 @@ fn validate_simd_scalar_consistency(signal: &[f64], time: &[f64]) -> SignalResul
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

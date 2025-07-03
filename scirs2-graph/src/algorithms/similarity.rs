@@ -87,7 +87,7 @@ where
 /// needed to transform one graph into another.
 pub fn graph_edit_distance<N, E, Ix>(graph1: &Graph<N, E, Ix>, graph2: &Graph<N, E, Ix>) -> usize
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {

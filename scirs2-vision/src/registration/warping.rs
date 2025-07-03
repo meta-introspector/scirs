@@ -179,7 +179,7 @@ fn warp_image_cpu(
 
     // Invert transformation for backwards mapping
     let inv_transform = invert_3x3_matrix(transform).map_err(|e| {
-        VisionError::OperationError(format!("Failed to invert transformation: {}", e))
+        VisionError::OperationError(format!("Failed to invert transformation: {e}"))
     })?;
 
     // For each pixel in output image
@@ -275,7 +275,7 @@ fn generate_warp_shader_code(
 
     let boundary_code = match boundary {
         BoundaryMethod::Zero => "return 0.0;".to_string(),
-        BoundaryMethod::Constant(value) => format!("return {};", value),
+        BoundaryMethod::Constant(value) => format!("return {value};"),
         BoundaryMethod::Reflect => generate_reflect_boundary_code(),
         BoundaryMethod::Wrap => generate_wrap_boundary_code(),
         BoundaryMethod::Clamp => generate_clamp_boundary_code(),
@@ -299,19 +299,19 @@ fn generate_warp_shader_code(
             float output_data[];
         }};
 
-        const uint IN_WIDTH = {}u;
-        const uint IN_HEIGHT = {}u;
-        const uint OUT_WIDTH = {}u;
-        const uint OUT_HEIGHT = {}u;
+        const uint IN_WIDTH = {in_width}u;
+        const uint IN_HEIGHT = {in_height}u;
+        const uint OUT_WIDTH = {out_width}u;
+        const uint OUT_HEIGHT = {out_height}u;
 
         float sample_boundary(int x, int y) {{
             if (x >= 0 && x < int(IN_WIDTH) && y >= 0 && y < int(IN_HEIGHT)) {{
                 return input_data[y * int(IN_WIDTH) + x];
             }}
-            {}
+            {boundary_code}
         }}
 
-        {}
+        {interpolation_code}
 
         void main() {{
             ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
@@ -338,8 +338,7 @@ fn generate_warp_shader_code(
             uint output_idx = uint(coord.y) * OUT_WIDTH + uint(coord.x);
             output_data[output_idx] = value;
         }}
-        "#,
-        in_width, in_height, out_width, out_height, boundary_code, interpolation_code
+        "#
     )
 }
 
@@ -533,7 +532,7 @@ pub fn warp_rgb_image(
     // Invert transformation for backwards mapping
     // Uses optimized 3x3 matrix inversion for transformation matrices
     let inv_transform = invert_3x3_matrix(transform).map_err(|e| {
-        VisionError::OperationError(format!("Failed to invert transformation: {}", e))
+        VisionError::OperationError(format!("Failed to invert transformation: {e}"))
     })?;
 
     // For each pixel in output image
@@ -1775,7 +1774,7 @@ impl TileCache {
     fn get_tile(&self, tile_id: TileId) -> Result<&RgbImage> {
         self.tiles
             .get(&tile_id)
-            .ok_or_else(|| VisionError::OperationError(format!("Tile {:?} not found", tile_id)))
+            .ok_or_else(|| VisionError::OperationError(format!("Tile {tile_id:?} not found")))
     }
 
     /// Ensure memory usage stays within budget

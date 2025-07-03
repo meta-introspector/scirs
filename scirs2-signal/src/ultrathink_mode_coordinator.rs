@@ -5,6 +5,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use std::collections::HashMap;
+use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Configuration for ultrathink mode operations

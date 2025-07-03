@@ -2707,7 +2707,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         &self,
         selected_clients: &[String],
         amplification_factor: f64,
-    ) -> Result<HashMap<String, ClientPrivacyAllocation>, OptimError> {
+    ) -> Result<HashMap<String, ClientPrivacyAllocation>> {
         let mut allocations = HashMap::new();
 
         let base_epsilon = self.config.base_config.target_epsilon / amplification_factor;
@@ -3612,7 +3612,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
         &self,
         client_updates: &HashMap<String, Array1<T>>,
         _round_plan: &FederatedRoundPlan,
-    ) -> Result<HashMap<String, Array1<T>>, OptimError> {
+    ) -> Result<HashMap<String, Array1<T>>> {
         Ok(client_updates.clone())
     }
 
@@ -3626,7 +3626,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
     pub fn cluster_clients(
         &self,
         _client_updates: &HashMap<String, Array1<T>>,
-    ) -> Result<HashMap<usize, Vec<String>>, OptimError> {
+    ) -> Result<HashMap<usize, Vec<String>>> {
         Ok(HashMap::new())
     }
 
@@ -3635,7 +3635,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
         &self,
         _cluster_assignments: &HashMap<usize, Vec<String>>,
         _meta_gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<HashMap<String, PersonalizedModel<T>>, OptimError> {
+    ) -> Result<HashMap<String, PersonalizedModel<T>>> {
         Ok(HashMap::new())
     }
 
@@ -3672,7 +3672,7 @@ impl<T: Float + std::fmt::Debug> AdaptiveBudgetManager<T> {
         &self,
         _client_updates: &HashMap<String, Array1<T>>,
         _round_plan: &FederatedRoundPlan,
-    ) -> Result<HashMap<String, AdaptivePrivacyAllocation>, OptimError> {
+    ) -> Result<HashMap<String, AdaptivePrivacyAllocation>> {
         Ok(HashMap::new())
     }
 }
@@ -3706,15 +3706,12 @@ impl<T: Float + Default + Clone + Send + Sync> CommunicationOptimizer<T> {
         &self,
         client_updates: &HashMap<String, Array1<T>>,
         _round_plan: &FederatedRoundPlan,
-    ) -> Result<HashMap<String, Array1<T>>, OptimError> {
+    ) -> Result<HashMap<String, Array1<T>>> {
         Ok(client_updates.clone())
     }
 
     #[allow(dead_code)]
-    pub fn compute_efficiency_scores(
-        &self,
-        _clients: &[String],
-    ) -> Result<HashMap<String, f64>, OptimError> {
+    pub fn compute_efficiency_scores(&self, _clients: &[String]) -> Result<HashMap<String, f64>> {
         Ok(HashMap::new())
     }
 }
@@ -4853,11 +4850,7 @@ impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
         Ok(result)
     }
 
-    fn quantize_gradients(
-        &self,
-        gradients: &Array1<T>,
-        bits: u8,
-    ) -> Result<(Array1<T>, f64), OptimError> {
+    fn quantize_gradients(&self, gradients: &Array1<T>, bits: u8) -> Result<(Array1<T>, f64)> {
         let levels = (1 << bits) as f64;
         let max_val = gradients.iter().cloned().fold(T::neg_infinity(), T::max);
         let min_val = gradients.iter().cloned().fold(T::infinity(), T::min);
@@ -4878,11 +4871,7 @@ impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
         Ok((quantized, compression_ratio))
     }
 
-    fn top_k_sparsification(
-        &self,
-        gradients: &Array1<T>,
-        k: usize,
-    ) -> Result<(Array1<T>, f64), OptimError> {
+    fn top_k_sparsification(&self, gradients: &Array1<T>, k: usize) -> Result<(Array1<T>, f64)> {
         let mut indexed_grads: Vec<(usize, T)> = gradients
             .iter()
             .enumerate()
@@ -4911,7 +4900,7 @@ impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
         &self,
         gradients: &Array1<T>,
         sparsity_ratio: f64,
-    ) -> Result<(Array1<T>, f64), OptimError> {
+    ) -> Result<(Array1<T>, f64)> {
         let mut rng = rand::rng();
         let keep_probability = 1.0 - sparsity_ratio;
 

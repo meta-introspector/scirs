@@ -4,7 +4,7 @@
 //! computing platforms, including spike-based optimization, event-driven parameter updates,
 //! and energy-efficient optimization strategies for neuromorphic chips.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use crate::optimizers::Optimizer;
 use ndarray::{Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;
@@ -39,8 +39,7 @@ pub enum NeuromorphicPlatform {
     Research,
     
     /// Custom neuromorphic hardware
-    Custom(String),
-}
+    Custom(String)}
 
 /// Neuromorphic optimization configuration
 #[derive(Debug, Clone)]
@@ -79,8 +78,7 @@ pub struct NeuromorphicConfig<T: Float> {
     pub metaplasticity: bool,
     
     /// Population dynamics configuration
-    pub population_config: PopulationConfig,
-}
+    pub population_config: PopulationConfig}
 
 /// Spike Timing Dependent Plasticity configuration
 #[derive(Debug, Clone)]
@@ -107,8 +105,7 @@ pub struct STDPConfig<T: Float> {
     pub enable_triplet: bool,
     
     /// Triplet learning rate
-    pub triplet_learning_rate: T,
-}
+    pub triplet_learning_rate: T}
 
 /// Membrane potential dynamics configuration
 #[derive(Debug, Clone)]
@@ -138,8 +135,7 @@ pub struct MembraneDynamicsConfig<T: Float> {
     pub adaptive_threshold: bool,
     
     /// Threshold adaptation time constant
-    pub threshold_adaptation_tau: T,
-}
+    pub threshold_adaptation_tau: T}
 
 /// Synaptic plasticity models
 #[derive(Debug, Clone, Copy)]
@@ -166,8 +162,7 @@ pub enum PlasticityModel {
     BCM,
     
     /// Oja's rule
-    Oja,
-}
+    Oja}
 
 /// Population-level configuration
 #[derive(Debug, Clone)]
@@ -191,8 +186,7 @@ pub struct PopulationConfig {
     pub enable_bursting: bool,
     
     /// Synchronization mechanisms
-    pub synchronization: SynchronizationMechanism,
-}
+    pub synchronization: SynchronizationMechanism}
 
 /// Population coding strategies
 #[derive(Debug, Clone, Copy)]
@@ -210,8 +204,7 @@ pub enum PopulationCodingStrategy {
     Vector,
     
     /// Rank order coding
-    RankOrder,
-}
+    RankOrder}
 
 /// Synchronization mechanisms
 #[derive(Debug, Clone, Copy)]
@@ -229,8 +222,7 @@ pub enum SynchronizationMechanism {
     Adaptive,
     
     /// Network oscillations
-    NetworkOscillations,
-}
+    NetworkOscillations}
 
 /// Energy optimization configuration
 #[derive(Debug, Clone)]
@@ -257,8 +249,7 @@ pub struct EnergyOptimizationConfig<T: Float> {
     pub monitoring_frequency: Duration,
     
     /// Thermal management
-    pub thermal_management: ThermalManagementConfig<T>,
-}
+    pub thermal_management: ThermalManagementConfig<T>}
 
 /// Sleep mode configuration for energy efficiency
 #[derive(Debug, Clone)]
@@ -276,8 +267,7 @@ pub struct SleepModeConfig<T: Float> {
     pub sleep_power: T,
     
     /// Wake-up energy cost (nJ)
-    pub wakeup_energy: T,
-}
+    pub wakeup_energy: T}
 
 /// Thermal management configuration
 #[derive(Debug, Clone)]
@@ -295,8 +285,7 @@ pub struct ThermalManagementConfig<T: Float> {
     pub thermal_time_constant: T,
     
     /// Thermal throttling strategy
-    pub throttling_strategy: ThermalThrottlingStrategy,
-}
+    pub throttling_strategy: ThermalThrottlingStrategy}
 
 /// Thermal throttling strategies
 #[derive(Debug, Clone, Copy)]
@@ -314,8 +303,7 @@ pub enum ThermalThrottlingStrategy {
     SelectiveShutdown,
     
     /// Dynamic load balancing
-    DynamicLoadBalancing,
-}
+    DynamicLoadBalancing}
 
 /// Spike representation for neuromorphic optimization
 #[derive(Debug, Clone)]
@@ -339,8 +327,7 @@ pub struct Spike<T: Float> {
     pub presynaptic_id: Option<usize>,
     
     /// Postsynaptic neuron ID
-    pub postsynaptic_id: Option<usize>,
-}
+    pub postsynaptic_id: Option<usize>}
 
 /// Spike train representation
 #[derive(Debug, Clone)]
@@ -361,8 +348,7 @@ pub struct SpikeTrain<T: Float> {
     pub duration: T,
     
     /// Spike count
-    pub spike_count: usize,
-}
+    pub spike_count: usize}
 
 impl<T: Float> SpikeTrain<T> {
     /// Create a new spike train from spike times
@@ -394,8 +380,7 @@ impl<T: Float> SpikeTrain<T> {
             inter_spike_intervals,
             firing_rate,
             duration,
-            spike_count,
-        }
+            spike_count}
     }
     
     /// Calculate coefficient of variation of inter-spike intervals
@@ -459,8 +444,7 @@ pub struct NeuromorphicEvent<T: Float> {
     pub energy_cost: T,
     
     /// Priority level
-    pub priority: EventPriority,
-}
+    pub priority: EventPriority}
 
 /// Event priority levels for neuromorphic processing
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -469,8 +453,7 @@ pub enum EventPriority {
     Normal,
     High,
     Critical,
-    RealTime,
-}
+    RealTime}
 
 /// Neuromorphic optimization metrics
 #[derive(Debug, Clone)]
@@ -503,8 +486,7 @@ pub struct NeuromorphicMetrics<T: Float> {
     pub thermal_efficiency: T,
     
     /// Network synchronization measure
-    pub network_synchronization: T,
-}
+    pub network_synchronization: T}
 
 impl<T: Float> Default for NeuromorphicMetrics<T> {
     fn default() -> Self {
@@ -518,8 +500,7 @@ impl<T: Float> Default for NeuromorphicMetrics<T> {
             plasticity_events_per_sec: T::zero(),
             memory_bandwidth_utilization: T::zero(),
             thermal_efficiency: T::one(),
-            network_synchronization: T::zero(),
-        }
+            network_synchronization: T::zero()}
     }
 }
 
@@ -537,8 +518,7 @@ impl<T: Float> Default for NeuromorphicConfig<T> {
             plasticity_model: PlasticityModel::STDP,
             homeostatic_plasticity: false,
             metaplasticity: false,
-            population_config: PopulationConfig::default(),
-        }
+            population_config: PopulationConfig::default()}
     }
 }
 
@@ -552,8 +532,7 @@ impl<T: Float> Default for STDPConfig<T> {
             weight_max: T::one(),
             weight_min: T::zero(),
             enable_triplet: false,
-            triplet_learning_rate: T::from(0.001).unwrap(),
-        }
+            triplet_learning_rate: T::from(0.001).unwrap()}
     }
 }
 
@@ -568,8 +547,7 @@ impl<T: Float> Default for MembraneDynamicsConfig<T> {
             capacitance: T::from(100.0).unwrap(),
             leak_conductance: T::from(10.0).unwrap(),
             adaptive_threshold: false,
-            threshold_adaptation_tau: T::from(100.0).unwrap(),
-        }
+            threshold_adaptation_tau: T::from(100.0).unwrap()}
     }
 }
 
@@ -582,8 +560,7 @@ impl Default for PopulationConfig {
             winner_take_all: false,
             coding_strategy: PopulationCodingStrategy::Distributed,
             enable_bursting: false,
-            synchronization: SynchronizationMechanism::None,
-        }
+            synchronization: SynchronizationMechanism::None}
     }
 }
 
@@ -597,8 +574,7 @@ impl<T: Float> Default for EnergyOptimizationConfig<T> {
             power_gating: false,
             sleep_mode_config: SleepModeConfig::default(),
             monitoring_frequency: Duration::from_millis(100),
-            thermal_management: ThermalManagementConfig::default(),
-        }
+            thermal_management: ThermalManagementConfig::default()}
     }
 }
 
@@ -609,8 +585,7 @@ impl<T: Float> Default for SleepModeConfig<T> {
             sleep_threshold: Duration::from_millis(100),
             wakeup_time: T::from(1.0).unwrap(),
             sleep_power: T::from(0.1).unwrap(),
-            wakeup_energy: T::from(0.01).unwrap(),
-        }
+            wakeup_energy: T::from(0.01).unwrap()}
     }
 }
 
@@ -621,7 +596,6 @@ impl<T: Float> Default for ThermalManagementConfig<T> {
             target_temperature: T::from(65.0).unwrap(),
             max_temperature: T::from(85.0).unwrap(),
             thermal_time_constant: T::from(10.0).unwrap(),
-            throttling_strategy: ThermalThrottlingStrategy::FrequencyScaling,
-        }
+            throttling_strategy: ThermalThrottlingStrategy::FrequencyScaling}
     }
 }

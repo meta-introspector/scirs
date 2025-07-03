@@ -68,7 +68,9 @@ fn test_simple_function() -> Result<(), Box<dyn std::error::Error>> {
 
     println!(
         "Sequential MC: value = {:.6}, error = {:.2e}, time = {:.2} ms",
-        seq_result.value, seq_result.std_error, seq_time.as_millis()
+        seq_result.value,
+        seq_result.std_error,
+        seq_time.as_millis()
     );
 
     // Parallel Monte Carlo (if available)
@@ -90,7 +92,9 @@ fn test_simple_function() -> Result<(), Box<dyn std::error::Error>> {
 
         println!(
             "Parallel MC:   value = {:.6}, error = {:.2e}, time = {:.2} ms",
-            par_result.value, par_result.std_error, par_time.as_millis()
+            par_result.value,
+            par_result.std_error,
+            par_time.as_millis()
         );
 
         let speedup = seq_time.as_nanos() as f64 / par_time.as_nanos() as f64;
@@ -139,7 +143,9 @@ fn test_expensive_function() -> Result<(), Box<dyn std::error::Error>> {
 
     println!(
         "Sequential MC: value = {:.6}, error = {:.2e}, time = {:.2} ms",
-        seq_result.value, seq_result.std_error, seq_time.as_millis()
+        seq_result.value,
+        seq_result.std_error,
+        seq_time.as_millis()
     );
 
     // Parallel Monte Carlo (if available)
@@ -161,7 +167,9 @@ fn test_expensive_function() -> Result<(), Box<dyn std::error::Error>> {
 
         println!(
             "Parallel MC:   value = {:.6}, error = {:.2e}, time = {:.2} ms",
-            par_result.value, par_result.std_error, par_time.as_millis()
+            par_result.value,
+            par_result.std_error,
+            par_time.as_millis()
         );
 
         let speedup = seq_time.as_nanos() as f64 / par_time.as_nanos() as f64;
@@ -199,7 +207,9 @@ fn test_multidimensional_integration() -> Result<(), Box<dyn std::error::Error>>
 
     println!(
         "Sequential MC: value = {:.6}, error = {:.2e}, time = {:.2} ms",
-        seq_result.value, seq_result.std_error, seq_time.as_millis()
+        seq_result.value,
+        seq_result.std_error,
+        seq_time.as_millis()
     );
 
     // Parallel Monte Carlo (if available)
@@ -221,7 +231,9 @@ fn test_multidimensional_integration() -> Result<(), Box<dyn std::error::Error>>
 
         println!(
             "Parallel MC:   value = {:.6}, error = {:.2e}, time = {:.2} ms",
-            par_result.value, par_result.std_error, par_time.as_millis()
+            par_result.value,
+            par_result.std_error,
+            par_time.as_millis()
         );
 
         let speedup = seq_time.as_nanos() as f64 / par_time.as_nanos() as f64;
@@ -280,9 +292,12 @@ fn test_adaptive_parallel_integration() -> Result<(), Box<dyn std::error::Error>
         let time = start.elapsed();
 
         println!("Adaptive MC result:");
-        println!("  Value: {:.6}", result.value);
-        println!("  Standard error: {:.2e}", result.std_error);
-        println!("  Samples used: {}", result.n_evals);
+        let value = result.value;
+        let std_error = result.std_error;
+        let n_evals = result.n_evals;
+        println!("  Value: {value:.6}");
+        println!("  Standard error: {std_error:.2e}");
+        println!("  Samples used: {n_evals}");
         let time_ms = time.as_millis();
         println!("  Time: {time_ms:.2} ms");
         println!("  Target variance: {target_variance:.2e}");

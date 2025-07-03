@@ -189,7 +189,7 @@ where
 
 /// SIMD-optimized batch random walk with precomputed transition probabilities
 /// More efficient for large-scale embedding generation
-pub struct BatchRandomWalker<N: Node> {
+pub struct BatchRandomWalker<N: Node + std::fmt::Debug> {
     /// Node index mapping
     node_to_idx: HashMap<N, usize>,
     /// Index to node mapping
@@ -282,7 +282,7 @@ impl<N: Node + Clone + Hash + Eq> BatchRandomWalker<N> {
         Ix: IndexType,
         N: std::fmt::Debug,
     {
-        let nodes: Vec<N> = graph.nodes().cloned().collect();
+        let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
         let node_to_idx: HashMap<N, usize> = nodes
             .iter()
             .enumerate()
@@ -342,8 +342,8 @@ impl<N: Node + Clone + Hash + Eq> BatchRandomWalker<N> {
     ) -> Result<Vec<Vec<N>>>
     where
         E: EdgeWeight,
-        Ix: IndexType,
-        N: Send + Sync,
+        Ix: IndexType + std::marker::Sync,
+        N: Send + Sync + std::fmt::Debug,
     {
         let total_walks = starts.len() * num_walks_per_node;
         let mut all_walks = Vec::with_capacity(total_walks);
@@ -492,14 +492,9 @@ where
                 let mut cumulative = vec![0.0; weights.len()];
                 cumulative[0] = weights[0] / total;
 
-                // SIMD optimized cumulative sum when possible
-                if weights.len() >= 4 {
-                    let normalized: Vec<f64> = weights.iter().map(|w| w / total).collect();
-                    f64::simd_cumulative_sum(&normalized, &mut cumulative);
-                } else {
-                    for i in 1..weights.len() {
-                        cumulative[i] = cumulative[i - 1] + weights[i] / total;
-                    }
+                // Compute cumulative sum for selection
+                for i in 1..weights.len() {
+                    cumulative[i] = cumulative[i - 1] + weights[i] / total;
                 }
 
                 let r = rng.random::<f64>();
@@ -528,7 +523,7 @@ pub fn parallel_node2vec_walks<N, E, Ix>(
     q: f64,
 ) -> Result<Vec<Vec<N>>>
 where
-    N: Node + Clone + Hash + Eq + Send + Sync,
+    N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Send + Sync,
     Ix: IndexType + Send + Sync,
 {

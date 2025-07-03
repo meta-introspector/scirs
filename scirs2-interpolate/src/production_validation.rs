@@ -297,7 +297,7 @@ impl ProductionValidator {
     /// Test thread safety with concurrent operations
     fn test_thread_safety<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static,
+        F: crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let thread_count = self.config.thread_count;
@@ -529,7 +529,7 @@ impl ProductionValidator {
         data: &(Array1<F>, Array1<F>),
     ) -> InterpolateResult<()>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
+        F: crate::traits::InterpolationFloat,
     {
         let (x, y) = data;
         let _spline = CubicSpline::new(&x.view(), &y.view())?;
@@ -574,7 +574,7 @@ impl ProductionValidator {
     }
     fn test_invalid_input_recovery<F>(&self) -> InterpolateResult<()>
     where
-        F: Float + FromPrimitive + Debug,
+        F: crate::traits::InterpolationFloat,
     {
         // Test recovery from various invalid inputs
 

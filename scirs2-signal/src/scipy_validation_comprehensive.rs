@@ -20,7 +20,6 @@ use crate::spectral::welch;
 use crate::wpt::wp_decompose;
 
 use ndarray::{Array1, Array2, ArrayView1};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::{check_finite, check_positive};
@@ -790,11 +789,11 @@ fn validate_sysid_implementations() -> SignalResult<SysIdValidationResult> {
     let n = 256;
     let true_ar_coeffs = vec![1.0, -0.8, 0.15]; // AR(2) system
     let mut signal = vec![0.0; n];
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Generate AR(2) process
     for i in 2..n {
-        let noise = 0.1 * rng.random_range(-1.0..1.0);
+        let noise = 0.1 * rng.gen_range(-1.0..1.0);
         signal[i] = -true_ar_coeffs[1] * signal[i - 1] - true_ar_coeffs[2] * signal[i - 2] + noise;
     }
 

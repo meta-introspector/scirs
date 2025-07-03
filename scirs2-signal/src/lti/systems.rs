@@ -449,7 +449,6 @@ impl LtiSystem for TransferFunction {
 ///
 /// ```rust
 /// use scirs2_signal::lti::systems::ZerosPoleGain;
-/// use num_complex::Complex64;
 ///
 /// // Create H(s) = 2 * (s + 1) / (s + 2)
 /// let zpk = ZerosPoleGain::new(
@@ -492,7 +491,6 @@ impl ZerosPoleGain {
     ///
     /// ```rust
     /// use scirs2_signal::lti::systems::ZerosPoleGain;
-    /// use num_complex::Complex64;
     ///
     /// // Create a simple first-order continuous-time system: H(s) = 1 / (s + 1)
     /// let zpk = ZerosPoleGain::new(

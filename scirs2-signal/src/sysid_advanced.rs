@@ -9,10 +9,10 @@ use crate::lti::{LtiSystem, StateSpace, TransferFunction};
 use crate::sysid_enhanced::{NonlinearFunction, ParameterEstimate, SystemModel};
 use ndarray::{s, Array1, Array2, ArrayView1, Axis};
 // use ndarray_linalg::{Solve, Eig, SVD, Norm}; // TODO: Add ndarray-linalg dependency
-use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_shape};
+#[cfg(test)]
 use std::f64::consts::PI;
 
 /// ARMAX model identification using iterative prediction error method
@@ -822,9 +822,9 @@ fn simulate_bj_model(
     let mut filtered_noise = Array1::zeros(n);
 
     // Generate innovations (would be estimated in practice)
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     for i in 0..n {
-        noise[i] = rng.random_range(-0.1..0.1);
+        noise[i] = rng.gen_range(-0.1..0.1);
     }
 
     // Filter through C/D
@@ -1193,13 +1193,13 @@ mod tests {
         let mut output = Array1::zeros(n);
 
         // Generate test data
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for i in 2..n {
-            input[i] = rng.random_range(-1.0..1.0);
+            input[i] = rng.gen_range(-1.0..1.0);
             output[i] = 0.7 * output[i - 1] - 0.2 * output[i - 2]
                 + 0.5 * input[i - 1]
                 + 0.3 * input[i - 2]
-                + 0.1 * rng.random_range(-1.0..1.0);
+                + 0.1 * rng.gen_range(-1.0..1.0);
         }
 
         let (model, _, _, converged, _) =

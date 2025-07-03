@@ -13,8 +13,6 @@ use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKe
 use cudarc::driver::sys::{CUcontext, CUdevice, CUdeviceptr};
 #[cfg(feature = "cuda")]
 use cudarc::driver::{CudaDevice, CudaSlice, DevicePtr};
-#[cfg(feature = "cuda")]
-use cudarc::nvrtc::Ptx;
 
 // CUDA API types - use real CUDA when available, fallback types otherwise
 #[cfg(feature = "cuda")]
@@ -195,13 +193,11 @@ impl CudaContext {
         #[cfg(feature = "cuda")]
         {
             // Real CUDA implementation
-            let device =
-                Arc::new(CudaDevice::new(0).map_err(|e| {
-                    GpuError::Other(format!("Failed to initialize CUDA device: {e}"))
-                })?);
+            let device = CudaDevice::new(0)
+                .map_err(|e| GpuError::Other(format!("Failed to initialize CUDA device: {e}")))?;
 
             Ok(Self {
-                device,
+                device: Arc::new(device),
                 compiled_kernels: Arc::new(Mutex::new(HashMap::new())),
                 memory_pool: Arc::new(Mutex::new(CudaMemoryPool::new(1024 * 1024 * 1024))), // 1GB pool
             })
@@ -247,8 +243,16 @@ impl CudaContext {
     }
 
     /// Create CUDA context for the device
+    #[cfg(feature = "cuda")]
     fn create_cuda_context(_device: CUdevice) -> Result<CUcontext, GpuError> {
         // In real implementation: cuCtxCreate_v2(&mut context, 0, device)
+        // For now, return a dummy context (actual implementation would need proper CUDA API calls)
+        Ok(std::ptr::null_mut())
+    }
+
+    /// Create CUDA context for the device (fallback)
+    #[cfg(not(feature = "cuda"))]
+    fn create_cuda_context(_device: CUdevice) -> Result<CUcontext, GpuError> {
         // For stub: return a non-null pointer to simulate success
         Ok(0x1 as *mut c_void) // Non-null stub pointer
     }
@@ -328,7 +332,7 @@ impl CudaContext {
         ptx: &str,
     ) -> Result<Arc<impl std::any::Any>, GpuError> {
         device
-            .load_ptx(Ptx::from_src(ptx), "module", &[])
+            .load_ptx(ptx, "neural_kernels", &[])
             .map_err(|e| GpuError::Other(format!("Failed to load PTX module: {e}")))
             .map(Arc::new)
     }
@@ -791,8 +795,8 @@ impl CudaKernelHandle {
             use std::collections::HashMap;
             use std::sync::Mutex;
 
-            static SIMULATED_PARAMETER_UPDATES: Mutex<HashMap<String, u64>> =
-                Mutex::new(HashMap::new());
+            static SIMULATED_PARAMETER_UPDATES: std::sync::LazyLock<Mutex<HashMap<String, u64>>> =
+                std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
 
             if let Ok(mut updates) = SIMULATED_PARAMETER_UPDATES.lock() {
                 let count = updates.entry(self.kernel_name.clone()).or_insert(0);

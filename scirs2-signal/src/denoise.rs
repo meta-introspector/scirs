@@ -56,7 +56,8 @@ pub enum ThresholdSelect {
 /// ```rust
 /// use scirs2_signal::denoise::{denoise_wavelet, ThresholdMethod, ThresholdSelect};
 /// use scirs2_signal::dwt::Wavelet;
-/// use std::f64::consts::PI;
+/// #[cfg(test)]
+use std::f64::consts::PI;
 ///
 /// // Create a clean signal
 /// let time: Vec<f64> = (0..1000).map(|i| i as f64 / 100.0).collect();
@@ -465,6 +466,7 @@ mod tests {
     use super::*;
     use crate::dwt::Wavelet;
     use rand::Rng;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]
@@ -508,10 +510,10 @@ mod tests {
         // a signal of the correct length
 
         // Add noise with a fixed seed for reproducibility
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut noisy_signal = clean_signal.clone();
         for val in noisy_signal.iter_mut() {
-            *val += 0.2 * rng.random_range(-1.0..1.0);
+            *val += 0.2 * rng.gen_range(-1.0..1.0);
         }
 
         // Denoise using wavelet thresholding with limited decomposition level

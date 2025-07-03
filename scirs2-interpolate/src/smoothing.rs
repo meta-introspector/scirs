@@ -120,7 +120,8 @@ where
         + MulAssign
         + DivAssign
         + RemAssign
-        + 'static,
+        + 'static
+        + crate::traits::InterpolationFloat,
 {
     /// Create a new variable knot smoothing spline
     ///

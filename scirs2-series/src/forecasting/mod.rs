@@ -2077,7 +2077,7 @@ pub mod ensemble {
 
         if !all_predictions.is_empty() {
             // Flatten predictions and targets for regression
-            let mut X = Vec::new(); // Features (model predictions)
+            let mut x = Vec::new(); // Features (model predictions)
             let mut y = Vec::new(); // Targets (actual values)
 
             for (fold_predictions, targets) in all_predictions.iter().zip(all_targets.iter()) {
@@ -2091,15 +2091,15 @@ pub mod ensemble {
                         }
                     }
                     if row.len() == num_models {
-                        X.push(row);
+                        x.push(row);
                         y.push(targets[i].to_f64().unwrap_or(0.0));
                     }
                 }
             }
 
             // Simple linear regression to find optimal weights
-            if X.len() > num_models && X.iter().all(|row| row.len() == num_models) {
-                weights = solve_linear_regression(&X, &y);
+            if x.len() > num_models && x.iter().all(|row| row.len() == num_models) {
+                weights = solve_linear_regression(&x, &y);
 
                 // Ensure weights are non-negative and sum to 1
                 let mut sum = weights.iter().sum::<f64>();
@@ -2237,9 +2237,9 @@ pub mod ensemble {
     }
 
     /// Simple linear regression solver for stacking weights
-    fn solve_linear_regression(X: &[Vec<f64>], y: &[f64]) -> Vec<f64> {
-        let n = X.len();
-        let m = if n > 0 { X[0].len() } else { 0 };
+    fn solve_linear_regression(x: &[Vec<f64>], y: &[f64]) -> Vec<f64> {
+        let n = x.len();
+        let m = if n > 0 { x[0].len() } else { 0 };
 
         if n == 0 || m == 0 || n != y.len() {
             return vec![1.0 / m.max(1) as f64; m.max(1)];
@@ -2254,16 +2254,16 @@ pub mod ensemble {
         for _ in 0..iterations {
             let mut gradients = vec![0.0; m];
 
-            for i in 0..n {
-                let mut prediction = 0.0;
-                for j in 0..m {
-                    prediction += weights[j] * X[i][j];
-                }
+            for (_i, (x_row, &y_val)) in x.iter().zip(y.iter()).enumerate() {
+                let prediction = weights
+                    .iter()
+                    .zip(x_row.iter())
+                    .map(|(w, x)| w * x)
+                    .sum::<f64>();
+                let error = prediction - y_val;
 
-                let error = prediction - y[i];
-
-                for j in 0..m {
-                    gradients[j] += (2.0 / n as f64) * error * X[i][j];
+                for (_j, (grad, &x_val)) in gradients.iter_mut().zip(x_row.iter()).enumerate() {
+                    *grad += (2.0 / n as f64) * error * x_val;
                 }
             }
 

@@ -137,7 +137,9 @@ impl ReferenceImplementation for ReferenceCorrelation {
     fn compute_matrix_f64(&self, data: ArrayView2<f64>) -> StatsResult<Array2<f64>> {
         let (n_rows, n_cols) = data.dim();
         if n_rows < 2 {
-            return Err(StatsError::InsufficientData);
+            return Err(StatsError::InsufficientData(
+                "Insufficient data for operation".to_string(),
+            ));
         }
 
         let mut correlation = Array2::zeros((n_cols, n_cols));

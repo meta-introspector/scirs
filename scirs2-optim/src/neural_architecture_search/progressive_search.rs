@@ -4,7 +4,8 @@
 //! complexity and search space as the search progresses.
 
 use super::NASConfig;
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 use num_traits::Float;
 use std::collections::HashMap;
 use std::time::Duration;

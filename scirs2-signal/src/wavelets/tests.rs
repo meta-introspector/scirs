@@ -2,6 +2,7 @@
 
 use super::*;
 use approx::assert_relative_eq;
+#[cfg(test)]
 use std::f64::consts::PI;
 
 #[test]

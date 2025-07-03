@@ -7,6 +7,7 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
+#[cfg(test)]
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
@@ -35,16 +36,17 @@ use std::fmt::Debug;
 /// ```
 /// use scirs2_signal::lombscargle::{lombscargle, AutoFreqMethod};
 /// use ndarray::Array1;
-/// use std::f64::consts::PI;
+/// #[cfg(test)]
+use std::f64::consts::PI;
 /// use rand::prelude::*;
 ///
 /// // Generate unevenly sampled data with a 1 Hz sinusoid
 /// let n = 100;
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// let mut t = Array1::linspace(0.0, 10.0, n);
 /// // Add some random noise to make sampling uneven
 /// for i in 0..n {
-///     t[i] += 0.1 * rng.random_range(0.0..1.0);
+///     t[i] += 0.1 * rng.gen_range(0.0..1.0);
 /// }
 /// let y: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * 1.0 * ti).sin()).collect();
 ///
@@ -832,6 +834,7 @@ pub fn find_peaks(
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

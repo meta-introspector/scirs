@@ -11,7 +11,8 @@ use std::collections::{HashMap, VecDeque};
 use super::{
     ComponentType, EvaluationMetric, OptimizerArchitecture, SearchResult, SearchSpaceConfig,
 };
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 
 /// Base trait for all search strategies
 pub trait SearchStrategy<T: Float>: Send + Sync {

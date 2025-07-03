@@ -219,7 +219,7 @@ impl AdvancedGenerator {
         let adversarial_data = &base_dataset.data + &perturbations;
 
         // Clip to valid range if needed
-        let clipped_data = adversarial_data.mapv(|x| x.max(-5.0).min(5.0));
+        let clipped_data = adversarial_data.mapv(|x| x.clamp(-5.0, 5.0));
 
         // Create adversarial labels
         let adversarial_target = if let Some(target) = &base_dataset.target {
@@ -510,10 +510,7 @@ impl AdvancedGenerator {
             );
             metadata.insert(
                 "description".to_string(),
-                format!(
-                    "Task {} with concept drift strength {:.2}",
-                    task_id, concept_drift_strength
-                ),
+                format!("Task {task_id} with concept drift strength {concept_drift_strength:.2}"),
             );
 
             task_datasets.push(Dataset {
@@ -567,9 +564,8 @@ impl AdvancedGenerator {
                             let gradient = rand::random::<f64>() * 2.0 - 1.0; // Simulated gradient
                             perturbations[[i, j]] += config.step_size * gradient.signum();
                             // Clip to epsilon ball
-                            perturbations[[i, j]] = perturbations[[i, j]]
-                                .max(-config.epsilon)
-                                .min(config.epsilon);
+                            perturbations[[i, j]] =
+                                perturbations[[i, j]].clamp(-config.epsilon, config.epsilon);
                         }
                     }
                 }
@@ -583,14 +579,15 @@ impl AdvancedGenerator {
                 Ok(perturbations)
             }
             _ => {
-                // For other methods, fall back to random noise
-                self.generate_perturbations(
-                    data,
-                    &AdversarialConfig {
-                        attack_method: AttackMethod::RandomNoise,
-                        ..config.clone()
-                    },
-                )
+                // For other methods, use random noise directly
+                let mut perturbations = Array2::zeros(data.dim());
+                for i in 0..data.nrows() {
+                    for j in 0..data.ncols() {
+                        let noise = rand::random::<f64>() * 2.0 - 1.0;
+                        perturbations[[i, j]] = config.epsilon * noise;
+                    }
+                }
+                Ok(perturbations)
             }
         }
     }
@@ -663,16 +660,20 @@ impl AdvancedGenerator {
                 Ok(anomalies)
             }
             _ => {
-                // Default to point anomalies
-                self.generate_anomalous_data(
-                    n_anomalies,
-                    n_features,
-                    normal_data,
-                    &AnomalyConfig {
-                        anomaly_type: AnomalyType::Point,
-                        ..config.clone()
-                    },
-                )
+                // Default to point anomalies implementation
+                let normal_mean = normal_data.mean_axis(Axis(0)).unwrap();
+                let normal_std = normal_data.std_axis(Axis(0), 0.0);
+                let mut rng = rand::rng();
+
+                let mut anomalies = Array2::zeros((n_anomalies, n_features));
+                for i in 0..n_anomalies {
+                    for j in 0..n_features {
+                        let direction = if rng.random::<f64>() > 0.5 { 1.0 } else { -1.0 };
+                        anomalies[[i, j]] =
+                            normal_mean[j] + direction * config.severity * normal_std[j];
+                    }
+                }
+                Ok(anomalies)
             }
         }
     }

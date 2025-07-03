@@ -853,6 +853,12 @@ impl ClusteringCoordinationInterface {
     }
 }
 
+impl Default for SpatialProcessingInterface {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SpatialProcessingInterface {
     /// Creates a new spatial processing interface with default settings
     pub fn new() -> Self {
@@ -950,6 +956,12 @@ impl SpatialProcessingInterface {
     }
 }
 
+impl Default for NeuralNetworkInterface {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NeuralNetworkInterface {
     /// Creates a new neural network interface with default settings
     pub fn new() -> Self {
@@ -1007,7 +1019,7 @@ impl NeuralNetworkInterface {
             // Simulate meta-learned adaptation
             let adaptation_strength = (self.neural_performance.len() as f64 * 0.01).min(0.3);
             for value in output.iter_mut() {
-                *value = *value * (1.0 + adaptation_strength);
+                *value *= (1.0 + adaptation_strength);
             }
             1.4 + adaptation_strength
         } else {
@@ -1170,6 +1182,12 @@ pub struct AllocationDecision;
 #[derive(Debug)]
 pub struct ReallocationTrigger;
 
+impl Default for GlobalUltrathinkOptimizer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GlobalUltrathinkOptimizer {
     pub fn new() -> Self {
         Self {
@@ -1218,6 +1236,12 @@ impl Default for MultiObjectiveTargets {
     }
 }
 
+impl Default for CrossModulePerformanceTracker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CrossModulePerformanceTracker {
     pub fn new() -> Self {
         Self {
@@ -1247,6 +1271,12 @@ impl CrossModulePerformanceTracker {
     }
 }
 
+impl Default for UnifiedMetaLearningSystem {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UnifiedMetaLearningSystem {
     pub fn new() -> Self {
         Self {
@@ -1272,6 +1302,12 @@ impl UnifiedMetaLearningSystem {
             improvement_factor: 1.6,
             confidence: 0.87,
         })
+    }
+}
+
+impl Default for UltrathinkResourceManager {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -1524,6 +1560,12 @@ pub struct EmergentBehavior {
     pub novelty: f64,
     /// Associated patterns
     pub patterns: Vec<String>,
+}
+
+impl Default for NeuralQuantumHybridProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl NeuralQuantumHybridProcessor {
@@ -1860,10 +1902,7 @@ impl NeuralQuantumHybridProcessor {
         _activity_result: &ActivityRecognitionResult,
     ) -> Result<Vec<EmergentBehavior>> {
         // Simplified emergent behavior detection
-        let mut behaviors = Vec::new();
-
-        // Example: Detect complex interaction patterns
-        behaviors.push(EmergentBehavior {
+        let behaviors = vec![EmergentBehavior {
             behavior_type: "complex_multi_agent_coordination".to_string(),
             strength: 0.7,
             complexity: 0.8,
@@ -1873,7 +1912,7 @@ impl NeuralQuantumHybridProcessor {
                 "synchronized_movement".to_string(),
                 "adaptive_formation".to_string(),
             ],
-        });
+        }];
 
         Ok(behaviors)
     }
@@ -1952,14 +1991,11 @@ impl NeuralQuantumHybridProcessor {
         let weight_adjustment = (latency_trend + quality_trend + energy_trend) / 3.0;
 
         // Apply constraints to keep weights in valid range
-        self.fusion_params.quantum_weight = (self.fusion_params.quantum_weight + weight_adjustment)
-            .max(0.1)
-            .min(0.7);
+        self.fusion_params.quantum_weight =
+            (self.fusion_params.quantum_weight + weight_adjustment).clamp(0.1, 0.7);
 
-        self.fusion_params.neuromorphic_weight = (self.fusion_params.neuromorphic_weight
-            + weight_adjustment * 0.8)
-            .max(0.1)
-            .min(0.7);
+        self.fusion_params.neuromorphic_weight =
+            (self.fusion_params.neuromorphic_weight + weight_adjustment * 0.8).clamp(0.1, 0.7);
 
         self.fusion_params.classical_weight =
             1.0 - self.fusion_params.quantum_weight - self.fusion_params.neuromorphic_weight;

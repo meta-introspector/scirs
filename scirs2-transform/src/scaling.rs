@@ -322,6 +322,7 @@ impl MaxAbsScaler {
     }
 
     /// Creates a MaxAbsScaler with default settings (same as new())
+    #[allow(dead_code)]
     pub fn with_defaults() -> Self {
         Self::new()
     }

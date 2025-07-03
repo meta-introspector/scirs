@@ -606,7 +606,7 @@ impl UltrathinkNumericalStabilityAnalyzer {
         E: std::fmt::Debug,
     {
         let mut issues = Vec::new();
-        let mut warnings = Vec::new();
+        let warnings = Vec::new();
         let mut metrics = HashMap::new();
 
         // Test 1: Basic function execution

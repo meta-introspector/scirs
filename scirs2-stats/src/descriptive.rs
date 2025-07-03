@@ -5,7 +5,7 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::error_standardization::ErrorMessages;
-use ndarray::ArrayView1;
+use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast, Signed};
 use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 
@@ -247,7 +247,10 @@ where
             .sum::<F>()
     } else if optimizer.should_use_simd(n) {
         // Use SIMD operations for variance calculation on large arrays
-        F::simd_variance_step(&x, mean_val)
+        let mean_array = Array1::from_elem(x.len(), mean_val);
+        let deviations = F::simd_sub(&x, &mean_array.view());
+        let squared_deviations = F::simd_mul(&deviations.view(), &deviations.view());
+        F::simd_sum(&squared_deviations.view())
     } else {
         // Fallback to scalar computation for small arrays
         x.iter()
@@ -335,14 +338,14 @@ where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
 {
     if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Empty array provided".to_string(),
-        ));
+        return Err(ErrorMessages::empty_array("x"));
     }
 
     if x.len() < 3 {
-        return Err(StatsError::DomainError(
-            "At least 3 data points required to calculate skewness".to_string(),
+        return Err(ErrorMessages::insufficient_data(
+            "skewness calculation",
+            3,
+            x.len(),
         ));
     }
 
@@ -354,8 +357,9 @@ where
     let (sum_sq_dev, sum_cubed_dev) = if n > 10000 && workers.unwrap_or(1) > 1 {
         // Use parallel computation for large arrays when workers specified
         use scirs2_core::parallel_ops::*;
-        let results: Vec<(F, F)> = x
-            .chunks_parallel(workers)
+
+        let chunk_size = n / workers.unwrap_or(1).max(1);
+        let results: Vec<(F, F)> = par_chunks(x.as_slice().unwrap_or(&[]), chunk_size)
             .map(|chunk| {
                 let mut sq_dev = F::zero();
                 let mut cubed_dev = F::zero();
@@ -453,14 +457,14 @@ where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
 {
     if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Empty array provided".to_string(),
-        ));
+        return Err(ErrorMessages::empty_array("x"));
     }
 
     if x.len() < 4 {
-        return Err(StatsError::DomainError(
-            "At least 4 data points required to calculate kurtosis".to_string(),
+        return Err(ErrorMessages::insufficient_data(
+            "kurtosis calculation",
+            4,
+            x.len(),
         ));
     }
 

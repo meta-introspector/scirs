@@ -379,7 +379,8 @@ fn analyze_scalability() -> Result<(), Box<dyn std::error::Error>> {
 
         #[cfg(not(feature = "simd"))]
         {
-            println!("Size {n}: {:.2} ms (standard method)", std_time.as_millis());
+            let time_ms = std_time.as_millis();
+            println!("Size {n}: {time_ms:.2} ms (standard method)");
         }
     }
 

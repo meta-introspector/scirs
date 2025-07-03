@@ -1046,7 +1046,6 @@ fn decompress_delta_lz4(data: &[u8]) -> Result<Vec<u8>> {
 // Parallel Compression/Decompression
 //
 
-use scirs2_core::parallel_ops::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
@@ -1106,7 +1105,9 @@ pub fn compress_data_parallel(
 
     // Configure thread pool
     let num_threads = if config.num_threads == 0 {
-        num_threads()
+        std::thread::available_parallelism()
+            .map(|p| p.get())
+            .unwrap_or(1)
     } else {
         config.num_threads
     };
@@ -1134,10 +1135,10 @@ pub fn compress_data_parallel(
     let chunks: Vec<&[u8]> = data.chunks(chunk_size).collect();
     let chunk_count = chunks.len();
 
-    // Process chunks in parallel
+    // Process chunks sequentially (TODO: implement proper parallel processing)
     let processed_count = Arc::new(AtomicUsize::new(0));
     let compressed_chunks: Result<Vec<Vec<u8>>> = chunks
-        .into_par_iter()
+        .into_iter()
         .map(|chunk| {
             let result = compress_data(chunk, algorithm, level);
             processed_count.fetch_add(1, Ordering::Relaxed);
@@ -1188,7 +1189,9 @@ pub fn decompress_data_parallel(
 
     // Configure thread pool
     let num_threads = if config.num_threads == 0 {
-        num_threads()
+        std::thread::available_parallelism()
+            .map(|p| p.get())
+            .unwrap_or(1)
     } else {
         config.num_threads
     };
@@ -1270,10 +1273,10 @@ pub fn decompress_data_parallel(
         offset += size;
     }
 
-    // Decompress chunks in parallel
+    // Decompress chunks sequentially (TODO: implement proper parallel processing)
     let processed_count = Arc::new(AtomicUsize::new(0));
     let decompressed_chunks: Result<Vec<Vec<u8>>> = chunks
-        .into_par_iter()
+        .into_iter()
         .map(|chunk| {
             let result = decompress_data(chunk, algorithm);
             processed_count.fetch_add(1, Ordering::Relaxed);

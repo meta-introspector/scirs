@@ -524,8 +524,7 @@ where
                     .map(|array| Box::new(array) as Box<dyn SparseArray<T>>)
             }
             _ => Err(SparseError::ValueError(format!(
-                "Unknown sparse format: {}. Supported formats are 'csr' and 'coo'",
-                format
+                "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
             ))),
         };
     }
@@ -575,8 +574,7 @@ where
         "coo" => CooArray::from_triplets(&out_rows, &out_cols, &out_data, output_shape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr' and 'coo'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
 }
@@ -706,8 +704,7 @@ where
             "coo" => CooArray::from_triplets(&rows, &cols, &data, output_shape, true)
                 .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
             _ => Err(SparseError::ValueError(format!(
-                "Unknown sparse format: {}. Supported formats are 'csr' and 'coo'",
-                format
+                "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
             ))),
         };
     }
@@ -754,8 +751,7 @@ where
         "coo" => CooArray::from_triplets(&rows, &cols, &data, output_shape, true)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr' and 'coo'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
 }
@@ -823,10 +819,8 @@ where
     for (i, row) in blocks.iter().enumerate() {
         if row.len() != n {
             return Err(SparseError::ValueError(format!(
-                "Block row {} has length {}, expected {}",
-                i,
-                row.len(),
-                n
+                "Block row {i} has length {}, expected {n}",
+                row.len()
             )));
         }
     }
@@ -847,8 +841,8 @@ where
                     *row_size = shape.0;
                 } else if *row_size != shape.0 {
                     return Err(SparseError::ValueError(format!(
-                        "Inconsistent row dimensions in block row {}. Expected {}, got {}",
-                        i, row_sizes[i], shape.0
+                        "Inconsistent row dimensions in block row {i}. Expected {}, got {}",
+                        row_sizes[i], shape.0
                     )));
                 }
 
@@ -857,8 +851,8 @@ where
                     *col_size = shape.1;
                 } else if *col_size != shape.1 {
                     return Err(SparseError::ValueError(format!(
-                        "Inconsistent column dimensions in block column {}. Expected {}, got {}",
-                        j, *col_size, shape.1
+                        "Inconsistent column dimensions in block column {j}. Expected {}, got {}",
+                        *col_size, shape.1
                     )));
                 }
 
@@ -871,16 +865,14 @@ where
     for (i, &row_size) in row_sizes.iter().enumerate().take(m) {
         if row_size == 0 {
             return Err(SparseError::ValueError(format!(
-                "Block row {} has no arrays, cannot determine dimensions",
-                i
+                "Block row {i} has no arrays, cannot determine dimensions"
             )));
         }
     }
     for (j, &col_size) in col_sizes.iter().enumerate().take(n) {
         if col_size == 0 {
             return Err(SparseError::ValueError(format!(
-                "Block column {} has no arrays, cannot determine dimensions",
-                j
+                "Block column {j} has no arrays, cannot determine dimensions"
             )));
         }
     }
@@ -929,8 +921,7 @@ where
                     .map(|array| Box::new(array) as Box<dyn SparseArray<T>>)
             }
             _ => Err(SparseError::ValueError(format!(
-                "Unknown sparse format: {}. Supported formats are 'csr' and 'coo'",
-                format
+                "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
             ))),
         };
     }
@@ -966,8 +957,7 @@ where
         "coo" => CooArray::from_triplets(&rows, &cols, &data, total_shape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
-            "Unknown sparse format: {}. Supported formats are 'csr' and 'coo'",
-            format
+            "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
 }

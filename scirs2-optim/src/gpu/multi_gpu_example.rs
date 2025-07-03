@@ -4,7 +4,8 @@
 //! with existing optimizers for distributed training scenarios.
 
 use crate::adam::Adam;
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 use crate::gpu::multi_gpu_sync::{
     create_multi_gpu_communicator, MultiGpuCommunicator, SyncFrequency,
 };

@@ -823,39 +823,6 @@ where
         }
     }
 
-    /// Calculate stability score
-    #[allow(dead_code)]
-    fn calculate_stability_score(
-        &self,
-        results: &[ClusteringResult],
-        _data: ArrayView2<F>,
-    ) -> Result<f64> {
-        if results.len() < 2 {
-            return Ok(1.0);
-        }
-
-        let mut stability_sum = 0.0;
-        let mut count = 0;
-
-        for i in 0..results.len() {
-            for j in (i + 1)..results.len() {
-                if let Ok(ari) = adjusted_rand_index(
-                    results[i].labels.mapv(|x| x as usize).view(),
-                    results[j].labels.mapv(|x| x as usize).view(),
-                ) {
-                    stability_sum += ari;
-                    count += 1;
-                }
-            }
-        }
-
-        if count > 0 {
-            Ok(stability_sum / count as f64)
-        } else {
-            Ok(0.0)
-        }
-    }
-
     /// Calculate agreement ratio between clusterers
     fn calculate_agreement_ratio(&self, results: &[ClusteringResult]) -> f64 {
         if results.len() < 2 {

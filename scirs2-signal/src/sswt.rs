@@ -8,12 +8,13 @@
 // An empirical mode decomposition-like tool. Applied and computational harmonic analysis, 30(2), 243-261.
 
 use ndarray::{s, Array1, Array2};
-use num_complex::Complex64;
 use num_traits::Float;
+#[cfg(test)]
 use std::f64::consts::PI;
 
 use crate::error::{SignalError, SignalResult};
 use crate::wavelets;
+use num_complex::Complex64;
 
 /// Configuration parameters for the synchrosqueezed wavelet transform
 #[derive(Debug, Clone)]

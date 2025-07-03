@@ -10,7 +10,9 @@ use std::marker::PhantomData;
 /// 2D Max Pooling layer
 #[derive(Debug)]
 pub struct MaxPool2D<F: Float + Debug + Send + Sync> {
+    #[allow(dead_code)]
     pool_size: (usize, usize),
+    #[allow(dead_code)]
     stride: (usize, usize),
     name: Option<String>,
     _phantom: PhantomData<F>,

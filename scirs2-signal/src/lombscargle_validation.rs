@@ -11,6 +11,7 @@ use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
 use rand::prelude::*;
 use scirs2_core::validation::{check_finite, check_positive};
+#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Validation result structure
@@ -372,13 +373,13 @@ fn validate_uneven_sampling(
     let f_signal = 10.0;
 
     // Create heavily uneven sampling (random gaps and clustering)
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut t = Vec::new();
     let mut current_time = 0.0;
 
     while t.len() < n_nominal && current_time < 10.0 {
         // Random time intervals with large variations
-        let interval = rng.random_range(0.001..0.5); // Very uneven: 1ms to 500ms
+        let interval = rng.gen_range(0.001..0.5); // Very uneven: 1ms to 500ms
         current_time += interval;
         t.push(current_time);
     }
@@ -1057,7 +1058,7 @@ fn validate_sparse_sampling(
     let f_signal = 10.0;
 
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut indices: Vec<usize> = (0..n_total).collect();
     indices.shuffle(&mut rng);
     indices.truncate(n_samples);
@@ -1323,14 +1324,14 @@ fn validate_correlated_noise(
 
     // Generate AR(1) correlated noise
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut corr_noise = vec![0.0; n];
     let alpha = 0.7; // AR(1) coefficient
-    corr_noise[0] = rng.random_range(-1.0..1.0);
+    corr_noise[0] = rng.gen_range(-1.0..1.0);
 
     for i in 1..n {
         corr_noise[i] =
-            alpha * corr_noise[i - 1] + (1.0 - alpha.powi(2)).sqrt() * rng.random_range(-1.0..1.0);
+            alpha * corr_noise[i - 1] + (1.0 - alpha.powi(2)).sqrt() * rng.gen_range(-1.0..1.0);
     }
 
     let signal: Vec<f64> = t
@@ -1702,7 +1703,7 @@ fn validate_statistical_properties(tolerance: f64) -> SignalResult<StatisticalVa
 /// Test white noise statistical properties
 fn test_white_noise_statistics() -> SignalResult<f64> {
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let n_trials = 100;
     let n_samples = 500;
@@ -1712,9 +1713,7 @@ fn test_white_noise_statistics() -> SignalResult<f64> {
     for _ in 0..n_trials {
         // Generate white noise
         let t: Vec<f64> = (0..n_samples).map(|i| i as f64 / fs).collect();
-        let signal: Vec<f64> = (0..n_samples)
-            .map(|_| rng.random_range(-1.0..1.0))
-            .collect();
+        let signal: Vec<f64> = (0..n_samples).map(|_| rng.gen_range(-1.0..1.0)).collect();
 
         // Compute periodogram
         let (_, power) = lombscargle(
@@ -1758,7 +1757,7 @@ fn test_white_noise_statistics() -> SignalResult<f64> {
 /// Test false alarm rates
 fn test_false_alarm_rates() -> SignalResult<f64> {
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let n_trials = 1000;
     let n_samples = 200;
@@ -1770,9 +1769,7 @@ fn test_false_alarm_rates() -> SignalResult<f64> {
     for _ in 0..n_trials {
         // Generate pure noise
         let t: Vec<f64> = (0..n_samples).map(|i| i as f64 / fs).collect();
-        let signal: Vec<f64> = (0..n_samples)
-            .map(|_| rng.random_range(-1.0..1.0))
-            .collect();
+        let signal: Vec<f64> = (0..n_samples).map(|_| rng.gen_range(-1.0..1.0)).collect();
 
         // Compute periodogram
         let (_, power) = lombscargle(
@@ -2461,7 +2458,7 @@ fn test_astronomical_scenarios(tolerance: f64) -> SignalResult<f64> {
 
     // Simulate variable star with irregular sampling
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let n_obs = 500;
     let period = 5.2; // days
@@ -2472,13 +2469,13 @@ fn test_astronomical_scenarios(tolerance: f64) -> SignalResult<f64> {
     let mut current_time = 0.0;
     for _ in 0..n_obs {
         // Random gaps between observations (0.1 to 2.0 days)
-        current_time += rng.random_range(0.1..2.0);
+        current_time += rng.gen_range(0.1..2.0);
         times.push(current_time);
 
         // Variable star signal with noise
         let phase = 2.0 * std::f64::consts::PI * current_time / period;
         let signal = 1.0 + 0.3 * phase.sin() + 0.1 * (2.0 * phase).sin(); // Fundamental + harmonic
-        let noise = 0.05 * rng.random_range(-1.0..1.0); // 5% noise
+        let noise = 0.05 * rng.gen_range(-1.0..1.0); // 5% noise
         brightness.push(signal + noise);
     }
 
@@ -2528,7 +2525,7 @@ fn test_physiological_scenarios(tolerance: f64) -> SignalResult<f64> {
 
     // Simulate heart rate variability data
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let n = 1000;
     let fs = 4.0; // 4 Hz sampling rate
@@ -2541,7 +2538,7 @@ fn test_physiological_scenarios(tolerance: f64) -> SignalResult<f64> {
             let very_low = 0.5 * (2.0 * std::f64::consts::PI * 0.02 * ti).sin(); // VLF: 0.01-0.04 Hz
             let low = 0.3 * (2.0 * std::f64::consts::PI * 0.1 * ti).sin(); // LF: 0.04-0.15 Hz
             let high = 0.2 * (2.0 * std::f64::consts::PI * 0.25 * ti).sin(); // HF: 0.15-0.4 Hz
-            let noise = 0.1 * rng.random_range(-1.0..1.0);
+            let noise = 0.1 * rng.gen_range(-1.0..1.0);
 
             1.0 + very_low + low + high + noise
         })
@@ -2602,7 +2599,7 @@ fn test_environmental_scenarios(tolerance: f64) -> SignalResult<f64> {
 
     // Simulate temperature measurements with seasonal variation and gaps
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let days_per_year = 365.25;
     let n_years = 3;
@@ -2614,7 +2611,7 @@ fn test_environmental_scenarios(tolerance: f64) -> SignalResult<f64> {
     for day in 0..(n_years as f64 * days_per_year) as i32 {
         for measurement in 0..measurements_per_day {
             // Simulate data gaps (missing data)
-            if rng.random_range(0.0..1.0) < 0.95 {
+            if rng.gen_range(0.0..1.0) < 0.95 {
                 // 95% data availability
                 let time_hours = day as f64 * 24.0 + measurement as f64 * 6.0;
                 times.push(time_hours / 24.0); // Convert to days
@@ -2625,7 +2622,7 @@ fn test_environmental_scenarios(tolerance: f64) -> SignalResult<f64> {
                 let daily = 5.0
                     * (2.0 * std::f64::consts::PI * measurement as f64 / measurements_per_day)
                         .sin();
-                let noise = 2.0 * rng.random_range(-1.0..1.0);
+                let noise = 2.0 * rng.gen_range(-1.0..1.0);
 
                 temperatures.push(20.0 + seasonal + daily + noise); // Base temp 20°C
             }
@@ -2718,7 +2715,7 @@ fn test_nonparametric_properties(tolerance: f64) -> SignalResult<f64> {
 
     // Test Kolmogorov-Smirnov test for power distribution
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let n_trials = 100;
     let n_samples = 200;
@@ -2727,9 +2724,7 @@ fn test_nonparametric_properties(tolerance: f64) -> SignalResult<f64> {
     for _ in 0..n_trials {
         // Generate white noise
         let t: Vec<f64> = (0..n_samples).map(|i| i as f64 * 0.01).collect();
-        let signal: Vec<f64> = (0..n_samples)
-            .map(|_| rng.random_range(-1.0..1.0))
-            .collect();
+        let signal: Vec<f64> = (0..n_samples).map(|_| rng.gen_range(-1.0..1.0)).collect();
 
         match lombscargle(
             &t,
@@ -2789,13 +2784,13 @@ fn test_bayesian_validation(tolerance: f64) -> SignalResult<f64> {
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
 
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Signal with known frequency plus noise
     let signal: Vec<f64> = t
         .iter()
         .map(|&ti| {
-            (2.0 * std::f64::consts::PI * true_freq * ti).sin() + 0.2 * rng.random_range(-1.0..1.0)
+            (2.0 * std::f64::consts::PI * true_freq * ti).sin() + 0.2 * rng.gen_range(-1.0..1.0)
         })
         .collect();
 
@@ -2847,7 +2842,7 @@ fn test_information_theory_metrics(tolerance: f64) -> SignalResult<f64> {
 
     // Test entropy and mutual information properties
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let n = 500;
     let fs = 100.0;
@@ -2895,7 +2890,7 @@ fn test_information_theory_metrics(tolerance: f64) -> SignalResult<f64> {
     }
 
     // Test 2: White noise should have high entropy
-    let signal_noise: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
+    let signal_noise: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
 
     match lombscargle(
         &t,
@@ -3154,9 +3149,9 @@ fn validate_cross_reference_implementation(
     // Make sampling uneven
     let mut t_uneven = Vec::new();
     let mut signal_uneven = Vec::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     for i in 0..n {
-        if rng.random_range(0.0..1.0) > 0.3 {
+        if rng.gen_range(0.0..1.0) > 0.3 {
             // Keep 70% of samples
             t_uneven.push(t[i]);
             signal_uneven.push(signal[i]);
@@ -3473,7 +3468,7 @@ fn validate_against_scipy_reference(
         // Generate test signal
         let n = 1000;
         let t: Vec<f64> = (0..n)
-            .map(|i| i as f64 * 0.01 + rand::thread_rng().random_range(0.0..0.001))
+            .map(|i| i as f64 * 0.01 + rand::rng().gen_range(0.0..0.001))
             .collect();
         let freq1 = 0.5;
         let freq2 = 1.5;
@@ -3601,10 +3596,10 @@ fn validate_noise_robustness(config: &EnhancedValidationConfig) -> SignalResult<
         let noise_power = signal_power / snr_linear;
         let noise_std = noise_power.sqrt();
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let noisy_signal: Vec<f64> = clean_signal
             .iter()
-            .map(|&s| s + noise_std * rng.random_range(-1.0..1.0))
+            .map(|&s| s + noise_std * rng.gen_range(-1.0..1.0))
             .collect();
 
         // Test frequencies around the true frequency

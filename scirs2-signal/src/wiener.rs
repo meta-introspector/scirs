@@ -28,10 +28,10 @@
 //! let clean_signal = Array1::from_vec(clean_signal_vec);
 //!
 //! // Add noise
-//! let mut rng = rand::thread_rng();
+//! let mut rng = rand::rng();
 //! let mut noisy_signal = clean_signal.clone();
 //! for i in 0..noisy_signal.len() {
-//!     noisy_signal[i] += 0.5 * rng.random_range(-1.0..1.0);
+//!     noisy_signal[i] += 0.5 * rng.gen_range(-1.0..1.0);
 //! }
 //!
 //! // Apply Wiener filter
@@ -39,10 +39,10 @@
 //! ```
 
 use ndarray::{s, Array1, Array2};
-use num_complex::Complex64;
 use std::cmp;
 
 use crate::error::{SignalError, SignalResult};
+use num_complex::Complex64;
 use scirs2_fft;
 
 /// Configuration for Wiener filtering

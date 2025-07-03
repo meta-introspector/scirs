@@ -42,7 +42,56 @@ use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::Path;
 
 use crate::error::{IoError, Result};
-use scirs2_core::numeric::ScientificNumber;
+// TODO: Fix scirs2_core integration
+// use scirs2_core::numeric::ScientificNumber;
+
+// Temporary trait replacement for ScientificNumber
+trait ScientificNumber: Copy + Default + std::fmt::Debug {
+    const SIZE: usize;
+    fn from_le_bytes(bytes: &[u8]) -> Self;
+    fn from_be_bytes(bytes: &[u8]) -> Self;
+    fn to_le_bytes(self) -> Vec<u8>;
+    fn to_be_bytes(self) -> Vec<u8>;
+}
+
+macro_rules! impl_scientific_number {
+    ($type:ty) => {
+        impl ScientificNumber for $type {
+            const SIZE: usize = std::mem::size_of::<$type>();
+
+            fn from_le_bytes(bytes: &[u8]) -> Self {
+                let mut array = [0u8; std::mem::size_of::<$type>()];
+                array.copy_from_slice(&bytes[..std::mem::size_of::<$type>()]);
+                <$type>::from_le_bytes(array)
+            }
+
+            fn from_be_bytes(bytes: &[u8]) -> Self {
+                let mut array = [0u8; std::mem::size_of::<$type>()];
+                array.copy_from_slice(&bytes[..std::mem::size_of::<$type>()]);
+                <$type>::from_be_bytes(array)
+            }
+
+            fn to_le_bytes(self) -> Vec<u8> {
+                <$type>::to_le_bytes(self).to_vec()
+            }
+
+            fn to_be_bytes(self) -> Vec<u8> {
+                <$type>::to_be_bytes(self).to_vec()
+            }
+        }
+    };
+}
+
+impl_scientific_number!(f32);
+impl_scientific_number!(f64);
+impl_scientific_number!(i8);
+impl_scientific_number!(i16);
+impl_scientific_number!(i32);
+impl_scientific_number!(i64);
+impl_scientific_number!(u8);
+impl_scientific_number!(u16);
+impl_scientific_number!(u32);
+impl_scientific_number!(u64);
 
 /// Endianness mode for Fortran files
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

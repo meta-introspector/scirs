@@ -655,7 +655,7 @@ where
         &mut self,
         points: &ArrayView2<F>,
     ) -> StatsResult<SimplicialComplex> {
-        let (n_points, _) = points.dim();
+        let (_n_points, _) = points.dim();
 
         // Compute distance matrix
         let distance_matrix = self.compute_distance_matrix(points)?;
@@ -978,7 +978,7 @@ where
 
     /// Compute Mapper graph
     fn compute_mapper(&self, points: &ArrayView2<F>) -> StatsResult<MapperGraph<F>> {
-        let (n_points, _) = points.dim();
+        let (_n_points, _) = points.dim();
 
         // Simplified Mapper implementation
         let mut nodes = HashMap::new();

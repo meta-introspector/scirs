@@ -547,6 +547,7 @@ fn process_fft_stage_disk(
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
     use num_complex::Complex;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     let start_time = std::time::Instant::now();

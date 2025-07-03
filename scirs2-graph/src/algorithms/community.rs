@@ -1794,7 +1794,7 @@ pub fn parallel_label_propagation_result<N, E, Ix>(
     max_iterations: Option<usize>,
 ) -> CommunityResult<N>
 where
-    N: Node + Clone + Hash + Eq + Send + Sync,
+    N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy + Send + Sync,
     Ix: petgraph::graph::IndexType + Send + Sync,
 {
@@ -1803,11 +1803,11 @@ where
     let mut labels: HashMap<N, usize> = HashMap::new();
 
     // Initialize labels (parallel)
-    nodes
+    labels = nodes
         .par_iter()
         .enumerate()
         .map(|(i, node)| (node.clone(), i))
-        .collect_into_vec(&mut labels.into_par_iter().collect());
+        .collect();
 
     let mut rng = rand::rng();
 
@@ -1892,7 +1892,7 @@ pub fn parallel_modularity<N, E, Ix>(
     communities: &HashMap<N, usize>,
 ) -> f64
 where
-    N: Node + Clone + Hash + Eq + Send + Sync,
+    N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy + Send + Sync,
     Ix: petgraph::graph::IndexType + Send + Sync,
 {
@@ -1918,8 +1918,8 @@ where
                     } else {
                         0.0
                     };
-                    let degree_i = graph.degree(node_i).unwrap_or(0) as f64;
-                    let degree_j = graph.degree(node_j).unwrap_or(0) as f64;
+                    let degree_i = graph.degree(node_i) as f64;
+                    let degree_j = graph.degree(node_j) as f64;
                     let expected = (degree_i * degree_j) / two_m;
 
                     a_ij - expected
@@ -1987,9 +1987,9 @@ mod tests {
         // Note: For small graphs, modularity can sometimes be 0 or slightly negative
         // due to numerical precision and the algorithm's initialization
         assert!(
-            communities.modularity >= -0.1,
+            communities.quality_score.unwrap_or(0.0) >= -0.1,
             "Modularity {} is too negative",
-            communities.modularity
+            communities.quality_score.unwrap_or(0.0)
         );
 
         Ok(())
@@ -2017,15 +2017,15 @@ mod tests {
 
         // Check that nodes in the same triangle tend to have the same label
         // (Note: label propagation is stochastic, so we can't guarantee exact results)
-        assert_eq!(communities.len(), 6);
+        assert_eq!(communities.num_communities, 6);
 
         // At least check that all nodes got labels
-        assert!(communities.contains_key(&"A"));
-        assert!(communities.contains_key(&"B"));
-        assert!(communities.contains_key(&"C"));
-        assert!(communities.contains_key(&"D"));
-        assert!(communities.contains_key(&"E"));
-        assert!(communities.contains_key(&"F"));
+        assert!(communities.node_communities.contains_key(&"A"));
+        assert!(communities.node_communities.contains_key(&"B"));
+        assert!(communities.node_communities.contains_key(&"C"));
+        assert!(communities.node_communities.contains_key(&"D"));
+        assert!(communities.node_communities.contains_key(&"E"));
+        assert!(communities.node_communities.contains_key(&"F"));
 
         Ok(())
     }
@@ -2739,7 +2739,7 @@ where
 /// // ... add nodes and edges ...
 /// let result = modularity_optimization_result(&graph, 1.0, 0.95, 1000);
 ///
-/// println!("Optimized modularity: {:.4}", result.quality_score.unwrap_or(0.0));
+/// println!("Optimized modularity: {:.4}", result.modularity);
 /// println!("Found {} communities", result.num_communities);
 /// ```
 pub fn modularity_optimization_result<N, E, Ix>(
@@ -2786,7 +2786,7 @@ where
 /// // ... add nodes and edges ...
 /// let result = greedy_modularity_optimization_result(&graph, 100);
 ///
-/// println!("Greedy modularity: {:.4}", result.quality_score.unwrap_or(0.0));
+/// println!("Greedy modularity: {:.4}", result.modularity);
 /// println!("Found {} communities", result.num_communities);
 /// ```
 pub fn greedy_modularity_optimization_result<N, E, Ix>(
@@ -2831,7 +2831,7 @@ where
 /// // ... add nodes and edges ...
 /// let result = parallel_louvain_communities_result(&graph, 50);
 ///
-/// println!("Parallel Louvain modularity: {:.4}", result.quality_score.unwrap_or(0.0));
+/// println!("Parallel Louvain modularity: {:.4}", result.modularity);
 /// println!("Found {} communities", result.num_communities);
 /// ```
 pub fn parallel_louvain_communities_result<N, E, Ix>(

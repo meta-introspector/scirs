@@ -208,7 +208,7 @@ where
 
     let n = x.len();
     let n_f = F::from(n).unwrap();
-    let order_f = F::from(moment_order as f64).unwrap();
+    let _order_f = F::from(moment_order as f64).unwrap();
     let optimizer = AutoOptimizer::new();
 
     if center {

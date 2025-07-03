@@ -456,6 +456,7 @@ fn calculate_memory_optimal_chunk_size(
 mod tests {
     use super::*;
     use ndarray::Array1;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

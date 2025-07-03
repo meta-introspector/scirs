@@ -1595,11 +1595,11 @@ impl<T> StreamError for std::result::Result<T, CoreError> {
     fn to_stream_error(self, message: &str) -> CoreError {
         match self {
             Ok(_) => CoreError::StreamError(
-                ErrorContext::new(format!("{message}"))
+                ErrorContext::new(message.to_string())
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             Err(e) => CoreError::StreamError(
-                ErrorContext::new(format!("{}, {}", message, e))
+                ErrorContext::new(format!("{message}, {e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
         }

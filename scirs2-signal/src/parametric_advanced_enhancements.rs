@@ -9,12 +9,11 @@ use crate::parametric::{estimate_ar, ARMethod};
 use crate::parametric_arma::{estimate_arma, ArmaMethod, ArmaModel};
 use crate::parametric_enhanced::{EnhancedParametricResult, ModelType, ParametricConfig};
 use ndarray::{s, Array1, Array2, ArrayView1, Axis};
-use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
+#[cfg(test)]
 use std::f64::consts::PI;
-use std::sync::Arc;
 
 /// Advanced model selection configuration
 #[derive(Debug, Clone)]
@@ -282,7 +281,7 @@ pub fn adaptive_model_selection(
     let criteria_values = match selected_model {
         ModelType::AR(p) => {
             let (ar_coeffs, _, variance) = estimate_ar(signal, p, ARMethod::Burg)?;
-            let ar_result = (ar_coeffs, None, variance);
+            let ar_result = ar_coeffs, None, variance;
             compute_model_criteria(signal, &ar_result, selected_model)?
         }
         ModelType::ARMA(p, q) => {
@@ -748,13 +747,13 @@ mod tests {
     #[test]
     fn test_adaptive_model_selection() {
         // Generate AR(2) signal
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let n = 200;
         let mut signal = Array1::zeros(n);
         
         // AR(2): x[t] = 0.7*x[t-1] - 0.2*x[t-2] + e[t]
         for t in 2..n {
-            signal[t] = 0.7 * signal[t-1] - 0.2 * signal[t-2] + 0.1 * rng.random_range(-1.0..1.0);
+            signal[t] = 0.7 * signal[t-1] - 0.2 * signal[t-2] + 0.1 * rng.gen_range(-1.0..1.0);
         }
         
         let config = AdvancedModelSelection::default();

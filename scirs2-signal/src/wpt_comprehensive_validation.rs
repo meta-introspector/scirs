@@ -14,13 +14,13 @@ use crate::error::{SignalError, SignalResult};
 use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
 use crate::wpt_validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rand::prelude::*;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
+use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Comprehensive WPT validation result
@@ -731,7 +731,7 @@ fn generate_test_signal(
 
     let signal = match signal_type {
         TestSignalType::WhiteNoise => {
-            Array1::from_vec((0..length).map(|_| rng.random_range(-1.0..1.0)).collect())
+            Array1::from_vec((0..length).map(|_| rng.gen_range(-1.0..1.0)).collect())
         }
         TestSignalType::Sinusoidal => {
             let freq = 0.1;
@@ -754,7 +754,7 @@ fn generate_test_signal(
             let segments = 8;
             let segment_size = length / segments;
             for i in 0..segments {
-                let value = rng.random_range(-1.0..1.0);
+                let value = rng.gen_range(-1.0..1.0);
                 let start = i * segment_size;
                 let end = ((i + 1) * segment_size).min(length);
                 for j in start..end {
@@ -1580,9 +1580,9 @@ fn test_signal_type_consistency(config: &ComprehensiveWptValidationConfig) -> Si
         .collect();
 
     // 4. Test with noise signal (stochastic)
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let noise_signal: Vec<f64> = (0..signal_length)
-        .map(|_| rng.random_range(-1.0..1.0))
+        .map(|_| rng.gen_range(-1.0..1.0))
         .collect();
 
     let test_signals = vec![

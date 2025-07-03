@@ -6,7 +6,7 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use std::fmt::Debug;
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use crate::regularizers::Regularizer;
 
 /// Dropout regularization

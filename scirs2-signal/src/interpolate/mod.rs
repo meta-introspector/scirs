@@ -51,6 +51,7 @@
 //! | Spectral | Periodic signals | Good for frequency content | Iterative process |
 
 // Re-export all submodules
+use std::f64::consts::PI;
 pub mod advanced;
 pub mod basic;
 pub mod core;

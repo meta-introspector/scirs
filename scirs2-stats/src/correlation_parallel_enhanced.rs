@@ -453,7 +453,13 @@ where
         + std::iter::Sum<F>
         + std::fmt::Debug,
 {
-    check_same_shape(&[x.len(), y.len()], "x and y")?;
+    if x.len() != y.len() {
+        return Err(StatsError::DimensionMismatch(format!(
+            "x and y must have the same length, got {} and {}",
+            x.len(),
+            y.len()
+        )));
+    }
     check_positive(window_size, "window_size")?;
 
     if window_size > x.len() {

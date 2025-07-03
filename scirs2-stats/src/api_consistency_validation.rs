@@ -137,7 +137,7 @@ pub struct ValidationCheck {
 }
 
 /// Categories of validation checks
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CheckCategory {
     /// Parameter naming consistency
     ParameterNaming,
@@ -156,7 +156,7 @@ pub enum CheckCategory {
 }
 
 /// Severity levels for validation issues
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Severity {
     /// Critical issue that breaks consistency
     Critical,
@@ -186,7 +186,7 @@ pub struct APIInconsistency {
 }
 
 /// Types of API inconsistencies
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum InconsistencyType {
     /// Parameter naming inconsistency
     ParameterNaming,

@@ -12,7 +12,8 @@ use std::time::{Duration, Instant, SystemTime};
 use super::{
     EvaluationConfig, EvaluationMetric, EvaluationResults, OptimizerArchitecture, ResourceUsage,
 };
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 
 /// Performance evaluator for optimizer architectures
 pub struct PerformanceEvaluator<T: Float> {

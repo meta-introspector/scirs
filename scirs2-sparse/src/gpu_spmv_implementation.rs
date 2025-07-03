@@ -86,6 +86,10 @@ impl GpuSpMV {
             GpuBackend::OpenCL => self.spmv_opencl(rows, indptr, indices, data, x),
             GpuBackend::Metal => self.spmv_metal(rows, indptr, indices, data, x),
             GpuBackend::Cpu => self.spmv_cpu_optimized(rows, indptr, indices, data, x),
+            GpuBackend::Rocm | GpuBackend::Wgpu => {
+                // For now, use CPU fallback for Rocm and Wgpu until implemented
+                self.spmv_cpu_optimized(rows, indptr, indices, data, x)
+            }
         }
     }
 
@@ -451,6 +455,8 @@ impl GpuSpMV {
             GpuBackend::OpenCL => "OpenCL",
             GpuBackend::Metal => "Apple Metal",
             GpuBackend::Cpu => "CPU Fallback",
+            GpuBackend::Rocm => "AMD ROCm",
+            GpuBackend::Wgpu => "WebGPU",
         };
 
         (self.backend, backend_name.to_string())

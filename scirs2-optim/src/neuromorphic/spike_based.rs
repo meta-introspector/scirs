@@ -7,7 +7,7 @@ use super::{
     Spike, SpikeTrain, NeuromorphicMetrics, STDPConfig, MembraneDynamicsConfig,
     PlasticityModel, NeuromorphicEvent, EventPriority
 };
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use crate::optimizers::Optimizer;
 use ndarray::{Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;
@@ -42,8 +42,7 @@ pub struct SpikingConfig<T: Float> {
     pub homeostatic_config: HomeostaticConfig<T>,
     
     /// Noise parameters for spike generation
-    pub noise_config: SpikeNoiseConfig<T>,
-}
+    pub noise_config: SpikeNoiseConfig<T>}
 
 /// Spike encoding methods for converting continuous values to spike trains
 #[derive(Debug, Clone, Copy)]
@@ -67,8 +66,7 @@ pub enum SpikeEncodingMethod {
     BurstCoding,
     
     /// Rank order coding
-    RankOrderCoding,
-}
+    RankOrderCoding}
 
 /// Spike decoding methods for converting spike trains to continuous values
 #[derive(Debug, Clone, Copy)]
@@ -89,8 +87,7 @@ pub enum SpikeDecodingMethod {
     MovingAverageFilter,
     
     /// Exponential decay filter
-    ExponentialDecayFilter,
-}
+    ExponentialDecayFilter}
 
 /// Homeostatic plasticity configuration
 #[derive(Debug, Clone)]
@@ -111,8 +108,7 @@ pub struct HomeostaticConfig<T: Float> {
     pub enable_intrinsic_plasticity: bool,
     
     /// Threshold adaptation rate
-    pub threshold_adaptation_rate: T,
-}
+    pub threshold_adaptation_rate: T}
 
 /// Spike noise configuration
 #[derive(Debug, Clone)]
@@ -130,8 +126,7 @@ pub struct SpikeNoiseConfig<T: Float> {
     pub noise_amplitude: T,
     
     /// Correlation noise
-    pub correlation_noise: T,
-}
+    pub correlation_noise: T}
 
 impl<T: Float> Default for SpikingConfig<T> {
     fn default() -> Self {
@@ -144,8 +139,7 @@ impl<T: Float> Default for SpikingConfig<T> {
             temporal_window: T::from(20.0).unwrap(),
             lateral_inhibition: false,
             homeostatic_config: HomeostaticConfig::default(),
-            noise_config: SpikeNoiseConfig::default(),
-        }
+            noise_config: SpikeNoiseConfig::default()}
     }
 }
 
@@ -157,8 +151,7 @@ impl<T: Float> Default for HomeostaticConfig<T> {
             scaling_time_constant: T::from(1000.0).unwrap(),
             scaling_factor: T::from(0.01).unwrap(),
             enable_intrinsic_plasticity: false,
-            threshold_adaptation_rate: T::from(0.001).unwrap(),
-        }
+            threshold_adaptation_rate: T::from(0.001).unwrap()}
     }
 }
 
@@ -169,8 +162,7 @@ impl<T: Float> Default for SpikeNoiseConfig<T> {
             jitter_std: T::from(0.5).unwrap(),
             poisson_noise: false,
             noise_amplitude: T::from(0.1).unwrap(),
-            correlation_noise: T::zero(),
-        }
+            correlation_noise: T::zero()}
     }
 }
 
@@ -213,8 +205,7 @@ pub struct SpikingOptimizer<T: Float> {
     metrics: NeuromorphicMetrics<T>,
     
     /// Plasticity model
-    plasticity_model: PlasticityModel,
-}
+    plasticity_model: PlasticityModel}
 
 impl<T: Float> SpikingOptimizer<T> {
     /// Create a new spiking optimizer
@@ -237,8 +228,7 @@ impl<T: Float> SpikingOptimizer<T> {
             homeostatic_scales: Array1::ones(num_neurons),
             spike_buffer: VecDeque::new(),
             metrics: NeuromorphicMetrics::default(),
-            plasticity_model: PlasticityModel::STDP,
-        }
+            plasticity_model: PlasticityModel::STDP}
     }
     
     /// Encode continuous input as spike trains
@@ -477,8 +467,7 @@ impl<T: Float> SpikingOptimizer<T> {
             width: Some(T::from(1.0).unwrap()),
             weight: T::one(),
             presynaptic_id: None,
-            postsynaptic_id: None,
-        };
+            postsynaptic_id: None};
         
         // Update spike train
         if let Some(spike_train) = self.spike_trains.get_mut(&neuron_id) {
@@ -638,8 +627,7 @@ pub struct SpikeTrainOptimizer<T: Float> {
     pattern_learning_rate: T,
     
     /// Temporal kernel for pattern comparison
-    temporal_kernel: TemporalKernel<T>,
-}
+    temporal_kernel: TemporalKernel<T>}
 
 /// Spike pattern template
 #[derive(Debug, Clone)]
@@ -657,8 +645,7 @@ pub struct SpikePattern<T: Float> {
     pub weight: T,
     
     /// Number of times pattern was observed
-    pub observation_count: usize,
-}
+    pub observation_count: usize}
 
 /// Temporal kernel for pattern matching
 #[derive(Debug, Clone)]
@@ -670,8 +657,7 @@ pub struct TemporalKernel<T: Float> {
     pub width: T,
     
     /// Kernel parameters
-    pub parameters: Vec<T>,
-}
+    pub parameters: Vec<T>}
 
 /// Types of temporal kernels
 #[derive(Debug, Clone, Copy)]
@@ -686,8 +672,7 @@ pub enum TemporalKernelType {
     Alpha,
     
     /// Rectangular kernel
-    Rectangular,
-}
+    Rectangular}
 
 impl<T: Float> SpikeTrainOptimizer<T> {
     /// Create a new spike train optimizer
@@ -700,9 +685,7 @@ impl<T: Float> SpikeTrainOptimizer<T> {
             temporal_kernel: TemporalKernel {
                 kernel_type: TemporalKernelType::Gaussian,
                 width: T::from(5.0).unwrap(),
-                parameters: vec![T::one()],
-            },
-        }
+                parameters: vec![T::one()]}}
     }
     
     /// Learn spike patterns from training data
@@ -736,8 +719,7 @@ impl<T: Float> SpikeTrainOptimizer<T> {
                     relative_spike_times: window_spikes,
                     duration: window_size,
                     weight: T::one(),
-                    observation_count: 1,
-                };
+                    observation_count: 1};
                 
                 // Check if similar pattern exists
                 if let Some(similar_pattern_id) = self.find_similar_pattern(&pattern) {
@@ -872,8 +854,7 @@ impl<T: Float> SpikeTrainOptimizer<T> {
                     relative_spike_times: window_spikes,
                     duration: window_size,
                     weight: T::one(),
-                    observation_count: 1,
-                };
+                    observation_count: 1};
                 
                 // Find best matching pattern
                 let mut best_match = (0, T::zero());

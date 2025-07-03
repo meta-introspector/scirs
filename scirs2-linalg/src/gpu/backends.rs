@@ -12,10 +12,7 @@ use std::collections::HashMap;
 #[cfg(feature = "cuda")]
 pub mod cuda {
     use super::*;
-    use num_traits::Float;
-    use std::ffi::CString;
     use std::ptr;
-    use std::sync::Arc;
 
     // CUDA runtime types and constants (would normally come from cuda-sys crate)
     type CudaResult = i32;
@@ -192,8 +189,8 @@ pub mod cuda {
             Ok(Self {
                 initialized: true,
                 devices,
-                driver_version: 470_57, // Mock driver version
-                runtime_version: 11_4,  // Mock CUDA 11.4
+                driver_version: 47_057, // Mock driver version
+                runtime_version: 114,   // Mock CUDA 11.4
             })
         }
 
@@ -679,7 +676,6 @@ pub mod cuda {
 #[cfg(feature = "opencl")]
 pub mod opencl {
     use super::*;
-    use std::ffi::{CStr, CString};
     use std::ptr;
     use std::sync::Arc;
 

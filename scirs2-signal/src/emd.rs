@@ -9,6 +9,7 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2};
 use num_traits::{Float, NumCast};
 use std::cmp::max;
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Configuration parameters for Empirical Mode Decomposition
@@ -945,7 +946,6 @@ pub fn hilbert_huang_spectrum(
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_find_local_extrema() {

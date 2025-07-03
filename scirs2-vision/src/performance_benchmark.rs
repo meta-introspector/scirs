@@ -100,7 +100,7 @@ pub struct PerformanceMetrics {
 }
 
 /// Quality assessment metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct QualityMetrics {
     /// Output quality scores
     pub quality_scores: StatisticalSummary,
@@ -113,7 +113,7 @@ pub struct QualityMetrics {
 }
 
 /// Resource utilization metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ResourceUsage {
     /// Memory usage statistics
     pub memory: MemoryUsage,
@@ -126,7 +126,7 @@ pub struct ResourceUsage {
 }
 
 /// Scalability assessment metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ScalabilityMetrics {
     /// Performance scaling with batch size
     pub batch_scaling: Vec<(usize, f64)>,
@@ -333,31 +333,16 @@ impl UltrathinkBenchmarkSuite {
 
     /// Run comprehensive ultrathink mode benchmarks
     pub fn run_comprehensive_benchmark(&mut self) -> Result<Vec<BenchmarkResult>> {
-        let mut results = Vec::new();
-
-        // 1. Baseline performance benchmark
-        results.push(self.benchmark_baseline_performance()?);
-
-        // 2. Quantum-inspired processing benchmark
-        results.push(self.benchmark_quantum_processing()?);
-
-        // 3. Neuromorphic computing benchmark
-        results.push(self.benchmark_neuromorphic_processing()?);
-
-        // 4. AI optimization benchmark
-        results.push(self.benchmark_ai_optimization()?);
-
-        // 5. Cross-module integration benchmark
-        results.push(self.benchmark_cross_module_integration()?);
-
-        // 6. Scalability benchmark
-        results.push(self.benchmark_scalability()?);
-
-        // 7. Quality and accuracy benchmark
-        results.push(self.benchmark_quality_accuracy()?);
-
-        // 8. Resource efficiency benchmark
-        results.push(self.benchmark_resource_efficiency()?);
+        let results = vec![
+            self.benchmark_baseline_performance()?,
+            self.benchmark_quantum_processing()?,
+            self.benchmark_neuromorphic_processing()?,
+            self.benchmark_ai_optimization()?,
+            self.benchmark_cross_module_integration()?,
+            self.benchmark_scalability()?,
+            self.benchmark_quality_accuracy()?,
+            self.benchmark_resource_efficiency()?,
+        ];
 
         // Store results
         self.performance_history.extend(results.clone());
@@ -720,39 +705,6 @@ impl Default for PerformanceMetrics {
             memory_bandwidth: StatisticalSummary::default(),
             cache_performance: CachePerformance::default(),
             parallel_efficiency: 0.0,
-        }
-    }
-}
-
-impl Default for QualityMetrics {
-    fn default() -> Self {
-        Self {
-            quality_scores: StatisticalSummary::default(),
-            accuracy: AccuracyMetrics::default(),
-            consistency: ConsistencyMetrics::default(),
-            error_rates: ErrorRateMetrics::default(),
-        }
-    }
-}
-
-impl Default for ResourceUsage {
-    fn default() -> Self {
-        Self {
-            memory: MemoryUsage::default(),
-            energy: EnergyConsumption::default(),
-            thermal: ThermalMetrics::default(),
-            network: NetworkUsage::default(),
-        }
-    }
-}
-
-impl Default for ScalabilityMetrics {
-    fn default() -> Self {
-        Self {
-            batch_scaling: Vec::new(),
-            input_size_scaling: Vec::new(),
-            parallel_scaling: Vec::new(),
-            memory_scaling: Vec::new(),
         }
     }
 }

@@ -15,14 +15,13 @@ use crate::error::{SignalError, SignalResult};
 use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
 use crate::wpt_validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, Axis};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast, Zero};
 use rand::prelude::*;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
 /// Enhanced modern validation result for WPT
@@ -640,9 +639,9 @@ fn run_streaming_validation(
     signal: &[f64],
     _wavelet: &Wavelet,
     _max_depth: usize,
-    config: &EnhancedModernValidationConfig,
+    _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<StreamingValidationResult> {
-    let start_time = Instant::now();
+    let _start_time = Instant::now();
 
     // Simulate streaming processing with different chunk sizes
     let chunk_sizes = vec![64, 128, 256, 512, 1024];

@@ -64,7 +64,7 @@
 use crate::error::{InterpolateError, InterpolateResult};
 use crate::traits::InterpolationFloat;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use num_traits::{Float, FromPrimitive};
+use num_traits::Float;
 use std::fmt::Debug;
 
 /// Boundary conditions for cubic spline interpolation
@@ -2129,7 +2129,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     ) -> InterpolateResult<Array1<F>> {
         let mut solutions = Vec::new();
         let tolerance = F::from_f64(1e-10).unwrap_or_default();
-        let max_iterations = 100;
+        let _max_iterations = 100;
 
         // Check each segment for roots
         for i in 0..self.coeffs.nrows() {
@@ -2254,7 +2254,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
         // True cubic case - use numerical method for simplicity
         // In a production version, you might want to implement Cardano's formula
         let tolerance = F::from_f64(1e-12).unwrap_or_default();
-        let max_iterations = 100;
+        let _max_iterations = 100;
 
         // Use multiple starting points to find all roots
         let start_points = [-2.0, -0.5, 0.0, 0.5, 2.0];
@@ -2324,7 +2324,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     fn find_derivative_discontinuity_roots(
         &self,
         tolerance: F,
-        max_iterations: usize,
+        _max_iterations: usize,
     ) -> InterpolateResult<Vec<F>> {
         let mut discontinuity_roots = Vec::new();
 
@@ -3547,7 +3547,7 @@ pub fn cubic_spline_scipy<F: InterpolationFloat>(
 /// # Returns
 ///
 /// A closure that can interpolate values
-pub fn interp1d_scipy<F: Float + FromPrimitive + Debug + 'static>(
+pub fn interp1d_scipy<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     kind: &str,

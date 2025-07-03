@@ -14,9 +14,8 @@ use ndarray::Array2;
 use num_traits::{Float, FromPrimitive};
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::filters::{gaussian_filter, median_filter};
+use crate::filters::{gaussian_filter, median_filter, uniform_filter};
 use crate::interpolation::BoundaryMode;
-use crate::morphology::{binary_closing, binary_opening, grey_opening};
 use crate::performance_profiler::{PerformanceProfiler, ProfilerConfig};
 
 /// Comprehensive benchmark suite for comparing with SciPy

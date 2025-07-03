@@ -58,7 +58,7 @@ pub enum InterpolationMethod {
     Spline,
 }
 
-impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
+impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
     /// Create a new RegularGridInterpolator
     ///
     /// # Arguments
@@ -909,7 +909,7 @@ impl<
 /// let result = interp.__call__(&points_to_interp.view()).unwrap();
 /// assert!((result[0] - 9.0).abs() < 1e-10);
 /// ```
-pub fn make_interp_nd<F: Float + FromPrimitive + Debug + Display>(
+pub fn make_interp_nd<F: crate::traits::InterpolationFloat>(
     points: Vec<Array1<F>>,
     values: Array<F, IxDyn>,
     method: InterpolationMethod,
@@ -935,7 +935,7 @@ pub fn make_interp_nd<F: Float + FromPrimitive + Debug + Display>(
 /// # Errors
 ///
 /// * If points and values dimensions don't match
-pub fn make_interp_scattered<F: Float + FromPrimitive + Debug + Display>(
+pub fn make_interp_scattered<F: crate::traits::InterpolationFloat>(
     points: Array2<F>,
     values: Array1<F>,
     method: ScatteredInterpolationMethod,
@@ -962,7 +962,7 @@ pub fn make_interp_scattered<F: Float + FromPrimitive + Debug + Display>(
 ///
 /// * If dimensions don't match
 /// * If any dimension has less than 2 points
-pub fn map_coordinates<F: Float + FromPrimitive + Debug + Display>(
+pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
     old_grid: Vec<Array1<F>>,
     old_values: Array<F, IxDyn>,
     new_grid: Vec<Array1<F>>,

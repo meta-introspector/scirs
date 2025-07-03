@@ -796,6 +796,7 @@ pub fn validate_parallel_filtering_accuracy(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]
@@ -881,8 +882,6 @@ mod tests {
 
     #[test]
     fn test_parallel_spectral_filter() {
-        use num_complex::Complex64;
-
         let fft_size = 128;
         let frequency_response: Vec<Complex64> = (0..fft_size / 2 + 1)
             .map(|i| {

@@ -47,12 +47,13 @@ use crate::filter::sosfilt_zi;
 use crate::streaming_stft::{StreamingStft, StreamingStftConfig};
 use crate::window::get_window;
 use ndarray::{Array1, Array2, ArrayView1, Axis};
-use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::VecDeque;
+#[cfg(test)]
 use std::f64::consts::PI;
+use num_complex::Complex64;
 
 /// Configuration for streaming signal processor
 #[derive(Debug, Clone)]
@@ -924,7 +925,9 @@ fn mel_to_hz(mel: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::f64::consts::PI;
+    #[cfg(test)]
+use std::f64::consts::PI;
+use num_complex::Complex64;
 
     #[test]
     fn test_streaming_processor_creation() {

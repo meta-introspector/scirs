@@ -493,7 +493,7 @@ impl CrossPlatformRegressionDetector {
                 baseline.statistics = stats;
             }
         } else {
-            let mut baseline = PerformanceBaseline {
+            let baseline = PerformanceBaseline {
                 platform,
                 function_name: function_name.to_string(),
                 input_parameters: input_parameters.to_string(),
@@ -631,7 +631,7 @@ impl CrossPlatformRegressionDetector {
 
         let times: Vec<f64> = measurements.iter().map(|m| m.execution_time_ns).collect();
 
-        let times_array = Array1::from_vec(times.clone());
+        let _times_array = Array1::from_vec(times.clone());
 
         // Calculate basic statistics
         let mean = times.iter().sum::<f64>() / times.len() as f64;
@@ -676,13 +676,13 @@ impl CrossPlatformRegressionDetector {
     }
 
     /// Analyze performance trend over time
-    fn analyze_trend(&self, function_name: &str) -> StatsResult<TrendAnalysis> {
+    fn analyze_trend(&self, _function_name: &str) -> StatsResult<TrendAnalysis> {
         // Get historical measurements for this function
         let measurements: Vec<_> = self
             .historical_data
             .values()
             .flatten()
-            .filter(|m| {
+            .filter(|_m| {
                 // Would match function name from context in real implementation
                 true
             })
@@ -751,7 +751,7 @@ impl CrossPlatformRegressionDetector {
         let sum_y = y.iter().sum::<f64>();
         let sum_xy = x.iter().zip(y.iter()).map(|(xi, yi)| xi * yi).sum::<f64>();
         let sum_x2 = x.iter().map(|xi| xi * xi).sum::<f64>();
-        let sum_y2 = y.iter().map(|yi| yi * yi).sum::<f64>();
+        let _sum_y2 = y.iter().map(|yi| yi * yi).sum::<f64>();
 
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
 
@@ -822,10 +822,10 @@ impl CrossPlatformRegressionDetector {
     /// Generate performance recommendations
     fn generate_recommendations(
         &self,
-        function_name: &str,
+        _function_name: &str,
         performance_change_percent: f64,
         baseline_stats: &BaselineStatistics,
-        current_measurement: &PerformanceMeasurement,
+        _current_measurement: &PerformanceMeasurement,
     ) -> StatsResult<Vec<PerformanceRecommendation>> {
         let mut recommendations = Vec::new();
 
@@ -929,7 +929,7 @@ impl CrossPlatformRegressionDetector {
     }
 
     /// Get the latest measurement for a function
-    fn get_latest_measurement(&self, function_name: &str) -> Option<PerformanceMeasurement> {
+    fn get_latest_measurement(&self, _function_name: &str) -> Option<PerformanceMeasurement> {
         // Simplified - would search through historical data
         None
     }

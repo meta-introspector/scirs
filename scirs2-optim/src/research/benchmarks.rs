@@ -3,7 +3,8 @@
 //! This module provides standardized benchmarks and evaluation protocols
 //! for comparing optimization algorithms in academic research contexts.
 
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 use crate::research::experiments::{Experiment, ExperimentResult};
 use crate::optimizers::*;
 use crate::unified_api::OptimizerConfig;
@@ -31,8 +32,7 @@ pub struct AcademicBenchmarkSuite {
     /// Suite metadata
     pub metadata: BenchmarkSuiteMetadata,
     /// Creation timestamp
-    pub created_at: DateTime<Utc>,
-}
+    pub created_at: DateTime<Utc>}
 
 /// Individual benchmark problem
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -58,8 +58,7 @@ pub struct BenchmarkProblem {
     /// Problem parameters
     pub parameters: HashMap<String, f64>,
     /// Literature references
-    pub references: Vec<String>,
-}
+    pub references: Vec<String>}
 
 /// Problem categories
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -91,8 +90,7 @@ pub enum ProblemCategory {
     /// Continuous optimization
     Continuous,
     /// Mixed optimization
-    Mixed,
-}
+    Mixed}
 
 /// Difficulty levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -106,8 +104,7 @@ pub enum DifficultyLevel {
     /// Very hard problems
     VeryHard,
     /// Extreme problems
-    Extreme,
-}
+    Extreme}
 
 /// Objective function definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -121,8 +118,7 @@ pub struct ObjectiveFunction {
     /// Mathematical description
     pub mathematical_form: String,
     /// Implementation notes
-    pub implementation_notes: String,
-}
+    pub implementation_notes: String}
 
 /// Function types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -166,8 +162,7 @@ pub enum FunctionType {
     /// StyblinskiTang function
     StyblinskiTang,
     /// Custom function
-    Custom(String),
-}
+    Custom(String)}
 
 /// Function properties
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -187,8 +182,7 @@ pub struct FunctionProperties {
     /// Condition number
     pub condition_number: Option<f64>,
     /// Lipschitz constant
-    pub lipschitz_constant: Option<f64>,
-}
+    pub lipschitz_constant: Option<f64>}
 
 /// Smoothness levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -202,8 +196,7 @@ pub enum SmoothnesLevel {
     /// Rough
     Rough,
     /// Very rough
-    VeryRough,
-}
+    VeryRough}
 
 /// Optimization constraint
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -215,8 +208,7 @@ pub struct Constraint {
     /// Mathematical form
     pub mathematical_form: String,
     /// Constraint parameters
-    pub parameters: HashMap<String, f64>,
-}
+    pub parameters: HashMap<String, f64>}
 
 /// Constraint types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -234,8 +226,7 @@ pub enum ConstraintType {
     /// Integer constraint
     Integer,
     /// Binary constraint
-    Binary,
-}
+    Binary}
 
 /// Known optimal solution
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -247,8 +238,7 @@ pub struct OptimalSolution {
     /// Solution properties
     pub properties: SolutionProperties,
     /// Literature reference
-    pub reference: Option<String>,
-}
+    pub reference: Option<String>}
 
 /// Solution properties
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -260,8 +250,7 @@ pub struct SolutionProperties {
     /// Solution uniqueness
     pub unique: bool,
     /// Solution stability
-    pub stable: bool,
-}
+    pub stable: bool}
 
 /// Evaluation metric for benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -277,8 +266,7 @@ pub struct EvaluationMetric {
     /// Better direction (higher or lower is better)
     pub better_direction: BetterDirection,
     /// Metric weight in overall score
-    pub weight: f64,
-}
+    pub weight: f64}
 
 /// Metric types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -306,8 +294,7 @@ pub enum MetricType {
     /// Energy consumption
     EnergyConsumption,
     /// Custom metric
-    Custom(String),
-}
+    Custom(String)}
 
 /// Aggregation methods for multiple runs
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -327,8 +314,7 @@ pub enum AggregationMethod {
     /// Success count
     SuccessCount,
     /// Custom aggregation
-    Custom(String),
-}
+    Custom(String)}
 
 /// Better direction for metrics
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -336,8 +322,7 @@ pub enum BetterDirection {
     /// Higher values are better
     Higher,
     /// Lower values are better
-    Lower,
-}
+    Lower}
 
 /// Benchmark results for a specific optimizer
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -353,8 +338,7 @@ pub struct BenchmarkResults {
     /// Performance ranking
     pub ranking: OptimizerRanking,
     /// Execution timestamp
-    pub executed_at: DateTime<Utc>,
-}
+    pub executed_at: DateTime<Utc>}
 
 /// Results for a single problem
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -368,8 +352,7 @@ pub struct ProblemResults {
     /// Statistical summaries
     pub statistics: ResultStatistics,
     /// Convergence analysis
-    pub convergence_analysis: ConvergenceAnalysis,
-}
+    pub convergence_analysis: ConvergenceAnalysis}
 
 /// Result for a single run
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -395,8 +378,7 @@ pub struct RunResult {
     /// Convergence trajectory
     pub trajectory: Vec<f64>,
     /// Error information (if failed)
-    pub error_info: Option<String>,
-}
+    pub error_info: Option<String>}
 
 /// Statistical summaries
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -420,8 +402,7 @@ pub struct ResultStatistics {
     /// Quartiles
     pub quartiles: (f64, f64, f64), // Q1, Q2, Q3
     /// Confidence intervals
-    pub confidence_intervals: HashMap<String, (f64, f64)>,
-}
+    pub confidence_intervals: HashMap<String, (f64, f64)>}
 
 /// Convergence analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -435,8 +416,7 @@ pub struct ConvergenceAnalysis {
     /// Plateau detection
     pub plateau_detected: bool,
     /// Convergence pattern
-    pub convergence_pattern: ConvergencePattern,
-}
+    pub convergence_pattern: ConvergencePattern}
 
 /// Convergence patterns
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -454,8 +434,7 @@ pub enum ConvergencePattern {
     /// Plateau then drop
     PlateauThenDrop,
     /// No clear pattern
-    Irregular,
-}
+    Irregular}
 
 /// Statistical significance test
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -473,8 +452,7 @@ pub struct StatisticalTest {
     /// Test result
     pub significant: bool,
     /// Effect size
-    pub effect_size: Option<f64>,
-}
+    pub effect_size: Option<f64>}
 
 /// Optimizer ranking
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -488,8 +466,7 @@ pub struct OptimizerRanking {
     /// Ranking score
     pub ranking_score: f64,
     /// Ranking method used
-    pub ranking_method: RankingMethod,
-}
+    pub ranking_method: RankingMethod}
 
 /// Ranking methods
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -505,8 +482,7 @@ pub enum RankingMethod {
     /// Tournament ranking
     Tournament,
     /// Custom ranking method
-    Custom(String),
-}
+    Custom(String)}
 
 /// Benchmark suite metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -524,8 +500,7 @@ pub struct BenchmarkSuiteMetadata {
     /// Keywords
     pub keywords: Vec<String>,
     /// Changelog
-    pub changelog: Vec<ChangelogEntry>,
-}
+    pub changelog: Vec<ChangelogEntry>}
 
 /// Changelog entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -537,8 +512,7 @@ pub struct ChangelogEntry {
     /// Changes description
     pub changes: String,
     /// Author of changes
-    pub author: String,
-}
+    pub author: String}
 
 /// Benchmark runner for executing benchmark suites
 #[derive(Debug)]
@@ -548,8 +522,7 @@ pub struct BenchmarkRunner {
     /// Execution settings
     settings: BenchmarkSettings,
     /// Progress callback
-    progress_callback: Option<Box<dyn Fn(f64) + Send + Sync>>,
-}
+    progress_callback: Option<Box<dyn Fn(f64) + Send + Sync>>}
 
 /// Benchmark execution settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -571,8 +544,7 @@ pub struct BenchmarkSettings {
     /// Save detailed results
     pub save_detailed_results: bool,
     /// Output directory
-    pub output_directory: Option<String>,
-}
+    pub output_directory: Option<String>}
 
 impl AcademicBenchmarkSuite {
     /// Create a new benchmark suite
@@ -585,8 +557,7 @@ impl AcademicBenchmarkSuite {
             metrics: Vec::new(),
             reference_results: HashMap::new(),
             metadata: BenchmarkSuiteMetadata::default(),
-            created_at: Utc::now(),
-        }
+            created_at: Utc::now()}
     }
     
     /// Add a benchmark problem
@@ -637,11 +608,9 @@ impl AcademicBenchmarkSuite {
                     multimodal: false,
                     smoothness: SmoothnesLevel::VerySmooth,
                     condition_number: Some(1.0),
-                    lipschitz_constant: Some(2.0),
-                },
+                    lipschitz_constant: Some(2.0)},
                 mathematical_form: "f(x) = 0.5 * x^T * x".to_string(),
-                implementation_notes: "Simple quadratic function with unit matrix".to_string(),
-            },
+                implementation_notes: "Simple quadratic function with unit matrix".to_string()},
             constraints: Vec::new(),
             optimal_solution: Some(OptimalSolution {
                 parameters: Array1::zeros(10),
@@ -650,13 +619,10 @@ impl AcademicBenchmarkSuite {
                     global_optimum: true,
                     local_optimum: true,
                     unique: true,
-                    stable: true,
-                },
-                reference: None,
-            }),
+                    stable: true},
+                reference: None}),
             parameters: HashMap::new(),
-            references: vec!["Standard optimization textbooks".to_string()],
-        }
+            references: vec!["Standard optimization textbooks".to_string()]}
     }
     
     fn create_rosenbrock_problem() -> BenchmarkProblem {
@@ -678,11 +644,9 @@ impl AcademicBenchmarkSuite {
                     multimodal: false,
                     smoothness: SmoothnesLevel::Smooth,
                     condition_number: None,
-                    lipschitz_constant: None,
-                },
+                    lipschitz_constant: None},
                 mathematical_form: "f(x) = sum(100*(x[i+1] - x[i]^2)^2 + (1 - x[i])^2)".to_string(),
-                implementation_notes: "Classic Rosenbrock function, challenging for optimization".to_string(),
-            },
+                implementation_notes: "Classic Rosenbrock function, challenging for optimization".to_string()},
             constraints: Vec::new(),
             optimal_solution: Some(OptimalSolution {
                 parameters: Array1::ones(10),
@@ -691,13 +655,10 @@ impl AcademicBenchmarkSuite {
                     global_optimum: true,
                     local_optimum: true,
                     unique: true,
-                    stable: true,
-                },
-                reference: Some("Rosenbrock, H.H. (1960)".to_string()),
-            }),
+                    stable: true},
+                reference: Some("Rosenbrock, H.H. (1960)".to_string())}),
             parameters: HashMap::new(),
-            references: vec!["Rosenbrock, H.H. (1960). An automatic method for finding the greatest or least value of a function.".to_string()],
-        }
+            references: vec!["Rosenbrock, H.H. (1960). An automatic method for finding the greatest or least value of a function.".to_string()]}
     }
     
     fn create_logistic_regression_problem() -> BenchmarkProblem {
@@ -719,11 +680,9 @@ impl AcademicBenchmarkSuite {
                     multimodal: false,
                     smoothness: SmoothnesLevel::Smooth,
                     condition_number: None,
-                    lipschitz_constant: None,
-                },
+                    lipschitz_constant: None},
                 mathematical_form: "f(w) = mean(log(1 + exp(-y * X * w))) + lambda * ||w||^2".to_string(),
-                implementation_notes: "Binary classification with L2 regularization".to_string(),
-            },
+                implementation_notes: "Binary classification with L2 regularization".to_string()},
             constraints: Vec::new(),
             optimal_solution: None, // Depends on dataset
             parameters: {
@@ -732,8 +691,7 @@ impl AcademicBenchmarkSuite {
                 params.insert("num_samples".to_string(), 1000.0);
                 params
             },
-            references: vec!["Standard machine learning references".to_string()],
-        }
+            references: vec!["Standard machine learning references".to_string()]}
     }
     
     fn create_neural_network_problem() -> BenchmarkProblem {
@@ -755,11 +713,9 @@ impl AcademicBenchmarkSuite {
                     multimodal: true,
                     smoothness: SmoothnesLevel::Smooth,
                     condition_number: None,
-                    lipschitz_constant: None,
-                },
+                    lipschitz_constant: None},
                 mathematical_form: "f(θ) = mean(-log(softmax(NN(x; θ))[y]))".to_string(),
-                implementation_notes: "Two-layer ReLU network with softmax output".to_string(),
-            },
+                implementation_notes: "Two-layer ReLU network with softmax output".to_string()},
             constraints: Vec::new(),
             optimal_solution: None, // Unknown for neural networks
             parameters: {
@@ -768,8 +724,7 @@ impl AcademicBenchmarkSuite {
                 params.insert("batch_size".to_string(), 64.0);
                 params
             },
-            references: vec!["LeCun et al. (1998). Gradient-based learning applied to document recognition.".to_string()],
-        }
+            references: vec!["LeCun et al. (1998). Gradient-based learning applied to document recognition.".to_string()]}
     }
     
     fn create_final_objective_metric() -> EvaluationMetric {
@@ -779,8 +734,7 @@ impl AcademicBenchmarkSuite {
             metric_type: MetricType::FinalObjective,
             aggregation: AggregationMethod::Mean,
             better_direction: BetterDirection::Lower,
-            weight: 1.0,
-        }
+            weight: 1.0}
     }
     
     fn create_convergence_time_metric() -> EvaluationMetric {
@@ -790,8 +744,7 @@ impl AcademicBenchmarkSuite {
             metric_type: MetricType::TimeToConvergence,
             aggregation: AggregationMethod::Median,
             better_direction: BetterDirection::Lower,
-            weight: 0.5,
-        }
+            weight: 0.5}
     }
     
     fn create_success_rate_metric() -> EvaluationMetric {
@@ -801,8 +754,7 @@ impl AcademicBenchmarkSuite {
             metric_type: MetricType::SuccessRate,
             aggregation: AggregationMethod::Mean,
             better_direction: BetterDirection::Higher,
-            weight: 0.8,
-        }
+            weight: 0.8}
     }
 }
 
@@ -812,8 +764,7 @@ impl BenchmarkRunner {
         Self {
             suite,
             settings,
-            progress_callback: None,
-        }
+            progress_callback: None}
     }
     
     /// Set progress callback
@@ -845,10 +796,8 @@ impl BenchmarkRunner {
                     category_ranks: HashMap::new(),
                     metric_ranks: HashMap::new(),
                     ranking_score: 0.0,
-                    ranking_method: RankingMethod::WeightedScore,
-                },
-                executed_at: Utc::now(),
-            };
+                    ranking_method: RankingMethod::WeightedScore},
+                executed_at: Utc::now()};
             
             for benchmark in &self.suite.benchmarks {
                 let problem_results = self.run_single_problem::<A>(benchmark, optimizer_config)?;
@@ -900,8 +849,7 @@ impl BenchmarkRunner {
             run_results,
             aggregated_metrics,
             statistics,
-            convergence_analysis,
-        })
+            convergence_analysis})
     }
     
     fn run_single_instance<A: Float + std::fmt::Debug + Send + Sync + 'static>(
@@ -920,8 +868,7 @@ impl BenchmarkRunner {
         let final_objective = match benchmark.objective_function.function_type {
             FunctionType::Quadratic => self.simulate_quadratic_optimization(seed),
             FunctionType::Rosenbrock => self.simulate_rosenbrock_optimization(seed),
-            _ => self.simulate_generic_optimization(seed),
-        };
+            _ => self.simulate_generic_optimization(seed)};
         
         let execution_time = start_time.elapsed().as_secs_f64();
         let iterations = std::cmp::min(1000, self.settings.max_iterations);
@@ -941,8 +888,7 @@ impl BenchmarkRunner {
             gradient_evaluations: iterations,
             memory_usage: 1024 * 1024, // 1MB default
             trajectory,
-            error_info: None,
-        })
+            error_info: None})
     }
     
     fn simulate_quadratic_optimization(&self, seed: u64) -> f64 {
@@ -1024,8 +970,7 @@ impl BenchmarkRunner {
                 worst_objective: 0.0,
                 median_objective: 0.0,
                 quartiles: (0.0, 0.0, 0.0),
-                confidence_intervals: HashMap::new(),
-            };
+                confidence_intervals: HashMap::new()};
         }
         
         let successful_runs = run_results.iter().filter(|r| r.converged).count();
@@ -1076,8 +1021,7 @@ impl BenchmarkRunner {
                 convergence_stability: 0.0,
                 early_convergence: false,
                 plateau_detected: false,
-                convergence_pattern: ConvergencePattern::Irregular,
-            };
+                convergence_pattern: ConvergencePattern::Irregular};
         }
         
         // Simplified convergence analysis
@@ -1096,8 +1040,7 @@ impl BenchmarkRunner {
             convergence_stability,
             early_convergence,
             plateau_detected,
-            convergence_pattern,
-        }
+            convergence_pattern}
     }
     
     fn calculate_overall_scores(&self, results: &mut BenchmarkResults) {
@@ -1113,8 +1056,7 @@ impl BenchmarkRunner {
                 if let Some(&value) = problem_result.aggregated_metrics.get(&metric.name) {
                     let normalized_score = match metric.better_direction {
                         BetterDirection::Lower => 1.0 / (1.0 + value),
-                        BetterDirection::Higher => value,
-                    };
+                        BetterDirection::Higher => value};
                     metric_score += normalized_score;
                     metric_count += 1;
                 }
@@ -1167,8 +1109,7 @@ impl Default for BenchmarkSuiteMetadata {
             references: Vec::new(),
             target_audience: vec!["Researchers".to_string(), "Students".to_string()],
             keywords: Vec::new(),
-            changelog: Vec::new(),
-        }
+            changelog: Vec::new()}
     }
 }
 
@@ -1183,8 +1124,7 @@ impl Default for BenchmarkSettings {
             parallel_execution: true,
             num_threads: None,
             save_detailed_results: true,
-            output_directory: None,
-        }
+            output_directory: None}
     }
 }
 

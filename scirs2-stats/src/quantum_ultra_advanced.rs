@@ -719,7 +719,7 @@ where
 
     /// Quantum amplitude estimation for enhanced Monte Carlo
     fn quantum_amplitude_estimation(&mut self, data: &ArrayView2<F>) -> StatsResult<QAEResults<F>> {
-        let (n_samples, _) = data.dim();
+        let (_n_samples, _) = data.dim();
 
         // Simplified QAE implementation
         let target_amplitude = F::from(0.3).unwrap(); // Would compute actual amplitude
@@ -743,7 +743,7 @@ where
 
     /// Quantum principal component analysis
     fn quantum_pca(&mut self, data: &ArrayView2<F>) -> StatsResult<QPCAResults<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (_n_samples, n_features) = data.dim();
         let num_components = self.config.qpca_config.num_components.min(n_features);
 
         // Simplified quantum PCA using matrix exponentiation
@@ -857,7 +857,7 @@ where
         &mut self,
         data: &ArrayView2<F>,
     ) -> StatsResult<TensorNetworkResults<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (_n_samples, n_features) = data.dim();
 
         // Simplified tensor network decomposition
         let num_tensors = (n_features as f64).log2().ceil() as usize;
@@ -1279,7 +1279,7 @@ where
         data: &ArrayView2<F>,
         num_latent_variables: usize,
     ) -> StatsResult<QuantumVariationalResult<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (_, n_features) = data.dim();
 
         // Initialize variational parameters using quantum-inspired distributions
         let mut variational_params =
@@ -1356,7 +1356,7 @@ where
         data: &ArrayView2<F>,
         params: &QuantumVariationalParams<F>,
     ) -> StatsResult<F> {
-        let (n_samples, _) = data.dim();
+        let (_n_samples, _) = data.dim();
 
         // Simplified quantum ELBO computation
         // In practice, would use quantum circuits for probability estimation
@@ -1832,7 +1832,7 @@ pub enum QuantumMeasurementBasis {
 impl<F: Float + NumCast + std::fmt::Display> UltraQuantumAnalyzer<F> {
     /// Validate if data is suitable for quantum encoding
     fn validate_quantum_encoding_feasibility(&self, data: &ArrayView2<F>) -> StatsResult<bool> {
-        let (n_samples, n_features) = data.dim();
+        let (_, n_features) = data.dim();
 
         // Check for minimum quantum advantage threshold
         if n_features < 4 {

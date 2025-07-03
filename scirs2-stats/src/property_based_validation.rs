@@ -741,7 +741,7 @@ impl MathematicalProperty<Array1<f64>> for QuantileMonotonicity {
             crate::quantile::QuantileInterpolation::Linear,
         );
 
-        let property_holds = match (q25, q50, q75) {
+        let property_holds = match (q25.clone(), q50.clone(), q75.clone()) {
             (Ok(q25_val), Ok(q50_val), Ok(q75_val)) => q25_val <= q50_val && q50_val <= q75_val,
             _ => false,
         };
@@ -816,7 +816,7 @@ impl MathematicalProperty<Array1<f64>> for QuantileBounds {
             crate::quantile::QuantileInterpolation::Linear,
         );
 
-        let property_holds = match (q25, q75) {
+        let property_holds = match (q25.clone(), q75.clone()) {
             (Ok(q25_val), Ok(q75_val)) => {
                 q25_val >= min_val && q25_val <= max_val && q75_val >= min_val && q75_val <= max_val
             }
@@ -961,7 +961,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationSymmetry {
         let corr_xy = pearson_r(&x.view(), &y.view());
         let corr_yx = pearson_r(&y.view(), &x.view());
 
-        let property_holds = match (corr_xy, corr_yx) {
+        let property_holds = match (corr_xy.clone(), corr_yx.clone()) {
             (Ok(xy), Ok(yx)) => (xy - yx).abs() < 1e-12,
             _ => false,
         };

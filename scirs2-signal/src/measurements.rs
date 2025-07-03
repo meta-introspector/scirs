@@ -172,15 +172,15 @@ where
 ///
 /// ```
 /// use scirs2_signal::measurements::snr;
-/// use rand::Rng;  // Import the Rng trait to access random_range
+/// use rand::Rng;  // Import the Rng trait to access gen_range
 ///
 /// // Create a clean signal
 /// let clean = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
 ///
 /// // Add noise to create signal_plus_noise
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// let noisy: Vec<f64> = clean.iter()
-///     .map(|&x| x + rng.random_range(-0.1f64..0.1f64))
+///     .map(|&x| x + rng.gen_range(-0.1f64..0.1f64))
 ///     .collect();
 ///
 /// // Calculate SNR
@@ -397,6 +397,7 @@ where
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]
@@ -455,10 +456,10 @@ mod tests {
         let noise_amplitude = 0.1; // -20 dB relative to signal
                                    // Using rand API that's compatible with 0.9.0
         use rand::Rng; // Import the Rng trait to access its methods
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let noisy: Vec<f64> = clean
             .iter()
-            .map(|&x| x + noise_amplitude * (2.0 * PI * rng.random_range(0.0..1.0)).sin())
+            .map(|&x| x + noise_amplitude * (2.0 * PI * rng.gen_range(0.0..1.0)).sin())
             .collect();
 
         // Calculate SNR

@@ -272,6 +272,10 @@ pub enum CoreError {
     /// Communication error (network or inter-process communication error)
     #[error("Communication error: {0}")]
     CommunicationError(ErrorContext),
+
+    /// Security error (authentication, authorization, or security-related error)
+    #[error("Security error: {0}")]
+    SecurityError(ErrorContext),
 }
 
 /// Result type alias for core operations

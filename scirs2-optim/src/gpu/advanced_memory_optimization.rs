@@ -2375,7 +2375,7 @@ impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
     }
 
     /// Get detailed memory breakdown
-    fn get_memory_breakdown(&self) -> Result<HashMap<String, usize>, OptimError> {
+    fn get_memory_breakdown(&self) -> Result<HashMap<String, usize>> {
         let mut breakdown = HashMap::new();
         
         breakdown.insert("parameters".to_string(), 0); // Would calculate actual usage
@@ -2661,7 +2661,7 @@ impl DynamicBatchController {
         self.current_batch_size = new_size;
     }
     
-    fn optimize_for_throughput(&mut self) -> Result<Option<(usize, usize)>, OptimError> {
+    fn optimize_for_throughput(&mut self) -> Result<Option<(usize, usize)>> {
         // Stub implementation
         Ok(None)
     }

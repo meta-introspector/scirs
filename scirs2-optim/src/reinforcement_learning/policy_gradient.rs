@@ -503,7 +503,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     }
 
     /// Compute policy gradients (simplified)
-    fn compute_policy_gradients(&self, loss: T) -> Result<HashMap<String, Array1<T>>, OptimError> {
+    fn compute_policy_gradients(&self, loss: T) -> Result<HashMap<String, Array1<T>>> {
         let mut gradients = HashMap::new();
 
         // Simplified gradient computation - in practice would use autodiff
@@ -518,7 +518,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     }
 
     /// Compute value function gradients (simplified)
-    fn compute_value_gradients(&self, loss: T) -> Result<HashMap<String, Array1<T>>, OptimError> {
+    fn compute_value_gradients(&self, loss: T) -> Result<HashMap<String, Array1<T>>> {
         let mut gradients = HashMap::new();
 
         if let Some(ref value_net) = self.value_network {
@@ -538,7 +538,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
         &self,
         gradients: &HashMap<String, Array1<T>>,
         max_norm: T,
-    ) -> Result<HashMap<String, Array1<T>>, OptimError> {
+    ) -> Result<HashMap<String, Array1<T>>> {
         let mut clipped_gradients = HashMap::new();
 
         // Compute global gradient norm

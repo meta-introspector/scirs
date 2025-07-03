@@ -368,12 +368,12 @@ pub fn register_non_rigid_regularized(
 
     // Use scirs2-linalg's least squares solver
     let result_x = lstsq(&k_matrix.view(), &target_x.view(), None).map_err(|e| {
-        VisionError::OperationError(format!("Regularized TPS solve failed for x: {}", e))
+        VisionError::OperationError(format!("Regularized TPS solve failed for x: {e}"))
     })?;
     let weights_x = result_x.x;
 
     let result_y = lstsq(&k_matrix.view(), &target_y.view(), None).map_err(|e| {
-        VisionError::OperationError(format!("Regularized TPS solve failed for y: {}", e))
+        VisionError::OperationError(format!("Regularized TPS solve failed for y: {e}"))
     })?;
     let weights_y = result_y.x;
 

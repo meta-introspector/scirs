@@ -4,6 +4,7 @@
 //! of signals.
 
 use crate::error::{SignalError, SignalResult};
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
@@ -161,7 +162,6 @@ where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    use num_complex::Complex64;
     use rustfft::FftPlanner;
 
     if a.is_empty() || v.is_empty() {

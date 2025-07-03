@@ -9,6 +9,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast};
+use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -180,7 +181,15 @@ pub struct TestResult<F> {
 
 impl<F> DescriptiveStatsBuilder<F>
 where
-    F: Float + NumCast + Clone,
+    F: Float
+        + NumCast
+        + Clone
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + Sync
+        + Send
+        + std::fmt::Display,
 {
     /// Create a new descriptive statistics builder
     pub fn new() -> Self {
@@ -351,8 +360,8 @@ where
         let percentiles = self.compute_percentiles(&sorted_data)?;
 
         // Use existing functions for skewness and kurtosis
-        let skewness = crate::descriptive::skew(&data.view(), false)?;
-        let kurtosis = crate::descriptive::kurtosis(&data.view(), true, false)?;
+        let skewness = crate::descriptive::skew(&data.view(), false, None)?;
+        let kurtosis = crate::descriptive::kurtosis(&data.view(), true, false, None)?;
 
         Ok(DescriptiveStats {
             count: data.len(),
@@ -376,14 +385,11 @@ where
         _warnings: &mut Vec<String>,
     ) -> StatsResult<DescriptiveStats<F>> {
         // Use parallel-optimized functions
-        let mean = crate::parallel_stats::mean_parallel(
-            &data.view(),
-            scirs2_core::parallel_ops::num_threads(),
-        )?;
+        let mean = crate::parallel_stats::mean_parallel(&data.view(), num_threads())?;
         let variance = crate::parallel_stats::variance_parallel(
             &data.view(),
             self.ddof.unwrap_or(1),
-            scirs2_core::parallel_ops::num_threads(),
+            num_threads(),
         )?;
         let std = variance.sqrt();
 
@@ -393,8 +399,8 @@ where
         let percentiles = self.compute_percentiles(&sorted_data)?;
 
         // Use existing functions for skewness and kurtosis
-        let skewness = crate::descriptive::skew(&data.view(), false)?;
-        let kurtosis = crate::descriptive::kurtosis(&data.view(), true, false)?;
+        let skewness = crate::descriptive::skew(&data.view(), false, None)?;
+        let kurtosis = crate::descriptive::kurtosis(&data.view(), true, false, None)?;
 
         Ok(DescriptiveStats {
             count: data.len(),
@@ -425,8 +431,8 @@ where
         let sorted_data = self.get_sorted_data(data);
         let percentiles = self.compute_percentiles(&sorted_data)?;
 
-        let skewness = crate::descriptive::skew(&data.view(), false)?;
-        let kurtosis = crate::descriptive::kurtosis(&data.view(), true, false)?;
+        let skewness = crate::descriptive::skew(&data.view(), false, None)?;
+        let kurtosis = crate::descriptive::kurtosis(&data.view(), true, false, None)?;
 
         Ok(DescriptiveStats {
             count: data.len(),

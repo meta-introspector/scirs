@@ -10,7 +10,8 @@ use rand::Rng;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::{Duration, Instant};
 
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 
 /// Neural Architecture Search for Optimizer Design
 pub struct NeuralArchitectureSearch<T: Float> {
@@ -2159,7 +2160,7 @@ impl<
 
     fn get_progressive_stage(
         &self,
-        progressive_state: &ProgressiveSearchState<T>,
+        _progressive_state: &ProgressiveSearchState<T>,
     ) -> ProgressiveStage {
         let iteration = self.search_history.current_iteration();
         let stage_duration = self.config.max_iterations / 4; // 4 stages

@@ -432,7 +432,7 @@ pub mod genomics {
             let mut phenotypes = Vec::with_capacity(n_samples);
 
             // Different expression patterns for different conditions
-            let condition_effects = vec![1.0, 2.5, 0.4, 1.8, 0.7]; // Log-fold changes
+            let condition_effects = [1.0, 2.5, 0.4, 1.8, 0.7]; // Log-fold changes
 
             for sample_idx in 0..n_samples {
                 let condition = sample_idx % condition_effects.len();

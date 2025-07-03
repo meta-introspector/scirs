@@ -4,9 +4,9 @@ use super::utils::compute_fft;
 use super::windows::dpss;
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 // PI is only used in doc examples
+use num_complex::Complex64;
 use std::fmt::Debug;
 
 /// Type alias for multitaper PSD calculation result
@@ -45,9 +45,9 @@ pub type MultitaperResult = (Vec<f64>, Vec<f64>, Option<Array2<f64>>, Option<Arr
 /// let fs = 100.0;
 /// let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
 /// use rand::Rng;
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// let signal: Vec<f64> = t.iter()
-///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(0.0..1.0))
+///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.gen_range(0.0..1.0))
 ///     .collect();
 ///
 /// // Compute multitaper power spectral density
@@ -249,11 +249,11 @@ where
 /// let fs = 1000.0;
 /// let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
 /// use rand::Rng;
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// let signal: Vec<f64> = t.iter()
 ///     .map(|&ti| {
 ///         let freq = 50.0 + 200.0 * ti; // Linear chirp from 50Hz to 250Hz
-///         (2.0 * PI * freq * ti).sin() + 0.1 * rng.random_range(0.0..1.0)
+///         (2.0 * PI * freq * ti).sin() + 0.1 * rng.gen_range(0.0..1.0)
 ///     })
 ///     .collect();
 ///

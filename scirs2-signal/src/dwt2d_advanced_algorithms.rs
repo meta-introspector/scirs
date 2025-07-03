@@ -10,7 +10,7 @@
 //! - Intelligent coefficient thresholding
 
 use crate::dwt::{Wavelet, WaveletFilters};
-use crate::dwt2d_enhanced::{BoundaryMode, Dwt2dConfig, Dwt2dQualityMetrics, EnhancedDwt2dResult};
+use crate::dwt2d_enhanced::{Dwt2dConfig, EnhancedDwt2dResult};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, Array3};
 use num_complex::Complex64;
@@ -603,8 +603,8 @@ fn create_steerable_filter(base_filters: &WaveletFilters, angle: f64) -> SignalR
 
     for i in 0..filter_size {
         for j in 0..filter_size {
-            let x = (i as f64 - center as f64);
-            let y = (j as f64 - center as f64);
+            let x = i as f64 - center as f64;
+            let y = j as f64 - center as f64;
 
             // Rotate coordinates
             let x_rot = x * angle.cos() + y * angle.sin();

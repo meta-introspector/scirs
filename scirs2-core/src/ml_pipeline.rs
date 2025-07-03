@@ -1008,19 +1008,18 @@ impl MLPipeline {
             if let Some(node) = self.nodes.iter().find(|n| n.name() == node_name) {
                 let node_start = Instant::now();
 
-                match node.process(batch) {
+                batch = match node.process(batch) {
                     Ok(processed_batch) => {
-                        batch = processed_batch;
-
                         // Update node metrics
                         let node_time = node_start.elapsed();
-                        self.update_node_metrics(&node_name, node_time, batch.size());
+                        self.update_node_metrics(&node_name, node_time, processed_batch.size());
+                        processed_batch
                     }
                     Err(e) => match &self.config.error_strategy {
                         ErrorStrategy::FailFast => return Err(e),
                         ErrorStrategy::SkipErrors => {
                             eprintln!("Node {} failed: {}, continuing...", node_name, e);
-                            continue;
+                            batch
                         }
                         ErrorStrategy::RetryWithBackoff {
                             max_retries,
@@ -1036,8 +1035,7 @@ impl MLPipeline {
 
                                 match node.process(batch.clone()) {
                                     Ok(processed_batch) => {
-                                        batch = processed_batch;
-                                        break;
+                                        break processed_batch;
                                     }
                                     Err(_) => {
                                         retries += 1;

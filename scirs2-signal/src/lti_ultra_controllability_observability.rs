@@ -17,13 +17,11 @@ use crate::lti::robust_analysis::{
 };
 use crate::lti::systems::StateSpace;
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// Ultra-enhanced controllability and observability analysis result
 #[derive(Debug, Clone)]

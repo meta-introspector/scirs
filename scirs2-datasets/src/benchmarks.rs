@@ -108,7 +108,7 @@ impl BenchmarkResult {
                 } else if bytes >= 1024 {
                     format!("{:.1} KB", bytes as f64 / 1024.0)
                 } else {
-                    format!("{} B", bytes)
+                    format!("{bytes} B")
                 }
             }
             None => "N/A".to_string(),
@@ -322,7 +322,7 @@ impl BenchmarkRunner {
         let iris_params = HashMap::from([("dataset".to_string(), "iris".to_string())]);
         let iris_result = self.run_benchmark("load_iris", iris_params, || match load_iris() {
             Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-            Err(e) => Err(format!("Failed to load iris: {}", e)),
+            Err(e) => Err(format!("Failed to load iris: {e}")),
         });
         suite.add_result(iris_result);
 
@@ -331,7 +331,7 @@ impl BenchmarkRunner {
         let boston_result =
             self.run_benchmark("load_boston", boston_params, || match load_boston() {
                 Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-                Err(e) => Err(format!("Failed to load boston: {}", e)),
+                Err(e) => Err(format!("Failed to load boston: {e}")),
             });
         suite.add_result(boston_result);
 
@@ -340,7 +340,7 @@ impl BenchmarkRunner {
         let digits_result =
             self.run_benchmark("load_digits", digits_params, || match load_digits() {
                 Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-                Err(e) => Err(format!("Failed to load digits: {}", e)),
+                Err(e) => Err(format!("Failed to load digits: {e}")),
             });
         suite.add_result(digits_result);
 
@@ -348,7 +348,7 @@ impl BenchmarkRunner {
         let wine_params = HashMap::from([("dataset".to_string(), "wine".to_string())]);
         let wine_result = self.run_benchmark("load_wine", wine_params, || match load_wine(false) {
             Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-            Err(e) => Err(format!("Failed to load wine: {}", e)),
+            Err(e) => Err(format!("Failed to load wine: {e}")),
         });
         suite.add_result(wine_result);
 
@@ -360,7 +360,7 @@ impl BenchmarkRunner {
                 bc_params,
                 || match load_breast_cancer() {
                     Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-                    Err(e) => Err(format!("Failed to load breast_cancer: {}", e)),
+                    Err(e) => Err(format!("Failed to load breast_cancer: {e}")),
                 },
             );
         suite.add_result(bc_result);
@@ -370,7 +370,7 @@ impl BenchmarkRunner {
         let diabetes_result =
             self.run_benchmark("load_diabetes", diabetes_params, || match load_diabetes() {
                 Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-                Err(e) => Err(format!("Failed to load diabetes: {}", e)),
+                Err(e) => Err(format!("Failed to load diabetes: {e}")),
             });
         suite.add_result(diabetes_result);
 

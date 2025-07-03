@@ -4,6 +4,7 @@
 //! such as zero padding, normalization, and window functions.
 
 use crate::error::{SignalError, SignalResult};
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
@@ -324,7 +325,6 @@ where
 ///
 /// ```
 /// use scirs2_signal::utils::is_real;
-/// use num_complex::Complex64;
 ///
 /// // Create a real-valued complex signal
 /// let signal = vec![
@@ -357,7 +357,6 @@ pub fn is_real(x: &[num_complex::Complex64], tol: f64) -> bool {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use num_complex::Complex64;
 
     #[test]
     fn test_zero_pad_constant() {

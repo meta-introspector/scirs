@@ -14,12 +14,10 @@ use crate::dwt::{Wavelet, WaveletFilters};
 use crate::dwt2d_enhanced::{BoundaryMode, Dwt2dConfig, Dwt2dQualityMetrics, EnhancedDwt2dResult};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
-use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// Ultra-refined 2D wavelet packet decomposition result
 #[derive(Debug, Clone)]

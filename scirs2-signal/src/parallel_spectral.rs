@@ -10,10 +10,10 @@ use ndarray::Array2;
 
 type SpectrogramResult = (Vec<f64>, Vec<f64>, Array2<f64>);
 type TimeFrequencyCoherenceResult = (Vec<f64>, Vec<f64>, Array2<f64>);
-use num_complex::Complex64;
 use rustfft::{num_complex::Complex, FftPlanner};
 use std::sync::Arc;
 
+use num_complex::Complex64;
 #[cfg(feature = "parallel")]
 use scirs2_core::parallel_ops::*;
 
@@ -1378,6 +1378,7 @@ impl ParallelSpectralProcessor {
 mod tests {
     use super::*;
     use rand::Rng;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]
@@ -1446,7 +1447,7 @@ mod tests {
         let signal1: Vec<f64> = (0..n)
             .map(|i| (2.0 * PI * 50.0 * i as f64 / fs).sin())
             .collect();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let signal2: Vec<f64> = signal1
             .iter()
             .map(|&x| x + 0.1 * rng.random::<f64>())

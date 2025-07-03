@@ -564,7 +564,7 @@ impl TransformationMonitor {
             2.0 * sum
         };
 
-        Ok((statistic, p_value.max(0.0).min(1.0)))
+        Ok((statistic, p_value.clamp(0.0, 1.0)))
     }
 
     fn population_stability_index(
@@ -893,7 +893,7 @@ impl TransformationMonitor {
             }
 
             let gamma_cf = (-x_half).exp() * x_half.powf(a) * h / self.gamma(a);
-            gamma_cf.max(0.0).min(1.0)
+            gamma_cf.clamp(0.0, 1.0)
         }
     }
 
@@ -1427,7 +1427,7 @@ impl AdvancedAnomalyDetector {
             "statistical" => {
                 for detector in self.statistical_detectors.values_mut() {
                     detector.z_score_threshold += adjustment;
-                    detector.z_score_threshold = detector.z_score_threshold.max(1.5).min(5.0);
+                    detector.z_score_threshold = detector.z_score_threshold.clamp(1.5, 5.0);
                 }
             }
             "ml" => {

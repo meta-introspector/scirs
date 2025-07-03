@@ -1779,7 +1779,7 @@ where
     }
 
     /// Calculate allocation urgency
-    fn calculate_urgency(&self, size: usize, pressure: f64) -> AllocationUrgency {
+    fn calculate_urgency(&self, _size: usize, pressure: f64) -> AllocationUrgency {
         if pressure > 0.95 {
             AllocationUrgency::Critical
         } else if pressure > 0.85 {
@@ -1935,7 +1935,7 @@ where
     }
 
     /// Infer deallocation strategy from pointer
-    fn infer_deallocation_strategy(&self, ptr: *mut u8, size: usize) -> AllocationStrategy {
+    fn infer_deallocation_strategy(&self, _ptr: *mut u8, _size: usize) -> AllocationStrategy {
         // Simplified - would use metadata to track allocation strategy
         self.config.allocation_strategy
     }

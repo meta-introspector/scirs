@@ -30,7 +30,6 @@
 use crate::error::InterpolateResult;
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive};
-use std::fmt::Debug;
 
 /// Perform nearest neighbor interpolation between two data points
 ///
@@ -339,7 +338,7 @@ pub(crate) fn cubic_interp<F: Float + FromPrimitive>(
 /// assert!(diff1 < 1e-10);  // Nearest value to x=1.5 is y=1.0
 /// assert!(diff2 < 1e-10);  // Nearest value to x=2.5 is y=4.0
 /// ```
-pub fn nearest_interpolate<F: Float + FromPrimitive + Debug + std::fmt::Display>(
+pub fn nearest_interpolate<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     x_new: &ArrayView1<F>,
@@ -380,7 +379,7 @@ pub fn nearest_interpolate<F: Float + FromPrimitive + Debug + std::fmt::Display>
 /// assert!(diff1 < 1e-10);  // Linear interpolation at x=1.5
 /// assert!(diff2 < 1e-10);  // Linear interpolation at x=2.5
 /// ```
-pub fn linear_interpolate<F: Float + FromPrimitive + Debug>(
+pub fn linear_interpolate<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     x_new: &ArrayView1<F>,
@@ -422,7 +421,7 @@ pub fn linear_interpolate<F: Float + FromPrimitive + Debug>(
 /// assert!(diff1 < 0.3);  // as the specific implementation may vary
 /// assert!(diff2 < 0.3);
 /// ```
-pub fn cubic_interpolate<F: Float + FromPrimitive + Debug>(
+pub fn cubic_interpolate<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     x_new: &ArrayView1<F>,

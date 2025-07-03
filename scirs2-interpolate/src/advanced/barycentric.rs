@@ -473,7 +473,7 @@ impl<F: Float + FromPrimitive + Debug> BarycentricTriangulation<F> {
 /// let y_interp = interp.evaluate(2.5).unwrap();
 /// println!("Interpolated value at x=2.5: {}", y_interp);
 /// ```
-pub fn make_barycentric_interpolator<F: Float + FromPrimitive + Debug>(
+pub fn make_barycentric_interpolator<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     order: usize,

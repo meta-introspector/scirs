@@ -25,6 +25,7 @@ pub trait InterpolationFloat:
     + RemAssign
     + Send
     + Sync
+    + Default
     + 'static
 {
     /// Default epsilon value for this floating-point type

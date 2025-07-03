@@ -461,6 +461,7 @@ where
 }
 
 // Helper function for Hessenberg reduction
+#[allow(dead_code)]
 fn hessenberg_reduction<I>(mut a: Array2<I>) -> Array2<I>
 where
     I: Float + Zero + One + Copy + std::ops::AddAssign,
@@ -526,6 +527,7 @@ where
 }
 
 // Helper function to tridiagonalize a symmetric matrix
+#[allow(dead_code)]
 fn tridiagonalize<I>(mut a: Array2<I>) -> Array2<I>
 where
     I: Float + Zero + One + Copy + std::ops::AddAssign + std::ops::SubAssign + std::ops::DivAssign,
@@ -600,6 +602,7 @@ where
 }
 
 // Helper function to tridiagonalize a symmetric matrix and return the transformation matrix
+#[allow(dead_code)]
 fn tridiagonalize_with_transform<I>(a: Array2<I>) -> (Array2<I>, Array2<I>)
 where
     I: Float + Zero + One + Copy + std::ops::AddAssign + std::ops::SubAssign + std::ops::DivAssign,
@@ -689,6 +692,7 @@ where
 }
 
 // QR algorithm for computing eigenvalues of a Hessenberg matrix
+#[allow(dead_code)]
 fn qr_algorithm<I>(mut a: Array2<I>, max_iter: usize, tol: I) -> Array1<num_complex::Complex<I>>
 where
     I: Float + Zero + One + Copy + std::fmt::Debug + std::ops::AddAssign + std::ops::SubAssign,
@@ -789,6 +793,7 @@ where
 }
 
 // QR algorithm for symmetric tridiagonal matrices
+#[allow(dead_code)]
 fn qr_algorithm_symmetric<I>(a: Array2<I>, max_iter: usize, tol: I) -> Array1<I>
 where
     I: Float + Zero + One + Copy + std::fmt::Debug + std::ops::AddAssign + std::ops::SubAssign,
@@ -1772,6 +1777,7 @@ mod tests {
 }
 
 /// Compute eigenvector using inverse iteration in extended precision
+#[allow(dead_code)]
 fn compute_eigenvector_inverse_iteration<I>(
     shifted_matrix: &Array2<num_complex::Complex<I>>,
     _lambda: num_complex::Complex<I>,
@@ -1825,6 +1831,7 @@ where
 }
 
 /// Solve complex linear system using simplified Gaussian elimination
+#[allow(dead_code)]
 fn solve_linear_system_complex<I>(
     a: &Array2<num_complex::Complex<I>>,
     b: &Array1<num_complex::Complex<I>>,
@@ -1892,6 +1899,7 @@ where
 }
 
 /// Compute the norm of a complex vector
+#[allow(dead_code)]
 fn compute_complex_norm<I>(v: &Array1<num_complex::Complex<I>>) -> I
 where
     I: Float + Zero + Copy,

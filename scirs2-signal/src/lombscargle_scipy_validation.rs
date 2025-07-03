@@ -19,6 +19,7 @@ use rand::prelude::*;
 use rand::Rng;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
+#[cfg(test)]
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -298,7 +299,7 @@ fn validate_single_case(
     config: &ScipyValidationConfig,
 ) -> SignalResult<(f64, f64, f64, f64)> {
     // Generate irregular time samples
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let duration = n as f64 / fs;
     let mut t: Vec<f64> = Vec::new();
     let mut signal: Vec<f64> = Vec::new();
@@ -306,14 +307,14 @@ fn validate_single_case(
     // Create irregularly sampled signal with known frequency content
     for i in 0..n {
         let base_time = i as f64 * duration / n as f64;
-        let jitter = rng.random_range(-0.1..0.1) * duration / n as f64;
+        let jitter = rng.gen_range(-0.1..0.1) * duration / n as f64;
         let time = (base_time + jitter).max(0.0).min(duration);
         t.push(time);
 
         // Add signal with multiple frequency components
         let signal_val = (2.0 * PI * test_freq * time).sin()
             + 0.3 * (2.0 * PI * test_freq * 2.0 * time).sin()
-            + 0.1 * rng.random_range(-1.0..1.0); // Add some noise
+            + 0.1 * rng.gen_range(-1.0..1.0); // Add some noise
         signal.push(signal_val);
     }
 
@@ -678,10 +679,10 @@ fn estimate_false_alarm_rate(config: &ScipyValidationConfig) -> SignalResult<f64
 
     for _ in 0..trials {
         // Generate pure noise
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let n = 100;
         let t: Vec<f64> = (0..n).map(|i| i as f64 / 10.0).collect();
-        let signal: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
+        let signal: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
 
         let freqs: Vec<f64> = Array1::linspace(0.1, 5.0, 50).to_vec();
 
@@ -712,14 +713,14 @@ fn estimate_detection_power(config: &ScipyValidationConfig) -> SignalResult<f64>
 
     for _ in 0..trials {
         // Generate signal with known frequency
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let n = 100;
         let fs = 10.0;
         let signal_freq = 1.0;
         let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
         let signal: Vec<f64> = t
             .iter()
-            .map(|&time| (2.0 * PI * signal_freq * time).sin() + 0.1 * rng.random_range(-1.0..1.0))
+            .map(|&time| (2.0 * PI * signal_freq * time).sin() + 0.1 * rng.gen_range(-1.0..1.0))
             .collect();
 
         let freqs: Vec<f64> = Array1::linspace(0.1, fs / 2.0, 50).to_vec();
@@ -1099,7 +1100,7 @@ fn test_numerical_conditioning(
 ) -> SignalResult<ConditioningTestResult> {
     // Generate test data with known conditioning properties
     let n = 1000;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Create time series with irregular sampling
     let mut times: Vec<f64> = (0..n).map(|_| rng.random::<f64>() * 100.0).collect();
@@ -1139,7 +1140,7 @@ fn test_numerical_conditioning(
 
 /// Test aliasing effects in Lomb-Scargle
 fn test_aliasing_effects(config: &ScipyValidationConfig) -> SignalResult<AliasingTestResult> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Test 1: Nyquist aliasing detection
     let nyquist_detection = test_nyquist_aliasing_detection(&mut rng)?;
@@ -1165,7 +1166,7 @@ fn test_aliasing_effects(config: &ScipyValidationConfig) -> SignalResult<Aliasin
 fn test_astronomical_scenarios(
     config: &ScipyValidationConfig,
 ) -> SignalResult<AstronomicalTestResult> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Test 1: Variable star simulation
     let variable_star_detection = test_variable_star_simulation(&mut rng)?;
@@ -1189,7 +1190,7 @@ fn test_astronomical_scenarios(
 
 /// Test phase coherence preservation
 fn test_phase_coherence(config: &ScipyValidationConfig) -> SignalResult<PhaseCoherenceResult> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Generate complex signal with known phase relationships
     let n = 500;
@@ -1227,7 +1228,7 @@ fn quantify_uncertainty(
     config: &ScipyValidationConfig,
     n_bootstrap: usize,
 ) -> SignalResult<UncertaintyResult> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Generate base dataset
     let n = 200;
@@ -1299,7 +1300,7 @@ fn quantify_uncertainty(
 fn test_frequency_resolution(
     config: &ScipyValidationConfig,
 ) -> SignalResult<FrequencyResolutionResult> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Test minimum resolvable frequency separation
     let min_frequency_separation = test_min_frequency_separation(&mut rng)?;
@@ -1489,7 +1490,7 @@ fn estimate_sampling_irregularity(times: &[f64]) -> f64 {
 fn test_perturbation_stability(times: &[f64], values: &[f64], freqs: &[f64]) -> SignalResult<f64> {
     // Test stability under small perturbations to the data
     let perturbation_level = 1e-8;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Original periodogram
     let original = lombscargle(times, values, freqs)?;

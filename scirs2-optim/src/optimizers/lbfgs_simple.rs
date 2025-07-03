@@ -5,7 +5,7 @@ use num_traits::Float;
 use std::collections::VecDeque;
 use std::fmt::Debug;
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use crate::optimizers::Optimizer;
 
 /// Simplified L-BFGS optimizer for testing
@@ -24,8 +24,7 @@ pub struct SimpleLBFGS<A: Float + ScalarOperand + Debug> {
     /// Previous parameters
     prev_params: Option<Array1<A>>,
     /// Previous gradient
-    prev_grad: Option<Array1<A>>,
-}
+    prev_grad: Option<Array1<A>>}
 
 impl<A: Float + ScalarOperand + Debug> SimpleLBFGS<A> {
     pub fn new(learning_rate: A) -> Self {
@@ -35,8 +34,7 @@ impl<A: Float + ScalarOperand + Debug> SimpleLBFGS<A> {
             s_list: VecDeque::new(),
             y_list: VecDeque::new(),
             prev_params: None,
-            prev_grad: None,
-        }
+            prev_grad: None}
     }
 
     pub fn learning_rate(&self) -> A {

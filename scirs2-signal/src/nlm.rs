@@ -24,10 +24,10 @@
 //! }
 //!
 //! // Add noise
-//! let mut rng = rand::thread_rng();
+//! let mut rng = rand::rng();
 //! let mut noisy_signal = clean_signal.clone();
 //! for i in 0..n {
-//!     noisy_signal[i] += 0.2 * rng.random_range(-1.0..1.0);
+//!     noisy_signal[i] += 0.2 * rng.gen_range(-1.0..1.0);
 //! }
 //!
 //! // Apply Non-Local Means denoising

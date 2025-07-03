@@ -389,8 +389,8 @@ where
 
     // Use SIMD operations for basic statistics
     let sum = F::simd_sum(&data.view());
-    let min_val = F::simd_min(&data.view());
-    let max_val = F::simd_max(&data.view());
+    let min_val = F::simd_min_element(&data.view());
+    let max_val = F::simd_max_element(&data.view());
 
     let mean = sum / F::from(n).unwrap();
 
@@ -632,7 +632,7 @@ where
 // Matrix operation placeholder implementations
 fn ultra_covariance_matrix_simd<F, D>(
     data: &ArrayBase<D, Ix2>,
-    optimizer: &AutoOptimizer,
+    _optimizer: &AutoOptimizer,
     has_avx2: bool,
 ) -> StatsResult<Array2<F>>
 where
@@ -642,11 +642,15 @@ where
     let (n_rows, n_cols) = data.dim();
 
     if n_rows == 0 || n_cols == 0 {
-        return Err(StatsError::InvalidArgument("Input data cannot be empty".to_string()));
+        return Err(StatsError::InvalidArgument(
+            "Input data cannot be empty".to_string(),
+        ));
     }
 
     if n_rows < 2 {
-        return Err(StatsError::InsufficientData);
+        return Err(StatsError::InsufficientData(
+            "Insufficient data for operation".to_string(),
+        ));
     }
 
     // First compute column means using SIMD where possible
@@ -715,7 +719,7 @@ where
 
 fn ultra_correlation_matrix_simd<F, D>(
     data: &ArrayBase<D, Ix2>,
-    optimizer: &AutoOptimizer,
+    _optimizer: &AutoOptimizer,
     has_avx2: bool,
 ) -> StatsResult<Array2<F>>
 where
@@ -725,11 +729,15 @@ where
     let (n_rows, n_cols) = data.dim();
 
     if n_rows == 0 || n_cols == 0 {
-        return Err(StatsError::InvalidArgument("Input data cannot be empty".to_string()));
+        return Err(StatsError::InvalidArgument(
+            "Input data cannot be empty".to_string(),
+        ));
     }
 
     if n_rows < 2 {
-        return Err(StatsError::InsufficientData);
+        return Err(StatsError::InsufficientData(
+            "Insufficient data for operation".to_string(),
+        ));
     }
 
     // First compute column means and standard deviations using SIMD where possible
@@ -838,7 +846,7 @@ where
 
 fn ultra_distance_matrix_simd<F, D>(
     data: &ArrayBase<D, Ix2>,
-    optimizer: &AutoOptimizer,
+    _optimizer: &AutoOptimizer,
     has_avx2: bool,
 ) -> StatsResult<Array2<F>>
 where
@@ -848,7 +856,9 @@ where
     let (n_rows, n_cols) = data.dim();
 
     if n_rows == 0 || n_cols == 0 {
-        return Err(StatsError::InvalidArgument("Input data cannot be empty".to_string()));
+        return Err(StatsError::InvalidArgument(
+            "Input data cannot be empty".to_string(),
+        ));
     }
 
     // Create result distance matrix (symmetric, zero diagonal)
@@ -901,7 +911,7 @@ where
 
 fn ultra_cosine_distance_matrix_simd<F, D>(
     data: &ArrayBase<D, Ix2>,
-    optimizer: &AutoOptimizer,
+    _optimizer: &AutoOptimizer,
     has_avx2: bool,
 ) -> StatsResult<Array2<F>>
 where
@@ -911,7 +921,9 @@ where
     let (n_rows, n_cols) = data.dim();
 
     if n_rows == 0 || n_cols == 0 {
-        return Err(StatsError::InvalidArgument("Input data cannot be empty".to_string()));
+        return Err(StatsError::InvalidArgument(
+            "Input data cannot be empty".to_string(),
+        ));
     }
 
     // Precompute norms for all rows using SIMD where possible
@@ -1015,7 +1027,9 @@ where
     let n = data.len();
 
     if n == 0 {
-        return Err(StatsError::InvalidArgument("Input data cannot be empty".to_string()));
+        return Err(StatsError::InvalidArgument(
+            "Input data cannot be empty".to_string(),
+        ));
     }
 
     if quantile < 0.0 || quantile > 1.0 {
@@ -1166,7 +1180,9 @@ where
     let n = data.len();
 
     if n == 0 {
-        return Err(StatsError::InvalidArgument("Input data cannot be empty".to_string()));
+        return Err(StatsError::InvalidArgument(
+            "Input data cannot be empty".to_string(),
+        ));
     }
 
     for &q in quantiles {

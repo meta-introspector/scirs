@@ -3415,13 +3415,6 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
             fitted: false,
         }
     }
-}
-
-impl<F: Float + Debug + Clone + std::iter::Sum> Default for GjrGarchModel<F> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
     /// Fit GJR-GARCH model to returns data
     pub fn fit(&mut self, returns: &Array1<F>) -> Result<GjrGarchResult<F>> {
@@ -3546,6 +3539,12 @@ impl<F: Float + Debug + Clone + std::iter::Sum> Default for GjrGarchModel<F> {
     }
 }
 
+impl<F: Float + Debug + Clone + std::iter::Sum> Default for GjrGarchModel<F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// GJR-GARCH model result
 #[derive(Debug, Clone)]
 pub struct GjrGarchResult<F: Float> {
@@ -3602,13 +3601,6 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
             fitted: false,
         }
     }
-}
-
-impl<F: Float + Debug + Clone + std::iter::Sum> Default for AparchModel<F> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
     /// Fit APARCH model to returns data
     pub fn fit(&mut self, returns: &Array1<F>) -> Result<AparchResult<F>> {

@@ -25,7 +25,6 @@ pub use pooling::{
 mod tests {
     use super::*;
     use crate::layers::Layer;
-    use ndarray::Array4;
 
     #[test]
     fn test_conv2d_basic() {

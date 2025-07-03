@@ -10,7 +10,8 @@ use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
 use super::transformer_optimizer::{TransformerOptimizer, TransformerOptimizerConfig};
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 
 /// Adaptive Transformer Enhancement System
 pub struct AdaptiveTransformerEnhancement<T: Float> {

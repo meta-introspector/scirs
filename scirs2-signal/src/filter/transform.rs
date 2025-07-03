@@ -5,10 +5,11 @@
 //! transformations, and conversions between zeros-poles-gain and transfer function forms.
 
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
 use num_traits::Zero;
 
 use super::common::FilterCoefficients;
+use num_complex::Complex64;
+use std::f64::consts::PI;
 
 /// Apply bilinear transform to convert analog filter to digital
 ///
@@ -31,7 +32,6 @@ use super::common::FilterCoefficients;
 ///
 /// ```
 /// use scirs2_signal::filter::transform::bilinear_transform;
-/// use num_complex::Complex64;
 ///
 /// // Convert simple analog integrator to digital
 /// let analog_poles = vec![Complex64::new(0.0, 0.0)];
@@ -94,7 +94,6 @@ pub fn bilinear_transform(
 ///
 /// ```
 /// use scirs2_signal::filter::transform::zpk_to_tf;
-/// use num_complex::Complex64;
 ///
 /// // Convert simple first-order system
 /// let zeros = vec![];

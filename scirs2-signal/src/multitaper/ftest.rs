@@ -6,6 +6,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
+use num_complex::Complex64;
 use scirs2_core::validation::{check_positive, check_shape};
 use statrs::distribution::{ContinuousCDF, FisherSnedecor};
 

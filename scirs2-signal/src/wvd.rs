@@ -8,10 +8,10 @@
 // - Boashash, B. (2015). Time-Frequency Signal Analysis and Processing (2nd ed.). Academic Press.
 
 use ndarray::{s, Array1, Array2};
-use num_complex::Complex64;
 
 use crate::error::{SignalError, SignalResult};
 use crate::hilbert;
+use num_complex::Complex64;
 
 /// Configuration parameters for the Wigner-Ville Distribution
 #[derive(Debug, Clone)]
@@ -477,6 +477,7 @@ pub fn extract_ridges(
 mod tests {
     use super::*;
     use ndarray::Array;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

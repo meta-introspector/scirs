@@ -89,6 +89,7 @@ pub struct LSTM<F: Float + Debug + Send + Sync> {
     /// Cell states cache for backward pass
     cell_states_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
     /// Gate values cache for backward pass
+    #[allow(dead_code)]
     gate_cache: LstmGateCache<F>,
 }
 
@@ -135,7 +136,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
                 weights_vec.push(val * scale);
             }
             Array::from_shape_vec(IxDyn(&[rows, cols]), weights_vec).map_err(|e| {
-                NeuralError::InvalidArchitecture(format!("Failed to create weights array: {}", e))
+                NeuralError::InvalidArchitecture(format!("Failed to create weights array: {e}"))
             })
         };
         // Initialize all weights and biases
@@ -332,8 +333,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
         let input_shape = input.shape();
         if input_shape.len() != 3 {
             return Err(NeuralError::InferenceError(format!(
-                "Expected 3D input [batch_size, seq_len, features], got {:?}",
-                input_shape
+                "Expected 3D input [batch_size, seq_len, features], got {input_shape:?}"
             )));
         }
 

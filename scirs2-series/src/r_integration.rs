@@ -16,7 +16,7 @@ use std::slice;
 use crate::{
     anomaly::{detect_anomalies, AnomalyMethod, AnomalyOptions},
     arima_models::ArimaModel,
-    decomposition::{stl_decompose, STLOptions},
+    decomposition::{stl_decomposition, STLOptions},
     error::{Result, TimeSeriesError},
     forecasting::neural::NeuralForecaster,
     utils::*,

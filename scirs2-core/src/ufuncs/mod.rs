@@ -4,7 +4,7 @@
 //! similar to `NumPy`'s ufuncs, allowing for vectorized element-wise operations with
 //! automatic broadcasting.
 
-use crate::error::{CoreError, CoreResult, ErrorLocation};
+use crate::error::{CoreError, CoreResult};
 use ndarray::{Array, ArrayView, Ix1, Ix2};
 use std::ops;
 
@@ -612,6 +612,7 @@ pub mod binary2d {
 /// Reduction operations for arrays
 pub mod reduction {
     use super::*;
+    use crate::error::{ErrorContext, ErrorLocation};
     use num_traits::{Float, FromPrimitive, One, Zero};
 
     /// Sum of array elements

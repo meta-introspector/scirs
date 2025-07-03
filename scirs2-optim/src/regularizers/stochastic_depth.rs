@@ -8,7 +8,7 @@ use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use crate::regularizers::Regularizer;
 
 /// Stochastic Depth regularization

@@ -10,6 +10,7 @@ use ndarray::{s, Array1, Array2, ArrayView2, Axis};
 // Enhanced with robust controllability/observability analysis
 use num_complex::Complex64;
 use scirs2_core::validation::{check_finite, check_shape};
+#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Comprehensive LTI system analysis result
@@ -1548,7 +1549,7 @@ fn analyze_controllability_uncertainty(
     use rand::prelude::*;
 
     let mut measures = Vec::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for _ in 0..config.mc_samples {
         // Add random perturbations to system matrices
@@ -1559,7 +1560,7 @@ fn analyze_controllability_uncertainty(
         for i in 0..perturbed_a.nrows() {
             for j in 0..perturbed_a.ncols() {
                 let noise =
-                    rng.random_range(-config.perturbation_magnitude..config.perturbation_magnitude);
+                    rng.gen_range(-config.perturbation_magnitude..config.perturbation_magnitude);
                 perturbed_a[[i, j]] += noise;
             }
         }
@@ -1567,7 +1568,7 @@ fn analyze_controllability_uncertainty(
         for i in 0..perturbed_b.nrows() {
             for j in 0..perturbed_b.ncols() {
                 let noise =
-                    rng.random_range(-config.perturbation_magnitude..config.perturbation_magnitude);
+                    rng.gen_range(-config.perturbation_magnitude..config.perturbation_magnitude);
                 perturbed_b[[i, j]] += noise;
             }
         }

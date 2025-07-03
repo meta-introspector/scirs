@@ -10,7 +10,6 @@
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
 use ndarray::{Array1, Array2};
-use num_complex::Complex64;
 use rand::prelude::*;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::f64::consts::PI;
@@ -639,14 +638,14 @@ fn cross_validate_lombscargle_methods(
 fn generate_lombscargle_test_signal(
     config: &TestSignalConfig,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Generate irregular time points
     let mut times = Vec::with_capacity(config.n);
     for i in 0..config.n {
         let regular_time = (i as f64 / (config.n - 1) as f64) * config.time_span;
-        let noise = (rng.random_range(-1.0..1.0) * config.irregularity * config.time_span
-            / config.n as f64);
+        let noise =
+            (rng.gen_range(-1.0..1.0) * config.irregularity * config.time_span / config.n as f64);
         times.push(regular_time + noise);
     }
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -710,13 +709,13 @@ fn generate_single_sinusoid(
     amplitudes: &[f64],
     noise_level: f64,
 ) -> Vec<f64> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let freq = frequencies[0];
     let amp = amplitudes[0];
 
     times
         .iter()
-        .map(|&t| amp * (2.0 * PI * freq * t).sin() + noise_level * rng.random_range(-1.0..1.0))
+        .map(|&t| amp * (2.0 * PI * freq * t).sin() + noise_level * rng.gen_range(-1.0..1.0))
         .collect()
 }
 
@@ -727,7 +726,7 @@ fn generate_multiple_sinusoids(
     amplitudes: &[f64],
     noise_level: f64,
 ) -> Vec<f64> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     times
         .iter()
@@ -737,17 +736,17 @@ fn generate_multiple_sinusoids(
                 let amp = amplitudes.get(i).copied().unwrap_or(1.0);
                 signal += amp * (2.0 * PI * freq * t).sin();
             }
-            signal + noise_level * rng.random_range(-1.0..1.0)
+            signal + noise_level * rng.gen_range(-1.0..1.0)
         })
         .collect()
 }
 
 /// Generate pure noise signal
 fn generate_pure_noise(times: &[f64], noise_level: f64) -> Vec<f64> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     times
         .iter()
-        .map(|_| noise_level * rng.random_range(-1.0..1.0))
+        .map(|_| noise_level * rng.gen_range(-1.0..1.0))
         .collect()
 }
 
@@ -850,13 +849,13 @@ fn estimate_lombscargle_frequency_resolution(_config: &TestSignalConfig) -> Sign
 }
 
 fn generate_highly_irregular_data(n: usize, time_span: f64) -> SignalResult<(Vec<f64>, Vec<f64>)> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut times = Vec::new();
     let mut signal = Vec::new();
 
     for _ in 0..n {
-        times.push(rng.random_range(0.0..time_span));
-        signal.push(rng.random_range(-1.0..1.0));
+        times.push(rng.gen_range(0.0..time_span));
+        signal.push(rng.gen_range(-1.0..1.0));
     }
 
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -1281,7 +1280,7 @@ fn enhance_with_real_world_signal_validation(
 
     // Test 1: Simulated variable star light curve
     let n_obs = 200;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut star_times = Vec::new();
     let mut star_magnitudes = Vec::new();
 
@@ -1297,8 +1296,8 @@ fn enhance_with_real_world_signal_validation(
 
                 // Variable star with 2.3-day period plus noise
                 let period = 2.3;
-                let magnitude = 12.0 - 0.5 * (2.0 * PI * time / period).sin()
-                    + 0.1 * rng.random_range(-1.0..1.0);
+                let magnitude =
+                    12.0 - 0.5 * (2.0 * PI * time / period).sin() + 0.1 * rng.gen_range(-1.0..1.0);
                 star_magnitudes.push(magnitude);
             }
         }
@@ -1345,7 +1344,7 @@ fn enhance_with_real_world_signal_validation(
 
     // Test 2: Simulated heart rate variability
     let hrv_times: Vec<f64> = (0..300)
-        .map(|i| i as f64 * 1.0 + 0.1 * rng.random_range(-0.5..0.5))
+        .map(|i| i as f64 * 1.0 + 0.1 * rng.gen_range(-0.5..0.5))
         .collect();
     let hrv_signal: Vec<f64> = hrv_times
         .iter()
@@ -1353,7 +1352,7 @@ fn enhance_with_real_world_signal_validation(
             // Respiratory sinus arrhythmia (~0.25 Hz) + LF component (~0.1 Hz)
             60.0 + 5.0 * (2.0 * PI * 0.25 * t).sin()
                 + 3.0 * (2.0 * PI * 0.1 * t).sin()
-                + 1.0 * rng.random_range(-1.0..1.0)
+                + 1.0 * rng.gen_range(-1.0..1.0)
         })
         .collect();
 
@@ -1424,7 +1423,7 @@ fn enhance_with_statistical_robustness_tests(
     let n = 100;
     let times: Vec<f64> = (0..n).map(|i| i as f64 * 0.1).collect();
     let true_freq = 0.15;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let mut bootstrap_results = Vec::new();
 
@@ -1432,7 +1431,7 @@ fn enhance_with_statistical_robustness_tests(
         // Bootstrap trials
         let signal: Vec<f64> = times
             .iter()
-            .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.3 * rng.random_range(-1.0..1.0))
+            .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.3 * rng.gen_range(-1.0..1.0))
             .collect();
 
         match lombscargle(
@@ -1532,8 +1531,8 @@ fn enhance_with_statistical_robustness_tests(
         .map(|&t| {
             let signal = (2.0 * PI * 0.08 * t).sin();
             // Laplacian noise (exponential distribution - uniform)
-            let u1 = rng.random_range(0.0..1.0);
-            let u2 = rng.random_range(0.0..1.0);
+            let u1 = rng.gen_range(0.0..1.0);
+            let u2 = rng.gen_range(0.0..1.0);
             let laplacian_noise = if u1 < 0.5 {
                 -(-2.0 * u2.ln()).sqrt()
             } else {

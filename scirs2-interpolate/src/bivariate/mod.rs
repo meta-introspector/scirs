@@ -59,7 +59,9 @@ pub struct BivariateSpline<F: Float + FromPrimitive + Debug + std::fmt::Display>
     fp: Option<F>,
 }
 
-impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BivariateSpline<F> {
+impl<F: Float + FromPrimitive + Debug + std::fmt::Display + crate::traits::InterpolationFloat>
+    BivariateSpline<F>
+{
     /// Create a new bivariate spline from knots and coefficients
     pub fn from_tck(
         tx: Array1<F>,
@@ -326,8 +328,8 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BivariateSpline<F> {
     }
 }
 
-impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BivariateInterpolator<F>
-    for BivariateSpline<F>
+impl<F: Float + FromPrimitive + Debug + std::fmt::Display + crate::traits::InterpolationFloat>
+    BivariateInterpolator<F> for BivariateSpline<F>
 {
     fn evaluate(
         &self,
@@ -407,7 +409,11 @@ pub struct SmoothBivariateSplineBuilder<'a, F: Float + FromPrimitive + Debug + s
     eps: Option<F>,
 }
 
-impl<'a, F: Float + FromPrimitive + Debug + std::fmt::Display> SmoothBivariateSplineBuilder<'a, F> {
+impl<
+        'a,
+        F: Float + FromPrimitive + Debug + std::fmt::Display + crate::traits::InterpolationFloat,
+    > SmoothBivariateSplineBuilder<'a, F>
+{
     /// Create a new builder with required parameters
     pub fn new(
         x: &'a ArrayView1<'a, F>,

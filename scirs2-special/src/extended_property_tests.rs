@@ -395,7 +395,7 @@ mod spherical_harmonics_properties {
 
         // For m=0, Y_l0 should be real
         match y_lm {
-            Ok((re, im)) => TestResult::from_bool(im.abs() < 1e-14),
+            Ok((_re, im)) => TestResult::from_bool(im.abs() < 1e-14),
             Err(_) => TestResult::discard(),
         }
     }
@@ -527,7 +527,7 @@ mod cross_function_properties {
         }
 
         let gamma_n_plus_1 = gamma((n + 1) as f64);
-        let n_factorial = factorial(n) as f64;
+        let n_factorial = factorial(n).unwrap();
 
         TestResult::from_bool(approx_eq(gamma_n_plus_1, n_factorial, 1e-10))
     }

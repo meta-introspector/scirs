@@ -8,17 +8,14 @@
 //! - Wavelet-based image enhancement
 //! - Directional wavelets and steerable filters
 
-use crate::dwt::{Wavelet, WaveletFilters};
-use crate::dwt2d_enhanced::{
-    enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig, EnhancedDwt2dResult,
-};
+use crate::dwt::Wavelet;
+use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, Array3, ArrayView2, Axis};
+use ndarray::{s, Array2};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use scirs2_core::validation::check_finite;
+#[cfg(test)]
 use std::f64::consts::PI;
-use std::sync::Arc;
 
 /// Advanced 2D wavelet processing configuration
 #[derive(Debug, Clone)]
@@ -908,8 +905,8 @@ mod tests {
         });
 
         // Add noise
-        let mut rng = rand::thread_rng();
-        let noisy_image = clean_image.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
+        let mut rng = rand::rng();
+        let noisy_image = clean_image.mapv(|x| x + 0.1 * rng.gen_range(-1.0..1.0));
 
         let config = AdvancedWaveletConfig::default();
         let result = advanced_wavelet_denoising(&noisy_image, Wavelet::DB(4), &config).unwrap();

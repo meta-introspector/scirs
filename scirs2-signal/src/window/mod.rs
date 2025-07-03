@@ -5,6 +5,7 @@
 //! reducing spectral leakage in Fourier transforms and filter design.
 
 use crate::error::{SignalError, SignalResult};
+#[cfg(test)]
 use std::f64::consts::PI;
 
 // Import specialized window implementations
@@ -1321,6 +1322,7 @@ mod lanczos_tests {
 pub mod analysis {
     use super::*;
     use crate::error::{SignalError, SignalResult};
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     /// Window analysis results

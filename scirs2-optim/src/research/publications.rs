@@ -3,7 +3,7 @@
 //! This module provides tools for generating academic publications from experimental
 //! results, managing bibliographies, and formatting papers for various venues.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use crate::research::experiments::{Experiment, ExperimentResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -44,8 +44,7 @@ pub struct Publication {
     /// Creation timestamp
     pub created_at: DateTime<Utc>,
     /// Last modified timestamp
-    pub modified_at: DateTime<Utc>,
-}
+    pub modified_at: DateTime<Utc>}
 
 /// Author information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -61,8 +60,7 @@ pub struct Author {
     /// Author position (first, corresponding, etc.)
     pub position: AuthorPosition,
     /// Contribution description
-    pub contributions: Vec<String>,
-}
+    pub contributions: Vec<String>}
 
 /// Author affiliation
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -74,8 +72,7 @@ pub struct Affiliation {
     /// Address
     pub address: String,
     /// Country
-    pub country: String,
-}
+    pub country: String}
 
 /// Author position/role
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -89,8 +86,7 @@ pub enum AuthorPosition {
     /// Equal contribution
     EqualContribution,
     /// Regular author
-    Regular,
-}
+    Regular}
 
 /// Publication types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -114,8 +110,7 @@ pub enum PublicationType {
     /// Software paper
     SoftwarePaper,
     /// Dataset paper
-    DatasetPaper,
-}
+    DatasetPaper}
 
 /// Publication venue
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -137,8 +132,7 @@ pub struct Venue {
     /// Ranking (A*, A, B, C)
     pub ranking: Option<String>,
     /// Venue URL
-    pub url: Option<String>,
-}
+    pub url: Option<String>}
 
 /// Venue types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -154,8 +148,7 @@ pub enum VenueType {
     /// Preprint server
     PreprintServer,
     /// Repository
-    Repository,
-}
+    Repository}
 
 /// Publication status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -177,8 +170,7 @@ pub enum PublicationStatus {
     /// Rejected
     Rejected,
     /// Withdrawn
-    Withdrawn,
-}
+    Withdrawn}
 
 /// Manuscript section
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -197,8 +189,7 @@ pub struct ManuscriptSection {
     pub figures: Vec<Figure>,
     pub tables: Vec<Table>,
     /// References in this section
-    pub references: Vec<String>,
-}
+    pub references: Vec<String>}
 
 /// Section types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -226,8 +217,7 @@ pub enum SectionType {
     /// Appendix
     Appendix,
     /// Custom section
-    Custom(String),
-}
+    Custom(String)}
 
 /// Figure information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -245,8 +235,7 @@ pub struct Figure {
     /// Height (in publication units)
     pub height: Option<f64>,
     /// Associated experiment ID
-    pub experiment_id: Option<String>,
-}
+    pub experiment_id: Option<String>}
 
 /// Figure types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -264,8 +253,7 @@ pub enum FigureType {
     /// Photo
     Photo,
     /// Other
-    Other,
-}
+    Other}
 
 /// Table information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -279,8 +267,7 @@ pub struct Table {
     /// Table number
     pub number: usize,
     /// Associated experiment ID
-    pub experiment_id: Option<String>,
-}
+    pub experiment_id: Option<String>}
 
 /// Bibliography management
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -290,8 +277,7 @@ pub struct Bibliography {
     /// Citation style
     pub citation_style: CitationStyle,
     /// Bibliography file path
-    pub file_path: Option<PathBuf>,
-}
+    pub file_path: Option<PathBuf>}
 
 /// BibTeX entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -301,8 +287,7 @@ pub struct BibTeXEntry {
     /// Entry type (article, inproceedings, etc.)
     pub entry_type: String,
     /// Fields (title, author, year, etc.)
-    pub fields: HashMap<String, String>,
-}
+    pub fields: HashMap<String, String>}
 
 /// Citation styles
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -324,8 +309,7 @@ pub enum CitationStyle {
     /// Harvard style
     Harvard,
     /// Custom style
-    Custom(String),
-}
+    Custom(String)}
 
 /// Submission record
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -343,8 +327,7 @@ pub struct SubmissionRecord {
     /// Decision outcome
     pub decision: Option<Decision>,
     /// Comments from editors
-    pub editor_comments: Option<String>,
-}
+    pub editor_comments: Option<String>}
 
 /// Submission status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -356,8 +339,7 @@ pub enum SubmissionStatus {
     /// Decision made
     Decided,
     /// Withdrawn
-    Withdrawn,
-}
+    Withdrawn}
 
 /// Review decision
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -371,8 +353,7 @@ pub enum Decision {
     /// Reject and resubmit
     RejectAndResubmit,
     /// Reject
-    Reject,
-}
+    Reject}
 
 /// Review information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -398,8 +379,7 @@ pub struct Review {
     /// Recommendation
     pub recommendation: ReviewRecommendation,
     /// Review timestamp
-    pub submitted_at: DateTime<Utc>,
-}
+    pub submitted_at: DateTime<Utc>}
 
 /// Reviewer information (anonymized)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -409,8 +389,7 @@ pub struct ReviewerInfo {
     /// Expertise level
     pub expertise_level: ExpertiseLevel,
     /// Research areas
-    pub research_areas: Vec<String>,
-}
+    pub research_areas: Vec<String>}
 
 /// Expertise levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -422,8 +401,7 @@ pub enum ExpertiseLevel {
     /// Some knowledge
     SomeKnowledge,
     /// Limited knowledge
-    LimitedKnowledge,
-}
+    LimitedKnowledge}
 
 /// Review recommendation
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -441,8 +419,7 @@ pub enum ReviewRecommendation {
     /// Reject
     Reject,
     /// Strong reject
-    StrongReject,
-}
+    StrongReject}
 
 /// Publication metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -466,8 +443,7 @@ pub struct PublicationMetadata {
     /// License
     pub license: Option<String>,
     /// Open access status
-    pub open_access: bool,
-}
+    pub open_access: bool}
 
 /// Publication generator for creating publications from experiments
 #[derive(Debug)]
@@ -477,8 +453,7 @@ pub struct PublicationGenerator {
     /// Default citation style
     default_citation_style: CitationStyle,
     /// Output directory
-    output_dir: PathBuf,
-}
+    output_dir: PathBuf}
 
 /// Publication template
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -490,8 +465,7 @@ pub struct PublicationTemplate {
     /// Default formatting options
     pub formatting: FormattingOptions,
     /// Target venue constraints
-    pub venue_constraints: VenueConstraints,
-}
+    pub venue_constraints: VenueConstraints}
 
 /// Section template
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -503,8 +477,7 @@ pub struct SectionTemplate {
     /// Required fields
     pub required_fields: Vec<String>,
     /// Word count target
-    pub target_word_count: Option<usize>,
-}
+    pub target_word_count: Option<usize>}
 
 /// Formatting options
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -522,8 +495,7 @@ pub struct FormattingOptions {
     /// Figure numbering
     pub figure_numbering: NumberingStyle,
     /// Table numbering
-    pub table_numbering: NumberingStyle,
-}
+    pub table_numbering: NumberingStyle}
 
 /// Document formats
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -537,8 +509,7 @@ pub enum DocumentFormat {
     /// Microsoft Word
     Word,
     /// PDF
-    PDF,
-}
+    PDF}
 
 /// Page margins
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -550,8 +521,7 @@ pub struct Margins {
     /// Left margin
     pub left: f64,
     /// Right margin
-    pub right: f64,
-}
+    pub right: f64}
 
 /// Citation format
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -563,8 +533,7 @@ pub enum CitationFormat {
     /// Superscript citations¹
     Superscript,
     /// Footnote citations
-    Footnote,
-}
+    Footnote}
 
 /// Numbering styles
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -576,8 +545,7 @@ pub enum NumberingStyle {
     /// Letters (a, b, c)
     Letters,
     /// No numbering
-    None,
-}
+    None}
 
 /// Venue constraints
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -595,8 +563,7 @@ pub struct VenueConstraints {
     /// Table limits
     pub max_tables: Option<usize>,
     /// Reference limits
-    pub max_references: Option<usize>,
-}
+    pub max_references: Option<usize>}
 
 impl Publication {
     /// Create a new publication
@@ -618,8 +585,7 @@ impl Publication {
             reviews: Vec::new(),
             metadata: PublicationMetadata::default(),
             created_at: now,
-            modified_at: now,
-        }
+            modified_at: now}
     }
     
     /// Set publication abstract
@@ -889,8 +855,7 @@ impl Publication {
             } else { 
                 0.0 
             },
-            avg_review_time_days: avg_review_time,
-        }
+            avg_review_time_days: avg_review_time}
     }
 }
 
@@ -908,8 +873,7 @@ pub struct SubmissionStatistics {
     /// Acceptance rate (0.0 to 1.0)
     pub acceptance_rate: f64,
     /// Average review time in days
-    pub avg_review_time_days: f64,
-}
+    pub avg_review_time_days: f64}
 
 impl Bibliography {
     /// Create a new bibliography
@@ -917,8 +881,7 @@ impl Bibliography {
         Self {
             entries: HashMap::new(),
             citation_style: CitationStyle::IEEE,
-            file_path: None,
-        }
+            file_path: None}
     }
     
     /// Add a BibTeX entry
@@ -958,8 +921,7 @@ impl Bibliography {
                         current_entry = Some(BibTeXEntry {
                             key,
                             entry_type,
-                            fields: HashMap::new(),
-                        });
+                            fields: HashMap::new()});
                     }
                 }
             } else if line.contains('=') && current_entry.is_some() {
@@ -1001,8 +963,7 @@ impl Default for PublicationMetadata {
             month: None,
             isbn_issn: None,
             license: None,
-            open_access: false,
-        }
+            open_access: false}
     }
 }
 
@@ -1012,8 +973,7 @@ impl PublicationGenerator {
         Self {
             templates: HashMap::new(),
             default_citation_style: CitationStyle::IEEE,
-            output_dir,
-        }
+            output_dir}
     }
     
     /// Generate publication from experiments
@@ -1062,8 +1022,7 @@ impl PublicationGenerator {
             SectionType::Experiments => self.generate_experiments_section(experiments)?,
             SectionType::Results => self.generate_results(experiments)?,
             SectionType::Conclusion => self.generate_conclusion(experiments)?,
-            _ => template.template.clone(),
-        };
+            _ => template.template.clone()};
         
         Ok(ManuscriptSection {
             title: match template.section_type {
@@ -1073,16 +1032,14 @@ impl PublicationGenerator {
                 SectionType::Results => "Results".to_string(),
                 SectionType::Conclusion => "Conclusion".to_string(),
                 SectionType::Custom(ref name) => name.clone(),
-                _ => format!("{:?}", template.section_type),
-            },
+                _ => format!("{:?}", template.section_type)},
             content,
             order: 0, // Will be set based on section type
             section_type: template.section_type.clone(),
             word_count: 0, // Will be calculated
             figures: Vec::new(),
             tables: Vec::new(),
-            references: Vec::new(),
-        })
+            references: Vec::new()})
     }
     
     fn generate_introduction(&self, _experiments: &[Experiment]) -> Result<String> {
@@ -1162,8 +1119,7 @@ mod tests {
                 fields.insert("title".to_string(), "Test Title".to_string());
                 fields.insert("year".to_string(), "2023".to_string());
                 fields
-            },
-        };
+            }};
         
         bibliography.add_entry(entry);
         assert_eq!(bibliography.entries.len(), 1);

@@ -6,8 +6,7 @@
 
 use super::{
     operations::{AdvancedGpuOperations, GpuKernelManager, GpuOperationDispatcher},
-    AutoGpuSelector, GpuBackend, GpuBackendManager, GpuContext, GpuContextAlloc, GpuDeviceType,
-    GpuOperation, GpuRecommendation,
+    GpuBackendManager, GpuContext, GpuDeviceType, GpuLinalgOps,
 };
 use crate::error::{LinalgError, LinalgResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
@@ -1232,11 +1231,11 @@ mod tests {
         let b = Array2::<f64>::ones((4, 4));
 
         // These should not panic even without GPU
-        let result = GpuAccelerationFramework::quick_matmul(&a.view(), &b.view());
+        let _result = GpuAccelerationFramework::quick_matmul(&a.view(), &b.view());
         // Result depends on GPU availability
 
         let x = Array1::<f64>::ones(4);
-        let result = GpuAccelerationFramework::quick_matvec(&a.view(), &x.view());
+        let _result = GpuAccelerationFramework::quick_matvec(&a.view(), &x.view());
         // Result depends on GPU availability
     }
 }

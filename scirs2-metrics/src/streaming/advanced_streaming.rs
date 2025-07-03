@@ -430,7 +430,7 @@ pub struct PerformanceDegradation {
 }
 
 /// Anomaly detector for streaming data
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AnomalyDetector<F: Float + std::fmt::Debug + Send + Sync> {
     algorithm: AnomalyDetectionAlgorithm,
     history_buffer: VecDeque<F>,
@@ -616,7 +616,9 @@ impl Default for StreamingConfig {
     }
 }
 
-impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> AdaptiveStreamingMetrics<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + 'static>
+    AdaptiveStreamingMetrics<F>
+{
     /// Create new adaptive streaming metrics
     pub fn new(config: StreamingConfig) -> Result<Self> {
         let mut drift_detectors: Vec<Box<dyn ConceptDriftDetector<F> + Send + Sync>> = Vec::new();
@@ -2341,7 +2343,7 @@ pub enum FeatureNormalization {
 }
 
 /// Optimization configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct OptimizationConfig {
     /// Optimization algorithm
     pub algorithm: OptimizationAlgorithm,
@@ -2372,6 +2374,12 @@ pub enum OptimizationAlgorithm {
     GridSearch { grid_density: usize },
     /// Random Search
     RandomSearch { num_trials: usize },
+}
+
+impl Default for OptimizationAlgorithm {
+    fn default() -> Self {
+        OptimizationAlgorithm::RandomSearch { num_trials: 100 }
+    }
 }
 
 /// Monitoring configuration
@@ -2488,6 +2496,21 @@ pub struct AdamOptimizer<F: Float + std::fmt::Debug> {
     t: usize,
 }
 
+impl<F: Float + std::fmt::Debug> AdamOptimizer<F> {
+    /// Create a new Adam optimizer
+    pub fn new(learning_rate: F) -> Result<Self> {
+        Ok(Self {
+            learning_rate,
+            beta1: F::from(0.9).unwrap(),
+            beta2: F::from(0.999).unwrap(),
+            epsilon: F::from(1e-8).unwrap(),
+            m: Vec::new(),
+            v: Vec::new(),
+            t: 0,
+        })
+    }
+}
+
 impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> NeuralOptimizer<F>
     for AdamOptimizer<F>
 {
@@ -2521,8 +2544,10 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> NeuralOp
             let v_hat = &self.v[i] / (F::one() - beta2_t);
 
             // Update parameters
-            *param =
-                param - &(&m_hat / (&v_hat.mapv(|x| x.sqrt()) + self.epsilon)) * self.learning_rate;
+            let epsilon_array = Array2::from_elem(v_hat.dim(), self.epsilon);
+            let denominator = &v_hat.mapv(|x| x.sqrt()) + &epsilon_array;
+            let update = &m_hat / &denominator;
+            *param = &*param - &(&update * self.learning_rate);
         }
 
         Ok(())
@@ -2628,13 +2653,14 @@ impl<F: Float + std::fmt::Debug> AdaptiveControlAgent<F> {
     /// Update experience in the RL agent
     pub fn update_experience(
         &mut self,
-        state: &Array1<F>,
-        action: &Array1<F>,
+        _state: &Array1<F>,
+        _action: &Array1<F>,
         reward: F,
         _performance_metrics: &HashMap<String, F>,
     ) -> Result<()> {
         // Update training metrics
         let metrics = RLTrainingMetrics {
+            episode: 0,
             total_reward: reward,
             average_reward: reward,
             exploration_rate: F::from(0.1).unwrap(),
@@ -2843,7 +2869,98 @@ pub struct OnlineLearningSystem<F: Float + std::fmt::Debug + Send + Sync> {
     performance_tracker: OnlinePerformanceTracker<F>,
 }
 
-impl<F: Float + std::fmt::Debug + Send + Sync> OnlineLearningSystem<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + 'static> OnlineLearningSystem<F> {
+    /// Create a new online learning system
+    pub fn new(config: OnlineLearningConfig) -> Result<Self> {
+        // Create placeholder implementations for required traits
+        struct PlaceholderOptimizer<F: Float> {
+            learning_rate: F,
+        }
+
+        impl<F: Float> OnlineOptimizer<F> for PlaceholderOptimizer<F> {
+            fn update(
+                &mut self,
+                _parameters: &mut Array1<F>,
+                _features: &Array1<F>,
+                _target: F,
+                _learning_rate: F,
+            ) -> Result<()> {
+                Ok(())
+            }
+
+            fn get_learning_rate(&self) -> F {
+                self.learning_rate
+            }
+
+            fn adapt_to_drift(&mut self, _drift_magnitude: F) -> Result<()> {
+                Ok(())
+            }
+        }
+
+        #[derive(Debug)]
+        struct PlaceholderDriftDetector<F: Float> {
+            threshold: F,
+        }
+
+        impl<F: Float + std::fmt::Debug + Send + Sync> ConceptDriftDetector<F>
+            for PlaceholderDriftDetector<F>
+        {
+            fn update(
+                &mut self,
+                _prediction_correct: bool,
+                _error: F,
+            ) -> Result<DriftDetectionResult> {
+                Ok(DriftDetectionResult {
+                    status: DriftStatus::Stable,
+                    confidence: F::from(0.5).unwrap().to_f64().unwrap(),
+                    change_point: None,
+                    statistics: HashMap::new(),
+                })
+            }
+
+            fn get_status(&self) -> DriftStatus {
+                DriftStatus::Stable
+            }
+
+            fn reset(&mut self) {
+                // Reset placeholder detector
+            }
+
+            fn get_config(&self) -> HashMap<String, f64> {
+                let mut config = HashMap::new();
+                config.insert("threshold".to_string(), 0.5);
+                config
+            }
+
+            fn get_statistics(&self) -> DriftStatistics<F> {
+                DriftStatistics {
+                    samples_since_reset: 0,
+                    warnings_count: 0,
+                    drifts_count: 0,
+                    current_error_rate: F::zero(),
+                    baseline_error_rate: F::zero(),
+                    drift_score: F::from(0.5).unwrap(),
+                    last_detection_time: None,
+                }
+            }
+        }
+
+        Ok(Self {
+            model_parameters: Array1::zeros(10),
+            feature_buffer: VecDeque::new(),
+            target_buffer: VecDeque::new(),
+            optimizer: Box::new(PlaceholderOptimizer {
+                learning_rate: F::from(config.adaptation_rate).unwrap(),
+            }),
+            drift_detector: Box::new(PlaceholderDriftDetector {
+                threshold: F::from(config.drift_adaptation_threshold).unwrap(),
+            }),
+            model_ensemble: Vec::new(),
+            adaptation_history: Vec::new(),
+            performance_tracker: OnlinePerformanceTracker::new()?,
+        })
+    }
+
     /// Get performance metrics
     pub fn get_performance_metrics(&self) -> HashMap<String, F> {
         let mut metrics = HashMap::new();
@@ -2996,6 +3113,27 @@ pub struct OnlinePerformanceTracker<F: Float + std::fmt::Debug + Send + Sync> {
     performance_anomaly_detector: Box<AnomalyDetector<F>>,
 }
 
+impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum>
+    OnlinePerformanceTracker<F>
+{
+    /// Create a new online performance tracker
+    pub fn new() -> Result<Self> {
+        #[derive(Debug)]
+        struct PlaceholderAnomalyDetector<F: Float> {
+            threshold: F,
+        }
+
+        Ok(Self {
+            performance_history: VecDeque::new(),
+            current_metrics: HashMap::new(),
+            trends: HashMap::new(),
+            performance_anomaly_detector: Box::new(AnomalyDetector::new(
+                AnomalyDetectionAlgorithm::ZScore { threshold: 3.0 },
+            )?),
+        })
+    }
+}
+
 /// Trend analysis for performance metrics
 #[derive(Debug, Clone)]
 pub struct TrendAnalysis<F: Float + std::fmt::Debug> {
@@ -3035,7 +3173,7 @@ pub struct PerformancePrediction<F: Float + std::fmt::Debug> {
 }
 
 /// Performance predictor using neural networks
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct PerformancePredictor<F: Float + std::fmt::Debug> {
     /// Neural network for prediction
     predictor_network: NeuralParameterOptimizer<F>,
@@ -3049,7 +3187,21 @@ pub struct PerformancePredictor<F: Float + std::fmt::Debug> {
     uncertainty_quantifier: UncertaintyQuantifier<F>,
 }
 
-impl<F: Float + std::fmt::Debug> PerformancePredictor<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> PerformancePredictor<F> {
+    /// Create a new performance predictor
+    pub fn new(_config: NetworkConfig) -> Result<Self> {
+        Ok(Self {
+            predictor_network: NeuralParameterOptimizer::new(
+                _config.clone(),
+                OptimizationConfig::default(),
+            )?,
+            feature_preprocessor: FeaturePreprocessor::new()?,
+            prediction_history: VecDeque::new(),
+            confidence_estimator: ConfidenceEstimator::new()?,
+            uncertainty_quantifier: UncertaintyQuantifier::new()?,
+        })
+    }
+
     /// Get accuracy from prediction history
     pub fn get_accuracy(&self) -> F {
         if self.prediction_history.is_empty() {
@@ -3094,7 +3246,7 @@ impl<F: Float + std::fmt::Debug> PerformancePredictor<F> {
     }
 
     /// Predict performance based on features
-    pub fn predict(&self, features: &Array1<F>, _parameters: &Array1<F>) -> Result<F> {
+    pub fn predict(&self, _features: &Array1<F>, _parameters: &Array1<F>) -> Result<F> {
         // Simple prediction based on history
         if self.prediction_history.is_empty() {
             return Ok(F::zero());
@@ -3125,6 +3277,23 @@ pub struct FeaturePreprocessor<F: Float + std::fmt::Debug> {
     projection_matrix: Option<Array2<F>>,
     /// Feature engineering functions
     feature_engineering: Vec<FeatureEngineeringFunction>,
+}
+
+impl<F: Float + std::fmt::Debug> FeaturePreprocessor<F> {
+    /// Create a new feature preprocessor
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            normalization_params: NormalizationParams {
+                mean: Array1::zeros(1),
+                std: Array1::ones(1),
+                min: Array1::zeros(1),
+                max: Array1::ones(1),
+            },
+            feature_selection_mask: Array1::from_elem(1, true),
+            projection_matrix: None,
+            feature_engineering: Vec::new(),
+        })
+    }
 }
 
 /// Normalization parameters
@@ -3204,7 +3373,7 @@ pub struct UncertaintyQuantifier<F: Float + std::fmt::Debug> {
 }
 
 /// Aleatoric uncertainty estimator
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AleatoricUncertaintyEstimator<F: Float + std::fmt::Debug> {
     /// Noise model parameters
     noise_parameters: Array1<F>,
@@ -3213,7 +3382,7 @@ pub struct AleatoricUncertaintyEstimator<F: Float + std::fmt::Debug> {
 }
 
 /// Epistemic uncertainty estimator
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct EpistemicUncertaintyEstimator<F: Float + std::fmt::Debug> {
     /// Model ensemble for uncertainty estimation
     model_ensemble: Vec<NeuralParameterOptimizer<F>>,
@@ -3323,6 +3492,18 @@ pub struct RegretTracker<F: Float + std::fmt::Debug> {
 }
 
 impl<F: Float + std::fmt::Debug> MultiArmedBandit<F> {
+    /// Create a new multi-armed bandit
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            algorithm: BanditAlgorithm::EpsilonGreedy,
+            arms: Vec::new(),
+            reward_history: Vec::new(),
+            action_history: VecDeque::new(),
+            best_arm: None,
+            regret_tracker: RegretTracker::new(),
+        })
+    }
+
     /// Get the cumulative regret
     pub fn get_cumulative_regret(&self) -> F {
         self.regret_tracker.cumulative_regret
@@ -3396,7 +3577,7 @@ pub struct NeuralFeatureExtractor<F: Float + std::fmt::Debug> {
 }
 
 /// Autoencoder network for feature extraction
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AutoencoderNetwork<F: Float + std::fmt::Debug> {
     /// Encoder network
     encoder: NeuralParameterOptimizer<F>,
@@ -3448,7 +3629,7 @@ pub enum AttentionType {
 }
 
 /// Feature selection network
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct FeatureSelectionNetwork<F: Float + std::fmt::Debug> {
     /// Selection network
     selection_network: NeuralParameterOptimizer<F>,
@@ -3478,6 +3659,27 @@ pub struct AdaptiveLearningScheduler<F: Float + std::fmt::Debug> {
 }
 
 impl<F: Float + std::fmt::Debug> AdaptiveLearningScheduler<F> {
+    /// Create a new adaptive learning scheduler
+    pub fn new(initial_lr: F, _config: OptimizationConfig) -> Result<Self> {
+        Ok(Self {
+            current_lr: initial_lr,
+            initial_lr,
+            scheduler_type: SchedulerType::ExponentialDecay {
+                decay_rate: F::from(0.9).unwrap(),
+                decay_steps: 1000,
+            },
+            performance_history: VecDeque::new(),
+            lr_history: VecDeque::new(),
+            adaptation_params: SchedulerAdaptationParams {
+                patience: 10,
+                min_lr: F::from(1e-6).unwrap(),
+                max_lr: F::from(1.0).unwrap(),
+                factor: F::from(0.5).unwrap(),
+                threshold: F::from(1e-4).unwrap(),
+            },
+        })
+    }
+
     /// Get the current learning rate
     pub fn get_current_lr(&self) -> F {
         self.current_lr
@@ -3549,7 +3751,61 @@ pub struct SchedulerAdaptationParams<F: Float + std::fmt::Debug> {
     pub monitoring_window: usize,
 }
 
+impl<F: Float + std::fmt::Debug> AutoencoderNetwork<F> {
+    /// Create a new autoencoder network
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            encoder: NeuralParameterOptimizer::new(
+                NetworkConfig::default(),
+                OptimizationConfig::default(),
+            )?,
+            decoder: NeuralParameterOptimizer::new(
+                NetworkConfig::default(),
+                OptimizationConfig::default(),
+            )?,
+            bottleneck_dim: 32,
+            reconstruction_loss: VecDeque::new(),
+        })
+    }
+}
+
+impl<F: Float + std::fmt::Debug> AttentionMechanism<F> {
+    /// Create a new attention mechanism
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            query_matrix: Array2::zeros((64, 32)),
+            key_matrix: Array2::zeros((64, 32)),
+            value_matrix: Array2::zeros((64, 32)),
+            attention_weights: Array2::zeros((64, 64)),
+            temperature: F::from(0.1).unwrap(),
+        })
+    }
+}
+
+impl<F: Float + std::fmt::Debug> FeatureSelectionNetwork<F> {
+    /// Create a new feature selection network
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            selection_weights: Array1::ones(64),
+            threshold: F::from(0.5).unwrap(),
+            learned_features: HashMap::new(),
+            importance_scores: Array1::zeros(64),
+        })
+    }
+}
+
 impl<F: Float + std::fmt::Debug> NeuralFeatureExtractor<F> {
+    /// Create a new neural feature extractor
+    pub fn new(_config: FeatureConfig) -> Result<Self> {
+        Ok(Self {
+            autoencoder: AutoencoderNetwork::new()?,
+            conv_layers: Vec::new(),
+            attention_mechanism: AttentionMechanism::new()?,
+            feature_selector: FeatureSelectionNetwork::new()?,
+            features_cache: HashMap::new(),
+        })
+    }
+
     /// Get feature importance from attention mechanism
     pub fn get_feature_importance(&self) -> Array1<F> {
         // Return attention weights as feature importance
@@ -3602,7 +3858,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> NeuralAdaptiveStreaming<F> {
         let feature_extractor = NeuralFeatureExtractor::new(config.feature_config.clone())?;
 
         let learning_scheduler = AdaptiveLearningScheduler::new(
-            config.network_config.learning_rate,
+            F::from(config.network_config.learning_rate).unwrap(),
             config.optimization_config.clone(),
         )?;
 
@@ -3638,9 +3894,13 @@ impl<F: Float + std::fmt::Debug + Send + Sync> NeuralAdaptiveStreaming<F> {
         // Use multi-armed bandit for parameter selection
         let bandit_params = self.parameter_bandit.select_arm(&features)?;
 
+        // Convert array results to hashmaps for combination
+        let rl_params = self.convert_array_to_params(&rl_action)?;
+        let bandit_params_map = self.convert_array_to_params(&bandit_params)?;
+
         // Combine predictions from different sources
         let optimized_params =
-            self.combine_parameter_predictions(&predicted_params, &rl_action, &bandit_params)?;
+            self.combine_parameter_predictions(&predicted_params, &rl_params, &bandit_params_map)?;
 
         // Update online learning system
         self.online_learner.update(&features, performance_metrics)?;
@@ -3744,6 +4004,30 @@ impl<F: Float + std::fmt::Debug + Send + Sync> NeuralAdaptiveStreaming<F> {
     }
 
     // Helper methods
+
+    /// Convert array to parameter hashmap
+    fn convert_array_to_params(&self, array: &Array1<F>) -> Result<HashMap<String, F>> {
+        let mut params = HashMap::new();
+
+        // Simple conversion - map array elements to parameter names
+        let param_names = vec![
+            "learning_rate",
+            "momentum",
+            "weight_decay",
+            "dropout_rate",
+            "batch_size",
+        ];
+
+        for (i, &value) in array.iter().enumerate() {
+            if i < param_names.len() {
+                params.insert(param_names[i].to_string(), value);
+            } else {
+                params.insert(format!("param_{}", i), value);
+            }
+        }
+
+        Ok(params)
+    }
 
     fn combine_parameter_predictions(
         &self,
@@ -3872,7 +4156,80 @@ impl Default for NeuralAdaptiveConfig {
     }
 }
 
-impl<F: Float + std::fmt::Debug> NeuralParameterOptimizer<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand>
+    NeuralParameterOptimizer<F>
+{
+    /// Create a new neural parameter optimizer
+    pub fn new(
+        network_config: NetworkConfig,
+        _optimization_config: OptimizationConfig,
+    ) -> Result<Self> {
+        let input_size = network_config
+            .optimizer_hidden_layers
+            .first()
+            .unwrap_or(&64);
+        let output_size = network_config.optimizer_hidden_layers.last().unwrap_or(&32);
+
+        let mut hidden_layers = Vec::new();
+        for &layer_size in &network_config.optimizer_hidden_layers {
+            hidden_layers.push(NeuralLayer {
+                weights: Array2::zeros((layer_size, *input_size)),
+                biases: Array1::zeros(layer_size),
+                activation: network_config.activation.clone(),
+                dropout_rate: network_config.dropout_rate,
+                batch_norm: None,
+            });
+        }
+
+        Ok(Self {
+            input_size: *input_size,
+            output_size: *output_size,
+            hidden_layers,
+            output_layer: NeuralLayer {
+                weights: Array2::zeros((*output_size, *input_size)),
+                biases: Array1::zeros(*output_size),
+                activation: network_config.activation.clone(),
+                dropout_rate: network_config.dropout_rate,
+                batch_norm: None,
+            },
+            optimizer: Box::new(AdamOptimizer::new(
+                F::from(network_config.learning_rate).unwrap(),
+            )?),
+            training_history: Vec::new(),
+            learning_rate: F::from(network_config.learning_rate).unwrap(),
+            regularization: RegularizationConfig {
+                l1_strength: F::from(0.0001).unwrap(),
+                l2_strength: F::from(0.0001).unwrap(),
+                dropout_rate: network_config.dropout_rate,
+                early_stopping: true,
+                patience: 10,
+            },
+        })
+    }
+
+    /// Predict optimal parameters
+    pub fn predict(&self, features: &Array1<F>) -> Result<HashMap<String, F>> {
+        // Simple prediction logic - return parameter suggestions
+        let mut params = HashMap::new();
+
+        // Generate some example parameters based on features
+        let feature_sum = features.sum();
+        params.insert(
+            "learning_rate".to_string(),
+            F::from(0.001).unwrap() * (F::one() + feature_sum * F::from(0.1).unwrap()),
+        );
+        params.insert(
+            "momentum".to_string(),
+            F::from(0.9).unwrap() * (F::one() + feature_sum * F::from(0.05).unwrap()),
+        );
+        params.insert(
+            "weight_decay".to_string(),
+            F::from(0.0001).unwrap() * (F::one() + feature_sum * F::from(0.01).unwrap()),
+        );
+
+        Ok(params)
+    }
+
     /// Get performance metrics for neural parameter optimizer
     pub fn get_performance_metrics(&self) -> HashMap<String, F> {
         let mut metrics = HashMap::new();
@@ -3920,7 +4277,10 @@ impl<F: Float + std::fmt::Debug> NeuralParameterOptimizer<F> {
     pub fn train(&mut self, features: &Array1<F>, target_performance: F) -> Result<()> {
         // Simple training step placeholder
         let prediction = self.predict(features)?;
-        let loss = (prediction - target_performance).abs();
+        let loss = match prediction.get("loss") {
+            Some(pred_loss) => (*pred_loss - target_performance).abs(),
+            None => target_performance.abs(),
+        };
 
         // Add training record
         let record = TrainingMetrics {
@@ -3940,12 +4300,6 @@ impl<F: Float + std::fmt::Debug> NeuralParameterOptimizer<F> {
         }
 
         Ok(())
-    }
-
-    /// Predict using the neural parameter optimizer
-    fn predict(&self, _features: &Array1<F>) -> Result<F> {
-        // Placeholder prediction
-        Ok(F::from(0.5).unwrap())
     }
 }
 

@@ -4066,7 +4066,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
     fn analyze_layouts(
         &self,
         _computation: &XLAComputation<T>,
-    ) -> Result<HashMap<OperandId, Layout>, OptimError> {
+    ) -> Result<HashMap<OperandId, Layout>> {
         // Analyze optimal data layouts
         Ok(HashMap::new()) // Simplified
     }

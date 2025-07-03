@@ -152,8 +152,8 @@ impl PolynomialFeatures {
         let max_abs_value = array_f64.iter().map(|&x| x.abs()).fold(0.0, f64::max);
         if max_abs_value > 100.0 && self.degree > 3 {
             return Err(TransformError::DataValidationError(format!(
-                "Large input values (max: {:.2}) with high degree ({}) may cause numerical overflow. Consider scaling input data first.",
-                max_abs_value, self.degree
+                "Large input values (max: {max_abs_value:.2}) with high degree ({}) may cause numerical overflow. Consider scaling input data first.",
+                self.degree
             )));
         }
 
@@ -948,6 +948,7 @@ fn golden_section_search(
 }
 
 /// Apply Yeo-Johnson transformation to a single value
+#[allow(dead_code)]
 fn yeo_johnson_transform(x: f64, lambda: f64) -> f64 {
     if x >= 0.0 {
         if (lambda - 0.0).abs() < EPSILON {
@@ -963,6 +964,7 @@ fn yeo_johnson_transform(x: f64, lambda: f64) -> f64 {
 }
 
 /// Apply Box-Cox transformation to a single value
+#[allow(dead_code)]
 fn box_cox_transform(x: f64, lambda: f64) -> f64 {
     if (lambda - 0.0).abs() < EPSILON {
         x.ln()
@@ -1023,6 +1025,7 @@ impl PowerTransformer {
     }
 
     /// Creates a new PowerTransformer with Yeo-Johnson method
+    #[allow(dead_code)]
     pub fn yeo_johnson(standardize: bool) -> Self {
         PowerTransformer {
             method: "yeo-johnson".to_string(),
@@ -1035,6 +1038,7 @@ impl PowerTransformer {
     }
 
     /// Creates a new PowerTransformer with Box-Cox method
+    #[allow(dead_code)]
     pub fn box_cox(standardize: bool) -> Self {
         PowerTransformer {
             method: "box-cox".to_string(),
@@ -1410,13 +1414,28 @@ impl PowerTransformer {
     }
 
     /// Returns the fitted lambda parameters
+    #[allow(dead_code)]
     pub fn lambdas(&self) -> Option<&Array1<f64>> {
         self.lambdas_.as_ref()
     }
 
     /// Returns whether the transformer has been fitted
+    #[allow(dead_code)]
     pub fn is_fitted(&self) -> bool {
         self.is_fitted
+    }
+}
+
+impl Default for PowerTransformer {
+    fn default() -> Self {
+        PowerTransformer {
+            method: "yeo-johnson".to_string(),
+            standardize: false,
+            lambdas_: None,
+            means_: None,
+            stds_: None,
+            is_fitted: false,
+        }
     }
 }
 

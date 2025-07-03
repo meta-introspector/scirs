@@ -478,7 +478,7 @@ impl ZeroCopyInterface {
             let mut named = self.named_data.write().unwrap();
             if named.contains_key(name) {
                 return Err(CoreError::ValidationError(
-                    ErrorContext::new(format!("Data with name '{}' already exists", name))
+                    ErrorContext::new(format!("Data with name '{name}' already exists"))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 ));
             }
@@ -534,7 +534,7 @@ impl ZeroCopyInterface {
         } else {
             self.update_exchange_stats(false);
             Err(CoreError::ValidationError(
-                ErrorContext::new(format!("No data found with name '{}'", name))
+                ErrorContext::new(format!("No data found with name '{name}'"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ))
         }
@@ -636,7 +636,7 @@ impl ZeroCopyInterface {
             Ok(())
         } else {
             Err(CoreError::ValidationError(
-                ErrorContext::new(format!("No data found with name '{}'", name))
+                ErrorContext::new(format!("No data found with name '{name}'"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ))
         }
@@ -660,7 +660,7 @@ impl ZeroCopyInterface {
             Ok(data.metadata().clone())
         } else {
             Err(CoreError::ValidationError(
-                ErrorContext::new(format!("No data found with name '{}'", name))
+                ErrorContext::new(format!("No data found with name '{name}'"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ))
         }
@@ -762,8 +762,7 @@ where
 
         let temp_file = NamedTempFile::new().map_err(|e| {
             CoreError::IoError(crate::error::ErrorContext::new(format!(
-                "Failed to create temporary file for import: {}",
-                e
+                "Failed to create temporary file for import: {e}"
             )))
         })?;
 

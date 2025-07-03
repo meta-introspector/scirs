@@ -373,7 +373,7 @@ impl AdvancedQMCGenerator {
     fn init_optimal_lhs_state(dimension: usize, seed: Option<u64>) -> Result<OptimalLHSState> {
         let rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         Ok(OptimalLHSState {
@@ -621,7 +621,7 @@ impl AdvancedQMCGenerator {
     ) -> Result<Vec<Array2<u32>>> {
         let mut rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut matrices = Vec::with_capacity(dimension);
@@ -666,7 +666,7 @@ impl AdvancedQMCGenerator {
     ) -> Result<Vec<Vec<u32>>> {
         let mut rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut permutations = Vec::with_capacity(bases.len());
@@ -708,7 +708,7 @@ impl AdvancedQMCGenerator {
     ) -> Result<Vec<Vec<u32>>> {
         let mut rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut permutations = Vec::with_capacity(bases.len());
@@ -956,7 +956,7 @@ impl AdvancedQMCGenerator {
     ) -> Result<Vec<Array2<u32>>> {
         let mut rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut matrices = Vec::with_capacity(dimension);
@@ -1030,7 +1030,7 @@ impl StratifiedSampler {
 
         let mut rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         // Generate samples for each stratum

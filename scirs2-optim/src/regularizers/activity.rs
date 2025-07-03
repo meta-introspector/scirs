@@ -2,7 +2,7 @@ use ndarray::{Array, ArrayBase, Data, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use crate::regularizers::Regularizer;
 
 /// Different norms for Activity regularization

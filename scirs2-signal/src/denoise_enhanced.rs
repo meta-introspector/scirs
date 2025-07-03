@@ -11,10 +11,12 @@ use crate::dwt::{wavedec, waverec, Wavelet};
 use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2, ArrayView1};
+use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
 use std::f64;
+use std::f64::consts::PI;
 
 /// Enhanced denoising configuration
 #[derive(Debug, Clone)]
@@ -2144,10 +2146,10 @@ mod tests {
         let clean_signal = t.mapv(|x| (2.0 * f64::consts::PI * 5.0 * x).sin());
 
         // Add noise
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let noise_level = 0.1;
-        let noisy_signal = &clean_signal
-            + &Array1::from_shape_fn(n, |_| noise_level * rng.random_range(-1.0..1.0));
+        let noisy_signal =
+            &clean_signal + &Array1::from_shape_fn(n, |_| noise_level * rng.gen_range(-1.0..1.0));
 
         let config = DenoiseConfig::default();
         let result = denoise_wavelet_1d(&noisy_signal, &config).unwrap();

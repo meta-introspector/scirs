@@ -150,10 +150,12 @@ pub mod gamma {
         let x3 = &x2 * x;
         let x4 = &x2 * &x2;
 
-        correction += ctx.float(1.0) / (12.0 * x);
-        correction += ctx.float(1.0) / (288.0 * &x2);
-        correction -= ctx.float(139.0) / (ctx.float(51840.0) * &x3);
-        correction -= ctx.float(571.0) / (ctx.float(2488320.0) * &x4);
+        correction += ctx.float(1.0) / (ctx.float(12.0) * x);
+        correction += ctx.float(1.0) / (ctx.float(288.0) * &x2);
+        let denom1 = ctx.float(51840.0) * &x3;
+        correction -= ctx.float(139.0) / denom1;
+        let denom2 = ctx.float(2488320.0) * &x4;
+        correction -= ctx.float(571.0) / denom2;
 
         Ok(term1 * term2 * correction)
     }
@@ -182,7 +184,7 @@ pub mod gamma {
             ag += ctx.float(LANCZOS_COEFFS[i]) / (x.clone() + i as f64);
         }
 
-        let tmp = x.clone() + &g + 0.5;
+        let tmp = x.clone() + &g + ctx.float(0.5);
         let result = sqrt_2pi * ag * tmp.clone().pow(x.clone() + 0.5) * (-tmp).exp();
 
         Ok(result / x)
@@ -238,13 +240,16 @@ pub mod gamma {
         // Add correction terms
         let x2 = x.clone() * x;
         let x3 = &x2 * x;
-        let x5 = (&x3).clone() * &x2;
-        let x7 = &x5 * &x2;
+        let x5 = x3.clone() * &x2;
+        let x7 = x5.clone() * &x2;
 
-        result += ctx.float(1.0) / (12.0 * x);
-        result -= ctx.float(1.0) / (ctx.float(360.0) * &x3);
-        result += ctx.float(1.0) / (1260.0 * &x5);
-        result -= ctx.float(1.0) / (1680.0 * &x7);
+        result += ctx.float(1.0) / (ctx.float(12.0) * x);
+        let denom3 = ctx.float(360.0) * &x3;
+        result -= ctx.float(1.0) / denom3;
+        let denom4 = ctx.float(1260.0) * &x5;
+        result += ctx.float(1.0) / denom4;
+        let denom5 = ctx.float(1680.0) * &x7;
+        result -= ctx.float(1.0) / denom5;
 
         Ok(result)
     }

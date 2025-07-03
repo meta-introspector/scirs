@@ -730,7 +730,7 @@ where
     where
         D: Data<Elem = F> + Sync + Send,
     {
-        use rand::{rng, Rng, SeedableRng};
+        use rand::{Rng, SeedableRng};
         use rand_chacha::ChaCha8Rng;
 
         let num_threads = self
@@ -754,7 +754,7 @@ where
                     let mut rng = if let Some(seed) = seed {
                         ChaCha8Rng::seed_from_u64(seed + thread_id as u64)
                     } else {
-                        ChaCha8Rng::from_rng(&mut rng()).unwrap()
+                        ChaCha8Rng::from_rng(&mut rand::rng())
                     };
 
                     let mut local_results = Vec::with_capacity(samples_per_thread);

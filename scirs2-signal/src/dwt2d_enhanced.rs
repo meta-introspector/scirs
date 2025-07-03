@@ -25,6 +25,7 @@ use rand::prelude::*;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use std::f64::consts::PI;
 use std::sync::Arc;
 
 /// Enhanced 2D DWT decomposition result
@@ -2045,7 +2046,7 @@ fn sure_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
 
 /// Compute SURE risk for given threshold
 fn compute_sure_risk(sorted_coeffs: &[f64], threshold: f64, sigma: f64, n: f64, k: usize) -> f64 {
-    let retained = (n - k as f64);
+    let retained = n - k as f64;
     let sum_sqr: f64 = sorted_coeffs.iter().skip(k).map(|&x| x * x).sum();
 
     // SURE risk estimate
@@ -3029,7 +3030,7 @@ mod tests {
     #[test]
     fn test_denoising() {
         // Create noisy image
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let clean_data = Array2::from_shape_fn((32, 32), |(i, j)| {
             (2.0 * std::f64::consts::PI * i as f64 / 16.0).sin()
                 * (2.0 * std::f64::consts::PI * j as f64 / 16.0).cos()
@@ -3037,7 +3038,7 @@ mod tests {
 
         let mut noisy_data = clean_data.clone();
         for val in noisy_data.iter_mut() {
-            *val += 0.1 * rng.random_range(-1.0..1.0);
+            *val += 0.1 * rng.gen_range(-1.0..1.0);
         }
 
         // Test different denoising methods

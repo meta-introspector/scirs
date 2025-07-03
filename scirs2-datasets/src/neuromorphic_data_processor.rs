@@ -684,11 +684,13 @@ impl NeuromorphicProcessor {
 }
 
 /// Convenience function to create neuromorphic processor with default settings
+#[allow(dead_code)]
 pub fn create_neuromorphic_processor() -> NeuromorphicProcessor {
     NeuromorphicProcessor::default()
 }
 
 /// Convenience function to create neuromorphic processor with custom topology
+#[allow(dead_code)]
 pub fn create_neuromorphic_processor_with_topology(
     input_neurons: usize,
     hidden_neurons: usize,

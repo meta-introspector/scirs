@@ -5,6 +5,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
+#[cfg(test)]
 use std::f64::consts::PI;
 use std::fmt::Debug;
 

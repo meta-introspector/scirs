@@ -2876,6 +2876,12 @@ pub struct PoolStats {
     pub current_matrices: usize,
     /// Current number of vectors in pool
     pub current_vectors: usize,
+    /// Total number of transformations performed
+    pub transform_count: u64,
+    /// Total time spent in transformations (nanoseconds)
+    pub total_transform_time_ns: u64,
+    /// Average processing throughput (samples/second)
+    pub throughput_samples_per_sec: f64,
 }
 
 impl UltraFastMemoryPool {
@@ -2894,6 +2900,9 @@ impl UltraFastMemoryPool {
                 peak_memory_mb: 0.0,
                 current_matrices: 0,
                 current_vectors: 0,
+                transform_count: 0,
+                total_transform_time_ns: 0,
+                throughput_samples_per_sec: 0.0,
             },
         };
 
@@ -3034,6 +3043,24 @@ impl UltraFastMemoryPool {
         }
     }
 
+    /// Update performance statistics
+    pub fn update_stats(&mut self, transform_time_ns: u64, samples_processed: usize) {
+        self.stats.transform_count += 1;
+        self.stats.total_transform_time_ns += transform_time_ns;
+
+        if self.stats.transform_count > 0 {
+            let avg_time_per_transform =
+                self.stats.total_transform_time_ns / self.stats.transform_count;
+            if avg_time_per_transform > 0 {
+                self.stats.throughput_samples_per_sec =
+                    (samples_processed as f64) / (avg_time_per_transform as f64 / 1_000_000_000.0);
+            }
+        }
+
+        // Update memory statistics
+        self.update_memory_stats();
+    }
+
     /// Clear all pools to free memory
     pub fn clear(&mut self) {
         self.matrix_pools.clear();
@@ -3102,6 +3129,20 @@ impl UltraFastPCA {
             memory_pool,
             processing_cache: std::collections::HashMap::new(),
         }
+    }
+
+    /// Fit the PCA model and transform the data
+    pub fn fit_transform(&mut self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
+        self.enhanced_pca.fit_transform(x)
+    }
+
+    /// Get the explained variance ratio
+    pub fn explained_variance_ratio(&self) -> Result<Array1<f64>> {
+        self.enhanced_pca.explained_variance_ratio().ok_or_else(|| {
+            TransformError::NotFitted(
+                "PCA must be fitted before getting explained variance ratio".to_string(),
+            )
+        })
     }
 
     /// ✅ ULTRATHINK OPTIMIZATION: Fast transform with memory pooling

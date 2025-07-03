@@ -1424,6 +1424,7 @@ pub fn simd_cepstral_analysis_f64(log_spectrum: &[f64], n_coeffs: usize) -> Sign
 
     let n = log_spectrum.len();
     let mut cepstrum = vec![0.0; n_coeffs];
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     // DCT computation using SIMD where possible
@@ -1442,6 +1443,7 @@ pub fn simd_cepstral_analysis_f64(log_spectrum: &[f64], n_coeffs: usize) -> Sign
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

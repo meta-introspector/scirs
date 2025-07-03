@@ -369,7 +369,7 @@ where
 
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         // Initialize parameters

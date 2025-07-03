@@ -437,7 +437,7 @@ where
         signal: &ArrayView1<F>,
     ) -> StatsResult<UltraSpectralResults<F>> {
         check_array_finite(signal, "signal")?;
-        check_min_length(signal, 2, "signal")?;
+        check_min_samples(signal, 2, "signal")?;
 
         let start_time = std::time::Instant::now();
         let mut results = UltraSpectralResults {
@@ -706,7 +706,7 @@ where
 
     fn ml_spectral_enhancement(
         &mut self,
-        signal: &ArrayView1<F>,
+        _signal: &ArrayView1<F>,
         psd: &Array2<F>,
     ) -> StatsResult<MLSpectralResults<F>> {
         let mut results = MLSpectralResults {
@@ -816,7 +816,7 @@ where
         frequencies
     }
 
-    fn generate_slepian_tapers(&mut self, n: usize, nw: F, k: usize) -> StatsResult<Array2<F>> {
+    fn generate_slepian_tapers(&mut self, n: usize, _nw: F, k: usize) -> StatsResult<Array2<F>> {
         // Simplified Slepian taper generation - would use proper DPSS implementation
         let mut tapers = Array2::zeros((n, k));
 

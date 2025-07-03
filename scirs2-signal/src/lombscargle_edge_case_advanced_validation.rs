@@ -171,7 +171,7 @@ pub fn run_advanced_edge_case_validation() -> SignalResult<AdvancedEdgeCaseValid
 
 /// Validate sparse sampling scenarios
 fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let true_freq = 0.1; // Low frequency to test with sparse sampling
     let amplitude = 1.0;
     let total_duration = 100.0;
@@ -183,16 +183,14 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
     for &n_samples in &sample_densities {
         // Generate sparse, randomly distributed time points
         let mut times: Vec<f64> = (0..n_samples)
-            .map(|_| rng.random_range(0.0..total_duration))
+            .map(|_| rng.gen_range(0.0..total_duration))
             .collect();
         times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         // Generate signal with true frequency
         let signal: Vec<f64> = times
             .iter()
-            .map(|&t| {
-                amplitude * (2.0 * PI * true_freq * t).sin() + 0.1 * rng.random_range(-1.0..1.0)
-            })
+            .map(|&t| amplitude * (2.0 * PI * true_freq * t).sin() + 0.1 * rng.gen_range(-1.0..1.0))
             .collect();
 
         // Run Lomb-Scargle analysis
@@ -242,7 +240,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
 
 /// Validate non-uniform grid handling
 fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let true_freq = 0.2;
     let amplitude = 1.0;
 
@@ -251,7 +249,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
     // Add clusters of points
     for cluster_center in [10.0, 30.0, 60.0, 90.0] {
         for _ in 0..25 {
-            times.push(cluster_center + rng.random_range(-2.0..2.0));
+            times.push(cluster_center + rng.gen_range(-2.0..2.0));
         }
     }
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -309,7 +307,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
             let regular_time = i as f64;
             // Add random jitter with increasing magnitude
             let jitter_magnitude = (i as f64 / 50.0).min(2.0);
-            regular_time + rng.random_range(-jitter_magnitude..jitter_magnitude)
+            regular_time + rng.gen_range(-jitter_magnitude..jitter_magnitude)
         })
         .collect();
     irregular_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -345,7 +343,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
 
 /// Validate noise tolerance
 fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let true_freq = 0.15;
     let amplitude = 1.0;
     let n_samples = 200;
@@ -360,17 +358,17 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
     for &noise_level in &noise_levels {
         // Test different noise types
         let noise_types = vec![
-            ("white", || rng.random_range(-1.0..1.0)),
+            ("white", || rng.gen_range(-1.0..1.0)),
             ("impulsive", || {
                 if rng.random::<f64>() < 0.1 {
-                    rng.random_range(-10.0..10.0)
+                    rng.gen_range(-10.0..10.0)
                 } else {
-                    rng.random_range(-0.1..0.1)
+                    rng.gen_range(-0.1..0.1)
                 }
             }),
             ("colored", || {
                 // Simple colored noise approximation
-                rng.random_range(-1.0..1.0) / (1.0 + rng.random_range(0.0..1.0))
+                rng.gen_range(-1.0..1.0) / (1.0 + rng.gen_range(0.0..1.0))
             }),
         ];
 
@@ -420,9 +418,7 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
     let n_false_positive_tests = 50;
 
     for _ in 0..n_false_positive_tests {
-        let pure_noise: Vec<f64> = (0..n_samples)
-            .map(|_| rng.random_range(-1.0..1.0))
-            .collect();
+        let pure_noise: Vec<f64> = (0..n_samples).map(|_| rng.gen_range(-1.0..1.0)).collect();
 
         let frequencies = Array1::linspace(0.05, 0.5, 100);
         if let Ok(power) = lombscargle(&times.to_vec(), &pure_noise, &frequencies, None) {
@@ -458,7 +454,7 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
 
 /// Validate aliasing detection
 fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let n_samples = 100;
 
     // Test 1: Nyquist frequency handling

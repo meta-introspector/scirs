@@ -398,7 +398,13 @@ where
 /// Normalizes data to have zero mean and unit variance using SIMD operations.
 pub fn batch_normalize_simd<F>(data: &ArrayView2<F>, axis: Option<usize>) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + std::fmt::Display
+        + num_traits::FromPrimitive,
 {
     check_array_finite(data, "data")?;
 
@@ -433,7 +439,7 @@ where
                 } else {
                     // Scalar fallback
                     let mean = column.mean().unwrap();
-                    let variance = column.var(1.0); // ddof=1
+                    let variance = column.var(F::one()); // ddof=1
                     let std_dev = variance.sqrt();
                     (mean, std_dev)
                 };
@@ -466,7 +472,7 @@ where
                 } else {
                     // Scalar fallback
                     let mean = row.mean().unwrap();
-                    let variance = row.var(1.0); // ddof=1
+                    let variance = row.var(F::one()); // ddof=1
                     let std_dev = variance.sqrt();
                     (mean, std_dev)
                 };
@@ -497,7 +503,7 @@ pub fn outlier_detection_zscore_simd<F>(
     threshold: F,
 ) -> StatsResult<(Array1<bool>, ComprehensiveStats<F>)>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + std::fmt::Display,
 {
     let stats = comprehensive_stats_simd(data)?;
 
@@ -538,7 +544,7 @@ where
 /// Computes robust center and scale estimates that are less sensitive to outliers.
 pub fn robust_statistics_simd<F>(data: &ArrayView1<F>) -> StatsResult<RobustStats<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy,
+    F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
 

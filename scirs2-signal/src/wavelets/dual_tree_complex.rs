@@ -907,6 +907,7 @@ fn create_dtcwt_filters(filter_set: FilterSet) -> SignalResult<DtcwtFilters> {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

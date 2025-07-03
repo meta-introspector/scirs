@@ -377,8 +377,7 @@ where
                                 } else {
                                     return Err(CoreError::DimensionError(
                                         ErrorContext::new(format!(
-                                            "Cannot convert reshaped array to target dimension type. Shape: {:?}",
-                                            shape
+                                            "Cannot convert reshaped array to target dimension type. Shape: {shape:?}"
                                         ))
                                         .with_location(ErrorLocation::new(file!(), line!())),
                                     ));
@@ -386,8 +385,7 @@ where
                             } else {
                                 return Err(CoreError::DimensionError(
                                     ErrorContext::new(format!(
-                                        "Cannot reshape array to shape {:?}",
-                                        shape
+                                        "Cannot reshape array to shape {shape:?}"
                                     ))
                                     .with_location(ErrorLocation::new(file!(), line!())),
                                 ));
@@ -403,8 +401,7 @@ where
                             let permuted = dyn_result.permuted_axes(axes.clone());
                             result = permuted.into_dimensionality().map_err(|e| {
                                 CoreError::ShapeError(ErrorContext::new(format!(
-                                    "Failed to convert back from dynamic array: {}",
-                                    e
+                                    "Failed to convert back from dynamic array: {e}"
                                 )))
                             })?;
                         }
@@ -529,8 +526,7 @@ where
                                 let transposed = dyn_result.permuted_axes(axes.clone());
                                 return transposed.into_dimensionality().map_err(|e| {
                                     CoreError::ShapeError(ErrorContext::new(format!(
-                                        "Failed to convert back from dynamic array: {}",
-                                        e
+                                        "Failed to convert back from dynamic array: {e}"
                                     )))
                                 });
                             }

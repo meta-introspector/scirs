@@ -4,7 +4,7 @@
 //! and other constrained optimization techniques for policy learning.
 
 use super::{PolicyNetwork, RLOptimizationMetrics};
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 

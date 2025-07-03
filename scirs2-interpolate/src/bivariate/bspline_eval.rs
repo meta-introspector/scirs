@@ -19,7 +19,11 @@ use std::fmt::Debug;
 ///
 /// The index i such that knots[i] <= x < knots[i+1]
 /// or the largest i such that knots[i] <= x if x == knots[knots.len()-1]
-pub fn find_span<F: Float + FromPrimitive + Debug>(x: F, knots: &ArrayView1<F>, k: usize) -> usize {
+pub fn find_span<F: crate::traits::InterpolationFloat>(
+    x: F,
+    knots: &ArrayView1<F>,
+    k: usize,
+) -> usize {
     let n = knots.len() - k - 1;
 
     // Handle boundary cases
@@ -59,7 +63,7 @@ pub fn find_span<F: Float + FromPrimitive + Debug>(x: F, knots: &ArrayView1<F>, 
 /// # Returns
 ///
 /// An array of k+1 basis function values
-pub fn basis_funs<F: Float + FromPrimitive + Debug>(
+pub fn basis_funs<F: crate::traits::InterpolationFloat>(
     x: F,
     span: usize,
     knots: &ArrayView1<F>,
@@ -105,7 +109,7 @@ pub fn basis_funs<F: Float + FromPrimitive + Debug>(
 /// # Returns
 ///
 /// A 2D array where the row `i` contains the `i`-th derivatives of the basis functions
-pub fn basis_funs_derivatives<F: Float + FromPrimitive + Debug>(
+pub fn basis_funs_derivatives<F: crate::traits::InterpolationFloat>(
     x: F,
     span: usize,
     knots: &ArrayView1<F>,
@@ -217,7 +221,7 @@ pub fn basis_funs_derivatives<F: Float + FromPrimitive + Debug>(
 /// # Returns
 ///
 /// The value of the tensor-product B-spline at (x, y)
-pub fn evaluate_bispline<F: Float + FromPrimitive + Debug>(
+pub fn evaluate_bispline<F: crate::traits::InterpolationFloat>(
     x: F,
     y: F,
     knots_x: &ArrayView1<F>,
@@ -272,7 +276,7 @@ pub fn evaluate_bispline<F: Float + FromPrimitive + Debug>(
 ///
 /// The value of the specified derivative of the tensor-product B-spline at (x, y)
 #[allow(clippy::too_many_arguments)]
-pub fn evaluate_bispline_derivative<F: Float + FromPrimitive + Debug>(
+pub fn evaluate_bispline_derivative<F: crate::traits::InterpolationFloat>(
     x: F,
     y: F,
     knots_x: &ArrayView1<F>,
@@ -348,7 +352,7 @@ pub fn evaluate_bispline_derivative<F: Float + FromPrimitive + Debug>(
 ///
 /// The integral of the tensor-product B-spline over the rectangular region
 #[allow(clippy::too_many_arguments)]
-pub fn integrate_bispline<F: Float + FromPrimitive + Debug>(
+pub fn integrate_bispline<F: crate::traits::InterpolationFloat>(
     xa: F,
     xb: F,
     ya: F,

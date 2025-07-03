@@ -425,7 +425,6 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
 mod tests {
     use super::*;
     use ndarray::Array3;
-    use rand::rngs::SmallRng;
     use rand::SeedableRng;
     #[test]
     fn test_rnn_shape() {

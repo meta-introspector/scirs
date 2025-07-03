@@ -18,13 +18,11 @@ use crate::parametric::{
 use crate::parametric_advanced::compute_eigendecomposition;
 use crate::sysid::{detect_outliers, estimate_robust_scale};
 use ndarray::{s, Array1, Array2, Axis};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// Ultra-enhanced ARMA estimation result with comprehensive diagnostics
 #[derive(Debug, Clone)]
@@ -120,6 +118,7 @@ impl Default for UltraEnhancedConfig {
     }
 }
 
+use num_complex::Complex64;
 /// Ultra-enhanced ARMA estimation with SIMD acceleration and advanced numerics
 ///
 /// This function provides state-of-the-art ARMA parameter estimation using:
@@ -144,19 +143,20 @@ impl Default for UltraEnhancedConfig {
 /// ```
 /// use scirs2_signal::parametric_ultra_enhanced::{ultra_enhanced_arma, UltraEnhancedConfig};
 /// use ndarray::Array1;
-/// use std::f64::consts::PI;
+/// #[cfg(test)]
+use std::f64::consts::PI;
 ///
 /// // Generate test signal with two sinusoids plus noise
 /// let n = 1024;
 /// let fs = 100.0;
 /// let t: Array1<f64> = Array1::linspace(0.0, (n-1) as f64 / fs, n);
 /// use rand::prelude::*;
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 ///
 /// let signal: Array1<f64> = t.mapv(|ti| {
 ///     (2.0 * PI * 5.0 * ti).sin() +
 ///     0.5 * (2.0 * PI * 15.0 * ti).sin() +
-///     0.1 * rng.random_range(-1.0..1.0)
+///     0.1 * rng.gen_range(-1.0..1.0)
 /// });
 ///
 /// let config = UltraEnhancedConfig::default();
@@ -1859,6 +1859,8 @@ fn analyze_simd_utilization(
 mod tests {
     use super::*;
     use ndarray::Array1;
+    use num_complex::Complex64;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

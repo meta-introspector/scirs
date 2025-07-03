@@ -4,7 +4,7 @@
 //! the tradeoffs between privacy guarantees and model utility in privacy-preserving
 //! machine learning systems.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use crate::privacy::{DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
 use ndarray::{ArrayBase, Data, Dimension};
 use num_traits::Float;

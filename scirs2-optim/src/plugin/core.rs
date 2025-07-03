@@ -550,7 +550,6 @@ impl Default for OptimizerState {
 }
 
 /// Utility functions for plugin development
-
 /// Create a basic plugin info structure
 pub fn create_plugin_info(name: &str, version: &str, author: &str) -> PluginInfo {
     PluginInfo {

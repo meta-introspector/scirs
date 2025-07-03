@@ -8,7 +8,8 @@ use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 
 /// Few-Shot Learning Enhancement System for Learned Optimizers
 pub struct FewShotLearningEnhancement<T: Float> {

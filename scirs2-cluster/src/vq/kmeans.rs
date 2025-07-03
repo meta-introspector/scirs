@@ -180,14 +180,7 @@ where
     }
 
     let opts = options.unwrap_or_default();
-    // We create the RNG but don't use it directly in this function
-    if opts.random_seed.is_some() {
-        #[allow(unused_variables)]
-        let seed = opts.random_seed.unwrap();
-        // In a real implementation, we would seed the RNG here
-    } else {
-        // In a real implementation, we would use rng here
-    };
+    // Random seed is handled in kmeans_init function
 
     let mut best_centroids = None;
     let mut best_labels = None;

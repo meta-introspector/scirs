@@ -28,7 +28,6 @@ use std::fmt::Debug;
 ///
 /// ```
 /// use scirs2_signal::czt::czt_points;
-/// use num_complex::Complex64;
 ///
 /// // Generate 10 points on the unit circle
 /// let points = czt_points(10, None, None).unwrap();
@@ -77,7 +76,6 @@ pub fn czt_points(
 ///
 /// ```
 /// use scirs2_signal::czt::czt;
-/// use num_complex::Complex64;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -91,8 +89,8 @@ pub fn czt_points(
 ///
 /// ```
 /// use scirs2_signal::czt::czt;
-/// use num_complex::Complex64;
-/// use std::f64::consts::PI;
+/// #[cfg(test)]
+use std::f64::consts::PI;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];

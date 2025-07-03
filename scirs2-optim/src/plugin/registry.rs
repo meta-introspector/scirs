@@ -288,13 +288,13 @@ impl PluginRegistry {
     }
 
     /// Create optimizer instance from plugin
-    pub fn create_optimizer<A: Float + 'static>(
+    pub fn create_optimizer<A>(
         &self,
         name: &str,
         config: OptimizerConfig,
     ) -> Result<Box<dyn OptimizerPlugin<A>>>
     where
-        A: Float + Debug + Send + Sync,
+        A: Float + Debug + Send + Sync + 'static,
     {
         let factories = self.factories.read().unwrap();
         let registration = factories

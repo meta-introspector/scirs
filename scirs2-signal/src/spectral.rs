@@ -738,6 +738,7 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
     use rand::Rng;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]
@@ -778,9 +779,9 @@ mod tests {
         let mut x: Vec<f64> = t.iter().map(|&t| (2.0 * PI * f * t).sin()).collect();
 
         // Add noise
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         x.iter_mut().for_each(|val| {
-            *val += rng.random_range(-0.1..0.1);
+            *val += rng.gen_range(-0.1..0.1);
         });
 
         // Compute Welch's periodogram

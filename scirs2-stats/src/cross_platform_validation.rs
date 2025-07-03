@@ -8,6 +8,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, Zero, One};
+use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -785,7 +786,7 @@ impl CrossPlatformValidator {
         let serial_mean = crate::descriptive::mean(&test_data.view())?;
         let parallel_result = crate::parallel_stats::mean_parallel(
             &test_data.view(),
-            scirs2_core::parallel_ops::num_threads()
+            num_threads()
         );
         
         let (status, accuracy_metrics) = match parallel_result {
@@ -794,7 +795,7 @@ impl CrossPlatformValidator {
                 let relative_error = absolute_error / serial_mean.abs();
                 
                 notes.push(format!("Parallel mean computation successful"));
-                notes.push(format!("Threads used: {}", scirs2_core::parallel_ops::num_threads()));
+                notes.push(format!("Threads used: {}", num_threads()));
                 notes.push(format!("Relative error: {:.2e}", relative_error));
                 
                 let metrics = AccuracyMetrics {
@@ -885,7 +886,7 @@ impl CrossPlatformValidator {
         let mut notes = Vec::new();
 
         // Test work-stealing scheduler if available
-        let thread_count = scirs2_core::parallel_ops::num_threads();
+        let thread_count = num_threads();
         notes.push(format!("Available threads: {}", thread_count));
         notes.push(format!("Work-stealing supported: {}", thread_count > 1));
 
@@ -1325,7 +1326,7 @@ impl CrossPlatformValidator {
         PlatformInfo {
             os: std::env::consts::OS.to_string(),
             arch: std::env::consts::ARCH.to_string(),
-            cpu_cores: scirs2_core::parallel_ops::num_threads(),
+            cpu_cores: num_threads(),
             simd_capabilities: Self::detect_simd_capabilities(),
             endianness: Self::detect_endianness(),
             float_model: Self::detect_float_model(),
@@ -1383,7 +1384,7 @@ impl CrossPlatformValidator {
     fn detect_threading_model() -> ThreadingModel {
         ThreadingModel {
             work_stealing: true, // Assume work-stealing is available
-            default_threads: scirs2_core::parallel_ops::num_threads(),
+            default_threads: num_threads(),
             thread_affinity: false, // Simplified
             numa_aware: false, // Simplified
         }

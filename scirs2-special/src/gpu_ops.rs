@@ -449,7 +449,7 @@ mod tests {
         use crate::gamma::gamma;
         for i in 0..10 {
             let expected = gamma(input[i]);
-            assert!((output[i] - expected).abs() < 1e-10);
+            assert!((output[i] - expected).abs() < 1e-10_f64);
         }
     }
 
@@ -465,7 +465,7 @@ mod tests {
         use crate::bessel::j0;
         for i in 0..10 {
             let expected = j0(input[i]);
-            assert!((output[i] - expected).abs() < 1e-10);
+            assert!((output[i] - expected).abs() < 1e-10_f64);
         }
     }
 }
@@ -974,7 +974,13 @@ fn create_gpu_buffer_with_caching<T>(
 where
     T: 'static,
 {
-    let type_id = std::any::TypeId::of::<T>().into();
+    let type_id = {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        let mut hasher = DefaultHasher::new();
+        std::any::TypeId::of::<T>().hash(&mut hasher);
+        hasher.finish() as usize
+    };
     let cache_key = (data.len(), type_id);
     let cache = get_buffer_cache();
 
@@ -1027,7 +1033,13 @@ fn create_empty_gpu_buffer_with_caching<T>(
 where
     T: 'static,
 {
-    let type_id = std::any::TypeId::of::<T>().into();
+    let type_id = {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        let mut hasher = DefaultHasher::new();
+        std::any::TypeId::of::<T>().hash(&mut hasher);
+        hasher.finish() as usize
+    };
     let cache_key = (size, type_id);
     let cache = get_buffer_cache();
 

@@ -781,7 +781,9 @@ mod tests {
                 crate::gpu_ops::GpuBackend::Cuda
                 | crate::gpu_ops::GpuBackend::OpenCL
                 | crate::gpu_ops::GpuBackend::Metal
-                | crate::gpu_ops::GpuBackend::Cpu => {}
+                | crate::gpu_ops::GpuBackend::Cpu
+                | crate::gpu_ops::GpuBackend::Rocm
+                | crate::gpu_ops::GpuBackend::Wgpu => {}
             }
         }
     }

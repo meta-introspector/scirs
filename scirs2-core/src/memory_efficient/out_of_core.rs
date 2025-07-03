@@ -296,8 +296,7 @@ where
         if squeezed_shape.len() != target_dims {
             return Err(CoreError::DimensionError(
                 ErrorContext::new(format!(
-                    "Cannot squeeze {} array from {} to {} dimensions. Source shape: {:?}, only {} singleton dimensions available",
-                    context, source_dims, target_dims, source_shape,
+                    "Cannot squeeze {context} array from {source_dims} to {target_dims} dimensions. Source shape: {source_shape:?}, only {} singleton dimensions available",
                     source_shape.iter().filter(|&&x| x == 1).count()
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
@@ -320,8 +319,7 @@ where
             .map_err(|_| {
                 CoreError::DimensionError(
                     ErrorContext::new(format!(
-                        "Cannot convert squeezed {} array from {} to {} dimensions",
-                        context, source_dims, target_dims
+                        "Cannot convert squeezed {context} array from {source_dims} to {target_dims} dimensions"
                     ))
                     .with_location(ErrorLocation::new(file!(), line!())),
                 )
@@ -342,8 +340,7 @@ where
             return array.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(
                     ErrorContext::new(format!(
-                        "Failed to convert {} array despite equal dimensions",
-                        context
+                        "Failed to convert {context} array despite equal dimensions"
                     ))
                     .with_location(ErrorLocation::new(file!(), line!())),
                 )
@@ -362,8 +359,7 @@ where
             Ok(reshaped) => reshaped.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(
                     ErrorContext::new(format!(
-                        "Failed to convert expanded {} array to target dimension type",
-                        context
+                        "Failed to convert expanded {context} array to target dimension type"
                     ))
                     .with_location(ErrorLocation::new(file!(), line!())),
                 )
@@ -378,8 +374,7 @@ where
                     .map_err(|_| {
                         CoreError::DimensionError(
                             ErrorContext::new(format!(
-                                "Cannot reshape {} array from shape {:?} to any expanded shape",
-                                context, source_shape
+                                "Cannot reshape {context} array from shape {source_shape:?} to any expanded shape"
                             ))
                             .with_location(ErrorLocation::new(file!(), line!())),
                         )
@@ -388,8 +383,7 @@ where
                     .map_err(|_| {
                         CoreError::DimensionError(
                             ErrorContext::new(format!(
-                                "Cannot expand {} array from {} to {} dimensions",
-                                context, source_dims, target_dims
+                                "Cannot expand {context} array from {source_dims} to {target_dims} dimensions"
                             ))
                             .with_location(ErrorLocation::new(file!(), line!())),
                         )
@@ -601,11 +595,8 @@ where
     for &idx in chunk_indices {
         if idx >= num_chunks {
             return Err(CoreError::IndexError(
-                ErrorContext::new(format!(
-                    "Chunk index out of bounds: {} >= {}",
-                    idx, num_chunks
-                ))
-                .with_location(ErrorLocation::new(file!(), line!())),
+                ErrorContext::new(format!("Chunk index out of bounds: {idx} >= {num_chunks}"))
+                    .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
     }

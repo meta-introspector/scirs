@@ -610,7 +610,12 @@ where
         }
     }
 
-    Err(GraphError::NoPath)
+    Err(GraphError::NoPath {
+        src_node: format!("{:?}", source),
+        target: format!("{:?}", target),
+        nodes: 0,
+        edges: 0,
+    })
 }
 
 /// A* search for directed graphs
@@ -680,7 +685,12 @@ where
         }
     }
 
-    Err(GraphError::NoPath)
+    Err(GraphError::NoPath {
+        src_node: format!("{:?}", source),
+        target: format!("{:?}", target),
+        nodes: 0,
+        edges: 0,
+    })
 }
 
 /// Finds K shortest paths between two nodes using Yen's algorithm
@@ -862,7 +872,12 @@ where
         }
     }
 
-    Err(GraphError::NoPath)
+    Err(GraphError::NoPath {
+        src_node: format!("{:?}", source),
+        target: format!("{:?}", target),
+        nodes: 0,
+        edges: 0,
+    })
 }
 
 #[cfg(test)]

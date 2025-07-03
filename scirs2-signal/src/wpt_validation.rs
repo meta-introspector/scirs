@@ -11,6 +11,7 @@ use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
+use std::f64::consts::PI;
 
 /// Validation result for WPT
 #[derive(Debug, Clone)]
@@ -757,14 +758,14 @@ fn analyze_best_basis_stability(
 
     // Test stability under noise
     let mut noise_stability_scores = Vec::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for _ in 0..5 {
         // Add small amount of noise
         let noise_level = 0.01 * compute_energy(signal).sqrt() / signal.len() as f64;
         let noisy_signal: Vec<f64> = signal
             .iter()
-            .map(|&x| x + noise_level * rng.random_range(-1.0..1.0))
+            .map(|&x| x + noise_level * rng.gen_range(-1.0..1.0))
             .collect();
 
         // Decompose noisy signal

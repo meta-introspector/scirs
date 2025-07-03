@@ -13,12 +13,14 @@ use crate::base::{DiGraph, Graph};
 use crate::error::{GraphError, Result};
 
 /// Create a new empty undirected graph
-pub fn create_graph<N: crate::base::Node, E: crate::base::EdgeWeight>() -> Graph<N, E> {
+pub fn create_graph<N: crate::base::Node + std::fmt::Debug, E: crate::base::EdgeWeight>(
+) -> Graph<N, E> {
     Graph::new()
 }
 
 /// Create a new empty directed graph
-pub fn create_digraph<N: crate::base::Node, E: crate::base::EdgeWeight>() -> DiGraph<N, E> {
+pub fn create_digraph<N: crate::base::Node + std::fmt::Debug, E: crate::base::EdgeWeight>(
+) -> DiGraph<N, E> {
     DiGraph::new()
 }
 
@@ -278,7 +280,7 @@ pub fn random_spanning_tree<N, E, Ix, R>(
     rng: &mut R,
 ) -> Result<Graph<N, E, Ix>>
 where
-    N: crate::base::Node,
+    N: crate::base::Node + std::fmt::Debug,
     E: crate::base::EdgeWeight + Clone,
     Ix: petgraph::graph::IndexType,
     R: Rng,

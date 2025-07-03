@@ -466,7 +466,7 @@ where
             return F::zero();
         }
 
-        let n_f = F::from(n).unwrap();
+        let _n_f = F::from(n).unwrap();
         let mut sum_xy = F::zero();
         let mut sum_x2 = F::zero();
         let mut sum_y2 = F::zero();

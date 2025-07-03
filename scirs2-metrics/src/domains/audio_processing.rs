@@ -1478,8 +1478,8 @@ impl AudioClassificationMetrics {
 
     fn calculate_frame_accuracy(
         &self,
-        frame_true: &ArrayView2<i32>,
-        frame_pred: &ArrayView2<i32>,
+        _frame_true: &ArrayView2<i32>,
+        _frame_pred: &ArrayView2<i32>,
     ) -> Result<f64> {
         // Simplified frame accuracy calculation
         Ok(0.85) // Placeholder

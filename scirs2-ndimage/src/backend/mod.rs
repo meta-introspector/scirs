@@ -28,7 +28,7 @@ pub use concrete_gpu_backends::OpenCLContext;
 // #[cfg(all(target_os = "macos", feature = "metal"))]
 // pub use concrete_gpu_backends::MetalContext;
 
-use crate::error::{NdimageError, NdimageResult};
+use crate::error::NdimageResult;
 use ndarray::{Array, ArrayView, Dimension};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;

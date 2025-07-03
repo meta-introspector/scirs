@@ -11,6 +11,7 @@ use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rustfft;
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Compute the Hilbert transform of a real-valued signal.
@@ -38,7 +39,6 @@ use std::fmt::Debug;
 /// ```
 /// use scirs2_signal::hilbert;
 /// use std::f64::consts::PI;
-/// use num_complex::Complex64;
 ///
 /// // Generate a cosine signal
 /// let n = 100;
@@ -261,8 +261,6 @@ pub fn instantaneous_frequency<T>(x: &[T], fs: f64) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
-    use std::f64::consts::PI;
-
     // Check input
     if x.is_empty() {
         return Err(SignalError::ValueError("Input array is empty".to_string()));
@@ -369,8 +367,6 @@ pub fn instantaneous_phase<T>(x: &[T], unwrap: bool) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
-    use std::f64::consts::PI;
-
     // Check input
     if x.is_empty() {
         return Err(SignalError::ValueError("Input array is empty".to_string()));
@@ -412,7 +408,6 @@ where
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_hilbert_transform() {

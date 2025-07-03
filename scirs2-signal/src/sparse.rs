@@ -1428,7 +1428,7 @@ pub fn estimate_rip_constant(phi: &Array2<f64>, s: usize) -> SignalResult<f64> {
     // Instead, we use a Monte Carlo approach with random sparse vectors.
 
     const NUM_TRIALS: usize = 1000;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let mut min_ratio = f64::MAX;
     let mut max_ratio = 0.0;

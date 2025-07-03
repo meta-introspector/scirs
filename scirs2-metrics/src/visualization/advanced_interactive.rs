@@ -2645,6 +2645,7 @@ impl RenderingEngine for DefaultRenderingEngine {
                        });".to_string();
 
         let render_time = start_time.elapsed();
+        let memory_usage = html.len() + css.len() + javascript.len();
 
         Ok(RenderOutput {
             html,
@@ -2653,7 +2654,7 @@ impl RenderingEngine for DefaultRenderingEngine {
             assets: Vec::new(),
             performance: RenderPerformance {
                 render_time,
-                memory_usage: html.len() + css.len() + javascript.len(),
+                memory_usage,
                 frame_rate: 60.0,
                 gpu_usage: Some(0.1), // Simulated low GPU usage
             },

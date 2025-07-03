@@ -590,7 +590,7 @@ where
     /// Fit a single model
     fn fit_single_model(
         &self,
-        model: &BayesianModel<F>,
+        _model: &BayesianModel<F>,
         x: &ArrayView2<F>,
         y: &ArrayView1<F>,
     ) -> StatsResult<AdvancedBayesianResult<F>> {
@@ -660,9 +660,9 @@ where
     /// Cross-validate model
     fn cross_validate_model(
         &self,
-        model: &BayesianModel<F>,
+        _model: &BayesianModel<F>,
         x: &ArrayView2<F>,
-        y: &ArrayView1<F>,
+        _y: &ArrayView1<F>,
     ) -> StatsResult<CrossValidationResult<F>> {
         let k = self.cv_config.k_folds;
         let fold_scores = Array1::ones(k);

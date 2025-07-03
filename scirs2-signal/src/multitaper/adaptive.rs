@@ -4,9 +4,9 @@ use super::utils::compute_fft;
 use super::windows::dpss;
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
-use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 // PI is only used in doc examples
+use num_complex::Complex64;
 use std::fmt::Debug;
 
 /// Compute multitaper spectral density estimate with adaptively weighted spectra.
@@ -39,9 +39,9 @@ use std::fmt::Debug;
 /// let fs = 100.0;
 /// let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
 /// use rand::Rng;
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// let signal: Vec<f64> = t.iter()
-///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(0.0..1.0))
+///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.gen_range(0.0..1.0))
 ///     .collect();
 ///
 /// // Compute adaptive multitaper power spectral density

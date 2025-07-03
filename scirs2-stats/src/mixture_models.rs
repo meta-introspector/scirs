@@ -341,7 +341,7 @@ where
                 use rand::{rngs::StdRng, SeedableRng};
                 let mut rng = match self.config.seed {
                     Some(seed) => StdRng::seed_from_u64(seed),
-                    None => SeedableRng::from_entropy(),
+                    None => StdRng::from_rng(&mut rand::rng()),
                 };
 
                 for i in 0..self.n_components {
@@ -369,7 +369,7 @@ where
         use rand::{rngs::StdRng, SeedableRng};
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let (n_samples, n_features) = data.dim();
@@ -1062,7 +1062,7 @@ where
     }
 
     /// Detect outliers in data
-    pub fn detect_outliers(&self, data: &ArrayView2<F>) -> StatsResult<Array1<bool>> {
+    pub fn detect_outliers(&self, _data: &ArrayView2<F>) -> StatsResult<Array1<bool>> {
         let params = self.gmm.parameters.as_ref().ok_or_else(|| {
             StatsError::InvalidArgument("Model must be fitted before outlier detection".to_string())
         })?;
@@ -1515,7 +1515,7 @@ where
 
     /// Fit Variational GMM to data
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<VariationalGMMResult<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (_n_samples, n_features) = data.dim();
 
         // Initialize parameters
         let mut weight_concentration =
@@ -1631,7 +1631,7 @@ where
         use rand::{rngs::StdRng, SeedableRng};
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => SeedableRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         for i in 0..self.max_components {
@@ -1696,7 +1696,7 @@ where
         }
 
         // Update means and precisions
-        let mut mean_precision = Array1::ones(self.max_components);
+        let mean_precision = Array1::ones(self.max_components);
         let mut means = Array2::zeros((self.max_components, n_features));
         let mut degrees_of_freedom = Array1::from_elem(
             self.max_components,

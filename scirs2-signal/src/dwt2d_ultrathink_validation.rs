@@ -6,7 +6,6 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, Array3, ArrayView2, ArrayViewMut2};
-use num_complex::Complex64;
 use rand::prelude::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
@@ -745,7 +744,7 @@ fn generate_test_image(
             // Sinusoidal patterns
             let value = (2.0 * PI * 3.0 * x).sin() * (2.0 * PI * 2.0 * y).cos()
                 + 0.5 * (2.0 * PI * 8.0 * x).cos() * (2.0 * PI * 5.0 * y).sin()
-                + 0.1 * rng.random_range(-1.0..1.0); // Add noise
+                + 0.1 * rng.gen_range(-1.0..1.0); // Add noise
 
             image[[i, j]] = value;
         }
@@ -762,7 +761,7 @@ fn simulate_reconstruction_test(
 ) -> SignalResult<f64> {
     // Simulate perfect reconstruction test
     // In real implementation, this would perform actual DWT and IDWT
-    let error = 1e-14 * (1.0 + rand::thread_rng().random_range(0.0..1.0));
+    let error = 1e-14 * (1.0 + rand::rng().gen_range(0.0..1.0));
     Ok(error)
 }
 

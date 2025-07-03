@@ -855,6 +855,7 @@ fn calculate_patch_distance(signal: &Array1<f64>, i: usize, j: usize, patch_size
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

@@ -36,7 +36,7 @@ pub fn multivariate_emd(
     } else {
         {
             // In rand 0.9, from_rng doesn't return Result but directly returns the PRNG
-            rand::rngs::StdRng::from_rng(&mut rand::thread_rng())
+            rand::rngs::StdRng::from_rng(&mut rand::rng())
         }
     };
 
@@ -45,7 +45,7 @@ pub fn multivariate_emd(
 
         // Generate random normal vector
         for _ in 0..n_signals {
-            v.push(rng.random_range(-1.0..1.0));
+            v.push(rng.gen_range(-1.0..1.0));
         }
 
         // Normalize

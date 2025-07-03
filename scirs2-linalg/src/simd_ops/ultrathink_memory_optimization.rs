@@ -498,6 +498,7 @@ pub struct BranchOptimizer;
 
 impl BranchOptimizer {
     /// Optimize conditional execution in matrix operations
+    #[allow(dead_code)]
     #[inline(always)]
     pub fn likely_branch<T>(condition: bool, if_true: T, if_false: T) -> T {
         // Note: std::intrinsics::likely requires unstable features
@@ -510,6 +511,7 @@ impl BranchOptimizer {
     }
     
     /// Optimize unlikely branches (e.g., error conditions)
+    #[allow(dead_code)]
     #[inline(always)]
     pub fn unlikely_branch<T>(condition: bool, if_true: T, if_false: T) -> T {
         // Note: std::intrinsics::unlikely requires unstable features
@@ -522,6 +524,7 @@ impl BranchOptimizer {
     }
     
     /// Prefetch-guided loop unrolling for predictable access patterns
+    #[allow(dead_code)]
     pub fn unrolled_loop_with_prefetch<F>(
         start: usize,
         end: usize,

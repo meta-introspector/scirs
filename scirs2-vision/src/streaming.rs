@@ -160,7 +160,7 @@ impl StreamPipeline {
                             }
                         }
                         Err(e) => {
-                            eprintln!("Stage {} error: {}", stage_name, e);
+                            eprintln!("Stage {stage_name} error: {e}");
                             if let Ok(mut m) = stage_metrics.lock() {
                                 m.dropped_frames += 1;
                             }
@@ -1489,8 +1489,7 @@ impl AutoScalingThreadPoolManager {
                 };
 
                 eprintln!(
-                    "Scaled {} from {} to {} threads (utilization: {:.1}%, bottleneck: {:.2})",
-                    stage_name, old_thread_count, new_thread_count, utilization, bottleneck_score
+                    "Scaled {stage_name} from {old_thread_count} to {new_thread_count} threads (utilization: {utilization:.1}%, bottleneck: {bottleneck_score:.2})"
                 );
             }
 
@@ -1795,8 +1794,7 @@ impl AdaptivePerformanceMonitor {
                 // In a real implementation, we would actually adjust the thread pool
                 // For now, we just log the adaptation
                 eprintln!(
-                    "Adapted {} to {} threads",
-                    bottleneck_stage, new_thread_count
+                    "Adapted {bottleneck_stage} to {new_thread_count} threads"
                 );
             }
         }
@@ -2210,7 +2208,7 @@ impl UltraStreamPipeline {
                             }
                         }
                         Err(e) => {
-                            eprintln!("Stage {} error: {}", stage_name, e);
+                            eprintln!("Stage {stage_name} error: {e}");
                             if let Ok(mut m) = stage_metrics.try_lock() {
                                 m.dropped_frames += 1;
                             }

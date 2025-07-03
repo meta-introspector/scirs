@@ -6,7 +6,7 @@
 
 use super::core::*;
 use super::template_generator::*;
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use ndarray::{Array1, Array2, Axis};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
@@ -28,8 +28,7 @@ pub struct EnhancedPluginValidator {
     /// Security validator
     security_validator: SecurityValidator,
     /// Validation configuration
-    config: ValidationConfig,
-}
+    config: ValidationConfig}
 
 /// Validation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,8 +50,7 @@ pub struct ValidationConfig {
     /// Memory usage limits
     pub memory_limits: MemoryLimits,
     /// Performance thresholds
-    pub performance_thresholds: PerformanceThresholds,
-}
+    pub performance_thresholds: PerformanceThresholds}
 
 /// Memory usage limits
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -62,8 +60,7 @@ pub struct MemoryLimits {
     /// Memory leak tolerance (bytes)
     pub leak_tolerance_bytes: usize,
     /// Maximum allocations per step
-    pub max_allocations_per_step: usize,
-}
+    pub max_allocations_per_step: usize}
 
 /// Performance thresholds
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -75,8 +72,7 @@ pub struct PerformanceThresholds {
     /// Maximum convergence iterations
     pub max_convergence_iterations: usize,
     /// Numerical precision tolerance
-    pub numerical_tolerance: f64,
-}
+    pub numerical_tolerance: f64}
 
 /// Comprehensive validation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -98,8 +94,7 @@ pub struct ComprehensiveValidationResult {
     /// Validation summary
     pub summary: ValidationSummary,
     /// Recommendations
-    pub recommendations: Vec<ValidationRecommendation>,
-}
+    pub recommendations: Vec<ValidationRecommendation>}
 
 /// Static analysis engine
 #[derive(Debug)]
@@ -109,8 +104,7 @@ pub struct StaticAnalyzer {
     /// API compliance checkers
     api_checkers: Vec<Box<dyn APIChecker>>,
     /// Documentation validators
-    doc_validators: Vec<Box<dyn DocumentationValidator>>,
-}
+    doc_validators: Vec<Box<dyn DocumentationValidator>>}
 
 /// Runtime validator for dynamic testing
 #[derive(Debug)]
@@ -120,8 +114,7 @@ pub struct RuntimeValidator {
     /// Edge case generators
     edge_case_generators: Vec<Box<dyn EdgeCaseGenerator>>,
     /// Invariant checkers
-    invariant_checkers: Vec<Box<dyn InvariantChecker>>,
-}
+    invariant_checkers: Vec<Box<dyn InvariantChecker>>}
 
 /// Performance tester
 #[derive(Debug)]
@@ -131,8 +124,7 @@ pub struct PerformanceTester {
     /// Memory profiler
     memory_profiler: MemoryProfiler,
     /// Throughput analyzer
-    throughput_analyzer: ThroughputAnalyzer,
-}
+    throughput_analyzer: ThroughputAnalyzer}
 
 /// Enhanced compatibility checker
 #[derive(Debug)]
@@ -142,8 +134,7 @@ pub struct CompatibilityChecker {
     /// Version compatibility matrix
     version_matrix: VersionCompatibilityMatrix,
     /// Dependency analyzer
-    dependency_analyzer: DependencyAnalyzer,
-}
+    dependency_analyzer: DependencyAnalyzer}
 
 /// Security validator
 #[derive(Debug)]
@@ -153,8 +144,7 @@ pub struct SecurityValidator {
     /// Dependency security checker
     dependency_security: DependencySecurityChecker,
     /// Safe code analyzer
-    safe_code_analyzer: SafeCodeAnalyzer,
-}
+    safe_code_analyzer: SafeCodeAnalyzer}
 
 /// Static analysis result
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -168,8 +158,7 @@ pub struct StaticAnalysisResult {
     /// Complexity metrics
     pub complexity_metrics: ComplexityMetrics,
     /// Maintainability index
-    pub maintainability_index: f64,
-}
+    pub maintainability_index: f64}
 
 /// Runtime validation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -183,8 +172,7 @@ pub struct RuntimeValidationResult {
     /// Runtime errors
     pub runtime_errors: Vec<RuntimeError>,
     /// Success rate
-    pub success_rate: f64,
-}
+    pub success_rate: f64}
 
 /// Performance test results
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -198,8 +186,7 @@ pub struct PerformanceTestResults {
     /// Scalability analysis
     pub scalability_analysis: ScalabilityAnalysis,
     /// Performance score
-    pub performance_score: f64,
-}
+    pub performance_score: f64}
 
 /// Compatibility check results
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -211,8 +198,7 @@ pub struct CompatibilityResults {
     /// Dependency compatibility
     pub dependency_compatibility: DependencyCompatibilityResult,
     /// Overall compatibility score
-    pub compatibility_score: f64,
-}
+    pub compatibility_score: f64}
 
 /// Security validation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -224,8 +210,7 @@ pub struct SecurityValidationResult {
     /// Safe code analysis
     pub safe_code_analysis: SafeCodeAnalysisResult,
     /// Security score
-    pub security_score: f64,
-}
+    pub security_score: f64}
 
 /// Validation summary
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -241,8 +226,7 @@ pub struct ValidationSummary {
     /// Critical issues
     pub critical_issues: usize,
     /// Validation duration
-    pub validation_duration: Duration,
-}
+    pub validation_duration: Duration}
 
 /// Validation recommendation
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -256,8 +240,7 @@ pub struct ValidationRecommendation {
     /// Suggested actions
     pub suggested_actions: Vec<String>,
     /// Impact assessment
-    pub impact: ImpactAssessment,
-}
+    pub impact: ImpactAssessment}
 
 /// Platform target for testing
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
@@ -269,8 +252,7 @@ pub enum PlatformTarget {
     WindowsX64,
     WindowsArm64,
     WebAssembly,
-    Custom(String),
-}
+    Custom(String)}
 
 /// Quality checker trait
 pub trait QualityChecker: Debug + Send + Sync {
@@ -385,8 +367,7 @@ pub struct CodeQualityMetrics {
     /// Test coverage percentage
     pub test_coverage: f64,
     /// Documentation ratio
-    pub documentation_ratio: f64,
-}
+    pub documentation_ratio: f64}
 
 /// API issue
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -400,8 +381,7 @@ pub struct APIIssue {
     /// Location
     pub location: String,
     /// Fix suggestion
-    pub fix_suggestion: Option<String>,
-}
+    pub fix_suggestion: Option<String>}
 
 /// API issue types
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -411,8 +391,7 @@ pub enum APIIssueType {
     MissingTrait,
     ImproperImplementation,
     PerformanceIssue,
-    SafetyIssue,
-}
+    SafetyIssue}
 
 /// Issue severity levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -420,8 +399,7 @@ pub enum IssueSeverity {
     Info,
     Warning,
     Error,
-    Critical,
-}
+    Critical}
 
 /// Complexity metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -433,8 +411,7 @@ pub struct ComplexityMetrics {
     /// Halstead complexity
     pub halstead_complexity: HalsteadMetrics,
     /// Maintainability index
-    pub maintainability_index: f64,
-}
+    pub maintainability_index: f64}
 
 /// Halstead complexity metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -448,8 +425,7 @@ pub struct HalsteadMetrics {
     /// Program difficulty
     pub difficulty: f64,
     /// Programming effort
-    pub effort: f64,
-}
+    pub effort: f64}
 
 /// Memory analysis result
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -463,8 +439,7 @@ pub struct MemoryAnalysis {
     /// Allocation patterns
     pub allocation_patterns: Vec<AllocationPattern>,
     /// Memory efficiency score
-    pub efficiency_score: f64,
-}
+    pub efficiency_score: f64}
 
 /// Allocation pattern
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -476,8 +451,7 @@ pub struct AllocationPattern {
     /// Size range
     pub size_range: (usize, usize),
     /// Duration
-    pub duration: Duration,
-}
+    pub duration: Duration}
 
 /// Throughput metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -491,8 +465,7 @@ pub struct ThroughputMetrics {
     /// 99th percentile latency
     pub p99_latency: Duration,
     /// Throughput stability
-    pub stability_coefficient: f64,
-}
+    pub stability_coefficient: f64}
 
 /// Scalability analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -504,8 +477,7 @@ pub struct ScalabilityAnalysis {
     /// Memory scaling
     pub memory_scaling: MemoryScaling,
     /// Recommended limits
-    pub recommended_limits: RecommendedLimits,
-}
+    pub recommended_limits: RecommendedLimits}
 
 /// Scaling behavior types
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -515,8 +487,7 @@ pub enum ScalingBehavior {
     Quadratic,
     Exponential,
     Constant,
-    Unknown,
-}
+    Unknown}
 
 /// Memory scaling characteristics
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -526,8 +497,7 @@ pub struct MemoryScaling {
     /// Memory scaling coefficient
     pub scaling_coefficient: f64,
     /// Base memory usage
-    pub base_memory: usize,
-}
+    pub base_memory: usize}
 
 /// Recommended operational limits
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -537,8 +507,7 @@ pub struct RecommendedLimits {
     /// Maximum batch size
     pub max_batch_size: usize,
     /// Recommended memory limit
-    pub recommended_memory_limit: usize,
-}
+    pub recommended_memory_limit: usize}
 
 impl EnhancedPluginValidator {
     /// Create a new enhanced plugin validator
@@ -555,8 +524,7 @@ impl EnhancedPluginValidator {
             performance_tester,
             compatibility_checker,
             security_validator,
-            config,
-        }
+            config}
     }
     
     /// Perform comprehensive validation
@@ -579,10 +547,8 @@ impl EnhancedPluginValidator {
                 failed_checks: 0,
                 warnings: 0,
                 critical_issues: 0,
-                validation_duration: Duration::default(),
-            },
-            recommendations: Vec::new(),
-        };
+                validation_duration: Duration::default()},
+            recommendations: Vec::new()};
         
         // Static analysis
         if self.config.enable_static_analysis {
@@ -703,8 +669,7 @@ impl EnhancedPluginValidator {
             warnings: Vec::new(),
             template_score: 0.0,
             completeness_score: 0.0,
-            quality_score: 0.0,
-        };
+            quality_score: 0.0};
         
         // Validate template structure
         if template.name.is_empty() {
@@ -799,9 +764,7 @@ impl EnhancedPluginValidator {
                         performance_impact: 0.8,
                         compatibility_impact: 0.1,
                         security_impact: 0.0,
-                        maintenance_impact: 0.3,
-                    },
-                });
+                        maintenance_impact: 0.3}});
             }
         }
         
@@ -821,9 +784,7 @@ impl EnhancedPluginValidator {
                         performance_impact: 0.0,
                         compatibility_impact: 0.0,
                         security_impact: 1.0,
-                        maintenance_impact: 0.5,
-                    },
-                });
+                        maintenance_impact: 0.5}});
             }
         }
         
@@ -894,8 +855,7 @@ pub struct TemplateValidationResult {
     /// Template completeness score
     pub completeness_score: f64,
     /// Template quality score
-    pub quality_score: f64,
-}
+    pub quality_score: f64}
 
 /// Recommendation types
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -906,8 +866,7 @@ pub enum RecommendationType {
     CodeQuality,
     Documentation,
     Testing,
-    Architecture,
-}
+    Architecture}
 
 /// Recommendation priority levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -915,8 +874,7 @@ pub enum RecommendationPriority {
     Low,
     Medium,
     High,
-    Critical,
-}
+    Critical}
 
 /// Impact assessment
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -928,8 +886,7 @@ pub struct ImpactAssessment {
     /// Security impact (0.0 to 1.0)
     pub security_impact: f64,
     /// Maintenance impact (0.0 to 1.0)
-    pub maintenance_impact: f64,
-}
+    pub maintenance_impact: f64}
 
 // Implementation stubs for the various analyzers and testers
 // These would be fully implemented based on specific requirements
@@ -947,8 +904,7 @@ impl StaticAnalyzer {
             ],
             doc_validators: vec![
                 Box::new(DocCoverageValidator),
-            ],
-        }
+            ]}
     }
     
     fn analyze(&self, plugin: &dyn OptimizerPlugin<f64>) -> Result<StaticAnalysisResult> {
@@ -959,8 +915,7 @@ impl StaticAnalyzer {
                 cyclomatic_complexity: 10.0,
                 code_duplication: 5.0,
                 test_coverage: 85.0,
-                documentation_ratio: 0.8,
-            },
+                documentation_ratio: 0.8},
             api_issues: vec![],
             documentation_coverage: 0.85,
             complexity_metrics: ComplexityMetrics {
@@ -971,12 +926,9 @@ impl StaticAnalyzer {
                     vocabulary: 50,
                     volume: 500.0,
                     difficulty: 10.0,
-                    effort: 5000.0,
-                },
-                maintainability_index: 75.0,
-            },
-            maintainability_index: 75.0,
-        })
+                    effort: 5000.0},
+                maintainability_index: 75.0},
+            maintainability_index: 75.0})
     }
 }
 
@@ -995,8 +947,7 @@ impl RuntimeValidator {
             invariant_checkers: vec![
                 Box::new(ParameterBoundsChecker),
                 Box::new(MonotonicityChecker),
-            ],
-        }
+            ]}
     }
     
     fn validate(&self, plugin: &mut dyn OptimizerPlugin<f64>) -> Result<RuntimeValidationResult> {
@@ -1019,8 +970,7 @@ impl RuntimeValidator {
             edge_case_results: vec![],
             invariant_violations: vec![],
             runtime_errors: vec![],
-            success_rate,
-        })
+            success_rate})
     }
 }
 
@@ -1029,8 +979,7 @@ impl PerformanceTester {
         Self {
             benchmark_suites: vec![],
             memory_profiler: MemoryProfiler::new(),
-            throughput_analyzer: ThroughputAnalyzer::new(),
-        }
+            throughput_analyzer: ThroughputAnalyzer::new()}
     }
     
     fn test_performance(&self, plugin: &mut dyn OptimizerPlugin<f64>, thresholds: &PerformanceThresholds) -> Result<PerformanceTestResults> {
@@ -1042,31 +991,26 @@ impl PerformanceTester {
                 average_memory_usage: 512 * 1024, // 512KB
                 memory_leak_detected: false,
                 allocation_patterns: vec![],
-                efficiency_score: 0.9,
-            },
+                efficiency_score: 0.9},
             throughput_metrics: ThroughputMetrics {
                 ops_per_second: 1000.0,
                 average_latency: Duration::from_micros(100),
                 p95_latency: Duration::from_micros(200),
                 p99_latency: Duration::from_micros(500),
-                stability_coefficient: 0.95,
-            },
+                stability_coefficient: 0.95},
             scalability_analysis: ScalabilityAnalysis {
                 scaling_behavior: ScalingBehavior::Linear,
                 size_performance_curve: vec![(100, 100.0), (1000, 1000.0), (10000, 10000.0)],
                 memory_scaling: MemoryScaling {
                     complexity_order: "O(n)".to_string(),
                     scaling_coefficient: 1.0,
-                    base_memory: 1024,
-                },
+                    base_memory: 1024},
                 recommended_limits: RecommendedLimits {
                     max_parameters: 1_000_000,
                     max_batch_size: 1000,
                     recommended_memory_limit: 100 * 1024 * 1024, // 100MB
-                },
-            },
-            performance_score: 0.85,
-        })
+                }},
+            performance_score: 0.85})
     }
 }
 
@@ -1075,8 +1019,7 @@ impl CompatibilityChecker {
         Self {
             platform_testers: HashMap::new(),
             version_matrix: VersionCompatibilityMatrix::new(),
-            dependency_analyzer: DependencyAnalyzer::new(),
-        }
+            dependency_analyzer: DependencyAnalyzer::new()}
     }
     
     fn check_compatibility(&self, plugin: &dyn OptimizerPlugin<f64>) -> Result<CompatibilityResults> {
@@ -1086,15 +1029,12 @@ impl CompatibilityChecker {
             version_compatibility: VersionCompatibilityResult {
                 compatible_versions: vec!["1.0.0".to_string(), "1.1.0".to_string()],
                 incompatible_versions: vec![],
-                compatibility_matrix: HashMap::new(),
-            },
+                compatibility_matrix: HashMap::new()},
             dependency_compatibility: DependencyCompatibilityResult {
                 compatible_dependencies: vec![],
                 incompatible_dependencies: vec![],
-                dependency_conflicts: vec![],
-            },
-            compatibility_score: 0.9,
-        })
+                dependency_conflicts: vec![]},
+            compatibility_score: 0.9})
     }
 }
 
@@ -1103,8 +1043,7 @@ impl SecurityValidator {
         Self {
             vulnerability_scanners: vec![],
             dependency_security: DependencySecurityChecker::new(),
-            safe_code_analyzer: SafeCodeAnalyzer::new(),
-        }
+            safe_code_analyzer: SafeCodeAnalyzer::new()}
     }
     
     fn validate_security(&self, plugin: &dyn OptimizerPlugin<f64>) -> Result<SecurityValidationResult> {
@@ -1116,10 +1055,8 @@ impl SecurityValidator {
                 unsafe_blocks: 0,
                 potential_memory_issues: vec![],
                 thread_safety_issues: vec![],
-                data_race_potential: false,
-            },
-            security_score: 1.0,
-        })
+                data_race_potential: false},
+            security_score: 1.0})
     }
 }
 
@@ -1189,16 +1126,13 @@ impl RuntimeTestCase for BasicFunctionalityTest {
                 passed: true,
                 message: "Basic functionality test passed".to_string(),
                 execution_time: Duration::from_millis(1),
-                details: HashMap::new(),
-            },
+                details: HashMap::new()},
             Err(e) => RuntimeTestResult {
                 test_name: self.name().to_string(),
                 passed: false,
                 message: format!("Test failed: {}", e),
                 execution_time: Duration::from_millis(1),
-                details: HashMap::new(),
-            },
-        }
+                details: HashMap::new()}}
     }
     
     fn name(&self) -> &str { "BasicFunctionality" }
@@ -1215,8 +1149,7 @@ impl RuntimeTestCase for ConvergenceTest {
             passed: true,
             message: "Convergence test passed".to_string(),
             execution_time: Duration::from_millis(10),
-            details: HashMap::new(),
-        }
+            details: HashMap::new()}
     }
     
     fn name(&self) -> &str { "Convergence" }
@@ -1233,8 +1166,7 @@ impl RuntimeTestCase for StateSerializationTest {
             passed: true,
             message: "State serialization test passed".to_string(),
             execution_time: Duration::from_millis(5),
-            details: HashMap::new(),
-        }
+            details: HashMap::new()}
     }
     
     fn name(&self) -> &str { "StateSerialization" }
@@ -1251,37 +1183,32 @@ pub struct RuntimeTestResult {
     pub passed: bool,
     pub message: String,
     pub execution_time: Duration,
-    pub details: HashMap<String, String>,
-}
+    pub details: HashMap<String, String>}
 
 /// Quality check result
 #[derive(Debug, Clone)]
 pub struct QualityCheckResult {
     pub score: f64,
-    pub issues: Vec<String>,
-}
+    pub issues: Vec<String>}
 
 /// API check result
 #[derive(Debug, Clone)]
 pub struct APICheckResult {
     pub compliant: bool,
-    pub issues: Vec<String>,
-}
+    pub issues: Vec<String>}
 
 /// Documentation validation result
 #[derive(Debug, Clone)]
 pub struct DocumentationValidationResult {
     pub coverage: f64,
-    pub missing_docs: Vec<String>,
-}
+    pub missing_docs: Vec<String>}
 
 /// Test categories
 #[derive(Debug, Clone)]
 pub enum TestCategory {
     Functionality,
     Performance,
-    Memory,
-}
+    Memory}
 
 // More stub implementations for completeness...
 
@@ -1330,8 +1257,7 @@ pub struct EdgeCase;
 pub enum EdgeCaseCategory {
     Numerical,
     Size,
-    Boundary,
-}
+    Boundary}
 
 #[derive(Debug)]
 pub struct EdgeCaseResult;
@@ -1348,8 +1274,7 @@ pub struct InvariantContext;
 #[derive(Debug)]
 pub struct InvariantCheckResult {
     pub passed: bool,
-    pub violations: Vec<String>,
-}
+    pub violations: Vec<String>}
 
 #[derive(Debug)]
 pub struct BenchmarkResult;
@@ -1397,15 +1322,13 @@ pub struct PlatformCompatibility;
 pub struct VersionCompatibilityResult {
     pub compatible_versions: Vec<String>,
     pub incompatible_versions: Vec<String>,
-    pub compatibility_matrix: HashMap<String, bool>,
-}
+    pub compatibility_matrix: HashMap<String, bool>}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DependencyCompatibilityResult {
     pub compatible_dependencies: Vec<String>,
     pub incompatible_dependencies: Vec<String>,
-    pub dependency_conflicts: Vec<String>,
-}
+    pub dependency_conflicts: Vec<String>}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityVulnerability;
@@ -1418,8 +1341,7 @@ pub struct SafeCodeAnalysisResult {
     pub unsafe_blocks: usize,
     pub potential_memory_issues: Vec<String>,
     pub thread_safety_issues: Vec<String>,
-    pub data_race_potential: bool,
-}
+    pub data_race_potential: bool}
 
 #[derive(Debug)]
 pub struct VulnerabilityScanResult;
@@ -1440,15 +1362,12 @@ impl Default for ValidationConfig {
             memory_limits: MemoryLimits {
                 max_memory_mb: 100,
                 leak_tolerance_bytes: 1024,
-                max_allocations_per_step: 10,
-            },
+                max_allocations_per_step: 10},
             performance_thresholds: PerformanceThresholds {
                 max_step_time_us: 1000,
                 min_throughput: 100.0,
                 max_convergence_iterations: 10000,
-                numerical_tolerance: 1e-6,
-            },
-        }
+                numerical_tolerance: 1e-6}}
     }
 }
 
@@ -1484,11 +1403,9 @@ mod tests {
                 cicd_files: vec![],
                 example_files: vec![],
                 benchmark_files: vec![],
-                resource_files: vec![],
-            },
+                resource_files: vec![]},
             required_features: vec![],
-            parameters: HashMap::new(),
-        };
+            parameters: HashMap::new()};
         
         let result = validator.validate_template(&template).unwrap();
         assert!(result.is_valid);

@@ -452,6 +452,7 @@ impl CacheOptimizedOps {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(test)]
     use std::f64::consts::PI;
 
     #[test]

@@ -520,7 +520,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
                     final_values.push(f_val);
                     iterations_counts.push(iteration as f64);
                     gradient_norms.push(grad_norm);
-                    convergence_curves.push(convergence_curve);
+                    convergence_curves.push(convergence_curve.clone());
                     successful_runs += 1;
                     converged = true;
                     break;
@@ -1132,7 +1132,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         let std_err = self.calculate_f64_std(values, mean) / (values.len() as f64).sqrt();
 
         // Simplified critical value (should use proper t-distribution)
-        let alpha = 1.0 - confidence_level;
+        let _alpha = 1.0 - confidence_level;
         let critical_value = 1.96; // Approximate for 95% confidence
 
         let margin_of_error = critical_value * std_err;

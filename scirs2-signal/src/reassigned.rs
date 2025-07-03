@@ -13,12 +13,13 @@
 //   of America, 119(1), 360-371.
 
 use ndarray::{s, Array1, Array2};
-use num_complex::Complex64;
+#[cfg(test)]
 use std::f64::consts::PI;
 
 use crate::error::SignalResult;
 use crate::spectral;
 use crate::window;
+use num_complex::Complex64;
 
 /// Configuration parameters for reassigned spectrogram computation
 #[derive(Debug, Clone)]

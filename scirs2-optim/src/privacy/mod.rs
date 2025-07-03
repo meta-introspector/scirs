@@ -617,7 +617,7 @@ impl MomentsAccountant {
     }
 
     /// Compute privacy cost for given number of steps
-    pub fn get_privacy_spent(&self, steps: usize) -> Result<(f64, f64), OptimError> {
+    pub fn get_privacy_spent(&self, steps: usize) -> Result<(f64, f64)> {
         if steps == 0 {
             return Ok((0.0, 0.0));
         }

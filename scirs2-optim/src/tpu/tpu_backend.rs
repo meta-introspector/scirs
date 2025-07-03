@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 
 use super::xla_compilation::ComputationId;
 use super::{TPUConfig, TPUVersion, XLAOptimizationLevel};
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 
 /// TPU Backend Manager
 pub struct TPUBackend<T: Float> {

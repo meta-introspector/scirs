@@ -1144,7 +1144,7 @@ impl SecurityAuditor {
     /// Test input validation with specific payload
     fn test_input_validation(
         &self,
-        test: &InputValidationTest,
+        _test: &InputValidationTest,
         payload: &TestPayload,
     ) -> Result<()> {
         match payload {
@@ -1562,7 +1562,7 @@ impl SecurityAuditor {
     }
 
     /// Test precision loss
-    fn test_precision_loss(&mut self, test: &NumericalStabilityTest) -> Result<()> {
+    fn test_precision_loss(&mut self, _test: &NumericalStabilityTest) -> Result<()> {
         // Simulate precision tracking
         let precision_measurement = PrecisionMeasurement {
             step: 1,
@@ -1713,7 +1713,7 @@ impl SecurityAuditor {
         // This would test the statistical properties of generated noise
 
         // Check for potential patterns or weaknesses in noise generation
-        let noise_samples = 1000;
+        let _noise_samples = 1000;
         let expected_variance = 1.0;
         let measured_variance = 0.98; // Simulated measurement
 

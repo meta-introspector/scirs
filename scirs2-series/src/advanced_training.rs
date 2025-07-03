@@ -295,6 +295,7 @@ pub struct NeuralODE<F: Float + Debug + ndarray::ScalarOperand> {
     hidden_dim: usize,
 }
 
+/// Configuration for ODE solver
 #[derive(Debug, Clone)]
 pub struct ODESolverConfig<F: Float + Debug> {
     /// Integration method
@@ -307,6 +308,7 @@ pub struct ODESolverConfig<F: Float + Debug> {
     tolerance: F,
 }
 
+/// Integration methods for ODE solving
 #[derive(Debug, Clone)]
 pub enum IntegrationMethod {
     /// Forward Euler method
@@ -499,6 +501,16 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> NeuralOD
         x.tanh()
     }
 }
+
+/// Type alias for complex encoder weights return type
+type EncoderWeights<F> = (
+    Array2<F>,
+    Array1<F>,
+    Array2<F>,
+    Array1<F>,
+    Array2<F>,
+    Array1<F>,
+);
 
 /// Variational Autoencoder for Time Series with Uncertainty Quantification
 #[derive(Debug)]
@@ -791,16 +803,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
         Ok(result)
     }
 
-    fn extract_encoder_weights(
-        &self,
-    ) -> (
-        Array2<F>,
-        Array1<F>,
-        Array2<F>,
-        Array1<F>,
-        Array2<F>,
-        Array1<F>,
-    ) {
+    fn extract_encoder_weights(&self) -> EncoderWeights<F> {
         let param_vec = self.encoder_params.row(0);
         let input_size = self.seq_len * self.feature_dim;
         let mut idx = 0;
@@ -1575,7 +1578,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
             let training_time = F::from(start_time.elapsed().as_secs_f64()).unwrap();
 
             // Update best parameters if improved
-            let is_better = self.best_score.map_or(true, |best| score > best);
+            let is_better = self.best_score.is_none_or(|best| score > best);
             if is_better {
                 self.best_params = Some(params.clone());
                 self.best_score = Some(score);

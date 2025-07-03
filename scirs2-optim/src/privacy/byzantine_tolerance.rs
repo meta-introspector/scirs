@@ -335,7 +335,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     fn filter_by_reputation(
         &self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<HashMap<String, Array1<T>>, OptimError> {
+    ) -> Result<HashMap<String, Array1<T>>> {
         let mut filtered = HashMap::new();
 
         for (participant_id, gradient) in gradients {
@@ -356,7 +356,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     fn detect_anomalies(
         &mut self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<HashMap<String, AnomalyScore>, OptimError> {
+    ) -> Result<HashMap<String, AnomalyScore>> {
         let mut anomaly_results = HashMap::new();
 
         for (participant_id, gradient) in gradients {
@@ -371,7 +371,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     fn detect_statistical_outliers(
         &mut self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<HashMap<String, OutlierScore>, OptimError> {
+    ) -> Result<HashMap<String, OutlierScore>> {
         let mut outlier_results = HashMap::new();
 
         // Collect all gradients for statistical analysis
@@ -392,7 +392,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     fn verify_gradients(
         &self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<HashMap<String, VerificationScore>, OptimError> {
+    ) -> Result<HashMap<String, VerificationScore>> {
         let mut verification_results = HashMap::new();
 
         for (participant_id, gradient) in gradients {
@@ -434,7 +434,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
         &self,
         all_participants: &HashMap<String, Array1<T>>,
         byzantine_participants: &[String],
-    ) -> Result<HashMap<String, Array1<T>>, OptimError> {
+    ) -> Result<HashMap<String, Array1<T>>> {
         let mut honest_participants = HashMap::new();
 
         for (participant_id, gradient) in all_participants {
@@ -843,7 +843,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
         &self,
         gradients: &HashMap<String, Array1<T>>,
         k: usize,
-    ) -> Result<HashMap<String, Array1<T>>, OptimError> {
+    ) -> Result<HashMap<String, Array1<T>>> {
         let mut scores = Vec::new();
         let participants: Vec<&String> = gradients.keys().collect();
 
@@ -888,7 +888,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     fn compute_fools_gold_weights(
         &self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<HashMap<String, T>, OptimError> {
+    ) -> Result<HashMap<String, T>> {
         let mut weights = HashMap::new();
 
         for participant_id in gradients.keys() {
@@ -909,7 +909,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     fn cluster_gradients(
         &self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<Vec<HashMap<String, Array1<T>>>, OptimError> {
+    ) -> Result<Vec<HashMap<String, Array1<T>>>> {
         // Simple clustering based on cosine similarity
         let mut clusters = Vec::new();
         let mut unassigned: HashMap<String, Array1<T>> = gradients.clone();
@@ -950,7 +950,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     fn find_largest_cluster(
         &self,
         clusters: &[HashMap<String, Array1<T>>],
-    ) -> Result<HashMap<String, Array1<T>>, OptimError> {
+    ) -> Result<HashMap<String, Array1<T>>> {
         clusters
             .iter()
             .max_by_key(|cluster| cluster.len())

@@ -11,7 +11,8 @@ use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
 use super::EvaluationResults;
-use crate::error::{OptimError, Result};
+#[allow(unused_imports)]
+use crate::error::Result;
 
 /// Main hyperparameter optimization coordinator
 pub struct HyperparameterOptimizer<T: Float> {

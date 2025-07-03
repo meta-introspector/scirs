@@ -17,7 +17,6 @@ use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, Windo
 use crate::lombscargle_simd::simd_lombscargle;
 
 use ndarray::{Array1, ArrayView1};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::{check_finite, check_positive};
@@ -242,11 +241,11 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingValidation> {
     let n_sparse = 10;
     let time_span = 100.0;
     let mut times = Vec::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Generate random sparse sampling times
     for _ in 0..n_sparse {
-        times.push(rng.random_range(0.0..time_span));
+        times.push(rng.gen_range(0.0..time_span));
     }
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -254,7 +253,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingValidation> {
     let true_freq = 0.1; // Low frequency to be detectable with sparse sampling
     let signal: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.1 * rng.random_range(-1.0..1.0))
+        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.1 * rng.gen_range(-1.0..1.0))
         .collect();
 
     // Compute Lomb-Scargle periodogram
@@ -341,7 +340,7 @@ fn validate_extreme_snr() -> SignalResult<ExtremeSNRValidation> {
     let signal_freq = 5.0;
     let signal_amplitude = 1.0;
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Test very low SNR (-30 dB)
     let low_snr_db = -30.0;
@@ -350,7 +349,7 @@ fn validate_extreme_snr() -> SignalResult<ExtremeSNRValidation> {
         .iter()
         .map(|&t| {
             signal_amplitude * (2.0 * PI * signal_freq * t).sin()
-                + noise_amplitude_low * rng.random_range(-1.0..1.0)
+                + noise_amplitude_low * rng.gen_range(-1.0..1.0)
         })
         .collect();
 
@@ -366,7 +365,7 @@ fn validate_extreme_snr() -> SignalResult<ExtremeSNRValidation> {
         .iter()
         .map(|&t| {
             signal_amplitude * (2.0 * PI * signal_freq * t).sin()
-                + noise_amplitude_high * rng.random_range(-1.0..1.0)
+                + noise_amplitude_high * rng.gen_range(-1.0..1.0)
         })
         .collect();
 
@@ -425,9 +424,9 @@ fn validate_pathological_signals() -> SignalResult<PathologicalSignalValidation>
 
     // Random walk
     let mut random_walk = vec![0.0; n];
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     for i in 1..n {
-        random_walk[i] = random_walk[i - 1] + rng.random_range(-1.0..1.0);
+        random_walk[i] = random_walk[i - 1] + rng.gen_range(-1.0..1.0);
     }
     let random_walk_handling = test_pathological_signal(&times, &random_walk)?;
 
@@ -593,10 +592,10 @@ fn validate_complex_frequency_content() -> SignalResult<ComplexFrequencyValidati
         assess_frequency_resolution(&times, &close_freq_signal, freq1, freq2)?;
 
     // Broadband noise + tones
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let broadband_signal: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * 15.0 * t).sin() + 0.5 * rng.random_range(-1.0..1.0))
+        .map(|&t| (2.0 * PI * 15.0 * t).sin() + 0.5 * rng.gen_range(-1.0..1.0))
         .collect();
 
     let broadband_plus_tones = assess_tone_in_noise_detection(&times, &broadband_signal, 15.0)?;
@@ -651,9 +650,9 @@ fn validate_missing_data_handling() -> SignalResult<MissingDataValidation> {
         .collect();
 
     // Random gaps (remove 30% of data randomly)
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let keep_indices: Vec<usize> = (0..n_complete)
-        .filter(|_| rng.random_range(0.0..1.0) > 0.3)
+        .filter(|_| rng.gen_range(0.0..1.0) > 0.3)
         .collect();
 
     let times_random_gaps: Vec<f64> = keep_indices.iter().map(|&i| times_complete[i]).collect();

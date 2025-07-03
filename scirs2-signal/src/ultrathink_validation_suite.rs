@@ -18,7 +18,6 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use num_complex::Complex64;
 use rand::prelude::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};

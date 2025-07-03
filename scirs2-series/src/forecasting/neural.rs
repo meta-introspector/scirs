@@ -1484,8 +1484,7 @@ pub mod advanced {
                         + &long_predictions[i] * weights[2];
 
                     // Calculate MSE
-                    for (_j, (&pred, &actual)) in combined.iter().zip(targets[i].iter()).enumerate()
-                    {
+                    for (&pred, &actual) in combined.iter().zip(targets[i].iter()) {
                         let error = pred - actual;
                         total_error = total_error + error * error;
                         count += 1;
@@ -2200,8 +2199,8 @@ pub mod advanced {
         }
 
         /// Simple least squares solver for meta-learning
-        fn solve_least_squares(&self, X: &Array2<F>, y: &Array1<F>) -> Result<Array1<F>> {
-            let n_features = X.ncols();
+        fn solve_least_squares(&self, x: &Array2<F>, y: &Array1<F>) -> Result<Array1<F>> {
+            let n_features = x.ncols();
             let mut weights = Array1::zeros(n_features);
 
             // Simple approach: solve each feature independently
@@ -2209,9 +2208,9 @@ pub mod advanced {
                 let mut num = F::zero();
                 let mut den = F::zero();
 
-                for i in 0..X.nrows() {
-                    num = num + X[[i, j]] * y[i];
-                    den = den + X[[i, j]] * X[[i, j]];
+                for i in 0..x.nrows() {
+                    num = num + x[[i, j]] * y[i];
+                    den = den + x[[i, j]] * x[[i, j]];
                 }
 
                 weights[j] = if den > F::zero() {

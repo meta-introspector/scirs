@@ -792,25 +792,35 @@ impl CrossPlatformTester {
         category: &TestCategory,
         platform_info: &PlatformInfo,
     ) -> Result<()> {
-        if let Some(tests) = self.test_registry.test_suites.get(category) {
-            let tests_to_run: Vec<_> = tests.iter().collect();
-            for test in tests_to_run {
-                if test.is_applicable(&self.current_platform_target()) {
-                    println!("  Running test: {}", test.name());
+        let test_names: Vec<String> =
+            if let Some(tests) = self.test_registry.test_suites.get(category) {
+                tests.iter().map(|test| test.name().to_string()).collect()
+            } else {
+                return Ok(());
+            };
 
-                    let start_time = Instant::now();
-                    let test_result = test.run_test(platform_info);
-                    let execution_time = start_time.elapsed();
+        let platform_target = self.current_platform_target();
 
-                    // Store result
-                    self.store_test_result(test.name(), test_result, execution_time);
+        for test_name in test_names {
+            if let Some(tests) = self.test_registry.test_suites.get(category) {
+                if let Some(test) = tests.iter().find(|t| t.name() == test_name) {
+                    if test.is_applicable(&platform_target) {
+                        println!("  Running test: {}", test.name());
 
-                    // Check timeout
-                    if execution_time > self.config.timeout_settings.test_timeout {
-                        println!("    ⚠️  Test exceeded timeout");
+                        let start_time = Instant::now();
+                        let test_result = test.run_test(platform_info);
+                        let execution_time = start_time.elapsed();
+
+                        // Store result
+                        self.store_test_result(test.name(), test_result, execution_time);
+
+                        // Check timeout
+                        if execution_time > self.config.timeout_settings.test_timeout {
+                            println!("    ⚠️  Test exceeded timeout");
+                        }
+                    } else {
+                        println!("  Skipping test: {} (not applicable)", test.name());
                     }
-                } else {
-                    println!("  Skipping test: {} (not applicable)", test.name());
                 }
             }
         }

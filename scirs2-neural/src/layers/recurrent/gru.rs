@@ -77,6 +77,7 @@ pub struct GRU<F: Float + Debug> {
     /// Hidden states cache for backward pass
     hidden_states_cache: RwLock<Option<Array<F, IxDyn>>>,
     /// Gate values cache for backward pass
+    #[allow(dead_code)]
     gate_cache: GruGateCache<F>,
 }
 
@@ -123,7 +124,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
                 weights_vec.push(val * scale);
             }
             Array::from_shape_vec(IxDyn(&[rows, cols]), weights_vec).map_err(|e| {
-                NeuralError::InvalidArchitecture(format!("Failed to create weights array: {}", e))
+                NeuralError::InvalidArchitecture(format!("Failed to create weights array: {e}"))
             })
         };
         // Initialize all weights and biases

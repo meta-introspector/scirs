@@ -7,7 +7,6 @@
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
 use ndarray::{Array1, Array2};
-use num_complex::Complex64;
 use rand::prelude::*;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
@@ -222,14 +221,14 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
     // Test 1: Single frequency sinusoid with irregular sampling
     for &freq in &[0.1, 1.0, 5.0, 10.0] {
         let n = 200;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Generate irregular time samples
         let mut t = Vec::new();
         let mut current_time = 0.0;
         for _ in 0..n {
             t.push(current_time);
-            current_time += 0.1 + 0.05 * rng.random_range(-1.0..1.0); // Irregular sampling
+            current_time += 0.1 + 0.05 * rng.gen_range(-1.0..1.0); // Irregular sampling
         }
 
         // Generate signal with known frequency
@@ -325,8 +324,8 @@ fn validate_statistical_robustness() -> SignalResult<StatisticalRobustnessMetric
     for _ in 0..n_trials {
         let n = 200;
         let t: Vec<f64> = (0..n).map(|i| i as f64 * 0.01).collect();
-        let mut rng = rand::thread_rng();
-        let y: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
+        let mut rng = rand::rng();
+        let y: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
 
         let freq_grid = Array1::linspace(0.1, 10.0, 100);
         let (freqs, power) = lombscargle(

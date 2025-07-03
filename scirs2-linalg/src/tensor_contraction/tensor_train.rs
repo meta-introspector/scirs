@@ -36,7 +36,16 @@ where
 
 impl<A> TensorTrain<A>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + 'static + ndarray::ScalarOperand,
+    A: Clone
+        + Float
+        + NumAssign
+        + Zero
+        + Debug
+        + Sum
+        + 'static
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     /// Creates a new TensorTrain from the given cores, ranks, and original shape.
     ///
@@ -572,7 +581,16 @@ pub fn tensor_train_decomposition<A, D>(
     epsilon: Option<A>,
 ) -> LinalgResult<TensorTrain<A>>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + 'static + ndarray::ScalarOperand,
+    A: Clone
+        + Float
+        + NumAssign
+        + Zero
+        + Debug
+        + Sum
+        + 'static
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
     D: Dimension,
 {
     // Convert to dynamic dimensionality
@@ -658,7 +676,16 @@ where
 // Helper function for full SVD decomposition
 fn svd<A>(matrix: &Array2<A>) -> LinalgResult<(Array2<A>, Array1<A>, Array2<A>)>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + 'static + ndarray::ScalarOperand,
+    A: Clone
+        + Float
+        + NumAssign
+        + Zero
+        + Debug
+        + Sum
+        + 'static
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     use crate::decomposition::svd as svd_decomp;
 
@@ -673,7 +700,16 @@ fn svd_with_truncation<A>(
     epsilon: A,
 ) -> LinalgResult<(Array2<A>, Array1<A>, Array2<A>)>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + 'static + ndarray::ScalarOperand,
+    A: Clone
+        + Float
+        + NumAssign
+        + Zero
+        + Debug
+        + Sum
+        + 'static
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     let (u, s, vt) = svd(matrix)?;
 
@@ -711,7 +747,16 @@ fn svd_with_max_rank<A>(
     max_rank: usize,
 ) -> LinalgResult<(Array2<A>, Array1<A>, Array2<A>)>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + 'static + ndarray::ScalarOperand,
+    A: Clone
+        + Float
+        + NumAssign
+        + Zero
+        + Debug
+        + Sum
+        + 'static
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     let (u, s, vt) = svd(matrix)?;
 
@@ -733,7 +778,16 @@ fn svd_with_truncation_and_max_rank<A>(
     max_rank: usize,
 ) -> LinalgResult<(Array2<A>, Array1<A>, Array2<A>)>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + 'static + ndarray::ScalarOperand,
+    A: Clone
+        + Float
+        + NumAssign
+        + Zero
+        + Debug
+        + Sum
+        + 'static
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     let (u, s, vt) = svd(matrix)?;
 
@@ -771,7 +825,16 @@ where
 // Helper function for QR decomposition
 fn qr_decomposition<A>(matrix: &Array2<A>) -> LinalgResult<(Array2<A>, Array2<A>)>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + 'static + ndarray::ScalarOperand,
+    A: Clone
+        + Float
+        + NumAssign
+        + Zero
+        + Debug
+        + Sum
+        + 'static
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     use crate::decomposition::qr;
 

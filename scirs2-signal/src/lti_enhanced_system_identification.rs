@@ -18,7 +18,7 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::f64::consts::PI;
 
 /// Ultra-enhanced system identification result with quantum-inspired optimization
 #[derive(Debug, Clone)]

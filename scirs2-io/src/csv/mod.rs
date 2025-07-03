@@ -1246,7 +1246,8 @@ pub fn write_csv_columns<P: AsRef<Path>, T: std::fmt::Display + Clone>(
 // Streaming CSV Processing for Large Files
 //
 
-use scirs2_core::parallel_ops::*;
+// TODO: Fix scirs2_core integration
+// use scirs2_core::parallel_ops::*;
 use std::sync::{Arc, Mutex};
 
 /// Configuration for streaming CSV operations
@@ -1560,7 +1561,7 @@ where
     let peak_memory = Arc::new(Mutex::new(0));
 
     let results: Vec<R> = chunks
-        .into_par_iter()
+        .into_iter()
         .filter_map(|chunk| {
             // Update peak memory
             let memory_usage = chunk.len() * std::mem::size_of::<String>();

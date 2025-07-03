@@ -6,7 +6,6 @@
 //! for analog-to-digital conversion.
 
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 
 // Helper enum for handling either single values or slices
@@ -22,6 +21,8 @@ use super::common::{
     validation::{convert_filter_type, validate_cutoff_frequency, validate_order},
     FilterCoefficients, FilterType, FilterTypeParam,
 };
+use num_complex::Complex64;
+use std::f64::consts::PI;
 
 /// Butterworth filter design
 ///

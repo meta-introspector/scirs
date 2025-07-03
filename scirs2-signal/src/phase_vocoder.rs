@@ -11,6 +11,7 @@ use crate::stft::{ShortTimeFft, StftConfig};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rustfft;
+#[cfg(test)]
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
@@ -47,6 +48,7 @@ impl Default for PhaseVocoderConfig {
     }
 }
 
+use num_complex::Complex64;
 /// Process a signal using the phase vocoder algorithm
 ///
 /// The phase vocoder uses the short-time Fourier transform (STFT) to analyze
@@ -67,7 +69,8 @@ impl Default for PhaseVocoderConfig {
 ///
 /// ```
 /// use scirs2_signal::phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
-/// use std::f64::consts::PI;
+/// #[cfg(test)]
+use std::f64::consts::PI;
 ///
 /// // Generate a simple test signal (a sine wave)
 /// let n = 48000; // 1 second at 48kHz

@@ -5,6 +5,7 @@
 
 use crate::error::SignalResult;
 use scirs2_special::i0;
+#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Kaiser window.
