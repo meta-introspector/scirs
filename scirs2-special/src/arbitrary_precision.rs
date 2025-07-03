@@ -10,10 +10,9 @@
 use crate::error::{SpecialError, SpecialResult};
 use rug::{
     float::{Constant, FreeCache},
-    ops::{CompleteRound, Pow},
+    ops::Pow,
     Complex, Float,
 };
-use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Default precision in bits for arbitrary precision computations
 pub const DEFAULT_PRECISION: u32 = 256;

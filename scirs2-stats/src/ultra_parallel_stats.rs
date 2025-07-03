@@ -175,7 +175,7 @@ pub enum ParallelMemoryStrategy {
 }
 
 /// Cache optimization levels
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum CacheOptimizationLevel {
     /// No cache optimization
     None,

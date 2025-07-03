@@ -326,7 +326,7 @@ pub fn run_dwt2d_ultrathink_validation(
     let mut score_count = 0;
 
     println!("🌊 Starting ultra-comprehensive 2D wavelet validation...");
-    
+
     // Set random seed for reproducibility
     let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(config.random_seed);
 
@@ -339,7 +339,9 @@ pub fn run_dwt2d_ultrathink_validation(
 
     if reconstruction_score < 95.0 {
         issues.push("Perfect reconstruction accuracy below optimal threshold".to_string());
-        recommendations.push("Consider improving numerical precision in reconstruction algorithms".to_string());
+        recommendations.push(
+            "Consider improving numerical precision in reconstruction algorithms".to_string(),
+        );
     }
 
     // 2. Orthogonality Validation
@@ -447,19 +449,30 @@ pub fn run_dwt2d_ultrathink_validation(
     score_count += 1;
 
     // Calculate overall score
-    let overall_score = if score_count > 0 { total_score / score_count as f64 } else { 0.0 };
+    let overall_score = if score_count > 0 {
+        total_score / score_count as f64
+    } else {
+        0.0
+    };
 
     // Generate final recommendations
     if overall_score > 95.0 {
-        recommendations.push("Excellent 2D wavelet implementation! Consider publishing performance benchmarks.".to_string());
+        recommendations.push(
+            "Excellent 2D wavelet implementation! Consider publishing performance benchmarks."
+                .to_string(),
+        );
     } else if overall_score > 85.0 {
         recommendations.push("Good implementation with room for optimization".to_string());
     } else {
-        recommendations.push("Implementation needs significant improvements for production use".to_string());
+        recommendations
+            .push("Implementation needs significant improvements for production use".to_string());
     }
 
     let execution_time = start_time.elapsed().as_secs_f64() * 1000.0;
-    println!("✅ 2D wavelet validation completed in {:.2}ms", execution_time);
+    println!(
+        "✅ 2D wavelet validation completed in {:.2}ms",
+        execution_time
+    );
     println!("📊 Overall score: {:.1}%", overall_score);
 
     // Create placeholder results for missing components
@@ -516,20 +529,22 @@ fn validate_perfect_reconstruction(
     for &(h, w) in &config.test_sizes {
         // Generate test image
         let test_image = generate_test_image(h, w, rng);
-        
+
         for wavelet in &config.wavelet_types {
             for &level in &config.decomposition_levels {
                 for boundary in &config.boundary_modes {
                     // Simulate wavelet decomposition and reconstruction
-                    let reconstruction_error = simulate_reconstruction_test(&test_image, wavelet, level, boundary)?;
-                    
+                    let reconstruction_error =
+                        simulate_reconstruction_test(&test_image, wavelet, level, boundary)?;
+
                     max_error = max_error.max(reconstruction_error);
                     errors.push(reconstruction_error);
-                    
+
                     // Track errors by category
                     *error_by_wavelet.entry(wavelet.clone()).or_insert(0.0) += reconstruction_error;
                     *error_by_level.entry(level).or_insert(0.0) += reconstruction_error;
-                    *error_by_boundary.entry(boundary.clone()).or_insert(0.0) += reconstruction_error;
+                    *error_by_boundary.entry(boundary.clone()).or_insert(0.0) +=
+                        reconstruction_error;
                 }
             }
         }
@@ -713,25 +728,29 @@ fn validate_consistency(
 
 // Helper functions for generating test data and scoring
 
-fn generate_test_image(height: usize, width: usize, rng: &mut rand_chacha::ChaCha8Rng) -> Array2<f64> {
+fn generate_test_image(
+    height: usize,
+    width: usize,
+    rng: &mut rand_chacha::ChaCha8Rng,
+) -> Array2<f64> {
     // Generate a test image with known characteristics
     let mut image = Array2::zeros((height, width));
-    
+
     // Add various frequency components
     for i in 0..height {
         for j in 0..width {
             let x = (i as f64) / (height as f64);
             let y = (j as f64) / (width as f64);
-            
+
             // Sinusoidal patterns
             let value = (2.0 * PI * 3.0 * x).sin() * (2.0 * PI * 2.0 * y).cos()
                 + 0.5 * (2.0 * PI * 8.0 * x).cos() * (2.0 * PI * 5.0 * y).sin()
                 + 0.1 * rng.random_range(-1.0..1.0); // Add noise
-                
+
             image[[i, j]] = value;
         }
     }
-    
+
     image
 }
 
@@ -743,20 +762,28 @@ fn simulate_reconstruction_test(
 ) -> SignalResult<f64> {
     // Simulate perfect reconstruction test
     // In real implementation, this would perform actual DWT and IDWT
-    let error = 1e-14 * (1.0 + rand::rng().random_range(0.0..1.0));
+    let error = 1e-14 * (1.0 + rand::thread_rng().random_range(0.0..1.0));
     Ok(error)
 }
 
 // Scoring functions
 
 fn calculate_reconstruction_score(result: &ReconstructionValidationResult) -> f64 {
-    let error_score = (-20.0 * (result.max_reconstruction_error + 1e-15).log10()).min(100.0).max(0.0);
-    let perfect_score = if result.perfect_reconstruction { 100.0 } else { 80.0 };
+    let error_score = (-20.0 * (result.max_reconstruction_error + 1e-15).log10())
+        .min(100.0)
+        .max(0.0);
+    let perfect_score = if result.perfect_reconstruction {
+        100.0
+    } else {
+        80.0
+    };
     (error_score + perfect_score) / 2.0
 }
 
 fn calculate_orthogonality_score(result: &OrthogonalityValidationResult) -> f64 {
-    let error_score = (-20.0 * (result.max_orthogonality_error + 1e-15).log10()).min(100.0).max(0.0);
+    let error_score = (-20.0 * (result.max_orthogonality_error + 1e-15).log10())
+        .min(100.0)
+        .max(0.0);
     (error_score + result.filter_orthogonality) / 2.0
 }
 
@@ -769,11 +796,15 @@ fn calculate_boundary_score(result: &BoundaryValidationResult) -> f64 {
 }
 
 fn calculate_multilevel_score(result: &MultilevelValidationResult) -> f64 {
-    (result.coefficient_consistency + result.scaling_consistency + result.frequency_localization) / 3.0
+    (result.coefficient_consistency + result.scaling_consistency + result.frequency_localization)
+        / 3.0
 }
 
 fn calculate_denoising_score(result: &DenoisingValidationResult) -> f64 {
-    (result.edge_preservation_score + result.texture_preservation_score + result.artifact_suppression) / 3.0
+    (result.edge_preservation_score
+        + result.texture_preservation_score
+        + result.artifact_suppression)
+        / 3.0
 }
 
 fn calculate_compression_score(result: &CompressionValidationResult) -> f64 {
@@ -781,8 +812,12 @@ fn calculate_compression_score(result: &CompressionValidationResult) -> f64 {
 }
 
 fn calculate_stability_score(result: &StabilityValidationResult) -> f64 {
-    (result.condition_number_analysis.stability_score + result.error_propagation + 
-     result.extreme_input_robustness + result.precision_maintenance + result.overflow_handling) / 5.0
+    (result.condition_number_analysis.stability_score
+        + result.error_propagation
+        + result.extreme_input_robustness
+        + result.precision_maintenance
+        + result.overflow_handling)
+        / 5.0
 }
 
 fn calculate_performance_score(result: &PerformanceAnalysisResult) -> f64 {
@@ -794,46 +829,97 @@ fn calculate_simd_score(result: &SimdOptimizationResult) -> f64 {
 }
 
 fn calculate_memory_score(result: &MemoryAnalysisResult) -> f64 {
-    (result.memory_efficiency + result.access_pattern_efficiency + (1.0 - result.cache_miss_rate) * 100.0) / 3.0
+    (result.memory_efficiency
+        + result.access_pattern_efficiency
+        + (1.0 - result.cache_miss_rate) * 100.0)
+        / 3.0
 }
 
 fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
-    (result.cross_wavelet_consistency + result.implementation_consistency + 
-     result.platform_consistency + result.parameter_consistency) / 4.0
+    (result.cross_wavelet_consistency
+        + result.implementation_consistency
+        + result.platform_consistency
+        + result.parameter_consistency)
+        / 4.0
 }
 
 /// Generate a comprehensive report of 2D wavelet validation results
 pub fn generate_dwt2d_ultrathink_report(result: &Dwt2dUltrathinkResult) -> String {
     let mut report = String::new();
-    
+
     report.push_str("# Ultra-comprehensive 2D Wavelet Transform Validation Report\n\n");
-    
-    report.push_str(&format!("## Overall Score: {:.1}%\n\n", result.overall_score));
-    
+
+    report.push_str(&format!(
+        "## Overall Score: {:.1}%\n\n",
+        result.overall_score
+    ));
+
     report.push_str("## Validation Results Summary\n\n");
-    
+
     report.push_str(&format!("### Perfect Reconstruction\n"));
-    report.push_str(&format!("- Maximum Error: {:.2e}\n", result.reconstruction_validation.max_reconstruction_error));
-    report.push_str(&format!("- Mean Error: {:.2e}\n", result.reconstruction_validation.mean_reconstruction_error));
-    report.push_str(&format!("- Perfect Reconstruction: {}\n", result.reconstruction_validation.perfect_reconstruction));
-    report.push_str(&format!("- SNR Improvement: {:.1} dB\n\n", result.reconstruction_validation.snr_improvement));
-    
+    report.push_str(&format!(
+        "- Maximum Error: {:.2e}\n",
+        result.reconstruction_validation.max_reconstruction_error
+    ));
+    report.push_str(&format!(
+        "- Mean Error: {:.2e}\n",
+        result.reconstruction_validation.mean_reconstruction_error
+    ));
+    report.push_str(&format!(
+        "- Perfect Reconstruction: {}\n",
+        result.reconstruction_validation.perfect_reconstruction
+    ));
+    report.push_str(&format!(
+        "- SNR Improvement: {:.1} dB\n\n",
+        result.reconstruction_validation.snr_improvement
+    ));
+
     report.push_str(&format!("### Orthogonality\n"));
-    report.push_str(&format!("- Maximum Orthogonality Error: {:.2e}\n", result.orthogonality_validation.max_orthogonality_error));
-    report.push_str(&format!("- Filter Orthogonality: {:.1}%\n", result.orthogonality_validation.filter_orthogonality));
-    report.push_str(&format!("- Bi-orthogonality Score: {:.1}%\n\n", result.orthogonality_validation.biorthogonality_score));
-    
+    report.push_str(&format!(
+        "- Maximum Orthogonality Error: {:.2e}\n",
+        result.orthogonality_validation.max_orthogonality_error
+    ));
+    report.push_str(&format!(
+        "- Filter Orthogonality: {:.1}%\n",
+        result.orthogonality_validation.filter_orthogonality
+    ));
+    report.push_str(&format!(
+        "- Bi-orthogonality Score: {:.1}%\n\n",
+        result.orthogonality_validation.biorthogonality_score
+    ));
+
     report.push_str(&format!("### Performance Analysis\n"));
-    report.push_str(&format!("- Time Complexity: O(N^{:.1})\n", result.performance_analysis.time_complexity));
-    report.push_str(&format!("- Memory Complexity: O(N^{:.1})\n", result.performance_analysis.memory_complexity));
-    report.push_str(&format!("- Cache Efficiency: {:.1}%\n", result.performance_analysis.cache_efficiency));
-    report.push_str(&format!("- Computational Intensity: {:.1}%\n\n", result.performance_analysis.computational_intensity));
-    
+    report.push_str(&format!(
+        "- Time Complexity: O(N^{:.1})\n",
+        result.performance_analysis.time_complexity
+    ));
+    report.push_str(&format!(
+        "- Memory Complexity: O(N^{:.1})\n",
+        result.performance_analysis.memory_complexity
+    ));
+    report.push_str(&format!(
+        "- Cache Efficiency: {:.1}%\n",
+        result.performance_analysis.cache_efficiency
+    ));
+    report.push_str(&format!(
+        "- Computational Intensity: {:.1}%\n\n",
+        result.performance_analysis.computational_intensity
+    ));
+
     report.push_str(&format!("### SIMD Optimization\n"));
-    report.push_str(&format!("- Speedup Factor: {:.1}x\n", result.simd_validation.speedup_factor));
-    report.push_str(&format!("- SIMD Accuracy: {:.2}%\n", result.simd_validation.simd_accuracy));
-    report.push_str(&format!("- Vector Utilization: {:.1}%\n\n", result.simd_validation.vector_utilization));
-    
+    report.push_str(&format!(
+        "- Speedup Factor: {:.1}x\n",
+        result.simd_validation.speedup_factor
+    ));
+    report.push_str(&format!(
+        "- SIMD Accuracy: {:.2}%\n",
+        result.simd_validation.simd_accuracy
+    ));
+    report.push_str(&format!(
+        "- Vector Utilization: {:.1}%\n\n",
+        result.simd_validation.vector_utilization
+    ));
+
     if !result.issues.is_empty() {
         report.push_str("## Issues Found\n\n");
         for issue in &result.issues {
@@ -841,14 +927,14 @@ pub fn generate_dwt2d_ultrathink_report(result: &Dwt2dUltrathinkResult) -> Strin
         }
         report.push_str("\n");
     }
-    
+
     if !result.recommendations.is_empty() {
         report.push_str("## Recommendations\n\n");
         for rec in &result.recommendations {
             report.push_str(&format!("- 💡 {}\n", rec));
         }
     }
-    
+
     report
 }
 
@@ -864,6 +950,6 @@ pub fn run_quick_dwt2d_validation() -> SignalResult<Dwt2dUltrathinkResult> {
         test_compression: false,
         ..Default::default()
     };
-    
+
     run_dwt2d_ultrathink_validation(&config)
 }

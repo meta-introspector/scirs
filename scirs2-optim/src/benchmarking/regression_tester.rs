@@ -5,7 +5,7 @@
 //! and automated CI/CD integration for continuous performance monitoring.
 
 use crate::benchmarking::BenchmarkResult;
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};

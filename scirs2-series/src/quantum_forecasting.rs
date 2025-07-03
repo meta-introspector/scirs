@@ -1325,7 +1325,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
 
             for (input, target) in training_data.iter().take(sample_size) {
                 // Get predictions from all models
-                let mut ensemble_pred = Array1::zeros(target.len());
+                let mut ensemble_pred = Array1::<F>::zeros(target.len());
 
                 for (model_idx, model) in self.models.iter().enumerate() {
                     if let Ok(pred) = model.forward(input) {

@@ -34,7 +34,7 @@ pub struct OptimizerComponent<T: Float> {
 }
 
 /// Types of optimizer components
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ComponentType {
     // Basic optimizers
     SGD,

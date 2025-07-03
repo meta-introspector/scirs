@@ -4,10 +4,10 @@
 //! for data transformation tasks, including data validation, memory optimization,
 //! and performance helpers.
 
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix2, par_azip, Zip};
+use ndarray::{par_azip, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix2, Zip};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::{check_not_empty};
+use scirs2_core::validation::check_not_empty;
 use std::collections::HashMap;
 
 use crate::error::{Result, TransformError};
@@ -110,7 +110,7 @@ impl TypeConverter {
             let shape = array.shape();
             let mut result = Array2::zeros((shape[0], shape[1]));
 
-            par_azip!((mut out in result.view_mut(), &inp in array) {
+            par_azip!((out in result.view_mut(), &inp in array) {
                 *out = num_traits::cast::<T, f64>(inp).unwrap_or(0.0);
             });
 
@@ -155,7 +155,7 @@ impl TypeConverter {
     /// Convert f64 array to f32 with overflow checking
     pub fn f64_to_f32_safe(array: &ArrayView2<f64>) -> Result<Array2<f32>> {
         check_not_empty(array, "array")?;
-        
+
         // Check finite values
         for &val in array.iter() {
             if !val.is_finite() {
@@ -186,7 +186,7 @@ impl StatUtils {
     /// Calculate robust statistics (median, MAD) efficiently
     pub fn robust_stats(data: &ArrayView1<f64>) -> Result<(f64, f64)> {
         check_not_empty(data, "data")?;
-        
+
         // Check finite values
         for &val in data.iter() {
             if !val.is_finite() {
@@ -222,7 +222,7 @@ impl StatUtils {
     /// Calculate column-wise robust statistics in parallel
     pub fn robust_stats_columns(data: &ArrayView2<f64>) -> Result<(Array1<f64>, Array1<f64>)> {
         check_not_empty(data, "data")?;
-        
+
         // Check finite values
         for &val in data.iter() {
             if !val.is_finite() {
@@ -258,7 +258,7 @@ impl StatUtils {
     /// Detect outliers using IQR method
     pub fn detect_outliers_iqr(data: &ArrayView1<f64>, factor: f64) -> Result<Vec<bool>> {
         check_not_empty(data, "data")?;
-        
+
         // Check finite values
         for &val in data.iter() {
             if !val.is_finite() {
@@ -476,7 +476,7 @@ impl ValidationUtils {
         transformation: &str,
     ) -> Result<()> {
         check_not_empty(data, "data")?;
-        
+
         // Check finite values
         for &val in data.iter() {
             if !val.is_finite() {
@@ -612,7 +612,10 @@ pub enum ProcessingStrategy {
     /// Parallel processing across multiple cores
     Parallel,
     /// Out-of-core processing for large datasets
-    OutOfCore { chunk_size: usize },
+    OutOfCore { 
+        /// Size of data chunks for processing
+        chunk_size: usize 
+    },
 }
 
 #[cfg(test)]

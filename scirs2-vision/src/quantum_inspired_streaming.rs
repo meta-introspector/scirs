@@ -15,12 +15,12 @@
 //! - Quantum annealing for adaptive parameter optimization
 
 use crate::error::Result;
-use crate::streaming::{Frame, ProcessingStage};
 #[cfg(test)]
 use crate::streaming::FrameMetadata;
+use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2};
-use rand::prelude::*;
-use rand::rng;
+use rand::seq::IteratorRandom;
+use scirs2_core::random::{Random, Rng};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
@@ -90,28 +90,191 @@ impl QuantumProcessingState {
         }
     }
 
-    /// Apply quantum evolution to the state
+    /// Apply quantum evolution to the state with entanglement effects
     pub fn evolve(&mut self, time_step: f64, hamiltonian: &QuantumHamiltonian) {
-        // Simplified quantum evolution using Schrödinger equation
-        // |ψ(t+dt)⟩ = exp(-iHdt/ℏ)|ψ(t)⟩
+        // Advanced quantum evolution with entanglement and decoherence
+        // |ψ(t+dt)⟩ = exp(-iHdt/ℏ)|ψ(t)⟩ with entanglement coupling
+
+        // Store original amplitudes for entanglement calculations
+        let original_amplitudes: HashMap<String, QuantumAmplitude> = self.stage_amplitudes.clone();
+        
+        // Create stage name to index mapping to avoid borrow conflicts
+        let stage_indices: HashMap<String, usize> = self.stage_amplitudes
+            .keys()
+            .enumerate()
+            .map(|(idx, name)| (name.clone(), idx))
+            .collect();
 
         for (stage_name, amplitude) in &mut self.stage_amplitudes {
             if let Some(&energy) = hamiltonian.stage_energies.get(stage_name) {
                 let phase_change = -energy * time_step;
 
-                // Apply rotation in complex plane
+                // Apply rotation in complex plane with entanglement corrections
                 let cos_phase = phase_change.cos();
                 let sin_phase = phase_change.sin();
 
-                let new_real = amplitude.real * cos_phase - amplitude.imaginary * sin_phase;
-                let new_imaginary = amplitude.real * sin_phase + amplitude.imaginary * cos_phase;
+                // Calculate entanglement contributions from other stages
+                let mut entanglement_real = 0.0;
+                let mut entanglement_imaginary = 0.0;
+
+                for (other_stage, other_amplitude) in &original_amplitudes {
+                    if other_stage != stage_name {
+                        // Get entanglement strength from the matrix
+                        let stage_idx = stage_indices.get(stage_name);
+                        let other_idx = stage_indices.get(other_stage);
+
+                        if let (Some(&i), Some(&j)) = (stage_idx, other_idx) {
+                            if i < self.entanglement_matrix.nrows()
+                                && j < self.entanglement_matrix.ncols()
+                            {
+                                let entanglement_strength = self.entanglement_matrix[[i, j]];
+
+                                // Apply entanglement coupling
+                                entanglement_real +=
+                                    entanglement_strength * other_amplitude.real * time_step;
+                                entanglement_imaginary +=
+                                    entanglement_strength * other_amplitude.imaginary * time_step;
+                            }
+                        }
+                    }
+                }
+
+                // Apply quantum evolution with entanglement
+                let new_real = amplitude.real * cos_phase - amplitude.imaginary * sin_phase
+                    + entanglement_real * 0.1;
+                let new_imaginary = amplitude.real * sin_phase
+                    + amplitude.imaginary * cos_phase
+                    + entanglement_imaginary * 0.1;
 
                 amplitude.real = new_real;
                 amplitude.imaginary = new_imaginary;
+
+                // Apply decoherence effects
+                let decoherence_factor = (-time_step * 0.01).exp(); // Small decoherence
+                amplitude.real *= decoherence_factor;
+                amplitude.imaginary *= decoherence_factor;
             }
         }
 
         self.global_phase += time_step;
+
+        // Update entanglement matrix based on quantum correlations
+        self.update_entanglement_matrix();
+    }
+
+    /// Get the index of a stage name for matrix operations
+    fn get_stage_index(&self, stage_name: &str) -> Option<usize> {
+        self.stage_amplitudes
+            .keys()
+            .enumerate()
+            .find(|(_, name)| name.as_str() == stage_name)
+            .map(|(index, _)| index)
+    }
+
+    /// Update entanglement matrix based on current quantum correlations
+    fn update_entanglement_matrix(&mut self) {
+        let stage_names: Vec<String> = self.stage_amplitudes.keys().cloned().collect();
+        let n_stages = stage_names.len();
+
+        for i in 0..n_stages {
+            for j in 0..n_stages {
+                if i != j
+                    && i < self.entanglement_matrix.nrows()
+                    && j < self.entanglement_matrix.ncols()
+                {
+                    let stage_i = &stage_names[i];
+                    let stage_j = &stage_names[j];
+
+                    if let (Some(amp_i), Some(amp_j)) = (
+                        self.stage_amplitudes.get(stage_i),
+                        self.stage_amplitudes.get(stage_j),
+                    ) {
+                        // Calculate quantum correlation based on amplitude overlap
+                        let correlation =
+                            amp_i.real * amp_j.real + amp_i.imaginary * amp_j.imaginary;
+
+                        // Update entanglement strength
+                        let current_entanglement = self.entanglement_matrix[[i, j]];
+                        let new_entanglement = 0.9 * current_entanglement + 0.1 * correlation.abs();
+                        self.entanglement_matrix[[i, j]] = new_entanglement.min(1.0);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Apply quantum error correction to maintain coherence
+    pub fn apply_quantum_error_correction(&mut self) {
+        // Simplified quantum error correction
+        let total_probability = self.calculate_total_probability();
+
+        if total_probability.abs() < 1e-6 {
+            // System has lost coherence, reinitialize to equal superposition
+            let n_stages = self.stage_amplitudes.len();
+            let amplitude_value = 1.0 / (n_stages as f64).sqrt();
+
+            for amplitude in self.stage_amplitudes.values_mut() {
+                amplitude.real = amplitude_value;
+                amplitude.imaginary = 0.0;
+            }
+        } else if (total_probability - 1.0).abs() > 0.01 {
+            // Renormalize amplitudes
+            let normalization_factor = 1.0 / total_probability.sqrt();
+            for amplitude in self.stage_amplitudes.values_mut() {
+                amplitude.real *= normalization_factor;
+                amplitude.imaginary *= normalization_factor;
+            }
+        }
+    }
+
+    /// Calculate total probability (should be 1 for normalized state)
+    fn calculate_total_probability(&self) -> f64 {
+        self.stage_amplitudes
+            .values()
+            .map(|amp| amp.probability())
+            .sum()
+    }
+
+    /// Calculate quantum advantage factor
+    pub fn calculate_quantum_advantage(&self) -> f64 {
+        let coherence = self.calculate_coherence_measure();
+        let entanglement = self.calculate_average_entanglement();
+
+        1.0 + coherence * 0.5 + entanglement * 0.3
+    }
+
+    /// Calculate coherence measure
+    fn calculate_coherence_measure(&self) -> f64 {
+        let mut coherence = 0.0;
+
+        for amplitude in self.stage_amplitudes.values() {
+            // Coherence based on complex amplitude magnitude
+            let magnitude = (amplitude.real.powi(2) + amplitude.imaginary.powi(2)).sqrt();
+            coherence += magnitude;
+        }
+
+        coherence / self.stage_amplitudes.len() as f64
+    }
+
+    /// Calculate average entanglement strength
+    fn calculate_average_entanglement(&self) -> f64 {
+        let mut total_entanglement = 0.0;
+        let mut count = 0;
+
+        for i in 0..self.entanglement_matrix.nrows() {
+            for j in 0..self.entanglement_matrix.ncols() {
+                if i != j {
+                    total_entanglement += self.entanglement_matrix[[i, j]];
+                    count += 1;
+                }
+            }
+        }
+
+        if count > 0 {
+            total_entanglement / count as f64
+        } else {
+            0.0
+        }
     }
 
     /// Measure the quantum state to get classical processing decisions
@@ -156,7 +319,7 @@ impl QuantumHamiltonian {
         let mut external_fields = HashMap::new();
 
         // Initialize with random energies representing computational costs
-        let mut rng = rng();
+        let mut rng = Random::default();
         for stage_name in stage_names {
             stage_energies.insert(stage_name.clone(), rng.random_range(0.1..2.0));
             external_fields.insert(stage_name.clone(), 0.0);
@@ -294,7 +457,7 @@ impl QuantumStreamProcessor {
     pub fn update_performance(&mut self, stage_name: &str, performance: f64) {
         self.performance_history
             .entry(stage_name.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(performance);
 
         // Keep only recent history
@@ -370,7 +533,7 @@ impl QuantumAnnealingStage {
 
         // Generate neighbor solution
         let mut neighbor_params = self.parameters.clone();
-        let mut rng = rng();
+        let mut rng = Random::default();
 
         if let Some((_param_name, param_value)) = neighbor_params.iter_mut().choose(&mut rng) {
             let perturbation = rng.random_range(-0.1..0.1) * self.temperature / 100.0;
@@ -388,7 +551,7 @@ impl QuantumAnnealingStage {
             (-delta_cost / self.temperature).exp()
         };
 
-        if rng.random::<f64>() < acceptance_probability {
+        if rng.random_f64() < acceptance_probability {
             self.parameters = neighbor_params;
 
             if neighbor_cost < self.best_cost {
@@ -671,7 +834,7 @@ impl QuantumSuperpositionStage {
     pub fn new(num_variants: usize) -> Self {
         let mut processing_variants = Vec::new();
         let mut superposition_weights = Vec::new();
-        let mut rng = rng();
+        let mut rng = Random::default();
 
         // Create multiple processing variants
         for i in 0..num_variants {

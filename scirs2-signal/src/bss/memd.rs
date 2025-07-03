@@ -36,7 +36,7 @@ pub fn multivariate_emd(
     } else {
         {
             // In rand 0.9, from_rng doesn't return Result but directly returns the PRNG
-            rand::rngs::StdRng::from_rng(&mut rand::rng())
+            rand::rngs::StdRng::from_rng(&mut rand::thread_rng())
         }
     };
 

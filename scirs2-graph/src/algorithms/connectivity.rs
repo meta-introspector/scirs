@@ -19,7 +19,7 @@ pub type Component<N> = HashSet<N>;
 /// * A vector of connected components, where each component is a set of nodes
 pub fn connected_components<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Component<N>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -66,7 +66,7 @@ where
 /// * A vector of strongly connected components
 pub fn strongly_connected_components<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Vec<Component<N>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -158,7 +158,7 @@ where
 /// * A vector of weakly connected components
 pub fn weakly_connected_components<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Vec<Component<N>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -207,7 +207,7 @@ where
 /// * A set of articulation points
 pub fn articulation_points<N, E, Ix>(graph: &Graph<N, E, Ix>) -> HashSet<N>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -305,7 +305,7 @@ pub struct BipartiteResult<N: Node> {
 /// * A BipartiteResult indicating if the graph is bipartite and the coloring
 pub fn is_bipartite<N, E, Ix>(graph: &Graph<N, E, Ix>) -> BipartiteResult<N>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -367,7 +367,7 @@ where
 /// * A vector of bridges, where each bridge is represented as a tuple of nodes
 pub fn bridges<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<(N, N)>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {

@@ -455,7 +455,7 @@ impl WasmAutoARIMA {
             max_seasonal_q: max_sq,
             ..Default::default()
         };
-        
+
         let (model, params) = js_result!(crate::arima_models::auto_arima(&arr, &options))?;
 
         Ok(WasmARIMA {

@@ -77,7 +77,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Embedding<F> {
         // Use standard distribution and scale it
         let mut rng = rng();
         let mut weight = Array::from_shape_fn(weight_shape.clone(), |_| {
-            let value: f64 = rng.gen::<f64>();
+            let value: f64 = rng.random::<f64>();
             // Scale to approximate normal distribution N(0, 1)
             let scaled_value = (value * 2.0 - 1.0) * 0.5;
             F::from(scaled_value).unwrap()
@@ -134,7 +134,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Embedding<F> {
     pub fn reset_parameters(&mut self) -> Result<()> {
         // Re-initialize weights with standard normal distribution
         for item in self.weight.iter_mut() {
-            *item = F::from(rng.gen::<f64>()).unwrap();
+            *item = F::from(rng.random::<f64>()).unwrap();
         if let Some(idx) = self.config.padding_idx {
             let mut slice = self.weight.slice_mut(ndarray::s![idx, ..]);
         // Reset gradients

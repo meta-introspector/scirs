@@ -8,7 +8,7 @@ use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::fmt::Debug;
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 
 /// Trait for regularizers that can be applied to parameters and gradients
 pub trait Regularizer<A, D>

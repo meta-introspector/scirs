@@ -37,7 +37,7 @@ use scirs2_core::{
 /// ```
 pub fn skewness_simd<F, D>(x: &ArrayBase<D, Ix1>, bias: bool) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::fmt::Display,
     D: Data<Elem = F>,
 {
     check_array_finite(x, "x")?;
@@ -108,7 +108,7 @@ where
 /// * The kurtosis of the input data
 pub fn kurtosis_simd<F, D>(x: &ArrayBase<D, Ix1>, fisher: bool, bias: bool) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::fmt::Display,
     D: Data<Elem = F>,
 {
     check_array_finite(x, "x")?;
@@ -191,7 +191,7 @@ where
 /// * The nth moment of the input data
 pub fn moment_simd<F, D>(x: &ArrayBase<D, Ix1>, moment_order: usize, center: bool) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::fmt::Display,
     D: Data<Elem = F>,
 {
     check_array_finite(x, "x")?;
@@ -257,7 +257,7 @@ pub fn moments_batch_simd<F, D>(
     center: bool,
 ) -> StatsResult<Vec<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::fmt::Display,
     D: Data<Elem = F>,
 {
     check_array_finite(x, "x")?;

@@ -700,8 +700,8 @@ where
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
-                let mut thread_rng = rand::rng();
-                StdRng::from_rng(&mut thread_rng).map_err(|_| {
+                let mut rng = rand::rng();
+                StdRng::from_rng(&mut rng).map_err(|_| {
                     InterpolateError::ComputationError("Failed to create RNG".to_string())
                 })?
             }
@@ -1185,8 +1185,8 @@ where
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
-                let mut thread_rng = rand::rng();
-                StdRng::from_rng(&mut thread_rng)
+                let mut rng = rand::rng();
+                StdRng::from_rng(&mut rng)
             }
         };
 

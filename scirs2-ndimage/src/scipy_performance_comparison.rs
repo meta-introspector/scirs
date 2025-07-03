@@ -6,6 +6,8 @@
 //! comprehensive API compatibility verification.
 
 use crate::error::NdimageResult;
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 use crate::filters::*;
 use crate::interpolation::*;
 use crate::measurements::*;

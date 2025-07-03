@@ -323,10 +323,7 @@ fn benchmark_ultrathink_strategies() -> Result<(), Box<dyn std::error::Error>> {
         };
 
         let result = ultrathink_optimize(objective, &initial_params.view(), Some(config))?;
-        println!(
-            "   Result: {:.6} in {} iterations",
-            result.fun, result.iterations
-        );
+        println!("   Result: {:.6} in {} iterations", result.fun, result.nit);
     }
 
     Ok(())

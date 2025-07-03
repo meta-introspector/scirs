@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (dataset_name, data) in datasets {
         println!("\n" + "=".repeat(60).as_str());
-        println!("Dataset: {}", dataset_name);
+        println!("Dataset: {dataset_name}");
         println!(
             "Shape: {} samples × {} features",
             data.nrows(),
@@ -110,7 +110,7 @@ fn test_individual_algorithm_tuning(
     ];
 
     for (strategy_name, config) in tuning_configs {
-        println!("\nTesting {} for K-means:", strategy_name);
+        println!("\nTesting {strategy_name} for K-means:");
 
         let tuner = AutoTuner::new(config);
         let start_time = std::time::Instant::now();
@@ -118,13 +118,15 @@ fn test_individual_algorithm_tuning(
         match tuner.tune_kmeans(data.view(), StandardSearchSpaces::kmeans()) {
             Ok(result) => {
                 let duration = start_time.elapsed();
-                println!("✓ {} completed in {:.2?}", strategy_name, duration);
-                println!("  - Best score: {:.4}", result.best_score);
+                println!("✓ {strategy_name} completed in {duration:.2?}");
+                let best_score = result.best_score;
+                println!("  - Best score: {best_score:.4}");
                 println!(
                     "  - Best k: {:.0}",
                     result.best_parameters.get("n_clusters").unwrap_or(&0.0)
                 );
-                println!("  - Evaluations: {}", result.evaluation_history.len());
+                let evaluations = result.evaluation_history.len();
+                println!("  - Evaluations: {evaluations}");
                 println!(
                     "  - Convergence: {:?}",
                     result.convergence_info.stopping_reason
@@ -134,11 +136,11 @@ fn test_individual_algorithm_tuning(
                     let scores: Vec<f64> =
                         result.evaluation_history.iter().map(|r| r.score).collect();
                     let improvement = scores.last().unwrap() - scores.first().unwrap();
-                    println!("  - Score improvement: {:.4}", improvement);
+                    println!("  - Score improvement: {improvement:.4}");
                 }
             }
             Err(e) => {
-                println!("× {} failed: {}", strategy_name, e);
+                println!("× {strategy_name} failed: {e}");
             }
         }
     }
@@ -163,8 +165,9 @@ fn test_individual_algorithm_tuning(
     match tuner.tune_dbscan(data.view(), StandardSearchSpaces::dbscan()) {
         Ok(result) => {
             let duration = start_time.elapsed();
-            println!("✓ Evolutionary DBSCAN tuning completed in {:.2?}", duration);
-            println!("  - Best score: {:.4}", result.best_score);
+            println!("✓ Evolutionary DBSCAN tuning completed in {duration:.2?}");
+            let best_score_dbscan = result.best_score;
+            println!("  - Best score: {best_score_dbscan:.4}");
             println!(
                 "  - Best eps: {:.4}",
                 result.best_parameters.get("eps").unwrap_or(&0.0)
@@ -179,7 +182,7 @@ fn test_individual_algorithm_tuning(
             );
         }
         Err(e) => {
-            println!("× Evolutionary DBSCAN tuning failed: {}", e);
+            println!("× Evolutionary DBSCAN tuning failed: {e}");
         }
     }
 
@@ -217,11 +220,14 @@ fn test_automatic_algorithm_selection(
     match auto_select_clustering_algorithm(data.view(), Some(full_config)) {
         Ok(result) => {
             let duration = start_time.elapsed();
-            println!("✓ Algorithm selection completed in {:.2?}", duration);
+            println!("✓ Algorithm selection completed in {duration:.2?}");
             println!("\nResults Summary:");
-            println!("  - Best algorithm: {:?}", result.best_algorithm);
-            println!("  - Best score: {:.4}", result.best_score);
-            println!("  - Total evaluation time: {:.2}s", result.total_time);
+            let best_algo = &result.best_algorithm;
+            println!("  - Best algorithm: {best_algo:?}");
+            let best_score_selection = result.best_score;
+            println!("  - Best score: {best_score_selection:.4}");
+            let total_time = result.total_time;
+            println!("  - Total evaluation time: {total_time:.2}s");
 
             // Show parameter details for best algorithm
             println!("\nBest Parameters:");
@@ -243,14 +249,14 @@ fn test_automatic_algorithm_selection(
 
             // Show recommendations
             if !result.recommendations.is_empty() {
-                println!("\nRecommendations for '{}':", dataset_name);
+                println!("\nRecommendations for '{dataset_name}':");
                 for (i, recommendation) in result.recommendations.iter().enumerate() {
                     println!("  {}. {}", i + 1, recommendation);
                 }
             }
         }
         Err(e) => {
-            println!("× Algorithm selection failed: {}", e);
+            println!("× Algorithm selection failed: {e}");
         }
     }
 
@@ -271,10 +277,13 @@ fn test_quick_selection(
     match quick_algorithm_selection(data.view()) {
         Ok(result) => {
             let duration = start_time.elapsed();
-            println!("✓ Quick selection completed in {:.2?}", duration);
-            println!("  - Recommended algorithm: {:?}", result.best_algorithm);
-            println!("  - Score: {:.4}", result.best_score);
-            println!("  - Algorithms tested: {}", result.algorithm_results.len());
+            println!("✓ Quick selection completed in {duration:.2?}");
+            let recommended = &result.best_algorithm;
+            println!("  - Recommended algorithm: {recommended:?}");
+            let quick_score = result.best_score;
+            println!("  - Score: {quick_score:.4}");
+            let tested_count = result.algorithm_results.len();
+            println!("  - Algorithms tested: {tested_count}");
 
             // Show quick comparison
             for (algorithm, tuning_result) in &result.algorithm_results {
@@ -282,11 +291,12 @@ fn test_quick_selection(
             }
 
             if !result.recommendations.is_empty() {
-                println!("  - Quick tip: {}", result.recommendations[0]);
+                let tip = &result.recommendations[0];
+                println!("  - Quick tip: {tip}");
             }
         }
         Err(e) => {
-            println!("× Quick selection failed: {}", e);
+            println!("× Quick selection failed: {e}");
         }
     }
 
@@ -341,7 +351,7 @@ fn create_sparse_data(n_samples: usize, n_features: usize) -> Array2<f64> {
     // Create sparse clusters with many noise points
     for _ in 0..n_samples {
         for _ in 0..n_features {
-            if rng.gen::<f64>() < 0.1 {
+            if rng.random::<f64>() < 0.1 {
                 // 10% density
                 data.push(rng.random_range(-10.0..10.0));
             } else {

@@ -10,13 +10,13 @@
 use crate::error::{MetricsError, Result};
 use crate::optimization::quantum_acceleration::QuantumMetricsComputer;
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use num_complex::Complex;
 use num_traits::Float;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant, SystemTime};
-use num_complex::Complex;
-use rand::Rng;
 
 /// Neuromorphic metrics computer using brain-inspired architectures
 #[derive(Debug)]
@@ -253,7 +253,10 @@ pub enum InhibitionPattern {
     /// Gaussian inhibition
     Gaussian { sigma: f64 },
     /// Difference of Gaussians
-    DoG { sigma_center: f64, sigma_surround: f64 },
+    DoG {
+        sigma_center: f64,
+        sigma_surround: f64,
+    },
     /// Custom pattern
     Custom { weights: Array2<f64> },
 }
@@ -1043,7 +1046,9 @@ impl Default for NeuromorphicConfig {
     }
 }
 
-impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand> NeuromorphicMetricsComputer<F> {
+impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
+    NeuromorphicMetricsComputer<F>
+{
     /// Create new neuromorphic metrics computer
     pub fn new(config: NeuromorphicConfig) -> Result<Self> {
         let topology = NetworkTopology::create_layered_topology(&config)?;
@@ -1104,11 +1109,8 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
 
         // Record performance
         let processing_time = start_time.elapsed();
-        self.performance_monitor.record_computation(
-            metric_type,
-            metric_value,
-            processing_time,
-        )?;
+        self.performance_monitor
+            .record_computation(metric_type, metric_value, processing_time)?;
 
         Ok(metric_value)
     }
@@ -1120,29 +1122,28 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
         target_accuracy: F,
     ) -> Result<Vec<F>> {
         let mut results = Vec::new();
-        let mut current_accuracy = F::zero();
 
         for (i, sample) in data_stream.axis_iter(Axis(0)).enumerate() {
             // Compute current prediction
             let prediction = self.predict_sample(&sample)?;
-            
+
             // Evaluate accuracy
-            current_accuracy = self.evaluate_prediction_accuracy(&prediction)?;
-            
+            let current_accuracy = self.evaluate_prediction_accuracy(&prediction)?;
+
             // Adapt network if accuracy is below target
             if current_accuracy < target_accuracy {
                 self.adapt_network_structure(current_accuracy, target_accuracy)?;
                 self.adjust_learning_parameters(current_accuracy)?;
             }
-            
+
             // Store memory trace
             self.store_memory_trace(&sample, &prediction, current_accuracy)?;
-            
+
             // Consolidate memories periodically
             if i % 100 == 0 {
                 self.consolidate_memories()?;
             }
-            
+
             results.push(current_accuracy);
         }
 
@@ -1150,30 +1151,31 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
     }
 
     /// Brain-inspired pattern recognition for anomaly detection
-    pub fn neuromorphic_anomaly_detection(
-        &mut self,
-        data: &ArrayView1<F>,
-    ) -> Result<(bool, F)> {
+    pub fn neuromorphic_anomaly_detection(&mut self, data: &ArrayView1<F>) -> Result<(bool, F)> {
         // Encode data as spike pattern
         let spike_pattern = self.encode_to_spikes(data)?;
-        
+
         // Inject into pattern recognition network
         self.inject_pattern_for_recognition(&spike_pattern)?;
-        
+
         // Run pattern matching
-        let recognition_results = self.pattern_recognizer.recognize_patterns(
-            &self.spiking_network.get_current_activity()?
-        )?;
-        
+        let recognition_results = self
+            .pattern_recognizer
+            .recognize_patterns(&self.spiking_network.get_current_activity()?)?;
+
         // Determine if pattern is anomalous
-        let is_anomaly = recognition_results.iter()
+        let is_anomaly = recognition_results
+            .iter()
             .all(|r| r.confidence < F::from(0.5).unwrap());
-        
+
         // Calculate anomaly score
         let anomaly_score = if is_anomaly {
-            F::one() - recognition_results.iter()
-                .map(|r| r.confidence)
-                .fold(F::zero(), |acc, x| acc + x) / F::from(recognition_results.len()).unwrap()
+            F::one()
+                - recognition_results
+                    .iter()
+                    .map(|r| r.confidence)
+                    .fold(F::zero(), |acc, x| acc + x)
+                    / F::from(recognition_results.len()).unwrap()
         } else {
             F::zero()
         };
@@ -1185,23 +1187,23 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
 
     fn encode_to_spikes(&self, data: &ArrayView1<F>) -> Result<Vec<Vec<Instant>>> {
         let mut spike_trains = Vec::new();
-        
+
         for &value in data.iter() {
             let mut neuron_spikes = Vec::new();
-            
+
             // Rate coding: higher values produce more spikes
             let spike_rate = value.to_f64().unwrap_or(0.0).abs() * 1000.0; // Hz
             let inter_spike_interval = Duration::from_secs_f64(1.0 / spike_rate.max(1.0));
-            
+
             let mut current_time = Duration::from_secs(0);
             while current_time < self.config.max_simulation_time {
                 neuron_spikes.push(Instant::now() + current_time);
                 current_time += inter_spike_interval;
             }
-            
+
             spike_trains.push(neuron_spikes);
         }
-        
+
         Ok(spike_trains)
     }
 
@@ -1216,14 +1218,14 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
                 self.spiking_network.inject_spikes(neuron_idx, spikes)?;
             }
         }
-        
+
         for (neuron_idx, spikes) in pred_spikes.iter().enumerate() {
             let input_neuron = self.config.input_neurons / 2 + neuron_idx;
             if input_neuron < self.config.input_neurons {
                 self.spiking_network.inject_spikes(input_neuron, spikes)?;
             }
         }
-        
+
         Ok(())
     }
 
@@ -1231,31 +1233,35 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
         let mut simulation_time = Duration::from_secs(0);
         let mut spike_history = Vec::new();
         let mut membrane_potentials = Vec::new();
-        
+
         while simulation_time < self.config.max_simulation_time {
             // Update membrane potentials
-            self.spiking_network.update_membrane_potentials(self.config.time_step)?;
-            
+            self.spiking_network
+                .update_membrane_potentials(self.config.time_step)?;
+
             // Check for spikes
             let current_spikes = self.spiking_network.check_for_spikes()?;
             spike_history.push((simulation_time, current_spikes));
-            
+
             // Record membrane potentials
             let potentials = self.spiking_network.get_membrane_potentials()?;
             membrane_potentials.push(potentials);
-            
+
             // Update synaptic states
-            self.spiking_network.update_synaptic_states(self.config.time_step)?;
-            
+            self.spiking_network
+                .update_synaptic_states(self.config.time_step)?;
+
             // Apply plasticity rules
-            self.plasticity_manager.apply_plasticity(&mut self.spiking_network, self.config.time_step)?;
-            
+            self.plasticity_manager
+                .apply_plasticity(&mut self.spiking_network, self.config.time_step)?;
+
             // Homeostatic regulation
-            self.homeostasis.regulate_activity(&mut self.spiking_network)?;
-            
+            self.homeostasis
+                .regulate_activity(&mut self.spiking_network)?;
+
             simulation_time += self.config.time_step;
         }
-        
+
         Ok(SimulationResult {
             spike_history,
             membrane_potentials,
@@ -1274,38 +1280,41 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
             "mutual_information" => self.compute_mutual_information(result),
             "synchrony" => self.compute_network_synchrony(result),
             "complexity" => self.compute_neural_complexity(result),
-            _ => Err(MetricsError::InvalidInput(
-                format!("Unknown neuromorphic metric: {}", metric_type)
-            )),
+            _ => Err(MetricsError::InvalidInput(format!(
+                "Unknown neuromorphic metric: {}",
+                metric_type
+            ))),
         }
     }
 
     fn compute_spike_correlation(&self, result: &SimulationResult<F>) -> Result<F> {
         // Compute correlation between output neuron spike trains
-        let output_start = self.config.input_neurons + 
-            self.config.hidden_layers * self.config.neurons_per_layer;
-        
+        let output_start =
+            self.config.input_neurons + self.config.hidden_layers * self.config.neurons_per_layer;
+
         if result.spike_history.len() < 2 {
             return Ok(F::zero());
         }
-        
+
         // Extract spike counts for output neurons
         let mut spike_counts = vec![F::zero(); self.config.output_neurons];
-        
+
         for (_, spikes) in &result.spike_history {
             for &neuron_id in spikes {
-                if neuron_id >= output_start && neuron_id < output_start + self.config.output_neurons {
+                if neuron_id >= output_start
+                    && neuron_id < output_start + self.config.output_neurons
+                {
                     let output_idx = neuron_id - output_start;
                     spike_counts[output_idx] = spike_counts[output_idx] + F::one();
                 }
             }
         }
-        
+
         // Compute correlation between first two output neurons
         if self.config.output_neurons >= 2 {
             let mean1 = spike_counts[0] / F::from(result.spike_history.len()).unwrap();
             let mean2 = spike_counts[1] / F::from(result.spike_history.len()).unwrap();
-            
+
             // Simplified correlation calculation
             let correlation = (spike_counts[0] - mean1) * (spike_counts[1] - mean2);
             Ok(correlation.abs())
@@ -1317,14 +1326,16 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
     fn compute_mutual_information(&self, result: &SimulationResult<F>) -> Result<F> {
         // Simplified mutual information calculation
         // In a full implementation, this would use proper MI estimation
-        let total_spikes = result.spike_history.iter()
+        let total_spikes = result
+            .spike_history
+            .iter()
             .map(|(_, spikes)| spikes.len())
             .sum::<usize>();
-        
+
         if total_spikes == 0 {
             return Ok(F::zero());
         }
-        
+
         let mi = F::from(total_spikes).unwrap().ln() / F::from(result.spike_history.len()).unwrap();
         Ok(mi)
     }
@@ -1333,39 +1344,45 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
         if result.spike_history.len() < 2 {
             return Ok(F::zero());
         }
-        
+
         // Compute synchrony as variance in spike timing
-        let spike_times: Vec<_> = result.spike_history.iter()
+        let spike_times: Vec<_> = result
+            .spike_history
+            .iter()
             .filter(|(_, spikes)| !spikes.is_empty())
             .map(|(time, _)| time.as_secs_f64())
             .collect();
-        
+
         if spike_times.len() < 2 {
             return Ok(F::zero());
         }
-        
+
         let mean_time = spike_times.iter().sum::<f64>() / spike_times.len() as f64;
-        let variance = spike_times.iter()
+        let variance = spike_times
+            .iter()
             .map(|&t| (t - mean_time).powi(2))
-            .sum::<f64>() / spike_times.len() as f64;
-        
+            .sum::<f64>()
+            / spike_times.len() as f64;
+
         // Higher synchrony = lower variance
         Ok(F::from(1.0 / (1.0 + variance)).unwrap())
     }
 
     fn compute_neural_complexity(&self, result: &SimulationResult<F>) -> Result<F> {
         // Neural complexity based on spike pattern diversity
-        let unique_patterns = result.spike_history.iter()
+        let unique_patterns = result
+            .spike_history
+            .iter()
             .map(|(_, spikes)| spikes.len())
             .collect::<std::collections::HashSet<_>>()
             .len();
-        
+
         let total_patterns = result.spike_history.len();
-        
+
         if total_patterns == 0 {
             return Ok(F::zero());
         }
-        
+
         let complexity = F::from(unique_patterns).unwrap() / F::from(total_patterns).unwrap();
         Ok(complexity)
     }
@@ -1378,29 +1395,38 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
     ) -> Result<()> {
         // Update learning based on performance
         let error = self.compute_prediction_error(y_true, y_pred)?;
-        
+
         // Adjust learning rate based on error
-        self.learning_controller.update_learning_rate(error, metric_value)?;
-        
+        self.learning_controller
+            .update_learning_rate(error, metric_value)?;
+
         // Update STDP parameters
         self.plasticity_manager.update_stdp_parameters(error)?;
-        
+
         // Homeostatic adjustments
         self.homeostasis.adjust_based_on_performance(metric_value)?;
-        
+
         Ok(())
     }
 
-    fn compute_prediction_error(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F> {
+    fn compute_prediction_error(
+        &self,
+        y_true: &ArrayView1<F>,
+        y_pred: &ArrayView1<F>,
+    ) -> Result<F> {
         if y_true.len() != y_pred.len() {
-            return Err(MetricsError::InvalidInput("Array length mismatch".to_string()));
+            return Err(MetricsError::InvalidInput(
+                "Array length mismatch".to_string(),
+            ));
         }
-        
-        let mse = y_true.iter()
+
+        let mse = y_true
+            .iter()
             .zip(y_pred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
-            .fold(F::zero(), |acc, x| acc + x) / F::from(y_true.len()).unwrap();
-        
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(y_true.len()).unwrap();
+
         Ok(mse)
     }
 
@@ -1408,24 +1434,26 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
         // Encode sample as spikes and run prediction
         let spike_pattern = self.encode_to_spikes(sample)?;
         self.inject_spike_patterns(&spike_pattern, &vec![])?;
-        
+
         let result = self.run_simulation()?;
-        
+
         // Extract prediction from output neurons
-        let output_start = self.config.input_neurons + 
-            self.config.hidden_layers * self.config.neurons_per_layer;
-        
+        let output_start =
+            self.config.input_neurons + self.config.hidden_layers * self.config.neurons_per_layer;
+
         let mut predictions = vec![F::zero(); self.config.output_neurons];
-        
+
         for (_, spikes) in &result.spike_history {
             for &neuron_id in spikes {
-                if neuron_id >= output_start && neuron_id < output_start + self.config.output_neurons {
+                if neuron_id >= output_start
+                    && neuron_id < output_start + self.config.output_neurons
+                {
                     let output_idx = neuron_id - output_start;
                     predictions[output_idx] = predictions[output_idx] + F::one();
                 }
             }
         }
-        
+
         // Normalize by simulation time
         let normalization = F::from(result.simulation_time.as_secs_f64()).unwrap();
         if normalization > F::zero() {
@@ -1433,33 +1461,34 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
                 *prediction = *prediction / normalization;
             }
         }
-        
+
         Ok(predictions)
     }
 
     fn evaluate_prediction_accuracy(&self, prediction: &[F]) -> Result<F> {
         // Simplified accuracy evaluation
         // In a real implementation, this would compare against ground truth
-        let prediction_strength = prediction.iter()
-            .fold(F::zero(), |acc, &x| acc + x) / F::from(prediction.len()).unwrap();
-        
+        let prediction_strength = prediction.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(prediction.len()).unwrap();
+
         Ok(prediction_strength)
     }
 
     fn adapt_network_structure(&mut self, current_accuracy: F, target_accuracy: F) -> Result<()> {
         let accuracy_gap = target_accuracy - current_accuracy;
-        
+
         if accuracy_gap > F::from(0.1).unwrap() {
             // Significant adaptation needed
-            self.learning_controller.trigger_structural_adaptation(accuracy_gap)?;
-            
+            self.learning_controller
+                .trigger_structural_adaptation(accuracy_gap)?;
+
             // Increase network connectivity
             self.spiking_network.increase_connectivity(0.1)?;
-            
+
             // Strengthen important synapses
             self.plasticity_manager.strengthen_critical_synapses()?;
         }
-        
+
         Ok(())
     }
 
@@ -1470,11 +1499,16 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
         } else if current_accuracy > F::from(0.9).unwrap() {
             self.plasticity_manager.decrease_learning_rate(0.9)?;
         }
-        
+
         Ok(())
     }
 
-    fn store_memory_trace(&mut self, sample: &ArrayView1<F>, prediction: &[F], accuracy: F) -> Result<()> {
+    fn store_memory_trace(
+        &mut self,
+        sample: &ArrayView1<F>,
+        _prediction: &[F],
+        accuracy: F,
+    ) -> Result<()> {
         let memory_trace = MemoryTrace {
             content: sample.to_vec(),
             activation: accuracy,
@@ -1482,9 +1516,9 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
             context: HashMap::new(),
             reliability: accuracy,
         };
-        
+
         self.memory_system.store_short_term_memory(memory_trace)?;
-        
+
         Ok(())
     }
 
@@ -1520,10 +1554,10 @@ impl NetworkTopology {
             layer_sizes.push(config.neurons_per_layer);
         }
         layer_sizes.push(config.output_neurons);
-        
+
         let connection_patterns = vec![ConnectionPattern::FullyConnected; layer_sizes.len() - 1];
         let recurrent_connections = Vec::new();
-        
+
         Ok(Self {
             layer_sizes,
             connection_patterns,
@@ -1535,22 +1569,25 @@ impl NetworkTopology {
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManager<F> {
     fn new(config: &NeuromorphicConfig) -> Result<Self> {
         let mut stdp_windows = HashMap::new();
-        
+
         // Default STDP window
-        stdp_windows.insert("default".to_string(), STDPWindow {
-            ltp_window: Duration::from_millis(50),
-            ltd_window: Duration::from_millis(50),
-            ltp_amplitude: vec![(Duration::from_millis(10), F::from(0.1).unwrap())],
-            ltd_amplitude: vec![(Duration::from_millis(10), F::from(-0.05).unwrap())],
-            curve_parameters: STDPCurveParameters {
-                a_ltp: F::from(0.1).unwrap(),
-                a_ltd: F::from(-0.05).unwrap(),
-                tau_ltp: Duration::from_millis(20),
-                tau_ltd: Duration::from_millis(20),
-                asymmetry: F::from(1.0).unwrap(),
+        stdp_windows.insert(
+            "default".to_string(),
+            STDPWindow {
+                ltp_window: Duration::from_millis(50),
+                ltd_window: Duration::from_millis(50),
+                ltp_amplitude: vec![(Duration::from_millis(10), F::from(0.1).unwrap())],
+                ltd_amplitude: vec![(Duration::from_millis(10), F::from(-0.05).unwrap())],
+                curve_parameters: STDPCurveParameters {
+                    a_ltp: F::from(0.1).unwrap(),
+                    a_ltd: F::from(-0.05).unwrap(),
+                    tau_ltp: Duration::from_millis(20),
+                    tau_ltd: Duration::from_millis(20),
+                    asymmetry: F::from(1.0).unwrap(),
+                },
             },
-        });
-        
+        );
+
         let homeostatic_controllers = vec![HomeostaticController::new(config)?];
         let metaplasticity_state = MetaplasticityState {
             activity_history: VecDeque::new(),
@@ -1558,14 +1595,14 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManage
             learning_rate_modulation: F::one(),
             state_variables: HashMap::new(),
         };
-        
+
         let learning_scheduler = LearningRateScheduler {
             base_rate: F::from(config.learning_rate).unwrap(),
             current_rate: F::from(config.learning_rate).unwrap(),
             policy: SchedulingPolicy::Constant,
             performance_metrics: VecDeque::new(),
         };
-        
+
         Ok(Self {
             stdp_windows,
             homeostatic_controllers,
@@ -1573,67 +1610,99 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManage
             learning_scheduler,
         })
     }
-    
-    fn apply_plasticity(&mut self, network: &mut SpikingNeuralNetwork<F>, time_step: Duration) -> Result<()> {
+
+    fn apply_plasticity(
+        &mut self,
+        network: &mut SpikingNeuralNetwork<F>,
+        time_step: Duration,
+    ) -> Result<()> {
         use scirs2_core::simd_ops::SimdUnifiedOps;
-        
+
         // Apply STDP to all synapses
         if let Some(stdp_window) = self.stdp_windows.get("default").cloned() {
             for synapse in network.synapses.connections.values_mut() {
                 self.apply_stdp_to_synapse(synapse, &stdp_window, time_step)?;
             }
         }
-        
+
         // Apply homeostatic plasticity
         for controller in &mut self.homeostatic_controllers {
             controller.regulate_activity(network)?;
         }
-        
+
         // Update metaplasticity state
         self.update_metaplasticity_state(network)?;
-        
+
         Ok(())
     }
-    
-    fn apply_stdp_to_synapse(&mut self, synapse: &mut Synapse<F>, stdp_window: &STDPWindow<F>, _time_step: Duration) -> Result<()> {
+
+    fn apply_stdp_to_synapse(
+        &mut self,
+        synapse: &mut Synapse<F>,
+        stdp_window: &STDPWindow<F>,
+        _time_step: Duration,
+    ) -> Result<()> {
         // Simplified STDP implementation
         let spike_timing_diff = synapse.plasticity_state.last_spike_diff;
-        
+
         if spike_timing_diff < stdp_window.ltp_window {
             // LTP: strengthen synapse
-            let ltp_amount = stdp_window.curve_parameters.a_ltp * 
-                F::from((-spike_timing_diff.as_secs_f64() / stdp_window.curve_parameters.tau_ltp.as_secs_f64()).exp()).unwrap();
+            let ltp_amount = stdp_window.curve_parameters.a_ltp
+                * F::from(
+                    (-spike_timing_diff.as_secs_f64()
+                        / stdp_window.curve_parameters.tau_ltp.as_secs_f64())
+                    .exp(),
+                )
+                .unwrap();
             synapse.weight = synapse.weight + ltp_amount;
             synapse.plasticity_state.ltp_level = synapse.plasticity_state.ltp_level + ltp_amount;
         } else if spike_timing_diff < stdp_window.ltd_window {
             // LTD: weaken synapse
-            let ltd_amount = stdp_window.curve_parameters.a_ltd * 
-                F::from((-spike_timing_diff.as_secs_f64() / stdp_window.curve_parameters.tau_ltd.as_secs_f64()).exp()).unwrap();
+            let ltd_amount = stdp_window.curve_parameters.a_ltd
+                * F::from(
+                    (-spike_timing_diff.as_secs_f64()
+                        / stdp_window.curve_parameters.tau_ltd.as_secs_f64())
+                    .exp(),
+                )
+                .unwrap();
             synapse.weight = synapse.weight + ltd_amount;
-            synapse.plasticity_state.ltd_level = synapse.plasticity_state.ltd_level + ltd_amount.abs();
+            synapse.plasticity_state.ltd_level =
+                synapse.plasticity_state.ltd_level + ltd_amount.abs();
         }
-        
+
         // Bound weights
-        synapse.weight = synapse.weight.max(F::from(-1.0).unwrap()).min(F::from(1.0).unwrap());
-        
+        synapse.weight = synapse
+            .weight
+            .max(F::from(-1.0).unwrap())
+            .min(F::from(1.0).unwrap());
+
         Ok(())
     }
-    
+
     fn update_metaplasticity_state(&mut self, network: &SpikingNeuralNetwork<F>) -> Result<()> {
         // Calculate current network activity
         let activity = network.calculate_network_activity()?;
-        self.metaplasticity_state.activity_history.push_back(activity);
-        
+        self.metaplasticity_state
+            .activity_history
+            .push_back(activity);
+
         // Maintain history window
         if self.metaplasticity_state.activity_history.len() > 1000 {
             self.metaplasticity_state.activity_history.pop_front();
         }
-        
+
         // Update modulation factors based on activity history
         if self.metaplasticity_state.activity_history.len() > 10 {
-            let recent_activity: F = self.metaplasticity_state.activity_history.iter()
-                .rev().take(10).cloned().fold(F::zero(), |acc, x| acc + x) / F::from(10).unwrap();
-            
+            let recent_activity: F = self
+                .metaplasticity_state
+                .activity_history
+                .iter()
+                .rev()
+                .take(10)
+                .cloned()
+                .fold(F::zero(), |acc, x| acc + x)
+                / F::from(10).unwrap();
+
             // Adjust learning rate based on activity
             if recent_activity > F::from(0.8).unwrap() {
                 self.metaplasticity_state.learning_rate_modulation = F::from(0.5).unwrap();
@@ -1641,39 +1710,70 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManage
                 self.metaplasticity_state.learning_rate_modulation = F::from(1.5).unwrap();
             }
         }
-        
+
         Ok(())
     }
-    
+
     fn update_stdp_parameters(&mut self, error: F) -> Result<()> {
         // Adjust STDP parameters based on error
         if let Some(stdp_window) = self.stdp_windows.get_mut("default") {
             if error > F::from(0.5).unwrap() {
                 // Increase plasticity when error is high
-                stdp_window.curve_parameters.a_ltp = stdp_window.curve_parameters.a_ltp * F::from(1.1).unwrap();
-                stdp_window.curve_parameters.a_ltd = stdp_window.curve_parameters.a_ltd * F::from(1.1).unwrap();
+                stdp_window.curve_parameters.a_ltp =
+                    stdp_window.curve_parameters.a_ltp * F::from(1.1).unwrap();
+                stdp_window.curve_parameters.a_ltd =
+                    stdp_window.curve_parameters.a_ltd * F::from(1.1).unwrap();
             } else if error < F::from(0.1).unwrap() {
                 // Decrease plasticity when error is low
-                stdp_window.curve_parameters.a_ltp = stdp_window.curve_parameters.a_ltp * F::from(0.95).unwrap();
-                stdp_window.curve_parameters.a_ltd = stdp_window.curve_parameters.a_ltd * F::from(0.95).unwrap();
+                stdp_window.curve_parameters.a_ltp =
+                    stdp_window.curve_parameters.a_ltp * F::from(0.95).unwrap();
+                stdp_window.curve_parameters.a_ltd =
+                    stdp_window.curve_parameters.a_ltd * F::from(0.95).unwrap();
             }
         }
         Ok(())
     }
-    
+
     fn strengthen_critical_synapses(&mut self) -> Result<()> {
-        // This would identify and strengthen important synapses
-        // Placeholder implementation
+        // Identify and strengthen important synapses based on their activity and importance
+        let strengthening_factor = F::from(1.1).unwrap(); // 10% increase
+        let activity_threshold = F::from(0.8).unwrap(); // High activity threshold
+
+        // Iterate through synapses and strengthen those with high activity or importance
+        for (_connection, synapse) in self.synapses.connections.iter_mut() {
+            // Calculate synapse importance based on weight magnitude and plasticity state
+            let weight_magnitude = synapse.weight.abs();
+            let ltp_strength = synapse.plasticity_state.ltp_level;
+            let importance_score = weight_magnitude + ltp_strength;
+
+            // Strengthen synapses that exceed the activity threshold
+            if importance_score > activity_threshold {
+                synapse.weight = synapse.weight * strengthening_factor;
+
+                // Update plasticity state to reflect strengthening
+                synapse.plasticity_state.ltp_level =
+                    synapse.plasticity_state.ltp_level * strengthening_factor;
+
+                // Ensure weights stay within bounds
+                synapse.weight = synapse
+                    .weight
+                    .max(F::from(-2.0).unwrap())
+                    .min(F::from(2.0).unwrap());
+            }
+        }
+
         Ok(())
     }
-    
+
     fn increase_learning_rate(&mut self, factor: f64) -> Result<()> {
-        self.learning_scheduler.current_rate = self.learning_scheduler.current_rate * F::from(factor).unwrap();
+        self.learning_scheduler.current_rate =
+            self.learning_scheduler.current_rate * F::from(factor).unwrap();
         Ok(())
     }
-    
+
     fn decrease_learning_rate(&mut self, factor: f64) -> Result<()> {
-        self.learning_scheduler.current_rate = self.learning_scheduler.current_rate * F::from(factor).unwrap();
+        self.learning_scheduler.current_rate =
+            self.learning_scheduler.current_rate * F::from(factor).unwrap();
         Ok(())
     }
 }
@@ -1682,7 +1782,7 @@ impl<F: Float> SpikingNeuralNetwork<F> {
     fn new(topology: NetworkTopology, config: &NeuromorphicConfig) -> Result<Self> {
         // Create real neuromorphic network with proper initialization
         let mut layers = Vec::new();
-        
+
         // Initialize layers with actual neurons
         for &layer_size in &topology.layer_sizes {
             let mut neurons = Vec::new();
@@ -1691,12 +1791,13 @@ impl<F: Float> SpikingNeuralNetwork<F> {
                     NeuronType::Input
                 } else if layers.len() == topology.layer_sizes.len() - 1 {
                     NeuronType::Output
-                } else if i % 5 == 0 { // 20% inhibitory neurons
+                } else if i % 5 == 0 {
+                    // 20% inhibitory neurons
                     NeuronType::Inhibitory
                 } else {
                     NeuronType::Excitatory
                 };
-                
+
                 let neuron = SpikingNeuron {
                     id: neurons.len(),
                     membrane_potential: F::from(-70.0).unwrap(), // Resting potential
@@ -1718,7 +1819,7 @@ impl<F: Float> SpikingNeuralNetwork<F> {
                 };
                 neurons.push(neuron);
             }
-            
+
             let layer = NeuronLayer {
                 neurons,
                 layer_params: LayerParameters {
@@ -1739,15 +1840,15 @@ impl<F: Float> SpikingNeuralNetwork<F> {
             };
             layers.push(layer);
         }
-        
+
         // Initialize synaptic connections
         let mut synapses = SynapticConnections::new();
         synapses.initialize_connections(&topology, &layers, config)?;
-        
+
         let current_time = Duration::from_secs(0);
         let spike_history = SpikeHistory::new();
         let network_state = NetworkState::new();
-        
+
         Ok(Self {
             topology,
             layers,
@@ -1757,46 +1858,53 @@ impl<F: Float> SpikingNeuralNetwork<F> {
             network_state,
         })
     }
-    
+
     fn inject_spikes(&mut self, neuron_id: usize, spikes: &[Instant]) -> Result<()> {
         // Find the layer and neuron index
         let mut global_neuron_idx = 0;
         let mut target_layer = None;
         let mut local_neuron_idx = None;
-        
+
         for (layer_idx, layer) in self.layers.iter().enumerate() {
-            if neuron_id >= global_neuron_idx && neuron_id < global_neuron_idx + layer.neurons.len() {
+            if neuron_id >= global_neuron_idx && neuron_id < global_neuron_idx + layer.neurons.len()
+            {
                 target_layer = Some(layer_idx);
                 local_neuron_idx = Some(neuron_id - global_neuron_idx);
                 break;
             }
             global_neuron_idx += layer.neurons.len();
         }
-        
+
         if let (Some(layer_idx), Some(local_idx)) = (target_layer, local_neuron_idx) {
             // Add spikes to the neuron's spike train
             for &spike_time in spikes {
-                self.layers[layer_idx].neurons[local_idx].spike_train.push_back(spike_time);
-                
+                self.layers[layer_idx].neurons[local_idx]
+                    .spike_train
+                    .push_back(spike_time);
+
                 // Record in spike history
                 if !self.spike_history.spikes_by_neuron.contains_key(&neuron_id) {
-                    self.spike_history.spikes_by_neuron.insert(neuron_id, VecDeque::new());
+                    self.spike_history
+                        .spikes_by_neuron
+                        .insert(neuron_id, VecDeque::new());
                 }
-                self.spike_history.spikes_by_neuron.get_mut(&neuron_id)
+                self.spike_history
+                    .spikes_by_neuron
+                    .get_mut(&neuron_id)
                     .unwrap()
                     .push_back(spike_time);
             }
         }
-        
+
         Ok(())
     }
-    
+
     fn update_membrane_potentials(&mut self, time_step: Duration) -> Result<()> {
         use scirs2_core::simd_ops::SimdUnifiedOps;
-        
+
         let dt = time_step.as_secs_f64();
         let _now = Instant::now();
-        
+
         // Pre-calculate input currents for all neurons to avoid borrow conflicts
         let mut input_currents = std::collections::HashMap::new();
         for layer in &self.layers {
@@ -1805,7 +1913,7 @@ impl<F: Float> SpikingNeuralNetwork<F> {
                 input_currents.insert(neuron.id, input_current);
             }
         }
-        
+
         // Update membrane potentials for all neurons using Leaky Integrate-and-Fire model
         for layer in &mut self.layers {
             for neuron in &mut layer.neurons {
@@ -1814,58 +1922,59 @@ impl<F: Float> SpikingNeuralNetwork<F> {
                     neuron.time_since_spike += time_step;
                     continue;
                 }
-                
+
                 // Integrate membrane potential: dV/dt = (-(V - V_rest) + I) / (RC)
                 let leak_current = -(neuron.membrane_potential - neuron.resting_potential);
                 let input_current = input_currents.get(&neuron.id).copied().unwrap_or(F::zero());
-                let noise_current = layer.layer_params.noise_level * F::from(rand::rng().random::<f64>()).unwrap();
-                
+                let noise_current =
+                    layer.layer_params.noise_level * F::from(rand::rng().random::<f64>()).unwrap();
+
                 let total_current = input_current + noise_current;
-                let membrane_change = (leak_current + total_current) * F::from(dt).unwrap() / 
-                    (neuron.resistance * neuron.capacitance);
-                
+                let membrane_change = (leak_current + total_current) * F::from(dt).unwrap()
+                    / (neuron.resistance * neuron.capacitance);
+
                 neuron.membrane_potential = neuron.membrane_potential + membrane_change;
-                
+
                 // Update adaptive threshold
                 Self::update_adaptive_threshold_static(neuron, time_step)?;
-                
+
                 // Apply lateral inhibition
                 Self::apply_lateral_inhibition_static(neuron, &layer.lateral_inhibition.strength)?;
-                
+
                 neuron.time_since_spike += time_step;
             }
         }
-        
+
         self.current_time += time_step;
         Ok(())
     }
-    
+
     fn check_for_spikes(&mut self) -> Result<Vec<usize>> {
         let mut spiking_neurons = Vec::new();
         let mut global_neuron_idx = 0;
         let now = Instant::now();
-        
+
         for layer in &mut self.layers {
             for (local_idx, neuron) in layer.neurons.iter_mut().enumerate() {
-                let current_threshold = neuron.adaptive_threshold.base_threshold + 
-                    neuron.adaptive_threshold.adaptation;
-                
+                let current_threshold =
+                    neuron.adaptive_threshold.base_threshold + neuron.adaptive_threshold.adaptation;
+
                 // Check if membrane potential exceeds threshold
                 if neuron.membrane_potential >= current_threshold {
                     spiking_neurons.push(global_neuron_idx + local_idx);
-                    
+
                     // Reset membrane potential and start refractory period
                     neuron.membrane_potential = neuron.resting_potential;
                     neuron.time_since_spike = Duration::from_secs(0);
-                    
+
                     // Add to spike train
                     neuron.spike_train.push_back(now);
-                    
+
                     // Update adaptive threshold (spike-triggered adaptation)
-                    neuron.adaptive_threshold.adaptation = neuron.adaptive_threshold.adaptation + 
-                        neuron.adaptive_threshold.adaptation_rate;
+                    neuron.adaptive_threshold.adaptation = neuron.adaptive_threshold.adaptation
+                        + neuron.adaptive_threshold.adaptation_rate;
                     neuron.adaptive_threshold.last_update = now;
-                    
+
                     // Maintain spike train size
                     if neuron.spike_train.len() > 1000 {
                         neuron.spike_train.pop_front();
@@ -1874,26 +1983,28 @@ impl<F: Float> SpikingNeuralNetwork<F> {
             }
             global_neuron_idx += layer.neurons.len();
         }
-        
+
         // Record spikes in network history
         if !spiking_neurons.is_empty() {
-            let current_spike_rate = spiking_neurons.len() as f64 / 
-                self.layers.iter().map(|l| l.neurons.len()).sum::<usize>() as f64;
-            self.spike_history.population_spike_rate.push_back(current_spike_rate);
-            
+            let current_spike_rate = spiking_neurons.len() as f64
+                / self.layers.iter().map(|l| l.neurons.len()).sum::<usize>() as f64;
+            self.spike_history
+                .population_spike_rate
+                .push_back(current_spike_rate);
+
             // Maintain history window
             if self.spike_history.population_spike_rate.len() > 10000 {
                 self.spike_history.population_spike_rate.pop_front();
             }
         }
-        
+
         Ok(spiking_neurons)
     }
-    
+
     fn get_membrane_potentials(&self) -> Result<Array1<F>> {
         let total_neurons: usize = self.layers.iter().map(|l| l.neurons.len()).sum();
         let mut potentials = Array1::zeros(total_neurons);
-        
+
         let mut idx = 0;
         for layer in &self.layers {
             for neuron in &layer.neurons {
@@ -1901,91 +2012,100 @@ impl<F: Float> SpikingNeuralNetwork<F> {
                 idx += 1;
             }
         }
-        
+
         Ok(potentials)
     }
-    
+
     fn update_synaptic_states(&mut self, time_step: Duration) -> Result<()> {
         let dt = time_step.as_secs_f64();
-        
+
         // Update short-term dynamics for all synapses
         for synapse in self.synapses.connections.values_mut() {
             // Update facilitation and depression variables
             let tau_f = synapse.short_term_dynamics.tau_facilitation.as_secs_f64();
             let tau_d = synapse.short_term_dynamics.tau_depression.as_secs_f64();
-            
+
             // Exponential decay
-            synapse.short_term_dynamics.facilitation = synapse.short_term_dynamics.facilitation * 
-                F::from((-dt / tau_f).exp()).unwrap();
-            synapse.short_term_dynamics.depression = synapse.short_term_dynamics.depression * 
-                F::from((-dt / tau_d).exp()).unwrap();
-                
+            synapse.short_term_dynamics.facilitation =
+                synapse.short_term_dynamics.facilitation * F::from((-dt / tau_f).exp()).unwrap();
+            synapse.short_term_dynamics.depression =
+                synapse.short_term_dynamics.depression * F::from((-dt / tau_d).exp()).unwrap();
+
             // Update utilization (simplified model)
-            synapse.short_term_dynamics.utilization = synapse.short_term_dynamics.facilitation * 
-                (F::one() - synapse.short_term_dynamics.depression);
-            
+            synapse.short_term_dynamics.utilization = synapse.short_term_dynamics.facilitation
+                * (F::one() - synapse.short_term_dynamics.depression);
+
             // Update plasticity state eligibility trace
-            synapse.plasticity_state.eligibility_trace = synapse.plasticity_state.eligibility_trace * 
-                F::from(0.99).unwrap(); // Exponential decay
+            synapse.plasticity_state.eligibility_trace =
+                synapse.plasticity_state.eligibility_trace * F::from(0.99).unwrap();
+            // Exponential decay
         }
-        
+
         Ok(())
     }
-    
+
     fn get_synaptic_weights(&self) -> Result<Array2<F>> {
         let total_neurons: usize = self.layers.iter().map(|l| l.neurons.len()).sum();
         let mut weights = Array2::zeros((total_neurons, total_neurons));
-        
+
         for ((pre, post), synapse) in &self.synapses.connections {
             weights[[*pre, *post]] = synapse.weight;
         }
-        
+
         Ok(weights)
     }
-    
+
     fn get_current_activity(&self) -> Result<Array1<F>> {
         let total_neurons: usize = self.layers.iter().map(|l| l.neurons.len()).sum();
         let mut activity = Array1::zeros(total_neurons);
         let now = Instant::now();
         let window = Duration::from_millis(100); // 100ms window
-        
+
         let mut idx = 0;
         for layer in &self.layers {
             for neuron in &layer.neurons {
                 // Count spikes in recent window
-                let recent_spikes = neuron.spike_train.iter()
+                let recent_spikes = neuron
+                    .spike_train
+                    .iter()
                     .filter(|&&spike_time| now.duration_since(spike_time) < window)
                     .count();
-                
-                activity[idx] = F::from(recent_spikes).unwrap() / F::from(window.as_secs_f64()).unwrap();
+
+                activity[idx] =
+                    F::from(recent_spikes).unwrap() / F::from(window.as_secs_f64()).unwrap();
                 idx += 1;
             }
         }
-        
+
         Ok(activity)
     }
-    
+
     fn increase_connectivity(&mut self, factor: f64) -> Result<()> {
         // Add new random connections
         let total_neurons: usize = self.layers.iter().map(|l| l.neurons.len()).sum();
         let mut rng = rand::rng();
-        
+
         // Calculate number of new connections to add
         let current_connections = self.synapses.connections.len();
         let new_connections = (current_connections as f64 * factor) as usize;
-        
+
         for _ in 0..new_connections {
             let pre_neuron = rng.random_range(0..total_neurons);
             let post_neuron = rng.random_range(0..total_neurons);
-            
-            if pre_neuron != post_neuron && !self.synapses.connections.contains_key(&(pre_neuron, post_neuron)) {
+
+            if pre_neuron != post_neuron
+                && !self
+                    .synapses
+                    .connections
+                    .contains_key(&(pre_neuron, post_neuron))
+            {
                 let weight = F::from(rng.random::<f64>() * 0.1 - 0.05).unwrap(); // Random weight [-0.05, 0.05]
                 let synapse_type = if weight > F::zero() {
                     SynapseType::Excitatory
                 } else {
                     SynapseType::Inhibitory
                 };
-                
+
                 let synapse = Synapse {
                     weight,
                     pre_neuron,
@@ -2006,19 +2126,27 @@ impl<F: Float> SpikingNeuralNetwork<F> {
                         tau_depression: Duration::from_millis(1000),
                     },
                 };
-                
-                self.synapses.connections.insert((pre_neuron, post_neuron), synapse);
-                self.synapses.delays.insert((pre_neuron, post_neuron), Duration::from_millis(1));
+
+                self.synapses
+                    .connections
+                    .insert((pre_neuron, post_neuron), synapse);
+                self.synapses
+                    .delays
+                    .insert((pre_neuron, post_neuron), Duration::from_millis(1));
             }
         }
-        
+
         Ok(())
     }
-    
+
     // Helper methods for neuromorphic computation
-    fn calculate_input_current(&self, neuron: &SpikingNeuron<F>, _layer_params: &LayerParameters<F>) -> Result<F> {
+    fn calculate_input_current(
+        &self,
+        neuron: &SpikingNeuron<F>,
+        _layer_params: &LayerParameters<F>,
+    ) -> Result<F> {
         let mut total_current = F::zero();
-        
+
         // Calculate synaptic input current
         for ((pre, post), synapse) in &self.synapses.connections {
             if *post == neuron.id {
@@ -2027,64 +2155,145 @@ impl<F: Float> SpikingNeuralNetwork<F> {
                     if let Some(pre_neuron) = self.get_neuron_by_id(*pre) {
                         // Check for recent spikes (within synaptic delay)
                         let default_delay = Duration::from_millis(1);
-                        let delay = self.synapses.delays.get(&(*pre, *post))
+                        let delay = self
+                            .synapses
+                            .delays
+                            .get(&(*pre, *post))
                             .unwrap_or(&default_delay);
-                        
-                        let recent_spike = pre_neuron.spike_train.iter()
-                            .find(|&&spike_time| {
-                                let elapsed = Instant::now().duration_since(spike_time);
-                                elapsed >= *delay && elapsed < *delay + Duration::from_millis(2)
-                            });
-                        
+
+                        let recent_spike = pre_neuron.spike_train.iter().find(|&&spike_time| {
+                            let elapsed = Instant::now().duration_since(spike_time);
+                            elapsed >= *delay && elapsed < *delay + Duration::from_millis(2)
+                        });
+
                         if recent_spike.is_some() {
-                            let synaptic_current = synapse.weight * synapse.short_term_dynamics.utilization;
+                            let synaptic_current =
+                                synapse.weight * synapse.short_term_dynamics.utilization;
                             total_current = total_current + synaptic_current;
                         }
                     }
                 }
             }
         }
-        
+
         Ok(total_current)
     }
-    
-    fn update_adaptive_threshold(&self, neuron: &mut SpikingNeuron<F>, time_step: Duration) -> Result<()> {
+
+    fn update_adaptive_threshold(
+        &self,
+        neuron: &mut SpikingNeuron<F>,
+        time_step: Duration,
+    ) -> Result<()> {
         let dt = time_step.as_secs_f64();
         let tau = neuron.adaptive_threshold.decay_time_constant.as_secs_f64();
-        
+
         // Exponential decay of adaptation
         let decay_factor = F::from((-dt / tau).exp()).unwrap();
         neuron.adaptive_threshold.adaptation = neuron.adaptive_threshold.adaptation * decay_factor;
-        
+
         Ok(())
     }
-    
-    fn apply_lateral_inhibition(&self, _neuron: &mut SpikingNeuron<F>, _inhibition: &LateralInhibition<F>) -> Result<()> {
-        // Simplified lateral inhibition implementation
-        // In a full implementation, this would apply spatial inhibition patterns
+
+    fn apply_lateral_inhibition(
+        &self,
+        neuron: &mut SpikingNeuron<F>,
+        inhibition: &LateralInhibition<F>,
+    ) -> Result<()> {
+        // Full lateral inhibition implementation
+        match &inhibition.pattern {
+            InhibitionPattern::WinnerTakeAll => {
+                // Winner-take-all: suppress all except the most active neuron
+                let inhibition_strength = inhibition.strength;
+                neuron.membrane_potential = neuron.membrane_potential - inhibition_strength;
+            }
+            InhibitionPattern::Gaussian { sigma } => {
+                // Gaussian inhibition pattern
+                let distance_factor = F::from(1.0).unwrap(); // Simplified distance calculation
+                let sigma_f = F::from(*sigma).unwrap();
+                let gaussian_weight = F::from(
+                    (-(distance_factor * distance_factor)
+                        / (F::from(2.0).unwrap() * sigma_f * sigma_f))
+                        .to_f64()
+                        .unwrap()
+                        .exp(),
+                )
+                .unwrap();
+                let inhibition_amount = inhibition.strength * gaussian_weight;
+                neuron.membrane_potential = neuron.membrane_potential - inhibition_amount;
+            }
+            InhibitionPattern::DoG {
+                sigma_center,
+                sigma_surround,
+            } => {
+                // Difference of Gaussians inhibition
+                let distance_factor = F::from(1.0).unwrap(); // Simplified distance calculation
+                let sigma_c = F::from(*sigma_center).unwrap();
+                let sigma_s = F::from(*sigma_surround).unwrap();
+
+                let center_weight = F::from(
+                    (-(distance_factor * distance_factor)
+                        / (F::from(2.0).unwrap() * sigma_c * sigma_c))
+                        .to_f64()
+                        .unwrap()
+                        .exp(),
+                )
+                .unwrap();
+                let surround_weight = F::from(
+                    (-(distance_factor * distance_factor)
+                        / (F::from(2.0).unwrap() * sigma_s * sigma_s))
+                        .to_f64()
+                        .unwrap()
+                        .exp(),
+                )
+                .unwrap();
+
+                let dog_weight = center_weight - surround_weight;
+                let inhibition_amount = inhibition.strength * dog_weight;
+                neuron.membrane_potential = neuron.membrane_potential - inhibition_amount;
+            }
+            InhibitionPattern::Custom { weights: _ } => {
+                // Custom inhibition pattern (would need spatial coordinates)
+                let custom_inhibition = inhibition.strength * F::from(0.5).unwrap();
+                neuron.membrane_potential = neuron.membrane_potential - custom_inhibition;
+            }
+        }
+
+        // Ensure membrane potential doesn't go below resting potential
+        neuron.membrane_potential = neuron.membrane_potential.max(neuron.resting_potential);
+
         Ok(())
     }
-    
+
     /// Static version of update_adaptive_threshold to avoid borrowing conflicts
-    fn update_adaptive_threshold_static(neuron: &mut SpikingNeuron<F>, time_step: Duration) -> Result<()> {
+    fn update_adaptive_threshold_static(
+        neuron: &mut SpikingNeuron<F>,
+        time_step: Duration,
+    ) -> Result<()> {
         let dt = time_step.as_secs_f64();
         let tau = neuron.adaptive_threshold.decay_time_constant.as_secs_f64();
-        
+
         // Exponential decay of adaptation
         let decay_factor = F::from((-dt / tau).exp()).unwrap();
         neuron.adaptive_threshold.adaptation = neuron.adaptive_threshold.adaptation * decay_factor;
-        
+
         Ok(())
     }
-    
+
     /// Static version of apply_lateral_inhibition to avoid borrowing conflicts
-    fn apply_lateral_inhibition_static(neuron: &mut SpikingNeuron<F>, inhibition_strength: &F) -> Result<()> {
+    fn apply_lateral_inhibition_static(
+        neuron: &mut SpikingNeuron<F>,
+        inhibition_strength: &F,
+    ) -> Result<()> {
         // Apply lateral inhibition by reducing membrane potential
-        let inhibition_factor = F::one() - *inhibition_strength;
-        neuron.membrane_potential = neuron.membrane_potential * inhibition_factor;
+        // This is a simplified version of the full lateral inhibition
+        neuron.membrane_potential = neuron.membrane_potential - *inhibition_strength;
+
+        // Ensure membrane potential doesn't go below resting potential
+        neuron.membrane_potential = neuron.membrane_potential.max(neuron.resting_potential);
+
         Ok(())
     }
-    
+
     fn find_neuron_layer(&self, neuron_id: usize) -> Option<usize> {
         let mut global_idx = 0;
         for (layer_idx, layer) in self.layers.iter().enumerate() {
@@ -2095,7 +2304,7 @@ impl<F: Float> SpikingNeuralNetwork<F> {
         }
         None
     }
-    
+
     fn get_neuron_by_id(&self, neuron_id: usize) -> Option<&SpikingNeuron<F>> {
         let mut global_idx = 0;
         for layer in &self.layers {
@@ -2107,20 +2316,22 @@ impl<F: Float> SpikingNeuralNetwork<F> {
         }
         None
     }
-    
+
     fn calculate_network_activity(&self) -> Result<F> {
         let now = Instant::now();
         let window = Duration::from_millis(100);
         let total_neurons = self.layers.iter().map(|l| l.neurons.len()).sum::<usize>();
-        
+
         if total_neurons == 0 {
             return Ok(F::zero());
         }
-        
+
         let mut active_neurons = 0;
         for layer in &self.layers {
             for neuron in &layer.neurons {
-                let recent_spikes = neuron.spike_train.iter()
+                let recent_spikes = neuron
+                    .spike_train
+                    .iter()
                     .filter(|&&spike_time| now.duration_since(spike_time) < window)
                     .count();
                 if recent_spikes > 0 {
@@ -2128,7 +2339,7 @@ impl<F: Float> SpikingNeuralNetwork<F> {
                 }
             }
         }
-        
+
         Ok(F::from(active_neurons).unwrap() / F::from(total_neurons).unwrap())
     }
 }
@@ -2142,17 +2353,22 @@ impl<F: Float> SynapticConnections<F> {
             topology: ConnectionTopology::new(),
         }
     }
-    
-    fn initialize_connections(&mut self, topology: &NetworkTopology, layers: &[NeuronLayer<F>], config: &NeuromorphicConfig) -> Result<()> {
+
+    fn initialize_connections(
+        &mut self,
+        topology: &NetworkTopology,
+        layers: &[NeuronLayer<F>],
+        config: &NeuromorphicConfig,
+    ) -> Result<()> {
         let mut global_pre_idx = 0;
         let mut rng = rand::rng();
-        
+
         // Create connections between consecutive layers
         for (layer_idx, pattern) in topology.connection_patterns.iter().enumerate() {
             let pre_layer_size = topology.layer_sizes[layer_idx];
             let post_layer_size = topology.layer_sizes[layer_idx + 1];
             let global_post_idx = topology.layer_sizes[..=layer_idx].iter().sum::<usize>();
-            
+
             match pattern {
                 ConnectionPattern::FullyConnected => {
                     // Connect every neuron in pre-layer to every neuron in post-layer
@@ -2160,23 +2376,27 @@ impl<F: Float> SynapticConnections<F> {
                         for post_local in 0..post_layer_size {
                             let pre_global = global_pre_idx + pre_local;
                             let post_global = global_post_idx + post_local;
-                            
+
                             // Determine connection strength based on neuron types
                             let pre_neuron = &layers[layer_idx].neurons[pre_local];
                             let post_neuron = &layers[layer_idx + 1].neurons[post_local];
-                            
+
                             let weight = match (&pre_neuron.neuron_type, &post_neuron.neuron_type) {
-                                (NeuronType::Excitatory, _) => F::from(rng.random::<f64>() * 0.1).unwrap(),
-                                (NeuronType::Inhibitory, _) => F::from(-rng.random::<f64>() * 0.1).unwrap(),
+                                (NeuronType::Excitatory, _) => {
+                                    F::from(rng.random::<f64>() * 0.1).unwrap()
+                                }
+                                (NeuronType::Inhibitory, _) => {
+                                    F::from(-rng.random::<f64>() * 0.1).unwrap()
+                                }
                                 _ => F::from((rng.random::<f64>() - 0.5) * 0.05).unwrap(),
                             };
-                            
+
                             let synapse_type = match pre_neuron.neuron_type {
                                 NeuronType::Excitatory => SynapseType::Excitatory,
                                 NeuronType::Inhibitory => SynapseType::Inhibitory,
                                 _ => SynapseType::Excitatory,
                             };
-                            
+
                             let synapse = Synapse {
                                 weight,
                                 pre_neuron: pre_global,
@@ -2197,15 +2417,16 @@ impl<F: Float> SynapticConnections<F> {
                                     tau_depression: Duration::from_millis(1000),
                                 },
                             };
-                            
+
                             // Random synaptic delay within specified range
                             let min_delay = config.synaptic_delay_range.0;
                             let max_delay = config.synaptic_delay_range.1;
                             let delay_range = max_delay.saturating_sub(min_delay);
-                            let delay = min_delay + Duration::from_nanos(
-                                (rng.random::<f64>() * delay_range.as_nanos() as f64) as u64
-                            );
-                            
+                            let delay = min_delay
+                                + Duration::from_nanos(
+                                    (rng.random::<f64>() * delay_range.as_nanos() as f64) as u64,
+                                );
+
                             self.connections.insert((pre_global, post_global), synapse);
                             self.delays.insert((pre_global, post_global), delay);
                         }
@@ -2218,14 +2439,14 @@ impl<F: Float> SynapticConnections<F> {
                             if rng.random::<f64>() < *probability {
                                 let pre_global = global_pre_idx + pre_local;
                                 let post_global = global_post_idx + post_local;
-                                
+
                                 let weight = F::from((rng.random::<f64>() - 0.5) * 0.1).unwrap();
                                 let synapse_type = if weight > F::zero() {
                                     SynapseType::Excitatory
                                 } else {
                                     SynapseType::Inhibitory
                                 };
-                                
+
                                 let synapse = Synapse {
                                     weight,
                                     pre_neuron: pre_global,
@@ -2246,7 +2467,7 @@ impl<F: Float> SynapticConnections<F> {
                                         tau_depression: Duration::from_millis(1000),
                                     },
                                 };
-                                
+
                                 let delay = Duration::from_millis(rng.random_range(1..20));
                                 self.connections.insert((pre_global, post_global), synapse);
                                 self.delays.insert((pre_global, post_global), delay);
@@ -2261,14 +2482,14 @@ impl<F: Float> SynapticConnections<F> {
                             if rng.random::<f64>() < 0.1 {
                                 let pre_global = global_pre_idx + pre_local;
                                 let post_global = global_post_idx + post_local;
-                                
+
                                 let weight = F::from((rng.random::<f64>() - 0.5) * 0.05).unwrap();
                                 let synapse_type = if weight > F::zero() {
                                     SynapseType::Excitatory
                                 } else {
                                     SynapseType::Inhibitory
                                 };
-                                
+
                                 let synapse = Synapse {
                                     weight,
                                     pre_neuron: pre_global,
@@ -2289,7 +2510,7 @@ impl<F: Float> SynapticConnections<F> {
                                         tau_depression: Duration::from_millis(1000),
                                     },
                                 };
-                                
+
                                 let delay = Duration::from_millis(rng.random_range(1..20));
                                 self.connections.insert((pre_global, post_global), synapse);
                                 self.delays.insert((pre_global, post_global), delay);
@@ -2298,28 +2519,30 @@ impl<F: Float> SynapticConnections<F> {
                     }
                 }
             }
-            
+
             global_pre_idx += pre_layer_size;
         }
-        
+
         // Add recurrent connections if specified
         for recurrent in &topology.recurrent_connections {
             let from_start: usize = topology.layer_sizes[..recurrent.from_layer].iter().sum();
             let from_end = from_start + topology.layer_sizes[recurrent.from_layer];
             let to_start: usize = topology.layer_sizes[..recurrent.to_layer].iter().sum();
             let to_end = to_start + topology.layer_sizes[recurrent.to_layer];
-            
+
             // Add sparse recurrent connections
             for from_idx in from_start..from_end {
                 for to_idx in to_start..to_end {
-                    if rng.random::<f64>() < 0.05 { // 5% connectivity for recurrent
-                        let weight = F::from(recurrent.strength * (rng.random::<f64>() - 0.5)).unwrap();
+                    if rng.random::<f64>() < 0.05 {
+                        // 5% connectivity for recurrent
+                        let weight =
+                            F::from(recurrent.strength * (rng.random::<f64>() - 0.5)).unwrap();
                         let synapse_type = if weight > F::zero() {
                             SynapseType::Excitatory
                         } else {
                             SynapseType::Inhibitory
                         };
-                        
+
                         let synapse = Synapse {
                             weight,
                             pre_neuron: from_idx,
@@ -2340,14 +2563,14 @@ impl<F: Float> SynapticConnections<F> {
                                 tau_depression: Duration::from_millis(1000),
                             },
                         };
-                        
+
                         self.connections.insert((from_idx, to_idx), synapse);
                         self.delays.insert((from_idx, to_idx), recurrent.delay);
                     }
                 }
             }
         }
-        
+
         Ok(())
     }
 }
@@ -2428,12 +2651,16 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningControll
                 tolerance: F::from(0.05).unwrap(),
             },
         ];
-        
+
         let strategies = vec![
-            AdaptationStrategy::GradientBased { learning_rate: F::from(config.learning_rate).unwrap() },
-            AdaptationStrategy::Evolutionary { population_size: 20 },
+            AdaptationStrategy::GradientBased {
+                learning_rate: F::from(config.learning_rate).unwrap(),
+            },
+            AdaptationStrategy::Evolutionary {
+                population_size: 20,
+            },
         ];
-        
+
         let performance_history = VecDeque::new();
         let adaptation_state = AdaptationState {
             current_strategy: 0,
@@ -2441,7 +2668,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningControll
             adaptation_history: VecDeque::new(),
             learning_progress: F::zero(),
         };
-        
+
         Ok(Self {
             objectives,
             strategies,
@@ -2449,7 +2676,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningControll
             adaptation_state,
         })
     }
-    
+
     fn update_learning_rate(&mut self, error: F, metric_value: F) -> Result<()> {
         // Update learning objectives
         for objective in &mut self.objectives {
@@ -2459,7 +2686,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningControll
                 _ => {}
             }
         }
-        
+
         // Record performance snapshot
         let snapshot = PerformanceSnapshot {
             timestamp: Instant::now(),
@@ -2470,18 +2697,18 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningControll
             adaptability: F::one(),
         };
         self.performance_history.push_back(snapshot);
-        
+
         // Maintain history size
         if self.performance_history.len() > 1000 {
             self.performance_history.pop_front();
         }
-        
+
         // Adapt strategy if needed
         self.adapt_strategy_if_needed()?;
-        
+
         Ok(())
     }
-    
+
     fn trigger_structural_adaptation(&mut self, accuracy_gap: F) -> Result<()> {
         let event = AdaptationEvent {
             timestamp: Instant::now(),
@@ -2490,34 +2717,38 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningControll
             performance_after: F::zero(), // Will be updated later
             adaptation_magnitude: accuracy_gap,
         };
-        
+
         self.adaptation_state.adaptation_history.push_back(event);
-        
+
         // Maintain history size
         if self.adaptation_state.adaptation_history.len() > 500 {
             self.adaptation_state.adaptation_history.pop_front();
         }
-        
+
         Ok(())
     }
-    
+
     fn adapt_strategy_if_needed(&mut self) -> Result<()> {
         if self.performance_history.len() > 10 {
-            let recent_performance: F = self.performance_history.iter()
-                .rev().take(10)
+            let recent_performance: F = self
+                .performance_history
+                .iter()
+                .rev()
+                .take(10)
                 .map(|s| s.accuracy)
-                .fold(F::zero(), |acc, x| acc + x) / F::from(10).unwrap();
-            
+                .fold(F::zero(), |acc, x| acc + x)
+                / F::from(10).unwrap();
+
             // Switch strategy if performance is poor
             if recent_performance < F::from(0.5).unwrap() {
-                self.adaptation_state.current_strategy = 
+                self.adaptation_state.current_strategy =
                     (self.adaptation_state.current_strategy + 1) % self.strategies.len();
             }
         }
-        
+
         Ok(())
     }
-    
+
     fn get_current_performance(&self) -> F {
         if let Some(latest) = self.performance_history.back() {
             latest.accuracy
@@ -2538,20 +2769,23 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> HomeostaticController<F>
             control_mode: HomeostaticMode::SynapticScaling,
         })
     }
-    
+
     fn regulate_activity(&mut self, network: &mut SpikingNeuralNetwork<F>) -> Result<()> {
         // Calculate current firing rates
         self.current_rate = network.calculate_network_activity()?;
-        
+
         // Adjust scaling factor based on difference from target
         let rate_error = self.target_rate - self.current_rate;
         let adjustment = rate_error * F::from(0.01).unwrap(); // Small adjustment
-        
+
         match self.control_mode {
             HomeostaticMode::SynapticScaling => {
                 self.scaling_factor = self.scaling_factor + adjustment;
-                self.scaling_factor = self.scaling_factor.max(F::from(0.1).unwrap()).min(F::from(2.0).unwrap());
-                
+                self.scaling_factor = self
+                    .scaling_factor
+                    .max(F::from(0.1).unwrap())
+                    .min(F::from(2.0).unwrap());
+
                 // Apply scaling to synaptic weights
                 for synapse in network.synapses.connections.values_mut() {
                     synapse.weight = synapse.weight * self.scaling_factor;
@@ -2562,17 +2796,17 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> HomeostaticController<F>
                 for layer in &mut network.layers {
                     for neuron in &mut layer.neurons {
                         let threshold_adjustment = -adjustment * F::from(5.0).unwrap();
-                        neuron.adaptive_threshold.base_threshold = 
+                        neuron.adaptive_threshold.base_threshold =
                             neuron.adaptive_threshold.base_threshold + threshold_adjustment;
                     }
                 }
             }
             _ => {} // Other modes not implemented
         }
-        
+
         Ok(())
     }
-    
+
     fn adjust_based_on_performance(&mut self, metric_value: F) -> Result<()> {
         // Adjust target rate based on performance
         if metric_value > F::from(0.8).unwrap() {
@@ -2580,7 +2814,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> HomeostaticController<F>
         } else if metric_value < F::from(0.5).unwrap() {
             self.target_rate = self.target_rate * F::from(1.02).unwrap(); // Slightly increase target
         }
-        
+
         Ok(())
     }
 }
@@ -2598,23 +2832,25 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SpikePatternRecognizer<F
             SpikePattern {
                 name: "sequential_activation".to_string(),
                 spatial_pattern: (0..config.output_neurons).collect(),
-                temporal_pattern: (0..config.output_neurons).map(|i| Duration::from_millis(i as u64 * 5)).collect(),
+                temporal_pattern: (0..config.output_neurons)
+                    .map(|i| Duration::from_millis(i as u64 * 5))
+                    .collect(),
                 strength: F::from(0.6).unwrap(),
                 tolerance: F::from(0.2).unwrap(),
             },
         ];
-        
+
         let mut thresholds = HashMap::new();
         thresholds.insert("synchronous_burst".to_string(), F::from(0.7).unwrap());
         thresholds.insert("sequential_activation".to_string(), F::from(0.6).unwrap());
-        
+
         let matching_algorithms = vec![
             PatternMatchingAlgorithm::CrossCorrelation,
             PatternMatchingAlgorithm::TemplateMatching,
         ];
-        
+
         let recognition_history = VecDeque::new();
-        
+
         Ok(Self {
             pattern_templates,
             thresholds,
@@ -2622,14 +2858,18 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SpikePatternRecognizer<F
             recognition_history,
         })
     }
-    
+
     fn recognize_patterns(&mut self, activity: &Array1<F>) -> Result<Vec<PatternRecognition<F>>> {
         let mut recognitions = Vec::new();
-        
+
         for pattern in &self.pattern_templates {
             let confidence = self.match_pattern_against_activity(pattern, activity)?;
-            let threshold = self.thresholds.get(&pattern.name).copied().unwrap_or(F::from(0.5).unwrap());
-            
+            let threshold = self
+                .thresholds
+                .get(&pattern.name)
+                .copied()
+                .unwrap_or(F::from(0.5).unwrap());
+
             if confidence >= threshold {
                 let recognition = PatternRecognition {
                     timestamp: Instant::now(),
@@ -2638,29 +2878,33 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SpikePatternRecognizer<F
                     matching_neurons: pattern.spatial_pattern.clone(),
                     temporal_offset: Duration::from_secs(0),
                 };
-                
+
                 recognitions.push(recognition.clone());
                 self.recognition_history.push_back(recognition);
-                
+
                 // Maintain history size
                 if self.recognition_history.len() > 1000 {
                     self.recognition_history.pop_front();
                 }
             }
         }
-        
+
         Ok(recognitions)
     }
-    
-    fn match_pattern_against_activity(&self, pattern: &SpikePattern<F>, activity: &Array1<F>) -> Result<F> {
+
+    fn match_pattern_against_activity(
+        &self,
+        pattern: &SpikePattern<F>,
+        activity: &Array1<F>,
+    ) -> Result<F> {
         if activity.len() == 0 {
             return Ok(F::zero());
         }
-        
+
         // Simple template matching - calculate correlation with expected pattern
         let mut correlation = F::zero();
         let mut valid_matches = 0;
-        
+
         for &neuron_id in &pattern.spatial_pattern {
             if neuron_id < activity.len() {
                 let neuron_activity = activity[neuron_id];
@@ -2668,11 +2912,11 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SpikePatternRecognizer<F
                 valid_matches += 1;
             }
         }
-        
+
         if valid_matches > 0 {
             correlation = correlation / F::from(valid_matches).unwrap();
         }
-        
+
         // Apply tolerance
         let confidence = correlation.max(F::zero()).min(F::one());
         Ok(confidence)
@@ -2691,7 +2935,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicMemory<F> {
                 priority_queue: Vec::new(),
             },
         };
-        
+
         let long_term_memory = LongTermMemory {
             memories: HashMap::new(),
             indices: MemoryIndices {
@@ -2707,7 +2951,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicMemory<F> {
                 quality_threshold: F::from(0.8).unwrap(),
             },
         };
-        
+
         let consolidation_controller = ConsolidationController {
             criteria: ConsolidationCriteria {
                 activation_threshold: F::from(0.7).unwrap(),
@@ -2735,17 +2979,20 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicMemory<F> {
                 },
             },
         };
-        
+
         let recall_mechanisms = RecallMechanisms {
             retrieval_cues: Vec::new(),
-            strategies: vec![RecallStrategy::DirectAccess, RecallStrategy::AssociativeRecall],
+            strategies: vec![
+                RecallStrategy::DirectAccess,
+                RecallStrategy::AssociativeRecall,
+            ],
             context_recall: ContextualRecall {
                 context_representations: HashMap::new(),
                 similarity_thresholds: HashMap::new(),
                 context_mappings: HashMap::new(),
             },
         };
-        
+
         Ok(Self {
             short_term_memory,
             long_term_memory,
@@ -2753,64 +3000,64 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicMemory<F> {
             recall_mechanisms,
         })
     }
-    
+
     fn store_short_term_memory(&mut self, trace: MemoryTrace<F>) -> Result<()> {
         self.short_term_memory.working_memory.push_back(trace);
-        
+
         // Enforce capacity limit
         while self.short_term_memory.working_memory.len() > self.short_term_memory.capacity {
             self.short_term_memory.working_memory.pop_front();
         }
-        
+
         Ok(())
     }
-    
+
     fn run_consolidation_cycle(&mut self) -> Result<()> {
         let now = Instant::now();
         if now >= self.consolidation_controller.scheduler.next_consolidation {
             // Move eligible memories from short-term to long-term
             let mut to_consolidate = Vec::new();
-            
+
             for (i, memory) in self.short_term_memory.working_memory.iter().enumerate() {
                 if self.should_consolidate_memory(memory)? {
                     to_consolidate.push(i);
                 }
             }
-            
+
             // Consolidate selected memories
             for &index in to_consolidate.iter().rev() {
                 if let Some(memory) = self.short_term_memory.working_memory.remove(index) {
                     self.consolidate_memory(memory)?;
                 }
             }
-            
+
             // Schedule next consolidation
-            self.consolidation_controller.scheduler.next_consolidation = 
+            self.consolidation_controller.scheduler.next_consolidation =
                 now + self.consolidation_controller.scheduler.intervals[0];
         }
-        
+
         Ok(())
     }
-    
+
     fn should_consolidate_memory(&self, memory: &MemoryTrace<F>) -> Result<bool> {
         let criteria = &self.consolidation_controller.criteria;
-        
+
         // Check activation threshold
         if memory.activation < criteria.activation_threshold {
             return Ok(false);
         }
-        
+
         // Check importance
         if memory.reliability < criteria.importance_weight {
             return Ok(false);
         }
-        
+
         Ok(true)
     }
-    
+
     fn consolidate_memory(&mut self, memory: MemoryTrace<F>) -> Result<()> {
         let memory_id = format!("mem_{}", self.long_term_memory.memories.len());
-        
+
         let consolidated = ConsolidatedMemory {
             id: memory_id.clone(),
             content: memory.content,
@@ -2819,22 +3066,33 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicMemory<F> {
             last_access: Instant::now(),
             associations: Vec::new(),
         };
-        
-        self.long_term_memory.memories.insert(memory_id.clone(), consolidated);
-        
+
+        self.long_term_memory
+            .memories
+            .insert(memory_id.clone(), consolidated);
+
         // Update indices
-        self.long_term_memory.indices.temporal_index.push((Instant::now(), memory_id));
-        
+        self.long_term_memory
+            .indices
+            .temporal_index
+            .push((Instant::now(), memory_id));
+
         // Enforce capacity
         if self.long_term_memory.memories.len() > self.long_term_memory.capacity {
             self.remove_oldest_memory()?;
         }
-        
+
         Ok(())
     }
-    
+
     fn remove_oldest_memory(&mut self) -> Result<()> {
-        if let Some((_, oldest_id)) = self.long_term_memory.indices.temporal_index.first().cloned() {
+        if let Some((_, oldest_id)) = self
+            .long_term_memory
+            .indices
+            .temporal_index
+            .first()
+            .cloned()
+        {
             self.long_term_memory.memories.remove(&oldest_id);
             self.long_term_memory.indices.temporal_index.remove(0);
         }
@@ -2848,16 +3106,16 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicPerformanceM
         metrics.insert("accuracy".to_string(), F::zero());
         metrics.insert("efficiency".to_string(), F::zero());
         metrics.insert("latency".to_string(), F::zero());
-        
+
         let benchmarks = VecDeque::new();
-        
+
         let efficiency = EfficiencyMetrics {
             energy_per_operation: F::from(0.001).unwrap(),
             operations_per_second: F::from(1000.0).unwrap(),
             memory_efficiency: F::from(0.8).unwrap(),
             spike_efficiency: F::from(0.7).unwrap(),
         };
-        
+
         let monitoring_config = MonitoringConfig {
             real_time_monitoring: true,
             monitoring_interval: Duration::from_millis(100),
@@ -2873,7 +3131,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicPerformanceM
                 thresholds
             },
         };
-        
+
         Ok(Self {
             metrics,
             benchmarks,
@@ -2881,11 +3139,16 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicPerformanceM
             config: monitoring_config,
         })
     }
-    
-    fn record_computation(&mut self, metric_type: &str, metric_value: F, processing_time: Duration) -> Result<()> {
+
+    fn record_computation(
+        &mut self,
+        metric_type: &str,
+        metric_value: F,
+        processing_time: Duration,
+    ) -> Result<()> {
         // Update metrics
         self.metrics.insert(metric_type.to_string(), metric_value);
-        
+
         // Record benchmark
         let benchmark = BenchmarkResult {
             timestamp: Instant::now(),
@@ -2895,28 +3158,28 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicPerformanceM
             processing_time,
             accuracy: metric_value,
         };
-        
+
         self.benchmarks.push_back(benchmark);
-        
+
         // Maintain benchmark history
         if self.benchmarks.len() > 1000 {
             self.benchmarks.pop_front();
         }
-        
+
         // Update efficiency metrics
         self.update_efficiency_metrics(processing_time)?;
-        
+
         Ok(())
     }
-    
+
     fn update_efficiency_metrics(&mut self, processing_time: Duration) -> Result<()> {
         let ops_per_sec = 1.0 / processing_time.as_secs_f64();
         self.efficiency.operations_per_second = F::from(ops_per_sec).unwrap();
-        
+
         // Update energy efficiency (simplified model)
         let energy_factor = processing_time.as_secs_f64() * 0.001; // 1mJ per second
         self.efficiency.energy_per_operation = F::from(energy_factor).unwrap();
-        
+
         Ok(())
     }
 }
@@ -3494,7 +3757,7 @@ impl<F: Float + Send + Sync + std::iter::Sum> ShortTermMemoryWithChunking<F> {
     /// Store new pattern in appropriate chunk
     pub fn store_pattern(&mut self, pattern: Array1<F>) -> Result<()> {
         let best_chunk = self.find_best_chunk(&pattern)?;
-        
+
         let chunk_key = match best_chunk {
             Some(key) => key,
             None => {
@@ -3506,11 +3769,14 @@ impl<F: Float + Send + Sync + std::iter::Sum> ShortTermMemoryWithChunking<F> {
                     new_key
                 } else {
                     // Replace least accessed chunk
-                    let lru_key = self.access_counts
+                    let lru_key = self
+                        .access_counts
                         .iter()
                         .min_by_key(|(_, &count)| count)
                         .map(|(key, _)| key.clone())
-                        .ok_or_else(|| MetricsError::ComputationError("No chunks available".to_string()))?;
+                        .ok_or_else(|| {
+                            MetricsError::ComputationError("No chunks available".to_string())
+                        })?;
                     self.chunks.get_mut(&lru_key).unwrap().clear();
                     lru_key
                 }
@@ -3563,7 +3829,9 @@ impl<F: Float + Send + Sync + std::iter::Sum> ShortTermMemoryWithChunking<F> {
     /// Calculate cosine similarity between two patterns
     fn calculate_cosine_similarity(&self, a: &Array1<F>, b: &Array1<F>) -> Result<F> {
         if a.len() != b.len() {
-            return Err(MetricsError::InvalidInput("Pattern lengths must match".to_string()));
+            return Err(MetricsError::InvalidInput(
+                "Pattern lengths must match".to_string(),
+            ));
         }
 
         let dot_product: F = a.iter().zip(b.iter()).map(|(&x, &y)| x * y).sum();
@@ -3677,7 +3945,13 @@ impl<F: Float + Send + Sync + ndarray::ScalarOperand> LongTermMemoryHierarchy<F>
     }
 
     /// Store episodic memory
-    pub fn store_episode(&mut self, key: String, data: Array1<F>, context: HashMap<String, String>, emotional_valence: F) {
+    pub fn store_episode(
+        &mut self,
+        key: String,
+        data: Array1<F>,
+        context: HashMap<String, String>,
+        emotional_valence: F,
+    ) {
         let entry = EpisodicMemoryEntry {
             data,
             context,
@@ -3691,7 +3965,13 @@ impl<F: Float + Send + Sync + ndarray::ScalarOperand> LongTermMemoryHierarchy<F>
     }
 
     /// Store semantic concept
-    pub fn store_concept(&mut self, key: String, concept: Array1<F>, associations: Vec<String>, confidence: F) {
+    pub fn store_concept(
+        &mut self,
+        key: String,
+        concept: Array1<F>,
+        associations: Vec<String>,
+        confidence: F,
+    ) {
         let entry = SemanticMemoryEntry {
             concept,
             associations,
@@ -3722,7 +4002,7 @@ impl<F: Float + Send + Sync + ndarray::ScalarOperand> LongTermMemoryHierarchy<F>
         if self.episodic_memory.contains_key(key) {
             self.update_access_stats(key);
         }
-        
+
         // Then get mutable reference and update retrieval count
         if let Some(entry) = self.episodic_memory.get_mut(key) {
             entry.retrieval_count += 1;
@@ -3735,20 +4015,27 @@ impl<F: Float + Send + Sync + ndarray::ScalarOperand> LongTermMemoryHierarchy<F>
     /// Update access statistics
     fn update_access_stats(&mut self, key: &str) {
         let now = SystemTime::now();
-        let stats = self.access_stats.entry(key.to_string()).or_insert(MemoryAccessStats {
-            access_count: 0,
-            last_access: now,
-            avg_access_interval: Duration::from_secs(0),
-        });
-        
+        let stats = self
+            .access_stats
+            .entry(key.to_string())
+            .or_insert(MemoryAccessStats {
+                access_count: 0,
+                last_access: now,
+                avg_access_interval: Duration::from_secs(0),
+            });
+
         if stats.access_count > 0 {
-            let interval = now.duration_since(stats.last_access).unwrap_or(Duration::from_secs(0));
+            let interval = now
+                .duration_since(stats.last_access)
+                .unwrap_or(Duration::from_secs(0));
             stats.avg_access_interval = Duration::from_nanos(
-                ((stats.avg_access_interval.as_nanos() * stats.access_count as u128 + interval.as_nanos()) 
-                / (stats.access_count as u128 + 1)).min(u64::MAX as u128) as u64
+                ((stats.avg_access_interval.as_nanos() * stats.access_count as u128
+                    + interval.as_nanos())
+                    / (stats.access_count as u128 + 1))
+                    .min(u64::MAX as u128) as u64,
             );
         }
-        
+
         stats.access_count += 1;
         stats.last_access = now;
     }
@@ -3761,7 +4048,7 @@ impl<F: Float + Send + Sync + ndarray::ScalarOperand> LongTermMemoryHierarchy<F>
             scheduled_time: SystemTime::now() + Duration::from_secs(3600), // 1 hour delay
             priority,
         };
-        
+
         // Insert in priority order
         let mut insert_position = None;
         for i in 0..self.consolidation_schedule.len() {
@@ -3770,7 +4057,7 @@ impl<F: Float + Send + Sync + ndarray::ScalarOperand> LongTermMemoryHierarchy<F>
                 break;
             }
         }
-        
+
         if let Some(pos) = insert_position {
             self.consolidation_schedule.insert(pos, task);
         } else {
@@ -3782,7 +4069,7 @@ impl<F: Float + Send + Sync + ndarray::ScalarOperand> LongTermMemoryHierarchy<F>
     pub fn process_consolidation(&mut self) -> usize {
         let now = SystemTime::now();
         let mut processed = 0;
-        
+
         while let Some(task) = self.consolidation_schedule.front() {
             if task.scheduled_time <= now {
                 let task = self.consolidation_schedule.pop_front().unwrap();
@@ -3793,7 +4080,7 @@ impl<F: Float + Send + Sync + ndarray::ScalarOperand> LongTermMemoryHierarchy<F>
                 break;
             }
         }
-        
+
         processed
     }
 
@@ -3803,7 +4090,8 @@ impl<F: Float + Send + Sync + ndarray::ScalarOperand> LongTermMemoryHierarchy<F>
             "episodic" => {
                 if let Some(entry) = self.episodic_memory.get_mut(&task.key) {
                     // Strengthen based on retrieval count and emotional valence
-                    let strength_factor = F::one() + entry.emotional_valence.abs() * F::from(0.1).unwrap();
+                    let strength_factor =
+                        F::one() + entry.emotional_valence.abs() * F::from(0.1).unwrap();
                     entry.data = &entry.data * strength_factor;
                 }
             }
@@ -4000,8 +4288,12 @@ impl<F: Float> TaskDistributionModel<F> {
 impl<F: Float> ContinualLearningSystem<F> {
     pub fn new() -> Result<Self> {
         Ok(Self {
-            ewc: ElasticWeightConsolidation { _phantom: std::marker::PhantomData },
-            progressive_networks: ProgressiveNeuralNetworks { _phantom: std::marker::PhantomData },
+            ewc: ElasticWeightConsolidation {
+                _phantom: std::marker::PhantomData,
+            },
+            progressive_networks: ProgressiveNeuralNetworks {
+                _phantom: std::marker::PhantomData,
+            },
             replay_systems: Vec::new(),
             task_modules: HashMap::new(),
         })
@@ -4028,10 +4320,18 @@ impl<F: Float + Send + Sync + ndarray::ScalarOperand> HierarchicalMemorySystem<F
 impl<F: Float> WorkingMemoryModel<F> {
     pub fn new() -> Result<Self> {
         Ok(Self {
-            central_executive: CentralExecutive { _phantom: std::marker::PhantomData },
-            phonological_loop: PhonologicalLoop { _phantom: std::marker::PhantomData },
-            visuospatial_sketchpad: VisuospatialSketchpad { _phantom: std::marker::PhantomData },
-            episodic_buffer: EpisodicBuffer { _phantom: std::marker::PhantomData },
+            central_executive: CentralExecutive {
+                _phantom: std::marker::PhantomData,
+            },
+            phonological_loop: PhonologicalLoop {
+                _phantom: std::marker::PhantomData,
+            },
+            visuospatial_sketchpad: VisuospatialSketchpad {
+                _phantom: std::marker::PhantomData,
+            },
+            episodic_buffer: EpisodicBuffer {
+                _phantom: std::marker::PhantomData,
+            },
         })
     }
 }
@@ -4039,10 +4339,14 @@ impl<F: Float> WorkingMemoryModel<F> {
 impl<F: Float> GlobalWorkspaceTheory<F> {
     pub fn new() -> Result<Self> {
         Ok(Self {
-            global_workspace: GlobalWorkspace { _phantom: std::marker::PhantomData },
+            global_workspace: GlobalWorkspace {
+                _phantom: std::marker::PhantomData,
+            },
             competition_mechanisms: Vec::new(),
             broadcasting_protocols: Vec::new(),
-            consciousness_types: ConsciousnessTypes { _phantom: std::marker::PhantomData },
+            consciousness_types: ConsciousnessTypes {
+                _phantom: std::marker::PhantomData,
+            },
         })
     }
 }
@@ -4061,10 +4365,18 @@ impl<F: Float> IntegratedInformationTheory<F> {
 impl<F: Float> AttentionSystems<F> {
     pub fn new() -> Result<Self> {
         Ok(Self {
-            bottom_up: BottomUpAttention { _phantom: std::marker::PhantomData },
-            top_down: TopDownAttention { _phantom: std::marker::PhantomData },
-            executive: ExecutiveAttention { _phantom: std::marker::PhantomData },
-            sustained: SustainedAttention { _phantom: std::marker::PhantomData },
+            bottom_up: BottomUpAttention {
+                _phantom: std::marker::PhantomData,
+            },
+            top_down: TopDownAttention {
+                _phantom: std::marker::PhantomData,
+            },
+            executive: ExecutiveAttention {
+                _phantom: std::marker::PhantomData,
+            },
+            sustained: SustainedAttention {
+                _phantom: std::marker::PhantomData,
+            },
         })
     }
 }

@@ -749,7 +749,7 @@ pub enum MemoryAllocationStrategy {
 
 impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
     /// Create a new TPU backend
-    pub fn new(config: TPUBackendConfig) -> Result<Self, OptimError> {
+    pub fn new(config: TPUBackendConfig) -> Result<Self> {
         let device_manager = DeviceManager::new(&config)?;
         let execution_engine = ExecutionEngine::new(&config)?;
         let memory_manager = TPUMemoryManager::new(&config)?;
@@ -775,7 +775,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
         &mut self,
         computation_id: ComputationId,
         inputs: Vec<TPUBuffer<T>>,
-    ) -> Result<Vec<TPUBuffer<T>>, OptimError> {
+    ) -> Result<Vec<TPUBuffer<T>>> {
         let start_time = Instant::now();
 
         // Get or compile the program
@@ -818,7 +818,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
     async fn get_or_compile_program(
         &self,
         computation_id: ComputationId,
-    ) -> Result<Arc<CompiledProgram>, OptimError> {
+    ) -> Result<Arc<CompiledProgram>> {
         // Check cache first
         {
             let cache = self.compilation_cache.read().unwrap();
@@ -839,10 +839,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
         Ok(Arc::new(program))
     }
 
-    async fn compile_program(
-        &self,
-        _computation_id: ComputationId,
-    ) -> Result<CompiledProgram, OptimError> {
+    async fn compile_program(&self, _computation_id: ComputationId) -> Result<CompiledProgram> {
         // Simplified compilation - in reality this would invoke XLA compiler
         let binary = vec![0u8; 1024]; // Placeholder binary
 
@@ -895,7 +892,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
     }
 
     /// Shutdown the backend gracefully
-    pub async fn shutdown(&mut self) -> Result<(), OptimError> {
+    pub async fn shutdown(&mut self) -> Result<()> {
         self.device_manager.shutdown().await?;
         self.memory_manager.cleanup()?;
         self.performance_monitor.flush_metrics()?;
@@ -1236,7 +1233,7 @@ impl<T: Float> TPUBuffer<T> {
     }
 
     /// Transfer buffer to device
-    pub fn transfer_to_device(&mut self, device: DeviceId) -> Result<(), OptimError> {
+    pub fn transfer_to_device(&mut self, device: DeviceId) -> Result<()> {
         self.device = Some(device);
         self.metadata.last_accessed = Instant::now();
         self.metadata.access_count += 1;

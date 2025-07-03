@@ -33,7 +33,10 @@ pub fn load_california_housing(force_download: bool) -> Result<Dataset> {
     temp_file.write_all(&data).map_err(DatasetsError::IoError)?;
 
     // Load from the temporary file (using CSV loader)
-    let mut dataset = loaders::load_csv(&temp_path, true, Some(8))?;
+    let config = loaders::CsvConfig::new()
+        .with_header(true)
+        .with_target_column(Some(8));
+    let mut dataset = loaders::load_csv(&temp_path, config)?;
 
     // Add metadata
     let feature_names = vec![

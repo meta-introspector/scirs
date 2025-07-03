@@ -7,7 +7,6 @@ use crate::error::{StatsError, StatsResult as Result};
 use crate::error_handling_v2::ErrorCode;
 use crate::{unified_error_handling::global_error_handler, validate_or_error};
 use ndarray::{Array1, Array2, ArrayView2, Axis};
-use scirs2_core::validation::*;
 
 /// Canonical Correlation Analysis
 ///

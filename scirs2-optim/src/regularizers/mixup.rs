@@ -220,8 +220,8 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> CutMix<A> {
         let cut_w = cut_w.max(1).min(width);
 
         // Get random center point
-        let cy = rng.gen_range(0..height);
-        let cx = rng.gen_range(0..width);
+        let cy = rng.random_range(0..height);
+        let cx = rng.random_range(0..width);
 
         // Calculate boundaries safely to avoid overflow
         let half_h = cut_h / 2;

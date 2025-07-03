@@ -75,7 +75,7 @@ pub fn k_fold_cross_validation(
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
-                // In rand 0.9.0, use rng() instead of thread_rng()
+                // In rand 0.9.0, use rng() instead of rng()
                 let mut r = rand::rng();
                 StdRng::from_rng(&mut r)
             }
@@ -242,7 +242,7 @@ where
     let mut rng = match random_seed {
         Some(seed) => Some(StdRng::seed_from_u64(seed)),
         None if shuffle => {
-            // In rand 0.9.0, use rng() instead of thread_rng()
+            // In rand 0.9.0, use rng() instead of rng()
             let mut r = rand::rng();
             Some(StdRng::from_rng(&mut r))
         }

@@ -103,7 +103,7 @@ pub use gpu::{
     rmsprop_gpu::RMSpropGpu,
     rocm_backend::{RocmBackend, RocmConfig},
     sgd_gpu::SGDGpu,
-    GpuOptimizer, GpuOptimizerConfig, GpuOptimError,
+    GpuOptimError, GpuOptimizer, GpuOptimizerConfig,
 };
 pub use gradient_processing::*;
 #[cfg(feature = "metrics_integration")]
@@ -178,15 +178,14 @@ pub use neural_integration::{
     LayerArchitecture, LayerId, OptimizationConfig, ParamId, ParameterManager, ParameterMetadata,
     ParameterOptimizer, ParameterType,
 };
-pub use plugin::{
-    OptimizerPlugin, PluginCapabilities, PluginLoader,
-    PluginRegistry, PluginValidationFramework,
-};
 pub use plugin::core::{
-    create_basic_capabilities, create_plugin_info, OptimizerPluginFactory,
-    PluginCategory, PluginInfo,
+    create_basic_capabilities, create_plugin_info, OptimizerPluginFactory, PluginCategory,
+    PluginInfo,
 };
 pub use plugin::sdk::{BaseOptimizerPlugin, PluginTester};
+pub use plugin::{
+    OptimizerPlugin, PluginCapabilities, PluginLoader, PluginRegistry, PluginValidationFramework,
+};
 // Macro is exported at crate root via #[macro_export]
 pub use online_learning::{
     ColumnGrowthStrategy, LearningRateAdaptation, LifelongOptimizer, LifelongStats,

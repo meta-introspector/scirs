@@ -306,14 +306,14 @@ fn validate_single_case(
     // Create irregularly sampled signal with known frequency content
     for i in 0..n {
         let base_time = i as f64 * duration / n as f64;
-        let jitter = rng.gen_range(-0.1..0.1) * duration / n as f64;
+        let jitter = rng.random_range(-0.1..0.1) * duration / n as f64;
         let time = (base_time + jitter).max(0.0).min(duration);
         t.push(time);
 
         // Add signal with multiple frequency components
         let signal_val = (2.0 * PI * test_freq * time).sin()
             + 0.3 * (2.0 * PI * test_freq * 2.0 * time).sin()
-            + 0.1 * rng.gen_range(-1.0..1.0); // Add some noise
+            + 0.1 * rng.random_range(-1.0..1.0); // Add some noise
         signal.push(signal_val);
     }
 
@@ -681,7 +681,7 @@ fn estimate_false_alarm_rate(config: &ScipyValidationConfig) -> SignalResult<f64
         let mut rng = rand::thread_rng();
         let n = 100;
         let t: Vec<f64> = (0..n).map(|i| i as f64 / 10.0).collect();
-        let signal: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
+        let signal: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
 
         let freqs: Vec<f64> = Array1::linspace(0.1, 5.0, 50).to_vec();
 
@@ -719,7 +719,7 @@ fn estimate_detection_power(config: &ScipyValidationConfig) -> SignalResult<f64>
         let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
         let signal: Vec<f64> = t
             .iter()
-            .map(|&time| (2.0 * PI * signal_freq * time).sin() + 0.1 * rng.gen_range(-1.0..1.0))
+            .map(|&time| (2.0 * PI * signal_freq * time).sin() + 0.1 * rng.random_range(-1.0..1.0))
             .collect();
 
         let freqs: Vec<f64> = Array1::linspace(0.1, fs / 2.0, 50).to_vec();
@@ -1102,7 +1102,7 @@ fn test_numerical_conditioning(
     let mut rng = rand::thread_rng();
 
     // Create time series with irregular sampling
-    let mut times: Vec<f64> = (0..n).map(|_| rng.gen::<f64>() * 100.0).collect();
+    let mut times: Vec<f64> = (0..n).map(|_| rng.random::<f64>() * 100.0).collect();
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     // Test signal with multiple frequencies
@@ -1194,7 +1194,7 @@ fn test_phase_coherence(config: &ScipyValidationConfig) -> SignalResult<PhaseCoh
     // Generate complex signal with known phase relationships
     let n = 500;
     let times: Vec<f64> = (0..n)
-        .map(|i| i as f64 * 0.1 + rng.gen::<f64>() * 0.05)
+        .map(|i| i as f64 * 0.1 + rng.random::<f64>() * 0.05)
         .collect();
 
     let freq1 = 0.2;
@@ -1235,7 +1235,7 @@ fn quantify_uncertainty(
     let true_freq = 0.3;
     let signal: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.1 * rng.gen::<f64>())
+        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.1 * rng.random::<f64>())
         .collect();
 
     // Bootstrap resampling
@@ -1497,7 +1497,7 @@ fn test_perturbation_stability(times: &[f64], values: &[f64], freqs: &[f64]) -> 
     // Perturbed periodogram
     let perturbed_values: Vec<f64> = values
         .iter()
-        .map(|&v| v + perturbation_level * rng.gen::<f64>())
+        .map(|&v| v + perturbation_level * rng.random::<f64>())
         .collect();
     let perturbed = lombscargle(times, &perturbed_values, freqs)?;
 
@@ -1558,7 +1558,7 @@ fn test_nyquist_aliasing_detection(rng: &mut impl Rng) -> SignalResult<f64> {
 
     let values: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.1 * rng.gen::<f64>())
+        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.1 * rng.random::<f64>())
         .collect();
 
     let freqs: Vec<f64> = (1..=50).map(|i| i as f64 * 0.02).collect();
@@ -1587,7 +1587,7 @@ fn test_sub_nyquist_handling(rng: &mut impl Rng) -> SignalResult<f64> {
 
     let values: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.05 * rng.gen::<f64>())
+        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.05 * rng.random::<f64>())
         .collect();
 
     let freqs: Vec<f64> = (1..=100).map(|i| i as f64 * 0.01).collect();
@@ -1615,7 +1615,7 @@ fn test_false_peak_suppression(rng: &mut impl Rng) -> SignalResult<f64> {
     // Signal with strong true frequency and weak noise
     let values: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.2 * rng.gen::<f64>())
+        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.2 * rng.random::<f64>())
         .collect();
 
     let freqs: Vec<f64> = (1..=100).map(|i| i as f64 * 0.01).collect();
@@ -1648,7 +1648,7 @@ fn test_spectral_leakage_mitigation(rng: &mut impl Rng) -> SignalResult<f64> {
         .map(|&t| {
             (2.0 * PI * freq1 * t).sin()
                 + 0.5 * (2.0 * PI * freq2 * t).sin()
-                + 0.1 * rng.gen::<f64>()
+                + 0.1 * rng.random::<f64>()
         })
         .collect();
 
@@ -1666,7 +1666,7 @@ fn test_variable_star_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
     // Simulate variable star light curve
     let n = 500;
     let observation_times: Vec<f64> = (0..n)
-        .map(|_| rng.gen::<f64>() * 100.0) // Irregular sampling
+        .map(|_| rng.random::<f64>() * 100.0) // Irregular sampling
         .collect();
     let mut times = observation_times;
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -1680,7 +1680,7 @@ fn test_variable_star_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
         .map(|&t| {
             15.0 + 0.5 * (2.0 * PI * freq * t).sin() +
             0.1 * (2.0 * PI * 2.0 * freq * t).sin() + // Harmonic
-            0.05 * rng.gen::<f64>() // Noise
+            0.05 * rng.random::<f64>() // Noise
         })
         .collect();
 
@@ -1722,7 +1722,7 @@ fn test_exoplanet_transit_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
             } else {
                 baseline
             };
-            transit_flux + 0.001 * rng.gen::<f64>() // Low noise
+            transit_flux + 0.001 * rng.random::<f64>() // Low noise
         })
         .collect();
 
@@ -1750,7 +1750,7 @@ fn test_rr_lyrae_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
     // Simulate RR Lyrae star
     let n = 800;
     let times: Vec<f64> = (0..n)
-        .map(|i| i as f64 * 0.015 + rng.gen::<f64>() * 0.005)
+        .map(|i| i as f64 * 0.015 + rng.random::<f64>() * 0.005)
         .collect();
 
     let period = 0.5; // Days (typical RR Lyrae period)
@@ -1768,7 +1768,7 @@ fn test_rr_lyrae_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
                 0.8 * (-0.5 * (phase - 0.3) / 0.7).exp()
             };
 
-            12.0 + brightness + 0.02 * rng.gen::<f64>()
+            12.0 + brightness + 0.02 * rng.random::<f64>()
         })
         .collect();
 
@@ -1803,7 +1803,7 @@ fn test_multi_periodic_source(rng: &mut impl Rng) -> SignalResult<f64> {
             (2.0 * PI * freq1 * t).sin()
                 + 0.7 * (2.0 * PI * freq2 * t).sin()
                 + 0.5 * (2.0 * PI * freq3 * t).sin()
-                + 0.1 * rng.gen::<f64>()
+                + 0.1 * rng.random::<f64>()
         })
         .collect();
 
@@ -1910,7 +1910,9 @@ fn test_min_frequency_separation(rng: &mut impl Rng) -> SignalResult<f64> {
         let values: Vec<f64> = times
             .iter()
             .map(|&t| {
-                (2.0 * PI * freq1 * t).sin() + (2.0 * PI * freq2 * t).sin() + 0.1 * rng.gen::<f64>()
+                (2.0 * PI * freq1 * t).sin()
+                    + (2.0 * PI * freq2 * t).sin()
+                    + 0.1 * rng.random::<f64>()
             })
             .collect();
 
@@ -1945,7 +1947,7 @@ fn test_resolution_scaling(rng: &mut impl Rng) -> SignalResult<f64> {
         let freq = 0.1;
         let values: Vec<f64> = times
             .iter()
-            .map(|&t| (2.0 * PI * freq * t).sin() + 0.1 * rng.gen::<f64>())
+            .map(|&t| (2.0 * PI * freq * t).sin() + 0.1 * rng.random::<f64>())
             .collect();
 
         let freqs: Vec<f64> = (50..=150).map(|i| i as f64 * 0.002).collect();
@@ -1989,7 +1991,7 @@ fn characterize_spectral_window(rng: &mut impl Rng) -> SignalResult<f64> {
     let n = 200;
 
     // Create irregular sampling pattern
-    let mut times: Vec<f64> = (0..n).map(|_| rng.gen::<f64>() * 50.0).collect();
+    let mut times: Vec<f64> = (0..n).map(|_| rng.random::<f64>() * 50.0).collect();
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     // Delta function in time domain (constant signal)

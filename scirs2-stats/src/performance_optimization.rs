@@ -404,10 +404,10 @@ impl OptimizedLinearDiscriminantAnalysis {
         let overall_mean = x.mean_axis(Axis(0)).unwrap();
 
         // Parallel computation of within-class scatter contributions
-        let sw_contributions: Vec<Array2<f64>> = classes
-            .par_iter()
-            .enumerate()
-            .map(|(class_idx, &class_label)| {
+        let sw_contributions: Vec<Array2<f64>> = (0..classes.len())
+            .into_par_iter()
+            .map(|class_idx| {
+                let class_label = classes[class_idx];
                 let mut sw_contrib = Array2::zeros((n_features, n_features));
                 let class_mean = class_means.row(class_idx);
 

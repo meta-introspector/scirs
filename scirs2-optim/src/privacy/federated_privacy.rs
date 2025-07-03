@@ -2102,7 +2102,7 @@ pub struct ClientComposition {
 
 impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
     /// Create a new federated privacy coordinator
-    pub fn new(config: FederatedPrivacyConfig) -> Result<Self, OptimError> {
+    pub fn new(config: FederatedPrivacyConfig) -> Result<Self> {
         let global_accountant = MomentsAccountant::new(
             config.base_config.noise_multiplier,
             config.base_config.target_delta,
@@ -2139,7 +2139,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
     pub fn start_federated_round(
         &mut self,
         available_clients: &[String],
-    ) -> Result<FederatedRoundPlan, OptimError> {
+    ) -> Result<FederatedRoundPlan> {
         self.current_round += 1;
 
         // Sample clients for this round
@@ -2203,7 +2203,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         &mut self,
         client_updates: &HashMap<String, Array1<T>>,
         round_plan: &FederatedRoundPlan,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         if self.config.secure_aggregation.enabled {
             // Use secure aggregation protocol
             if let Some(ref aggregation_plan) = round_plan.aggregation_plan {
@@ -2225,7 +2225,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         &mut self,
         aggregated_update: &mut Array1<T>,
         round_plan: &FederatedRoundPlan,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         let noise_scale = self.compute_federated_noise_scale(round_plan)?;
 
         // Select noise mechanism
@@ -2254,7 +2254,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         &mut self,
         client_updates: &HashMap<String, Array1<T>>,
         round_plan: &FederatedRoundPlan,
-    ) -> Result<AdvancedAggregationResult<T>, OptimError> {
+    ) -> Result<AdvancedAggregationResult<T>> {
         // 1. Byzantine outlier detection and filtering
         let outlier_results = self
             .byzantine_aggregator
@@ -2332,7 +2332,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         aggregated_update: &mut Array1<T>,
         allocations: &HashMap<String, AdaptivePrivacyAllocation>,
         round_plan: &FederatedRoundPlan,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Local DP noise (already applied at client level)
         // Global DP noise
         let global_epsilon = self.compute_global_epsilon(allocations)?;
@@ -2371,7 +2371,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
     fn compute_advanced_privacy_guarantees(
         &self,
         round_plan: &FederatedRoundPlan,
-    ) -> Result<AdvancedPrivacyGuarantees, OptimError> {
+    ) -> Result<AdvancedPrivacyGuarantees> {
         let basic_guarantees = self.get_privacy_guarantees();
 
         // Compute amplification benefits
@@ -2405,7 +2405,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         &mut self,
         available_clients: &[String],
         round_plan: &FederatedRoundPlan,
-    ) -> Result<EnhancedSamplingResult, OptimError> {
+    ) -> Result<EnhancedSamplingResult> {
         // Get client reputation scores
         let reputation_scores = self
             .byzantine_aggregator
@@ -2458,7 +2458,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         &mut self,
         client_updates: &HashMap<String, Array1<T>>,
         round_plan: &FederatedRoundPlan,
-    ) -> Result<PersonalizedRoundResult<T>, OptimError> {
+    ) -> Result<PersonalizedRoundResult<T>> {
         // 1. Cluster clients based on model similarity
         let cluster_assignments = self
             .personalization_manager
@@ -2510,7 +2510,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
     }
 
     /// Sample clients for federated round
-    fn sample_clients(&self, available_clients: &[String]) -> Result<Vec<String>, OptimError> {
+    fn sample_clients(&self, available_clients: &[String]) -> Result<Vec<String>> {
         let mut rng = rand::rng();
         let target_count = self.config.clients_per_round.min(available_clients.len());
 
@@ -2526,7 +2526,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
                 let sampling_rate = target_count as f64 / available_clients.len() as f64;
                 let selected = available_clients
                     .iter()
-                    .filter(|_| rng.gen::<f64>() < sampling_rate)
+                    .filter(|_| rng.random::<f64>() < sampling_rate)
                     .cloned()
                     .collect::<Vec<_>>();
 
@@ -2557,7 +2557,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         &self,
         available_clients: &[String],
         target_count: usize,
-    ) -> Result<Vec<String>, OptimError> {
+    ) -> Result<Vec<String>> {
         // Group clients by device type
         let mut device_groups: HashMap<DeviceType, Vec<String>> = HashMap::new();
 
@@ -2607,7 +2607,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         &self,
         available_clients: &[String],
         target_count: usize,
-    ) -> Result<Vec<String>, OptimError> {
+    ) -> Result<Vec<String>> {
         // Compute importance weights based on participation frequency
         let mut client_weights: Vec<(String, f64)> = available_clients
             .iter()
@@ -2634,7 +2634,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
                 break;
             }
 
-            let random_weight = rng.gen::<f64>() * total_weight;
+            let random_weight = rng.random::<f64>() * total_weight;
             let mut cumulative_weight = 0.0;
 
             for (i, (_, weight)) in client_weights.iter().enumerate() {
@@ -2654,9 +2654,9 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         &self,
         available_clients: &[String],
         target_count: usize,
-    ) -> Result<Vec<String>, OptimError> {
+    ) -> Result<Vec<String>> {
         use rand::seq::SliceRandom;
-        
+
         // Ensure representation from different clusters/groups
         let mut selected = Vec::new();
         let mut remaining_clients = available_clients.to_vec();
@@ -2744,7 +2744,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         &self,
         selected_clients: &[String],
         amplification_factor: f64,
-    ) -> Result<RoundPrivacyAnalysis, OptimError> {
+    ) -> Result<RoundPrivacyAnalysis> {
         let sampling_probability = selected_clients.len() as f64 / self.config.total_clients as f64;
 
         // Compute theoretical privacy cost
@@ -2811,10 +2811,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
     }
 
     /// Simple aggregation without secure protocols
-    fn simple_aggregate(
-        &self,
-        client_updates: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn simple_aggregate(&self, client_updates: &HashMap<String, Array1<T>>) -> Result<Array1<T>> {
         if client_updates.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No client updates provided".to_string(),
@@ -2841,10 +2838,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
     }
 
     /// Compute federated noise scale
-    fn compute_federated_noise_scale(
-        &self,
-        round_plan: &FederatedRoundPlan,
-    ) -> Result<T, OptimError> {
+    fn compute_federated_noise_scale(&self, round_plan: &FederatedRoundPlan) -> Result<T> {
         let base_noise = self.config.base_config.noise_multiplier;
         let amplification_adjustment = 1.0 / round_plan.amplification_factor;
         let participation_adjustment = (round_plan.selected_clients.len() as f64).sqrt();
@@ -2856,10 +2850,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
     }
 
     /// Compute federated sensitivity
-    fn compute_federated_sensitivity(
-        &self,
-        round_plan: &FederatedRoundPlan,
-    ) -> Result<T, OptimError> {
+    fn compute_federated_sensitivity(&self, round_plan: &FederatedRoundPlan) -> Result<T> {
         // In federated setting, sensitivity is typically the clipping threshold
         // divided by the number of participating clients
         let base_sensitivity = self.config.base_config.l2_norm_clip;
@@ -2871,10 +2862,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
     }
 
     /// Update privacy accountants after round completion
-    fn update_privacy_accountants(
-        &mut self,
-        round_plan: &FederatedRoundPlan,
-    ) -> Result<(), OptimError> {
+    fn update_privacy_accountants(&mut self, round_plan: &FederatedRoundPlan) -> Result<()> {
         // Update global accountant
         let (global_epsilon, global_delta) = self
             .global_accountant
@@ -2915,10 +2903,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
     }
 
     /// Check if sufficient privacy budget is available
-    fn has_sufficient_privacy_budget(
-        &self,
-        budget: &PrivacyBudget,
-    ) -> Result<bool, OptimError> {
+    fn has_sufficient_privacy_budget(&self, budget: &PrivacyBudget) -> Result<bool> {
         let threshold_factor = 0.1; // Reserve 10% of budget
 
         Ok(
@@ -2928,7 +2913,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
     }
 
     /// Get global privacy budget
-    fn get_global_privacy_budget(&self) -> Result<PrivacyBudget, OptimError> {
+    fn get_global_privacy_budget(&self) -> Result<PrivacyBudget> {
         let (epsilon_consumed, delta_consumed) = self
             .global_accountant
             .get_privacy_spent(self.current_round)?;
@@ -3063,7 +3048,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
 // Implementation of helper structures
 
 impl<T: Float> SecureAggregator<T> {
-    fn new(config: SecureAggregationConfig) -> Result<Self, OptimError> {
+    fn new(config: SecureAggregationConfig) -> Result<Self> {
         Ok(Self {
             config,
             client_masks: HashMap::new(),
@@ -3073,12 +3058,9 @@ impl<T: Float> SecureAggregator<T> {
         })
     }
 
-    fn prepare_round(
-        &mut self,
-        selected_clients: &[String],
-    ) -> Result<SecureAggregationPlan, OptimError> {
+    fn prepare_round(&mut self, selected_clients: &[String]) -> Result<SecureAggregationPlan> {
         // Generate round-specific keys
-        let round_seed = self.shared_randomness.gen::<u64>();
+        let round_seed = self.shared_randomness.random::<u64>();
         self.round_keys.push(round_seed);
 
         // Generate client masks (simplified)
@@ -3088,7 +3070,7 @@ impl<T: Float> SecureAggregator<T> {
             let mask_size = self.config.masking_dimension;
 
             let mask = Array1::from_iter(
-                (0..mask_size).map(|_| T::from(client_rng.gen_range(-1.0..1.0)).unwrap()),
+                (0..mask_size).map(|_| T::from(client_rng.random_range(-1.0..1.0)).unwrap()),
             );
 
             self.client_masks.insert(client_id.clone(), mask);
@@ -3106,7 +3088,7 @@ impl<T: Float> SecureAggregator<T> {
         &self,
         client_updates: &HashMap<String, Array1<T>>,
         _aggregation_plan: &SecureAggregationPlan,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         if client_updates.len() < self.aggregation_threshold {
             return Err(OptimError::InvalidConfig(
                 "Insufficient clients for secure aggregation".to_string(),
@@ -3152,7 +3134,7 @@ impl PrivacyAmplificationAnalyzer {
         &mut self,
         sampling_probability: f64,
         round: usize,
-    ) -> Result<f64, OptimError> {
+    ) -> Result<f64> {
         if !self.config.enabled {
             return Ok(1.0);
         }
@@ -3265,12 +3247,7 @@ impl FederatedCompositionAnalyzer {
         }
     }
 
-    fn analyze_composition(
-        &self,
-        round: usize,
-        epsilon: f64,
-        delta: f64,
-    ) -> Result<f64, OptimError> {
+    fn analyze_composition(&self, round: usize, epsilon: f64, delta: f64) -> Result<f64> {
         match self.method {
             FederatedCompositionMethod::Basic => Ok(epsilon * round as f64),
             FederatedCompositionMethod::AdvancedComposition => {
@@ -3551,7 +3528,7 @@ pub struct PersonalizationEffectivenessMetrics {
 
 impl<T: Float + Default + Clone + Send + Sync> ByzantineRobustAggregator<T> {
     #[allow(dead_code)]
-    pub fn new() -> Result<Self, OptimError> {
+    pub fn new() -> Result<Self> {
         Ok(Self {
             config: ByzantineRobustConfig::default(),
             client_reputations: HashMap::new(),
@@ -3566,7 +3543,7 @@ impl<T: Float + Default + Clone + Send + Sync> ByzantineRobustAggregator<T> {
         &mut self,
         _client_updates: &HashMap<String, Array1<T>>,
         _round: usize,
-    ) -> Result<Vec<OutlierDetectionResult>, OptimError> {
+    ) -> Result<Vec<OutlierDetectionResult>> {
         Ok(Vec::new())
     }
 
@@ -3580,7 +3557,7 @@ impl<T: Float + Default + Clone + Send + Sync> ByzantineRobustAggregator<T> {
         &self,
         client_updates: &HashMap<String, Array1<T>>,
         _allocations: &HashMap<String, AdaptivePrivacyAllocation>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         if let Some(first_update) = client_updates.values().next() {
             let mut result = Array1::zeros(first_update.len());
             let count = T::from(client_updates.len()).unwrap();
@@ -3591,21 +3568,19 @@ impl<T: Float + Default + Clone + Send + Sync> ByzantineRobustAggregator<T> {
 
             Ok(result / count)
         } else {
-            Err(OptimError::InvalidConfig(
-                "No client updates".to_string(),
-            ))
+            Err(OptimError::InvalidConfig("No client updates".to_string()))
         }
     }
 
     #[allow(dead_code)]
-    pub fn compute_robustness_factor(&self) -> Result<f64, OptimError> {
+    pub fn compute_robustness_factor(&self) -> Result<f64> {
         Ok(0.9) // Placeholder
     }
 }
 
 impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
     #[allow(dead_code)]
-    pub fn new() -> Result<Self, OptimError> {
+    pub fn new() -> Result<Self> {
         Ok(Self {
             config: PersonalizationConfig::default(),
             client_models: HashMap::new(),
@@ -3628,7 +3603,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
     }
 
     #[allow(dead_code)]
-    pub fn compute_privacy_cost(&self) -> Result<f64, OptimError> {
+    pub fn compute_privacy_cost(&self) -> Result<f64> {
         Ok(0.1) // Placeholder
     }
 
@@ -3642,10 +3617,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
     }
 
     #[allow(dead_code)]
-    pub fn update_global_model(
-        &mut self,
-        aggregate: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    pub fn update_global_model(&mut self, aggregate: &Array1<T>) -> Result<Array1<T>> {
         self.global_model = Some(aggregate.clone());
         Ok(aggregate.clone())
     }
@@ -3671,7 +3643,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
     pub fn compute_effectiveness_metrics(
         &self,
         _personalized_models: &HashMap<String, PersonalizedModel<T>>,
-    ) -> Result<PersonalizationEffectivenessMetrics, OptimError> {
+    ) -> Result<PersonalizationEffectivenessMetrics> {
         Ok(PersonalizationEffectivenessMetrics {
             global_model_improvement: 0.1,
             personalized_model_improvement: 0.2,
@@ -3684,7 +3656,7 @@ impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
 
 impl<T: Float + std::fmt::Debug> AdaptiveBudgetManager<T> {
     #[allow(dead_code)]
-    pub fn new() -> Result<Self, OptimError> {
+    pub fn new() -> Result<Self> {
         Ok(Self {
             config: AdaptiveBudgetConfig::default(),
             client_budgets: HashMap::new(),
@@ -3707,7 +3679,7 @@ impl<T: Float + std::fmt::Debug> AdaptiveBudgetManager<T> {
 
 impl<T: Float + Default + Clone + Send + Sync> CommunicationOptimizer<T> {
     #[allow(dead_code)]
-    pub fn new() -> Result<Self, OptimError> {
+    pub fn new() -> Result<Self> {
         Ok(Self {
             config: CommunicationConfig::default(),
             compression_engine: CompressionEngine::new(),
@@ -3749,7 +3721,7 @@ impl<T: Float + Default + Clone + Send + Sync> CommunicationOptimizer<T> {
 
 impl<T: Float + Default + Clone + Send + Sync> ContinualLearningCoordinator<T> {
     #[allow(dead_code)]
-    pub fn new() -> Result<Self, OptimError> {
+    pub fn new() -> Result<Self> {
         Ok(Self {
             config: ContinualLearningConfig::default(),
             task_detector: TaskDetector::new(),
@@ -3772,7 +3744,7 @@ impl<T: Float + Default + Clone + Send + Sync> ContinualLearningCoordinator<T> {
     }
 
     #[allow(dead_code)]
-    pub fn compute_privacy_overhead(&self) -> Result<f64, OptimError> {
+    pub fn compute_privacy_overhead(&self) -> Result<f64> {
         Ok(0.05) // Placeholder
     }
 
@@ -3781,7 +3753,7 @@ impl<T: Float + Default + Clone + Send + Sync> ContinualLearningCoordinator<T> {
         &mut self,
         _updates: &HashMap<String, Array1<T>>,
         _round: usize,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         Ok(())
     }
 }
@@ -4091,7 +4063,7 @@ pub mod secure_aggregation_protocols {
 
     impl<T: Float + Default + Clone + Send + Sync> AdvancedSecureAggregator<T> {
         /// Create a new advanced secure aggregator
-        pub fn new(config: AdvancedSecureAggregationConfig) -> Result<Self, OptimError> {
+        pub fn new(config: AdvancedSecureAggregationConfig) -> Result<Self> {
             let key_manager = SecureKeyManager::new()?;
             let fault_detector = ByzantineFaultDetector::new();
 
@@ -4110,7 +4082,7 @@ pub mod secure_aggregation_protocols {
             &mut self,
             round_number: usize,
             participants: Vec<String>,
-        ) -> Result<AggregationSetup<T>, OptimError> {
+        ) -> Result<AggregationSetup<T>> {
             self.round_state = AggregationRoundState::new();
             self.round_state.round_number = round_number;
             self.round_state.participants = participants.clone();
@@ -4143,7 +4115,7 @@ pub mod secure_aggregation_protocols {
         pub fn process_client_share(
             &mut self,
             client_share: ClientShare<T>,
-        ) -> Result<ShareProcessingResult, OptimError> {
+        ) -> Result<ShareProcessingResult> {
             // Verify client authentication
             if self.config.require_authentication {
                 self.verify_client_authentication(&client_share)?;
@@ -4179,7 +4151,7 @@ pub mod secure_aggregation_protocols {
         }
 
         /// Aggregate received shares securely
-        pub fn aggregate_shares(&mut self) -> Result<Array1<T>, OptimError> {
+        pub fn aggregate_shares(&mut self) -> Result<Array1<T>> {
             let start_time = Instant::now();
 
             // Check if we have enough shares for reconstruction
@@ -4215,7 +4187,7 @@ pub mod secure_aggregation_protocols {
         fn setup_shamir_secret_sharing(
             &mut self,
             participants: &[String],
-        ) -> Result<AggregationSetup<T>, OptimError> {
+        ) -> Result<AggregationSetup<T>> {
             let n = participants.len();
             let t = self.config.reconstruction_threshold;
 
@@ -4248,12 +4220,12 @@ pub mod secure_aggregation_protocols {
         fn setup_verifiable_secret_sharing(
             &mut self,
             participants: &[String],
-        ) -> Result<AggregationSetup<T>, OptimError> {
+        ) -> Result<AggregationSetup<T>> {
             // Similar to Shamir but with additional verification
             self.setup_shamir_secret_sharing(participants)
         }
 
-        fn aggregate_shamir_shares(&self) -> Result<Array1<T>, OptimError> {
+        fn aggregate_shamir_shares(&self) -> Result<Array1<T>> {
             let shares: Vec<_> = self.round_state.received_shares.values().collect();
 
             if shares.is_empty() {
@@ -4298,15 +4270,12 @@ pub mod secure_aggregation_protocols {
             Ok(aggregated_gradient)
         }
 
-        fn aggregate_verifiable_shares(&self) -> Result<Array1<T>, OptimError> {
+        fn aggregate_verifiable_shares(&self) -> Result<Array1<T>> {
             // For now, use same as Shamir - in practice would include verification
             self.aggregate_shamir_shares()
         }
 
-        fn verify_client_authentication(
-            &self,
-            share: &ClientShare<T>,
-        ) -> Result<(), OptimError> {
+        fn verify_client_authentication(&self, share: &ClientShare<T>) -> Result<()> {
             if let Some(ref signature) = share.signature {
                 let public_key = self
                     .key_manager
@@ -4343,17 +4312,14 @@ pub mod secure_aggregation_protocols {
             hasher.finalize().to_vec()
         }
 
-        fn generate_verification_key(&self, client_id: &str) -> Result<Vec<u8>, OptimError> {
+        fn generate_verification_key(&self, client_id: &str) -> Result<Vec<u8>> {
             let mut hasher = Sha256::new();
             hasher.update(client_id.as_bytes());
             hasher.update(&self.key_manager.master_key);
             Ok(hasher.finalize().to_vec())
         }
 
-        fn update_aggregation_metrics(
-            &mut self,
-            aggregation_time_ms: f64,
-        ) -> Result<(), OptimError> {
+        fn update_aggregation_metrics(&mut self, aggregation_time_ms: f64) -> Result<()> {
             self.metrics.total_rounds += 1;
 
             // Update average aggregation time
@@ -4408,7 +4374,7 @@ pub mod secure_aggregation_protocols {
     }
 
     impl SecureKeyManager {
-        fn new() -> Result<Self, OptimError> {
+        fn new() -> Result<Self> {
             let mut master_key = [0u8; 32];
             rand::rng().fill(&mut master_key);
 
@@ -4419,7 +4385,7 @@ pub mod secure_aggregation_protocols {
             })
         }
 
-        fn rotate_keys(&mut self, round: usize) -> Result<(), OptimError> {
+        fn rotate_keys(&mut self, round: usize) -> Result<()> {
             self.key_rotation_counter = round;
             Ok(())
         }
@@ -4433,10 +4399,7 @@ pub mod secure_aggregation_protocols {
             }
         }
 
-        fn detect_byzantine_behavior(
-            &mut self,
-            share: &ClientShare<T>,
-        ) -> Result<bool, OptimError> {
+        fn detect_byzantine_behavior(&mut self, share: &ClientShare<T>) -> Result<bool> {
             let is_anomaly = self.anomaly_detector.detect_anomaly(&share.share_values)?;
 
             if is_anomaly {
@@ -4493,7 +4456,7 @@ pub mod secure_aggregation_protocols {
             }
         }
 
-        fn detect_anomaly(&self, _values: &Array1<T>) -> Result<bool, OptimError> {
+        fn detect_anomaly(&self, _values: &Array1<T>) -> Result<bool> {
             // Simplified anomaly detection - in practice would be more sophisticated
             Ok(false)
         }
@@ -4531,7 +4494,7 @@ impl<T: Float + Default + Clone + Send + Sync> StatisticalAnalyzer<T> {
         &mut self,
         client_updates: &HashMap<String, Array1<T>>,
         round: usize,
-    ) -> Result<Vec<OutlierDetectionResult>, OptimError> {
+    ) -> Result<Vec<OutlierDetectionResult>> {
         let mut results = Vec::new();
 
         if client_updates.len() < 3 {
@@ -4632,7 +4595,7 @@ impl<T: Float + Default + Clone + Send + Sync> RobustEstimators<T> {
         &mut self,
         client_updates: &HashMap<String, Array1<T>>,
         trim_ratio: f64,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         if client_updates.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No client updates provided".to_string(),
@@ -4680,7 +4643,7 @@ impl<T: Float + Default + Clone + Send + Sync> RobustEstimators<T> {
     pub fn coordinate_wise_median(
         &mut self,
         client_updates: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         if client_updates.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No client updates provided".to_string(),
@@ -4711,7 +4674,7 @@ impl<T: Float + Default + Clone + Send + Sync> RobustEstimators<T> {
         &mut self,
         client_updates: &HashMap<String, Array1<T>>,
         f: usize, // number of Byzantine clients to tolerate
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         if client_updates.len() <= 2 * f {
             return Err(OptimError::InvalidConfig(
                 "Insufficient non-Byzantine clients for Krum".to_string(),
@@ -4745,9 +4708,7 @@ impl<T: Float + Default + Clone + Send + Sync> RobustEstimators<T> {
             .iter()
             .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(client, _)| client)
-            .ok_or_else(|| {
-                OptimError::InvalidConfig("Failed to find best client".to_string())
-            })?;
+            .ok_or_else(|| OptimError::InvalidConfig("Failed to find best client".to_string()))?;
 
         Ok(client_updates[best_client].clone())
     }
@@ -4780,7 +4741,7 @@ impl UtilityEstimator {
         model_accuracy: f64,
         convergence_rate: f64,
         privacy_cost: f64,
-    ) -> Result<UtilityMeasurement, OptimError> {
+    ) -> Result<UtilityMeasurement> {
         let measurement = UtilityMeasurement {
             round,
             model_accuracy,
@@ -4849,7 +4810,7 @@ impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
         &mut self,
         gradients: &Array1<T>,
         round: usize,
-    ) -> Result<CompressionResult<T>, OptimError> {
+    ) -> Result<CompressionResult<T>> {
         let original_size = gradients.len() * std::mem::size_of::<T>();
         let start_time = std::time::Instant::now();
 
@@ -4955,7 +4916,7 @@ impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
         let keep_probability = 1.0 - sparsity_ratio;
 
         let sparse_gradients = gradients.mapv(|x| {
-            if rng.gen::<f64>() < keep_probability {
+            if rng.random::<f64>() < keep_probability {
                 x / T::from(keep_probability).unwrap() // Unbiased estimator
             } else {
                 T::zero()

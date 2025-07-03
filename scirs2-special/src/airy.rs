@@ -995,6 +995,168 @@ pub mod complex {
     }
 }
 
+/// Exponentially scaled Airy function Ai(x) * exp(2/3 * x^(3/2)) for x >= 0
+///
+/// For negative x, returns Ai(x)
+pub fn aie<F: Float + FromPrimitive + Debug>(x: F) -> F {
+    if x >= F::zero() {
+        let two_thirds = F::from_f64(2.0 / 3.0).unwrap();
+        let exp_factor = (two_thirds * x.powf(F::from_f64(1.5).unwrap())).exp();
+        ai(x) * exp_factor
+    } else {
+        ai(x)
+    }
+}
+
+/// Exponentially scaled Airy function Bi(x) * exp(-2/3 * |x|^(3/2)) for x >= 0
+///
+/// For negative x, returns Bi(x)
+pub fn bie<F: Float + FromPrimitive + Debug>(x: F) -> F {
+    if x >= F::zero() {
+        let two_thirds = F::from_f64(2.0 / 3.0).unwrap();
+        let exp_factor = (-two_thirds * x.powf(F::from_f64(1.5).unwrap())).exp();
+        bi(x) * exp_factor
+    } else {
+        bi(x)
+    }
+}
+
+/// Exponentially scaled Airy functions and their derivatives
+///
+/// Returns (Ai(x)*exp_factor, Ai'(x)*exp_factor, Bi(x)*exp_factor, Bi'(x)*exp_factor)
+/// where exp_factor = exp(2/3 * x^(3/2)) for x >= 0, and 1 for x < 0
+pub fn airye<F: Float + FromPrimitive + Debug>(x: F) -> (F, F, F, F) {
+    if x >= F::zero() {
+        let two_thirds = F::from_f64(2.0 / 3.0).unwrap();
+        let exp_factor = (two_thirds * x.powf(F::from_f64(1.5).unwrap())).exp();
+        (
+            ai(x) * exp_factor,
+            aip(x) * exp_factor,
+            bi(x) * (-two_thirds * x.powf(F::from_f64(1.5).unwrap())).exp(),
+            bip(x) * (-two_thirds * x.powf(F::from_f64(1.5).unwrap())).exp(),
+        )
+    } else {
+        (ai(x), aip(x), bi(x), bip(x))
+    }
+}
+
+/// Compute zeros of Airy function Ai(x)
+///
+/// Returns the k-th negative zero of Ai(x)
+pub fn ai_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialResult<F> {
+    use crate::error::SpecialError;
+
+    if k == 0 {
+        return Err(SpecialError::ValueError(
+            "ai_zeros: k must be >= 1".to_string(),
+        ));
+    }
+
+    // Asymptotic approximation for the k-th zero
+    let k_f = F::from_usize(k).unwrap();
+    let pi = F::from_f64(std::f64::consts::PI).unwrap();
+    let three_fourths = F::from_f64(0.75).unwrap();
+
+    // McMahon's asymptotic formula for Airy zeros
+    let s = (three_fourths * (k_f - F::from_f64(0.25).unwrap()) * pi)
+        .powf(F::from_f64(2.0 / 3.0).unwrap());
+    let initial_guess = -s;
+
+    // Refine with Newton's method
+    let mut zero = initial_guess;
+    for _ in 0..10 {
+        let f_val = ai(zero);
+        let fp_val = aip(zero);
+
+        if fp_val.abs() < F::epsilon() {
+            break;
+        }
+
+        let correction = f_val / fp_val;
+        zero = zero - correction;
+
+        if correction.abs() < F::epsilon() {
+            break;
+        }
+    }
+
+    Ok(zero)
+}
+
+/// Compute zeros of Airy function Bi(x)
+///
+/// Returns the k-th negative zero of Bi(x)
+pub fn bi_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialResult<F> {
+    use crate::error::SpecialError;
+
+    if k == 0 {
+        return Err(SpecialError::ValueError(
+            "bi_zeros: k must be >= 1".to_string(),
+        ));
+    }
+
+    // Asymptotic approximation for the k-th zero
+    let k_f = F::from_usize(k).unwrap();
+    let pi = F::from_f64(std::f64::consts::PI).unwrap();
+    let three_fourths = F::from_f64(0.75).unwrap();
+
+    // McMahon's asymptotic formula for Airy zeros (adjusted for Bi)
+    let s = (three_fourths * (k_f + F::from_f64(0.25).unwrap()) * pi)
+        .powf(F::from_f64(2.0 / 3.0).unwrap());
+    let initial_guess = -s;
+
+    // Refine with Newton's method
+    let mut zero = initial_guess;
+    for _ in 0..10 {
+        let f_val = bi(zero);
+        let fp_val = bip(zero);
+
+        if fp_val.abs() < F::epsilon() {
+            break;
+        }
+
+        let correction = f_val / fp_val;
+        zero = zero - correction;
+
+        if correction.abs() < F::epsilon() {
+            break;
+        }
+    }
+
+    Ok(zero)
+}
+
+/// Integral of Airy functions: ∫₀^x Ai(t) dt and ∫₀^x Bi(t) dt
+///
+/// Returns (∫₀^x Ai(t) dt, ∫₀^x Bi(t) dt)
+pub fn itairy<F: Float + FromPrimitive + Debug>(x: F) -> (F, F) {
+    // Use adaptive integration with Simpson's rule
+    let n_points = 100;
+    let h = x / F::from_usize(n_points).unwrap();
+
+    let mut integral_ai = F::zero();
+    let mut integral_bi = F::zero();
+
+    for i in 0..=n_points {
+        let t = F::from_usize(i).unwrap() * h;
+        let weight = if i == 0 || i == n_points {
+            F::one()
+        } else if i % 2 == 1 {
+            F::from_f64(4.0).unwrap()
+        } else {
+            F::from_f64(2.0).unwrap()
+        };
+
+        integral_ai = integral_ai + weight * ai(t);
+        integral_bi = integral_bi + weight * bi(t);
+    }
+
+    integral_ai = integral_ai * h / F::from_f64(3.0).unwrap();
+    integral_bi = integral_bi * h / F::from_f64(3.0).unwrap();
+
+    (integral_ai, integral_bi)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

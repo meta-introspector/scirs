@@ -8,6 +8,24 @@
 use crate::error::{SpecialError, SpecialResult};
 use ndarray::{Array, ArrayView1, Dimension};
 
+/// Safe slice casting replacement for bytemuck::cast_slice
+#[allow(dead_code)]
+fn cast_slice_to_bytes<T>(slice: &[T]) -> &[u8] {
+    unsafe { std::slice::from_raw_parts(slice.as_ptr() as *const u8, std::mem::size_of_val(slice)) }
+}
+
+/// Safe slice casting replacement for bytemuck::cast_slice (reverse)
+#[allow(dead_code)]
+fn cast_bytes_to_slice<T>(bytes: &[u8]) -> &[T] {
+    assert_eq!(bytes.len() % std::mem::size_of::<T>(), 0);
+    unsafe {
+        std::slice::from_raw_parts(
+            bytes.as_ptr() as *const T,
+            bytes.len() / std::mem::size_of::<T>(),
+        )
+    }
+}
+
 #[cfg(feature = "futures")]
 use futures::future::BoxFuture;
 
@@ -292,9 +310,9 @@ pub mod gpu {
         #[cfg(feature = "gpu")]
         pub fn new<T>(ctx: &scirs2_core::gpu::GpuContext, data: &[T]) -> SpecialResult<Self>
         where
-            T: bytemuck::Pod + 'static,
+            T: 'static,
         {
-            let byte_data = bytemuck::cast_slice(data);
+            let byte_data = cast_slice_to_bytes(data);
             let buffer = ctx.create_buffer_with_data(byte_data).map_err(|e| {
                 SpecialError::ComputationError(format!("GPU buffer creation failed: {}", e))
             })?;
@@ -389,7 +407,7 @@ pub mod gpu {
             output: &mut [T],
         ) -> SpecialResult<std::time::Duration>
         where
-            T: bytemuck::Pod + Clone,
+            T: Clone,
         {
             let start_time = std::time::Instant::now();
 
@@ -403,7 +421,7 @@ pub mod gpu {
 
             // Create GPU buffers
             let input_buffer = context
-                .create_buffer_with_data(bytemuck::cast_slice(input))
+                .create_buffer_with_data(cast_slice_to_bytes(input))
                 .map_err(|e| {
                     SpecialError::ComputationError(format!("Input buffer creation failed: {}", e))
                 })?;
@@ -432,7 +450,7 @@ pub mod gpu {
                 SpecialError::ComputationError(format!("Buffer read failed: {}", e))
             })?;
 
-            let typed_result = bytemuck::cast_slice::<u8, T>(&result_data);
+            let typed_result = cast_bytes_to_slice::<T>(&result_data);
             output.copy_from_slice(typed_result);
 
             let elapsed = start_time.elapsed();

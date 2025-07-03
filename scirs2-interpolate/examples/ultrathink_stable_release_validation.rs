@@ -4,8 +4,8 @@
 //! This module provides focused performance, stability, and compatibility validation
 //! specifically designed for the ultrathink mode preparation.
 
-use std::time::Instant;
 use std::collections::HashMap;
+use std::time::Instant;
 
 /// Stable Release Validation Results
 #[derive(Debug, Clone)]
@@ -40,30 +40,41 @@ pub struct UltrathinkMetrics {
 /// Simplified validation that works around compilation issues
 pub fn validate_stable_release_readiness() -> Result<StableReleaseValidation, String> {
     println!("🚀 Starting Ultrathink Stable Release Validation...");
-    println!("=" .repeat(60));
-    
+    println!("=".repeat(60));
+
     let start_time = Instant::now();
     let mut critical_issues = Vec::new();
     let mut recommendations = Vec::new();
-    
+
     // 1. Performance Validation
     println!("\n📈 Performance Validation:");
-    let performance_score = validate_performance_characteristics(&mut critical_issues, &mut recommendations)?;
+    let performance_score =
+        validate_performance_characteristics(&mut critical_issues, &mut recommendations)?;
     println!("   Performance Score: {:.1}%", performance_score * 100.0);
-    
-    // 2. Stability Validation  
+
+    // 2. Stability Validation
     println!("\n🛡️  Stability Validation:");
-    let stability_score = validate_stability_characteristics(&mut critical_issues, &mut recommendations)?;
+    let stability_score =
+        validate_stability_characteristics(&mut critical_issues, &mut recommendations)?;
     println!("   Stability Score: {:.1}%", stability_score * 100.0);
-    
+
     // 3. Compatibility Validation
     println!("\n🔄 Compatibility Validation:");
-    let compatibility_score = validate_compatibility_characteristics(&mut critical_issues, &mut recommendations)?;
-    println!("   Compatibility Score: {:.1}%", compatibility_score * 100.0);
-    
+    let compatibility_score =
+        validate_compatibility_characteristics(&mut critical_issues, &mut recommendations)?;
+    println!(
+        "   Compatibility Score: {:.1}%",
+        compatibility_score * 100.0
+    );
+
     // 4. Overall Assessment
-    let overall_readiness = assess_overall_readiness(performance_score, stability_score, compatibility_score, &critical_issues);
-    
+    let overall_readiness = assess_overall_readiness(
+        performance_score,
+        stability_score,
+        compatibility_score,
+        &critical_issues,
+    );
+
     let validation = StableReleaseValidation {
         performance_score,
         stability_score,
@@ -73,16 +84,19 @@ pub fn validate_stable_release_readiness() -> Result<StableReleaseValidation, St
         recommendations,
         validation_timestamp: start_time,
     };
-    
+
     print_validation_summary(&validation);
     Ok(validation)
 }
 
-fn validate_performance_characteristics(critical_issues: &mut Vec<String>, recommendations: &mut Vec<String>) -> Result<f64, String> {
+fn validate_performance_characteristics(
+    critical_issues: &mut Vec<String>,
+    recommendations: &mut Vec<String>,
+) -> Result<f64, String> {
     let mut score = 0.0;
     let mut tests_passed = 0;
     let total_tests = 5;
-    
+
     // Test 1: Basic interpolation throughput simulation
     println!("   Testing basic interpolation throughput...");
     if simulate_throughput_test() {
@@ -93,7 +107,7 @@ fn validate_performance_characteristics(critical_issues: &mut Vec<String>, recom
         critical_issues.push("Throughput below 1M ops/sec".to_string());
         println!("   ❌ Throughput: Below threshold");
     }
-    
+
     // Test 2: Memory efficiency simulation
     println!("   Testing memory efficiency...");
     if simulate_memory_efficiency() {
@@ -104,7 +118,7 @@ fn validate_performance_characteristics(critical_issues: &mut Vec<String>, recom
         critical_issues.push("High memory usage detected".to_string());
         println!("   ❌ Memory efficiency: Needs improvement");
     }
-    
+
     // Test 3: SIMD acceleration check
     println!("   Testing SIMD capabilities...");
     if simulate_simd_validation() {
@@ -115,7 +129,7 @@ fn validate_performance_characteristics(critical_issues: &mut Vec<String>, recom
         recommendations.push("Enable SIMD features for better performance".to_string());
         println!("   ⚠️  SIMD acceleration: Limited or disabled");
     }
-    
+
     // Test 4: Parallel scaling
     println!("   Testing parallel scaling...");
     if simulate_parallel_scaling() {
@@ -126,7 +140,7 @@ fn validate_performance_characteristics(critical_issues: &mut Vec<String>, recom
         recommendations.push("Review parallel algorithms for better scaling".to_string());
         println!("   ⚠️  Parallel scaling: Below expectations");
     }
-    
+
     // Test 5: Numerical accuracy
     println!("   Testing numerical accuracy...");
     if simulate_numerical_accuracy() {
@@ -137,16 +151,22 @@ fn validate_performance_characteristics(critical_issues: &mut Vec<String>, recom
         critical_issues.push("Numerical accuracy issues detected".to_string());
         println!("   ❌ Numerical accuracy: Precision loss detected");
     }
-    
-    println!("   Performance tests: {}/{} passed", tests_passed, total_tests);
+
+    println!(
+        "   Performance tests: {}/{} passed",
+        tests_passed, total_tests
+    );
     Ok(score)
 }
 
-fn validate_stability_characteristics(critical_issues: &mut Vec<String>, recommendations: &mut Vec<String>) -> Result<f64, String> {
+fn validate_stability_characteristics(
+    critical_issues: &mut Vec<String>,
+    recommendations: &mut Vec<String>,
+) -> Result<f64, String> {
     let mut score = 0.0;
     let mut tests_passed = 0;
     let total_tests = 4;
-    
+
     // Test 1: Error handling robustness
     println!("   Testing error handling...");
     if simulate_error_handling() {
@@ -157,7 +177,7 @@ fn validate_stability_characteristics(critical_issues: &mut Vec<String>, recomme
         critical_issues.push("Poor error handling detected".to_string());
         println!("   ❌ Error handling: Needs improvement");
     }
-    
+
     // Test 2: Edge case handling
     println!("   Testing edge case stability...");
     if simulate_edge_cases() {
@@ -168,7 +188,7 @@ fn validate_stability_characteristics(critical_issues: &mut Vec<String>, recomme
         critical_issues.push("Edge case failures detected".to_string());
         println!("   ❌ Edge cases: Some failures detected");
     }
-    
+
     // Test 3: Memory safety
     println!("   Testing memory safety...");
     if simulate_memory_safety() {
@@ -179,7 +199,7 @@ fn validate_stability_characteristics(critical_issues: &mut Vec<String>, recomme
         critical_issues.push("Memory safety issues detected".to_string());
         println!("   ❌ Memory safety: Issues detected");
     }
-    
+
     // Test 4: Thread safety
     println!("   Testing thread safety...");
     if simulate_thread_safety() {
@@ -190,16 +210,22 @@ fn validate_stability_characteristics(critical_issues: &mut Vec<String>, recomme
         critical_issues.push("Thread safety issues detected".to_string());
         println!("   ❌ Thread safety: Issues detected");
     }
-    
-    println!("   Stability tests: {}/{} passed", tests_passed, total_tests);
+
+    println!(
+        "   Stability tests: {}/{} passed",
+        tests_passed, total_tests
+    );
     Ok(score)
 }
 
-fn validate_compatibility_characteristics(critical_issues: &mut Vec<String>, recommendations: &mut Vec<String>) -> Result<f64, String> {
+fn validate_compatibility_characteristics(
+    critical_issues: &mut Vec<String>,
+    recommendations: &mut Vec<String>,
+) -> Result<f64, String> {
     let mut score = 0.0;
     let mut tests_passed = 0;
     let total_tests = 3;
-    
+
     // Test 1: SciPy API compatibility
     println!("   Testing SciPy API compatibility...");
     if simulate_scipy_compatibility() {
@@ -210,7 +236,7 @@ fn validate_compatibility_characteristics(critical_issues: &mut Vec<String>, rec
         recommendations.push("Improve SciPy API coverage for easier migration".to_string());
         println!("   ⚠️  SciPy compatibility: < 90% coverage");
     }
-    
+
     // Test 2: Cross-platform compatibility
     println!("   Testing cross-platform compatibility...");
     if simulate_cross_platform() {
@@ -221,7 +247,7 @@ fn validate_compatibility_characteristics(critical_issues: &mut Vec<String>, rec
         critical_issues.push("Cross-platform compatibility issues".to_string());
         println!("   ❌ Cross-platform: Issues detected");
     }
-    
+
     // Test 3: Version compatibility
     println!("   Testing version compatibility...");
     if simulate_version_compatibility() {
@@ -232,14 +258,22 @@ fn validate_compatibility_characteristics(critical_issues: &mut Vec<String>, rec
         critical_issues.push("API stability concerns".to_string());
         println!("   ❌ Version compatibility: API stability issues");
     }
-    
-    println!("   Compatibility tests: {}/{} passed", tests_passed, total_tests);
+
+    println!(
+        "   Compatibility tests: {}/{} passed",
+        tests_passed, total_tests
+    );
     Ok(score)
 }
 
-fn assess_overall_readiness(performance: f64, stability: f64, compatibility: f64, critical_issues: &[String]) -> ReadinessLevel {
+fn assess_overall_readiness(
+    performance: f64,
+    stability: f64,
+    compatibility: f64,
+    critical_issues: &[String],
+) -> ReadinessLevel {
     let overall_score = (performance + stability + compatibility) / 3.0;
-    
+
     if critical_issues.is_empty() && overall_score >= 0.95 {
         ReadinessLevel::ProductionReady
     } else if critical_issues.len() <= 2 && overall_score >= 0.85 {
@@ -255,14 +289,29 @@ fn print_validation_summary(validation: &StableReleaseValidation) {
     println!("\n" + "=".repeat(60));
     println!("🎯 STABLE RELEASE VALIDATION SUMMARY");
     println!("=".repeat(60));
-    
+
     println!("\n📊 Scores:");
-    println!("   Performance:    {:.1}%", validation.performance_score * 100.0);
-    println!("   Stability:      {:.1}%", validation.stability_score * 100.0);
-    println!("   Compatibility:  {:.1}%", validation.compatibility_score * 100.0);
-    println!("   Overall:        {:.1}%", 
-             (validation.performance_score + validation.stability_score + validation.compatibility_score) / 3.0 * 100.0);
-    
+    println!(
+        "   Performance:    {:.1}%",
+        validation.performance_score * 100.0
+    );
+    println!(
+        "   Stability:      {:.1}%",
+        validation.stability_score * 100.0
+    );
+    println!(
+        "   Compatibility:  {:.1}%",
+        validation.compatibility_score * 100.0
+    );
+    println!(
+        "   Overall:        {:.1}%",
+        (validation.performance_score
+            + validation.stability_score
+            + validation.compatibility_score)
+            / 3.0
+            * 100.0
+    );
+
     println!("\n🎖️  Readiness Assessment:");
     match &validation.overall_readiness {
         ReadinessLevel::ProductionReady => {
@@ -287,37 +336,64 @@ fn print_validation_summary(validation: &StableReleaseValidation) {
             }
         }
     }
-    
+
     if !validation.critical_issues.is_empty() {
         println!("\n🚨 Critical Issues:");
         for issue in &validation.critical_issues {
             println!("   • {}", issue);
         }
     }
-    
+
     if !validation.recommendations.is_empty() {
         println!("\n💡 Recommendations:");
         for rec in &validation.recommendations {
             println!("   • {}", rec);
         }
     }
-    
-    println!("\n⏱️  Validation completed in {:.2}s", validation.validation_timestamp.elapsed().as_secs_f64());
+
+    println!(
+        "\n⏱️  Validation completed in {:.2}s",
+        validation.validation_timestamp.elapsed().as_secs_f64()
+    );
 }
 
 // Simulation functions (replace with actual tests when compilation issues are resolved)
-fn simulate_throughput_test() -> bool { true } // Simulated: > 1M ops/sec
-fn simulate_memory_efficiency() -> bool { true } // Simulated: < 10MB for 1M points
-fn simulate_simd_validation() -> bool { true } // Simulated: 2-4x speedup detected
-fn simulate_parallel_scaling() -> bool { true } // Simulated: 7.2x speedup on 8 cores
-fn simulate_numerical_accuracy() -> bool { true } // Simulated: < 1e-14 relative error
-fn simulate_error_handling() -> bool { true } // Simulated: All errors handled gracefully
-fn simulate_edge_cases() -> bool { true } // Simulated: Edge cases handled
-fn simulate_memory_safety() -> bool { true } // Simulated: No memory issues
-fn simulate_thread_safety() -> bool { true } // Simulated: Thread-safe
-fn simulate_scipy_compatibility() -> bool { true } // Simulated: 92% compatibility
-fn simulate_cross_platform() -> bool { true } // Simulated: All platforms work
-fn simulate_version_compatibility() -> bool { true } // Simulated: API stable
+fn simulate_throughput_test() -> bool {
+    true
+} // Simulated: > 1M ops/sec
+fn simulate_memory_efficiency() -> bool {
+    true
+} // Simulated: < 10MB for 1M points
+fn simulate_simd_validation() -> bool {
+    true
+} // Simulated: 2-4x speedup detected
+fn simulate_parallel_scaling() -> bool {
+    true
+} // Simulated: 7.2x speedup on 8 cores
+fn simulate_numerical_accuracy() -> bool {
+    true
+} // Simulated: < 1e-14 relative error
+fn simulate_error_handling() -> bool {
+    true
+} // Simulated: All errors handled gracefully
+fn simulate_edge_cases() -> bool {
+    true
+} // Simulated: Edge cases handled
+fn simulate_memory_safety() -> bool {
+    true
+} // Simulated: No memory issues
+fn simulate_thread_safety() -> bool {
+    true
+} // Simulated: Thread-safe
+fn simulate_scipy_compatibility() -> bool {
+    true
+} // Simulated: 92% compatibility
+fn simulate_cross_platform() -> bool {
+    true
+} // Simulated: All platforms work
+fn simulate_version_compatibility() -> bool {
+    true
+} // Simulated: API stable
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     match validate_stable_release_readiness() {
@@ -348,7 +424,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("   4. 📅 Reassess timeline after fixes");
                 }
             }
-            
+
             println!("\n🏁 Ultrathink validation completed successfully!");
             Ok(())
         }
@@ -362,23 +438,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_validation_framework() {
         let result = validate_stable_release_readiness();
         assert!(result.is_ok());
-        
+
         let validation = result.unwrap();
         assert!(validation.performance_score >= 0.0);
         assert!(validation.stability_score >= 0.0);
         assert!(validation.compatibility_score >= 0.0);
     }
-    
+
     #[test]
     fn test_readiness_assessment() {
         let readiness = assess_overall_readiness(0.98, 0.96, 0.94, &[]);
         assert_eq!(readiness, ReadinessLevel::ProductionReady);
-        
+
         let readiness = assess_overall_readiness(0.85, 0.80, 0.90, &["Minor issue".to_string()]);
         assert!(matches!(readiness, ReadinessLevel::NearReady(_)));
     }

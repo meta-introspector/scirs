@@ -16,8 +16,8 @@
 //! - **Color Constancy**: Advanced color perception under varying illumination
 //! - **Motion Prediction**: Biological motion prediction and tracking
 
-use ndarray::{s, Array, Array1, Array2, Array3, Array4, ArrayView2, ArrayViewMut2, Axis, Zip};
-use num_traits::{Float, FromPrimitive, One, Zero};
+use ndarray::{s, Array1, Array2, Array3, Array4, ArrayView2, ArrayViewMut2, Axis};
+use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 

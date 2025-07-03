@@ -792,7 +792,7 @@ impl EnhancedMemoryMonitor {
             .map_err(|_| OptimError::LockError("Failed to acquire detector lock".to_string()))?;
 
         // Take memory snapshot
-        let snapshot = detector.take_snapshot()?;
+        let _snapshot = detector.take_snapshot()?;
 
         // Detect leaks
         let leak_results = detector.detect_leaks()?;
@@ -1280,7 +1280,7 @@ impl MachineLearningDetector {
 impl AdvancedAlertSystem {
     fn new(_config: AlertConfig) -> Result<Self> {
         Ok(Self {
-            config: _config,
+            config: _config.clone(),
             alert_history: VecDeque::new(),
             rate_limiter: RateLimiter::new(_config),
             templates: HashMap::new(),

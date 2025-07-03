@@ -601,7 +601,7 @@ impl DistributedPCA {
     }
 
     /// Fit PCA using distributed computation
-    pub async fn fit(&mut self, x: &ArrayView2<f64>) -> Result<()> {
+    pub async fn fit(&mut self, x: &ArrayView2<'_, f64>) -> Result<()> {
         let (n_samples, n_features) = x.dim();
 
         // Partition data across nodes
@@ -658,7 +658,7 @@ impl DistributedPCA {
     }
 
     /// Transform data using distributed computation
-    pub async fn transform(&self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
+    pub async fn transform(&self, x: &ArrayView2<'_, f64>) -> Result<Array2<f64>> {
         if self.components.is_none() {
             return Err(TransformError::NotFitted(
                 "PCA model not fitted".to_string(),
@@ -699,7 +699,7 @@ impl DistributedPCA {
     }
 
     /// Partition data for distributed processing using intelligent strategies
-    async fn partition_data(&self, x: &ArrayView2<f64>) -> Result<Vec<Vec<Vec<f64>>>> {
+    async fn partition_data(&self, x: &ArrayView2<'_, f64>) -> Result<Vec<Vec<Vec<f64>>>> {
         let (n_samples, n_features) = x.dim();
         let nodes = self.coordinator.nodes.read().await;
 
@@ -716,7 +716,7 @@ impl DistributedPCA {
     /// Row-wise partitioning with load balancing
     async fn partition_rowwise(
         &self,
-        x: &ArrayView2<f64>,
+        x: &ArrayView2<'_, f64>,
         nodes: &HashMap<NodeId, NodeInfo>,
     ) -> Result<Vec<Vec<Vec<f64>>>> {
         let (n_samples, _) = x.dim();
@@ -765,7 +765,7 @@ impl DistributedPCA {
     /// Column-wise partitioning for feature-parallel processing
     async fn partition_columnwise(
         &self,
-        x: &ArrayView2<f64>,
+        x: &ArrayView2<'_, f64>,
         nodes: &HashMap<NodeId, NodeInfo>,
     ) -> Result<Vec<Vec<Vec<f64>>>> {
         let (n_samples, n_features) = x.dim();
@@ -801,7 +801,7 @@ impl DistributedPCA {
     /// Block-wise partitioning for 2D parallelism
     async fn partition_blockwise(
         &self,
-        x: &ArrayView2<f64>,
+        x: &ArrayView2<'_, f64>,
         nodes: &HashMap<NodeId, NodeInfo>,
         block_size: (usize, usize),
     ) -> Result<Vec<Vec<Vec<f64>>>> {
@@ -861,7 +861,7 @@ impl DistributedPCA {
     /// Adaptive partitioning based on data characteristics and node capabilities
     async fn partition_adaptive(
         &self,
-        x: &ArrayView2<f64>,
+        x: &ArrayView2<'_, f64>,
         nodes: &HashMap<NodeId, NodeInfo>,
     ) -> Result<Vec<Vec<Vec<f64>>>> {
         let (n_samples, n_features) = x.dim();

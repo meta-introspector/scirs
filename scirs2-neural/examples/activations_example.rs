@@ -133,6 +133,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 x_values[idx],
                 convert_to_vec(&relu_output)[idx]
             );
+        }
+    }
     Ok(())
 }
 fn convert_to_vec<F: Clone>(array: &Array<F, ndarray::IxDyn>) -> Vec<F> {

@@ -819,13 +819,13 @@ pub enum SequenceEncodingMethod {
 /// Sequence encoder network trait
 pub trait SequenceEncoderNetwork<T: Float>: Send + Sync {
     /// Encode sequence
-    fn encode(&self, sequence: &Array2<T>) -> Result<Array1<T>, OptimError>;
+    fn encode(&self, sequence: &Array2<T>) -> Result<Array1<T>>;
     
     /// Get output dimension
     fn output_dim(&self) -> usize;
     
     /// Update parameters
-    fn update(&mut self, gradients: &HashMap<String, Array1<T>>) -> Result<(), OptimError>;
+    fn update(&mut self, gradients: &HashMap<String, Array1<T>>) -> Result<()>;
 }
 
 /// Sequence preprocessing
@@ -1656,7 +1656,7 @@ pub struct TrajectoryAnalyzer<T: Float> {
 /// Trajectory analysis method trait
 pub trait TrajectoryAnalysisMethod<T: Float>: Send + Sync {
     /// Analyze trajectory
-    fn analyze(&self, trajectory: &[Array1<T>]) -> Result<AnalysisResult<T>, OptimError>;
+    fn analyze(&self, trajectory: &[Array1<T>]) -> Result<AnalysisResult<T>>;
     
     /// Get method name
     fn name(&self) -> &str;
@@ -2040,13 +2040,13 @@ pub enum PredictionModelType {
 /// Prediction architecture trait
 pub trait PredictionArchitecture<T: Float>: Send + Sync {
     /// Make prediction
-    fn predict(&self, sequence: &Array2<T>) -> Result<Array2<T>, OptimError>;
+    fn predict(&self, sequence: &Array2<T>) -> Result<Array2<T>>;
     
     /// Get prediction uncertainty
-    fn uncertainty(&self, sequence: &Array2<T>) -> Result<Array1<T>, OptimError>;
+    fn uncertainty(&self, sequence: &Array2<T>) -> Result<Array1<T>>;
     
     /// Update model
-    fn update(&mut self, data: &[(Array2<T>, Array2<T>)]) -> Result<(), OptimError>;
+    fn update(&mut self, data: &[(Array2<T>, Array2<T>)]) -> Result<()>;
 }
 
 /// Prediction training state
@@ -2708,7 +2708,7 @@ pub struct TransformerOptimizerState<T: Float> {
 
 impl<T: Float> TransformerOptimizer<T> {
     /// Create new transformer optimizer
-    pub fn new(config: TransformerBasedOptimizerConfig<T>) -> Result<Self, OptimError> {
+    pub fn new(config: TransformerBasedOptimizerConfig<T>) -> Result<Self> {
         let transformer = TransformerArchitecture::new(&config)?;
         let positional_encoding = PositionalEncoding::new(
             PositionalEncodingType::Sinusoidal,
@@ -2736,7 +2736,7 @@ impl<T: Float> TransformerOptimizer<T> {
         params: &ArrayBase<S, D>,
         gradients: &ArrayBase<S, D>,
         context: &TaskContext<T>,
-    ) -> Result<Array<T, D>, OptimError>
+    ) -> Result<Array<T, D>>
     where
         S: Data<Elem = T>,
         D: Dimension + Clone,
@@ -2763,7 +2763,7 @@ impl<T: Float> TransformerOptimizer<T> {
         Ok(updates)
     }
     
-    fn prepare_parameter_sequence<S, D>(&self, params: &ArrayBase<S, D>) -> Result<Array2<T>, OptimError>
+    fn prepare_parameter_sequence<S, D>(&self, params: &ArrayBase<S, D>) -> Result<Array2<T>>
     where
         S: Data<Elem = T>,
         D: Dimension,
@@ -2781,7 +2781,7 @@ impl<T: Float> TransformerOptimizer<T> {
         Ok(sequence)
     }
     
-    fn prepare_gradient_sequence<S, D>(&self, gradients: &ArrayBase<S, D>) -> Result<Array2<T>, OptimError>
+    fn prepare_gradient_sequence<S, D>(&self, gradients: &ArrayBase<S, D>) -> Result<Array2<T>>
     where
         S: Data<Elem = T>,
         D: Dimension,
@@ -2804,7 +2804,7 @@ impl<T: Float> TransformerOptimizer<T> {
         _update_rule: &UpdateRule<T>,
         params: &ArrayBase<S, D>,
         gradients: &ArrayBase<S, D>,
-    ) -> Result<Array<T, D>, OptimError>
+    ) -> Result<Array<T, D>>
     where
         S: Data<Elem = T>,
         D: Dimension + Clone,
@@ -2827,7 +2827,7 @@ impl<T: Float> TransformerOptimizer<T> {
         &mut self,
         _processed_sequence: &Array2<T>,
         _updates: &Array<T, impl Dimension>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         self.state.step += 1;
         Ok(())
     }
@@ -2861,7 +2861,7 @@ pub struct RuleCondition<T: Float> {
 
 // Implementation of supporting components
 impl<T: Float> TransformerLayer<T> {
-    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>> {
         // Pre-norm architecture
         let normalized_input = self.pre_norm1.forward(input)?;
         
@@ -2888,7 +2888,7 @@ impl<T: Float> TransformerLayer<T> {
 }
 
 impl<T: Float> FeedForwardNetwork<T> {
-    fn new(input_dim: usize, hidden_dim: usize, dropout_rate: f64) -> Result<Self, OptimError> {
+    fn new(input_dim: usize, hidden_dim: usize, dropout_rate: f64) -> Result<Self> {
         Ok(Self {
             linear1: LinearLayer::new(input_dim, hidden_dim)?,
             linear2: LinearLayer::new(hidden_dim, input_dim)?,
@@ -2904,7 +2904,7 @@ impl<T: Float> FeedForwardNetwork<T> {
         })
     }
     
-    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>> {
         // First linear transformation
         let hidden = self.linear1.forward(input)?;
         
@@ -2920,7 +2920,7 @@ impl<T: Float> FeedForwardNetwork<T> {
         Ok(output)
     }
     
-    fn apply_activation(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn apply_activation(&self, input: &Array2<T>) -> Result<Array2<T>> {
         let mut output = input.clone();
         
         match self.activation {
@@ -2948,7 +2948,7 @@ impl<T: Float> FeedForwardNetwork<T> {
 }
 
 impl<T: Float> LinearLayer<T> {
-    fn new(input_dim: usize, output_dim: usize) -> Result<Self, OptimError> {
+    fn new(input_dim: usize, output_dim: usize) -> Result<Self> {
         // Xavier initialization
         let init_scale = T::from((2.0 / (input_dim + output_dim) as f64).sqrt()).unwrap();
         
@@ -2966,7 +2966,7 @@ impl<T: Float> LinearLayer<T> {
         })
     }
     
-    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>> {
         let batch_size = input.shape()[0];
         let mut output = Array2::zeros((batch_size, self.output_dim));
         
@@ -2986,7 +2986,7 @@ impl<T: Float> LinearLayer<T> {
 }
 
 impl<T: Float> LayerNormalization<T> {
-    fn new(dim: usize) -> Result<Self, OptimError> {
+    fn new(dim: usize) -> Result<Self> {
         Ok(Self {
             weight: Array1::ones(dim),
             bias: Array1::zeros(dim),
@@ -2995,7 +2995,7 @@ impl<T: Float> LayerNormalization<T> {
         })
     }
     
-    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>> {
         let mut output = input.clone();
         let batch_size = input.shape()[0];
         
@@ -3027,7 +3027,7 @@ impl<T: Float> LayerNormalization<T> {
 }
 
 impl<T: Float> EmbeddingLayer<T> {
-    fn new(embedding_dim: usize, max_seq_length: usize) -> Result<Self, OptimError> {
+    fn new(embedding_dim: usize, max_seq_length: usize) -> Result<Self> {
         let init_scale = T::from(0.02).unwrap();
         let embedding_weights = Array2::from_shape_fn((max_seq_length, embedding_dim), |(i, j)| {
             T::from((i as f64 * 0.01 + j as f64 * 0.02 - 0.5)).unwrap() * init_scale
@@ -3040,7 +3040,7 @@ impl<T: Float> EmbeddingLayer<T> {
         })
     }
     
-    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>> {
         // Simple pass-through with dimension adjustment if needed
         let seq_len = input.shape()[0].min(self.max_seq_length);
         let input_dim = input.shape()[1];
@@ -3067,7 +3067,7 @@ impl<T: Float> EmbeddingLayer<T> {
 }
 
 impl<T: Float> OutputProjection<T> {
-    fn new(input_dim: usize, output_dim: usize) -> Result<Self, OptimError> {
+    fn new(input_dim: usize, output_dim: usize) -> Result<Self> {
         Ok(Self {
             projection_layer: LinearLayer::new(input_dim, output_dim)?,
             output_activation: OutputActivation::Linear,
@@ -3080,7 +3080,7 @@ impl<T: Float> OutputProjection<T> {
         })
     }
     
-    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>> {
         self.projection_layer.forward(input)
     }
 }
@@ -3093,7 +3093,7 @@ impl DropoutLayer {
         }
     }
     
-    fn forward<T: Float>(&self, input: Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward<T: Float>(&self, input: Array2<T>) -> Result<Array2<T>> {
         if !self.training || self.dropout_rate <= 0.0 {
             return Ok(input);
         }
@@ -3116,14 +3116,14 @@ impl DropoutLayer {
 }
 
 impl<T: Float> ResidualConnections<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             connection_type: ResidualType::Add,
             scaling_factor: T::one(),
         })
     }
     
-    fn apply(&self, input: &Array2<T>, transformed: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn apply(&self, input: &Array2<T>, transformed: &Array2<T>) -> Result<Array2<T>> {
         match self.connection_type {
             ResidualType::Add => {
                 if input.shape() != transformed.shape() {
@@ -3167,7 +3167,7 @@ impl<T: Float> ResidualConnections<T> {
 
 // Implementation stubs for major components
 impl<T: Float> TransformerArchitecture<T> {
-    fn new(config: &TransformerBasedOptimizerConfig<T>) -> Result<Self, OptimError> {
+    fn new(config: &TransformerBasedOptimizerConfig<T>) -> Result<Self> {
         let mut layers = Vec::new();
         
         // Create transformer layers
@@ -3208,7 +3208,7 @@ impl<T: Float> TransformerArchitecture<T> {
         })
     }
     
-    fn forward(&self, grad_sequence: &Array2<T>, param_sequence: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&self, grad_sequence: &Array2<T>, param_sequence: &Array2<T>) -> Result<Array2<T>> {
         // Combine input sequences
         let seq_len = grad_sequence.shape()[0].min(param_sequence.shape()[0]);
         let mut combined_input = Array2::zeros((seq_len, self.config.model_dim));
@@ -3247,7 +3247,7 @@ impl<T: Float> TransformerArchitecture<T> {
 }
 
 impl<T: Float> PositionalEncoding<T> {
-    fn new(encoding_type: PositionalEncodingType, max_length: usize, encoding_dim: usize) -> Result<Self, OptimError> {
+    fn new(encoding_type: PositionalEncodingType, max_length: usize, encoding_dim: usize) -> Result<Self> {
         let mut encoding_matrix = Array2::zeros((max_length, encoding_dim));
         
         match encoding_type {
@@ -3288,7 +3288,7 @@ impl<T: Float> PositionalEncoding<T> {
         })
     }
     
-    fn encode(&self, sequence: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn encode(&self, sequence: &Array2<T>) -> Result<Array2<T>> {
         let seq_len = sequence.shape()[0].min(self.max_length);
         let dim = sequence.shape()[1].min(self.encoding_dim);
         
@@ -3305,11 +3305,11 @@ impl<T: Float> PositionalEncoding<T> {
 }
 
 impl<T: Float> MultiHeadAttention<T> {
-    fn new(config: &TransformerBasedOptimizerConfig<T>) -> Result<Self, OptimError> {
+    fn new(config: &TransformerBasedOptimizerConfig<T>) -> Result<Self> {
         Self::new_with_config(config.model_dim, config.num_heads, config.dropout_rate)
     }
     
-    fn new_with_config(model_dim: usize, num_heads: usize, dropout_rate: f64) -> Result<Self, OptimError> {
+    fn new_with_config(model_dim: usize, num_heads: usize, dropout_rate: f64) -> Result<Self> {
         if model_dim % num_heads != 0 {
             return Err(OptimError::InvalidConfig(
                 format!("Model dimension {} must be divisible by number of heads {}", model_dim, num_heads)
@@ -3356,7 +3356,7 @@ impl<T: Float> MultiHeadAttention<T> {
         })
     }
     
-    fn forward(&mut self, query: &Array2<T>, key: &Array2<T>, value: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&mut self, query: &Array2<T>, key: &Array2<T>, value: &Array2<T>) -> Result<Array2<T>> {
         let seq_len = query.shape()[0];
         let model_dim = query.shape()[1];
         
@@ -3380,7 +3380,7 @@ impl<T: Float> MultiHeadAttention<T> {
         Ok(output)
     }
     
-    fn project_matrix(&self, input: &Array2<T>, weights: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn project_matrix(&self, input: &Array2<T>, weights: &Array2<T>) -> Result<Array2<T>> {
         let seq_len = input.shape()[0];
         let output_dim = weights.shape()[1];
         let mut output = Array2::zeros((seq_len, output_dim));
@@ -3398,12 +3398,12 @@ impl<T: Float> MultiHeadAttention<T> {
         Ok(output)
     }
     
-    fn reshape_for_heads(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn reshape_for_heads(&self, input: &Array2<T>) -> Result<Array2<T>> {
         // Simplified reshaping for multi-head attention
         Ok(input.clone())
     }
     
-    fn compute_attention(&mut self, q: &Array2<T>, k: &Array2<T>, v: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn compute_attention(&mut self, q: &Array2<T>, k: &Array2<T>, v: &Array2<T>) -> Result<Array2<T>> {
         let seq_len = q.shape()[0];
         
         // Compute attention weights
@@ -3457,14 +3457,14 @@ impl<T: Float> MultiHeadAttention<T> {
         Ok(output)
     }
     
-    fn concatenate_heads(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn concatenate_heads(&self, input: &Array2<T>) -> Result<Array2<T>> {
         // Simplified concatenation - in practice this would reshape multi-head outputs
         Ok(input.clone())
     }
 }
 
 impl<T: Float> TransformerMetaLearning<T> {
-    fn new(config: &TransformerMetaConfig<T>) -> Result<Self, OptimError> {
+    fn new(config: &TransformerMetaConfig<T>) -> Result<Self> {
         Ok(Self {
             meta_strategy: config.strategy,
             gradient_processor: GradientProcessor::new()?,
@@ -3494,7 +3494,7 @@ impl<T: Float> TransformerMetaLearning<T> {
         })
     }
     
-    fn generate_update_rule(&self, sequence: &Array2<T>, context: &TaskContext<T>) -> Result<UpdateRule<T>, OptimError> {
+    fn generate_update_rule(&self, sequence: &Array2<T>, context: &TaskContext<T>) -> Result<UpdateRule<T>> {
         // Process the transformer sequence to extract optimization patterns
         let processed_gradients = self.gradient_processor.process(sequence)?;
         
@@ -3525,7 +3525,7 @@ impl<T: Float> TransformerMetaLearning<T> {
         })
     }
     
-    fn compute_adaptive_learning_rate(&self, context: &Array1<T>) -> Result<T, OptimError> {
+    fn compute_adaptive_learning_rate(&self, context: &Array1<T>) -> Result<T> {
         // Simple adaptive learning rate computation
         let context_norm = self.compute_norm(context)?;
         let base_lr = T::from(0.001).unwrap();
@@ -3533,19 +3533,19 @@ impl<T: Float> TransformerMetaLearning<T> {
         Ok(base_lr * adaptive_factor)
     }
     
-    fn compute_adaptive_momentum(&self, context: &Array1<T>) -> Result<T, OptimError> {
+    fn compute_adaptive_momentum(&self, context: &Array1<T>) -> Result<T> {
         // Adaptive momentum based on gradient stability
         let stability_measure = self.compute_stability(context)?;
         let base_momentum = T::from(0.9).unwrap();
         Ok(base_momentum * stability_measure)
     }
     
-    fn determine_update_operations(&self, _context: &Array1<T>) -> Result<Vec<UpdateOperation>, OptimError> {
+    fn determine_update_operations(&self, _context: &Array1<T>) -> Result<Vec<UpdateOperation>> {
         // For now, use standard gradient descent operations
         Ok(vec![UpdateOperation::Multiply, UpdateOperation::Add])
     }
     
-    fn generate_adaptive_conditions(&self, context: &Array1<T>) -> Result<Vec<RuleCondition<T>>, OptimError> {
+    fn generate_adaptive_conditions(&self, context: &Array1<T>) -> Result<Vec<RuleCondition<T>>> {
         let gradient_norm = self.compute_norm(context)?;
         
         Ok(vec![
@@ -3562,7 +3562,7 @@ impl<T: Float> TransformerMetaLearning<T> {
         ])
     }
     
-    fn compute_norm(&self, array: &Array1<T>) -> Result<T, OptimError> {
+    fn compute_norm(&self, array: &Array1<T>) -> Result<T> {
         let mut sum = T::zero();
         for &val in array.iter() {
             sum = sum + val * val;
@@ -3570,7 +3570,7 @@ impl<T: Float> TransformerMetaLearning<T> {
         Ok(sum.sqrt())
     }
     
-    fn compute_stability(&self, context: &Array1<T>) -> Result<T, OptimError> {
+    fn compute_stability(&self, context: &Array1<T>) -> Result<T> {
         // Simple stability measure based on variance
         let mean = context.sum() / T::from(context.len()).unwrap();
         let mut variance = T::zero();
@@ -3588,7 +3588,7 @@ impl<T: Float> TransformerMetaLearning<T> {
 }
 
 impl<T: Float> OptimizationSequenceProcessor<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             sequence_analyzer: SequenceAnalyzer::new()?,
             pattern_detector: PatternDetector::new()?,
@@ -3606,7 +3606,7 @@ impl<T: Float> OptimizationSequenceProcessor<T> {
         })
     }
     
-    fn process_sequence(&mut self, sequence: &Array2<T>) -> Result<ProcessedSequence<T>, OptimError> {
+    fn process_sequence(&mut self, sequence: &Array2<T>) -> Result<ProcessedSequence<T>> {
         // Analyze sequence patterns
         let patterns = self.pattern_detector.detect_patterns(sequence)?;
         
@@ -3636,7 +3636,7 @@ impl<T: Float> OptimizationSequenceProcessor<T> {
 }
 
 impl<T: Float> TransformerMemoryManager<T> {
-    fn new(config: &TransformerMemoryConfig<T>) -> Result<Self, OptimError> {
+    fn new(config: &TransformerMemoryConfig<T>) -> Result<Self> {
         let mut memory_stores = HashMap::new();
         
         // Initialize memory stores for each type
@@ -3662,7 +3662,7 @@ impl<T: Float> TransformerMemoryManager<T> {
         })
     }
     
-    fn store_memory(&mut self, memory_type: MemoryType, key: String, value: Array1<T>) -> Result<(), OptimError> {
+    fn store_memory(&mut self, memory_type: MemoryType, key: String, value: Array1<T>) -> Result<()> {
         let store = self.memory_stores.get_mut(&memory_type)
             .ok_or_else(|| OptimError::InvalidConfig("Memory type not configured".to_string()))?;
         
@@ -3689,7 +3689,7 @@ impl<T: Float> TransformerMemoryManager<T> {
         Ok(())
     }
     
-    fn retrieve_memory(&mut self, memory_type: MemoryType, key: &str) -> Result<Option<Array1<T>>, OptimError> {
+    fn retrieve_memory(&mut self, memory_type: MemoryType, key: &str) -> Result<Option<Array1<T>>> {
         let store = self.memory_stores.get_mut(&memory_type)
             .ok_or_else(|| OptimError::InvalidConfig("Memory type not configured".to_string()))?;
         
@@ -3713,7 +3713,7 @@ impl<T: Float> TransformerMemoryManager<T> {
         }
     }
     
-    fn cleanup(&mut self) -> Result<(), OptimError> {
+    fn cleanup(&mut self) -> Result<()> {
         if self.config.enable_gc {
             self.garbage_collector.collect(&mut self.memory_stores, &self.access_patterns)?;
         }
@@ -3722,7 +3722,7 @@ impl<T: Float> TransformerMemoryManager<T> {
 }
 
 impl<T: Float> TransformerPerformanceTracker<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             performance_history: VecDeque::new(),
             metrics_computer: MetricsComputer::new()?,
@@ -3747,7 +3747,7 @@ impl<T: Float> TransformerPerformanceTracker<T> {
         })
     }
     
-    fn track_performance(&mut self, result: &TransformerOptimizationResult<T>) -> Result<(), OptimError> {
+    fn track_performance(&mut self, result: &TransformerOptimizationResult<T>) -> Result<()> {
         // Compute current metrics
         let metrics = self.metrics_computer.compute_metrics(result)?;
         
@@ -3787,7 +3787,7 @@ impl<T: Float> TransformerPerformanceTracker<T> {
         &self.current_metrics
     }
     
-    fn predict_future_performance(&self, steps_ahead: usize) -> Result<Vec<PerformanceMetrics<T>>, OptimError> {
+    fn predict_future_performance(&self, steps_ahead: usize) -> Result<Vec<PerformanceMetrics<T>>> {
         if !self.config.enable_prediction {
             return Err(OptimError::InvalidConfig("Performance prediction is disabled".to_string()));
         }
@@ -3797,7 +3797,7 @@ impl<T: Float> TransformerPerformanceTracker<T> {
 }
 
 impl<T: Float> TransformerOptimizerState<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             parameters: HashMap::new(),
             optimizer_state: HashMap::new(),
@@ -3812,7 +3812,7 @@ impl<T: Float> TransformerOptimizerState<T> {
 
 // Additional stub implementations for helper components
 impl<T: Float> GradientProcessor<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             processing_layers: vec![LinearLayer::new(256, 256)?],
             clipping: GradientClipping::new()?,
@@ -3825,7 +3825,7 @@ impl<T: Float> GradientProcessor<T> {
         })
     }
     
-    fn process(&self, sequence: &Array2<T>) -> Result<Array1<T>, OptimError> {
+    fn process(&self, sequence: &Array2<T>) -> Result<Array1<T>> {
         // Simple processing - flatten and average
         let mut processed = Array1::zeros(256);
         let seq_len = sequence.shape()[0];
@@ -3844,7 +3844,7 @@ impl<T: Float> GradientProcessor<T> {
 }
 
 impl<T: Float> UpdateRuleGenerator<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             generator_network: GeneratorNetwork::new()?,
             rule_templates: vec![],
@@ -3855,7 +3855,7 @@ impl<T: Float> UpdateRuleGenerator<T> {
 }
 
 impl<T: Float> ContextIntegrator<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             integration_type: IntegrationType::Additive,
             weights: Array1::ones(256),
@@ -3863,14 +3863,14 @@ impl<T: Float> ContextIntegrator<T> {
         })
     }
     
-    fn integrate(&self, gradients: &Array1<T>, _context: &TaskContext<T>) -> Result<Array1<T>, OptimError> {
+    fn integrate(&self, gradients: &Array1<T>, _context: &TaskContext<T>) -> Result<Array1<T>> {
         // Simple integration - just return processed gradients
         Ok(gradients.clone())
     }
 }
 
 impl<T: Float> ContextMemory<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             memory_bank: Vec::new(),
             access_mechanism: MemoryAccessMechanism::new()?,
@@ -3880,7 +3880,7 @@ impl<T: Float> ContextMemory<T> {
 }
 
 impl<T: Float> PerformanceTracker<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             metrics_history: VecDeque::new(),
             current_metrics: HashMap::new(),
@@ -3894,7 +3894,7 @@ impl<T: Float> PerformanceTracker<T> {
 }
 
 impl<T: Float> AdaptationMechanism<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             adaptation_strategy: AdaptationType::Gradient,
             learning_rates: HashMap::new(),
@@ -3905,7 +3905,7 @@ impl<T: Float> AdaptationMechanism<T> {
 
 // Additional helper implementations
 impl<T: Float> SequenceAnalyzer<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             analysis_methods: vec![AnalysisMethod::Statistical],
             window_size: 32,
@@ -3919,7 +3919,7 @@ impl<T: Float> SequenceAnalyzer<T> {
 }
 
 impl<T: Float> PatternDetector<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             detection_algorithms: vec![DetectionAlgorithm::Correlation],
             pattern_library: Vec::new(),
@@ -3931,14 +3931,14 @@ impl<T: Float> PatternDetector<T> {
         })
     }
     
-    fn detect_patterns(&mut self, sequence: &Array2<T>) -> Result<Vec<DetectedPattern<T>>, OptimError> {
+    fn detect_patterns(&mut self, sequence: &Array2<T>) -> Result<Vec<DetectedPattern<T>>> {
         // Simple pattern detection - just return empty for now
         Ok(Vec::new())
     }
 }
 
 impl<T: Float> TrendAnalyzer<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             trend_methods: vec![TrendMethod::LinearRegression],
             analysis_window: 16,
@@ -3950,14 +3950,14 @@ impl<T: Float> TrendAnalyzer<T> {
         })
     }
     
-    fn analyze_trends(&mut self, sequence: &Array2<T>) -> Result<Vec<TrendInfo<T>>, OptimError> {
+    fn analyze_trends(&mut self, sequence: &Array2<T>) -> Result<Vec<TrendInfo<T>>> {
         // Simple trend analysis - return empty for now
         Ok(Vec::new())
     }
 }
 
 impl<T: Float> SequenceEmbedder<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             embedding_model: EmbeddingModel::Transformer,
             embedding_dim: 256,
@@ -3969,7 +3969,7 @@ impl<T: Float> SequenceEmbedder<T> {
         })
     }
     
-    fn embed(&mut self, sequence: &Array2<T>) -> Result<Array1<T>, OptimError> {
+    fn embed(&mut self, sequence: &Array2<T>) -> Result<Array1<T>> {
         // Simple embedding - average pooling
         let seq_len = sequence.shape()[0];
         let seq_dim = sequence.shape()[1];
@@ -3989,7 +3989,7 @@ impl<T: Float> SequenceEmbedder<T> {
 }
 
 impl<T: Float> TemporalProcessor<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             processing_model: TemporalModel::LSTM,
             temporal_config: TemporalConfig {
@@ -4000,7 +4000,7 @@ impl<T: Float> TemporalProcessor<T> {
         })
     }
     
-    fn process(&mut self, sequence: &Array2<T>) -> Result<TemporalFeatures<T>, OptimError> {
+    fn process(&mut self, sequence: &Array2<T>) -> Result<TemporalFeatures<T>> {
         // Simple temporal processing
         Ok(TemporalFeatures {
             temporal_embedding: Array1::zeros(128),
@@ -4017,7 +4017,7 @@ impl<T: Float> TemporalProcessor<T> {
 
 // Stub implementations for remaining helper components
 impl<T: Float> GeneratorNetwork<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             encoder: TransformerArchitecture::new(&TransformerBasedOptimizerConfig::default())?,
             decoder: RuleDecoder::new()?,
@@ -4027,7 +4027,7 @@ impl<T: Float> GeneratorNetwork<T> {
 }
 
 impl<T: Float> RuleDecoder<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             layers: vec![],
             output_projection: OutputProjection::new(256, 256)?,
@@ -4047,7 +4047,7 @@ impl RuleVocabulary {
 }
 
 impl<T: Float> RuleSelector<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             selection_strategy: SelectionStrategy::PerformanceBased,
             selection_criteria: SelectionCriteria::default(),
@@ -4056,7 +4056,7 @@ impl<T: Float> RuleSelector<T> {
 }
 
 impl<T: Float> RuleComposer<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             composition_strategy: CompositionStrategy::Sequential,
             composition_rules: vec![],
@@ -4065,7 +4065,7 @@ impl<T: Float> RuleComposer<T> {
 }
 
 impl<T: Float> GradientClipping<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             method: ClippingMethod::Norm,
             threshold: T::from(1.0).unwrap(),
@@ -4081,7 +4081,7 @@ impl<T: Float> GradientClipping<T> {
 }
 
 impl<T: Float> GradientNormalization<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             normalization_type: NormalizationType::L2,
             scale_factor: T::one(),
@@ -4091,7 +4091,7 @@ impl<T: Float> GradientNormalization<T> {
 }
 
 impl<T: Float> MemoryAccessMechanism<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             strategy: MemoryAccessStrategy::Attention,
             query_processor: QueryProcessor::new()?,
@@ -4101,7 +4101,7 @@ impl<T: Float> MemoryAccessMechanism<T> {
 }
 
 impl<T: Float> QueryProcessor<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             processing_layers: vec![],
             query_embedding: EmbeddingLayer::new(256, 1024)?,
@@ -4110,7 +4110,7 @@ impl<T: Float> QueryProcessor<T> {
 }
 
 impl<T: Float> SimilarityMeasure<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             measure_type: SimilarityType::Cosine,
             parameters: HashMap::new(),
@@ -4119,7 +4119,7 @@ impl<T: Float> SimilarityMeasure<T> {
 }
 
 impl<T: Float> MemoryManagement<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             management_strategy: ManagementStrategy::LRU,
             capacity_limits: HashMap::new(),
@@ -4129,7 +4129,7 @@ impl<T: Float> MemoryManagement<T> {
 }
 
 impl<T: Float> CompressionManager<T> {
-    fn new(compression_ratio: f64) -> Result<Self, OptimError> {
+    fn new(compression_ratio: f64) -> Result<Self> {
         Ok(Self {
             compression_type: CompressionType::PCA,
             compression_ratio: T::from(compression_ratio).unwrap(),
@@ -4137,19 +4137,19 @@ impl<T: Float> CompressionManager<T> {
         })
     }
     
-    fn compress(&self, data: &Array1<T>) -> Result<Array1<T>, OptimError> {
+    fn compress(&self, data: &Array1<T>) -> Result<Array1<T>> {
         // Simple compression - just return the input for now
         Ok(data.clone())
     }
     
-    fn decompress(&self, data: &Array1<T>) -> Result<Array1<T>, OptimError> {
+    fn decompress(&self, data: &Array1<T>) -> Result<Array1<T>> {
         // Simple decompression - just return the input for now
         Ok(data.clone())
     }
 }
 
 impl<T: Float> CompressionModel<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             model_type: CompressionModelType::PCA,
             parameters: HashMap::new(),
@@ -4158,7 +4158,7 @@ impl<T: Float> CompressionModel<T> {
 }
 
 impl<T: Float> MemoryGarbageCollector<T> {
-    fn new(enabled: bool) -> Result<Self, OptimError> {
+    fn new(enabled: bool) -> Result<Self> {
         Ok(Self {
             enabled,
             gc_strategy: GCStrategy::Generational,
@@ -4167,7 +4167,7 @@ impl<T: Float> MemoryGarbageCollector<T> {
         })
     }
     
-    fn collect(&mut self, _stores: &mut HashMap<MemoryType, MemoryStore<T>>, _patterns: &HashMap<String, AccessPattern>) -> Result<(), OptimError> {
+    fn collect(&mut self, _stores: &mut HashMap<MemoryType, MemoryStore<T>>, _patterns: &HashMap<String, AccessPattern>) -> Result<()> {
         // Simple GC - update last GC time
         self.last_gc = Instant::now();
         Ok(())
@@ -4175,7 +4175,7 @@ impl<T: Float> MemoryGarbageCollector<T> {
 }
 
 impl<T: Float> MemoryStore<T> {
-    fn new(capacity: usize) -> Result<Self, OptimError> {
+    fn new(capacity: usize) -> Result<Self> {
         Ok(Self {
             data: HashMap::new(),
             capacity,
@@ -4183,26 +4183,26 @@ impl<T: Float> MemoryStore<T> {
         })
     }
     
-    fn store(&mut self, key: String, value: Array1<T>) -> Result<(), OptimError> {
+    fn store(&mut self, key: String, value: Array1<T>) -> Result<()> {
         self.data.insert(key, value);
         self.current_size += 1;
         Ok(())
     }
     
-    fn retrieve(&mut self, key: &str) -> Result<Option<Array1<T>>, OptimError> {
+    fn retrieve(&mut self, key: &str) -> Result<Option<Array1<T>>> {
         Ok(self.data.get(key).cloned())
     }
 }
 
 impl<T: Float> MetricsComputer<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             metric_types: vec![MetricType::Accuracy, MetricType::Loss],
             computation_config: ComputationConfig::default(),
         })
     }
     
-    fn compute_metrics(&self, _result: &TransformerOptimizationResult<T>) -> Result<PerformanceMetrics<T>, OptimError> {
+    fn compute_metrics(&self, _result: &TransformerOptimizationResult<T>) -> Result<PerformanceMetrics<T>> {
         Ok(PerformanceMetrics {
             accuracy: T::from(0.9).unwrap(),
             loss: T::from(0.1).unwrap(),
@@ -4215,7 +4215,7 @@ impl<T: Float> MetricsComputer<T> {
 }
 
 impl<T: Float> BenchmarkSuite<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             benchmarks: vec![],
             suite_config: BenchmarkConfig::default(),
@@ -4224,18 +4224,18 @@ impl<T: Float> BenchmarkSuite<T> {
 }
 
 impl<T: Float> PerformancePredictor<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             prediction_model: PredictionModel::new()?,
             predictor_config: PredictorConfig::default(),
         })
     }
     
-    fn update(&mut self, _history: &VecDeque<PerformanceRecord<T>>) -> Result<(), OptimError> {
+    fn update(&mut self, _history: &VecDeque<PerformanceRecord<T>>) -> Result<()> {
         Ok(())
     }
     
-    fn predict(&self, _history: &VecDeque<PerformanceRecord<T>>, _steps: usize) -> Result<Vec<PerformanceMetrics<T>>, OptimError> {
+    fn predict(&self, _history: &VecDeque<PerformanceRecord<T>>, _steps: usize) -> Result<Vec<PerformanceMetrics<T>>> {
         Ok(vec![PerformanceMetrics {
             accuracy: T::from(0.9).unwrap(),
             loss: T::from(0.1).unwrap(),
@@ -4248,20 +4248,20 @@ impl<T: Float> PerformancePredictor<T> {
 }
 
 impl<T: Float> AnomalyDetector<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             detection_method: AnomalyDetectionMethod::Statistical,
             detector_config: AnomalyConfig::default(),
         })
     }
     
-    fn check_anomaly(&mut self, _history: &VecDeque<PerformanceRecord<T>>) -> Result<bool, OptimError> {
+    fn check_anomaly(&mut self, _history: &VecDeque<PerformanceRecord<T>>) -> Result<bool> {
         Ok(false)
     }
 }
 
 impl<T: Float> PredictionModel<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             model_type: PredictionModelType::LSTM,
             architecture: Box::new(TransformerPredictionArchitecture::new()?),
@@ -4276,7 +4276,7 @@ impl<T: Float> PredictionModel<T> {
 }
 
 impl<T: Float> TransformerPredictionArchitecture<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             layers: vec![],
             output_layer: LinearLayer::new(256, 256)?,
@@ -4285,22 +4285,22 @@ impl<T: Float> TransformerPredictionArchitecture<T> {
 }
 
 impl<T: Float> PredictionArchitecture<T> for TransformerPredictionArchitecture<T> {
-    fn predict(&self, sequence: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn predict(&self, sequence: &Array2<T>) -> Result<Array2<T>> {
         // Simple prediction - just return the input
         Ok(sequence.clone())
     }
     
-    fn uncertainty(&self, _sequence: &Array2<T>) -> Result<Array1<T>, OptimError> {
+    fn uncertainty(&self, _sequence: &Array2<T>) -> Result<Array1<T>> {
         Ok(Array1::zeros(256))
     }
     
-    fn update(&mut self, _data: &[(Array2<T>, Array2<T>)]) -> Result<(), OptimError> {
+    fn update(&mut self, _data: &[(Array2<T>, Array2<T>)]) -> Result<()> {
         Ok(())
     }
 }
 
 impl<T: Float> ContextIntegration<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             integration_layers: vec![],
             context_encoder: LinearLayer::new(256, 256)?,

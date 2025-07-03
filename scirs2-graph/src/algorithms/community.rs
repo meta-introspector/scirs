@@ -1720,7 +1720,7 @@ where
 {
     #[allow(deprecated)]
     let structure = fluid_communities(graph, num_communities, max_iterations);
-    CommunityResult::from_community_structure(structure)
+    CommunityResult::from_node_map(structure.node_communities)
 }
 
 /// Hierarchical community structure with standardized CommunityResult return type
@@ -1956,7 +1956,7 @@ mod tests {
         // Sparse connection between communities
         graph.add_edge(2, 3, 0.1)?;
 
-        let communities = louvain_communities(&graph);
+        let communities = louvain_communities_result(&graph);
 
         // Check that nodes in the same group have the same community
         assert_eq!(
@@ -2013,7 +2013,7 @@ mod tests {
         // Weak link between communities
         graph.add_edge("C", "D", 0.1)?;
 
-        let communities = label_propagation(&graph, 100);
+        let communities = label_propagation_result(&graph, 100);
 
         // Check that nodes in the same triangle tend to have the same label
         // (Note: label propagation is stochastic, so we can't guarantee exact results)
@@ -2288,7 +2288,7 @@ mod tests {
         graph.add_edge(2, 3, 0.1)?;
 
         let infomap_result = infomap_communities(&graph, 100, 1e-6);
-        let louvain_result = louvain_communities(&graph);
+        let louvain_result = louvain_communities_result(&graph);
 
         // Both should find some community structure
         let infomap_communities_count: HashSet<usize> =
@@ -2372,7 +2372,7 @@ mod tests {
         // Weak connection between communities
         graph.add_edge(2, 3, 0.1)?;
 
-        let result = fluid_communities(&graph, 2, 30);
+        let result = fluid_communities_result(&graph, 2, 30);
 
         // Check that all nodes are assigned to communities
         assert_eq!(result.node_communities.len(), 6);
@@ -2394,7 +2394,7 @@ mod tests {
     #[test]
     fn test_fluid_communities_empty_graph() {
         let graph = create_graph::<i32, f64>();
-        let result = fluid_communities(&graph, 2, 10);
+        let result = fluid_communities_result(&graph, 2, 10);
 
         assert!(result.node_communities.is_empty());
         assert_eq!(result.modularity, 0.0);
@@ -2405,7 +2405,7 @@ mod tests {
         let mut graph = create_graph::<&str, f64>();
         graph.add_node("A");
 
-        let result = fluid_communities(&graph, 1, 10);
+        let result = fluid_communities_result(&graph, 1, 10);
 
         assert_eq!(result.node_communities.len(), 1);
         assert!(result.node_communities.contains_key(&"A"));
@@ -2685,8 +2685,16 @@ where
         node_degrees.insert(node.clone(), degree);
     }
 
+    // Convert communities to NodeIndex-based map for modularity calculation
+    let mut communities_by_index: HashMap<petgraph::graph::NodeIndex<Ix>, usize> = HashMap::new();
+    for (node, community) in &communities {
+        if let Some(&node_idx) = graph.node_indices.get(node) {
+            communities_by_index.insert(node_idx, *community);
+        }
+    }
+
     // Calculate final modularity with the initial communities
-    let final_modularity = calculate_modularity(graph, &communities, m);
+    let final_modularity = calculate_modularity(graph, &communities_by_index, m);
 
     CommunityStructure {
         node_communities: communities,
@@ -2738,8 +2746,9 @@ where
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
+    #[allow(deprecated)]
     let structure = modularity_optimization(graph, initial_temp, cooling_rate, max_iterations);
-    CommunityResult::from_community_structure(structure)
+    CommunityResult::from_node_map(structure.node_communities)
 }
 
 /// Optimizes modularity using a greedy approach (modern API)
@@ -2782,8 +2791,9 @@ where
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
+    #[allow(deprecated)]
     let structure = greedy_modularity_optimization(graph, max_iterations);
-    CommunityResult::from_community_structure(structure)
+    CommunityResult::from_node_map(structure.node_communities)
 }
 
 /// Detects communities using parallel Louvain method (modern API)
@@ -2826,6 +2836,7 @@ where
     E: EdgeWeight + Into<f64> + Send + Sync + Copy,
     Ix: IndexType + Send + Sync,
 {
+    #[allow(deprecated)]
     let structure = parallel_louvain_communities(graph, max_iterations);
-    CommunityResult::from_community_structure(structure)
+    CommunityResult::from_node_map(structure.node_communities)
 }

@@ -556,6 +556,7 @@ impl RealWorldDatasets {
         Ok(dataset)
     }
 
+    /// Load Auto MPG dataset
     pub fn load_auto_mpg(&mut self) -> Result<Dataset> {
         let cache_key = CacheKey::new("auto_mpg", &self.config);
 
@@ -590,6 +591,7 @@ impl RealWorldDatasets {
         Ok(dataset)
     }
 
+    /// Load Concrete Compressive Strength dataset
     pub fn load_concrete_strength(&mut self) -> Result<Dataset> {
         let cache_key = CacheKey::new("concrete_strength", &self.config);
 
@@ -623,6 +625,7 @@ impl RealWorldDatasets {
         Ok(dataset)
     }
 
+    /// Load White Wine Quality dataset
     pub fn load_white_wine_quality(&mut self) -> Result<Dataset> {
         let cache_key = CacheKey::new("white_wine_quality", &self.config);
 
@@ -655,6 +658,7 @@ impl RealWorldDatasets {
         Ok(dataset)
     }
 
+    /// Load Electricity Load dataset
     pub fn load_electricity_load(&mut self) -> Result<Dataset> {
         let cache_key = CacheKey::new("electricity_load", &self.config);
 
@@ -688,6 +692,7 @@ impl RealWorldDatasets {
         Ok(dataset)
     }
 
+    /// Load Stock Prices dataset
     pub fn load_stock_prices(&mut self) -> Result<Dataset> {
         let cache_key = CacheKey::new("stock_prices", &self.config);
 
@@ -720,6 +725,7 @@ impl RealWorldDatasets {
         Ok(dataset)
     }
 
+    /// Load CIFAR-10 subset dataset
     pub fn load_cifar10_subset(&mut self) -> Result<Dataset> {
         let cache_key = CacheKey::new("cifar10_subset", &self.config);
 
@@ -763,6 +769,7 @@ impl RealWorldDatasets {
         Ok(dataset)
     }
 
+    /// Load Fashion-MNIST subset dataset
     pub fn load_fashion_mnist_subset(&mut self) -> Result<Dataset> {
         let cache_key = CacheKey::new("fashion_mnist_subset", &self.config);
 
@@ -807,6 +814,7 @@ impl RealWorldDatasets {
         Ok(dataset)
     }
 
+    /// Load IMDB movie reviews dataset
     pub fn load_imdb_reviews(&mut self) -> Result<Dataset> {
         let cache_key = CacheKey::new("imdb_reviews", &self.config);
 
@@ -839,6 +847,7 @@ impl RealWorldDatasets {
         Ok(dataset)
     }
 
+    /// Load news articles dataset
     pub fn load_news_articles(&mut self) -> Result<Dataset> {
         let cache_key = CacheKey::new("news_articles", &self.config);
 
@@ -877,6 +886,7 @@ impl RealWorldDatasets {
         Ok(dataset)
     }
 
+    /// Load credit card fraud detection dataset
     pub fn load_credit_card_fraud(&mut self) -> Result<Dataset> {
         let cache_key = CacheKey::new("credit_card_fraud", &self.config);
 
@@ -910,6 +920,7 @@ impl RealWorldDatasets {
         Ok(dataset)
     }
 
+    /// Load loan default prediction dataset
     pub fn load_loan_default(&mut self) -> Result<Dataset> {
         let cache_key = CacheKey::new("loan_default", &self.config);
 
@@ -1071,7 +1082,7 @@ impl RealWorldDatasets {
 
         for line_result in reader.lines() {
             let line = line_result
-                .map_err(|e| DatasetsError::ParseError(format!("Failed to read line: {}", e)))?;
+                .map_err(|e| DatasetsError::FormatError(format!("Failed to read line: {}", e)))?;
             let line = line.trim();
 
             if line.is_empty() {
@@ -1102,7 +1113,7 @@ impl RealWorldDatasets {
         }
 
         if rows.is_empty() {
-            return Err(DatasetsError::ParseError(
+            return Err(DatasetsError::FormatError(
                 "No valid data rows found in CSV".to_string(),
             ));
         }
@@ -1216,6 +1227,7 @@ impl RealWorldDatasets {
         Ok((data, target))
     }
 
+    #[allow(dead_code)]
     fn create_synthetic_credit_approval_data(&self) -> Result<Dataset> {
         use rand::Rng;
         let mut rng = rand::rng();
@@ -1314,6 +1326,7 @@ impl RealWorldDatasets {
         Ok(Dataset::from_metadata(data, Some(target), metadata))
     }
 
+    #[allow(dead_code)]
     fn create_synthetic_mushroom_data(&self) -> Result<Dataset> {
         use rand::Rng;
         let mut rng = rand::rng();
@@ -1446,6 +1459,7 @@ impl RealWorldDatasets {
         Ok(Dataset::from_metadata(data, Some(target), metadata))
     }
 
+    #[allow(dead_code)]
     fn create_synthetic_spam_data(&self) -> Result<Dataset> {
         use rand::Rng;
         let mut rng = rand::rng();
@@ -2365,24 +2379,28 @@ pub fn load_adult() -> Result<Dataset> {
     loader.load_adult()
 }
 
+/// Load Titanic dataset
 pub fn load_titanic() -> Result<Dataset> {
     let config = RealWorldConfig::default();
     let mut loader = RealWorldDatasets::new(config)?;
     loader.load_titanic()
 }
 
+/// Load California Housing dataset
 pub fn load_california_housing() -> Result<Dataset> {
     let config = RealWorldConfig::default();
     let mut loader = RealWorldDatasets::new(config)?;
     loader.load_california_housing()
 }
 
+/// Load Heart Disease dataset
 pub fn load_heart_disease() -> Result<Dataset> {
     let config = RealWorldConfig::default();
     let mut loader = RealWorldDatasets::new(config)?;
     loader.load_heart_disease()
 }
 
+/// Load Red Wine Quality dataset
 pub fn load_red_wine_quality() -> Result<Dataset> {
     let config = RealWorldConfig::default();
     let mut loader = RealWorldDatasets::new(config)?;

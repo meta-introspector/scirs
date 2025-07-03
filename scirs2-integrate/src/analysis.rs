@@ -349,8 +349,12 @@ impl BifurcationAnalyzer {
         }
 
         // Detect bifurcation curves by finding stability transitions
-        let curves = self.extract_bifurcation_curves(&stability_map, &parameter_grid, 
-                                                     parameter_range_1, parameter_range_2)?;
+        let curves = self.extract_bifurcation_curves(
+            &stability_map,
+            &parameter_grid,
+            parameter_range_1,
+            parameter_range_2,
+        )?;
 
         Ok(TwoParameterBifurcationResult {
             parameter_grid,
@@ -1614,31 +1618,34 @@ impl BifurcationAnalyzer {
         param_range_1: (f64, f64),
         param_range_2: (f64, f64),
     ) -> crate::error::IntegrateResult<Vec<BifurcationCurve>> {
-        
         let mut curves = Vec::new();
         let (n_points_1, n_points_2) = stability_map.dim();
-        
+
         // Extract horizontal transition lines (parameter 1 direction)
         for j in 0..n_points_2 {
             let mut current_curve: Option<BifurcationCurve> = None;
-            
+
             for i in 0..(n_points_1 - 1) {
                 let current_stability = stability_map[[i, j]];
                 let next_stability = stability_map[[i + 1, j]];
-                
+
                 // Check for stability transition
-                if (current_stability - next_stability).abs() > 0.5 && 
-                   current_stability >= 0.0 && next_stability >= 0.0 {
-                    
+                if (current_stability - next_stability).abs() > 0.5
+                    && current_stability >= 0.0
+                    && next_stability >= 0.0
+                {
                     // Calculate parameter values at transition
-                    let p1 = param_range_1.0 + (i as f64 / (n_points_1 - 1) as f64) * 
-                             (param_range_1.1 - param_range_1.0);
-                    let p2 = param_range_2.0 + (j as f64 / (n_points_2 - 1) as f64) * 
-                             (param_range_2.1 - param_range_2.0);
-                    
+                    let p1 = param_range_1.0
+                        + (i as f64 / (n_points_1 - 1) as f64)
+                            * (param_range_1.1 - param_range_1.0);
+                    let p2 = param_range_2.0
+                        + (j as f64 / (n_points_2 - 1) as f64)
+                            * (param_range_2.1 - param_range_2.0);
+
                     // Determine bifurcation type based on stability values
-                    let curve_type = self.classify_bifurcation_type(current_stability, next_stability);
-                    
+                    let curve_type =
+                        self.classify_bifurcation_type(current_stability, next_stability);
+
                     match &mut current_curve {
                         Some(curve) if curve.curve_type == curve_type => {
                             // Continue existing curve
@@ -1659,7 +1666,7 @@ impl BifurcationAnalyzer {
                     }
                 }
             }
-            
+
             // Finalize curve if it exists
             if let Some(curve) = current_curve.take() {
                 if curve.points.len() > 1 {
@@ -1667,28 +1674,32 @@ impl BifurcationAnalyzer {
                 }
             }
         }
-        
+
         // Extract vertical transition lines (parameter 2 direction)
         for i in 0..n_points_1 {
             let mut current_curve: Option<BifurcationCurve> = None;
-            
+
             for j in 0..(n_points_2 - 1) {
                 let current_stability = stability_map[[i, j]];
                 let next_stability = stability_map[[i, j + 1]];
-                
+
                 // Check for stability transition
-                if (current_stability - next_stability).abs() > 0.5 && 
-                   current_stability >= 0.0 && next_stability >= 0.0 {
-                    
+                if (current_stability - next_stability).abs() > 0.5
+                    && current_stability >= 0.0
+                    && next_stability >= 0.0
+                {
                     // Calculate parameter values at transition
-                    let p1 = param_range_1.0 + (i as f64 / (n_points_1 - 1) as f64) * 
-                             (param_range_1.1 - param_range_1.0);
-                    let p2 = param_range_2.0 + (j as f64 / (n_points_2 - 1) as f64) * 
-                             (param_range_2.1 - param_range_2.0);
-                    
+                    let p1 = param_range_1.0
+                        + (i as f64 / (n_points_1 - 1) as f64)
+                            * (param_range_1.1 - param_range_1.0);
+                    let p2 = param_range_2.0
+                        + (j as f64 / (n_points_2 - 1) as f64)
+                            * (param_range_2.1 - param_range_2.0);
+
                     // Determine bifurcation type based on stability values
-                    let curve_type = self.classify_bifurcation_type(current_stability, next_stability);
-                    
+                    let curve_type =
+                        self.classify_bifurcation_type(current_stability, next_stability);
+
                     match &mut current_curve {
                         Some(curve) if curve.curve_type == curve_type => {
                             // Continue existing curve
@@ -1709,7 +1720,7 @@ impl BifurcationAnalyzer {
                     }
                 }
             }
-            
+
             // Finalize curve if it exists
             if let Some(curve) = current_curve.take() {
                 if curve.points.len() > 1 {
@@ -1717,7 +1728,7 @@ impl BifurcationAnalyzer {
                 }
             }
         }
-        
+
         Ok(curves)
     }
 
@@ -1727,15 +1738,19 @@ impl BifurcationAnalyzer {
             // Transition from stable to unstable (or vice versa)
             (f, t) if (f - 1.0).abs() < 0.1 && (t - 2.0).abs() < 0.1 => BifurcationType::Fold,
             (f, t) if (f - 2.0).abs() < 0.1 && (t - 1.0).abs() < 0.1 => BifurcationType::Fold,
-            
+
             // Transition through transcritical pattern
-            (f, t) if (f - 1.0).abs() < 0.1 && (t - 3.0).abs() < 0.1 => BifurcationType::Transcritical,
-            (f, t) if (f - 3.0).abs() < 0.1 && (t - 1.0).abs() < 0.1 => BifurcationType::Transcritical,
-            
+            (f, t) if (f - 1.0).abs() < 0.1 && (t - 3.0).abs() < 0.1 => {
+                BifurcationType::Transcritical
+            }
+            (f, t) if (f - 3.0).abs() < 0.1 && (t - 1.0).abs() < 0.1 => {
+                BifurcationType::Transcritical
+            }
+
             // Transition to oscillatory behavior (Hopf bifurcation)
             (f, t) if (f - 1.0).abs() < 0.1 && (t - 4.0).abs() < 0.1 => BifurcationType::Hopf,
             (f, t) if (f - 4.0).abs() < 0.1 && (t - 1.0).abs() < 0.1 => BifurcationType::Hopf,
-            
+
             // Default to fold bifurcation for other transitions
             _ => BifurcationType::Fold,
         }
@@ -3788,9 +3803,11 @@ pub mod advanced_analysis {
             }
 
             // Linear regression on log-log plot
-            let dimension = self.calculate_slope_from_log_data(&scales, &counts)?;
+            // For box counting: dimension = -slope of log(count) vs log(scale)
+            let slope = self.calculate_slope_from_log_data(&scales, &counts)?;
+            let dimension = -slope;
 
-            let r_squared = self.calculate_r_squared(&scales, &counts, dimension)?;
+            let r_squared = self.calculate_r_squared(&scales, &counts, slope)?;
 
             Ok(FractalDimension {
                 dimension,
@@ -4777,35 +4794,56 @@ pub mod advanced_analysis {
 
         #[test]
         fn test_fractal_analyzer() {
-            // Optimized test with reduced complexity for performance
-            let mut points = Vec::new();
+            use rand::rng;
 
-            // Create a smaller 5x5 grid pattern for faster computation
-            // This reduces the problem size from 100 to 25 points (4x speedup)
-            for i in 0..5 {
-                for j in 0..5 {
-                    let point = Array1::from_vec(vec![i as f64 * 0.2, j as f64 * 0.2]);
-                    points.push(point);
-                }
+            // Create a simple 2D filled area for testing - should have dimension close to 2
+            let mut points = Vec::new();
+            let mut rng = rng();
+
+            // Generate points uniformly distributed in a square with some noise
+            for _i in 0..500 {
+                let x = rng.random::<f64>() * 2.0 - 1.0; // range [-1, 1]
+                let y = rng.random::<f64>() * 2.0 - 1.0; // range [-1, 1]
+                let point = Array1::from_vec(vec![x, y]);
+                points.push(point);
             }
 
             // Optimized analyzer configuration for better performance
             let mut analyzer = FractalAnalyzer::new();
-            analyzer.scale_range = (0.2, 0.8); // Tighter range for fewer scale iterations
-            analyzer.n_scales = 3; // Minimal scales (was 5, now 3) for 40% speedup
+            analyzer.scale_range = (0.1, 0.5); // Adjusted range for better scale coverage
+            analyzer.n_scales = 5; // Increased scales for more stable slope calculation
             analyzer.box_counting_method = BoxCountingMethod::Standard; // Use standard method
 
             let result = analyzer.calculate_fractal_dimension(&points).unwrap();
 
             // Verify the results are mathematically valid
             assert!(result.dimension.is_finite(), "Dimension should be finite");
-            assert!(result.dimension > 0.0, "Dimension should be positive");
-            assert!(result.dimension <= 3.0, "Dimension should not exceed embedding dimension");
-            assert!(result.r_squared >= 0.0 && result.r_squared <= 1.0, "R-squared should be in [0,1]");
-            
-            // For a 2D grid pattern, expect dimension to be reasonable
-            assert!(result.dimension >= 1.0 && result.dimension <= 2.5, 
-                    "2D grid should have dimension between 1.0 and 2.5, got: {}", result.dimension);
+            assert!(
+                result.dimension > 0.0,
+                "Dimension should be positive, got: {}",
+                result.dimension
+            );
+            assert!(
+                result.dimension <= 3.0,
+                "Dimension should not exceed embedding dimension, got: {}",
+                result.dimension
+            );
+            assert!(
+                result.dimension >= 1.5 && result.dimension <= 2.5,
+                "2D filled area should have dimension between 1.5 and 2.5, got: {}",
+                result.dimension
+            );
+            assert!(
+                result.r_squared >= 0.0 && result.r_squared <= 1.0,
+                "R-squared should be in [0,1], got: {}",
+                result.r_squared
+            );
+
+            // Verify that the fractal dimension makes sense for a spiral pattern
+            println!(
+                "Fractal dimension: {}, R²: {}",
+                result.dimension, result.r_squared
+            );
         }
 
         #[test]
@@ -5255,7 +5293,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     /// Uncertainty quantification for predictions
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     pub struct UncertaintyQuantification {
         /// Bayesian neural network configuration
         pub bayesian_config: Option<BayesianConfig>,
@@ -5946,7 +5984,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     /// Performance tracking for real-time monitoring
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     pub struct PerformanceTracker {
         /// Latency measurements
         pub latency_metrics: LatencyMetrics,
@@ -6592,18 +6630,6 @@ pub mod ml_bifurcation_prediction {
         }
     }
 
-
-    impl Default for UncertaintyQuantification {
-        fn default() -> Self {
-            Self {
-                bayesian_config: None,
-                mc_dropout_config: None,
-                ensemble_config: None,
-                conformal_config: None,
-            }
-        }
-    }
-
     impl RealTimeBifurcationMonitor {
         /// Create a new real-time bifurcation monitor
         pub fn new(
@@ -6812,20 +6838,6 @@ pub mod ml_bifurcation_prediction {
             }
         }
     }
-
-    impl Default for PerformanceTracker {
-        fn default() -> Self {
-            Self {
-                latency_metrics: LatencyMetrics::default(),
-                accuracy_metrics: AccuracyMetrics::default(),
-                resource_metrics: ResourceMetrics::default(),
-                alert_metrics: AlertMetrics::default(),
-            }
-        }
-    }
-
-
-
 
     impl Default for AlertMetrics {
         fn default() -> Self {

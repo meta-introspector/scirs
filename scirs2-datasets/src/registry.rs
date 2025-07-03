@@ -323,7 +323,7 @@ fn load_local_dataset(
     relative_path: &str,
     expected_sha256: &str,
 ) -> Result<crate::utils::Dataset> {
-    use crate::loaders::csv::{load_csv, CsvConfig};
+    use crate::loaders::{load_csv, CsvConfig};
     use std::path::Path;
 
     // Build absolute path from workspace root

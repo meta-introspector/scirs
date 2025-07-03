@@ -100,7 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         };
         export_scatter_2d_to_html(&plot, &filename, &export_config)?;
-        println!("      💾 Exported to {}", filename);
+        println!("      💾 Exported to {filename}");
     }
 
     // Test 2: 3D Interactive Visualization
@@ -137,7 +137,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (name, mode) in &view_modes {
         interactive_viz.set_view_mode(*mode);
-        println!("   📷 Set view mode: {}", name);
+        println!("   📷 Set view mode: {name}");
     }
 
     // Export 3D visualization
@@ -192,9 +192,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let filename =
                         format!("high_dim_3d_{}.html", name.to_lowercase().replace(" ", "_"));
                     export_scatter_3d_to_html(&plot, &filename, &export_config)?;
-                    println!("      💾 Exported to {}", filename);
+                    println!("      💾 Exported to {filename}");
                 }
-                Err(e) => println!("   ❌ Failed to create 3D plot using {}: {}", name, e),
+                Err(e) => println!("   ❌ Failed to create 3D plot using {name}: {e}"),
             }
         } else {
             match create_scatter_plot_2d(data_high_dim.view(), &labels_high_dim, None, &config) {
@@ -208,9 +208,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let filename =
                         format!("high_dim_2d_{}.html", name.to_lowercase().replace(" ", "_"));
                     export_scatter_2d_to_html(&plot, &filename, &export_config)?;
-                    println!("      💾 Exported to {}", filename);
+                    println!("      💾 Exported to {filename}");
                 }
-                Err(e) => println!("   ❌ Failed to create 2D plot using {}: {}", name, e),
+                Err(e) => println!("   ❌ Failed to create 2D plot using {name}: {e}"),
             }
         }
     }
@@ -279,7 +279,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let frames = recorder.get_frames();
-    println!("   📹 Recorded {} animation frames", frames.len());
+    let frame_count = frames.len();
+    println!("   📹 Recorded {frame_count} animation frames");
 
     // Generate interpolated frames
     let interpolated_frames = recorder.generate_interpolated_frames();
@@ -381,8 +382,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &filename,
             export_config,
         ) {
-            Ok(_) => println!("   ✅ Exported to {} format: {}", name, filename),
-            Err(e) => println!("   ⚠️  Export to {} failed: {}", name, e),
+            Ok(_) => println!("   ✅ Exported to {name} format: {filename}"),
+            Err(e) => println!("   ⚠️  Export to {name} failed: {e}"),
         }
     }
 

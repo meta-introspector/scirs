@@ -633,7 +633,7 @@ fn create_synthetic_dataset(
             Array2::from_shape_fn(
                 image_size,
                 |_| {
-                    if rng.gen::<f32>() > 0.7 {
+                    if rng.random::<f32>() > 0.7 {
                         1.0
                 },
         class_patterns.push(pattern);
@@ -644,7 +644,7 @@ fn create_synthetic_dataset(
         // Add the class pattern with noise
         for h in 0..image_size.0 {
             for w in 0..image_size.1 {
-                let noise = rng.gen::<f32>() * 0.3;
+                let noise = rng.random::<f32>() * 0.3;
                 let pixel = (class_patterns[class][[h, w]] + noise).min(1.0);
                 images[[i, 0, h, w]] = pixel;
         // One-hot encode the label

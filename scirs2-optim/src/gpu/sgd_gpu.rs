@@ -6,7 +6,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use crate::error::Result as OptimResult;
-use crate::gpu::{GpuOptimizerConfig, GpuOptimError, GpuOptimizerMemory};
+use crate::gpu::{GpuOptimError, GpuOptimizerConfig, GpuOptimizerMemory};
 use crate::optimizers::{Optimizer, SGD};
 
 #[cfg(feature = "gpu")]

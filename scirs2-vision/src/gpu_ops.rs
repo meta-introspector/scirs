@@ -1689,8 +1689,7 @@ pub fn gpu_multi_head_attention(
     let output_buffer = ctx.context.create_buffer::<f32>(seq_len * hidden_dim);
 
     // GPU kernel for attention computation
-    let attention_kernel =
-        r#"
+    let attention_kernel = r#"
         #version 450
         
         layout(local_size_x = 16, local_size_y = 16) in;
@@ -1911,13 +1910,18 @@ pub fn gpu_batch_matmul_transformer(
             
             c[row * N + col] = result;
         }
-        "#.to_string();
+        "#
+    .to_string();
 
     // Execute tiled matmul kernel
     match ctx.context.execute_kernel(
         &matmul_kernel,
         &[&a_buffer, &b_buffer, &c_buffer],
-        ((m.div_ceil(16) * 16) as u32, (n.div_ceil(16) * 16) as u32, 1),
+        (
+            (m.div_ceil(16) * 16) as u32,
+            (n.div_ceil(16) * 16) as u32,
+            1,
+        ),
         &[m as u32, n as u32, k as u32],
         &[],
     ) {
@@ -2043,7 +2047,8 @@ pub fn gpu_feature_matching_ultra(
                 distances[idx1] = 1e9;
             }
         }
-        "#.to_string();
+        "#
+    .to_string();
 
     // Execute matching kernel
     match ctx.context.execute_kernel(
@@ -2116,9 +2121,7 @@ pub fn gpu_neural_feature_extraction(
     let mut current_shape = (height, width);
 
     // Process through neural network layers
-    for (layer_config, layer_weights) in
-        layer_configs.iter().zip(weights.iter())
-    {
+    for (layer_config, layer_weights) in layer_configs.iter().zip(weights.iter()) {
         match layer_config.layer_type {
             LayerType::Convolution => {
                 current_buffer = gpu_conv_layer(

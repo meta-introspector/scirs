@@ -572,55 +572,69 @@ impl UltrathinkTextCoordinator {
                 "Vector dimensions must match".into(),
             ));
         }
-        
+
         // Cosine similarity
         let cosine_sim = {
             let dot_product = a.dot(b);
             let norm_a = a.dot(a).sqrt();
             let norm_b = b.dot(b).sqrt();
-            
+
             if norm_a == 0.0 || norm_b == 0.0 {
                 0.0
             } else {
                 dot_product / (norm_a * norm_b)
             }
         };
-        
+
         // Euclidean distance-based similarity
-        let euclidean_dist = a.iter().zip(b.iter())
+        let euclidean_dist = a
+            .iter()
+            .zip(b.iter())
             .map(|(&x, &y)| (x - y).powi(2))
             .sum::<f64>()
             .sqrt();
         let euclidean_sim = 1.0 / (1.0 + euclidean_dist);
-        
+
         // Manhattan distance-based similarity
-        let manhattan_dist = a.iter().zip(b.iter())
+        let manhattan_dist = a
+            .iter()
+            .zip(b.iter())
             .map(|(&x, &y)| (x - y).abs())
             .sum::<f64>();
         let manhattan_sim = 1.0 / (1.0 + manhattan_dist);
-        
+
         // Weighted combination of similarities
         let semantic_similarity = cosine_sim * 0.5 + euclidean_sim * 0.3 + manhattan_sim * 0.2;
-        
+
         Ok(semantic_similarity.clamp(0.0, 1.0))
     }
 
     fn calculate_contextual_similarity(&self, text1: &str, text2: &str) -> Result<f64> {
         // Enhanced contextual similarity based on text features
-        
+
         // Word overlap analysis
         let words1: std::collections::HashSet<String> = text1
             .split_whitespace()
-            .map(|w| w.to_lowercase().chars().filter(|c| c.is_alphabetic()).collect())
+            .map(|w| {
+                w.to_lowercase()
+                    .chars()
+                    .filter(|c| c.is_alphabetic())
+                    .collect()
+            })
             .filter(|w: &String| w.len() > 2)
             .collect();
-        
+
         let words2: std::collections::HashSet<String> = text2
             .split_whitespace()
-            .map(|w| w.to_lowercase().chars().filter(|c| c.is_alphabetic()).collect())
+            .map(|w| {
+                w.to_lowercase()
+                    .chars()
+                    .filter(|c| c.is_alphabetic())
+                    .collect()
+            })
             .filter(|w: &String| w.len() > 2)
             .collect();
-        
+
         let intersection = words1.intersection(&words2).count();
         let union = words1.union(&words2).count();
         let jaccard_similarity = if union > 0 {
@@ -628,20 +642,23 @@ impl UltrathinkTextCoordinator {
         } else {
             0.0
         };
-        
+
         // Length-based similarity
         let len1 = text1.len() as f64;
         let len2 = text2.len() as f64;
         let length_similarity = 1.0 - (len1 - len2).abs() / (len1 + len2).max(1.0);
-        
+
         // Sentence structure similarity (simplified)
         let sent_count1 = text1.matches('.').count() + 1;
         let sent_count2 = text2.matches('.').count() + 1;
-        let structure_similarity = 1.0 - ((sent_count1 as i32 - sent_count2 as i32).abs() as f64) / (sent_count1 + sent_count2) as f64;
-        
+        let structure_similarity = 1.0
+            - ((sent_count1 as i32 - sent_count2 as i32).abs() as f64)
+                / (sent_count1 + sent_count2) as f64;
+
         // Combined contextual similarity
-        let contextual_similarity = jaccard_similarity * 0.6 + length_similarity * 0.2 + structure_similarity * 0.2;
-        
+        let contextual_similarity =
+            jaccard_similarity * 0.6 + length_similarity * 0.2 + structure_similarity * 0.2;
+
         Ok(contextual_similarity.clamp(0.0, 1.0))
     }
 
@@ -993,24 +1010,26 @@ impl NeuralProcessingEnsemble {
         // Enhanced implementation with actual text processing
         let num_texts = texts.len();
         let embedding_dim = 768;
-        
+
         // Generate meaningful embeddings based on text content
         let mut vectors = Array2::zeros((num_texts, embedding_dim));
         for (i, text) in texts.iter().enumerate() {
             // Simple but meaningful embedding based on text features
             let text_len = text.len() as f64;
             let word_count = text.split_whitespace().count() as f64;
-            let char_diversity = text.chars().collect::<std::collections::HashSet<_>>().len() as f64;
-            
+            let char_diversity =
+                text.chars().collect::<std::collections::HashSet<_>>().len() as f64;
+
             // Create a feature vector based on text characteristics
             for j in 0..embedding_dim {
                 let feature_index = j as f64;
-                let base_value = (text_len * 0.01 + word_count * 0.1 + char_diversity * 0.05) / 100.0;
+                let base_value =
+                    (text_len * 0.01 + word_count * 0.1 + char_diversity * 0.05) / 100.0;
                 let variation = (feature_index * 0.1).sin() * 0.1;
                 vectors[[i, j]] = base_value + variation;
             }
         }
-        
+
         Ok(TextProcessingResult {
             vectors,
             sentiment: SentimentResult::neutral(),
@@ -1025,13 +1044,17 @@ impl NeuralProcessingEnsemble {
         // Generate meaningful embeddings based on text features
         let embedding_dim = 768;
         let mut embedding = Array1::zeros(embedding_dim);
-        
+
         // Text features
         let text_len = text.len() as f64;
         let word_count = text.split_whitespace().count() as f64;
         let char_diversity = text.chars().collect::<std::collections::HashSet<_>>().len() as f64;
-        let avg_word_len = if word_count > 0.0 { text_len / word_count } else { 0.0 };
-        
+        let avg_word_len = if word_count > 0.0 {
+            text_len / word_count
+        } else {
+            0.0
+        };
+
         // N-gram analysis for more sophisticated features
         let bigrams: std::collections::HashSet<String> = text
             .chars()
@@ -1040,7 +1063,7 @@ impl NeuralProcessingEnsemble {
             .map(|w| format!("{}{}", w[0], w[1]))
             .collect();
         let bigram_diversity = bigrams.len() as f64;
-        
+
         // Generate embedding based on multiple text features
         for i in 0..embedding_dim {
             let feature_index = i as f64;
@@ -1051,21 +1074,23 @@ impl NeuralProcessingEnsemble {
                 avg_word_len * 0.05,
                 bigram_diversity * 0.001,
             ];
-            
+
             let feature_weight = (feature_index * 0.1).sin().abs();
-            let weighted_sum: f64 = base_features.iter().enumerate()
+            let weighted_sum: f64 = base_features
+                .iter()
+                .enumerate()
                 .map(|(j, &val)| val * (1.0 + j as f64 * 0.1))
                 .sum();
-            
+
             embedding[i] = weighted_sum * feature_weight * 0.1;
         }
-        
+
         // Normalize the embedding
         let norm = embedding.dot(&embedding).sqrt();
         if norm > 0.0 {
             embedding.mapv_inplace(|x| x / norm);
         }
-        
+
         Ok(embedding)
     }
 
@@ -1076,11 +1101,11 @@ impl NeuralProcessingEnsemble {
     ) -> Result<Vec<ClassificationResult>> {
         // Enhanced classification using text features
         let mut results = Vec::new();
-        
+
         for text in texts {
             // Generate embeddings for the text
             let _text_embedding = self.get_ultra_embeddings(text)?;
-            
+
             // Simple classification based on text features and category matching
             let _text_lower = text.to_lowercase();
             let word_count = text.split_whitespace().count();
@@ -1089,12 +1114,12 @@ impl NeuralProcessingEnsemble {
             } else {
                 0.0
             };
-            
+
             // Create a classification result placeholder
             // In a real implementation, this would use trained models
             results.push(ClassificationResult);
         }
-        
+
         Ok(results)
     }
 
@@ -1105,31 +1130,34 @@ impl NeuralProcessingEnsemble {
     ) -> Result<EnhancedTopicModelingResult> {
         // Enhanced topic modeling using text analysis
         // This is a simplified implementation for demonstration
-        
+
         // Analyze documents for common patterns
-        let mut word_frequencies: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+        let mut word_frequencies: std::collections::HashMap<String, usize> =
+            std::collections::HashMap::new();
         let mut _total_words = 0;
-        
+
         for doc in documents {
             for word in doc.split_whitespace() {
-                let clean_word = word.to_lowercase()
+                let clean_word = word
+                    .to_lowercase()
                     .chars()
                     .filter(|c| c.is_alphabetic())
                     .collect::<String>();
-                
-                if clean_word.len() > 2 { // Filter out very short words
+
+                if clean_word.len() > 2 {
+                    // Filter out very short words
                     *word_frequencies.entry(clean_word).or_insert(0) += 1;
                     _total_words += 1;
                 }
             }
         }
-        
+
         // Simple topic extraction based on word frequency patterns
         let _top_words: Vec<_> = word_frequencies
             .iter()
             .filter(|(_, &count)| count > 1) // Only words that appear multiple times
             .collect();
-        
+
         Ok(EnhancedTopicModelingResult)
     }
 }

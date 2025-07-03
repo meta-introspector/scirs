@@ -544,7 +544,7 @@ fn compute_parallel_bootstrap_ci(
     let bootstrap_powers: Vec<Vec<f64>> = (0..n_bootstrap)
         .into_par_iter()
         .map(|iter| {
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             let times_ref = times_arc.clone();
             let values_ref = values_arc.clone();
             let frequencies_ref = frequencies_arc.clone();

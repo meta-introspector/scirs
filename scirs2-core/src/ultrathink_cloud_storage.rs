@@ -1413,7 +1413,10 @@ impl UltrathinkCloudStorageCoordinator {
         })?;
 
         providers.insert(id.clone(), provider);
-        println!("✅ Registered cloud storage provider: {}", id.0);
+        println!(
+            "✅ Registered cloud storage provider: {provider}",
+            provider = id.0
+        );
         Ok(())
     }
 

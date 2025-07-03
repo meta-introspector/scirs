@@ -226,7 +226,7 @@ where
         &laplacian_cols,
         &laplacian_values,
         (n, n),
-        true, // Sum duplicates
+        false, // Triplets are not sorted
     )
 }
 
@@ -279,7 +279,7 @@ where
         &laplacian_cols,
         &laplacian_values,
         (n, n),
-        true, // Sum duplicates
+        false, // Triplets are not sorted
     )
 }
 
@@ -329,7 +329,7 @@ where
         &laplacian_cols,
         &laplacian_values,
         (n, n),
-        true, // Sum duplicates
+        false, // Triplets are not sorted
     )
 }
 
@@ -748,4 +748,5 @@ mod tests {
         assert_relative_eq!(in_degrees[1], 1.0);
         assert_relative_eq!(in_degrees[2], 1.0);
     }
+
 }

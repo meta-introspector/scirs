@@ -386,34 +386,34 @@ where
     D: Data<Elem = F>,
 {
     let n = data.len();
-    
+
     // Use SIMD operations for basic statistics
     let sum = F::simd_sum(&data.view());
     let min_val = F::simd_min(&data.view());
     let max_val = F::simd_max(&data.view());
-    
+
     let mean = sum / F::from(n).unwrap();
-    
+
     // Compute sum of squares using SIMD where possible
     let sum_squares = data.iter().fold(F::zero(), |acc, &val| acc + val * val);
     let variance = (sum_squares / F::from(n).unwrap()) - (mean * mean);
     let std_dev = variance.sqrt();
-    
+
     // Compute higher moments for skewness and kurtosis
     let mut sum_cubed_dev = F::zero();
     let mut sum_fourth_dev = F::zero();
-    
+
     for &val in data.iter() {
         let dev = val - mean;
         let dev_squared = dev * dev;
         sum_cubed_dev = sum_cubed_dev + dev * dev_squared;
         sum_fourth_dev = sum_fourth_dev + dev_squared * dev_squared;
     }
-    
+
     let n_f = F::from(n).unwrap();
     let skewness = (sum_cubed_dev / n_f) / (std_dev * std_dev * std_dev);
     let kurtosis = (sum_fourth_dev / n_f) / (variance * variance) - F::from(3.0).unwrap();
-    
+
     Ok(UltraBatchStats {
         mean,
         variance,
@@ -439,50 +439,50 @@ where
 {
     let n = data.len();
     let chunk_size = config.chunk_size.min(n);
-    
+
     // Process data in cache-friendly chunks
     let mut total_sum = F::zero();
     let mut total_sum_squares = F::zero();
     let mut global_min = data[0];
     let mut global_max = data[0];
-    
+
     // Process chunks using SIMD operations
     for chunk_start in (0..n).step_by(chunk_size) {
         let chunk_end = (chunk_start + chunk_size).min(n);
         let chunk = data.slice(ndarray::s![chunk_start..chunk_end]);
-        
+
         // Use SIMD for chunk processing
         let chunk_sum = F::simd_sum(&chunk.view());
         let chunk_min = F::simd_min(&chunk.view());
         let chunk_max = F::simd_max(&chunk.view());
-        
+
         total_sum = total_sum + chunk_sum;
-        
+
         if chunk_min < global_min {
             global_min = chunk_min;
         }
         if chunk_max > global_max {
             global_max = chunk_max;
         }
-        
+
         // Compute sum of squares for this chunk
         for &val in chunk.iter() {
             total_sum_squares = total_sum_squares + val * val;
         }
     }
-    
+
     let mean = total_sum / F::from(n).unwrap();
     let variance = (total_sum_squares / F::from(n).unwrap()) - (mean * mean);
     let std_dev = variance.sqrt();
-    
+
     // Compute higher moments (skewness, kurtosis) in second pass
     let mut sum_cubed_dev = F::zero();
     let mut sum_fourth_dev = F::zero();
-    
+
     for chunk_start in (0..n).step_by(chunk_size) {
         let chunk_end = (chunk_start + chunk_size).min(n);
         let chunk = data.slice(ndarray::s![chunk_start..chunk_end]);
-        
+
         for &val in chunk.iter() {
             let dev = val - mean;
             let dev_squared = dev * dev;
@@ -490,11 +490,11 @@ where
             sum_fourth_dev = sum_fourth_dev + dev_squared * dev_squared;
         }
     }
-    
+
     let n_f = F::from(n).unwrap();
     let skewness = (sum_cubed_dev / n_f) / (std_dev * std_dev * std_dev);
     let kurtosis = (sum_fourth_dev / n_f) / (variance * variance) - F::from(3.0).unwrap();
-    
+
     Ok(UltraBatchStats {
         mean,
         variance,
@@ -523,12 +523,12 @@ where
 {
     let n = data.len();
     let num_windows = n - window_size + 1;
-    
+
     // For now, fall back to optimized scalar implementation with SIMD hints
     // Full SIMD implementation would require vectorizing across multiple windows
     for i in 0..num_windows {
         let window = data.slice(ndarray::s![i..i + window_size]);
-        
+
         // Use SIMD operations where possible
         let sum = if window_size >= 8 {
             // Hint for SIMD sum if window is large enough
@@ -536,13 +536,14 @@ where
         } else {
             window.iter().fold(F::zero(), |acc, &val| acc + val)
         };
-        
+
         let mean = sum / F::from(window_size).unwrap();
         means.push(mean);
-        
+
         // Compute variance using SIMD if available
         let variance = if window_size >= 8 {
-            let sum_sq_diff = window.iter()
+            let sum_sq_diff = window
+                .iter()
                 .map(|&val| {
                     let diff = val - mean;
                     diff * diff
@@ -550,7 +551,8 @@ where
                 .fold(F::zero(), |acc, sq_diff| acc + sq_diff);
             sum_sq_diff / F::from(window_size - 1).unwrap()
         } else {
-            let sum_sq_diff = window.iter()
+            let sum_sq_diff = window
+                .iter()
                 .map(|&val| {
                     let diff = val - mean;
                     diff * diff
@@ -559,20 +561,22 @@ where
             sum_sq_diff / F::from(window_size - 1).unwrap()
         };
         variances.push(variance);
-        
+
         // Min/Max using SIMD if available
         let (min_val, max_val) = if window_size >= 8 {
             (F::simd_min(&window.view()), F::simd_max(&window.view()))
         } else {
             let min_val = window.iter().fold(F::infinity(), |acc, &val| acc.min(val));
-            let max_val = window.iter().fold(F::neg_infinity(), |acc, &val| acc.max(val));
+            let max_val = window
+                .iter()
+                .fold(F::neg_infinity(), |acc, &val| acc.max(val));
             (min_val, max_val)
         };
-        
+
         mins.push(min_val);
         maxs.push(max_val);
     }
-    
+
     Ok(())
 }
 
@@ -636,11 +640,11 @@ where
     D: Data<Elem = F>,
 {
     let (n_rows, n_cols) = data.dim();
-    
+
     if n_rows == 0 || n_cols == 0 {
         return Err(StatsError::EmptyInput);
     }
-    
+
     if n_rows < 2 {
         return Err(StatsError::InsufficientData);
     }
@@ -656,10 +660,10 @@ where
         };
         means.push(mean);
     }
-    
+
     // Create result covariance matrix
     let mut result = Array2::<F>::zeros((n_cols, n_cols));
-    
+
     // Compute covariance matrix elements using SIMD operations
     for i in 0..n_cols {
         for j in i..n_cols {
@@ -667,21 +671,21 @@ where
             let col_j = data.column(j);
             let mean_i = means[i];
             let mean_j = means[j];
-            
+
             let mut covariance = F::zero();
-            
+
             // Use SIMD for covariance computation when available
             if has_avx2 && n_rows >= 8 {
                 // Vectorized covariance computation
                 let chunk_size = 8; // AVX2 can process 8 f32 or 4 f64 at once
                 let mut sum = F::zero();
-                
+
                 // Process in chunks for SIMD
                 for chunk_start in (0..n_rows).step_by(chunk_size) {
                     let chunk_end = (chunk_start + chunk_size).min(n_rows);
                     let chunk_i = col_i.slice(ndarray::s![chunk_start..chunk_end]);
                     let chunk_j = col_j.slice(ndarray::s![chunk_start..chunk_end]);
-                    
+
                     // Compute (x_i - mean_i) * (x_j - mean_j) for the chunk
                     for (&val_i, &val_j) in chunk_i.iter().zip(chunk_j.iter()) {
                         sum = sum + (val_i - mean_i) * (val_j - mean_j);
@@ -694,10 +698,10 @@ where
                     covariance = covariance + (val_i - mean_i) * (val_j - mean_j);
                 }
             }
-            
+
             // Use sample covariance (n-1 denominator)
             covariance = covariance / F::from(n_rows - 1).unwrap();
-            
+
             // Fill symmetric matrix
             result[[i, j]] = covariance;
             if i != j {
@@ -705,7 +709,7 @@ where
             }
         }
     }
-    
+
     Ok(result)
 }
 
@@ -719,11 +723,11 @@ where
     D: Data<Elem = F>,
 {
     let (n_rows, n_cols) = data.dim();
-    
+
     if n_rows == 0 || n_cols == 0 {
         return Err(StatsError::EmptyInput);
     }
-    
+
     if n_rows < 2 {
         return Err(StatsError::InsufficientData);
     }
@@ -733,24 +737,24 @@ where
     for col_idx in 0..n_cols {
         let col = data.column(col_idx);
         let n_f = F::from(n_rows).unwrap();
-        
+
         // Compute mean with SIMD if available
         let mean = if has_avx2 && col.len() >= 8 {
             F::simd_sum(&col.view()) / n_f
         } else {
             col.iter().fold(F::zero(), |acc, &val| acc + val) / n_f
         };
-        
+
         // Compute standard deviation
         let variance = if has_avx2 && col.len() >= 8 {
             // SIMD-accelerated variance computation
             let mut sum_sq_diff = F::zero();
             let chunk_size = 8;
-            
+
             for chunk_start in (0..n_rows).step_by(chunk_size) {
                 let chunk_end = (chunk_start + chunk_size).min(n_rows);
                 let chunk = col.slice(ndarray::s![chunk_start..chunk_end]);
-                
+
                 for &val in chunk.iter() {
                     let diff = val - mean;
                     sum_sq_diff = sum_sq_diff + diff * diff;
@@ -759,7 +763,8 @@ where
             sum_sq_diff / F::from(n_rows - 1).unwrap()
         } else {
             // Scalar computation
-            let sum_sq_diff = col.iter()
+            let sum_sq_diff = col
+                .iter()
                 .map(|&val| {
                     let diff = val - mean;
                     diff * diff
@@ -767,19 +772,19 @@ where
                 .fold(F::zero(), |acc, sq_diff| acc + sq_diff);
             sum_sq_diff / F::from(n_rows - 1).unwrap()
         };
-        
+
         let std_dev = variance.sqrt();
         stats.push((mean, std_dev));
     }
-    
+
     // Create result correlation matrix
     let mut result = Array2::<F>::zeros((n_cols, n_cols));
-    
+
     // Set diagonal to 1.0 (perfect self-correlation)
     for i in 0..n_cols {
         result[[i, i]] = F::one();
     }
-    
+
     // Compute correlation matrix elements using SIMD operations
     for i in 0..n_cols {
         for j in (i + 1)..n_cols {
@@ -787,26 +792,26 @@ where
             let col_j = data.column(j);
             let (mean_i, std_i) = stats[i];
             let (mean_j, std_j) = stats[j];
-            
+
             // Check for zero variance
             if std_i == F::zero() || std_j == F::zero() {
                 result[[i, j]] = F::zero();
                 result[[j, i]] = F::zero();
                 continue;
             }
-            
+
             let mut covariance = F::zero();
-            
+
             // Use SIMD for covariance computation when available
             if has_avx2 && n_rows >= 8 {
                 let chunk_size = 8;
                 let mut sum = F::zero();
-                
+
                 for chunk_start in (0..n_rows).step_by(chunk_size) {
                     let chunk_end = (chunk_start + chunk_size).min(n_rows);
                     let chunk_i = col_i.slice(ndarray::s![chunk_start..chunk_end]);
                     let chunk_j = col_j.slice(ndarray::s![chunk_start..chunk_end]);
-                    
+
                     for (&val_i, &val_j) in chunk_i.iter().zip(chunk_j.iter()) {
                         sum = sum + (val_i - mean_i) * (val_j - mean_j);
                     }
@@ -818,16 +823,16 @@ where
                     covariance = covariance + (val_i - mean_i) * (val_j - mean_j);
                 }
             }
-            
+
             covariance = covariance / F::from(n_rows - 1).unwrap();
             let correlation = covariance / (std_i * std_j);
-            
+
             // Fill symmetric matrix
             result[[i, j]] = correlation;
             result[[j, i]] = correlation;
         }
     }
-    
+
     Ok(result)
 }
 
@@ -841,33 +846,33 @@ where
     D: Data<Elem = F>,
 {
     let (n_rows, n_cols) = data.dim();
-    
+
     if n_rows == 0 || n_cols == 0 {
         return Err(StatsError::EmptyInput);
     }
 
     // Create result distance matrix (symmetric, zero diagonal)
     let mut result = Array2::<F>::zeros((n_rows, n_rows));
-    
+
     // Compute distance matrix elements using SIMD operations
     for i in 0..n_rows {
         for j in (i + 1)..n_rows {
             let row_i = data.row(i);
             let row_j = data.row(j);
-            
+
             let mut sum_sq_diff = F::zero();
-            
+
             // Use SIMD for distance computation when available
             if has_avx2 && n_cols >= 8 {
                 let chunk_size = 8;
                 let mut sum = F::zero();
-                
+
                 // Process in chunks for SIMD
                 for chunk_start in (0..n_cols).step_by(chunk_size) {
                     let chunk_end = (chunk_start + chunk_size).min(n_cols);
                     let chunk_i = row_i.slice(ndarray::s![chunk_start..chunk_end]);
                     let chunk_j = row_j.slice(ndarray::s![chunk_start..chunk_end]);
-                    
+
                     // Compute squared differences for the chunk
                     for (&val_i, &val_j) in chunk_i.iter().zip(chunk_j.iter()) {
                         let diff = val_i - val_j;
@@ -882,15 +887,15 @@ where
                     sum_sq_diff = sum_sq_diff + diff * diff;
                 }
             }
-            
+
             let distance = sum_sq_diff.sqrt();
-            
+
             // Fill symmetric matrix (diagonal remains zero)
             result[[i, j]] = distance;
             result[[j, i]] = distance;
         }
     }
-    
+
     Ok(result)
 }
 
@@ -904,7 +909,7 @@ where
     D: Data<Elem = F>,
 {
     let (n_rows, n_cols) = data.dim();
-    
+
     if n_rows == 0 || n_cols == 0 {
         return Err(StatsError::EmptyInput);
     }
@@ -913,16 +918,16 @@ where
     let mut norms = Vec::with_capacity(n_rows);
     for row_idx in 0..n_rows {
         let row = data.row(row_idx);
-        
+
         let norm_sq = if has_avx2 && n_cols >= 8 {
             // SIMD norm computation
             let chunk_size = 8;
             let mut sum = F::zero();
-            
+
             for chunk_start in (0..n_cols).step_by(chunk_size) {
                 let chunk_end = (chunk_start + chunk_size).min(n_cols);
                 let chunk = row.slice(ndarray::s![chunk_start..chunk_end]);
-                
+
                 for &val in chunk.iter() {
                     sum = sum + val * val;
                 }
@@ -932,13 +937,13 @@ where
             // Scalar norm computation
             row.iter().fold(F::zero(), |acc, &val| acc + val * val)
         };
-        
+
         norms.push(norm_sq.sqrt());
     }
 
     // Create result cosine distance matrix (symmetric, zero diagonal)
     let mut result = Array2::<F>::zeros((n_rows, n_rows));
-    
+
     // Compute cosine distance matrix elements using SIMD operations
     for i in 0..n_rows {
         for j in (i + 1)..n_rows {
@@ -946,27 +951,27 @@ where
             let row_j = data.row(j);
             let norm_i = norms[i];
             let norm_j = norms[j];
-            
+
             // Check for zero norms (would result in undefined cosine)
             if norm_i == F::zero() || norm_j == F::zero() {
                 result[[i, j]] = F::one(); // Maximum distance for zero vectors
                 result[[j, i]] = F::one();
                 continue;
             }
-            
+
             let mut dot_product = F::zero();
-            
+
             // Use SIMD for dot product computation when available
             if has_avx2 && n_cols >= 8 {
                 let chunk_size = 8;
                 let mut sum = F::zero();
-                
+
                 // Process in chunks for SIMD
                 for chunk_start in (0..n_cols).step_by(chunk_size) {
                     let chunk_end = (chunk_start + chunk_size).min(n_cols);
                     let chunk_i = row_i.slice(ndarray::s![chunk_start..chunk_end]);
                     let chunk_j = row_j.slice(ndarray::s![chunk_start..chunk_end]);
-                    
+
                     // Compute dot product for the chunk
                     for (&val_i, &val_j) in chunk_i.iter().zip(chunk_j.iter()) {
                         sum = sum + val_i * val_j;
@@ -979,22 +984,22 @@ where
                     dot_product = dot_product + val_i * val_j;
                 }
             }
-            
+
             // Cosine similarity = dot_product / (norm_i * norm_j)
             let cosine_similarity = dot_product / (norm_i * norm_j);
-            
+
             // Cosine distance = 1 - cosine_similarity
             // Clamp to [0, 2] range for numerical stability
             let cosine_distance = (F::one() - cosine_similarity)
                 .max(F::zero())
                 .min(F::from(2.0).unwrap());
-            
+
             // Fill symmetric matrix (diagonal remains zero)
             result[[i, j]] = cosine_distance;
             result[[j, i]] = cosine_distance;
         }
     }
-    
+
     Ok(result)
 }
 
@@ -1008,27 +1013,27 @@ where
     D: Data<Elem = F>,
 {
     let n = data.len();
-    
+
     if n == 0 {
         return Err(StatsError::EmptyInput);
     }
-    
+
     if quantile < 0.0 || quantile > 1.0 {
         return Err(StatsError::InvalidArgument(
-            "Quantile must be between 0 and 1".to_string()
+            "Quantile must be between 0 and 1".to_string(),
         ));
     }
-    
+
     // Convert data to mutable vector for in-place partitioning
     let mut data_vec: Vec<F> = data.iter().cloned().collect();
-    
+
     // Calculate target index
     let target_index = if quantile == 1.0 {
         n - 1
     } else {
         ((n as f64 - 1.0) * quantile).round() as usize
     };
-    
+
     // Use optimized quickselect with SIMD-aware partitioning
     if has_avx2 && n > 64 {
         ultra_quickselect_simd_recursive(&mut data_vec, target_index, 0, n - 1)
@@ -1050,14 +1055,14 @@ where
     if left == right {
         return Ok(data[left]);
     }
-    
+
     // Use median-of-three pivot selection for better performance
     let pivot_index = median_of_three_pivot(data, left, right);
     let pivot_value = data[pivot_index];
-    
+
     // SIMD-optimized partitioning
     let partition_index = simd_partition(data, left, right, pivot_value);
-    
+
     if target_index == partition_index {
         Ok(data[partition_index])
     } else if target_index < partition_index {
@@ -1079,12 +1084,12 @@ where
     if left == right {
         return Ok(data[left]);
     }
-    
+
     let pivot_index = median_of_three_pivot(data, left, right);
     let pivot_value = data[pivot_index];
-    
+
     let partition_index = scalar_partition(data, left, right, pivot_value);
-    
+
     if target_index == partition_index {
         Ok(data[partition_index])
     } else if target_index < partition_index {
@@ -1099,12 +1104,14 @@ where
     F: Copy + PartialOrd,
 {
     let mid = left + (right - left) / 2;
-    
-    if (data[left] <= data[mid] && data[mid] <= data[right]) ||
-       (data[right] <= data[mid] && data[mid] <= data[left]) {
+
+    if (data[left] <= data[mid] && data[mid] <= data[right])
+        || (data[right] <= data[mid] && data[mid] <= data[left])
+    {
         mid
-    } else if (data[mid] <= data[left] && data[left] <= data[right]) ||
-              (data[right] <= data[left] && data[left] <= data[mid]) {
+    } else if (data[mid] <= data[left] && data[left] <= data[right])
+        || (data[right] <= data[left] && data[left] <= data[mid])
+    {
         left
     } else {
         right
@@ -1126,7 +1133,7 @@ where
 {
     let mut i = left;
     let mut j = right;
-    
+
     loop {
         while i <= j && data[i] < pivot {
             i += 1;
@@ -1134,16 +1141,16 @@ where
         while i <= j && data[j] > pivot {
             j -= 1;
         }
-        
+
         if i >= j {
             break;
         }
-        
+
         data.swap(i, j);
         i += 1;
         j -= 1;
     }
-    
+
     j
 }
 
@@ -1157,22 +1164,22 @@ where
     D: Data<Elem = F>,
 {
     let n = data.len();
-    
+
     if n == 0 {
         return Err(StatsError::EmptyInput);
     }
-    
+
     for &q in quantiles {
         if q < 0.0 || q > 1.0 {
             return Err(StatsError::InvalidArgument(
-                "All quantiles must be between 0 and 1".to_string()
+                "All quantiles must be between 0 and 1".to_string(),
             ));
         }
     }
-    
+
     // Sort the data once
     let mut sorted_data: Vec<F> = data.iter().cloned().collect();
-    
+
     // Use optimized sorting based on data size and SIMD availability
     if has_avx2 && n > 1000 {
         // For large datasets, consider using a SIMD-optimized sorting network
@@ -1182,10 +1189,10 @@ where
         // Standard sorting for smaller datasets
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     }
-    
+
     // Extract all quantiles using linear interpolation
     let mut results = Vec::with_capacity(quantiles.len());
-    
+
     for &quantile in quantiles {
         let result = if quantile == 0.0 {
             sorted_data[0]
@@ -1197,7 +1204,7 @@ where
             let lower_index = pos.floor() as usize;
             let upper_index = (lower_index + 1).min(n - 1);
             let fraction = F::from(pos.fract()).unwrap();
-            
+
             if lower_index == upper_index {
                 sorted_data[lower_index]
             } else {
@@ -1206,10 +1213,10 @@ where
                 lower_val + fraction * (upper_val - lower_val)
             }
         };
-        
+
         results.push(result);
     }
-    
+
     Ok(Array1::from_vec(results))
 }
 

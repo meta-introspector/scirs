@@ -1518,8 +1518,8 @@ fn select_best_strategy(
         0.05
     };
     use rand::Rng;
-    let mut rng = rand::thread_rng();
-    let random_factor: f64 = rng.gen(); // Simple random number
+    let mut rng = rand::rng();
+    let random_factor: f64 = rng.random(); // Simple random number
 
     let selected_strategy = if random_factor < exploration_rate && scored_strategies.len() > 1 {
         // Exploration: occasionally select a suboptimal strategy to learn

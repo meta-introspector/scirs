@@ -13,8 +13,8 @@
 //! - **Resource exhaustion scenarios**: Test system limits
 
 use crate::error::{InterpolateError, InterpolateResult};
-use crate::traits::InterpolationFloat;
 use crate::simd_comprehensive_validation::PerformanceImpact;
+use crate::traits::InterpolationFloat;
 use ndarray::{Array1, ArrayView1};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -1309,12 +1309,12 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
     /// Test matrix conditioning edge cases
     fn test_matrix_conditioning(&self) -> InterpolateResult<StressTestResult> {
         let start = Instant::now();
-        
+
         // Create ill-conditioned data (clustered points)
         let n = 100;
         let mut x_data = Array1::zeros(n);
         let mut y_data = Array1::zeros(n);
-        
+
         // Cluster most points near 0, with a few outliers
         for i in 0..n {
             if i < n - 5 {
@@ -1327,8 +1327,10 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
         }
 
         // Test robust methods
-        let linear_result = crate::interp1d::linear_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
-        let cubic_result = crate::interp1d::cubic_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
+        let linear_result =
+            crate::interp1d::linear_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
+        let cubic_result =
+            crate::interp1d::cubic_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
 
         let duration = start.elapsed();
         let both_stable = linear_result.is_ok() && cubic_result.is_ok();
@@ -1358,21 +1360,22 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
     /// Test floating point precision limits
     fn test_precision_limits(&self) -> InterpolateResult<StressTestResult> {
         let start = Instant::now();
-        
+
         // Create data with precision challenges
         let n = 50;
         let epsilon = T::from_f64(f64::EPSILON).unwrap();
         let x_data = Array1::linspace(T::one(), T::one() + epsilon * T::from_f64(10.0).unwrap(), n);
         let y_data = x_data.mapv(|x| x * x); // Simple quadratic
 
-        let linear_result = crate::interp1d::linear_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
-        
+        let linear_result =
+            crate::interp1d::linear_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
+
         let duration = start.elapsed();
         let precision_stable = linear_result.is_ok();
 
         if let Ok(interpolated) = linear_result {
             let has_artifacts = interpolated.iter().any(|&x| x.is_nan() || x.is_infinite());
-            
+
             Ok(StressTestResult {
                 test_name: "precision_limits".to_string(),
                 category: StressTestCategory::NumericalStability,
@@ -1390,7 +1393,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                     Vec::new()
                 },
                 performance_impact: PerformanceImpact::Minimal,
-                recovery_strategy: Some("Use higher precision arithmetic or scaled computation".to_string()),
+                recovery_strategy: Some(
+                    "Use higher precision arithmetic or scaled computation".to_string(),
+                ),
                 production_impact: ProductionImpact::Reliability,
             })
         } else {
@@ -1412,7 +1417,7 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
     /// Test gradient stability with discontinuous data
     fn test_gradient_stability(&self) -> InterpolateResult<StressTestResult> {
         let start = Instant::now();
-        
+
         // Create step function data
         let n = 100;
         let x_data = Array1::linspace(T::zero(), T::from_f64(2.0).unwrap(), n);
@@ -1425,18 +1430,24 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
         });
 
         // Test methods that are sensitive to gradients
-        let cubic_result = crate::interp1d::cubic_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
-        let linear_result = crate::interp1d::linear_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
+        let cubic_result =
+            crate::interp1d::cubic_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
+        let linear_result =
+            crate::interp1d::linear_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
 
         let duration = start.elapsed();
-        
+
         let gradient_stable = if let (Ok(cubic), Ok(linear)) = (&cubic_result, &linear_result) {
             // Check for excessive overshoot in cubic interpolation
             let max_overshoot = cubic.iter().fold(T::zero(), |acc, &x| {
                 let abs_x = x.abs();
-                if abs_x > acc { abs_x } else { acc }
+                if abs_x > acc {
+                    abs_x
+                } else {
+                    acc
+                }
             });
-            
+
             max_overshoot < T::from_f64(50.0).unwrap() // Reasonable overshoot threshold
         } else {
             false
@@ -1459,7 +1470,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                 Vec::new()
             },
             performance_impact: PerformanceImpact::Moderate,
-            recovery_strategy: Some("Use monotonic or shape-preserving interpolation methods".to_string()),
+            recovery_strategy: Some(
+                "Use monotonic or shape-preserving interpolation methods".to_string(),
+            ),
             production_impact: ProductionImpact::MinorPerformance,
         })
     }
@@ -1467,7 +1480,7 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
     /// Test oscillatory stability
     fn test_oscillatory_stability(&self) -> InterpolateResult<StressTestResult> {
         let start = Instant::now();
-        
+
         // Create high-frequency oscillatory data
         let n = 100;
         let x_data = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), n);
@@ -1476,13 +1489,16 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             (x * freq).sin()
         });
 
-        let cubic_result = crate::interp1d::cubic_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
-        
+        let cubic_result =
+            crate::interp1d::cubic_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
+
         let duration = start.elapsed();
-        
+
         let oscillatory_stable = if let Ok(cubic) = &cubic_result {
             // Check for aliasing artifacts (values outside expected range)
-            let in_range = cubic.iter().all(|&x| x >= T::from_f64(-1.5).unwrap() && x <= T::from_f64(1.5).unwrap());
+            let in_range = cubic
+                .iter()
+                .all(|&x| x >= T::from_f64(-1.5).unwrap() && x <= T::from_f64(1.5).unwrap());
             in_range
         } else {
             false
@@ -1505,7 +1521,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                 Vec::new()
             },
             performance_impact: PerformanceImpact::Moderate,
-            recovery_strategy: Some("Use appropriate anti-aliasing or spectral methods".to_string()),
+            recovery_strategy: Some(
+                "Use appropriate anti-aliasing or spectral methods".to_string(),
+            ),
             production_impact: ProductionImpact::MinorPerformance,
         })
     }
@@ -1513,12 +1531,12 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
     /// Test scaling invariance
     fn test_scaling_stability(&self) -> InterpolateResult<StressTestResult> {
         let start = Instant::now();
-        
+
         // Test interpolation with different scaling
         let n = 50;
         let x1 = Array1::linspace(T::zero(), T::from_f64(1.0).unwrap(), n);
         let y1 = x1.mapv(|x| x * x);
-        
+
         let x2 = x1.mapv(|x| x * T::from_f64(1000.0).unwrap());
         let y2 = y1.mapv(|y| y * T::from_f64(1000000.0).unwrap());
 
@@ -1526,7 +1544,7 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
         let result2 = crate::interp1d::linear_interpolate(&x2.view(), &y2.view(), &x2.view());
 
         let duration = start.elapsed();
-        
+
         let scaling_stable = result1.is_ok() && result2.is_ok();
 
         Ok(StressTestResult {
@@ -1557,8 +1575,14 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
 
         let error_scenarios = vec![
             ("empty_data", self.test_empty_data_error_messages()),
-            ("mismatched_dimensions", self.test_dimension_mismatch_errors()),
-            ("invalid_parameters", self.test_parameter_validation_errors()),
+            (
+                "mismatched_dimensions",
+                self.test_dimension_mismatch_errors(),
+            ),
+            (
+                "invalid_parameters",
+                self.test_parameter_validation_errors(),
+            ),
             ("numerical_failures", self.test_numerical_error_messages()),
         ];
 
@@ -1583,17 +1607,20 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
     /// Test empty data error messages
     fn test_empty_data_error_messages(&self) -> InterpolateResult<StressTestResult> {
         let start = Instant::now();
-        
+
         let empty_x: Array1<T> = Array1::zeros(0);
         let empty_y: Array1<T> = Array1::zeros(0);
-        
-        let result = crate::interp1d::linear_interpolate(&empty_x.view(), &empty_y.view(), &empty_x.view());
-        
+
+        let result =
+            crate::interp1d::linear_interpolate(&empty_x.view(), &empty_y.view(), &empty_x.view());
+
         let duration = start.elapsed();
-        
+
         let clear_error = if let Err(e) = result {
             let error_msg = format!("{}", e);
-            error_msg.contains("empty") || error_msg.contains("size") || error_msg.contains("length")
+            error_msg.contains("empty")
+                || error_msg.contains("size")
+                || error_msg.contains("length")
         } else {
             false // Should fail, not succeed
         };
@@ -1623,17 +1650,20 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
     /// Test dimension mismatch error messages
     fn test_dimension_mismatch_errors(&self) -> InterpolateResult<StressTestResult> {
         let start = Instant::now();
-        
+
         let x_data = Array1::linspace(T::zero(), T::from_f64(1.0).unwrap(), 10);
         let y_data = Array1::linspace(T::zero(), T::from_f64(1.0).unwrap(), 5); // Mismatched size
-        
-        let result = crate::interp1d::linear_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
-        
+
+        let result =
+            crate::interp1d::linear_interpolate(&x_data.view(), &y_data.view(), &x_data.view());
+
         let duration = start.elapsed();
-        
+
         let clear_error = if let Err(e) = result {
             let error_msg = format!("{}", e);
-            error_msg.contains("dimension") || error_msg.contains("size") || error_msg.contains("mismatch")
+            error_msg.contains("dimension")
+                || error_msg.contains("size")
+                || error_msg.contains("mismatch")
         } else {
             false
         };
@@ -1718,30 +1748,38 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
     /// Test memory exhaustion recovery
     fn test_memory_exhaustion_recovery(&self) -> InterpolateResult<StressTestResult> {
         let start = Instant::now();
-        
+
         // Try to create very large arrays that might exhaust memory
         let large_size = 10_000_000; // 10M points
-        
+
         let result = if large_size * std::mem::size_of::<T>() > 1_000_000_000 {
             // Simulate memory exhaustion
-            Err(InterpolateError::InvalidInput("Insufficient memory".to_string()))
+            Err(InterpolateError::InvalidInput(
+                "Insufficient memory".to_string(),
+            ))
         } else {
             // Actually try the allocation if reasonable
             match Array1::zeros(large_size).to_owned() {
                 x_data => {
                     let y_data = Array1::zeros(large_size);
-                    crate::interp1d::linear_interpolate(&x_data.view(), &y_data.view(), &x_data.view())
+                    crate::interp1d::linear_interpolate(
+                        &x_data.view(),
+                        &y_data.view(),
+                        &x_data.view(),
+                    )
                 }
             }
         };
 
         let duration = start.elapsed();
-        
+
         let graceful_handling = match result {
             Err(e) => {
                 let error_msg = format!("{}", e);
-                error_msg.contains("memory") || error_msg.contains("size") || error_msg.contains("allocation")
-            },
+                error_msg.contains("memory")
+                    || error_msg.contains("size")
+                    || error_msg.contains("allocation")
+            }
             Ok(_) => true, // If it succeeded, that's fine too
         };
 
@@ -1766,7 +1804,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                 Vec::new()
             },
             performance_impact: PerformanceImpact::Significant,
-            recovery_strategy: Some("Implement graceful degradation for large datasets".to_string()),
+            recovery_strategy: Some(
+                "Implement graceful degradation for large datasets".to_string(),
+            ),
             production_impact: ProductionImpact::Reliability,
         })
     }

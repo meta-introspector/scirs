@@ -14,9 +14,8 @@ use crate::wiener::wiener_filter;
 use ndarray::{s, Array1};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use scirs2_core::validation::check_finite;
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// Advanced adaptive denoising configuration
 #[derive(Debug, Clone)]
@@ -1029,10 +1028,10 @@ mod tests {
 
         // Add noise
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let noisy_signal: Vec<f64> = clean_signal
             .iter()
-            .map(|&s| s + 0.1 * rng.gen_range(-1.0..1.0))
+            .map(|&s| s + 0.1 * rng.random_range(-1.0..1.0))
             .collect();
 
         let config = AdaptiveDenoisingConfig::default();

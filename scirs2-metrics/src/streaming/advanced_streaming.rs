@@ -18,7 +18,7 @@ use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant, SystemTime};
 
 /// Advanced streaming metrics with concept drift detection
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AdaptiveStreamingMetrics<F: Float> {
     /// Configuration for the streaming system
     config: StreamingConfig,
@@ -178,7 +178,7 @@ pub enum AlertSeverity {
 }
 
 /// Concept drift detector trait
-pub trait ConceptDriftDetector<F: Float> {
+pub trait ConceptDriftDetector<F: Float>: std::fmt::Debug {
     /// Update detector with new prediction
     fn update(&mut self, prediction_correct: bool, error: F) -> Result<DriftDetectionResult>;
 

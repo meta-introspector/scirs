@@ -649,7 +649,7 @@ mod tests {
             // Modify some values using linear indexing
             let slice = array_view.as_slice_mut().unwrap();
             slice[5 * 10 + 5] = 42.0; // (5, 5) in row-major order
-            slice[1 * 10 + 2] = 13.7; // (1, 2) in row-major order
+            slice[10 + 2] = 13.7; // (1, 2) in row-major order
         }
 
         // Flush changes
@@ -659,7 +659,7 @@ mod tests {
         let read_array: ArrayD<f64> = read_mmap_array(&file_path).unwrap();
         let read_slice = read_array.as_slice().unwrap();
         assert_eq!(read_slice[5 * 10 + 5], 42.0);
-        assert_eq!(read_slice[1 * 10 + 2], 13.7);
+        assert_eq!(read_slice[10 + 2], 13.7);
         assert_eq!(read_slice[0], 0.0);
     }
 

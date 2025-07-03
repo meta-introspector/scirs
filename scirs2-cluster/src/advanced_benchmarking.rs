@@ -2,7 +2,7 @@
 //!
 //! This module provides cutting-edge benchmarking capabilities for clustering algorithms,
 //! including statistical analysis, memory profiling, performance regression detection,
-//! and automated optimization suggestions. It represents the state-of-the-art in 
+//! and automated optimization suggestions. It represents the state-of-the-art in
 //! clustering performance analysis for the 0.1.0-beta.1 release.
 //!
 //! # Features
@@ -26,7 +26,7 @@
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let data = Array2::random((1000, 10), ndarray_rand::rand_distr::Uniform::new(-1.0, 1.0));
-//! 
+//!
 //! let config = BenchmarkConfig {
 //!     warmup_iterations: 10,
 //!     measurement_iterations: 100,
@@ -39,24 +39,24 @@
 //!
 //! let benchmark = AdvancedBenchmark::new(config);
 //! let results = benchmark.comprehensive_analysis(&data.view())?;
-//! 
+//!
 //! create_comprehensive_report(&results, "benchmark_report.html")?;
 //! # Ok(())
 //! # }
 //! ```
 
-use crate::error::{ClusteringError, Result};
-use crate::vq::{kmeans, kmeans2};
-use crate::hierarchy::{linkage, LinkageMethod, Metric};
 use crate::density::{dbscan, optics};
+use crate::error::{ClusteringError, Result};
 use crate::gmm::{gaussian_mixture, GMMOptions};
-use crate::metrics::{silhouette_score, calinski_harabasz_score};
+use crate::hierarchy::{linkage, LinkageMethod, Metric};
+use crate::metrics::{calinski_harabasz_score, silhouette_score};
+use crate::vq::{kmeans, kmeans2};
 
 use ndarray::{Array1, Array2, ArrayView2};
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -414,7 +414,7 @@ impl AdvancedBenchmark {
 
         // Benchmark each algorithm
         let algorithms = self.get_algorithms_to_benchmark();
-        
+
         for algorithm_name in algorithms {
             match self.benchmark_algorithm(&algorithm_name, data) {
                 Ok(result) => {
@@ -454,7 +454,11 @@ impl AdvancedBenchmark {
     }
 
     /// Benchmark a specific algorithm
-    fn benchmark_algorithm(&self, algorithm: &str, data: &ArrayView2<f64>) -> Result<AlgorithmBenchmark> {
+    fn benchmark_algorithm(
+        &self,
+        algorithm: &str,
+        data: &ArrayView2<f64>,
+    ) -> Result<AlgorithmBenchmark> {
         let mut execution_times = Vec::new();
         let mut memory_profiles = Vec::new();
         let mut error_count = 0;
@@ -471,12 +475,12 @@ impl AdvancedBenchmark {
         for _ in 0..self.config.measurement_iterations {
             let start_memory = self.get_memory_usage();
             let start_time = Instant::now();
-            
+
             match self.run_algorithm_once(algorithm, data) {
                 Ok(_) => {
                     let duration = start_time.elapsed();
                     execution_times.push(duration);
-                    
+
                     if self.config.memory_profiling {
                         let end_memory = self.get_memory_usage();
                         memory_profiles.push(end_memory.saturating_sub(start_memory));
@@ -489,14 +493,15 @@ impl AdvancedBenchmark {
         }
 
         if execution_times.is_empty() {
-            return Err(ClusteringError::ComputationError(
-                format!("All iterations failed for algorithm: {}", algorithm)
-            ));
+            return Err(ClusteringError::ComputationError(format!(
+                "All iterations failed for algorithm: {}",
+                algorithm
+            )));
         }
 
         // Calculate performance statistics
         let performance = self.calculate_performance_statistics(&execution_times)?;
-        
+
         // Calculate memory profile
         let memory = if self.config.memory_profiling && !memory_profiles.is_empty() {
             Some(self.calculate_memory_profile(&memory_profiles))
@@ -523,7 +528,10 @@ impl AdvancedBenchmark {
 
         // Generate optimization suggestions
         let optimization_suggestions = self.generate_optimization_suggestions(
-            algorithm, &performance, &memory, &quality_metrics
+            algorithm,
+            &performance,
+            &memory,
+            &quality_metrics,
         );
 
         let error_rate = error_count as f64 / total_iterations as f64;
@@ -560,9 +568,10 @@ impl AdvancedBenchmark {
                 let _result = gaussian_mixture(data, 3, options)?;
             }
             _ => {
-                return Err(ClusteringError::ComputationError(
-                    format!("Unknown algorithm: {}", algorithm)
-                ));
+                return Err(ClusteringError::ComputationError(format!(
+                    "Unknown algorithm: {}",
+                    algorithm
+                )));
             }
         }
         Ok(())
@@ -570,20 +579,17 @@ impl AdvancedBenchmark {
 
     /// Get list of algorithms to benchmark
     fn get_algorithms_to_benchmark(&self) -> Vec<&'static str> {
-        vec![
-            "kmeans",
-            "kmeans2", 
-            "hierarchical_ward",
-            "dbscan",
-            "gmm",
-        ]
+        vec!["kmeans", "kmeans2", "hierarchical_ward", "dbscan", "gmm"]
     }
 
     /// Calculate performance statistics from execution times
-    fn calculate_performance_statistics(&self, times: &[Duration]) -> Result<PerformanceStatistics> {
+    fn calculate_performance_statistics(
+        &self,
+        times: &[Duration],
+    ) -> Result<PerformanceStatistics> {
         if times.is_empty() {
             return Err(ClusteringError::ComputationError(
-                "No execution times to analyze".to_string()
+                "No execution times to analyze".to_string(),
             ));
         }
 
@@ -593,13 +599,15 @@ impl AdvancedBenchmark {
         let mean_nanos = times.iter().map(|d| d.as_nanos()).sum::<u128>() / times.len() as u128;
         let mean = Duration::from_nanos(mean_nanos as u64);
 
-        let variance = times.iter()
+        let variance = times
+            .iter()
             .map(|d| {
                 let diff = d.as_nanos() as i128 - mean_nanos as i128;
                 (diff * diff) as u128
             })
-            .sum::<u128>() / times.len() as u128;
-        
+            .sum::<u128>()
+            / times.len() as u128;
+
         let std_dev = Duration::from_nanos((variance as f64).sqrt() as u64);
 
         let min = sorted_times[0];
@@ -625,7 +633,8 @@ impl AdvancedBenchmark {
 
         // Count outliers (values beyond 2 standard deviations)
         let outlier_threshold = 2.0 * std_dev.as_nanos() as f64;
-        let outliers = times.iter()
+        let outliers = times
+            .iter()
             .filter(|&d| {
                 let diff = (d.as_nanos() as f64 - mean.as_nanos() as f64).abs();
                 diff > outlier_threshold
@@ -669,8 +678,8 @@ impl AdvancedBenchmark {
         }
 
         let peak_memory_mb = *memory_samples.iter().max().unwrap() as f64 / 1_048_576.0;
-        let average_memory_mb = memory_samples.iter().sum::<usize>() as f64 / 
-            (memory_samples.len() as f64 * 1_048_576.0);
+        let average_memory_mb = memory_samples.iter().sum::<usize>() as f64
+            / (memory_samples.len() as f64 * 1_048_576.0);
 
         // Simplified calculations for demo
         let allocation_rate = peak_memory_mb * 0.1; // Placeholder
@@ -699,7 +708,11 @@ impl AdvancedBenchmark {
 
     /// Perform GPU vs CPU comparison (placeholder)
     #[allow(unused_variables)]
-    fn perform_gpu_comparison(&self, algorithm: &str, data: &ArrayView2<f64>) -> Result<GpuVsCpuComparison> {
+    fn perform_gpu_comparison(
+        &self,
+        algorithm: &str,
+        data: &ArrayView2<f64>,
+    ) -> Result<GpuVsCpuComparison> {
         // Placeholder implementation - would integrate with actual GPU code
         let cpu_time = Duration::from_millis(100);
         let gpu_time = Duration::from_millis(20);
@@ -707,8 +720,9 @@ impl AdvancedBenchmark {
         let speedup = cpu_time.as_secs_f64() / gpu_time.as_secs_f64();
         let efficiency = (speedup / 5.0 * 100.0).min(100.0); // Assuming 5x is optimal
         let gpu_memory_mb = data.len() as f64 * 8.0 / 1_048_576.0; // 8 bytes per f64
-        let transfer_overhead_percent = (gpu_time.as_secs_f64() - gpu_compute_time.as_secs_f64()) / 
-            gpu_time.as_secs_f64() * 100.0;
+        let transfer_overhead_percent = (gpu_time.as_secs_f64() - gpu_compute_time.as_secs_f64())
+            / gpu_time.as_secs_f64()
+            * 100.0;
 
         Ok(GpuVsCpuComparison {
             cpu_time,
@@ -722,7 +736,11 @@ impl AdvancedBenchmark {
     }
 
     /// Calculate clustering quality metrics
-    fn calculate_quality_metrics(&self, algorithm: &str, data: &ArrayView2<f64>) -> Result<QualityMetrics> {
+    fn calculate_quality_metrics(
+        &self,
+        algorithm: &str,
+        data: &ArrayView2<f64>,
+    ) -> Result<QualityMetrics> {
         // Run algorithm to get labels for quality calculation
         let (labels, n_clusters, inertia, convergence_iterations) = match algorithm {
             "kmeans" => {
@@ -731,7 +749,13 @@ impl AdvancedBenchmark {
             }
             "dbscan" => {
                 let (labels, _) = dbscan(data, 0.5, 5)?;
-                let n_clusters = labels.iter().filter(|&&x| x >= 0).map(|&x| x).max().unwrap_or(-1) as usize + 1;
+                let n_clusters = labels
+                    .iter()
+                    .filter(|&&x| x >= 0)
+                    .map(|&x| x)
+                    .max()
+                    .unwrap_or(-1) as usize
+                    + 1;
                 (labels, n_clusters, None, None)
             }
             _ => {
@@ -765,7 +789,11 @@ impl AdvancedBenchmark {
     }
 
     /// Perform scalability analysis across different data sizes
-    fn perform_scalability_analysis(&self, algorithm: &str, base_data: &ArrayView2<f64>) -> Result<ScalabilityAnalysis> {
+    fn perform_scalability_analysis(
+        &self,
+        algorithm: &str,
+        base_data: &ArrayView2<f64>,
+    ) -> Result<ScalabilityAnalysis> {
         let sizes = vec![100, 250, 500, 1000, 2000];
         let mut size_to_time = Vec::new();
 
@@ -776,7 +804,7 @@ impl AdvancedBenchmark {
 
             let subset = base_data.slice(ndarray::s![0..size, ..]);
             let start_time = Instant::now();
-            
+
             if self.run_algorithm_once(algorithm, &subset).is_ok() {
                 let duration = start_time.elapsed();
                 size_to_time.push((size, duration));
@@ -811,7 +839,8 @@ impl AdvancedBenchmark {
         }
 
         // Simple heuristic based on growth rate
-        let ratios: Vec<f64> = timings.windows(2)
+        let ratios: Vec<f64> = timings
+            .windows(2)
             .map(|pair| {
                 let (size1, time1) = pair[0];
                 let (size2, time2) = pair[1];
@@ -837,15 +866,20 @@ impl AdvancedBenchmark {
     }
 
     /// Predict performance for larger data sizes
-    fn predict_scalability(&self, timings: &[(usize, Duration)], complexity: &ComplexityClass) -> Vec<(usize, Duration)> {
+    fn predict_scalability(
+        &self,
+        timings: &[(usize, Duration)],
+        complexity: &ComplexityClass,
+    ) -> Vec<(usize, Duration)> {
         if timings.is_empty() {
             return Vec::new();
         }
 
         let (base_size, base_time) = timings[timings.len() - 1];
         let prediction_sizes = vec![5000, 10000, 20000, 50000];
-        
-        prediction_sizes.into_iter()
+
+        prediction_sizes
+            .into_iter()
             .map(|size| {
                 let size_factor = size as f64 / base_size as f64;
                 let time_factor = match complexity {
@@ -855,7 +889,7 @@ impl AdvancedBenchmark {
                     ComplexityClass::Cubic => size_factor * size_factor * size_factor,
                     ComplexityClass::Unknown => size_factor * size_factor, // Conservative estimate
                 };
-                
+
                 let predicted_time = Duration::from_secs_f64(base_time.as_secs_f64() * time_factor);
                 (size, predicted_time)
             })
@@ -898,7 +932,9 @@ impl AdvancedBenchmark {
             if mem.potential_leak {
                 suggestions.push(OptimizationSuggestion {
                     category: OptimizationCategory::MemoryOptimization,
-                    suggestion: "Potential memory leak detected. Review memory allocation patterns.".to_string(),
+                    suggestion:
+                        "Potential memory leak detected. Review memory allocation patterns."
+                            .to_string(),
                     expected_improvement: 25.0,
                     difficulty: 8,
                     priority: OptimizationPriority::Critical,
@@ -947,7 +983,9 @@ impl AdvancedBenchmark {
         if performance.mean > Duration::from_millis(100) {
             suggestions.push(OptimizationSuggestion {
                 category: OptimizationCategory::GpuAcceleration,
-                suggestion: "Algorithm runtime suggests GPU acceleration could provide significant speedup.".to_string(),
+                suggestion:
+                    "Algorithm runtime suggests GPU acceleration could provide significant speedup."
+                        .to_string(),
                 expected_improvement: 300.0,
                 difficulty: 7,
                 priority: OptimizationPriority::High,
@@ -958,10 +996,14 @@ impl AdvancedBenchmark {
     }
 
     /// Detect performance regressions
-    fn detect_regression(&self, algorithm: &str, result: &AlgorithmBenchmark) -> Option<RegressionAlert> {
+    fn detect_regression(
+        &self,
+        algorithm: &str,
+        result: &AlgorithmBenchmark,
+    ) -> Option<RegressionAlert> {
         // In a real implementation, this would compare against historical baselines
         // For now, we'll use simple heuristics
-        
+
         if result.error_rate > 0.1 {
             return Some(RegressionAlert {
                 algorithm: algorithm.to_string(),
@@ -973,7 +1015,10 @@ impl AdvancedBenchmark {
                 } else {
                     RegressionSeverity::Moderate
                 },
-                description: format!("High error rate detected: {:.1}%", result.error_rate * 100.0),
+                description: format!(
+                    "High error rate detected: {:.1}%",
+                    result.error_rate * 100.0
+                ),
                 suggested_actions: vec![
                     "Check input data quality".to_string(),
                     "Verify algorithm parameters".to_string(),
@@ -999,7 +1044,10 @@ impl AdvancedBenchmark {
     }
 
     /// Generate cross-algorithm comparisons
-    fn generate_comparisons(&self, results: &HashMap<String, AlgorithmBenchmark>) -> Result<Vec<AlgorithmComparison>> {
+    fn generate_comparisons(
+        &self,
+        results: &HashMap<String, AlgorithmBenchmark>,
+    ) -> Result<Vec<AlgorithmComparison>> {
         let mut comparisons = Vec::new();
         let algorithms: Vec<&String> = results.keys().collect();
 
@@ -1010,9 +1058,10 @@ impl AdvancedBenchmark {
                 let result_a = &results[algo_a];
                 let result_b = &results[algo_b];
 
-                let performance_difference = 
-                    (result_b.performance.mean.as_secs_f64() - result_a.performance.mean.as_secs_f64()) /
-                    result_a.performance.mean.as_secs_f64() * 100.0;
+                let performance_difference = (result_b.performance.mean.as_secs_f64()
+                    - result_a.performance.mean.as_secs_f64())
+                    / result_a.performance.mean.as_secs_f64()
+                    * 100.0;
 
                 let winner = if performance_difference < 0.0 {
                     algo_b.clone()
@@ -1026,12 +1075,24 @@ impl AdvancedBenchmark {
                 let quality_difference = quality_b - quality_a;
 
                 // Calculate memory difference
-                let memory_a = result_a.memory.as_ref().map(|m| m.peak_memory_mb).unwrap_or(0.0);
-                let memory_b = result_b.memory.as_ref().map(|m| m.peak_memory_mb).unwrap_or(0.0);
+                let memory_a = result_a
+                    .memory
+                    .as_ref()
+                    .map(|m| m.peak_memory_mb)
+                    .unwrap_or(0.0);
+                let memory_b = result_b
+                    .memory
+                    .as_ref()
+                    .map(|m| m.peak_memory_mb)
+                    .unwrap_or(0.0);
                 let memory_difference = memory_b - memory_a;
 
                 // Simple significance calculation (would use proper statistical tests in real implementation)
-                let significance = if performance_difference.abs() > 10.0 { 0.01 } else { 0.1 };
+                let significance = if performance_difference.abs() > 10.0 {
+                    0.01
+                } else {
+                    0.1
+                };
 
                 comparisons.push(AlgorithmComparison {
                     algorithm_a: algo_a.clone(),
@@ -1052,11 +1113,16 @@ impl AdvancedBenchmark {
     fn collect_system_info(&self) -> SystemInfo {
         SystemInfo {
             cpu_info: "Unknown CPU".to_string(), // Would use platform-specific detection
-            total_memory_gb: 16.0, // Placeholder
-            available_memory_gb: 8.0, // Placeholder
+            total_memory_gb: 16.0,               // Placeholder
+            available_memory_gb: 8.0,            // Placeholder
             os: std::env::consts::OS.to_string(),
             rust_version: env!("CARGO_PKG_RUST_VERSION").to_string(),
-            optimizations: if cfg!(debug_assertions) { "Debug" } else { "Release" }.to_string(),
+            optimizations: if cfg!(debug_assertions) {
+                "Debug"
+            } else {
+                "Release"
+            }
+            .to_string(),
             gpu_info: None, // Would detect GPU if available
             cpu_cores: num_cpus::get(),
             cpu_frequency_mhz: None,
@@ -1064,11 +1130,15 @@ impl AdvancedBenchmark {
     }
 
     /// Generate overall recommendations based on all results
-    fn generate_recommendations(&self, results: &HashMap<String, AlgorithmBenchmark>) -> Vec<String> {
+    fn generate_recommendations(
+        &self,
+        results: &HashMap<String, AlgorithmBenchmark>,
+    ) -> Vec<String> {
         let mut recommendations = Vec::new();
 
         // Find best performing algorithm
-        let best_algo = results.iter()
+        let best_algo = results
+            .iter()
             .min_by(|a, b| a.1.performance.mean.cmp(&b.1.performance.mean))
             .map(|(name, _)| name);
 
@@ -1077,19 +1147,28 @@ impl AdvancedBenchmark {
         }
 
         // Check for high error rates
-        let high_error_algos: Vec<&str> = results.iter()
+        let high_error_algos: Vec<&str> = results
+            .iter()
             .filter(|(_, result)| result.error_rate > 0.05)
             .map(|(name, _)| name.as_str())
             .collect();
 
         if !high_error_algos.is_empty() {
-            recommendations.push(format!("Algorithms with high error rates: {:?}", high_error_algos));
+            recommendations.push(format!(
+                "Algorithms with high error rates: {:?}",
+                high_error_algos
+            ));
         }
 
         // Memory efficiency recommendations
-        let memory_inefficient: Vec<&str> = results.iter()
+        let memory_inefficient: Vec<&str> = results
+            .iter()
             .filter(|(_, result)| {
-                result.memory.as_ref().map(|m| m.efficiency_score < 60.0).unwrap_or(false)
+                result
+                    .memory
+                    .as_ref()
+                    .map(|m| m.efficiency_score < 60.0)
+                    .unwrap_or(false)
             })
             .map(|(name, _)| name.as_str())
             .collect();
@@ -1105,16 +1184,17 @@ impl AdvancedBenchmark {
 /// Create a comprehensive HTML report from benchmark results
 pub fn create_comprehensive_report(results: &BenchmarkResults, output_path: &str) -> Result<()> {
     let html_content = generate_html_report(results);
-    
+
     std::fs::write(output_path, html_content)
         .map_err(|e| ClusteringError::ComputationError(format!("Failed to write report: {}", e)))?;
-    
+
     Ok(())
 }
 
 /// Generate HTML report content
 fn generate_html_report(results: &BenchmarkResults) -> String {
-    format!(r#"
+    format!(
+        r#"
 <!DOCTYPE html>
 <html>
 <head>
@@ -1201,7 +1281,6 @@ fn generate_performance_table(results: &BenchmarkResults) -> String {
             let quality = result.quality_metrics.silhouette_score
                 .map(|s| format!("{:.3}", s))
                 .unwrap_or_else(|| "N/A".to_string());
-            
             format!(
                 "<tr><td>{}</td><td>{:.2?}</td><td>{:.2?}</td><td>{:.2}</td><td>{:.2}%</td><td>{}</td></tr>",
                 name,
@@ -1221,11 +1300,13 @@ fn generate_regression_alerts_html(results: &BenchmarkResults) -> String {
     if results.regression_alerts.is_empty() {
         "<p class=\"success\">No performance regressions detected.</p>".to_string()
     } else {
-        results.regression_alerts.iter()
+        results
+            .regression_alerts
+            .iter()
             .map(|alert| {
                 let class = match alert.severity {
                     RegressionSeverity::Critical => "error",
-                    RegressionSeverity::Major => "error", 
+                    RegressionSeverity::Major => "error",
                     RegressionSeverity::Moderate => "warning",
                     RegressionSeverity::Minor => "warning",
                 };
@@ -1241,7 +1322,9 @@ fn generate_regression_alerts_html(results: &BenchmarkResults) -> String {
 
 /// Generate recommendations HTML
 fn generate_recommendations_html(results: &BenchmarkResults) -> String {
-    results.recommendations.iter()
+    results
+        .recommendations
+        .iter()
         .map(|rec| format!("<li>{}</li>", rec))
         .collect::<Vec<_>>()
         .join("\n")
@@ -1270,7 +1353,7 @@ mod tests {
             Duration::from_millis(110),
             Duration::from_millis(98),
         ];
-        
+
         let stats = benchmark.calculate_performance_statistics(&times).unwrap();
         assert!(stats.mean.as_millis() > 90 && stats.mean.as_millis() < 120);
         assert!(stats.throughput > 0.0);
@@ -1280,22 +1363,28 @@ mod tests {
     #[test]
     fn test_complexity_estimation() {
         let benchmark = AdvancedBenchmark::new(BenchmarkConfig::default());
-        
+
         // Linear growth pattern
         let linear_timings = vec![
             (100, Duration::from_millis(10)),
             (200, Duration::from_millis(20)),
             (400, Duration::from_millis(40)),
         ];
-        assert_eq!(benchmark.estimate_complexity(&linear_timings), ComplexityClass::Linear);
-        
-        // Quadratic growth pattern  
+        assert_eq!(
+            benchmark.estimate_complexity(&linear_timings),
+            ComplexityClass::Linear
+        );
+
+        // Quadratic growth pattern
         let quadratic_timings = vec![
             (100, Duration::from_millis(10)),
             (200, Duration::from_millis(40)),
             (400, Duration::from_millis(160)),
         ];
-        assert_eq!(benchmark.estimate_complexity(&quadratic_timings), ComplexityClass::Quadratic);
+        assert_eq!(
+            benchmark.estimate_complexity(&quadratic_timings),
+            ComplexityClass::Quadratic
+        );
     }
 
     #[test]
@@ -1305,7 +1394,7 @@ mod tests {
             measurement_iterations: 5,
             ..Default::default()
         };
-        
+
         let benchmark = AdvancedBenchmark::new(config.clone());
         assert_eq!(benchmark.config.warmup_iterations, 2);
         assert_eq!(benchmark.config.measurement_iterations, 5);
@@ -1314,34 +1403,37 @@ mod tests {
     #[test]
     fn test_optimization_suggestions() {
         let benchmark = AdvancedBenchmark::new(BenchmarkConfig::default());
-        
+
         let performance = PerformanceStatistics {
             mean: Duration::from_millis(1000), // Slow performance
-            coefficient_of_variation: 0.3, // High variance
-            throughput: 0.5, // Low throughput
+            coefficient_of_variation: 0.3,     // High variance
+            throughput: 0.5,                   // Low throughput
             is_stable: false,
             ..Default::default()
         };
-        
+
         let memory = Some(MemoryProfile {
             efficiency_score: 30.0, // Low efficiency
             potential_leak: true,
             ..Default::default()
         });
-        
+
         let quality = QualityMetrics {
             silhouette_score: Some(0.2), // Poor quality
             n_clusters: 3,
             ..Default::default()
         };
-        
-        let suggestions = benchmark.generate_optimization_suggestions(
-            "kmeans", &performance, &memory, &quality
-        );
-        
+
+        let suggestions =
+            benchmark.generate_optimization_suggestions("kmeans", &performance, &memory, &quality);
+
         assert!(!suggestions.is_empty());
-        assert!(suggestions.iter().any(|s| s.category == OptimizationCategory::MemoryOptimization));
-        assert!(suggestions.iter().any(|s| s.priority == OptimizationPriority::Critical));
+        assert!(suggestions
+            .iter()
+            .any(|s| s.category == OptimizationCategory::MemoryOptimization));
+        assert!(suggestions
+            .iter()
+            .any(|s| s.priority == OptimizationPriority::Critical));
     }
 }
 

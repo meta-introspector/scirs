@@ -70,12 +70,19 @@ pub struct MLPipeline {
 /// Parameters for fitted scalers
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScalerParams {
+    /// Scaling method used
     pub method: ScalingMethod,
+    /// Mean value (for StandardScaler)
     pub mean: Option<f64>,
+    /// Standard deviation (for StandardScaler)
     pub std: Option<f64>,
+    /// Minimum value (for MinMaxScaler)
     pub min: Option<f64>,
+    /// Maximum value (for MinMaxScaler)
     pub max: Option<f64>,
+    /// Median value (for RobustScaler)
     pub median: Option<f64>,
+    /// Median absolute deviation (for RobustScaler)
     pub mad: Option<f64>,
 }
 
@@ -97,56 +104,82 @@ pub struct MLExperiment {
 /// Dataset information for experiments
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatasetInfo {
+    /// Number of samples in the dataset
     pub n_samples: usize,
+    /// Number of features in the dataset
     pub n_features: usize,
+    /// Number of classes (for classification tasks)
     pub n_classes: Option<usize>,
+    /// Distribution of classes in the dataset
     pub class_distribution: Option<HashMap<String, usize>>,
+    /// Percentage of missing data
     pub missing_data_percentage: f64,
 }
 
 /// Model configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelConfig {
+    /// Type of ML model used
     pub model_type: String,
+    /// Hyperparameter settings
     pub hyperparameters: HashMap<String, serde_json::Value>,
+    /// List of preprocessing steps applied
     pub preprocessing_steps: Vec<String>,
 }
 
 /// Experiment results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExperimentResults {
+    /// Score on training data
     pub training_score: f64,
+    /// Score on validation data
     pub validation_score: f64,
+    /// Score on test data (if available)
     pub test_score: Option<f64>,
+    /// Time taken for training (in seconds)
     pub training_time: f64,
+    /// Average inference time per sample (in milliseconds)
     pub inference_time: Option<f64>,
+    /// Feature importance scores
     pub feature_importance: Option<Vec<(String, f64)>>,
 }
 
 /// Cross-validation results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossValidationResults {
+    /// Individual scores for each fold
     pub scores: Vec<f64>,
+    /// Mean score across all folds
     pub mean_score: f64,
+    /// Standard deviation of scores
     pub std_score: f64,
+    /// Detailed results for each fold
     pub fold_details: Vec<FoldResult>,
 }
 
 /// Result for a single fold
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FoldResult {
+    /// Index of the fold
     pub fold_index: usize,
+    /// Training score for this fold
     pub train_score: f64,
+    /// Validation score for this fold
     pub validation_score: f64,
+    /// Training time in seconds for this fold
     pub training_time: f64,
 }
 
 /// Data split for ML training
 #[derive(Debug, Clone)]
 pub struct DataSplit {
+    /// Training features
     pub x_train: Array2<f64>,
+    /// Testing features
     pub x_test: Array2<f64>,
+    /// Training targets
     pub y_train: Array1<f64>,
+    /// Testing targets
     pub y_test: Array1<f64>,
 }
 

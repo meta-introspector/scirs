@@ -166,8 +166,7 @@ impl<A: Float> ParameterConstraint<A> {
             }
             ParameterConstraint::Custom { name } => {
                 return Err(OptimError::InvalidConfig(format!(
-                    "Custom constraint '{}' not implemented",
-                    name
+                    "Custom constraint '{name}' not implemented"
                 )));
             }
         }
@@ -471,7 +470,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GroupManager<A, D> {
         self.groups
             .iter()
             .find(|g| g.id == id)
-            .ok_or_else(|| OptimError::InvalidConfig(format!("Group {} not found", id)))
+            .ok_or_else(|| OptimError::InvalidConfig(format!("Group {id} not found")))
     }
 
     /// Get mutable group by ID
@@ -479,7 +478,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GroupManager<A, D> {
         self.groups
             .iter_mut()
             .find(|g| g.id == id)
-            .ok_or_else(|| OptimError::InvalidConfig(format!("Group {} not found", id)))
+            .ok_or_else(|| OptimError::InvalidConfig(format!("Group {id} not found")))
     }
 
     /// Get all groups

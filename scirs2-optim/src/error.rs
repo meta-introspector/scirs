@@ -53,59 +53,58 @@ pub type OptimizerError = OptimError;
 impl fmt::Display for OptimError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            OptimError::InvalidConfig(msg) => write!(f, "Invalid configuration: {}", msg),
-            OptimError::OptimizationError(msg) => write!(f, "Optimization error: {}", msg),
-            OptimError::DimensionMismatch(msg) => write!(f, "Dimension mismatch: {}", msg),
+            OptimError::InvalidConfig(msg) => write!(f, "Invalid configuration: {msg}"),
+            OptimError::OptimizationError(msg) => write!(f, "Optimization error: {msg}"),
+            OptimError::DimensionMismatch(msg) => write!(f, "Dimension mismatch: {msg}"),
             OptimError::PrivacyBudgetExhausted {
                 consumed_epsilon,
                 target_epsilon,
             } => {
                 write!(
                     f,
-                    "Privacy budget exhausted: consumed ε={:.4}, target ε={:.4}",
-                    consumed_epsilon, target_epsilon
+                    "Privacy budget exhausted: consumed ε={consumed_epsilon:.4}, target ε={target_epsilon:.4}"
                 )
             }
             OptimError::InvalidPrivacyConfig(msg) => {
-                write!(f, "Invalid privacy configuration: {}", msg)
+                write!(f, "Invalid privacy configuration: {msg}")
             }
             OptimError::PrivacyAccountingError(msg) => {
-                write!(f, "Privacy accounting error: {}", msg)
+                write!(f, "Privacy accounting error: {msg}")
             }
             OptimError::ConfigurationError(msg) => {
-                write!(f, "Configuration error: {}", msg)
+                write!(f, "Configuration error: {msg}")
             }
             OptimError::InvalidState(msg) => {
-                write!(f, "Invalid state error: {}", msg)
+                write!(f, "Invalid state error: {msg}")
             }
             OptimError::MonitoringError(msg) => {
-                write!(f, "Monitoring error: {}", msg)
+                write!(f, "Monitoring error: {msg}")
             }
             OptimError::AnalysisError(msg) => {
-                write!(f, "Analysis error: {}", msg)
+                write!(f, "Analysis error: {msg}")
             }
             OptimError::UnsupportedOperation(msg) => {
-                write!(f, "Unsupported operation: {}", msg)
+                write!(f, "Unsupported operation: {msg}")
             }
             OptimError::ResourceError(msg) => {
-                write!(f, "Resource error: {}", msg)
+                write!(f, "Resource error: {msg}")
             }
             OptimError::ResourceUnavailable(msg) => {
-                write!(f, "Resource unavailable: {}", msg)
+                write!(f, "Resource unavailable: {msg}")
             }
             OptimError::ExecutionError(msg) => {
-                write!(f, "Execution error: {}", msg)
+                write!(f, "Execution error: {msg}")
             }
             OptimError::Environment(msg) => {
-                write!(f, "Environment error: {}", msg)
+                write!(f, "Environment error: {msg}")
             }
             OptimError::LockError(msg) => {
-                write!(f, "Lock error: {}", msg)
+                write!(f, "Lock error: {msg}")
             }
             OptimError::ThreadError(msg) => {
-                write!(f, "Thread error: {}", msg)
+                write!(f, "Thread error: {msg}")
             }
-            OptimError::Other(msg) => write!(f, "Error: {}", msg),
+            OptimError::Other(msg) => write!(f, "Error: {msg}"),
         }
     }
 }
@@ -115,7 +114,7 @@ impl Error for OptimError {}
 /// From implementations for common error types
 impl From<std::time::SystemTimeError> for OptimError {
     fn from(error: std::time::SystemTimeError) -> Self {
-        OptimError::Other(format!("System time error: {}", error))
+        OptimError::Other(format!("System time error: {error}"))
     }
 }
 

@@ -7,8 +7,8 @@
 //!   cargo run --example gpu_acceleration --release
 
 use scirs2_datasets::{
-    get_optimal_gpu_config, is_cuda_available, is_opencl_available, list_gpu_devices, make_blobs,
-    make_blobs_auto_gpu, make_classification, make_classification_auto_gpu, make_regression,
+    get_optimal_gpu_config, is_cuda_available, is_opencl_available, list_gpu_devices,
+    make_blobs_auto_gpu, make_classification, make_classification_auto_gpu,
     make_regression_auto_gpu, GpuBackend, GpuBenchmark, GpuConfig, GpuContext, GpuMemoryConfig,
 };
 use std::collections::HashMap;
@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn demonstrate_gpu_detection() {
     println!("🔍 GPU DETECTION AND AVAILABILITY");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     println!("CUDA Support:");
     if is_cuda_available() {
@@ -96,7 +96,7 @@ fn demonstrate_gpu_detection() {
 
 fn demonstrate_device_listing() -> Result<(), Box<dyn std::error::Error>> {
     println!("📋 AVAILABLE GPU DEVICES");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     let devices = list_gpu_devices()?;
 
@@ -136,7 +136,7 @@ fn demonstrate_device_listing() -> Result<(), Box<dyn std::error::Error>> {
 
 fn demonstrate_backend_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ GPU BACKEND COMPARISON");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     let test_size = 50_000;
     let features = 20;
@@ -218,7 +218,7 @@ fn demonstrate_backend_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
 fn demonstrate_performance_benchmarks() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 PERFORMANCE BENCHMARKS");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     let config = get_optimal_gpu_config();
     let benchmark = GpuBenchmark::new(config)?;
@@ -275,7 +275,7 @@ fn demonstrate_cpu_gpu_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
 fn demonstrate_memory_management() -> Result<(), Box<dyn std::error::Error>> {
     println!("💾 GPU MEMORY MANAGEMENT");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     // Configure memory-constrained GPU context
     let memory_config = GpuMemoryConfig {
@@ -345,7 +345,7 @@ fn demonstrate_memory_management() -> Result<(), Box<dyn std::error::Error>> {
 
 fn demonstrate_real_world_scenarios() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌍 REAL-WORLD GPU SCENARIOS");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     // Scenario 1: Large-scale data augmentation
     println!("Scenario 1: Large-scale synthetic data generation");

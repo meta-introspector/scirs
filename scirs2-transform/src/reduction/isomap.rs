@@ -403,7 +403,7 @@ impl Isomap {
         &self,
         distances_to_landmarks: &ndarray::ArrayView1<f64>,
         landmark_embedding: &Array2<f64>,
-        geodesic_distances: &Array2<f64>,
+        _geodesic_distances: &Array2<f64>,
     ) -> Result<Array1<f64>> {
         let n_landmarks = landmark_embedding.nrows();
 
@@ -429,7 +429,7 @@ impl Isomap {
         // Build system: A * x = b where x are the coordinates
         // Using the constraint that distances in embedding space should
         // approximate geodesic distances
-        let mut A = Array2::zeros((k_landmarks, self.n_components));
+        let mut a = Array2::zeros((k_landmarks, self.n_components));
         let mut b = Array1::zeros(k_landmarks);
         let mut weights = Array1::zeros(k_landmarks);
 
@@ -448,39 +448,39 @@ impl Isomap {
 
             // Coefficients are the landmark coordinates (weighted)
             for dim in 0..self.n_components {
-                A[[row_idx, dim]] = landmark_embedding[[landmark_idx, dim]] * weight;
+                a[[row_idx, dim]] = landmark_embedding[[landmark_idx, dim]] * weight;
             }
         }
 
         // Solve weighted least squares: A^T W A x = A^T W b
         // where W is the diagonal weight matrix
-        let mut AtWA = Array2::zeros((self.n_components, self.n_components));
-        let mut AtWb = Array1::zeros(self.n_components);
+        let mut at_wa = Array2::zeros((self.n_components, self.n_components));
+        let mut at_wb = Array1::zeros(self.n_components);
 
         for i in 0..self.n_components {
             for j in 0..self.n_components {
                 for k in 0..k_landmarks {
-                    AtWA[[i, j]] += A[[k, i]] * weights[k] * A[[k, j]];
+                    at_wa[[i, j]] += a[[k, i]] * weights[k] * a[[k, j]];
                 }
             }
             for k in 0..k_landmarks {
-                AtWb[i] += A[[k, i]] * weights[k] * b[k];
+                at_wb[i] += a[[k, i]] * weights[k] * b[k];
             }
         }
 
         // Add regularization to prevent singular matrix
         for i in 0..self.n_components {
-            AtWA[[i, i]] += 1e-10;
+            at_wa[[i, i]] += 1e-10;
         }
 
         // Solve using simple Gaussian elimination for small systems
-        self.solve_linear_system(&AtWA, &AtWb)
+        self.solve_linear_system(&at_wa, &at_wb)
     }
 
     /// Simple linear system solver for small matrices
-    fn solve_linear_system(&self, A: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
-        let n = A.nrows();
-        let mut A_copy = A.clone();
+    fn solve_linear_system(&self, a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
+        let n = a.nrows();
+        let mut a_copy = a.clone();
         let mut b_copy = b.clone();
 
         // Gaussian elimination with partial pivoting
@@ -488,7 +488,7 @@ impl Isomap {
             // Find pivot
             let mut max_row = i;
             for k in i + 1..n {
-                if A_copy[[k, i]].abs() > A_copy[[max_row, i]].abs() {
+                if a_copy[[k, i]].abs() > a_copy[[max_row, i]].abs() {
                     max_row = k;
                 }
             }
@@ -496,9 +496,9 @@ impl Isomap {
             // Swap rows
             if max_row != i {
                 for j in 0..n {
-                    let temp = A_copy[[i, j]];
-                    A_copy[[i, j]] = A_copy[[max_row, j]];
-                    A_copy[[max_row, j]] = temp;
+                    let temp = a_copy[[i, j]];
+                    a_copy[[i, j]] = a_copy[[max_row, j]];
+                    a_copy[[max_row, j]] = temp;
                 }
                 let temp = b_copy[i];
                 b_copy[i] = b_copy[max_row];
@@ -506,7 +506,7 @@ impl Isomap {
             }
 
             // Check for singular matrix
-            if A_copy[[i, i]].abs() < 1e-12 {
+            if a_copy[[i, i]].abs() < 1e-12 {
                 return Err(TransformError::ComputationError(
                     "Singular matrix in landmark MDS".to_string(),
                 ));
@@ -514,9 +514,9 @@ impl Isomap {
 
             // Eliminate
             for k in i + 1..n {
-                let factor = A_copy[[k, i]] / A_copy[[i, i]];
+                let factor = a_copy[[k, i]] / a_copy[[i, i]];
                 for j in i..n {
-                    A_copy[[k, j]] -= factor * A_copy[[i, j]];
+                    a_copy[[k, j]] -= factor * a_copy[[i, j]];
                 }
                 b_copy[k] -= factor * b_copy[i];
             }
@@ -527,9 +527,9 @@ impl Isomap {
         for i in (0..n).rev() {
             x[i] = b_copy[i];
             for j in i + 1..n {
-                x[i] -= A_copy[[i, j]] * x[j];
+                x[i] -= a_copy[[i, j]] * x[j];
             }
-            x[i] /= A_copy[[i, i]];
+            x[i] /= a_copy[[i, i]];
         }
 
         Ok(x)

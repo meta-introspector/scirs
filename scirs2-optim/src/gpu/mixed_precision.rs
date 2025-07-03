@@ -8,7 +8,7 @@ use num_traits::Float;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-use crate::gpu::{GpuOptimizerConfig, GpuOptimError};
+use crate::gpu::{GpuOptimError, GpuOptimizerConfig};
 
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBuffer, GpuContext};

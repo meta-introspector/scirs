@@ -29,6 +29,7 @@ pub struct AdaptiveStreamingEngine {
 
 /// Stream processing configuration
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct AdaptiveStreamConfig {
     /// Maximum buffer size in bytes
     max_buffer_size: usize,
@@ -43,6 +44,7 @@ pub struct AdaptiveStreamConfig {
 }
 
 /// Adaptive buffer management system
+#[allow(dead_code)]
 pub struct AdaptiveBufferManager {
     /// Primary buffer for incoming data
     primary_buffer: Arc<Mutex<VecDeque<StreamChunk>>>,
@@ -159,6 +161,7 @@ pub struct AdaptiveParameters {
 }
 
 /// ML-based pattern detection system
+#[allow(dead_code)]
 pub struct PatternDetector {
     /// Pattern history
     pattern_history: Arc<Mutex<VecDeque<PatternSignature>>>,
@@ -238,6 +241,7 @@ pub struct DetectionParameters {
 }
 
 /// Stream performance optimizer
+#[allow(dead_code)]
 pub struct StreamPerformanceOptimizer {
     /// Performance history
     performance_history: Arc<Mutex<VecDeque<PerformanceMetrics>>>,
@@ -302,6 +306,7 @@ pub enum MemoryStrategy {
 }
 
 /// Stream quality monitoring system
+#[allow(dead_code)]
 pub struct StreamQualityMonitor {
     /// Quality history
     quality_history: Arc<Mutex<VecDeque<QualityMetrics>>>,
@@ -342,6 +347,7 @@ pub struct QualityThresholds {
 }
 
 /// Alert system for quality issues
+#[allow(dead_code)]
 pub struct AlertSystem {
     /// Active alerts
     active_alerts: Arc<Mutex<Vec<QualityAlert>>>,
@@ -961,6 +967,7 @@ pub struct QuantumInspiredOptimizer {
 
 /// Quantum optimization state representing superposition of configurations
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct QuantumOptimizationState {
     /// Configuration parameters in superposition
     config_superposition: Vec<ConfigurationAmplitude>,
@@ -985,6 +992,7 @@ pub struct ConfigurationAmplitude {
 
 /// Quantum annealing parameters
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct QuantumAnnealingParams {
     /// Initial temperature
     initial_temperature: f64,
@@ -1288,6 +1296,7 @@ pub enum LayerType {
 
 /// Learning rate schedule
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct LearningRateSchedule {
     /// Initial learning rate
     initial_rate: f64,
@@ -1316,6 +1325,7 @@ pub enum ScheduleType {
 
 /// Architecture change record
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ArchitectureChange {
     /// Change type
     change_type: ChangeType,
@@ -1344,6 +1354,7 @@ pub enum ChangeType {
 
 /// Learning episode record
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct LearningEpisode {
     /// Input features
     input_features: Array1<f64>,
@@ -1359,6 +1370,7 @@ pub struct LearningEpisode {
 
 /// Adaptation parameters
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct AdaptationParameters {
     /// Learning rate
     learning_rate: f64,
@@ -1374,6 +1386,7 @@ pub struct AdaptationParameters {
 
 /// Performance prediction model
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PerformancePredictionModel {
     /// Historical performance data
     performance_history: VecDeque<PerformancePredictionPoint>,
@@ -1385,6 +1398,7 @@ pub struct PerformancePredictionModel {
 
 /// Performance prediction data point
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct PerformancePredictionPoint {
     /// Input features
     features: Array1<f64>,
@@ -1400,6 +1414,7 @@ pub struct PerformancePredictionPoint {
 
 /// Prediction model parameters
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct PredictionModelParams {
     /// Time series model order
     model_order: usize,

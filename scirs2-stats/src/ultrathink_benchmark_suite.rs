@@ -9,7 +9,7 @@ use crate::error::StatsResult;
 use crate::ultrathink_error_enhancements_v2::CompatibilityImpact;
 use ndarray::Array1;
 use num_traits::Float;
-use rand::thread_rng;
+use rand::rng;
 use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -79,17 +79,17 @@ pub enum DataDistribution {
     Exponential,
     Pareto,
     Bimodal,
-    Sparse(f64), // sparsity ratio
+    Sparse(f64),     // sparsity ratio
     Correlated(f64), // correlation coefficient
-    Outliers(f64), // outlier percentage
+    Outliers(f64),   // outlier percentage
 }
 
 /// Precision levels for numerical testing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PrecisionLevel {
-    Half,   // f16
-    Single, // f32
-    Double, // f64
+    Half,     // f16
+    Single,   // f32
+    Double,   // f64
     Extended, // f128 if available
 }
 
@@ -156,14 +156,14 @@ pub struct ScalabilityMetrics {
 /// Algorithmic complexity classification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ComplexityClass {
-    Constant,        // O(1)
-    Logarithmic,     // O(log n)
-    Linear,          // O(n)
-    Linearithmic,    // O(n log n)
-    Quadratic,       // O(n²)
-    Cubic,           // O(n³)
-    Exponential,     // O(2^n)
-    Factorial,       // O(n!)
+    Constant,     // O(1)
+    Logarithmic,  // O(log n)
+    Linear,       // O(n)
+    Linearithmic, // O(n log n)
+    Quadratic,    // O(n²)
+    Cubic,        // O(n³)
+    Exponential,  // O(2^n)
+    Factorial,    // O(n!)
     Unknown,
 }
 
@@ -358,20 +358,20 @@ pub struct PlatformOptimizationRecommendation {
 /// Implementation complexity levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ImplementationComplexity {
-    Trivial,   // compiler flags
-    Low,       // algorithm parameter tuning
-    Medium,    // algorithm variant selection
-    High,      // custom implementation
-    Expert,    // hardware-specific optimization
+    Trivial, // compiler flags
+    Low,     // algorithm parameter tuning
+    Medium,  // algorithm variant selection
+    High,    // custom implementation
+    Expert,  // hardware-specific optimization
 }
 
 /// Platform specificity levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PlatformSpecificity {
-    Universal,  // applies to all platforms
-    Family,     // applies to platform family (Intel x86, ARM)
-    Specific,   // applies to specific CPU/GPU
-    Unique,     // applies only to this exact hardware
+    Universal, // applies to all platforms
+    Family,    // applies to platform family (Intel x86, ARM)
+    Specific,  // applies to specific CPU/GPU
+    Unique,    // applies only to this exact hardware
 }
 
 impl UltraThinkBenchmarkSuite {
@@ -464,27 +464,18 @@ impl UltraThinkBenchmarkSuite {
                 let data = self.generate_test_data(size, distribution)?;
 
                 // Benchmark mean calculation
-                let mean_metrics = self.benchmark_function(
-                    "mean",
-                    &data,
-                    |d| crate::mean(&d.view()),
-                )?;
+                let mean_metrics =
+                    self.benchmark_function("mean", &data, |d| crate::mean(&d.view()))?;
                 metrics.push(mean_metrics);
 
                 // Benchmark standard deviation
-                let std_metrics = self.benchmark_function(
-                    "std",
-                    &data,
-                    |d| crate::std(&d.view(), 1),
-                )?;
+                let std_metrics =
+                    self.benchmark_function("std", &data, |d| crate::std(&d.view(), 1))?;
                 metrics.push(std_metrics);
 
                 // Benchmark variance
-                let var_metrics = self.benchmark_function(
-                    "var",
-                    &data,
-                    |d| crate::var(&d.view(), 1),
-                )?;
+                let var_metrics =
+                    self.benchmark_function("var", &data, |d| crate::var(&d.view(), 1))?;
                 metrics.push(var_metrics);
             }
         }
@@ -501,21 +492,17 @@ impl UltraThinkBenchmarkSuite {
             let y = self.generate_test_data(size, &DataDistribution::Normal)?;
 
             // Benchmark Pearson correlation
-            let pearson_metrics = self.benchmark_correlation_function(
-                "pearson_r",
-                &x,
-                &y,
-                |x, y| crate::pearson_r(&x.view(), &y.view()),
-            )?;
+            let pearson_metrics =
+                self.benchmark_correlation_function("pearson_r", &x, &y, |x, y| {
+                    crate::pearson_r(&x.view(), &y.view())
+                })?;
             metrics.push(pearson_metrics);
 
             // Benchmark Spearman correlation
-            let spearman_metrics = self.benchmark_correlation_function(
-                "spearman_r",
-                &x,
-                &y,
-                |x, y| crate::spearman_r(&x.view(), &y.view()),
-            )?;
+            let spearman_metrics =
+                self.benchmark_correlation_function("spearman_r", &x, &y, |x, y| {
+                    crate::spearman_r(&x.view(), &y.view())
+                })?;
             metrics.push(spearman_metrics);
         }
 
@@ -531,12 +518,10 @@ impl UltraThinkBenchmarkSuite {
             let y = self.generate_test_data(size, &DataDistribution::Normal)?;
 
             // Benchmark linear regression
-            let linear_metrics = self.benchmark_correlation_function(
-                "linear_regression",
-                &x,
-                &y,
-                |x, y| crate::linregress(&x.view(), &y.view()),
-            )?;
+            let linear_metrics =
+                self.benchmark_correlation_function("linear_regression", &x, &y, |x, y| {
+                    crate::linregress(&x.view(), &y.view())
+                })?;
             metrics.push(linear_metrics);
         }
 
@@ -551,11 +536,8 @@ impl UltraThinkBenchmarkSuite {
             let data = self.generate_test_data(size, &DataDistribution::Normal)?;
 
             // Benchmark normality tests
-            let shapiro_metrics = self.benchmark_function(
-                "shapiro",
-                &data,
-                |d| crate::shapiro(&d.view()),
-            )?;
+            let shapiro_metrics =
+                self.benchmark_function("shapiro", &data, |d| crate::shapiro(&d.view()))?;
             metrics.push(shapiro_metrics);
         }
 
@@ -570,18 +552,12 @@ impl UltraThinkBenchmarkSuite {
         for &size in &self.config.base_config.data_sizes {
             // Test with very small values
             let small_data = Array1::from_elem(size, 1e-100_f64);
-            let small_metrics = self.benchmark_stability(
-                "mean_small_values",
-                &small_data,
-            )?;
+            let small_metrics = self.benchmark_stability("mean_small_values", &small_data)?;
             metrics.push(small_metrics);
 
             // Test with very large values
             let large_data = Array1::from_elem(size, 1e100_f64);
-            let large_metrics = self.benchmark_stability(
-                "mean_large_values",
-                &large_data,
-            )?;
+            let large_metrics = self.benchmark_stability("mean_large_values", &large_data)?;
             metrics.push(large_metrics);
 
             // Test with mixed scales
@@ -589,10 +565,7 @@ impl UltraThinkBenchmarkSuite {
             for (i, mut val) in mixed_data.iter_mut().enumerate() {
                 *val = if i % 2 == 0 { 1e-50 } else { 1e50 };
             }
-            let mixed_metrics = self.benchmark_stability(
-                "mean_mixed_scales",
-                &mixed_data,
-            )?;
+            let mixed_metrics = self.benchmark_stability("mean_mixed_scales", &mixed_data)?;
             metrics.push(mixed_metrics);
         }
 
@@ -613,12 +586,9 @@ impl UltraThinkBenchmarkSuite {
 
         for &size in &test_sizes {
             let data = self.generate_test_data(size, &DataDistribution::Normal)?;
-            
-            let scalability_metrics = self.benchmark_scalability(
-                "mean_scalability",
-                &data,
-                size,
-            )?;
+
+            let scalability_metrics =
+                self.benchmark_scalability("mean_scalability", &data, size)?;
             metrics.push(scalability_metrics);
         }
 
@@ -637,11 +607,9 @@ impl UltraThinkBenchmarkSuite {
 
         for &size in &self.config.base_config.data_sizes {
             let data = self.generate_test_data(size, &DataDistribution::Normal)?;
-            
-            let cross_platform_metrics = self.benchmark_cross_platform(
-                "mean_cross_platform",
-                &data,
-            )?;
+
+            let cross_platform_metrics =
+                self.benchmark_cross_platform("mean_cross_platform", &data)?;
             metrics.push(cross_platform_metrics);
         }
 
@@ -649,11 +617,15 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Generate test data based on distribution type
-    fn generate_test_data(&self, size: usize, distribution: &DataDistribution) -> StatsResult<Array1<f64>> {
+    fn generate_test_data(
+        &self,
+        size: usize,
+        distribution: &DataDistribution,
+    ) -> StatsResult<Array1<f64>> {
         use rand::prelude::*;
-        use rand_distr::{Normal, Uniform, LogNormal, Exp, Pareto};
+        use rand_distr::{Exp, LogNormal, Normal, Pareto, Uniform};
 
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mut data = Array1::zeros(size);
 
         match distribution {
@@ -721,7 +693,7 @@ impl UltraThinkBenchmarkSuite {
         F: Fn(&Array1<f64>) -> StatsResult<R>,
     {
         let mut timings = Vec::new();
-        
+
         // Warmup
         for _ in 0..self.config.base_config.warmup_iterations {
             let _ = func(data)?;
@@ -762,7 +734,7 @@ impl UltraThinkBenchmarkSuite {
         F: Fn(&Array1<f64>, &Array1<f64>) -> StatsResult<R>,
     {
         let mut timings = Vec::new();
-        
+
         // Warmup
         for _ in 0..self.config.base_config.warmup_iterations {
             let _ = func(x, y)?;
@@ -799,12 +771,12 @@ impl UltraThinkBenchmarkSuite {
     ) -> StatsResult<UltraThinkBenchmarkMetrics> {
         // Use high-precision reference calculation
         let reference_result = self.calculate_high_precision_mean(data);
-        
+
         // Calculate with regular precision
         let result = crate::mean(&data.view())?;
-        
+
         let relative_error = (result - reference_result).abs() / reference_result.abs();
-        
+
         let stability_metrics = NumericalStabilityMetrics {
             relative_error,
             condition_number: None,
@@ -868,7 +840,7 @@ impl UltraThinkBenchmarkSuite {
     ) -> StatsResult<UltraThinkBenchmarkMetrics> {
         // This is a simplified implementation
         // In practice, you would run multiple sizes and analyze scaling
-        
+
         let base_metrics = crate::benchmark_suite::BenchmarkMetrics {
             function_name: name.to_string(),
             data_size: size,
@@ -925,7 +897,7 @@ impl UltraThinkBenchmarkSuite {
     ) -> StatsResult<UltraThinkBenchmarkMetrics> {
         // This would involve running on multiple platforms
         // For now, we simulate the metrics
-        
+
         let base_metrics = crate::benchmark_suite::BenchmarkMetrics {
             function_name: name.to_string(),
             data_size: data.len(),
@@ -956,7 +928,10 @@ impl UltraThinkBenchmarkSuite {
                 ("x86_64".to_string(), 1.0),
                 ("aarch64".to_string(), 0.85),
                 ("wasm32".to_string(), 0.6),
-            ].iter().cloned().collect(),
+            ]
+            .iter()
+            .cloned()
+            .collect(),
             architecture_impact: HashMap::new(),
             feature_dependency_analysis: FeatureDependencyAnalysis {
                 simd_feature_impact: HashMap::new(),
@@ -995,14 +970,20 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Calculate base metrics from timing data
-    fn calculate_base_metrics(&self, name: &str, size: usize, timings: &[f64]) -> crate::benchmark_suite::BenchmarkMetrics {
+    fn calculate_base_metrics(
+        &self,
+        name: &str,
+        size: usize,
+        timings: &[f64],
+    ) -> crate::benchmark_suite::BenchmarkMetrics {
         let mut sorted_timings = timings.to_vec();
         sorted_timings.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let mean = timings.iter().sum::<f64>() / timings.len() as f64;
-        let variance = timings.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / timings.len() as f64;
+        let variance =
+            timings.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / timings.len() as f64;
         let std_dev = variance.sqrt();
-        
+
         crate::benchmark_suite::BenchmarkMetrics {
             function_name: name.to_string(),
             data_size: size,
@@ -1033,9 +1014,9 @@ impl UltraThinkBenchmarkSuite {
         // Simplified stability analysis
         let mean = data.iter().sum::<f64>() / data.len() as f64;
         let variance = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64;
-        
+
         NumericalStabilityMetrics {
-            relative_error: 1e-15, // Machine epsilon for f64
+            relative_error: 1e-15,       // Machine epsilon for f64
             condition_number: Some(1.0), // Well-conditioned for basic operations
             error_accumulation_rate: 0.0,
             precision_loss_percent: 0.0,
@@ -1047,7 +1028,7 @@ impl UltraThinkBenchmarkSuite {
     fn calculate_scalability_metrics(&self, size: usize, timings: &[f64]) -> ScalabilityMetrics {
         let mean_time = timings.iter().sum::<f64>() / timings.len() as f64;
         let efficiency = 1.0 / (mean_time / size as f64);
-        
+
         ScalabilityMetrics {
             complexity_class: ComplexityClass::Linear,
             measured_scaling_factor: 1.0,
@@ -1077,10 +1058,14 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Build performance prediction models
-    fn build_performance_models(&mut self, metrics: &[UltraThinkBenchmarkMetrics]) -> StatsResult<()> {
+    fn build_performance_models(
+        &mut self,
+        metrics: &[UltraThinkBenchmarkMetrics],
+    ) -> StatsResult<()> {
         // Group metrics by function name
-        let mut function_metrics: HashMap<String, Vec<&UltraThinkBenchmarkMetrics>> = HashMap::new();
-        
+        let mut function_metrics: HashMap<String, Vec<&UltraThinkBenchmarkMetrics>> =
+            HashMap::new();
+
         for metric in metrics {
             function_metrics
                 .entry(metric.base_metrics.function_name.clone())
@@ -1098,24 +1083,45 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Build performance model for a specific function
-    fn build_performance_model(&self, metrics: &[&UltraThinkBenchmarkMetrics]) -> StatsResult<PerformanceModel> {
+    fn build_performance_model(
+        &self,
+        metrics: &[&UltraThinkBenchmarkMetrics],
+    ) -> StatsResult<PerformanceModel> {
         // Simple linear regression: time = a * size + b
         let n = metrics.len() as f64;
-        let sum_x = metrics.iter().map(|m| m.base_metrics.data_size as f64).sum::<f64>();
-        let sum_y = metrics.iter().map(|m| m.base_metrics.timing.mean_ns).sum::<f64>();
-        let sum_xy = metrics.iter().map(|m| m.base_metrics.data_size as f64 * m.base_metrics.timing.mean_ns).sum::<f64>();
-        let sum_x2 = metrics.iter().map(|m| (m.base_metrics.data_size as f64).powi(2)).sum::<f64>();
+        let sum_x = metrics
+            .iter()
+            .map(|m| m.base_metrics.data_size as f64)
+            .sum::<f64>();
+        let sum_y = metrics
+            .iter()
+            .map(|m| m.base_metrics.timing.mean_ns)
+            .sum::<f64>();
+        let sum_xy = metrics
+            .iter()
+            .map(|m| m.base_metrics.data_size as f64 * m.base_metrics.timing.mean_ns)
+            .sum::<f64>();
+        let sum_x2 = metrics
+            .iter()
+            .map(|m| (m.base_metrics.data_size as f64).powi(2))
+            .sum::<f64>();
 
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x.powi(2));
         let intercept = (sum_y - slope * sum_x) / n;
 
         // Calculate R²
         let mean_y = sum_y / n;
-        let ss_tot = metrics.iter().map(|m| (m.base_metrics.timing.mean_ns - mean_y).powi(2)).sum::<f64>();
-        let ss_res = metrics.iter().map(|m| {
-            let predicted = slope * m.base_metrics.data_size as f64 + intercept;
-            (m.base_metrics.timing.mean_ns - predicted).powi(2)
-        }).sum::<f64>();
+        let ss_tot = metrics
+            .iter()
+            .map(|m| (m.base_metrics.timing.mean_ns - mean_y).powi(2))
+            .sum::<f64>();
+        let ss_res = metrics
+            .iter()
+            .map(|m| {
+                let predicted = slope * m.base_metrics.data_size as f64 + intercept;
+                (m.base_metrics.timing.mean_ns - predicted).powi(2)
+            })
+            .sum::<f64>();
         let r_squared = 1.0 - ss_res / ss_tot;
 
         Ok(PerformanceModel {
@@ -1132,7 +1138,10 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Generate intelligent optimization recommendations
-    fn generate_intelligent_recommendations(&self, metrics: &[UltraThinkBenchmarkMetrics]) -> Vec<IntelligentRecommendation> {
+    fn generate_intelligent_recommendations(
+        &self,
+        metrics: &[UltraThinkBenchmarkMetrics],
+    ) -> Vec<IntelligentRecommendation> {
         let mut recommendations = Vec::new();
 
         // Analyze SIMD opportunities
@@ -1151,82 +1160,96 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Analyze SIMD optimization opportunities
-    fn analyze_simd_opportunities(&self, _metrics: &[UltraThinkBenchmarkMetrics]) -> Vec<IntelligentRecommendation> {
-        vec![
-            IntelligentRecommendation {
-                category: RecommendationCategory::Performance,
-                priority: RecommendationPriority::High,
-                recommendation: "Enable SIMD optimizations for array operations".to_string(),
-                expected_improvement: 2.5,
-                confidence: 0.9,
-                implementation_effort: ImplementationEffort::Low,
-                compatibility_impact: CompatibilityImpact::None,
-                platform_specificity: PlatformSpecificity::Universal,
-                code_example: Some(r#"
+    fn analyze_simd_opportunities(
+        &self,
+        _metrics: &[UltraThinkBenchmarkMetrics],
+    ) -> Vec<IntelligentRecommendation> {
+        vec![IntelligentRecommendation {
+            category: RecommendationCategory::Performance,
+            priority: RecommendationPriority::High,
+            recommendation: "Enable SIMD optimizations for array operations".to_string(),
+            expected_improvement: 2.5,
+            confidence: 0.9,
+            implementation_effort: ImplementationEffort::Low,
+            compatibility_impact: CompatibilityImpact::None,
+            platform_specificity: PlatformSpecificity::Universal,
+            code_example: Some(
+                r#"
 // Enable SIMD for mean calculation
 use scirs2_core::simd_ops::SimdUnifiedOps;
 let result = f64::simd_mean(&data.view());
-"#.to_string()),
-                validation_strategy: "Compare SIMD vs scalar results for numerical accuracy".to_string(),
-            },
-        ]
+"#
+                .to_string(),
+            ),
+            validation_strategy: "Compare SIMD vs scalar results for numerical accuracy"
+                .to_string(),
+        }]
     }
 
     /// Analyze parallel processing opportunities
-    fn analyze_parallel_opportunities(&self, _metrics: &[UltraThinkBenchmarkMetrics]) -> Vec<IntelligentRecommendation> {
-        vec![
-            IntelligentRecommendation {
-                category: RecommendationCategory::Performance,
-                priority: RecommendationPriority::Medium,
-                recommendation: "Use parallel processing for large datasets (>10K elements)".to_string(),
-                expected_improvement: 3.0,
-                confidence: 0.8,
-                implementation_effort: ImplementationEffort::Medium,
-                compatibility_impact: CompatibilityImpact::Minor,
-                platform_specificity: PlatformSpecificity::Universal,
-                code_example: Some(r#"
+    fn analyze_parallel_opportunities(
+        &self,
+        _metrics: &[UltraThinkBenchmarkMetrics],
+    ) -> Vec<IntelligentRecommendation> {
+        vec![IntelligentRecommendation {
+            category: RecommendationCategory::Performance,
+            priority: RecommendationPriority::Medium,
+            recommendation: "Use parallel processing for large datasets (>10K elements)"
+                .to_string(),
+            expected_improvement: 3.0,
+            confidence: 0.8,
+            implementation_effort: ImplementationEffort::Medium,
+            compatibility_impact: CompatibilityImpact::Minor,
+            platform_specificity: PlatformSpecificity::Universal,
+            code_example: Some(
+                r#"
 // Enable parallel processing for large arrays
 use scirs2_core::parallel_ops::*;
 if data.len() > 10_000 {
     let result = parallel_mean(&data.view());
 }
-"#.to_string()),
-                validation_strategy: "Verify thread safety and performance scaling".to_string(),
-            },
-        ]
+"#
+                .to_string(),
+            ),
+            validation_strategy: "Verify thread safety and performance scaling".to_string(),
+        }]
     }
 
     /// Analyze memory optimization opportunities
-    fn analyze_memory_opportunities(&self, _metrics: &[UltraThinkBenchmarkMetrics]) -> Vec<IntelligentRecommendation> {
-        vec![
-            IntelligentRecommendation {
-                category: RecommendationCategory::Memory,
-                priority: RecommendationPriority::Medium,
-                recommendation: "Use memory-mapped files for very large datasets".to_string(),
-                expected_improvement: 1.5,
-                confidence: 0.7,
-                implementation_effort: ImplementationEffort::High,
-                compatibility_impact: CompatibilityImpact::Moderate,
-                platform_specificity: PlatformSpecificity::Family,
-                code_example: None,
-                validation_strategy: "Monitor memory usage and I/O patterns".to_string(),
-            },
-        ]
+    fn analyze_memory_opportunities(
+        &self,
+        _metrics: &[UltraThinkBenchmarkMetrics],
+    ) -> Vec<IntelligentRecommendation> {
+        vec![IntelligentRecommendation {
+            category: RecommendationCategory::Memory,
+            priority: RecommendationPriority::Medium,
+            recommendation: "Use memory-mapped files for very large datasets".to_string(),
+            expected_improvement: 1.5,
+            confidence: 0.7,
+            implementation_effort: ImplementationEffort::High,
+            compatibility_impact: CompatibilityImpact::Moderate,
+            platform_specificity: PlatformSpecificity::Family,
+            code_example: None,
+            validation_strategy: "Monitor memory usage and I/O patterns".to_string(),
+        }]
     }
 
     /// Analyze numerical stability improvements
-    fn analyze_stability_improvements(&self, _metrics: &[UltraThinkBenchmarkMetrics]) -> Vec<IntelligentRecommendation> {
-        vec![
-            IntelligentRecommendation {
-                category: RecommendationCategory::Stability,
-                priority: RecommendationPriority::High,
-                recommendation: "Use Kahan summation for improved numerical accuracy".to_string(),
-                expected_improvement: 1.1,
-                confidence: 0.95,
-                implementation_effort: ImplementationEffort::Low,
-                compatibility_impact: CompatibilityImpact::None,
-                platform_specificity: PlatformSpecificity::Universal,
-                code_example: Some(r#"
+    fn analyze_stability_improvements(
+        &self,
+        _metrics: &[UltraThinkBenchmarkMetrics],
+    ) -> Vec<IntelligentRecommendation> {
+        vec![IntelligentRecommendation {
+            category: RecommendationCategory::Stability,
+            priority: RecommendationPriority::High,
+            recommendation: "Use Kahan summation for improved numerical accuracy".to_string(),
+            expected_improvement: 1.1,
+            confidence: 0.95,
+            implementation_effort: ImplementationEffort::Low,
+            compatibility_impact: CompatibilityImpact::None,
+            platform_specificity: PlatformSpecificity::Universal,
+            code_example: Some(
+                r#"
 // Kahan summation for improved accuracy
 fn kahan_sum(data: &[f64]) -> f64 {
     let mut sum = 0.0;
@@ -1239,14 +1262,18 @@ fn kahan_sum(data: &[f64]) -> f64 {
     }
     sum
 }
-"#.to_string()),
-                validation_strategy: "Compare with high-precision reference implementation".to_string(),
-            },
-        ]
+"#
+                .to_string(),
+            ),
+            validation_strategy: "Compare with high-precision reference implementation".to_string(),
+        }]
     }
 
     /// Create comprehensive analysis
-    fn create_comprehensive_analysis(&self, metrics: &[UltraThinkBenchmarkMetrics]) -> ComprehensiveAnalysis {
+    fn create_comprehensive_analysis(
+        &self,
+        metrics: &[UltraThinkBenchmarkMetrics],
+    ) -> ComprehensiveAnalysis {
         ComprehensiveAnalysis {
             overall_performance_score: self.calculate_overall_score(metrics),
             scalability_assessment: self.assess_scalability(metrics),
@@ -1269,7 +1296,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
             .collect();
 
         let mean_score = throughput_scores.iter().sum::<f64>() / throughput_scores.len() as f64;
-        
+
         // Convert to 0-100 scale (somewhat arbitrary scaling)
         (mean_score * 10.0).min(100.0)
     }
@@ -1289,17 +1316,25 @@ fn kahan_sum(data: &[f64]) -> f64 {
         let avg_relative_error = metrics
             .iter()
             .map(|m| m.stability_metrics.relative_error)
-            .sum::<f64>() / metrics.len() as f64;
+            .sum::<f64>()
+            / metrics.len() as f64;
 
         StabilityAssessment {
             overall_stability_score: (1.0 - avg_relative_error).max(0.0),
-            precision_loss_risk: if avg_relative_error > 1e-10 { StabilityRisk::Medium } else { StabilityRisk::Low },
+            precision_loss_risk: if avg_relative_error > 1e-10 {
+                StabilityRisk::Medium
+            } else {
+                StabilityRisk::Low
+            },
             numerical_robustness: 0.95,
         }
     }
 
     /// Assess cross-platform performance
-    fn assess_cross_platform(&self, _metrics: &[UltraThinkBenchmarkMetrics]) -> CrossPlatformAssessment {
+    fn assess_cross_platform(
+        &self,
+        _metrics: &[UltraThinkBenchmarkMetrics],
+    ) -> CrossPlatformAssessment {
         CrossPlatformAssessment {
             portability_score: 0.9,
             performance_variance: 0.15,
@@ -1312,7 +1347,10 @@ fn kahan_sum(data: &[f64]) -> f64 {
     }
 
     /// Analyze performance bottlenecks
-    fn analyze_bottlenecks(&self, _metrics: &[UltraThinkBenchmarkMetrics]) -> Vec<BottleneckAnalysis> {
+    fn analyze_bottlenecks(
+        &self,
+        _metrics: &[UltraThinkBenchmarkMetrics],
+    ) -> Vec<BottleneckAnalysis> {
         vec![
             BottleneckAnalysis {
                 component: "Memory bandwidth".to_string(),
@@ -1334,7 +1372,10 @@ fn kahan_sum(data: &[f64]) -> f64 {
     }
 
     /// Identify optimization opportunities
-    fn identify_optimization_opportunities(&self, _metrics: &[UltraThinkBenchmarkMetrics]) -> Vec<OptimizationOpportunity> {
+    fn identify_optimization_opportunities(
+        &self,
+        _metrics: &[UltraThinkBenchmarkMetrics],
+    ) -> Vec<OptimizationOpportunity> {
         vec![
             OptimizationOpportunity {
                 opportunity: "SIMD vectorization".to_string(),
@@ -1372,7 +1413,7 @@ pub struct IntelligentRecommendation {
     pub priority: RecommendationPriority,
     pub recommendation: String,
     pub expected_improvement: f64, // multiplier
-    pub confidence: f64, // 0.0 to 1.0
+    pub confidence: f64,           // 0.0 to 1.0
     pub implementation_effort: ImplementationEffort,
     pub compatibility_impact: CompatibilityImpact,
     pub platform_specificity: PlatformSpecificity,
@@ -1402,11 +1443,11 @@ pub enum RecommendationPriority {
 /// Implementation effort levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ImplementationEffort {
-    Trivial,   // < 1 hour
-    Low,       // 1-4 hours
-    Medium,    // 1-2 days
-    High,      // 3-7 days
-    Expert,    // > 1 week, requires expertise
+    Trivial, // < 1 hour
+    Low,     // 1-4 hours
+    Medium,  // 1-2 days
+    High,    // 3-7 days
+    Expert,  // > 1 week, requires expertise
 }
 
 /// Comprehensive analysis results
@@ -1481,41 +1522,37 @@ impl Default for UltraThinkBenchmarkConfig {
             enable_scalability_analysis: true,
             enable_complexity_analysis: true,
             enable_power_analysis: false, // Requires special hardware
-            target_platforms: vec![
-                TargetPlatform {
-                    name: "x86_64".to_string(),
-                    architecture: "x86_64".to_string(),
-                    cpu_features: vec!["AVX2".to_string(), "FMA".to_string()],
-                    memory_hierarchy: MemoryHierarchy {
-                        l1_cache_kb: 32,
-                        l2_cache_kb: 256,
-                        l3_cache_mb: 8,
-                        memory_bandwidth_gbps: 50.0,
-                        numa_nodes: 1,
-                    },
-                    expected_performance: Some(ExpectedPerformance {
-                        operations_per_second: 1e9,
-                        memory_bandwidth_utilization: 0.7,
-                        cache_efficiency: 0.8,
-                    }),
+            target_platforms: vec![TargetPlatform {
+                name: "x86_64".to_string(),
+                architecture: "x86_64".to_string(),
+                cpu_features: vec!["AVX2".to_string(), "FMA".to_string()],
+                memory_hierarchy: MemoryHierarchy {
+                    l1_cache_kb: 32,
+                    l2_cache_kb: 256,
+                    l3_cache_mb: 8,
+                    memory_bandwidth_gbps: 50.0,
+                    numa_nodes: 1,
                 },
-            ],
+                expected_performance: Some(ExpectedPerformance {
+                    operations_per_second: 1e9,
+                    memory_bandwidth_utilization: 0.7,
+                    cache_efficiency: 0.8,
+                }),
+            }],
             data_distributions: vec![
                 DataDistribution::Normal,
                 DataDistribution::Uniform,
                 DataDistribution::Sparse(0.9),
             ],
             precision_levels: vec![PrecisionLevel::Single, PrecisionLevel::Double],
-            stress_test_configs: vec![
-                StressTestConfig {
-                    name: "High memory pressure".to_string(),
-                    data_size_multiplier: 10.0,
-                    concurrent_operations: 4,
-                    memory_pressure: 0.8,
-                    thermal_stress: false,
-                    duration_minutes: 1.0,
-                },
-            ],
+            stress_test_configs: vec![StressTestConfig {
+                name: "High memory pressure".to_string(),
+                data_size_multiplier: 10.0,
+                concurrent_operations: 4,
+                memory_pressure: 0.8,
+                thermal_stress: false,
+                duration_minutes: 1.0,
+            }],
         }
     }
 }
@@ -1544,11 +1581,15 @@ mod tests {
     fn test_data_generation() {
         let config = UltraThinkBenchmarkConfig::default();
         let suite = UltraThinkBenchmarkSuite::new(config);
-        
-        let data = suite.generate_test_data(100, &DataDistribution::Normal).unwrap();
+
+        let data = suite
+            .generate_test_data(100, &DataDistribution::Normal)
+            .unwrap();
         assert_eq!(data.len(), 100);
-        
-        let sparse_data = suite.generate_test_data(100, &DataDistribution::Sparse(0.9)).unwrap();
+
+        let sparse_data = suite
+            .generate_test_data(100, &DataDistribution::Sparse(0.9))
+            .unwrap();
         let zero_count = sparse_data.iter().filter(|&&x| x == 0.0).count();
         assert!(zero_count > 50); // Should have many zeros
     }
@@ -1557,67 +1598,67 @@ mod tests {
     fn test_performance_model_building() {
         let config = UltraThinkBenchmarkConfig::default();
         let suite = UltraThinkBenchmarkSuite::new(config);
-        
-        // Create some mock metrics
-        let mock_metrics = vec![
-            UltraThinkBenchmarkMetrics {
-                base_metrics: crate::benchmark_suite::BenchmarkMetrics {
-                    function_name: "test".to_string(),
-                    data_size: 100,
-                    timing: crate::benchmark_suite::TimingStats {
-                        mean_ns: 1000.0,
-                        std_dev_ns: 100.0,
-                        min_ns: 900.0,
-                        max_ns: 1200.0,
-                        median_ns: 1000.0,
-                        p95_ns: 1100.0,
-                        p99_ns: 1150.0,
-                    },
-                    memory: None,
-                    algorithm_config: crate::benchmark_suite::AlgorithmConfig {
-                        simd_enabled: false,
-                        parallel_enabled: false,
-                        thread_count: None,
-                        simd_width: None,
-                        algorithm_variant: "standard".to_string(),
-                    },
-                    throughput: 100000.0,
-                    baseline_comparison: None,
-                },
-                stability_metrics: NumericalStabilityMetrics {
-                    relative_error: 1e-15,
-                    condition_number: Some(1.0),
-                    error_accumulation_rate: 0.0,
-                    precision_loss_percent: 0.0,
-                    distribution_stability: HashMap::new(),
-                },
-                scalability_metrics: ScalabilityMetrics {
-                    complexity_class: ComplexityClass::Linear,
-                    measured_scaling_factor: 1.0,
-                    scale_efficiency: vec![(100, 1.0)],
-                    memory_scaling: MemoryScalingMetrics {
-                        allocation_efficiency: 0.95,
-                        memory_reuse_factor: 0.8,
-                        fragmentation_growth_rate: 0.01,
-                        cache_miss_rate_growth: 0.05,
-                    },
-                    parallel_scaling: None,
-                },
-                power_metrics: None,
-                memory_hierarchy_metrics: MemoryHierarchyMetrics {
-                    l1_cache_hit_rate: 0.95,
-                    l2_cache_hit_rate: 0.85,
-                    l3_cache_hit_rate: 0.75,
-                    memory_bandwidth_utilization: 0.6,
-                    numa_locality_score: 0.9,
-                    prefetch_effectiveness: 0.7,
-                },
-                platform_variance: None,
-                prediction_accuracy: None,
-            },
-        ];
 
-        let model = suite.build_performance_model(&mock_metrics.iter().collect::<Vec<_>>()).unwrap();
+        // Create some mock metrics
+        let mock_metrics = vec![UltraThinkBenchmarkMetrics {
+            base_metrics: crate::benchmark_suite::BenchmarkMetrics {
+                function_name: "test".to_string(),
+                data_size: 100,
+                timing: crate::benchmark_suite::TimingStats {
+                    mean_ns: 1000.0,
+                    std_dev_ns: 100.0,
+                    min_ns: 900.0,
+                    max_ns: 1200.0,
+                    median_ns: 1000.0,
+                    p95_ns: 1100.0,
+                    p99_ns: 1150.0,
+                },
+                memory: None,
+                algorithm_config: crate::benchmark_suite::AlgorithmConfig {
+                    simd_enabled: false,
+                    parallel_enabled: false,
+                    thread_count: None,
+                    simd_width: None,
+                    algorithm_variant: "standard".to_string(),
+                },
+                throughput: 100000.0,
+                baseline_comparison: None,
+            },
+            stability_metrics: NumericalStabilityMetrics {
+                relative_error: 1e-15,
+                condition_number: Some(1.0),
+                error_accumulation_rate: 0.0,
+                precision_loss_percent: 0.0,
+                distribution_stability: HashMap::new(),
+            },
+            scalability_metrics: ScalabilityMetrics {
+                complexity_class: ComplexityClass::Linear,
+                measured_scaling_factor: 1.0,
+                scale_efficiency: vec![(100, 1.0)],
+                memory_scaling: MemoryScalingMetrics {
+                    allocation_efficiency: 0.95,
+                    memory_reuse_factor: 0.8,
+                    fragmentation_growth_rate: 0.01,
+                    cache_miss_rate_growth: 0.05,
+                },
+                parallel_scaling: None,
+            },
+            power_metrics: None,
+            memory_hierarchy_metrics: MemoryHierarchyMetrics {
+                l1_cache_hit_rate: 0.95,
+                l2_cache_hit_rate: 0.85,
+                l3_cache_hit_rate: 0.75,
+                memory_bandwidth_utilization: 0.6,
+                numa_locality_score: 0.9,
+                prefetch_effectiveness: 0.7,
+            },
+            platform_variance: None,
+            prediction_accuracy: None,
+        }];
+
+        let model = suite
+            .build_performance_model(&mock_metrics.iter().collect::<Vec<_>>())
+            .unwrap();
         assert!(matches!(model.model_type, ModelType::Linear));
         assert_eq!(model.coefficients.len(), 2); // intercept and slope
     }

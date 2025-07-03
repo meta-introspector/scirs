@@ -448,7 +448,7 @@ impl TransformationMonitor {
     ) -> Result<DriftDetectionResult> {
         check_not_empty(reference, "reference")?;
         check_not_empty(new_data, "new_data")?;
-        
+
         // Check finite values in reference
         for &val in reference.iter() {
             if !val.is_finite() {
@@ -457,7 +457,7 @@ impl TransformationMonitor {
                 ));
             }
         }
-        
+
         // Check finite values in new_data
         for &val in new_data.iter() {
             if !val.is_finite() {
@@ -636,7 +636,8 @@ impl TransformationMonitor {
                 if value < bins[0] {
                     frequencies[0] += 1;
                 } else if value > bins[bins.len() - 1] {
-                    frequencies[frequencies.len() - 1] += 1;
+                    let last_idx = frequencies.len() - 1;
+                    frequencies[last_idx] += 1;
                 }
             }
         }
@@ -879,7 +880,7 @@ impl TransformationMonitor {
                 if d.abs() < 1e-30 {
                     d = 1e-30;
                 }
-                let c = b + an / c;
+                let mut c = b + an / c;
                 if c.abs() < 1e-30 {
                     c = 1e-30;
                 }
@@ -1360,6 +1361,11 @@ impl AdvancedAnomalyDetector {
         // Identify trending anomalies
         let trending_metrics = self.identify_trending_anomalies(&recent_anomalies);
 
+        let most_anomalous_metric = metric_frequencies
+            .iter()
+            .max_by_key(|(_, &count)| count)
+            .map(|(metric, _)| metric.clone());
+
         AnomalyInsights {
             total_anomalies,
             critical_anomalies,
@@ -1367,10 +1373,7 @@ impl AdvancedAnomalyDetector {
             metric_frequencies,
             method_frequencies,
             trending_metrics,
-            most_anomalous_metric: metric_frequencies
-                .iter()
-                .max_by_key(|(_, &count)| count)
-                .map(|(metric, _)| metric.clone()),
+            most_anomalous_metric,
         }
     }
 

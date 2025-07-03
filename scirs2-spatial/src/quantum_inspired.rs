@@ -2426,7 +2426,7 @@ mod tests {
         assert_eq!(tour.len(), 3);
 
         // Verify all cities are included
-        let mut cities_included = vec![false; 3];
+        let mut cities_included = [false; 3];
         for &city in &tour {
             cities_included[city] = true;
         }
@@ -3707,7 +3707,7 @@ impl QuantumKernelMachine {
         labels: &ArrayView1<f64>,
     ) -> SpatialResult<()> {
         let (n_samples, _) = points.dim();
-        
+
         if n_samples != labels.len() {
             return Err(SpatialError::InvalidInput(
                 "Number of samples must match number of labels".to_string(),
@@ -3721,7 +3721,7 @@ impl QuantumKernelMachine {
             let quantum_state = self.encode_classical_data(&point)?;
             self.quantum_training_data.push(quantum_state);
         }
-        
+
         self.training_labels = labels.to_owned();
 
         // Compute quantum kernel matrix
@@ -3873,14 +3873,22 @@ impl QuantumKernelMachine {
             let qubit = i % self.num_qubits;
             match gate {
                 QuantumGateType::RX(angle) => {
-                    let data_angle = if i < point.len() { point[i] * angle } else { *angle };
+                    let data_angle = if i < point.len() {
+                        point[i] * angle
+                    } else {
+                        *angle
+                    };
                     // RX implementation using Hadamard and RZ
                     state.hadamard(qubit)?;
                     state.phase_rotation(qubit, data_angle)?;
                     state.hadamard(qubit)?;
                 }
                 QuantumGateType::RY(angle) => {
-                    let data_angle = if i < point.len() { point[i] * angle } else { *angle };
+                    let data_angle = if i < point.len() {
+                        point[i] * angle
+                    } else {
+                        *angle
+                    };
                     // RY implementation
                     state.phase_rotation(qubit, PI / 2.0)?;
                     state.hadamard(qubit)?;
@@ -3889,7 +3897,11 @@ impl QuantumKernelMachine {
                     state.phase_rotation(qubit, -PI / 2.0)?;
                 }
                 QuantumGateType::RZ(angle) => {
-                    let data_angle = if i < point.len() { point[i] * angle } else { *angle };
+                    let data_angle = if i < point.len() {
+                        point[i] * angle
+                    } else {
+                        *angle
+                    };
                     state.phase_rotation(qubit, data_angle)?;
                 }
                 QuantumGateType::H => {
@@ -3976,7 +3988,7 @@ impl QuantumKernelMachine {
 
         // Compute fidelity between quantum states
         let fidelity = self.compute_quantum_fidelity(state1, state2);
-        
+
         // Apply kernel transformation
         Ok(fidelity.abs())
     }
@@ -3990,7 +4002,7 @@ impl QuantumKernelMachine {
             .zip(state2.amplitudes.iter())
             .map(|(a, b)| a.conj() * b)
             .sum::<Complex64>();
-        
+
         overlap.norm_sqr()
     }
 
@@ -4002,7 +4014,7 @@ impl QuantumKernelMachine {
         let n_samples = kernel_matrix.nrows();
         let mut alpha = Array1::<f64>::zeros(n_samples);
         let regularization = self.kernel_params.regularization;
-        
+
         // Simplified SMO algorithm - select support vectors with non-zero alphas
         for i in 0..n_samples {
             for j in (i + 1)..n_samples {
@@ -4011,7 +4023,7 @@ impl QuantumKernelMachine {
                     let k_ii = kernel_matrix[[i, i]];
                     let k_jj = kernel_matrix[[j, j]];
                     let k_ij = kernel_matrix[[i, j]];
-                    
+
                     let eta = k_ii + k_jj - 2.0 * k_ij;
                     if eta > 0.0 {
                         let delta = (self.training_labels[i] - self.training_labels[j]) / eta;
@@ -4025,7 +4037,7 @@ impl QuantumKernelMachine {
         // Extract support vectors (non-zero alphas)
         let mut support_indices = Vec::new();
         let mut support_coefficients = Vec::new();
-        
+
         for (i, &coeff) in alpha.iter().enumerate() {
             if coeff.abs() > 1e-6 {
                 support_indices.push(i);
@@ -4062,11 +4074,11 @@ impl QuantumKernelMachine {
         // Simplified quantum advantage metric based on entanglement and superposition
         let num_qubits = self.num_qubits as f64;
         let feature_depth = self.feature_map_depth as f64;
-        
+
         // Theoretical quantum advantage scales exponentially with qubits
         let exponential_advantage = 2.0_f64.powf(num_qubits / 4.0);
         let depth_advantage = (1.0 + feature_depth).ln();
-        
+
         exponential_advantage * depth_advantage
     }
 }
@@ -4106,7 +4118,7 @@ impl QuantumVariationalClassifier {
     pub fn new(num_qubits: usize, circuit_depth: usize) -> Self {
         let num_params = num_qubits * circuit_depth * 3; // 3 rotation angles per qubit per layer
         let parameters = Array1::zeros(num_params);
-        
+
         let optimizer = QuantumParameterOptimizer {
             learning_rate: 0.01,
             momentum: 0.9,
@@ -4147,7 +4159,7 @@ impl QuantumVariationalClassifier {
             for (point, &label) in points.outer_iter().zip(labels.iter()) {
                 // Forward pass
                 let prediction = self.forward_pass(&point)?;
-                
+
                 // Compute loss (squared error)
                 let error = prediction - label;
                 total_cost += error * error;
@@ -4158,7 +4170,8 @@ impl QuantumVariationalClassifier {
             }
 
             // Update parameters using optimizer
-            self.optimizer.update_parameters(&mut self.parameters, &total_gradients)?;
+            self.optimizer
+                .update_parameters(&mut self.parameters, &total_gradients)?;
 
             // Check convergence
             if iteration % 10 == 0 {
@@ -4226,7 +4239,7 @@ impl QuantumVariationalClassifier {
             .filter(|&i| (i & 1) == 0)
             .map(|i| state.probability(i))
             .sum::<f64>();
-        
+
         let prob_1 = (0..state.amplitudes.len())
             .filter(|&i| (i & 1) == 1)
             .map(|i| state.probability(i))
@@ -4253,7 +4266,7 @@ impl QuantumVariationalClassifier {
 
             // Temporarily update parameters for gradient computation
             let _original_params = self.parameters.clone();
-            
+
             // Forward pass with positive shift
             let mut temp_classifier = self.clone();
             temp_classifier.parameters = params_plus;
@@ -4288,9 +4301,9 @@ impl QuantumParameterOptimizer {
 
         for i in 0..parameters.len() {
             // Update momentum buffer
-            self.momentum_buffer[i] = 
+            self.momentum_buffer[i] =
                 self.momentum * self.momentum_buffer[i] - self.learning_rate * gradients[i];
-            
+
             // Update parameters
             parameters[i] += self.momentum_buffer[i];
         }

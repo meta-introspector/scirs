@@ -242,7 +242,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingValidation> {
     let n_sparse = 10;
     let time_span = 100.0;
     let mut times = Vec::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Generate random sparse sampling times
     for _ in 0..n_sparse {
@@ -341,7 +341,7 @@ fn validate_extreme_snr() -> SignalResult<ExtremeSNRValidation> {
     let signal_freq = 5.0;
     let signal_amplitude = 1.0;
 
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Test very low SNR (-30 dB)
     let low_snr_db = -30.0;
@@ -425,7 +425,7 @@ fn validate_pathological_signals() -> SignalResult<PathologicalSignalValidation>
 
     // Random walk
     let mut random_walk = vec![0.0; n];
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     for i in 1..n {
         random_walk[i] = random_walk[i - 1] + rng.random_range(-1.0..1.0);
     }
@@ -593,7 +593,7 @@ fn validate_complex_frequency_content() -> SignalResult<ComplexFrequencyValidati
         assess_frequency_resolution(&times, &close_freq_signal, freq1, freq2)?;
 
     // Broadband noise + tones
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let broadband_signal: Vec<f64> = times
         .iter()
         .map(|&t| (2.0 * PI * 15.0 * t).sin() + 0.5 * rng.random_range(-1.0..1.0))
@@ -651,7 +651,7 @@ fn validate_missing_data_handling() -> SignalResult<MissingDataValidation> {
         .collect();
 
     // Random gaps (remove 30% of data randomly)
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let keep_indices: Vec<usize> = (0..n_complete)
         .filter(|_| rng.random_range(0.0..1.0) > 0.3)
         .collect();

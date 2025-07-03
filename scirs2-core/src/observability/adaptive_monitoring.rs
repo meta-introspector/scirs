@@ -931,7 +931,7 @@ impl AlertingSystem {
             "average_latency_ms" => Ok(metrics.average_latency_ms),
             "cache_miss_rate" => Ok(metrics.cache_miss_rate),
             _ => Err(CoreError::ValidationError(ErrorContext {
-                message: format!("Unknown metric: {}", metric),
+                message: format!("Unknown metric: {metric}"),
                 location: None,
                 cause: None,
             })),
@@ -962,7 +962,7 @@ impl AlertingSystem {
             ),
             rule_name: rule.name.clone(),
             severity: rule.severity,
-            message: format!("Alert triggered: {}", rule.name),
+            message: format!("Alert triggered: {name}", name = rule.name),
             triggered_at: Instant::now(),
             acknowledged: false,
             resolved: false,
@@ -1701,7 +1701,7 @@ impl MetricsCollector {
             if let Ok(output) = Command::new("tasklist")
                 .args(&[
                     "/fi",
-                    &format!("PID eq {}", std::process::id()),
+                    &format!("PID eq {pid}", pid = std::process::id()),
                     "/fo",
                     "CSV",
                 ])
@@ -1731,7 +1731,7 @@ impl MetricsCollector {
                 .args(&[
                     "process",
                     "where",
-                    &format!("ProcessId={}", std::process::id()),
+                    &format!("ProcessId={pid}", pid = std::process::id()),
                     "get",
                     "WorkingSetSize",
                     "/value",

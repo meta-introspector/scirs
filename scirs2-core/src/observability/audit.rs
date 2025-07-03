@@ -950,7 +950,7 @@ impl LogFileManager {
                                 if modified_datetime < cutoff_date {
                                     // Archive this file
                                     let source_path = entry.path();
-                                    let archive_filename = format!("archived_{}", filename);
+                                    let archive_filename = format!("archived_{filename}");
                                     let dest_path = archive_path.join(archive_filename);
 
                                     // Simple archive: copy to archive directory
@@ -1439,24 +1439,22 @@ impl AlertManager {
 
         // Attempt simple SMTP connection
         match TcpStream::connect_timeout(
-            &format!("{}:{}", smtp_server, smtp_port)
-                .parse()
-                .map_err(|e| {
-                    CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                        "Invalid SMTP address: {}",
-                        e
-                    )))
-                })?,
+            &format!("{smtp_server}:{smtp_port}").parse().map_err(|e| {
+                CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                    "Invalid SMTP address: {}",
+                    e
+                )))
+            })?,
             Duration::from_secs(10),
         ) {
             Ok(mut stream) => {
                 // Very basic SMTP implementation
                 let commands = vec![
                     format!("HELO localhost\r\n"),
-                    format!("MAIL FROM:<{}>\r\n", from_email),
-                    format!("RCPT TO:<{}>\r\n", email),
+                    format!("MAIL FROM:<{from_email}>\r\n"),
+                    format!("RCPT TO:<{email}>\r\n"),
                     "DATA\r\n".to_string(),
-                    format!("Subject: Security Alert\r\n\r\n{}\r\n.\r\n", message),
+                    format!("Subject: Security Alert\r\n\r\n{message}\r\n.\r\n"),
                     "QUIT\r\n".to_string(),
                 ];
 
@@ -2343,7 +2341,7 @@ fn get_stack_trace() -> String {
 
     // Get current thread and function info
     if let Some(name) = std::thread::current().name() {
-        result.push_str(&format!("  Thread: {}\n", name));
+        result.push_str(&format!("  Thread: {name}\n"));
     } else {
         result.push_str("  Thread: <unnamed>\n");
     }

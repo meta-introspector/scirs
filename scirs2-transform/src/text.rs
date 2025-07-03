@@ -299,34 +299,34 @@ impl TfidfVectorizer {
     /// Transform documents to TF-IDF vectors
     pub fn transform(&self, documents: &[String]) -> Result<Array2<f64>> {
         // Get count vectors
-        let mut X = self.count_vectorizer.transform(documents)?;
+        let mut x = self.count_vectorizer.transform(documents)?
 
         // Apply sublinear TF scaling
         if self.sublinear_tf {
-            X.mapv_inplace(|v| if v > 0.0 { 1.0 + v.ln() } else { 0.0 });
+            x.mapv_inplace(|v| if v > 0.0 { 1.0 + v.ln() } else { 0.0 });
         }
 
         // Apply IDF weighting
         if self.use_idf {
-            for i in 0..X.shape()[0] {
-                for j in 0..X.shape()[1] {
-                    X[[i, j]] *= self.idf[j];
+            for i in 0..x.shape()[0] {
+                for j in 0..x.shape()[1] {
+                    x[[i, j]] *= self.idf[j];
                 }
             }
         }
 
         // Apply L2 normalization
         if self.norm {
-            for i in 0..X.shape()[0] {
-                let row = X.row(i);
+            for i in 0..x.shape()[0] {
+                let row = x.row(i);
                 let norm = row.dot(&row).sqrt();
                 if norm > 0.0 {
-                    X.row_mut(i).mapv_inplace(|v| v / norm);
+                    x.row_mut(i).mapv_inplace(|v| v / norm);
                 }
             }
         }
 
-        Ok(X)
+        Ok(x)
     }
 
     /// Fit and transform in one step

@@ -34,31 +34,31 @@ mod data_generators {
     use super::*;
 
     pub fn normal(n: usize, mean: f64, std: f64) -> Array1<f64> {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let normal = Normal::new(mean, std).unwrap();
         Array1::from_shape_fn(n, |_| normal.sample(&mut rng))
     }
 
     pub fn uniform(n: usize, low: f64, high: f64) -> Array1<f64> {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let uniform = Uniform::new(low, high);
         Array1::from_shape_fn(n, |_| uniform.sample(&mut rng))
     }
 
     pub fn exponential(n: usize, lambda: f64) -> Array1<f64> {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let exp = Exponential::new(lambda).unwrap();
         Array1::from_shape_fn(n, |_| exp.sample(&mut rng))
     }
 
     pub fn multivariate_normal(n: usize, dim: usize) -> Array2<f64> {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let normal = StandardNormal;
         Array2::from_shape_fn((n, dim), |_| normal.sample(&mut rng))
     }
 
     pub fn correlated_data(n: usize, correlation: f64) -> (Array1<f64>, Array1<f64>) {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let normal = StandardNormal;
         let x = Array1::from_shape_fn(n, |_| normal.sample(&mut rng));
         let noise = Array1::from_shape_fn(n, |_| normal.sample(&mut rng));
@@ -411,7 +411,7 @@ fn bench_random_sampling(c: &mut Criterion) {
             &data,
             |b, data| {
                 b.iter(|| {
-                    let mut rng = thread_rng();
+                    let mut rng = rng();
                     black_box(random::choice(&data.view(), 100.min(n), true, &mut rng))
                 })
             },
@@ -424,7 +424,7 @@ fn bench_random_sampling(c: &mut Criterion) {
                 &data,
                 |b, data| {
                     b.iter(|| {
-                        let mut rng = thread_rng();
+                        let mut rng = rng();
                         black_box(random::choice(&data.view(), 100.min(n), false, &mut rng))
                     })
                 },
@@ -434,7 +434,7 @@ fn bench_random_sampling(c: &mut Criterion) {
         // Permutation
         group.bench_with_input(BenchmarkId::new("permutation", n), &n, |b, &n| {
             b.iter(|| {
-                let mut rng = thread_rng();
+                let mut rng = rng();
                 black_box(random::permutation(n, &mut rng))
             })
         });

@@ -3,9 +3,9 @@
 //! This module implements optimization algorithms based on spiking neural networks,
 //! which process information using discrete spike events rather than continuous signals.
 
-use super::{NeuromorphicConfig, NeuronState, SpikeEvent};
-use crate::error::OptimizeError;
-use ndarray::{Array1, Array2, ArrayView1};
+use super::{NeuromorphicConfig, SpikeEvent};
+use ndarray::{Array1, ArrayView1};
+use rand::Rng;
 use scirs2_core::error::CoreResult as Result;
 use std::collections::VecDeque;
 
@@ -85,17 +85,18 @@ impl SpikingNeuron {
     }
 
     /// Update neuron state for one time step
-    pub fn update(&mut self, dt: f64, external_current: f64) -> Option<f64> {
+    pub fn update(&mut self, dt: f64, external_current: f64, current_time: f64) -> Option<f64> {
         // Check if in refractory period
         if let Some(last_spike) = self.last_spike_time {
-            if (0.0 - last_spike) < self.refractory_period {
+            if (current_time - last_spike) < self.refractory_period {
                 return None; // Still refractory
             }
         }
 
         // Add noise
         let noise = if self.noise_amplitude > 0.0 {
-            (rand::random::<f64>() - 0.5) * 2.0 * self.noise_amplitude
+            let mut rng = rand::rng();
+            (rng.random::<f64>() - 0.5) * 2.0 * self.noise_amplitude
         } else {
             0.0
         };
@@ -218,12 +219,13 @@ impl SpikingNeuralNetwork {
         // Create random connectivity
         let mut synapses = vec![Vec::new(); config.num_neurons];
         let connection_probability = 0.1; // 10% connection probability
+        let mut rng = rand::rng();
 
         for i in 0..config.num_neurons {
             for j in 0..config.num_neurons {
-                if i != j && rand::random::<f64>() < connection_probability {
-                    let weight = (rand::random::<f64>() - 0.5) * 0.2;
-                    let delay = rand::random::<f64>() * 0.005; // 0-5ms delay
+                if i != j && rng.random::<f64>() < connection_probability {
+                    let weight = (rng.random::<f64>() - 0.5) * 0.2;
+                    let delay = rng.random::<f64>() * 0.005; // 0-5ms delay
                     synapses[i].push(Synapse::new(i, j, weight, delay));
                 }
             }
@@ -299,7 +301,8 @@ impl SpikingNeuralNetwork {
             let total_input = synaptic_input + feedback_input;
 
             // Update neuron
-            if let Some(_spike_time) = neuron.update(self.config.dt, total_input) {
+            if let Some(_spike_time) = neuron.update(self.config.dt, total_input, self.current_time)
+            {
                 spiked_neurons.push(neuron_idx);
                 neuron.last_spike_time = Some(self.current_time);
 
@@ -462,7 +465,7 @@ mod tests {
         let mut neuron = SpikingNeuron::new(&config);
 
         // Apply strong input to cause spike
-        let spike_time = neuron.update(0.001, 50.0);
+        let spike_time = neuron.update(0.001, 50.0, 0.0);
         assert!(spike_time.is_some());
         assert_eq!(neuron.membrane_potential, neuron.resting_potential);
     }
@@ -526,7 +529,7 @@ mod tests {
 
         // Simulate a few steps
         for _ in 0..10 {
-            let spiked = network.simulate_step(1.0).unwrap();
+            let _spiked = network.simulate_step(1.0).unwrap();
             // Should complete without error
         }
 
@@ -565,7 +568,7 @@ mod tests {
             network.simulate_step(1.0).unwrap();
         }
 
-        let time_before_reset = network.current_time;
+        let _time_before_reset = network.current_time;
         network.reset();
 
         assert_eq!(network.current_time, 0.0);

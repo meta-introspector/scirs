@@ -103,6 +103,7 @@ pub mod tokenize;
 pub mod topic_coherence;
 pub mod topic_modeling;
 pub mod transformer;
+pub mod ultrathink_performance;
 pub mod ultrathink_text_coordinator;
 pub mod utils;
 pub mod vectorize;
@@ -173,7 +174,9 @@ pub use sentiment::{
     LexiconSentimentAnalyzer, RuleBasedSentimentAnalyzer, Sentiment, SentimentLexicon,
     SentimentResult, SentimentRules, SentimentWordCounts,
 };
-pub use simd_ops::{SimdEditDistance, SimdStringOps, SimdTextAnalyzer};
+pub use simd_ops::{
+    SimdEditDistance, SimdStringOps, SimdTextAnalyzer, TextProcessingResult, UltraSIMDTextProcessor,
+};
 pub use sparse::{CsrMatrix, DokMatrix, SparseMatrixBuilder, SparseVector};
 pub use sparse_vectorize::{
     sparse_cosine_similarity, MemoryStats, SparseCountVectorizer, SparseTfidfVectorizer,
@@ -188,7 +191,7 @@ pub use stemming::{
 };
 pub use streaming::{
     ChunkedCorpusReader, MemoryMappedCorpus, ProgressTracker, StreamingTextProcessor,
-    StreamingVectorizer,
+    StreamingVectorizer, UltraStreamingMetrics, UltrathinkStreamingProcessor,
 };
 pub use string_metrics::{
     AlignmentResult, DamerauLevenshteinMetric, Metaphone, NeedlemanWunsch, Nysiis,
@@ -213,6 +216,10 @@ pub use transformer::{
     FeedForward, LayerNorm, MultiHeadAttention, PositionalEncoding, TokenEmbedding,
     TransformerConfig, TransformerDecoder, TransformerDecoderLayer, TransformerEncoder,
     TransformerEncoderLayer, TransformerModel,
+};
+pub use ultrathink_performance::{
+    DetailedPerformanceReport, OptimizationRecommendation, PerformanceSummary,
+    PerformanceThresholds, UltrathinkPerformanceMonitor,
 };
 pub use vectorize::{CountVectorizer, TfidfVectorizer, Vectorizer};
 pub use visualization::{

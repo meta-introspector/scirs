@@ -3,7 +3,7 @@
 //! This module provides optimization strategies that adapt to different hardware configurations,
 //! including CPUs, GPUs, TPUs, edge devices, and distributed systems.
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::collections::HashMap;

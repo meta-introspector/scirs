@@ -6,11 +6,12 @@
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
-use rand::{Rng, SeedableRng, rngs::StdRng};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::f64::consts::PI;
 
 /// Quantum-enhanced dataset generator using quantum-inspired algorithms
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct QuantumDatasetGenerator {
     /// Quantum coherence time for entanglement effects
     coherence_time: f64,

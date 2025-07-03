@@ -135,7 +135,6 @@ impl<T> ErrorContext<T> for Result<T> {
     }
 }
 
-
 /// Error kind for categorizing errors
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ErrorKind {

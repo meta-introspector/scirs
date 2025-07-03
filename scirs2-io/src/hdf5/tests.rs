@@ -1,7 +1,7 @@
 //! Tests for HDF5 functionality
 
 #[cfg(test)]
-mod tests {
+mod hdf5_tests {
     use crate::hdf5::{
         create_hdf5_with_structure, write_hdf5, AttributeValue, CompressionOptions, DataArray,
         DatasetOptions, FileMode, Group, HDF5DataType, HDF5File, StringEncoding,

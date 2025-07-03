@@ -801,20 +801,41 @@ impl NeuralAdaptiveSparseProcessor {
             let nnz = end_idx - start_idx;
 
             if nnz >= 8 {
-                // Use SIMD for longer rows
+                // Use proper SIMD for longer rows
                 let mut sum = T::zero();
                 let simd_len = nnz & !7; // Round down to multiple of 8
 
-                for i in (0..simd_len).step_by(8) {
-                    // Manual SIMD computation
-                    for j in 0..8 {
-                        let idx = start_idx + i + j;
-                        let col = indices[idx];
-                        sum += data[idx] * x[col];
+                // Process in SIMD chunks
+                for chunk_start in (0..simd_len).step_by(8) {
+                    let chunk_end = (chunk_start + 8).min(nnz);
+                    let actual_chunk_size = chunk_end - chunk_start;
+                    
+                    if actual_chunk_size == 8 {
+                        // Full SIMD chunk - extract data and indices
+                        let data_chunk: Vec<T> = (0..8)
+                            .map(|i| data[start_idx + chunk_start + i])
+                            .collect();
+                        let x_chunk: Vec<T> = (0..8)
+                            .map(|i| x[indices[start_idx + chunk_start + i]])
+                            .collect();
+                        
+                        // Perform SIMD multiplication and reduction
+                        use ndarray::Array1;
+                        let data_array = Array1::from(data_chunk);
+                        let x_array = Array1::from(x_chunk);
+                        let simd_result = T::simd_dot(&data_array.view(), &x_array.view());
+                        sum += simd_result;
+                    } else {
+                        // Partial chunk - use scalar computation
+                        for i in chunk_start..chunk_end {
+                            let idx = start_idx + i;
+                            let col = indices[idx];
+                            sum += data[idx] * x[col];
+                        }
                     }
                 }
 
-                // Handle remainder
+                // Handle remainder elements
                 for idx in (start_idx + simd_len)..end_idx {
                     let col = indices[idx];
                     sum += data[idx] * x[col];
@@ -874,12 +895,38 @@ impl NeuralAdaptiveSparseProcessor {
             if nnz == 0 {
                 y[row] = T::zero();
             } else if nnz >= 64 {
-                // Use SIMD for long rows
+                // Use advanced SIMD with vectorized gather operations for very long rows
                 let mut sum = T::zero();
-                for idx in start_idx..end_idx {
+                let simd_chunks = nnz / 8;
+                let remainder = nnz % 8;
+                
+                // Process full SIMD chunks
+                for chunk in 0..simd_chunks {
+                    let chunk_start = start_idx + chunk * 8;
+                    
+                    // Extract data and corresponding x values
+                    let data_vec: Vec<T> = (0..8)
+                        .map(|i| data[chunk_start + i])
+                        .collect();
+                    let x_vec: Vec<T> = (0..8)
+                        .map(|i| x[indices[chunk_start + i]])
+                        .collect();
+                    
+                    // Use SIMD operations for dot product
+                    use ndarray::Array1;
+                    let data_array = Array1::from(data_vec);
+                    let x_array = Array1::from(x_vec);
+                    let chunk_result = T::simd_dot(&data_array.view(), &x_array.view());
+                    sum += chunk_result;
+                }
+                
+                // Handle remainder elements
+                for i in 0..remainder {
+                    let idx = start_idx + simd_chunks * 8 + i;
                     let col = indices[idx];
                     sum += data[idx] * x[col];
                 }
+                
                 y[row] = sum;
             } else if nnz <= 4 {
                 // Optimized for very sparse rows

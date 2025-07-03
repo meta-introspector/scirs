@@ -492,7 +492,7 @@ where
         for fold in 0..cv {
             // Shuffle indices for this fold
             for i in 0..indices.len() {
-                let j = rng.gen_range(0..indices.len());
+                let j = rng.random_range(0..indices.len());
                 indices.swap(i, j);
             }
 

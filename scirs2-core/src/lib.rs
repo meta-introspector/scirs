@@ -346,9 +346,9 @@ pub use crate::quantum_optimization::{
 
 // Ultrathink JIT Compilation re-exports
 pub use crate::ultrathink_jit_compilation::{
-    AdaptiveCodeGenerator, CompilationStatistics, JitAnalytics, JitCompilerConfig,
-    JitProfiler, KernelCache, KernelMetadata, KernelPerformance, LlvmCompilationEngine,
-    OptimizationResults, PerformanceImprovement, RuntimeOptimizer, UltrathinkJitCompiler,
+    AdaptiveCodeGenerator, CompilationStatistics, JitAnalytics, JitCompilerConfig, JitProfiler,
+    KernelCache, KernelMetadata, KernelPerformance, LlvmCompilationEngine, OptimizationResults,
+    PerformanceImprovement, RuntimeOptimizer, UltrathinkJitCompiler,
 };
 
 // Ultrathink Cloud Storage re-exports

@@ -25,6 +25,14 @@ pub enum OptimizeError {
     /// Not implemented error
     #[error("Not implemented: {0}")]
     NotImplementedError(String),
+
+    /// Initialization error (failed to initialize optimizer)
+    #[error("Initialization error: {0}")]
+    InitializationError(String),
+
+    /// I/O error
+    #[error("I/O error: {0}")]
+    IOError(String),
 }
 
 /// Result type for optimization operations

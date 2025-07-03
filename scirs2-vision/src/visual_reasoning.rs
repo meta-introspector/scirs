@@ -501,55 +501,107 @@ pub struct AbstractionLayer {
     pub learning_algorithm: String,
 }
 
+/// Parameters for concept learning in visual reasoning
+///
+/// This structure configures how the system learns and emerges new concepts
+/// from visual input data through adaptive mechanisms.
 #[derive(Debug, Clone)]
 pub struct ConceptLearningParams {
+    /// Learning rate for concept adaptation and emergence
     pub learning_rate: f32,
+    /// Threshold for determining when a new concept should emerge
     pub concept_emergence_threshold: f32,
+    /// Whether to enable hierarchical concept learning
     pub hierarchical_learning: bool,
 }
 
+/// Different sensory modalities for multi-modal processing
+///
+/// Represents the various types of sensory input that can be processed
+/// and fused in the visual reasoning system.
 #[derive(Debug, Clone)]
 pub enum Modality {
+    /// Visual sensory input (images, video)
     Visual,
+    /// Audio sensory input (sounds, speech)
     Audio,
+    /// Textual input (natural language)
     Text,
+    /// Tactile sensory input (touch, pressure)
     Tactile,
+    /// Temporal sequence information
     Temporal,
+    /// Spatial relationship information
     Spatial,
 }
 
+/// Strategy for fusing multiple sensory modalities
+///
+/// Defines how different sensory inputs should be combined and weighted
+/// to create unified multi-modal representations.
 #[derive(Debug, Clone)]
 pub struct FusionStrategy {
+    /// Name identifier for this fusion strategy
     pub strategy_name: String,
+    /// Weights assigned to each modality in the fusion process
     pub modality_weights: HashMap<Modality, f32>,
+    /// Level of fusion (early, intermediate, late)
     pub fusion_level: String,
+    /// Whether to align temporal sequences across modalities
     pub temporal_alignment: bool,
 }
 
+/// Cross-modal attention mechanism for multi-modal processing
+///
+/// Implements attention mechanisms that allow one modality to attend to
+/// and influence processing in another modality.
 #[derive(Debug, Clone)]
 pub struct CrossModalAttention {
+    /// Type of attention mechanism (additive, multiplicative, etc.)
     pub attention_type: String,
+    /// Source modality providing attention signal
     pub source_modality: Modality,
+    /// Target modality receiving attention
     pub target_modality: Modality,
+    /// Attention weight matrix
     pub attention_weights: Array2<f32>,
 }
 
+/// A visual fact extracted from reasoning about visual content
+///
+/// Represents a structured fact (subject-predicate-object triple) that has been
+/// inferred or extracted from visual reasoning processes.
 #[derive(Debug, Clone)]
 pub struct VisualFact {
+    /// Unique identifier for this fact
     pub fact_id: String,
+    /// Subject of the fact (what the fact is about)
     pub subject: String,
+    /// Predicate describing the relationship or property
     pub predicate: String,
+    /// Object related to the subject by the predicate
     pub object: String,
+    /// Confidence score for this fact (0.0 to 1.0)
     pub confidence: f32,
+    /// Supporting evidence for this fact
     pub evidence: Vec<String>,
 }
 
+/// A logical reasoning rule for visual reasoning processes
+///
+/// Represents an if-then rule that can be applied during reasoning to derive
+/// new conclusions from existing facts and conditions.
 #[derive(Debug, Clone)]
 pub struct ReasoningRule {
+    /// Unique identifier for this reasoning rule
     pub rule_id: String,
+    /// Conditions that must be met for the rule to apply
     pub conditions: Vec<String>,
+    /// Conclusions that can be drawn when conditions are met
     pub conclusions: Vec<String>,
+    /// Type of reasoning rule (deductive, inductive, abductive)
     pub rule_type: String,
+    /// Reliability score for this rule (0.0 to 1.0)
     pub reliability: f32,
 }
 

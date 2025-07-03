@@ -6,6 +6,7 @@
 
 use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::error_context;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
@@ -215,16 +216,16 @@ impl OptimizationVisualizer {
         output_path: &Path,
     ) -> ScirsResult<()> {
         if trajectory.is_empty() {
-            return Err(ScirsError::InvalidInput("Empty trajectory".to_string()));
+            return Err(ScirsError::InvalidInput(error_context!("Empty trajectory")));
         }
 
         match self.config.format {
             OutputFormat::Svg => self.plot_convergence_svg(trajectory, output_path),
             OutputFormat::Html => self.plot_convergence_html(trajectory, output_path),
             OutputFormat::Data => self.export_convergence_data(trajectory, output_path),
-            _ => Err(ScirsError::NotImplemented(
-                "PNG output not yet implemented".to_string(),
-            )),
+            _ => Err(ScirsError::NotImplementedError(error_context!(
+                "PNG output not yet implemented"
+            ))),
         }
     }
 
@@ -235,22 +236,22 @@ impl OptimizationVisualizer {
         output_path: &Path,
     ) -> ScirsResult<()> {
         if trajectory.is_empty() {
-            return Err(ScirsError::InvalidInput("Empty trajectory".to_string()));
+            return Err(ScirsError::InvalidInput(error_context!("Empty trajectory")));
         }
 
         if trajectory.parameters[0].len() != 2 {
-            return Err(ScirsError::InvalidInput(
-                "Parameter trajectory visualization only supports 2D problems".to_string(),
-            ));
+            return Err(ScirsError::InvalidInput(error_context!(
+                "Parameter trajectory visualization only supports 2D problems"
+            )));
         }
 
         match self.config.format {
             OutputFormat::Svg => self.plot_trajectory_svg(trajectory, output_path),
             OutputFormat::Html => self.plot_trajectory_html(trajectory, output_path),
             OutputFormat::Data => self.export_trajectory_data(trajectory, output_path),
-            _ => Err(ScirsError::NotImplemented(
-                "PNG output not yet implemented".to_string(),
-            )),
+            _ => Err(ScirsError::NotImplementedError(error_context!(
+                "PNG output not yet implemented"
+            ))),
         }
     }
 

@@ -386,7 +386,9 @@ impl IntelligentErrorRecovery {
         let suggestion = RecoverySuggestion {
             suggestion_type: SuggestionType::InputValidation,
             description: "Check and reshape input arrays to match expected dimensions".to_string(),
-            action: RecoveryAction::ValidateInputs,
+            action: RecoveryAction::ValidateInputs {
+                validation_checks: vec![],
+            },
             expected_outcome: "Arrays will have compatible dimensions for computation".to_string(),
             confidence: 0.9,
             prerequisites: vec!["Access to input data".to_string()],
@@ -1429,7 +1431,7 @@ impl MLEnhancedErrorRecovery {
                 suggestion_type: SuggestionType::Approximation,
                 description: "Use ML-guided approximation methods".to_string(),
                 action: RecoveryAction::UseApproximation {
-                    method: "neural_approximation".to_string(),
+                    approximation_method: "neural_approximation".to_string(),
                 },
                 expected_outcome: "Fast approximate solution with controlled error".to_string(),
                 confidence,

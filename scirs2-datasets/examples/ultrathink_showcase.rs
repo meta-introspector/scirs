@@ -10,20 +10,24 @@ use scirs2_datasets::{
     benchmark_ultra_performance,
     // Adaptive streaming
     create_adaptive_engine,
+    create_adaptive_engine_with_config,
     // Ultra-GPU optimization
     generate_ultra_matrix,
     // Core functionality
     make_classification,
     quick_quality_assessment,
+    AdaptiveStreamConfig,
     AdaptiveStreamingEngine,
+    ChunkMetadata,
+    DataCharacteristics,
     Dataset,
     GpuBackend,
     GpuContext,
+    StatisticalMoments,
     StreamChunk,
-    StreamConfig,
-
+    TrendDirection,
+    TrendIndicators,
     UltraDatasetAnalyzer,
-
     UltraGpuOptimizer,
 };
 use std::time::{Duration, Instant};
@@ -197,7 +201,7 @@ fn demonstrate_adaptive_streaming(dataset: &Dataset) -> Result<(), Box<dyn std::
     println!("===================================");
 
     // Configure streaming engine
-    let config = StreamConfig {
+    let config = AdaptiveStreamConfig {
         max_buffer_size: 10 * 1024 * 1024, // 10MB
         batch_size: 100,
         adaptive_threshold: 0.8,
@@ -227,21 +231,21 @@ fn demonstrate_adaptive_streaming(dataset: &Dataset) -> Result<(), Box<dyn std::
         let chunk = StreamChunk {
             data: chunk_data,
             timestamp: Instant::now(),
-            metadata: scirs2_datasets::ChunkMetadata {
+            metadata: ChunkMetadata {
                 source_id: format!("demo_source_{}", i),
                 sequence_number: i as u64,
-                characteristics: scirs2_datasets::DataCharacteristics {
-                    moments: scirs2_datasets::StatisticalMoments {
+                characteristics: DataCharacteristics {
+                    moments: StatisticalMoments {
                         mean: 0.0,
                         variance: 1.0,
                         skewness: 0.0,
                         kurtosis: 0.0,
                     },
                     entropy: 1.0,
-                    trend: scirs2_datasets::TrendIndicators {
+                    trend: TrendIndicators {
                         linear_slope: 0.1,
                         trend_strength: 0.5,
-                        direction: scirs2_datasets::TrendDirection::Increasing,
+                        direction: TrendDirection::Increasing,
                         seasonality: 0.2,
                     },
                     anomaly_score: 0.1,

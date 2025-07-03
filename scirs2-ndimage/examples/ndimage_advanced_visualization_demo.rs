@@ -187,7 +187,7 @@ fn create_sample_image(size: usize) -> Array2<f64> {
 }
 
 fn add_noise(image: &Array2<f64>) -> Array2<f64> {
-    let mut rng = ndarray_rand::rand::thread_rng();
+    let mut rng = ndarray_rand::rand::rng();
     image.mapv(|x| x + (ndarray_rand::rand::Rng::gen::<f64>(&mut rng) - 0.5) * 0.1)
 }
 

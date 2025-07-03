@@ -107,16 +107,23 @@ pub struct FeatureStats {
     pub data_type: InferredDataType,
     /// Basic statistics
     pub count: usize,
+    /// Mean value (for numerical data)
     pub mean: Option<f64>,
+    /// Standard deviation (for numerical data)
     pub std: Option<f64>,
+    /// Minimum value (for numerical data)
     pub min: Option<f64>,
+    /// Maximum value (for numerical data)
     pub max: Option<f64>,
+    /// Median value (for numerical data)
     pub median: Option<f64>,
     /// Percentiles (25%, 75%)
     pub q25: Option<f64>,
+    /// 75th percentile
     pub q75: Option<f64>,
     /// Unique values (for categorical data)
     pub unique_count: Option<usize>,
+    /// List of unique values (for categorical data with few values)
     pub unique_values: Option<Vec<String>>,
     /// Missing data count
     pub missing_count: usize,
@@ -125,9 +132,13 @@ pub struct FeatureStats {
 /// Inferred data type for a feature
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InferredDataType {
+    /// Continuous numerical data
     Numerical,
+    /// Categorical/string data
     Categorical,
+    /// Binary data (0/1 or true/false)
     Binary,
+    /// Unknown data type
     Unknown,
 }
 
@@ -193,21 +204,32 @@ pub struct QualityIssue {
 /// Type of data quality issue
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum IssueType {
+    /// Missing data values
     MissingData,
+    /// Statistical outliers
     Outliers,
+    /// Duplicate rows
     Duplicates,
+    /// Low variance features
     LowVariance,
+    /// Highly correlated features
     HighCorrelation,
+    /// Imbalanced class distribution
     ImbalancedClasses,
+    /// Skewed data distribution
     SkewedDistribution,
 }
 
 /// Severity level of an issue
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Severity {
+    /// Low severity issue
     Low,
+    /// Medium severity issue
     Medium,
+    /// High severity issue
     High,
+    /// Critical severity issue
     Critical,
 }
 

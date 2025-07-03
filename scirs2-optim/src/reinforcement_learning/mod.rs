@@ -138,7 +138,7 @@ impl<T: Float> TrajectoryBatch<T> {
         rewards: Array1<T>,
         values: Array1<T>,
         dones: Array1<bool>,
-    ) -> Result<Self, OptimError> {
+    ) -> Result<Self> {
         let batch_size = observations.nrows();
 
         // Validate dimensions
@@ -170,12 +170,7 @@ impl<T: Float> TrajectoryBatch<T> {
     }
 
     /// Compute Generalized Advantage Estimation (GAE)
-    pub fn compute_advantages(
-        &mut self,
-        gamma: T,
-        lambda: T,
-        next_value: T,
-    ) -> Result<(), OptimError> {
+    pub fn compute_advantages(&mut self, gamma: T, lambda: T, next_value: T) -> Result<()> {
         let batch_size = self.rewards.len();
         let mut gae = T::zero();
 
@@ -269,19 +264,13 @@ pub trait PolicyNetwork<T: Float> {
         &self,
         observations: &Array2<T>,
         actions: &Array2<T>,
-    ) -> Result<PolicyEvaluation<T>, OptimError>;
+    ) -> Result<PolicyEvaluation<T>>;
 
     /// Get action distribution for given observations
-    fn get_action_distribution(
-        &self,
-        observations: &Array2<T>,
-    ) -> Result<ActionDistribution<T>, OptimError>;
+    fn get_action_distribution(&self, observations: &Array2<T>) -> Result<ActionDistribution<T>>;
 
     /// Update policy parameters with gradients
-    fn update_parameters(
-        &mut self,
-        gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<(), OptimError>;
+    fn update_parameters(&mut self, gradients: &HashMap<String, Array1<T>>) -> Result<()>;
 
     /// Get current policy parameters
     fn get_parameters(&self) -> HashMap<String, Array1<T>>;
@@ -290,13 +279,10 @@ pub trait PolicyNetwork<T: Float> {
 /// Value network interface for RL optimizers
 pub trait ValueNetwork<T: Float> {
     /// Evaluate value function for given observations
-    fn evaluate_value(&self, observations: &Array2<T>) -> Result<Array1<T>, OptimError>;
+    fn evaluate_value(&self, observations: &Array2<T>) -> Result<Array1<T>>;
 
     /// Update value function parameters with gradients
-    fn update_parameters(
-        &mut self,
-        gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<(), OptimError>;
+    fn update_parameters(&mut self, gradients: &HashMap<String, Array1<T>>) -> Result<()>;
 
     /// Get current value function parameters
     fn get_parameters(&self) -> HashMap<String, Array1<T>>;

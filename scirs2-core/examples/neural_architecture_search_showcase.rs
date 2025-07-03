@@ -95,12 +95,21 @@ fn demonstrate_evolutionary_nas() -> CoreResult<()> {
         memory_bandwidth: 400.0, // GB/s
     };
 
+    // Create search configuration
+    let config = SearchConfig {
+        strategy: NASStrategy::Evolutionary,
+        max_evaluations: 50,
+        population_size: 20,
+        max_generations: 10,
+    };
+
     // Create NAS engine
     let mut nas = NeuralArchitectureSearch::new(
         search_space,
         NASStrategy::Evolutionary,
         objectives,
         constraints,
+        config,
     )?;
 
     println!("🔧 Configured evolutionary search with:");
@@ -111,28 +120,36 @@ fn demonstrate_evolutionary_nas() -> CoreResult<()> {
 
     // Run architecture search
     let start_time = Instant::now();
-    let best_architecture = nas.search(50)?; // 50 iterations
+    let search_results = nas.search()?;
     let search_time = start_time.elapsed();
 
     println!("\n📊 Search Results:");
     println!("   - Search completed in {:?}", search_time);
-    println!("   - Best architecture ID: {}", best_architecture.id);
-    println!("   - Number of layers: {}", best_architecture.layers.len());
-    println!(
-        "   - Architecture strategy: {:?}",
-        best_architecture.metadata.search_strategy
-    );
-
-    // Analyze architecture composition
-    let layer_counts = count_layer_types(&best_architecture);
-    println!("\n🏗️  Architecture Composition:");
-    for (layer_type, count) in layer_counts {
-        println!("   - {:?}: {}", layer_type, count);
+    if let Some((best_arch, performance)) = &search_results.best_architecture {
+        println!(
+            "   - Best architecture found with fitness: {:.4}",
+            performance.accuracy
+        );
+        println!("   - Number of layers: {}", best_arch.layers.len());
+        println!(
+            "   - Total evaluations: {}",
+            search_results.statistics.total_evaluations
+        );
+    } else {
+        println!("   - No architecture found");
     }
 
-    // Export detailed results
-    let results = nas.export_results()?;
-    analyze_search_results(&results)?;
+    // Analyze architecture composition
+    if let Some((best_arch, _)) = &search_results.best_architecture {
+        let layer_counts = count_layer_types(&best_arch);
+        println!("\n🏗️  Architecture Composition:");
+        for (layer_type, count) in layer_counts {
+            println!("   - {:?}: {}", layer_type, count);
+        }
+    }
+
+    // Analyze detailed results
+    analyze_search_results(&search_results)?;
 
     Ok(())
 }
@@ -147,12 +164,21 @@ fn demonstrate_quantum_enhanced_nas() -> CoreResult<()> {
     let objectives = OptimizationObjectives::default();
     let constraints = HardwareConstraints::default();
 
+    // Create search configuration for quantum-enhanced search
+    let config = SearchConfig {
+        strategy: NASStrategy::QuantumEnhanced,
+        max_evaluations: 30,
+        population_size: 15,
+        max_generations: 8,
+    };
+
     // Create quantum-enhanced NAS
     let mut nas = NeuralArchitectureSearch::new(
         search_space,
         NASStrategy::QuantumEnhanced,
         objectives,
         constraints,
+        config,
     )?;
 
     println!("🔬 Quantum-enhanced search features:");
@@ -163,20 +189,24 @@ fn demonstrate_quantum_enhanced_nas() -> CoreResult<()> {
 
     // Run quantum search
     let start_time = Instant::now();
-    let best_architecture = nas.search(30)?; // Fewer iterations due to quantum efficiency
+    let search_results = nas.search()?; // Quantum-enhanced search
     let search_time = start_time.elapsed();
 
     println!("\n⚡ Quantum Search Results:");
     println!("   - Enhanced exploration completed in {:?}", search_time);
-    println!(
-        "   - Quantum-optimized architecture: {}",
-        best_architecture.id
-    );
-    println!("   - Generation: {}", best_architecture.metadata.generation);
-    println!(
-        "   - Estimated FLOPS: {}",
-        best_architecture.metadata.estimated_flops
-    );
+    if let Some((best_arch, performance)) = &search_results.best_architecture {
+        println!(
+            "   - Quantum-optimized architecture found with fitness: {:.4}",
+            performance.accuracy
+        );
+        println!("   - Number of layers: {}", best_arch.layers.len());
+        println!(
+            "   - Total evaluations: {}",
+            search_results.statistics.total_evaluations
+        );
+    } else {
+        println!("   - No quantum-optimized architecture found");
+    }
 
     // Show quantum-specific insights
     println!("\n🌌 Quantum Optimization Insights:");
@@ -211,12 +241,21 @@ fn demonstrate_progressive_nas() -> CoreResult<()> {
     let objectives = OptimizationObjectives::default();
     let constraints = HardwareConstraints::default();
 
+    // Create search configuration for progressive search
+    let config = SearchConfig {
+        strategy: NASStrategy::Progressive,
+        max_evaluations: 40,
+        population_size: 12,
+        max_generations: 15,
+    };
+
     // Create progressive NAS
     let mut nas = NeuralArchitectureSearch::new(
         search_space,
         NASStrategy::Progressive,
         objectives,
         constraints,
+        config,
     )?;
 
     println!("🎯 Progressive search strategy:");
@@ -227,35 +266,45 @@ fn demonstrate_progressive_nas() -> CoreResult<()> {
 
     // Run progressive search
     let start_time = Instant::now();
-    let best_architecture = nas.search(40)?;
+    let search_results = nas.search()?;
     let search_time = start_time.elapsed();
 
     println!("\n📊 Progressive Search Results:");
     println!("   - Complexity progression completed in {:?}", search_time);
-    println!(
-        "   - Final architecture complexity: {} layers",
-        best_architecture.layers.len()
-    );
-    println!(
-        "   - Progressive strategy: {:?}",
-        best_architecture.metadata.search_strategy
-    );
+    if let Some((best_arch, performance)) = &search_results.best_architecture {
+        println!(
+            "   - Final architecture complexity: {} layers",
+            best_arch.layers.len()
+        );
+        println!(
+            "   - Progressive fitness achieved: {:.4}",
+            performance.accuracy
+        );
+        println!(
+            "   - Total evaluations: {}",
+            search_results.statistics.total_evaluations
+        );
+    } else {
+        println!("   - No progressive architecture found");
+    }
 
     // Show progression details
-    let results = nas.export_results()?;
-    if !results.progress_history.is_empty() {
-        let initial_accuracy = results.progress_history.first().unwrap().best_accuracy;
-        let final_accuracy = results.progress_history.last().unwrap().best_accuracy;
-        let improvement = (final_accuracy - initial_accuracy) / initial_accuracy * 100.0;
+    if !search_results.progress_history.is_empty() {
+        let initial_fitness = search_results
+            .progress_history
+            .first()
+            .unwrap()
+            .best_fitness;
+        let final_fitness = search_results.progress_history.last().unwrap().best_fitness;
+        let improvement = (final_fitness - initial_fitness) / initial_fitness * 100.0;
 
         println!("\n📈 Progression Analysis:");
-        println!("   - Initial accuracy: {:.3}", initial_accuracy);
-        println!("   - Final accuracy: {:.3}", final_accuracy);
+        println!("   - Initial fitness: {:.3}", initial_fitness);
+        println!("   - Final fitness: {:.3}", final_fitness);
         println!("   - Improvement: {:.1}%", improvement);
-        println!(
-            "   - Convergence iterations: {}",
-            results.statistics.convergence_iterations
-        );
+        if let Some(convergence_gen) = search_results.statistics.convergence_generation {
+            println!("   - Convergence generation: {}", convergence_gen);
+        }
     }
 
     Ok(())
@@ -312,40 +361,54 @@ fn demonstrate_multi_objective_optimization() -> CoreResult<()> {
     for (scenario_name, objectives) in scenarios {
         println!("\n🔍 Optimizing for: {}", scenario_name);
 
+        // Create search configuration for multi-objective optimization
+        let config = SearchConfig {
+            strategy: NASStrategy::Evolutionary,
+            max_evaluations: 25,
+            population_size: 10,
+            max_generations: 8,
+        };
+
         let mut nas = NeuralArchitectureSearch::new(
             search_space.clone(),
             NASStrategy::Evolutionary,
             objectives,
             constraints.clone(),
+            config,
         )?;
 
-        let architecture = nas.search(20)?;
+        let search_results = nas.search()?;
 
-        println!("   - Architecture: {}", architecture.id);
-        println!("   - Layers: {}", architecture.layers.len());
-        println!(
-            "   - Estimated memory: {} MB",
-            architecture.metadata.estimated_memory / (1024 * 1024)
-        );
-        println!(
-            "   - Estimated latency: {:?}",
-            architecture.metadata.estimated_latency
-        );
+        if let Some((best_arch, performance)) = &search_results.best_architecture {
+            println!(
+                "   - Architecture found with fitness: {:.4}",
+                performance.accuracy
+            );
+            println!("   - Layers: {}", best_arch.layers.len());
+            println!(
+                "   - Total evaluations: {}",
+                search_results.statistics.total_evaluations
+            );
+        } else {
+            println!("   - No architecture found for this scenario");
+        }
 
         // Analyze optimization focus
-        let layer_counts = count_layer_types(&architecture);
-        let has_attention = layer_counts.contains_key(&LayerType::Attention);
-        let has_conv = layer_counts.contains_key(&LayerType::Convolution2D);
+        if let Some((best_arch, _)) = &search_results.best_architecture {
+            let layer_counts = count_layer_types(&best_arch);
+            let has_attention = layer_counts.contains_key(&LayerType::Attention);
+            let has_conv = layer_counts.contains_key(&LayerType::Convolution2D);
 
-        println!("   - Architecture characteristics:");
-        if has_attention {
-            println!("     * Uses attention mechanisms (accuracy-focused)");
-        }
-        if has_conv {
-            println!("     * Uses convolutions (efficiency-focused)");
-        }
-        if architecture.layers.len() < 8 {
-            println!("     * Compact architecture (resource-efficient)");
+            println!("   - Architecture characteristics:");
+            if has_attention {
+                println!("     * Uses attention mechanisms (accuracy-focused)");
+            }
+            if has_conv {
+                println!("     * Uses convolutions (efficiency-focused)");
+            }
+            if best_arch.layers.len() < 8 {
+                println!("     * Compact architecture (resource-efficient)");
+            }
         }
     }
 
@@ -413,34 +476,49 @@ fn demonstrate_hardware_aware_search() -> CoreResult<()> {
         );
         println!("   - Compute units: {}", constraints.compute_units);
 
+        // Create search configuration for hardware-aware search
+        let config = SearchConfig {
+            strategy: NASStrategy::Evolutionary,
+            max_evaluations: 15,
+            population_size: 8,
+            max_generations: 5,
+        };
+
         let mut nas = NeuralArchitectureSearch::new(
             search_space.clone(),
             NASStrategy::Evolutionary,
             objectives.clone(),
             constraints,
+            config,
         )?;
 
-        let architecture = nas.search(15)?;
+        let search_results = nas.search()?;
 
         println!("   - Generated architecture:");
-        println!("     * ID: {}", architecture.id);
-        println!("     * Layers: {}", architecture.layers.len());
-        println!(
-            "     * Complexity: {:?}",
-            if architecture.layers.len() < 5 {
-                "Simple"
-            } else if architecture.layers.len() < 10 {
-                "Moderate"
-            } else {
-                "Complex"
-            }
-        );
+        if let Some((best_arch, performance)) = &search_results.best_architecture {
+            println!("     * Fitness: {:.4}", performance.accuracy);
+            println!("     * Layers: {}", best_arch.layers.len());
+            println!(
+                "     * Complexity: {:?}",
+                if best_arch.layers.len() < 5 {
+                    "Simple"
+                } else if best_arch.layers.len() < 10 {
+                    "Moderate"
+                } else {
+                    "Complex"
+                }
+            );
+        } else {
+            println!("     * No architecture generated");
+        }
 
         // Analyze hardware-specific optimizations
-        let layer_counts = count_layer_types(&architecture);
-        println!("     * Layer distribution:");
-        for (layer_type, count) in layer_counts {
-            println!("       - {:?}: {}", layer_type, count);
+        if let Some((best_arch, _)) = &search_results.best_architecture {
+            let layer_counts = count_layer_types(&best_arch);
+            println!("     * Layer distribution:");
+            for (layer_type, count) in layer_counts {
+                println!("       - {:?}: {}", layer_type, count);
+            }
         }
     }
 
@@ -503,43 +581,50 @@ fn demonstrate_meta_learning() -> CoreResult<()> {
     for (domain_name, search_space) in domains {
         println!("\n📚 Learning from {} domain:", domain_name);
 
+        // Create search configuration for meta-learning
+        let config = SearchConfig {
+            strategy: NASStrategy::Hybrid, // Use hybrid for meta-learning
+            max_evaluations: 25,
+            population_size: 12,
+            max_generations: 8,
+        };
+
         let mut nas = NeuralArchitectureSearch::new(
             search_space,
             NASStrategy::Hybrid, // Use hybrid for meta-learning
             objectives.clone(),
             constraints.clone(),
+            config,
         )?;
 
-        let architecture = nas.search(25)?;
-        let results = nas.export_results()?;
+        let search_results = nas.search()?;
 
         println!("   - Domain-specific architecture learned");
-        println!(
-            "   - Best accuracy: {:.3}",
-            results
-                .best_architecture
-                .as_ref()
-                .map(|(_, perf)| perf.accuracy)
-                .unwrap_or(0.0)
-        );
+        if let Some((_, performance)) = &search_results.best_architecture {
+            println!("   - Best accuracy: {:.3}", performance.accuracy);
+        } else {
+            println!("   - No architecture found for this domain");
+        }
 
         // Analyze domain patterns
-        let layer_counts = count_layer_types(&architecture);
-        println!("   - Dominant patterns discovered:");
-        for (layer_type, count) in layer_counts.iter().take(3) {
-            println!("     * {:?}: {} instances", layer_type, count);
+        if let Some((best_arch, _)) = &search_results.best_architecture {
+            let layer_counts = count_layer_types(&best_arch);
+            println!("   - Dominant patterns discovered:");
+            for (layer_type, count) in layer_counts.iter().take(3) {
+                println!("     * {:?}: {} instances", layer_type, count);
+            }
         }
 
         // Show meta-learning insights
-        if !results.meta_knowledge.best_practices.is_empty() {
+        if !search_results.meta_knowledge.best_practices.is_empty() {
             println!(
                 "   - Best practices learned: {}",
-                results.meta_knowledge.best_practices.len()
+                search_results.meta_knowledge.best_practices.len()
             );
-            for practice in results.meta_knowledge.best_practices.iter().take(2) {
+            for practice in search_results.meta_knowledge.best_practices.iter().take(2) {
                 println!(
-                    "     * {} (confidence: {:.2})",
-                    practice.description, practice.confidence
+                    "     * {} (effectiveness: {:.2})",
+                    practice.description, practice.effectiveness
                 );
             }
         }
@@ -577,54 +662,46 @@ fn analyze_search_results(results: &SearchResults) -> CoreResult<()> {
     println!("\n📈 Search Statistics:");
     println!(
         "   - Total architectures evaluated: {}",
-        results.statistics.total_evaluated
+        results.statistics.total_evaluations
     );
     println!(
         "   - Successful architectures: {}",
-        results.statistics.successful_count
+        results.statistics.successful_evaluations
     );
-    println!(
-        "   - Average evaluation time: {:?}",
-        results.statistics.avg_evaluation_time
-    );
-    println!(
-        "   - Improvement over baseline: {:.1}%",
-        results.statistics.improvement_over_baseline * 100.0
-    );
+    if let Some(convergence_gen) = results.statistics.convergence_generation {
+        println!("   - Convergence generation: {}", convergence_gen);
+    }
 
     // Resource usage
     println!("\n💰 Resource Usage:");
-    println!(
-        "   - Total compute time: {:?}",
-        results.resource_usage.compute_time
-    );
+    println!("   - Total CPU time: {:?}", results.resource_usage.cpu_time);
     println!(
         "   - Peak memory: {} MB",
-        results.resource_usage.peak_memory / (1024 * 1024)
+        results.resource_usage.memory_peak / (1024 * 1024)
     );
     println!(
-        "   - Energy consumed: {:.2} J",
-        results.resource_usage.energy_consumed
+        "   - Total evaluations: {}",
+        results.resource_usage.evaluations_count
     );
 
     // Convergence analysis
     if !results.progress_history.is_empty() {
-        let initial_accuracy = results.progress_history[0].best_accuracy;
-        let final_accuracy = results.progress_history.last().unwrap().best_accuracy;
-        let improvement = (final_accuracy - initial_accuracy) / initial_accuracy * 100.0;
+        let initial_fitness = results.progress_history[0].best_fitness;
+        let final_fitness = results.progress_history.last().unwrap().best_fitness;
+        let improvement = (final_fitness - initial_fitness) / initial_fitness * 100.0;
 
         println!("\n📉 Convergence Analysis:");
-        println!("   - Initial best accuracy: {:.4}", initial_accuracy);
-        println!("   - Final best accuracy: {:.4}", final_accuracy);
+        println!("   - Initial best fitness: {:.4}", initial_fitness);
+        println!("   - Final best fitness: {:.4}", final_fitness);
         println!("   - Total improvement: {:.1}%", improvement);
         println!("   - Progress points: {}", results.progress_history.len());
 
-        // Show diversity evolution
-        let initial_diversity = results.progress_history[0].diversity;
-        let final_diversity = results.progress_history.last().unwrap().diversity;
+        // Show fitness evolution
+        let initial_avg = results.progress_history[0].avg_fitness;
+        let final_avg = results.progress_history.last().unwrap().avg_fitness;
         println!(
-            "   - Population diversity: {:.3} → {:.3}",
-            initial_diversity, final_diversity
+            "   - Average fitness: {:.3} → {:.3}",
+            initial_avg, final_avg
         );
     }
 
@@ -643,10 +720,10 @@ fn analyze_search_results(results: &SearchResults) -> CoreResult<()> {
             .take(3)
         {
             println!(
-                "   {}. {} (confidence: {:.2})",
+                "   {}. {} (effectiveness: {:.2})",
                 i + 1,
                 practice.description,
-                practice.confidence
+                practice.effectiveness
             );
         }
     }
@@ -685,11 +762,20 @@ mod tests {
         ];
 
         for strategy in strategies {
+            // Create search configuration for strategy testing
+            let config = SearchConfig {
+                strategy,
+                max_evaluations: 10,
+                population_size: 5,
+                max_generations: 3,
+            };
+
             let nas = NeuralArchitectureSearch::new(
                 SearchSpace::default(),
                 strategy,
                 OptimizationObjectives::default(),
                 HardwareConstraints::default(),
+                config,
             );
 
             assert!(
@@ -790,6 +876,10 @@ mod tests {
                 estimated_memory: 0,
                 estimated_latency: Duration::new(0, 0),
             },
+            fitness: 0.0,
+            optimizer: OptimizerType::Adam,
+            loss_function: "categorical_crossentropy".to_string(),
+            metrics: vec!["accuracy".to_string()],
         };
 
         let counts = count_layer_types(&architecture);

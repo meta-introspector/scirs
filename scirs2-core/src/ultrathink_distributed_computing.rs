@@ -2102,11 +2102,13 @@ pub struct FaultToleranceMetrics {
 
 impl UltrathinkDistributedComputer {
     /// Create a new distributed computer with default configuration
+    #[allow(dead_code)]
     pub fn new() -> CoreResult<Self> {
         Self::with_config(DistributedComputingConfig::default())
     }
 
     /// Create a new distributed computer with custom configuration
+    #[allow(dead_code)]
     pub fn with_config(config: DistributedComputingConfig) -> CoreResult<Self> {
         let cluster_manager = Arc::new(Mutex::new(ClusterManager::new(&config)?));
         let task_scheduler = Arc::new(Mutex::new(AdaptiveTaskScheduler::new(&config)?));

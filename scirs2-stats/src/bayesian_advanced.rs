@@ -255,7 +255,7 @@ pub enum ModelSelectionCriterion {
     /// Watanabe-Akaike Information Criterion
     WAIC,
     /// Leave-One-Out Cross-Validation
-    LOO_CV,
+    LooCv,
     /// Marginal Likelihood (Bayes Factor)
     MarginalLikelihood,
     /// Posterior Predictive Loss
@@ -497,7 +497,7 @@ where
             criteria: vec![
                 ModelSelectionCriterion::DIC,
                 ModelSelectionCriterion::WAIC,
-                ModelSelectionCriterion::LOO_CV,
+                ModelSelectionCriterion::LooCv,
             ],
             cv_config: CrossValidationConfig::default(),
             parallel_config: ParallelConfig::default(),
@@ -650,7 +650,7 @@ where
         match criterion {
             ModelSelectionCriterion::DIC => Ok(result.model_fit.dic),
             ModelSelectionCriterion::WAIC => Ok(result.model_fit.waic),
-            ModelSelectionCriterion::LOO_CV => Ok(result.model_fit.waic + F::from(1.0).unwrap()),
+            ModelSelectionCriterion::LooCv => Ok(result.model_fit.waic + F::from(1.0).unwrap()),
             ModelSelectionCriterion::MarginalLikelihood => Ok(result.model_fit.lppd),
             ModelSelectionCriterion::PPL => Ok(result.model_fit.waic + F::from(2.0).unwrap()),
             ModelSelectionCriterion::CVIC => Ok(result.model_fit.waic + F::from(0.5).unwrap()),

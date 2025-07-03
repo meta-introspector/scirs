@@ -156,14 +156,14 @@ where
 
                     if float_val > max {
                         return Err(NumericConversionError::Overflow {
-                            value: format!("{}", value),
+                            value: format!("{value}"),
                             max: format!("{}", T::max_value()),
                         });
                     }
 
                     if float_val < min {
                         return Err(NumericConversionError::Underflow {
-                            value: format!("{}", value),
+                            value: format!("{value}"),
                             min: format!("{}", T::min_value()),
                         });
                     }
@@ -171,7 +171,7 @@ where
                     // Check for precision loss when converting float to int
                     if float_val.fract() != 0.0 && !Self::is_float_type::<T>() {
                         return Err(NumericConversionError::PrecisionLoss {
-                            value: format!("{}", value),
+                            value: format!("{value}"),
                         });
                     }
                 }
@@ -184,7 +184,7 @@ where
                     let max_s: S = max_s;
                     if value > max_s {
                         return Err(NumericConversionError::Overflow {
-                            value: format!("{}", value),
+                            value: format!("{value}"),
                             max: format!("{}", T::max_value()),
                         });
                     }
@@ -194,14 +194,14 @@ where
                     let min_s: S = min_s;
                     if value < min_s {
                         return Err(NumericConversionError::Underflow {
-                            value: format!("{}", value),
+                            value: format!("{value}"),
                             min: format!("{}", T::min_value()),
                         });
                     }
                 }
 
                 Err(NumericConversionError::NotRepresentable {
-                    value: format!("{}", value),
+                    value: format!("{value}"),
                 })
             }
         }
@@ -435,15 +435,15 @@ where
         if self.im.is_zero() {
             format!("{}", self.re)
         } else if self.im.is_sign_positive() {
-            format!("{}+{}i", self.re, self.im)
+            format!("{re}+{im}i", re = self.re, im = self.im)
         } else {
-            format!("{}{}i", self.re, self.im)
+            format!("{re}{im}i", re = self.re, im = self.im)
         }
     }
 
     fn to_polar_string(&self) -> String {
         let (mag, phase) = self.to_polar();
-        format!("{:.4}∠{:.4}rad", mag, phase)
+        format!("{mag:.4}∠{phase:.4}rad")
     }
 
     fn is_approx_zero(&self, epsilon: T) -> bool {
@@ -696,7 +696,11 @@ pub mod precision {
                 value: converted,
                 precision: new_precision,
                 error_bound: new_error_bound,
-                source_type: format!("{}→{}", self.source_type, std::any::type_name::<U>()),
+                source_type: format!(
+                    "{src}→{dst}",
+                    src = self.source_type,
+                    dst = std::any::type_name::<U>()
+                ),
                 operations_count: self.operations_count + 1,
             })
         }
@@ -724,7 +728,7 @@ pub mod precision {
                 value: result,
                 precision: self.precision * precision_multiplier,
                 error_bound: self.error_bound * precision_multiplier,
-                source_type: format!("{}({op_name})", self.source_type),
+                source_type: format!("{src}({op_name})", src = self.source_type),
                 operations_count: self.operations_count + 1,
             }
         }
@@ -751,7 +755,11 @@ pub mod precision {
                 value: result,
                 precision: combined_precision * 1.1, // Add small overhead for combination
                 error_bound: combined_error,
-                source_type: format!("{}⊕{}", self.source_type, other.source_type),
+                source_type: format!(
+                    "{src}⊕{other}",
+                    src = self.source_type,
+                    other = other.source_type
+                ),
                 operations_count: self.operations_count.max(other.operations_count) + 1,
             }
         }
@@ -971,8 +979,8 @@ pub mod units {
         pub fn multiply(&self, other: &Quantity) -> Quantity {
             let new_dimensions = self.unit.dimensions.multiply(&other.unit.dimensions);
             let new_unit = Unit::new(
-                format!("{}⋅{}", self.unit.symbol, other.unit.symbol),
-                format!("{}⋅{}", self.unit.symbol, other.unit.symbol),
+                format!("{a}⋅{b}", a = self.unit.symbol, b = other.unit.symbol),
+                format!("{a}⋅{b}", a = self.unit.symbol, b = other.unit.symbol),
                 new_dimensions,
                 self.unit.scale_factor * other.unit.scale_factor,
             );
@@ -984,8 +992,8 @@ pub mod units {
         pub fn divide(&self, other: &Quantity) -> Quantity {
             let new_dimensions = self.unit.dimensions.divide(&other.unit.dimensions);
             let new_unit = Unit::new(
-                format!("{}/{}", self.unit.symbol, other.unit.symbol),
-                format!("{}/{}", self.unit.symbol, other.unit.symbol),
+                format!("{a}/{b}", a = self.unit.symbol, b = other.unit.symbol),
+                format!("{a}/{b}", a = self.unit.symbol, b = other.unit.symbol),
                 new_dimensions,
                 self.unit.scale_factor / other.unit.scale_factor,
             );

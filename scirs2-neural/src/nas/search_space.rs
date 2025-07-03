@@ -195,7 +195,7 @@ use rand::rng;
             if let Some(matrix) = &self.connection_matrix {
                 for i in 0..num_layers {
                     for j in (i + 1)..num_layers {
-                        if rng.gen::<f32>() < matrix.connections[i][j] {
+                        if rng.random::<f32>() < matrix.connections[i][j] {
                             connections.push((i, j));
                         }
                     }
@@ -233,12 +233,12 @@ use rand::rng;
         let mut mutated = architecture.clone();
         // Mutate layers
         for (i, layer) in mutated.layers.iter_mut().enumerate() {
-            if rng.gen::<f32>() < mutation_rate {
+            if rng.random::<f32>() < mutation_rate {
                 if let Some(layer_choice) = self.layer_choices.get(i) {
                     let idx = rng.random_range(0..layer_choice.choices.len());
                     *layer = layer_choice.choices[idx].clone();
         // Add or remove layers
-        if rng.gen::<f32>() < mutation_rate {
+        if rng.random::<f32>() < mutation_rate {
             if mutated.layers.len() < self.config.max_layers && rng.gen_bool(0.5) {
                 // Add a layer
                 let pos = mutated.layers.len();
@@ -256,11 +256,11 @@ use rand::rng;
                     if *j > idx {
                         *j -= 1;
         // Mutate connections
-        if self.config.allow_branches && rng.gen::<f32>() < mutation_rate {
+        if self.config.allow_branches && rng.random::<f32>() < mutation_rate {
             let num_layers = mutated.layers.len();
             for i in 0..num_layers {
                 for j in (i + 1)..num_layers {
-                    if rng.gen::<f32>() < mutation_rate {
+                    if rng.random::<f32>() < mutation_rate {
                         let has_connection = mutated.connections.contains(&(i, j));
                         if has_connection {
                             mutated.connections.retain(|(a, b)| !(*a == i && *b == j));

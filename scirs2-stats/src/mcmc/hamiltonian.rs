@@ -4,7 +4,7 @@
 //! more efficient proposals than random walk methods.
 
 use crate::error::{StatsError, StatsResult as Result};
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{Array1, Array2};
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
 use scirs2_core::validation::*;

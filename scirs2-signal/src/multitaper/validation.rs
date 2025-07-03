@@ -8,7 +8,7 @@
 
 // use super::dpss_enhanced::validate_dpss_implementation; // Commented out for now
 use super::psd::pmtm;
-use super::{enhanced_pmtm, MultitaperConfig, EnhancedMultitaperResult};
+use super::{enhanced_pmtm, EnhancedMultitaperResult, MultitaperConfig};
 use crate::error::{SignalError, SignalResult};
 // Note: Array1, Array2 imports removed as unused
 use num_complex::Complex64;
@@ -314,7 +314,7 @@ fn validate_spectral_accuracy(
 
     // Multiple realizations for bias/variance estimation
     let mut psd_estimates = Vec::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for _ in 0..100 {
         // Add noise
@@ -732,7 +732,7 @@ fn validate_confidence_intervals(
     // Run multiple trials and check coverage
     let mut coverage_count = 0;
     let n_trials = 100;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for _ in 0..n_trials {
         // Add noise
@@ -812,7 +812,7 @@ pub fn generate_test_signal(
     let n = config.n;
     let fs = config.fs;
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     let signal = match signal_type {
         TestSignalType::Sinusoid => {
@@ -1819,9 +1819,7 @@ pub fn validate_multitaper_with_simd(
 
 /// Enhanced numerical precision validation for multitaper methods
 /// Tests edge cases and numerical stability across different parameter ranges
-pub fn validate_numerical_precision_enhanced(
-    test_signals: &TestSignalConfig,
-) -> SignalResult<f64> {
+pub fn validate_numerical_precision_enhanced(test_signals: &TestSignalConfig) -> SignalResult<f64> {
     let mut total_score = 0.0;
     let mut test_count = 0;
 
@@ -1830,7 +1828,7 @@ pub fn validate_numerical_precision_enhanced(
         let small_signal: Vec<f64> = (0..test_signals.n)
             .map(|i| amplitude * (2.0 * PI * i as f64 / test_signals.n as f64).sin())
             .collect();
-        
+
         let config = MultitaperConfig {
             fs: test_signals.fs,
             nw: test_signals.nw,
@@ -1840,7 +1838,11 @@ pub fn validate_numerical_precision_enhanced(
         {
             if let Ok(result) = enhanced_pmtm(&small_signal, &config) {
                 // Check that PSD values are finite and positive
-                let finite_count = result.psd.iter().filter(|&&x| x.is_finite() && x > 0.0).count();
+                let finite_count = result
+                    .psd
+                    .iter()
+                    .filter(|&&x| x.is_finite() && x > 0.0)
+                    .count();
                 let score = (finite_count as f64 / result.psd.len() as f64) * 100.0;
                 total_score += score;
                 test_count += 1;
@@ -1853,7 +1855,7 @@ pub fn validate_numerical_precision_enhanced(
         let large_signal: Vec<f64> = (0..test_signals.n)
             .map(|i| amplitude * (2.0 * PI * i as f64 / test_signals.n as f64).sin())
             .collect();
-        
+
         let config = MultitaperConfig {
             fs: test_signals.fs,
             nw: test_signals.nw,
@@ -1875,7 +1877,7 @@ pub fn validate_numerical_precision_enhanced(
     let nyquist_signal: Vec<f64> = (0..test_signals.n)
         .map(|i| (PI * i as f64).sin()) // Frequency at Nyquist
         .collect();
-    
+
     let config = MultitaperConfig {
         fs: test_signals.fs,
         nw: test_signals.nw,
@@ -1905,9 +1907,7 @@ pub fn validate_numerical_precision_enhanced(
 }
 
 /// Validate spectral estimation consistency across different parameter combinations
-pub fn validate_parameter_consistency(
-    test_signals: &TestSignalConfig,
-) -> SignalResult<f64> {
+pub fn validate_parameter_consistency(test_signals: &TestSignalConfig) -> SignalResult<f64> {
     let test_signal: Vec<f64> = (0..test_signals.n)
         .map(|i| {
             let t = i as f64 / test_signals.fs;
@@ -1926,15 +1926,13 @@ pub fn validate_parameter_consistency(
                 nw,
                 k,
                 nfft: None,
-                detrend: Some("constant".to_string()),
-                return_onesided: true,
-                scaling: "density".to_string(),
+                onesided: true,
                 adaptive: true,
-                low_bias: true,
-                eigen_tolerance: 1e-9,
-                max_iter: 150,
-                jackknife: false,
                 confidence: None,
+                return_tapers: false,
+                parallel: true,
+                parallel_threshold: 1024,
+                memory_optimized: false,
             };
 
             if let Ok(result) = enhanced_pmtm(&test_signal, &config) {
@@ -1942,7 +1940,8 @@ pub fn validate_parameter_consistency(
                 let mean_psd = result.psd.iter().sum::<f64>() / result.psd.len() as f64;
                 if mean_psd.is_finite() && mean_psd > 0.0 {
                     // Find peaks at expected frequencies (10 Hz and 25 Hz)
-                    let peak_score = validate_expected_peaks(&result, &[10.0, 25.0], test_signals.fs);
+                    let peak_score =
+                        validate_expected_peaks(&result, &[10.0, 25.0], test_signals.fs);
                     consistency_scores.push(peak_score);
                 }
             }
@@ -1953,12 +1952,14 @@ pub fn validate_parameter_consistency(
     if consistency_scores.len() > 1 {
         let mean_score = consistency_scores.iter().sum::<f64>() / consistency_scores.len() as f64;
         let std_dev = {
-            let variance = consistency_scores.iter()
+            let variance = consistency_scores
+                .iter()
                 .map(|x| (x - mean_score).powi(2))
-                .sum::<f64>() / consistency_scores.len() as f64;
+                .sum::<f64>()
+                / consistency_scores.len() as f64;
             variance.sqrt()
         };
-        
+
         // Lower standard deviation indicates better consistency
         let consistency = (100.0 - std_dev).max(0.0);
         Ok(consistency)
@@ -1974,22 +1975,22 @@ fn validate_expected_peaks(
     fs: f64,
 ) -> f64 {
     let mut peak_scores = Vec::new();
-    
+
     for &freq in expected_freqs {
         // Find the frequency bin closest to the expected frequency
         let freq_resolution = fs / result.frequencies.len() as f64;
         let target_bin = (freq / freq_resolution).round() as usize;
-        
+
         if target_bin < result.psd.len() {
             // Check if there's a local maximum around this frequency
             let window_size = 3; // Look at ±3 bins
             let start = target_bin.saturating_sub(window_size);
             let end = (target_bin + window_size + 1).min(result.psd.len());
-            
+
             let window_psd = &result.psd[start..end];
             let max_in_window = window_psd.iter().fold(0.0f64, |a, &b| a.max(b));
             let target_value = result.psd[target_bin];
-            
+
             // Score based on how close the target bin is to the maximum
             if max_in_window > 0.0 {
                 let score = (target_value / max_in_window) * 100.0;
@@ -1997,7 +1998,7 @@ fn validate_expected_peaks(
             }
         }
     }
-    
+
     if !peak_scores.is_empty() {
         peak_scores.iter().sum::<f64>() / peak_scores.len() as f64
     } else {
@@ -2011,35 +2012,37 @@ pub fn run_comprehensive_enhanced_validation(
     tolerance: f64,
 ) -> SignalResult<UltraEnhancedMultitaperValidationResult> {
     println!("Running comprehensive enhanced multitaper validation...");
-    
+
     // Run base validation
     let base_validation = validate_multitaper_comprehensive(test_signals, tolerance)?;
-    
+
     // Run enhanced numerical precision tests
-    let precision_score = validate_numerical_precision_enhanced(test_signals)
-        .unwrap_or(0.0);
-    
+    let precision_score = validate_numerical_precision_enhanced(test_signals).unwrap_or(0.0);
+
     // Run parameter consistency tests
-    let consistency_score = validate_parameter_consistency(test_signals)
-        .unwrap_or(0.0);
-    
+    let consistency_score = validate_parameter_consistency(test_signals).unwrap_or(0.0);
+
     // Run SIMD performance tests
-    let simd_score = validate_simd_operations(test_signals)
-        .unwrap_or(0.0);
-    
+    let simd_score = validate_simd_operations(test_signals).unwrap_or(0.0);
+
     // Calculate enhanced overall score
-    let enhanced_score = (base_validation.overall_score * 0.6) 
+    let enhanced_score = (base_validation.overall_score * 0.6)
         + (precision_score * 0.15)
         + (consistency_score * 0.15)
         + (simd_score * 0.1);
-    
+
     Ok(UltraEnhancedMultitaperValidationResult {
         base_validation,
         precision_score,
         consistency_score,
         simd_performance_score: simd_score,
         enhanced_overall_score: enhanced_score,
-        recommendations: generate_recommendations(enhanced_score, precision_score, consistency_score, simd_score),
+        recommendations: generate_recommendations(
+            enhanced_score,
+            precision_score,
+            consistency_score,
+            simd_score,
+        ),
     })
 }
 
@@ -2051,27 +2054,35 @@ fn generate_recommendations(
     simd_score: f64,
 ) -> Vec<String> {
     let mut recommendations = Vec::new();
-    
+
     if overall_score < 80.0 {
-        recommendations.push("Overall performance below optimal level. Consider reviewing core algorithms.".to_string());
+        recommendations.push(
+            "Overall performance below optimal level. Consider reviewing core algorithms."
+                .to_string(),
+        );
     }
-    
+
     if precision_score < 70.0 {
         recommendations.push("Numerical precision issues detected. Consider using higher precision arithmetic for critical calculations.".to_string());
     }
-    
+
     if consistency_score < 75.0 {
-        recommendations.push("Parameter consistency issues found. Validate parameter bounds and default values.".to_string());
+        recommendations.push(
+            "Parameter consistency issues found. Validate parameter bounds and default values."
+                .to_string(),
+        );
     }
-    
+
     if simd_score < 60.0 {
         recommendations.push("SIMD operations underperforming. Check platform capabilities and optimization settings.".to_string());
     }
-    
+
     if recommendations.is_empty() {
-        recommendations.push("All validation tests passed successfully. Implementation is robust.".to_string());
+        recommendations.push(
+            "All validation tests passed successfully. Implementation is robust.".to_string(),
+        );
     }
-    
+
     recommendations
 }
 

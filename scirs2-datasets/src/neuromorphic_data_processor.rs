@@ -8,7 +8,7 @@ use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{s, Array1, Array2, Array3};
 use rand::prelude::*;
-use rand::{SeedableRng, rngs::StdRng};
+use rand::{rngs::StdRng, SeedableRng};
 use std::time::{Duration, Instant};
 
 /// Neuromorphic data processor using spiking neural networks
@@ -60,6 +60,7 @@ pub struct SynapticPlasticity {
 
 /// Spiking neuron state
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct NeuronState {
     /// Current membrane potential
     membrane_potential: f64,
@@ -73,6 +74,7 @@ struct NeuronState {
 
 /// Synaptic connection with STDP
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct Synapse {
     /// Synaptic weight
     weight: f64,

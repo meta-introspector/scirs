@@ -765,7 +765,7 @@ where
                     for _ in 0..samples_per_thread {
                         // Generate bootstrap sample
                         let bootstrap_indices: Vec<usize> =
-                            (0..n_data).map(|_| rng.gen_range(0..n_data)).collect();
+                            (0..n_data).map(|_| rng.random_range(0..n_data)).collect();
 
                         let bootstrap_sample: Vec<F> =
                             bootstrap_indices.into_iter().map(|i| data_arc[i]).collect();

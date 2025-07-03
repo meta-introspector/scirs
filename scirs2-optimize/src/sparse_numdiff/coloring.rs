@@ -71,7 +71,7 @@ pub fn determine_column_groups(
     let mut rng = match seed {
         Some(s) => StdRng::seed_from_u64(s),
         None => {
-            // Use a constant seed for reproducibility in case thread_rng fails
+            // Use a constant seed for reproducibility in case rng fails
             // This is a fallback case, so using a fixed seed is acceptable
             StdRng::seed_from_u64(0)
         }

@@ -22,15 +22,13 @@ pub use simd_specialized::{
 // Ultra SIMD optimized exports
 #[cfg(feature = "simd")]
 pub use ultra_simd_optimized::{
-    ultra_simd_gaussian_pyramid, ultra_simd_morphological_erosion_2d,
-    ultra_simd_separable_convolution_2d, ultra_simd_template_matching,
+    ultra_simd_gaussian_pyramid, ultra_simd_morphological_erosion_2d, ultra_simd_template_matching,
 };
 
 // Ultra SIMD enhanced exports
 #[cfg(feature = "simd")]
 pub use ultra_simd_enhanced::{
-    ultra_simd_convolution_2d, ultra_simd_median_filter,
-    ultra_simd_separable_convolution_2d as ultra_simd_separable,
+    ultra_simd_convolution_2d, ultra_simd_median_filter, ultra_simd_separable_convolution_2d,
 };
 
 // Advanced SIMD extensions exports

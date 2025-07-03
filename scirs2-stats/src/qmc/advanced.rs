@@ -5,9 +5,9 @@
 
 use crate::error::{StatsError, StatsResult as Result};
 use crate::error_handling_v2::ErrorCode;
-use crate::{unified_error_handling::global_error_handler, validate_or_error};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, FromPrimitive};
+use crate::unified_error_handling::global_error_handler;
+use ndarray::{Array1, Array2};
+use num_traits::Float;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::validation::*;
 use std::collections::HashMap;
@@ -529,7 +529,7 @@ impl AdvancedQMCGenerator {
 
             let mut uniform = Array1::zeros(dimension);
             for i in 0..dimension {
-                uniform[i] = rand::rng().gen::<f64>();
+                uniform[i] = rand::rng().random::<f64>();
             }
 
             // Apply inverse normal transformation and correlation
@@ -537,10 +537,10 @@ impl AdvancedQMCGenerator {
                 // Inverse normal using Box-Muller approximation
                 if u <= 0.5 {
                     -(-2.0 * u.ln()).sqrt()
-                        * (2.0 * std::f64::consts::PI * rand::rng().gen::<f64>()).cos()
+                        * (2.0 * std::f64::consts::PI * rand::rng().random::<f64>()).cos()
                 } else {
                     (-2.0 * (1.0 - u).ln()).sqrt()
-                        * (2.0 * std::f64::consts::PI * rand::rng().gen::<f64>()).cos()
+                        * (2.0 * std::f64::consts::PI * rand::rng().random::<f64>()).cos()
                 }
             });
 
@@ -554,7 +554,7 @@ impl AdvancedQMCGenerator {
             // Standard LHS
             for i in 0..dimension {
                 let stratum = current_index % 1000; // Simplified stratification
-                let u = rand::rng().gen::<f64>();
+                let u = rand::rng().random::<f64>();
                 point[i] = (stratum as f64 + u) / 1000.0;
             }
         }
@@ -633,7 +633,7 @@ impl AdvancedQMCGenerator {
             for i in 0..32 {
                 matrix[[i, i]] = 1; // Diagonal
                 for j in (i + 1)..32 {
-                    matrix[[i, j]] = if rng.gen::<f64>() < 0.5 { 1 } else { 0 };
+                    matrix[[i, j]] = if rng.random::<f64>() < 0.5 { 1 } else { 0 };
                 }
             }
 
@@ -676,7 +676,7 @@ impl AdvancedQMCGenerator {
 
             // Use Faure-Tezuka permutation pattern
             for i in 1..base {
-                let j = rng.gen_range(0..=i);
+                let j = rng.random_range(0..=i);
                 perm.swap(i as usize, j as usize);
             }
 
@@ -718,7 +718,7 @@ impl AdvancedQMCGenerator {
 
             // Enhanced shuffling with bias towards uniformity
             for i in (1..base).rev() {
-                let j = rng.gen_range(0..=i);
+                let j = rng.random_range(0..=i);
                 perm.swap(i as usize, j as usize);
             }
 
@@ -963,7 +963,7 @@ impl AdvancedQMCGenerator {
         for _ in 0..dimension {
             let mut matrix = Array2::zeros((base as usize, base as usize));
             for i in 0..base as usize {
-                let j = rng.gen_range(0..base as usize);
+                let j = rng.random_range(0..base as usize);
                 matrix[[i, j]] = 1;
             }
             matrices.push(matrix);
@@ -1063,7 +1063,7 @@ impl StratifiedSampler {
 
         // Fill remaining samples if needed
         while sample_idx < n_samples {
-            let random_stratum_idx = rng.gen_range(0..total_strata);
+            let random_stratum_idx = rng.random_range(0..total_strata);
             let stratum_indices = self.linear_to_multi_index(random_stratum_idx);
             let point = self.sample_within_stratum(&stratum_indices, &mut rng)?;
 
@@ -1102,17 +1102,17 @@ impl StratifiedSampler {
             let stratum_start = stratum_idx as f64 * stratum_width;
 
             let sample_within_stratum = match self.config.intra_stratum_method {
-                IntraStratumMethod::Random => stratum_start + rng.gen::<f64>() * stratum_width,
+                IntraStratumMethod::Random => stratum_start + rng.random::<f64>() * stratum_width,
                 IntraStratumMethod::Centroid => stratum_start + 0.5 * stratum_width,
                 IntraStratumMethod::QMC(_seq_type) => {
                     // Simplified QMC within stratum
-                    stratum_start + (0.5 + 0.3 * (rng.gen::<f64>() - 0.5)) * stratum_width
+                    stratum_start + (0.5 + 0.3 * (rng.random::<f64>() - 0.5)) * stratum_width
                 }
                 IntraStratumMethod::Antithetic => {
                     if dim % 2 == 0 {
-                        stratum_start + rng.gen::<f64>() * stratum_width
+                        stratum_start + rng.random::<f64>() * stratum_width
                     } else {
-                        stratum_start + (1.0 - rng.gen::<f64>()) * stratum_width
+                        stratum_start + (1.0 - rng.random::<f64>()) * stratum_width
                     }
                 }
             };

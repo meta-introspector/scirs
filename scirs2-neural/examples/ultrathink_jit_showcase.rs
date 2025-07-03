@@ -53,11 +53,11 @@ fn demonstrate_elementwise_operations(compiler: &JITCompiler) -> Result<()> {
     let b = Array::linspace(1.0f32, 2.0, size * size).into_shape((size, size)).unwrap().into_dyn();
     // Test different element-wise operations
     let operations = vec![
-        (\"Addition\", ElementWiseOp::Add),
-        (\"Multiplication\", ElementWiseOp::Mul),
-        (\"Subtraction\", ElementWiseOp::Sub),
-        (\"Square Root\", ElementWiseOp::Sqrt),
-        (\"Exponential\", ElementWiseOp::Exp),
+        ("Addition", ElementWiseOp::Add),
+        ("Multiplication", ElementWiseOp::Mul),
+        ("Subtraction", ElementWiseOp::Sub),
+        ("Square Root", ElementWiseOp::Sqrt),
+        ("Exponential", ElementWiseOp::Exp),
     ];
     for (name, op) in operations {
         let operation = JITOperation::ElementWise {

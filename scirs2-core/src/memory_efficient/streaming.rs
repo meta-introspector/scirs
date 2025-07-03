@@ -641,7 +641,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                             // Other error, update stats and continue
                             let mut stats_guard = stats.write().unwrap();
                             stats_guard.error_count += 1;
-                            stats_guard.last_error = Some(format!("{}", err));
+                            stats_guard.last_error = Some(format!("{err}"));
                             continue;
                         }
                     }
@@ -734,7 +734,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                                 // Error sending output, update stats
                                 let mut stats_guard = stats.write().unwrap();
                                 stats_guard.error_count += 1;
-                                stats_guard.last_error = Some(format!("{}", err));
+                                stats_guard.last_error = Some(format!("{err}"));
                             }
                         }
                     }
@@ -743,7 +743,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                     // Processing error, update stats
                     let mut stats_guard = stats.write().unwrap();
                     stats_guard.error_count += 1;
-                    stats_guard.last_error = Some(format!("{}", err));
+                    stats_guard.last_error = Some(format!("{err}"));
                 }
             }
 

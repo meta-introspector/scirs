@@ -270,11 +270,10 @@ pub use gpu::{
 };
 pub use jit_optimization::{optimize_function, FunctionPattern, JitCompiler, JitOptions, JitStats};
 pub use learned_optimizers::{
-    learned_optimize, ActivationType, AdaptationStatistics,
-    AdaptiveNASSystem, AdaptiveTransformerOptimizer, FewShotLearningOptimizer,
-    LearnedHyperparameterTuner, LearnedOptimizationConfig, LearnedOptimizer, MetaOptimizerState,
-    NeuralAdaptiveOptimizer, OptimizationNetwork, OptimizationProblem, ParameterDistribution,
-    ProblemEncoder, TrainingTask,
+    learned_optimize, ActivationType, AdaptationStatistics, AdaptiveNASSystem,
+    AdaptiveTransformerOptimizer, FewShotLearningOptimizer, LearnedHyperparameterTuner,
+    LearnedOptimizationConfig, LearnedOptimizer, MetaOptimizerState, NeuralAdaptiveOptimizer,
+    OptimizationNetwork, OptimizationProblem, ParameterDistribution, ProblemEncoder, TrainingTask,
 };
 pub use least_squares::{
     bounded_least_squares, least_squares, robust_least_squares, separable_least_squares,
@@ -299,8 +298,8 @@ pub use quantum_inspired::{
 };
 pub use reinforcement_learning::{
     actor_critic_optimize, bandit_optimize, evolutionary_optimize, meta_learning_optimize,
-    policy_gradient_optimize, BanditOptimizer, EvolutionaryStrategy,
-    Experience, MetaLearningOptimizer, OptimizationAction, OptimizationState, QLearningOptimizer,
+    policy_gradient_optimize, BanditOptimizer, EvolutionaryStrategy, Experience,
+    MetaLearningOptimizer, OptimizationAction, OptimizationState, QLearningOptimizer,
     RLOptimizationConfig, RLOptimizer,
 };
 pub use roots::root;
@@ -389,11 +388,11 @@ pub mod prelude {
         optimize_function, FunctionPattern, JitCompiler, JitOptions, JitStats,
     };
     pub use crate::learned_optimizers::{
-        learned_optimize, ActivationType, AdaptationStatistics,
-        AdaptiveNASSystem, AdaptiveTransformerOptimizer, FewShotLearningOptimizer,
-        LearnedHyperparameterTuner, LearnedOptimizationConfig, LearnedOptimizer,
-        MetaOptimizerState, NeuralAdaptiveOptimizer, OptimizationNetwork, OptimizationProblem,
-        ParameterDistribution, ProblemEncoder, TrainingTask,
+        learned_optimize, ActivationType, AdaptationStatistics, AdaptiveNASSystem,
+        AdaptiveTransformerOptimizer, FewShotLearningOptimizer, LearnedHyperparameterTuner,
+        LearnedOptimizationConfig, LearnedOptimizer, MetaOptimizerState, NeuralAdaptiveOptimizer,
+        OptimizationNetwork, OptimizationProblem, ParameterDistribution, ProblemEncoder,
+        TrainingTask,
     };
     pub use crate::least_squares::{
         bounded_least_squares, least_squares, robust_least_squares, separable_least_squares,
@@ -426,9 +425,9 @@ pub mod prelude {
     };
     pub use crate::reinforcement_learning::{
         bandit_optimize, evolutionary_optimize, meta_learning_optimize, policy_gradient_optimize,
-        BanditOptimizer, EvolutionaryStrategy, Experience,
-        MetaLearningOptimizer, OptimizationAction, OptimizationState,
-        QLearningOptimizer, RLOptimizationConfig, RLOptimizer,
+        BanditOptimizer, EvolutionaryStrategy, Experience, MetaLearningOptimizer,
+        OptimizationAction, OptimizationState, QLearningOptimizer, RLOptimizationConfig,
+        RLOptimizer,
     };
     pub use crate::result::OptimizeResults;
     pub use crate::roots::{root, Method as RootMethod};

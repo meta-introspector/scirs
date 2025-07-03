@@ -916,7 +916,7 @@ impl Validator {
                             message: "Statistical constraints require an array of numeric values"
                                 .to_string(),
                             expected: Some("numeric array".to_string()),
-                            actual: Some(format!("{}", value)),
+                            actual: Some(format!("{value}")),
                             constraint: Some("statistical".to_string()),
                             severity: ErrorSeverity::Error,
                             context: HashMap::new(),
@@ -1066,7 +1066,7 @@ impl Validator {
                             message: "Temporal constraints require an array of timestamps"
                                 .to_string(),
                             expected: Some("array of timestamps".to_string()),
-                            actual: Some(format!("{}", value)),
+                            actual: Some(format!("{value}")),
                             constraint: Some("temporal".to_string()),
                             severity: ErrorSeverity::Error,
                             context: HashMap::new(),
@@ -1226,7 +1226,7 @@ impl Validator {
                             field_path: field_path.to_string(),
                             message: "Shape constraints require an array".to_string(),
                             expected: Some("array".to_string()),
-                            actual: Some(format!("{}", value)),
+                            actual: Some(format!("{value}")),
                             constraint: Some("shape".to_string()),
                             severity: ErrorSeverity::Error,
                             context: HashMap::new(),

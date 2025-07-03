@@ -16,6 +16,7 @@
 
 use crate::error::CoreResult;
 use crate::quantum_optimization::QuantumOptimizer;
+use rand::prelude::*;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
@@ -533,21 +534,28 @@ impl NeuralArchitectureSearch {
         let mut hasher = DefaultHasher::new();
         std::time::SystemTime::now().hash(&mut hasher);
 
+        let mut rng = rand::rng();
         let num_layers = self.search_space.depth_range.0
-            + (rand::random::<f64>() * (self.search_space.depth_range.1 - self.search_space.depth_range.0) as f64) as usize;
-        
+            + (rng.random::<f64>()
+                * (self.search_space.depth_range.1 - self.search_space.depth_range.0) as f64)
+                as usize;
+
         let mut layers = Vec::new();
         let mut connections = Vec::new();
 
         for i in 0..num_layers {
-            let layer_type_idx = (rand::random::<f64>() * self.search_space.layer_types.len() as f64) as usize;
+            let layer_type_idx =
+                (rng.random::<f64>() * self.search_space.layer_types.len() as f64) as usize;
             let layer_type = self.search_space.layer_types[layer_type_idx];
-            
-            let activation_idx = (rand::random::<f64>() * self.search_space.activations.len() as f64) as usize;
+
+            let activation_idx =
+                (rng.random::<f64>() * self.search_space.activations.len() as f64) as usize;
             let activation = Some(self.search_space.activations[activation_idx]);
 
             let units = self.search_space.width_range.0
-                + (rand::random::<f64>() * (self.search_space.width_range.1 - self.search_space.width_range.0) as f64) as usize;
+                + (rng.random::<f64>()
+                    * (self.search_space.width_range.1 - self.search_space.width_range.0) as f64)
+                    as usize;
 
             layers.push(LayerConfig {
                 layer_type,
@@ -576,7 +584,8 @@ impl NeuralArchitectureSearch {
             }
         }
 
-        let optimizer_idx = (rand::random::<f64>() * self.search_space.optimizers.len() as f64) as usize;
+        let optimizer_idx =
+            (rng.random::<f64>() * self.search_space.optimizers.len() as f64) as usize;
 
         Ok(Architecture {
             id: format!("arch_{}", hasher.finish()),
@@ -596,7 +605,7 @@ impl NeuralArchitectureSearch {
                 parents: Vec::new(),
                 created_at: Instant::now(),
                 search_strategy: self.strategy,
-                estimated_flops: 1_000_000, // Rough estimate
+                estimated_flops: 1_000_000,    // Rough estimate
                 estimated_memory: 1024 * 1024, // 1MB
                 estimated_latency: Duration::from_millis(10),
             },
@@ -631,13 +640,16 @@ impl NeuralArchitectureSearch {
 
             // Update best
             if let Some((arch, perf)) = evaluated.first() {
-                if best_architecture.is_none() || perf.accuracy > best_architecture.as_ref().unwrap().1.accuracy {
+                if best_architecture.is_none()
+                    || perf.accuracy > best_architecture.as_ref().unwrap().1.accuracy
+                {
                     best_architecture = Some((arch.clone(), perf.clone()));
                 }
             }
 
             // Record progress
-            let avg_fitness = evaluated.iter().map(|(_, p)| p.accuracy).sum::<f64>() / evaluated.len() as f64;
+            let avg_fitness =
+                evaluated.iter().map(|(_, p)| p.accuracy).sum::<f64>() / evaluated.len() as f64;
             progress_history.push(SearchProgress {
                 generation,
                 best_fitness: best_architecture.as_ref().unwrap().1.accuracy,
@@ -649,17 +661,19 @@ impl NeuralArchitectureSearch {
             let mut next_population = Vec::new();
 
             // Keep elite
-            for i in 0..elite_size {
-                next_population.push(evaluated[i].0.clone());
+            for (arch, _) in evaluated.iter().take(elite_size) {
+                next_population.push(arch.clone());
             }
 
             // Crossover and mutation
+            let mut rng = rand::rng();
             while next_population.len() < self.config.population_size {
-                let parent1_idx = (rand::random::<f64>() * elite_size as f64) as usize;
-                let parent2_idx = (rand::random::<f64>() * elite_size as f64) as usize;
-                
-                let (child1, child2) = self.crossover(&evaluated[parent1_idx].0, &evaluated[parent2_idx].0)?;
-                
+                let parent1_idx = (rng.random::<f64>() * elite_size as f64) as usize;
+                let parent2_idx = (rng.random::<f64>() * elite_size as f64) as usize;
+
+                let (child1, child2) =
+                    self.crossover(&evaluated[parent1_idx].0, &evaluated[parent2_idx].0)?;
+
                 let mutated_child1 = self.mutate(&child1)?;
                 let mutated_child2 = self.mutate(&child2)?;
 
@@ -697,8 +711,13 @@ impl NeuralArchitectureSearch {
     }
 
     /// Crossover operation for evolutionary search
-    fn crossover(&self, parent1: &Architecture, parent2: &Architecture) -> CoreResult<(Architecture, Architecture)> {
-        let crossover_point = (rand::random::<f64>() * parent1.layers.len() as f64) as usize;
+    fn crossover(
+        &self,
+        parent1: &Architecture,
+        parent2: &Architecture,
+    ) -> CoreResult<(Architecture, Architecture)> {
+        let mut rng = rand::rng();
+        let crossover_point = (rng.random::<f64>() * parent1.layers.len() as f64) as usize;
 
         let mut child1_layers = parent1.layers[..crossover_point].to_vec();
         child1_layers.extend_from_slice(&parent2.layers[crossover_point..]);
@@ -776,23 +795,27 @@ impl NeuralArchitectureSearch {
     /// Mutation operation for evolutionary search
     fn mutate(&self, architecture: &Architecture) -> CoreResult<Architecture> {
         let mut mutated = architecture.clone();
-        
+        let mut rng = rand::rng();
+
         // Mutate with probability
-        if rand::random::<f64>() < 0.1 {
+        if rng.random::<f64>() < 0.1 {
             // Change layer type
             if !mutated.layers.is_empty() {
-                let layer_idx = (rand::random::<f64>() * mutated.layers.len() as f64) as usize;
-                let new_type_idx = (rand::random::<f64>() * self.search_space.layer_types.len() as f64) as usize;
+                let layer_idx = (rng.random::<f64>() * mutated.layers.len() as f64) as usize;
+                let new_type_idx =
+                    (rng.random::<f64>() * self.search_space.layer_types.len() as f64) as usize;
                 mutated.layers[layer_idx].layer_type = self.search_space.layer_types[new_type_idx];
             }
         }
 
-        if rand::random::<f64>() < 0.1 {
+        if rng.random::<f64>() < 0.1 {
             // Change activation
             if !mutated.layers.is_empty() {
-                let layer_idx = (rand::random::<f64>() * mutated.layers.len() as f64) as usize;
-                let new_activation_idx = (rand::random::<f64>() * self.search_space.activations.len() as f64) as usize;
-                mutated.layers[layer_idx].activation = Some(self.search_space.activations[new_activation_idx]);
+                let layer_idx = (rng.random::<f64>() * mutated.layers.len() as f64) as usize;
+                let new_activation_idx =
+                    (rng.random::<f64>() * self.search_space.activations.len() as f64) as usize;
+                mutated.layers[layer_idx].activation =
+                    Some(self.search_space.activations[new_activation_idx]);
             }
         }
 
@@ -801,13 +824,17 @@ impl NeuralArchitectureSearch {
 
     /// Evaluate architecture performance
     #[allow(dead_code)]
-    fn evaluate_architecture(&self, architecture: &Architecture) -> CoreResult<ArchitecturePerformance> {
+    fn evaluate_architecture(
+        &self,
+        architecture: &Architecture,
+    ) -> CoreResult<ArchitecturePerformance> {
         // Simplified evaluation - in practice this would train the model
+        let mut rng = rand::rng();
         let complexity_penalty = architecture.layers.len() as f64 * 0.01;
-        let accuracy = 0.8 - complexity_penalty + rand::random::<f64>() * 0.1;
+        let accuracy = 0.8 - complexity_penalty + rng.random::<f64>() * 0.1;
 
         Ok(ArchitecturePerformance {
-            accuracy: accuracy.max(0.0).min(1.0),
+            accuracy: accuracy.clamp(0.0, 1.0),
             loss: 1.0 - accuracy,
             latency: Duration::from_millis(10 + architecture.layers.len() as u64),
             memory_usage: architecture.layers.len() * 1024 * 1024,
@@ -909,7 +936,9 @@ impl NeuralArchitectureSearch {
             let arch = self.generate_random_architecture()?;
             let performance = self.evaluate_architecture(&arch)?;
 
-            if best_architecture.is_none() || performance.accuracy > best_architecture.as_ref().unwrap().1.accuracy {
+            if best_architecture.is_none()
+                || performance.accuracy > best_architecture.as_ref().unwrap().1.accuracy
+            {
                 best_architecture = Some((arch.clone(), performance.clone()));
             }
 
@@ -925,7 +954,10 @@ impl NeuralArchitectureSearch {
             // Progress logging
             if i % 100 == 0 {
                 if let Some((_, ref perf)) = best_architecture {
-                    println!("Random search iteration {}: best accuracy = {:.4}", i, perf.accuracy);
+                    println!(
+                        "Random search iteration {}: best accuracy = {:.4}",
+                        i, perf.accuracy
+                    );
                 }
             }
         }
@@ -1060,7 +1092,7 @@ impl Default for HardwareConstraints {
         Self {
             max_memory: Some(8 * 1024 * 1024 * 1024), // 8GB
             max_latency: Some(Duration::from_millis(100)),
-            max_energy: Some(10.0), // 10 joules
+            max_energy: Some(10.0),            // 10 joules
             max_parameters: Some(100_000_000), // 100M parameters
             target_platform: HardwarePlatform::GPU,
             compute_units: 16,

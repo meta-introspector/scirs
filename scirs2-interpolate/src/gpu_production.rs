@@ -236,7 +236,7 @@ impl ProductionGpuAccelerator {
         let devices = Self::detect_gpu_devices()?;
 
         if devices.is_empty() {
-            return Err(InterpolateError::InitializationError(
+            return Err(InterpolateError::InvalidState(
                 "No GPU devices detected".to_string(),
             ));
         }

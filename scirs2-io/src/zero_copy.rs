@@ -425,7 +425,11 @@ pub mod simd_zero_copy {
             let b_view = ArrayView1::from_shape(count, b_slice).unwrap();
 
             // Simple addition implementation for testing to avoid hangs
-            let result: Array1<f32> = a_view.iter().zip(b_view.iter()).map(|(&a, &b)| a + b).collect();
+            let result: Array1<f32> = a_view
+                .iter()
+                .zip(b_view.iter())
+                .map(|(&a, &b)| a + b)
+                .collect();
             Ok(result)
         }
 
@@ -494,7 +498,11 @@ pub mod simd_zero_copy {
             let b_view = ArrayView1::from_shape(count, b_slice).unwrap();
 
             // Simple addition implementation for testing to avoid hangs
-            let result: Array1<f64> = a_view.iter().zip(b_view.iter()).map(|(&a, &b)| a + b).collect();
+            let result: Array1<f64> = a_view
+                .iter()
+                .zip(b_view.iter())
+                .map(|(&a, &b)| a + b)
+                .collect();
             Ok(result)
         }
 
@@ -1112,8 +1120,8 @@ mod tests {
         // Test memory advice enum
         let advice = MemoryAdvice::Sequential;
         match advice {
-            MemoryAdvice::Sequential => assert!(true),
-            _ => assert!(false),
+            MemoryAdvice::Sequential => {} // Expected case
+            _ => panic!("Unexpected memory advice"),
         }
     }
 
@@ -1122,8 +1130,8 @@ mod tests {
         // Test NUMA policy enum
         let policy = NumaMemoryPolicy::Local;
         match policy {
-            NumaMemoryPolicy::Local => assert!(true),
-            _ => assert!(false),
+            NumaMemoryPolicy::Local => {} // Expected case
+            _ => panic!("Unexpected NUMA policy"),
         }
 
         let bind_policy = NumaMemoryPolicy::Bind(0);

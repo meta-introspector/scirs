@@ -330,7 +330,7 @@ impl CompressedMemMapBuilder {
     {
         // Create ndarray from raw data
         let array = Array::from_shape_vec(IxDyn(shape), data.to_vec())
-            .map_err(|e| CoreError::ShapeError(ErrorContext::new(format!("{}", e))))?;
+            .map_err(|e| CoreError::ShapeError(ErrorContext::new(format!("{e}"))))?;
 
         // Create compressed memory-mapped array
         self.create(&array, path)

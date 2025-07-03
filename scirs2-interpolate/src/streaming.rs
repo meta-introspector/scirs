@@ -189,8 +189,11 @@ impl<T: Float + Debug + FromPrimitive + Zero> OnlineSplineInterpolator<T> {
 
     /// Add a new point to the streaming interpolator
     pub fn add_point(&mut self, x: T, y: T) -> InterpolateResult<()> {
-        check_finite(&[x.to_f64().unwrap_or(0.0), y.to_f64().unwrap_or(0.0)], "input point")?;
-        
+        check_finite(
+            &[x.to_f64().unwrap_or(0.0), y.to_f64().unwrap_or(0.0)],
+            "input point",
+        )?;
+
         let point = StreamingPoint {
             x,
             y,

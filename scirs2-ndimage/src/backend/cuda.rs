@@ -493,6 +493,11 @@ pub struct CudaKernel {
     ptx_code: Vec<u8>,
 }
 
+// SAFETY: CudaKernel's raw pointers are managed by CUDA runtime
+// and the kernel cache is only accessed through proper synchronization
+unsafe impl Send for CudaKernel {}
+unsafe impl Sync for CudaKernel {}
+
 /// Kernel cache to avoid recompilation
 lazy_static::lazy_static! {
     static ref KERNEL_CACHE: Arc<Mutex<HashMap<String, CudaKernel>>> = Arc::new(Mutex::new(HashMap::new()));

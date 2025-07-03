@@ -443,12 +443,14 @@ fn generate_synthetic_data(
     num_classes: usize,
 ) -> Vec<(Vec<f32>, usize)> {
     use rand::prelude::*;
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     (0..samples)
         .map(|_| {
-            let input: Vec<f32> = (0..input_dim).map(|_| rng.gen_range(-1.0..1.0)).collect();
-            let target = rng.gen_range(0..num_classes);
+            let input: Vec<f32> = (0..input_dim)
+                .map(|_| rng.random_range(-1.0..1.0))
+                .collect();
+            let target = rng.random_range(0..num_classes);
             (input, target)
         })
         .collect()

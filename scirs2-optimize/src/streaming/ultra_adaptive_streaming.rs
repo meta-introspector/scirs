@@ -579,7 +579,7 @@ impl<T: StreamingObjective> UltraAdaptiveStreamingOptimizer<T> {
         federated_update: &Array1<f64>,
         selected_algorithm: &OptimizationAlgorithm,
     ) -> Result<Array1<f64>> {
-        let mut fusion_weights = Array1::ones(3) / 3.0;
+        let mut fusion_weights: Array1<f64> = Array1::ones(3) / 3.0;
 
         // Adaptive weight calculation based on recent performance
         let recent_performance = self.performance_tracker.get_recent_performance();
@@ -753,7 +753,7 @@ impl<T: StreamingObjective> UltraAdaptiveStreamingOptimizer<T> {
 
         if n > 0 {
             let mut v = Array1::ones(n);
-            v /= v.mapv(|x| x * x).sum().sqrt();
+            v /= v.mapv(|x: f64| -> f64 { x * x }).sum().sqrt();
 
             for _ in 0..10 {
                 // Power iterations

@@ -21,11 +21,9 @@
 //! - Neuromorphic hardware optimization
 //! - Event-driven optimization problems
 
-use crate::error::OptimizeError;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::error::CoreResult as Result;
-use std::time::{Duration, Instant};
 
 pub mod event_driven;
 pub mod liquid_state_machines;
@@ -180,7 +178,7 @@ impl NeuromorphicNetwork {
             for j in 0..config.num_neurons {
                 if i != j {
                     // Random connection strength
-                    connectivity[[i, j]] = (rand::random::<f64>() - 0.5) * 0.1;
+                    connectivity[[i, j]] = (rand::rng().random::<f64>() - 0.5) * 0.1;
                 }
             }
         }
@@ -269,7 +267,7 @@ impl NeuromorphicNetwork {
 
             // Add noise
             if self.config.noise_level > 0.0 {
-                let noise = (rand::random::<f64>() - 0.5) * 2.0 * self.config.noise_level;
+                let noise = (rand::rng().random::<f64>() - 0.5) * 2.0 * self.config.noise_level;
                 self.neurons[i].potential += noise;
             }
 
@@ -473,7 +471,15 @@ impl NeuromorphicOptimizer for BasicNeuromorphicOptimizer {
             x: self.best_params.clone(),
             fun: self.best_objective,
             success: self.best_objective < 1e-3,
-            iterations: self.iterations,
+            nit: self.iterations,
+            nfev: self.iterations,
+            njev: 0,
+            nhev: 0,
+            maxcv: 0,
+            status: 0,
+            jac: None,
+            hess: None,
+            constr: None,
             message: "Neuromorphic optimization completed".to_string(),
         })
     }
@@ -496,6 +502,13 @@ impl NeuromorphicOptimizer for BasicNeuromorphicOptimizer {
             neuron.input_current = 0.0;
             neuron.adaptation = 0.0;
         }
+    }
+}
+
+impl BasicNeuromorphicOptimizer {
+    /// Get mutable reference to the network
+    pub fn network_mut(&mut self) -> &mut NeuromorphicNetwork {
+        &mut self.network
     }
 }
 

@@ -1337,7 +1337,7 @@ pub fn export_native_visualization(
             file.write_all(output.svg_content.as_bytes())
                 .map_err(|e| ClusteringError::InvalidInput(format!("Failed to write SVG file: {}", e)))?;
             
-            println!("✅ Exported native ultrathink visualization to {}.svg", filename);
+            println!("✅ Exported native ultrathink visualization to {filename}.svg");
         },
         "html" => {
             use std::fs::File;
@@ -1368,7 +1368,7 @@ pub fn export_native_visualization(
             file.write_all(html_content.as_bytes())
                 .map_err(|e| ClusteringError::InvalidInput(format!("Failed to write HTML file: {}", e)))?;
             
-            println!("🌐 Exported interactive ultrathink visualization to {}.html", filename);
+            println!("🌐 Exported interactive ultrathink visualization to {filename}.html");
         },
         _ => {
             return Err(ClusteringError::InvalidInput(format!("Unsupported export format: {}", format)));

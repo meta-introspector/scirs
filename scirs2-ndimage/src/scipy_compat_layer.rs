@@ -534,7 +534,7 @@ pub mod migration_utils {
             )
         }
 
-        fn convert_scipy_call(&self, function_name: &str, scipy_call: &str) -> String {
+        fn convert_scipy_call(&self, function_name: &str, _scipy_call: &str) -> String {
             // Simple pattern matching for common cases
             match function_name {
                 "gaussian_filter" => {

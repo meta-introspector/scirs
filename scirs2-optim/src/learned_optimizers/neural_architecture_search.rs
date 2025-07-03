@@ -1184,10 +1184,7 @@ pub struct MultiObjectiveState<T: Float> {
 
 impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     /// Create a new NAS instance
-    pub fn new(
-        config: NASConfig,
-        search_space: ArchitectureSearchSpace,
-    ) -> Result<Self, OptimError> {
+    pub fn new(config: NASConfig, search_space: ArchitectureSearchSpace) -> Result<Self> {
         let search_strategy = SearchStrategy::new(config.search_strategy, &config)?;
         let evaluator = ArchitectureEvaluator::new(&config)?;
         let population_manager = PopulationManager::new(&config)?;
@@ -1212,7 +1209,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     }
 
     /// Execute the neural architecture search
-    pub async fn search(&mut self) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    pub async fn search(&mut self) -> Result<Vec<ArchitectureCandidate>> {
         let start_time = Instant::now();
         let mut best_architectures = Vec::new();
         let mut iteration = 0;
@@ -1272,7 +1269,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         Ok(final_architectures)
     }
 
-    async fn initialize_population(&mut self) -> Result<(), OptimError> {
+    async fn initialize_population(&mut self) -> Result<()> {
         // Warm start with existing architectures if available
         for arch_desc in &self.config.warm_start_architectures {
             if let Ok(architecture) = self.architecture_generator.load_architecture(arch_desc) {
@@ -1319,9 +1316,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         Ok(())
     }
 
-    async fn generate_architectures(
-        &mut self,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    async fn generate_architectures(&mut self) -> Result<Vec<ArchitectureCandidate>> {
         match self.config.search_strategy {
             SearchStrategyType::Random => self.generate_random_architectures().await,
             SearchStrategyType::Evolutionary => self.generate_evolutionary_architectures().await,
@@ -1340,9 +1335,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         }
     }
 
-    async fn generate_random_architectures(
-        &mut self,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    async fn generate_random_architectures(&mut self) -> Result<Vec<ArchitectureCandidate>> {
         let mut architectures = Vec::new();
         let batch_size = 10; // Generate 10 random architectures
 
@@ -1368,9 +1361,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         Ok(architectures)
     }
 
-    async fn generate_evolutionary_architectures(
-        &mut self,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    async fn generate_evolutionary_architectures(&mut self) -> Result<Vec<ArchitectureCandidate>> {
         let mut new_architectures = Vec::new();
         let generation_size = self.config.population_size / 2;
 
@@ -1381,7 +1372,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
 
         // Crossover
         for i in 0..generation_size {
-            if rand::rng().gen::<f64>() < self.config.crossover_rate {
+            if rand::rng().random::<f64>() < self.config.crossover_rate {
                 let parent1 = &parents[i * 2];
                 let parent2 = &parents[i * 2 + 1];
 
@@ -1410,7 +1401,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
 
         // Mutation
         for architecture in &mut new_architectures {
-            if rand::rng().gen::<f64>() < self.config.mutation_rate {
+            if rand::rng().random::<f64>() < self.config.mutation_rate {
                 let mutation_record = self
                     .architecture_generator
                     .mutate(&mut architecture.architecture)?;
@@ -1424,7 +1415,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     async fn evaluate_architectures(
         &mut self,
         architectures: Vec<ArchitectureCandidate>,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    ) -> Result<Vec<ArchitectureCandidate>> {
         let mut evaluated = Vec::new();
 
         for mut candidate in architectures {
@@ -1471,7 +1462,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &mut self,
         _best_architectures: Vec<ArchitectureCandidate>,
         total_time: Duration,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    ) -> Result<Vec<ArchitectureCandidate>> {
         // Get final best architectures
         let mut final_best = self
             .population_manager
@@ -1508,9 +1499,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     }
 
     // Bayesian optimization implementation
-    async fn generate_bayesian_architectures(
-        &mut self,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    async fn generate_bayesian_architectures(&mut self) -> Result<Vec<ArchitectureCandidate>> {
         let mut new_architectures = Vec::new();
         let acquisition_batch_size = 5;
 
@@ -1568,7 +1557,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     async fn update_surrogate_model(
         &mut self,
         bayesian_state: &mut BayesianOptimizationState<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         let training_data: Vec<(Vec<T>, T)> = bayesian_state
             .observations
             .iter()
@@ -1648,7 +1637,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &mut self,
         model: &mut SurrogateModel<T>,
         training_data: Vec<(Vec<T>, T)>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Simplified GP update - in production would use proper GP library
         model.training_data = training_data;
 
@@ -1691,7 +1680,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &mut self,
         model: &mut SurrogateModel<T>,
         training_data: Vec<(Vec<T>, T)>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Simplified random forest update
         model.training_data = training_data;
 
@@ -1713,7 +1702,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &mut self,
         model: &mut SurrogateModel<T>,
         training_data: Vec<(Vec<T>, T)>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Simplified neural network update
         model.training_data = training_data;
 
@@ -1750,7 +1739,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     async fn optimize_acquisition_function(
         &mut self,
         bayesian_state: &mut BayesianOptimizationState<T>,
-    ) -> Result<ArchitectureSpec, OptimError> {
+    ) -> Result<ArchitectureSpec> {
         let mut best_spec = self.architecture_generator.generate_random_architecture()?;
         let mut best_acquisition = T::from(std::f64::NEG_INFINITY).unwrap();
 
@@ -1780,7 +1769,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         spec: &ArchitectureSpec,
         model: &SurrogateModel<T>,
         acquisition_fn: AcquisitionFunction,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let features = self.encode_architecture_features(spec);
         let (mean, variance) = self.predict_with_uncertainty(model, &features).await?;
 
@@ -1802,7 +1791,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &self,
         model: &SurrogateModel<T>,
         features: &[T],
-    ) -> Result<(T, T), OptimError> {
+    ) -> Result<(T, T)> {
         match model.model_type {
             SurrogateModelType::GaussianProcess => {
                 self.gp_predict_with_uncertainty(model, features).await
@@ -1826,7 +1815,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &self,
         model: &SurrogateModel<T>,
         features: &[T],
-    ) -> Result<(T, T), OptimError> {
+    ) -> Result<(T, T)> {
         // Simplified GP prediction - would use proper GP implementation
         let length_scale = model
             .parameters
@@ -1891,7 +1880,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &self,
         model: &SurrogateModel<T>,
         features: &[T],
-    ) -> Result<(T, T), OptimError> {
+    ) -> Result<(T, T)> {
         // Simplified random forest prediction
         let prediction = self.simple_nearest_neighbor_prediction(model, features)?;
         let uncertainty = T::from(0.2).unwrap(); // Fixed uncertainty for RF
@@ -1902,7 +1891,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &self,
         model: &SurrogateModel<T>,
         features: &[T],
-    ) -> Result<(T, T), OptimError> {
+    ) -> Result<(T, T)> {
         // Simplified neural network prediction
         let prediction = self.simple_nearest_neighbor_prediction(model, features)?;
         let uncertainty = T::from(0.15).unwrap(); // Fixed uncertainty for NN
@@ -1913,7 +1902,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &self,
         model: &SurrogateModel<T>,
         features: &[T],
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         if model.training_data.is_empty() {
             return Ok(T::zero());
         }
@@ -1943,7 +1932,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         mean: T,
         variance: T,
         training_data: &[(Vec<T>, T)],
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         if training_data.is_empty() {
             return Ok(variance.sqrt()); // Pure exploration
         }
@@ -1971,7 +1960,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         }
     }
 
-    fn upper_confidence_bound(&self, mean: T, variance: T, beta: T) -> Result<T, OptimError> {
+    fn upper_confidence_bound(&self, mean: T, variance: T, beta: T) -> Result<T> {
         Ok(mean + beta * variance.sqrt())
     }
 
@@ -1980,7 +1969,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         mean: T,
         variance: T,
         training_data: &[(Vec<T>, T)],
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         if training_data.is_empty() {
             return Ok(T::from(0.5).unwrap()); // Neutral probability
         }
@@ -2030,9 +2019,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         (-x * x / T::from(2.0).unwrap()).exp() / sqrt_2pi
     }
 
-    async fn generate_rl_architectures(
-        &mut self,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    async fn generate_rl_architectures(&mut self) -> Result<Vec<ArchitectureCandidate>> {
         let mut new_architectures = Vec::new();
         let generation_batch_size = 8;
 
@@ -2074,7 +2061,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
 
     async fn generate_differentiable_architectures(
         &mut self,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    ) -> Result<Vec<ArchitectureCandidate>> {
         let mut new_architectures = Vec::new();
         let generation_batch_size = 4;
 
@@ -2117,9 +2104,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         Ok(new_architectures)
     }
 
-    async fn generate_progressive_architectures(
-        &mut self,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    async fn generate_progressive_architectures(&mut self) -> Result<Vec<ArchitectureCandidate>> {
         let mut new_architectures = Vec::new();
         let generation_batch_size = 6;
 
@@ -2185,7 +2170,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &self,
         stage: ProgressiveStage,
         _progressive_state: &ProgressiveSearchState<T>,
-    ) -> Result<ArchitectureSpec, OptimError> {
+    ) -> Result<ArchitectureSpec> {
         let (min_layers, max_layers, base_width) = match stage {
             ProgressiveStage::Minimal => (1, 2, 32),
             ProgressiveStage::Small => (2, 4, 64),
@@ -2193,7 +2178,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
             ProgressiveStage::Large => (4, 8, 256),
         };
 
-        let num_layers = rand::rng().gen_range(min_layers..=max_layers);
+        let num_layers = rand::rng().random_range(min_layers..=max_layers);
         let mut layers = Vec::new();
 
         // Generate layers with progressive complexity
@@ -2245,7 +2230,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         layer_idx: usize,
         complexity: f64,
         base_width: usize,
-    ) -> Result<LayerSpec, OptimError> {
+    ) -> Result<LayerSpec> {
         // Select layer type based on complexity
         let layer_type = if complexity < 0.3 {
             LayerType::Linear
@@ -2268,7 +2253,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
                 LayerType::Attention,
                 LayerType::LSTM,
             ];
-            layer_types[rand::rng().gen_range(0..layer_types.len())]
+            layer_types[rand::rng().random_range(0..layer_types.len())]
         };
 
         // Adjust dimensions based on complexity
@@ -2329,7 +2314,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &self,
         num_layers: usize,
         stage: ProgressiveStage,
-    ) -> Result<Array2<bool>, OptimError> {
+    ) -> Result<Array2<bool>> {
         let mut connections = Array2::from_elem((num_layers, num_layers), false);
 
         // Always have sequential connections
@@ -2388,7 +2373,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         depth: usize,
         width: usize,
         stage: ProgressiveStage,
-    ) -> Result<GlobalArchitectureConfig, OptimError> {
+    ) -> Result<GlobalArchitectureConfig> {
         let (attention_type, num_heads) = match stage {
             ProgressiveStage::Minimal => (AttentionType::None, 1),
             ProgressiveStage::Small => (AttentionType::SelfAttention, 2),
@@ -2442,7 +2427,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     fn create_progressive_specialized_components(
         &self,
         stage: ProgressiveStage,
-    ) -> Result<Vec<SpecializedComponent>, OptimError> {
+    ) -> Result<Vec<SpecializedComponent>> {
         let mut components = Vec::new();
 
         match stage {
@@ -2551,7 +2536,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
 
     async fn generate_multiobjective_architectures(
         &mut self,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    ) -> Result<Vec<ArchitectureCandidate>> {
         let mut new_architectures = Vec::new();
         let generation_batch_size = 6;
 
@@ -2608,9 +2593,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         Ok(new_architectures)
     }
 
-    async fn generate_hyperband_architectures(
-        &mut self,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    async fn generate_hyperband_architectures(&mut self) -> Result<Vec<ArchitectureCandidate>> {
         let mut new_architectures = Vec::new();
 
         // Hyperband-style resource allocation
@@ -2665,10 +2648,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     }
 
     // RL helper functions
-    async fn update_rl_policy(
-        &mut self,
-        rl_state: &mut RLSearchState<T>,
-    ) -> Result<(), OptimError> {
+    async fn update_rl_policy(&mut self, rl_state: &mut RLSearchState<T>) -> Result<()> {
         if rl_state.reward_history.len() < 2 {
             return Ok(()); // Need at least 2 rewards for policy update
         }
@@ -2690,12 +2670,16 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
                     .unwrap();
 
             // Apply gradient to weights (simplified update)
-            rl_state.controller.weights[layer_idx] = rl_state.controller.weights[layer_idx]
-                .mapv(|w| w + gradient_scale * T::from(rand::rng().gen_range(-0.1..0.1)).unwrap());
+            rl_state.controller.weights[layer_idx] =
+                rl_state.controller.weights[layer_idx].mapv(|w| {
+                    w + gradient_scale * T::from(rand::rng().random_range(-0.1..0.1)).unwrap()
+                });
 
             // Update biases
-            rl_state.controller.biases[layer_idx] = rl_state.controller.biases[layer_idx]
-                .mapv(|b| b + gradient_scale * T::from(rand::rng().gen_range(-0.1..0.1)).unwrap());
+            rl_state.controller.biases[layer_idx] =
+                rl_state.controller.biases[layer_idx].mapv(|b| {
+                    b + gradient_scale * T::from(rand::rng().random_range(-0.1..0.1)).unwrap()
+                });
         }
 
         // Update exploration rate (epsilon decay)
@@ -2715,7 +2699,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     async fn generate_architecture_with_controller(
         &mut self,
         rl_state: &mut RLSearchState<T>,
-    ) -> Result<ArchitectureSpec, OptimError> {
+    ) -> Result<ArchitectureSpec> {
         let mut architecture_decisions = Vec::new();
         let mut current_state = self.encode_current_search_state(rl_state);
 
@@ -2813,11 +2797,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         state_encoding
     }
 
-    fn forward_controller(
-        &self,
-        controller: &ControllerNetwork<T>,
-        state: &[T],
-    ) -> Result<Vec<T>, OptimError> {
+    fn forward_controller(&self, controller: &ControllerNetwork<T>, state: &[T]) -> Result<Vec<T>> {
         let mut current_input = Array1::from_vec(state.to_vec());
 
         // Forward pass through controller network
@@ -2866,14 +2846,14 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &self,
         probabilities: &[T],
         rl_state: &RLSearchState<T>,
-    ) -> Result<ArchitectureAction, OptimError> {
+    ) -> Result<ArchitectureAction> {
         let exploration_rate = rl_state
             .policy_parameters
             .exploration_rate
             .to_f64()
             .unwrap_or(0.1);
 
-        if rand::rng().gen::<f64>() < exploration_rate {
+        if rand::rng().random::<f64>() < exploration_rate {
             // Exploration: random action
             self.sample_random_action()
         } else {
@@ -2882,8 +2862,8 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         }
     }
 
-    fn sample_random_action(&self) -> Result<ArchitectureAction, OptimError> {
-        let action_type = rand::rng().gen_range(0..4);
+    fn sample_random_action(&self) -> Result<ArchitectureAction> {
+        let action_type = rand::rng().random_range(0..4);
 
         match action_type {
             0 => Ok(ArchitectureAction::SelectLayerType(
@@ -2902,10 +2882,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         }
     }
 
-    fn sample_action_from_distribution(
-        &self,
-        probabilities: &[T],
-    ) -> Result<ArchitectureAction, OptimError> {
+    fn sample_action_from_distribution(&self, probabilities: &[T]) -> Result<ArchitectureAction> {
         // Convert to cumulative distribution
         let mut cumulative = Vec::new();
         let mut sum = T::zero();
@@ -2914,7 +2891,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
             cumulative.push(sum.to_f64().unwrap_or(0.0));
         }
 
-        let random_val = rand::rng().gen::<f64>();
+        let random_val = rand::rng().random::<f64>();
         let selected_index = cumulative
             .iter()
             .position(|&x| x >= random_val)
@@ -2940,29 +2917,29 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
 
     fn sample_random_layer_type(&self) -> LayerType {
         let layer_types = &self.search_space.layer_types;
-        layer_types[rand::rng().gen_range(0..layer_types.len())]
+        layer_types[rand::rng().random_range(0..layer_types.len())]
     }
 
     fn sample_random_hidden_size(&self) -> usize {
         let hidden_sizes = &self.search_space.hidden_sizes;
-        hidden_sizes[rand::rng().gen_range(0..hidden_sizes.len())]
+        hidden_sizes[rand::rng().random_range(0..hidden_sizes.len())]
     }
 
     fn sample_random_activation(&self) -> ActivationType {
         let activations = &self.search_space.activation_functions;
-        activations[rand::rng().gen_range(0..activations.len())]
+        activations[rand::rng().random_range(0..activations.len())]
     }
 
     fn sample_random_connection(&self) -> ConnectionPattern {
         let connections = &self.search_space.connection_patterns;
-        connections[rand::rng().gen_range(0..connections.len())]
+        connections[rand::rng().random_range(0..connections.len())]
     }
 
     fn action_to_layer_spec(
         &self,
         action: &ArchitectureAction,
         layer_idx: usize,
-    ) -> Result<Option<LayerSpec>, OptimError> {
+    ) -> Result<Option<LayerSpec>> {
         match action {
             ArchitectureAction::Stop => Ok(None),
             ArchitectureAction::SelectLayerType(layer_type) => {
@@ -3044,7 +3021,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     fn generate_global_config_from_decisions(
         &self,
         decisions: &[ArchitectureAction],
-    ) -> Result<GlobalArchitectureConfig, OptimError> {
+    ) -> Result<GlobalArchitectureConfig> {
         let depth = decisions.len();
         let width = decisions
             .iter()
@@ -3083,7 +3060,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         &self,
         connections: &mut Array2<bool>,
         decisions: &[ArchitectureAction],
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Add skip connections based on connection decisions
         for (i, action) in decisions.iter().enumerate() {
             if let ArchitectureAction::SelectConnection(ConnectionPattern::Residual) = action {
@@ -3100,7 +3077,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     fn generate_specialized_components_from_decisions(
         &self,
         decisions: &[ArchitectureAction],
-    ) -> Result<Vec<SpecializedComponent>, OptimError> {
+    ) -> Result<Vec<SpecializedComponent>> {
         let mut components = Vec::new();
 
         // Add adaptive learning rate component if many layers
@@ -3141,10 +3118,10 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     async fn sample_from_continuous_space(
         &mut self,
         diff_state: &mut DifferentiableNASState<T>,
-    ) -> Result<ArchitectureSpec, OptimError> {
+    ) -> Result<ArchitectureSpec> {
         // Use Gumbel softmax to sample discrete architectures from continuous space
         let mut layers = Vec::new();
-        let num_layers = 3 + rand::rng().gen_range(0..5); // 3-7 layers
+        let num_layers = 3 + rand::rng().random_range(0..5); // 3-7 layers
 
         for i in 0..num_layers {
             // Sample layer type using continuous relaxation
@@ -3154,7 +3131,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
                 .or_insert_with(|| {
                     let mut weights = Vec::new();
                     for _ in 0..LayerType::Custom as usize + 1 {
-                        weights.push(T::from(rand::rng().gen::<f64>()).unwrap());
+                        weights.push(T::from(rand::rng().random::<f64>()).unwrap());
                     }
                     weights
                 });
@@ -3167,7 +3144,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
             } else {
                 layers[i - 1].dimensions.output_dim
             };
-            let output_dim = 64 + rand::rng().gen_range(0..192); // 64-256
+            let output_dim = 64 + rand::rng().random_range(0..192); // 64-256
 
             let layer_spec = LayerSpec {
                 layer_type: self.index_to_layer_type(layer_type),
@@ -3209,13 +3186,13 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         })
     }
 
-    fn gumbel_softmax_sample(&self, logits: &[T], temperature: T) -> Result<usize, OptimError> {
+    fn gumbel_softmax_sample(&self, logits: &[T], temperature: T) -> Result<usize> {
         let mut gumbel_logits = Vec::new();
 
         for &logit in logits {
             // Add Gumbel noise: -log(-log(uniform))
-            let uniform1 = T::from(rand::rng().gen::<f64>().max(1e-10)).unwrap();
-            let uniform2 = T::from(rand::rng().gen::<f64>().max(1e-10)).unwrap();
+            let uniform1 = T::from(rand::rng().random::<f64>().max(1e-10)).unwrap();
+            let uniform2 = T::from(rand::rng().random::<f64>().max(1e-10)).unwrap();
             let gumbel_noise = -(-uniform1.ln()).ln();
 
             gumbel_logits.push((logit + gumbel_noise) / temperature);
@@ -3257,7 +3234,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     fn select_pareto_parents(
         &self,
         mo_state: &MultiObjectiveState<T>,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    ) -> Result<Vec<ArchitectureCandidate>> {
         if mo_state.pareto_front.is_empty() {
             // If no Pareto front yet, select from general population
             return self.population_manager.select_parents(2);
@@ -3269,7 +3246,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
 
         for _ in 0..2 {
             if !mo_state.pareto_front.is_empty() {
-                let idx = rng.gen_range(0..mo_state.pareto_front.len());
+                let idx = rng.random_range(0..mo_state.pareto_front.len());
                 parents.push(mo_state.pareto_front[idx].clone());
             }
         }
@@ -3438,7 +3415,7 @@ pub struct ArchitectureEvaluator<T: Float> {
 }
 
 impl<T: Float + Default + Clone> ArchitectureEvaluator<T> {
-    pub fn new(config: &NASConfig) -> Result<Self, OptimError> {
+    pub fn new(config: &NASConfig) -> Result<Self> {
         Ok(Self {
             config: config.clone(),
             _phantom: std::marker::PhantomData,
@@ -3448,14 +3425,14 @@ impl<T: Float + Default + Clone> ArchitectureEvaluator<T> {
     pub async fn evaluate_architecture(
         &self,
         arch: &ArchitectureSpec,
-    ) -> Result<PerformanceMetrics, OptimError> {
+    ) -> Result<PerformanceMetrics> {
         Ok(PerformanceMetrics::default())
     }
 
     pub async fn validate_architecture(
         &self,
         _arch: &ArchitectureSpec,
-    ) -> Result<ValidationResults, OptimError> {
+    ) -> Result<ValidationResults> {
         Ok(ValidationResults {
             accuracy: 0.85,
             loss: 0.15,
@@ -3482,7 +3459,7 @@ pub struct PerformancePredictor<T: Float> {
 }
 
 impl<T: Float + Default + Clone> PerformancePredictor<T> {
-    pub fn new(config: &NASConfig) -> Result<Self, OptimError> {
+    pub fn new(config: &NASConfig) -> Result<Self> {
         Ok(Self {
             config: config.clone(),
             _phantom: std::marker::PhantomData,
@@ -3496,20 +3473,17 @@ pub struct ResourceManager {
 }
 
 impl ResourceManager {
-    pub fn new(constraints: &SearchConstraints) -> Result<Self, OptimError> {
+    pub fn new(constraints: &SearchConstraints) -> Result<Self> {
         Ok(Self {
             constraints: constraints.clone(),
         })
     }
 
-    pub fn check_constraints(&self, arch: &ArchitectureSpec) -> Result<bool, OptimError> {
+    pub fn check_constraints(&self, arch: &ArchitectureSpec) -> Result<bool> {
         Ok(true) // Simplified check
     }
 
-    pub fn estimate_resource_usage(
-        &self,
-        arch: &ArchitectureSpec,
-    ) -> Result<ResourceUsage, OptimError> {
+    pub fn estimate_resource_usage(&self, arch: &ArchitectureSpec) -> Result<ResourceUsage> {
         Ok(ResourceUsage::default())
     }
 
@@ -3542,7 +3516,7 @@ pub struct DiversityTracker {
 }
 
 impl<T: Float + Default + Clone> PopulationManager<T> {
-    pub fn new(config: &NASConfig) -> Result<Self, OptimError> {
+    pub fn new(config: &NASConfig) -> Result<Self> {
         Ok(Self {
             config: config.clone(),
             population: Vec::with_capacity(config.population_size),
@@ -3560,7 +3534,7 @@ impl<T: Float + Default + Clone> PopulationManager<T> {
     pub async fn update_population(
         &mut self,
         mut architectures: Vec<ArchitectureCandidate>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Add new architectures to population
         self.population.extend(architectures.drain(..));
 
@@ -3592,15 +3566,12 @@ impl<T: Float + Default + Clone> PopulationManager<T> {
         Ok(())
     }
 
-    pub fn get_best_architectures(
-        &self,
-        count: usize,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    pub fn get_best_architectures(&self, count: usize) -> Result<Vec<ArchitectureCandidate>> {
         let actual_count = count.min(self.population.len());
         Ok(self.population[..actual_count].to_vec())
     }
 
-    pub fn add_architecture(&mut self, arch: ArchitectureCandidate) -> Result<(), OptimError> {
+    pub fn add_architecture(&mut self, arch: ArchitectureCandidate) -> Result<()> {
         // Check for duplicates based on architecture hash
         let arch_hash = self.compute_architecture_hash(&arch.architecture);
         if !self
@@ -3630,10 +3601,7 @@ impl<T: Float + Default + Clone> PopulationManager<T> {
         self.population.len()
     }
 
-    pub fn select_parents(
-        &self,
-        count: usize,
-    ) -> Result<Vec<ArchitectureCandidate>, OptimError> {
+    pub fn select_parents(&self, count: usize) -> Result<Vec<ArchitectureCandidate>> {
         if self.population.is_empty() {
             return Ok(vec![]);
         }
@@ -3650,7 +3618,7 @@ impl<T: Float + Default + Clone> PopulationManager<T> {
 
             // Select tournament participants
             for _ in 0..tournament_size.min(self.population.len()) {
-                let candidate_idx = rng.gen_range(0..self.population.len());
+                let candidate_idx = rng.random_range(0..self.population.len());
                 let candidate = &self.population[candidate_idx];
 
                 if candidate.performance.optimization_performance > best_performance {
@@ -3954,13 +3922,13 @@ pub struct ArchitectureGenerator {
 }
 
 impl ArchitectureGenerator {
-    pub fn new(search_space: &ArchitectureSearchSpace) -> Result<Self, OptimError> {
+    pub fn new(search_space: &ArchitectureSearchSpace) -> Result<Self> {
         Ok(Self {
             search_space: search_space.clone(),
         })
     }
 
-    pub fn generate_random_architecture(&self) -> Result<ArchitectureSpec, OptimError> {
+    pub fn generate_random_architecture(&self) -> Result<ArchitectureSpec> {
         Ok(ArchitectureSpec {
             layers: vec![LayerSpec {
                 layer_type: LayerType::LSTM,
@@ -3996,7 +3964,7 @@ impl ArchitectureGenerator {
         })
     }
 
-    pub fn load_architecture(&self, description: &str) -> Result<ArchitectureSpec, OptimError> {
+    pub fn load_architecture(&self, description: &str) -> Result<ArchitectureSpec> {
         // Simplified - would parse from description
         self.generate_random_architecture()
     }
@@ -4005,15 +3973,12 @@ impl ArchitectureGenerator {
         &self,
         parent1: &ArchitectureSpec,
         parent2: &ArchitectureSpec,
-    ) -> Result<ArchitectureSpec, OptimError> {
+    ) -> Result<ArchitectureSpec> {
         // Simplified crossover - would implement proper genetic operations
         self.generate_random_architecture()
     }
 
-    pub fn mutate(
-        &self,
-        architecture: &mut ArchitectureSpec,
-    ) -> Result<MutationRecord, OptimError> {
+    pub fn mutate(&self, architecture: &mut ArchitectureSpec) -> Result<MutationRecord> {
         Ok(MutationRecord {
             mutation_type: MutationType::ParameterMutation,
             affected_components: vec!["layer_0".to_string()],
@@ -4060,7 +4025,7 @@ impl<T: Float + Default + Clone> SearchHistory<T> {
         &mut self,
         iteration: usize,
         population: &PopulationManager<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         Ok(())
     }
 
@@ -4068,16 +4033,13 @@ impl<T: Float + Default + Clone> SearchHistory<T> {
         &mut self,
         total_time: Duration,
         final_best: &[ArchitectureCandidate],
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         Ok(())
     }
 }
 
 impl<T: Float + Default + Clone> SearchStrategy<T> {
-    pub fn new(
-        strategy_type: SearchStrategyType,
-        config: &NASConfig,
-    ) -> Result<Self, OptimError> {
+    pub fn new(strategy_type: SearchStrategyType, config: &NASConfig) -> Result<Self> {
         let state = match strategy_type {
             SearchStrategyType::Random => SearchStrategyState::Random(RandomSearchState::default()),
             SearchStrategyType::Evolutionary => {
@@ -4199,7 +4161,7 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
         &mut self,
         population: &PopulationManager<T>,
         iteration: usize,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         Ok(())
     }
 }
@@ -4211,7 +4173,7 @@ pub struct MultiObjectiveOptimizer<T: Float> {
 }
 
 impl<T: Float + Default + Clone> MultiObjectiveOptimizer<T> {
-    pub fn new(config: &NASConfig) -> Result<Self, OptimError> {
+    pub fn new(config: &NASConfig) -> Result<Self> {
         Ok(Self {
             config: config.clone(),
             _phantom: std::marker::PhantomData,

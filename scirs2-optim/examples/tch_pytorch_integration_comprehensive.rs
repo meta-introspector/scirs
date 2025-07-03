@@ -161,7 +161,7 @@ impl Tensor {
     fn randn(shape: &[i64], device: Device) -> Self {
         let mut rng = Xoshiro256Plus::seed_from_u64(42);
         let data = Array2::from_shape_fn((shape[0] as usize, shape[1] as usize), |_| {
-            rng.gen_range(-1.0..1.0)
+            rng.random_range(-1.0..1.0)
         });
         Self::new(data, device)
     }
@@ -1275,7 +1275,7 @@ fn create_tch_network(
 
         let weight_data =
             Array2::from_shape_fn((in_features as usize, out_features as usize), |_| {
-                rng.gen_range(-limit..limit)
+                rng.random_range(-limit..limit)
             });
         let bias_data = Array2::zeros((1, out_features as usize));
 
@@ -1330,11 +1330,11 @@ fn create_tch_dataset(
 
     for _ in 0..n_samples {
         let input_data =
-            Array2::from_shape_fn((1, input_dim as usize), |_| rng.gen_range(-1.0..1.0));
+            Array2::from_shape_fn((1, input_dim as usize), |_| rng.random_range(-1.0..1.0));
 
         let target_data = Array2::from_shape_fn((1, output_dim as usize), |_| {
             let sum = input_data.iter().sum::<f32>();
-            (sum / input_dim as f32).tanh() + rng.gen_range(-0.1..0.1)
+            (sum / input_dim as f32).tanh() + rng.random_range(-0.1..0.1)
         });
 
         inputs.push(Tensor::new(input_data, device.clone()));

@@ -1236,7 +1236,7 @@ impl SecurityAuditor {
     }
 
     /// Execute function with timeout
-    fn execute_with_timeout<F, T>(&self, f: F) -> Result<std::result::Result<T, OptimError>>
+    fn execute_with_timeout<F, T>(&self, f: F) -> Result<std::result::Result<T, String>>
     where
         F: FnOnce() -> Result<T>,
     {

@@ -22,8 +22,10 @@ pub struct UMAP {
     /// Number of components (dimensions) in the low dimensional space
     n_components: usize,
     /// Controls how UMAP balances local versus global structure
+    #[allow(dead_code)]
     min_dist: f64,
     /// Controls how tightly UMAP is allowed to pack points together
+    #[allow(dead_code)]
     spread: f64,
     /// Learning rate for optimization
     learning_rate: f64,
@@ -410,7 +412,7 @@ impl UMAP {
             .as_ref()
             .ok_or_else(|| TransformError::NotFitted("Training data not available".to_string()))?;
 
-        let (n_new_samples, n_features) = x.dim();
+        let (_n_new_samples, n_features) = x.dim();
         let (_, n_training_features) = training_data.dim();
 
         if n_features != n_training_features {

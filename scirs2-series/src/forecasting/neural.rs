@@ -1286,7 +1286,9 @@ pub mod advanced {
         }
     }
 
-    impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MultiScaleNeuralForecaster<F> {
+    impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand>
+        MultiScaleNeuralForecaster<F>
+    {
         pub fn new(config: MultiScaleConfig) -> Self {
             // Configure individual models for different time scales
             let short_term_config = LSTMConfig {

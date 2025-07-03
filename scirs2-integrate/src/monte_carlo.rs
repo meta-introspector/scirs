@@ -131,8 +131,8 @@ where
     } else {
         // In rand 0.9.0, from_entropy is replaced by building from OsRng
         // Note: thread_rng() was renamed to rng() in rand 0.9.0
-        let mut thread_rng = rand::rng();
-        StdRng::from_rng(&mut thread_rng)
+        let mut rng = rand::rng();
+        StdRng::from_rng(&mut rng)
     };
 
     // Create uniform distributions for each dimension
@@ -252,7 +252,7 @@ where
 /// let uniform_sampler = |rng: &mut StdRng, dims: usize| {
 ///     let mut point = Array1::zeros(dims);
 ///     for i in 0..dims {
-///         point[i] = rng.gen_range(0.0..1.0);
+///         point[i] = rng.random_range(0.0..1.0);
 ///     }
 ///     point
 /// };
@@ -320,8 +320,8 @@ where
     } else {
         // In rand 0.9.0, from_entropy is replaced by building from OsRng
         // Note: thread_rng() was renamed to rng() in rand 0.9.0
-        let mut thread_rng = rand::rng();
-        StdRng::from_rng(&mut thread_rng)
+        let mut rng = rand::rng();
+        StdRng::from_rng(&mut rng)
     };
 
     // Sample and evaluate the function

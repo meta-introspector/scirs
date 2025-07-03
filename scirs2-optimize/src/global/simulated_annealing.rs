@@ -84,7 +84,7 @@ where
         options: SimulatedAnnealingOptions,
     ) -> Self {
         let ndim = x0.len();
-        let seed = options.seed.unwrap_or_else(rand::random);
+        let seed = options.seed.unwrap_or_else(rand::rng().gen);
         let rng = StdRng::seed_from_u64(seed);
 
         // Evaluate initial point

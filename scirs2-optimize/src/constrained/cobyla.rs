@@ -246,7 +246,7 @@ fn build_linear_models(
     xpt: &Array2<f64>,
     fval: &Array1<f64>,
     con: &Array2<f64>,
-    x: &Array1<f64>,
+    _x: &Array1<f64>,
     n: usize,
     num_constraints: usize,
 ) -> OptimizeResult<(Array1<f64>, Array2<f64>)> {
@@ -254,7 +254,7 @@ fn build_linear_models(
     let mut grad_f = Array1::zeros(n);
     let mut grad_c = Array2::zeros((num_constraints, n));
 
-    let h = 1e-8;
+    let _h = 1e-8;
 
     // Build gradient of objective function
     for i in 0..n {

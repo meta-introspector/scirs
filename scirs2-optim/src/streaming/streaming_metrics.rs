@@ -788,7 +788,7 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
     }
 
     /// Record a new metrics sample
-    pub fn record_sample(&mut self, sample: MetricsSample<A>) -> Result<(), OptimError> {
+    pub fn record_sample(&mut self, sample: MetricsSample<A>) -> Result<()> {
         // Update current metrics
         self.update_performance_metrics(&sample)?;
         self.update_resource_metrics(&sample)?;
@@ -833,7 +833,7 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
         &self,
         start_time: SystemTime,
         end_time: SystemTime,
-    ) -> Result<Vec<MetricsSnapshot<A>>, OptimError> {
+    ) -> Result<Vec<MetricsSnapshot<A>>> {
         self.historical_data.get_range(start_time, end_time)
     }
 
@@ -843,42 +843,33 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
         period: AggregationPeriod,
         start_time: SystemTime,
         end_time: SystemTime,
-    ) -> Result<Vec<AggregatedMetrics<A>>, OptimError> {
+    ) -> Result<Vec<AggregatedMetrics<A>>> {
         self.historical_data
             .get_aggregated(period, start_time, end_time)
     }
 
     /// Export metrics to configured destinations
-    pub fn export_metrics(&self) -> Result<(), OptimError> {
+    pub fn export_metrics(&self) -> Result<()> {
         // Implementation would export to configured destinations
         Ok(())
     }
 
-    fn update_performance_metrics(
-        &mut self,
-        _sample: &MetricsSample<A>,
-    ) -> Result<(), OptimError> {
+    fn update_performance_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<()> {
         // Update performance metrics based on sample
         Ok(())
     }
 
-    fn update_resource_metrics(
-        &mut self,
-        _sample: &MetricsSample<A>,
-    ) -> Result<(), OptimError> {
+    fn update_resource_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<()> {
         // Update resource metrics based on sample
         Ok(())
     }
 
-    fn update_quality_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<(), OptimError> {
+    fn update_quality_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<()> {
         // Update quality metrics based on sample
         Ok(())
     }
 
-    fn update_business_metrics(
-        &mut self,
-        _sample: &MetricsSample<A>,
-    ) -> Result<(), OptimError> {
+    fn update_business_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<()> {
         // Update business metrics based on sample
         Ok(())
     }
@@ -1140,7 +1131,7 @@ impl<A: Float> HistoricalMetrics<A> {
         }
     }
 
-    fn store_snapshot(&mut self, snapshot: MetricsSnapshot<A>) -> Result<(), OptimError> {
+    fn store_snapshot(&mut self, snapshot: MetricsSnapshot<A>) -> Result<()> {
         self.time_series.insert(snapshot.timestamp, snapshot);
         Ok(())
     }
@@ -1149,7 +1140,7 @@ impl<A: Float> HistoricalMetrics<A> {
         &self,
         start_time: SystemTime,
         end_time: SystemTime,
-    ) -> Result<Vec<MetricsSnapshot<A>>, OptimError> {
+    ) -> Result<Vec<MetricsSnapshot<A>>> {
         let start_ts = start_time.duration_since(UNIX_EPOCH).unwrap().as_secs();
         let end_ts = end_time.duration_since(UNIX_EPOCH).unwrap().as_secs();
 
@@ -1167,7 +1158,7 @@ impl<A: Float> HistoricalMetrics<A> {
         _period: AggregationPeriod,
         _start_time: SystemTime,
         _end_time: SystemTime,
-    ) -> Result<Vec<AggregatedMetrics<A>>, OptimError> {
+    ) -> Result<Vec<AggregatedMetrics<A>>> {
         // Implementation would aggregate data for the specified period
         Ok(Vec::new())
     }
@@ -1183,7 +1174,7 @@ impl<A: Float> AlertSystem<A> {
         }
     }
 
-    fn evaluate_rules(&mut self, _sample: &MetricsSample<A>) -> Result<(), OptimError> {
+    fn evaluate_rules(&mut self, _sample: &MetricsSample<A>) -> Result<()> {
         // Implementation would evaluate all alert rules
         Ok(())
     }

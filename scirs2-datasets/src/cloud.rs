@@ -52,15 +52,23 @@ pub enum CloudProvider {
 pub enum CloudCredentials {
     /// Access key and secret
     AccessKey {
+        /// AWS access key ID
         access_key: String,
+        /// AWS secret access key
         secret_key: String,
+        /// Optional session token for temporary credentials
         session_token: Option<String>,
     },
     /// Service account key (GCS)
-    ServiceAccount { key_file: String },
+    ServiceAccount {
+        /// Path to service account key file
+        key_file: String,
+    },
     /// Azure storage account key
     AzureKey {
+        /// Azure storage account name
         account_name: String,
+        /// Azure storage account key
         account_key: String,
     },
     /// Use environment variables

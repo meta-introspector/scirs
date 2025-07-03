@@ -168,10 +168,10 @@ pub struct DistributionInfo {
 /// Quality metrics
 #[derive(Debug, Clone)]
 pub struct QualityMetrics {
-    pub completeness: f64,     // percentage of non-missing values
-    pub consistency: f64,      // consistency score
+    pub completeness: f64,      // percentage of non-missing values
+    pub consistency: f64,       // consistency score
     pub accuracy_estimate: f64, // estimated accuracy
-    pub noise_level: f64,      // estimated noise level
+    pub noise_level: f64,       // estimated noise level
 }
 
 /// Execution environment information
@@ -276,7 +276,7 @@ pub struct PerformanceMetrics {
 #[derive(Debug, Clone)]
 pub struct BottleneckInfo {
     pub component: String,
-    pub impact_factor: f64, // multiplier for performance impact
+    pub impact_factor: f64,          // multiplier for performance impact
     pub optimization_potential: f64, // 0.0 to 1.0
     pub recommended_action: String,
 }
@@ -352,11 +352,11 @@ pub struct OptimizationRecommendation {
 /// Implementation effort levels
 #[derive(Debug, Clone)]
 pub enum EffortLevel {
-    Trivial,   // < 1 hour
-    Low,       // 1-4 hours
-    Medium,    // 1-2 days
-    High,      // 3-7 days
-    VeryHigh,  // > 1 week
+    Trivial,  // < 1 hour
+    Low,      // 1-4 hours
+    Medium,   // 1-2 days
+    High,     // 3-7 days
+    VeryHigh, // > 1 week
 }
 
 /// Compatibility impact
@@ -488,7 +488,7 @@ impl UltraThinkErrorEngine {
         // Store for learning if enabled
         if self.config.enable_learning {
             self.error_history.push(enhanced_context.clone());
-            
+
             // Limit history size
             if self.error_history.len() > self.config.cache_size_limit {
                 self.error_history.remove(0);
@@ -499,7 +499,11 @@ impl UltraThinkErrorEngine {
     }
 
     /// Analyze error using intelligent diagnostics
-    fn analyze_error(&self, error: &StatsError, context: &OperationContext) -> IntelligentDiagnostics {
+    fn analyze_error(
+        &self,
+        error: &StatsError,
+        context: &OperationContext,
+    ) -> IntelligentDiagnostics {
         // Determine root cause
         let root_cause = self.determine_root_cause(error, context);
 
@@ -550,14 +554,21 @@ impl UltraThinkErrorEngine {
     }
 
     /// Calculate probable causes with probabilities
-    fn calculate_probable_causes(&self, error: &StatsError, context: &OperationContext) -> Vec<(String, f64)> {
+    fn calculate_probable_causes(
+        &self,
+        error: &StatsError,
+        context: &OperationContext,
+    ) -> Vec<(String, f64)> {
         let mut causes = Vec::new();
 
         // Base analysis on error type and context
         match error {
             StatsError::InvalidArgument(msg) if msg.contains("empty") => {
                 causes.push(("Insufficient input data".to_string(), 0.9));
-                causes.push(("Data preprocessing removed all valid points".to_string(), 0.7));
+                causes.push((
+                    "Data preprocessing removed all valid points".to_string(),
+                    0.7,
+                ));
                 causes.push(("Incorrect data loading".to_string(), 0.5));
             }
             StatsError::ComputationError(_) => {
@@ -573,7 +584,10 @@ impl UltraThinkErrorEngine {
 
         // Adjust probabilities based on data characteristics
         if context.data_characteristics.size_info.total_elements == 0 {
-            if let Some(pos) = causes.iter().position(|(cause, _)| cause.contains("Insufficient")) {
+            if let Some(pos) = causes
+                .iter()
+                .position(|(cause, _)| cause.contains("Insufficient"))
+            {
                 causes[pos].1 = 0.95;
             }
         }
@@ -646,7 +660,7 @@ impl UltraThinkErrorEngine {
     /// Analyze computational complexity
     fn analyze_complexity(&self, context: &OperationContext) -> ComplexityAnalysis {
         let size = context.data_characteristics.size_info.total_elements;
-        
+
         // Estimate complexity based on operation and data size
         let (time_complexity, space_complexity) = match context.function_name.as_str() {
             name if name.contains("sort") => ("O(n log n)".to_string(), "O(n)".to_string()),
@@ -665,25 +679,24 @@ impl UltraThinkErrorEngine {
                     cache_efficiency: 0.8,
                     cpu_utilization: 0.6,
                 },
-                predicted_performance: vec![
-                    (size * 10, PerformanceMetrics {
+                predicted_performance: vec![(
+                    size * 10,
+                    PerformanceMetrics {
                         execution_time: Duration::from_micros(size as u64 * 10),
                         memory_usage: size * 80,
                         cache_efficiency: 0.7,
                         cpu_utilization: 0.8,
-                    }),
-                ],
+                    },
+                )],
                 scaling_factor: 1.0,
                 recommended_max_size: Some(1_000_000),
             },
-            bottleneck_analysis: vec![
-                BottleneckInfo {
-                    component: "Memory allocation".to_string(),
-                    impact_factor: 1.5,
-                    optimization_potential: 0.3,
-                    recommended_action: "Use memory pools or streaming algorithms".to_string(),
-                },
-            ],
+            bottleneck_analysis: vec![BottleneckInfo {
+                component: "Memory allocation".to_string(),
+                impact_factor: 1.5,
+                optimization_potential: 0.3,
+                recommended_action: "Use memory pools or streaming algorithms".to_string(),
+            }],
         }
     }
 
@@ -699,7 +712,8 @@ impl UltraThinkErrorEngine {
             RootCause::DataIssue(DataIssueType::InsufficientData) => {
                 strategies.push(RecoveryStrategy {
                     name: "Data Augmentation".to_string(),
-                    description: "Increase dataset size through augmentation techniques".to_string(),
+                    description: "Increase dataset size through augmentation techniques"
+                        .to_string(),
                     implementation_steps: vec![
                         ImplementationStep {
                             step_number: 1,
@@ -711,7 +725,8 @@ impl UltraThinkErrorEngine {
                         ImplementationStep {
                             step_number: 2,
                             action: "Validate data quality".to_string(),
-                            details: "Ensure augmented data maintains statistical properties".to_string(),
+                            details: "Ensure augmented data maintains statistical properties"
+                                .to_string(),
                             validation: "Run statistical tests for consistency".to_string(),
                             fallback: None,
                         },
@@ -724,13 +739,14 @@ impl UltraThinkErrorEngine {
                         performance_degradation_risk: RiskLevel::Medium,
                         compatibility_risk: RiskLevel::VeryLow,
                     },
-                    code_example: Some(r#"
+                    code_example: Some(
+                        r#"
 // Example: Bootstrap resampling for data augmentation
 use ndarray::Array1;
-use rand::{thread_rng, seq::SliceRandom};
+use rand::{rng, seq::SliceRandom};
 
 fn bootstrap_augment(data: &Array1<f64>, target_size: usize) -> Array1<f64> {
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let mut augmented = Vec::with_capacity(target_size);
     
     for _ in 0..target_size {
@@ -740,22 +756,22 @@ fn bootstrap_augment(data: &Array1<f64>, target_size: usize) -> Array1<f64> {
     
     Array1::from(augmented)
 }
-"#.to_string()),
+"#
+                        .to_string(),
+                    ),
                 });
             }
             RootCause::NumericalInstability(_) => {
                 strategies.push(RecoveryStrategy {
                     name: "Regularization".to_string(),
                     description: "Add regularization to improve numerical stability".to_string(),
-                    implementation_steps: vec![
-                        ImplementationStep {
-                            step_number: 1,
-                            action: "Add ridge regularization".to_string(),
-                            details: "Include L2 penalty term in computation".to_string(),
-                            validation: "Check condition number improvement".to_string(),
-                            fallback: Some("Use higher precision arithmetic".to_string()),
-                        },
-                    ],
+                    implementation_steps: vec![ImplementationStep {
+                        step_number: 1,
+                        action: "Add ridge regularization".to_string(),
+                        details: "Include L2 penalty term in computation".to_string(),
+                        validation: "Check condition number improvement".to_string(),
+                        fallback: Some("Use higher precision arithmetic".to_string()),
+                    }],
                     success_probability: 0.9,
                     performance_impact: PerformanceImpact::Minimal,
                     risk_assessment: RiskAssessment {
@@ -764,29 +780,31 @@ fn bootstrap_augment(data: &Array1<f64>, target_size: usize) -> Array1<f64> {
                         performance_degradation_risk: RiskLevel::Low,
                         compatibility_risk: RiskLevel::VeryLow,
                     },
-                    code_example: Some(r#"
+                    code_example: Some(
+                        r#"
 // Example: Ridge regularization for matrix operations
 fn add_ridge_regularization(matrix: &mut Array2<f64>, lambda: f64) {
     for i in 0..matrix.nrows().min(matrix.ncols()) {
         matrix[[i, i]] += lambda;
     }
 }
-"#.to_string()),
+"#
+                        .to_string(),
+                    ),
                 });
             }
             _ => {
                 strategies.push(RecoveryStrategy {
                     name: "Robust Alternative".to_string(),
-                    description: "Use robust statistical methods less sensitive to outliers".to_string(),
-                    implementation_steps: vec![
-                        ImplementationStep {
-                            step_number: 1,
-                            action: "Switch to robust estimator".to_string(),
-                            details: "Use median-based or M-estimators".to_string(),
-                            validation: "Compare results with original method".to_string(),
-                            fallback: None,
-                        },
-                    ],
+                    description: "Use robust statistical methods less sensitive to outliers"
+                        .to_string(),
+                    implementation_steps: vec![ImplementationStep {
+                        step_number: 1,
+                        action: "Switch to robust estimator".to_string(),
+                        details: "Use median-based or M-estimators".to_string(),
+                        validation: "Compare results with original method".to_string(),
+                        fallback: None,
+                    }],
                     success_probability: 0.7,
                     performance_impact: PerformanceImpact::Moderate,
                     risk_assessment: RiskAssessment {
@@ -830,14 +848,12 @@ fn add_ridge_regularization(matrix: &mut Array2<f64>, lambda: f64) {
         PerformanceAssessment {
             baseline_performance: baseline,
             strategy_performance,
-            optimization_recommendations: vec![
-                OptimizationRecommendation {
-                    recommendation: "Use SIMD operations for large datasets".to_string(),
-                    expected_improvement: 25.0,
-                    implementation_effort: EffortLevel::Low,
-                    compatibility_impact: CompatibilityImpact::None,
-                },
-            ],
+            optimization_recommendations: vec![OptimizationRecommendation {
+                recommendation: "Use SIMD operations for large datasets".to_string(),
+                expected_improvement: 25.0,
+                implementation_effort: EffortLevel::Low,
+                compatibility_impact: CompatibilityImpact::None,
+            }],
         }
     }
 
@@ -858,14 +874,12 @@ fn add_ridge_regularization(matrix: &mut Array2<f64>, lambda: f64) {
                 "Use exploratory data analysis first".to_string(),
                 "Consider preprocessing pipeline".to_string(),
             ],
-            documentation_refs: vec![
-                DocumentationRef {
-                    title: "Input Validation Best Practices".to_string(),
-                    url: "https://docs.scirs2.rs/validation".to_string(),
-                    relevance_score: 0.9,
-                    section: Some("Data Preprocessing".to_string()),
-                },
-            ],
+            documentation_refs: vec![DocumentationRef {
+                title: "Input Validation Best Practices".to_string(),
+                url: "https://docs.scirs2.rs/validation".to_string(),
+                relevance_score: 0.9,
+                section: Some("Data Preprocessing".to_string()),
+            }],
             interactive_options: vec![
                 InteractiveOption {
                     option_type: InteractiveType::AutoFix,
@@ -902,7 +916,7 @@ pub fn create_enhanced_error_context(
     data_size: usize,
 ) -> UltraThinkErrorContext {
     let mut engine = UltraThinkErrorEngine::new(ErrorEngineConfig::default());
-    
+
     let context = OperationContext {
         function_name: function_name.to_string(),
         module_path: module_path.to_string(),
@@ -942,7 +956,7 @@ pub fn create_enhanced_error_context(
                 cache_sizes: vec![32_768, 262_144, 8_388_608], // L1, L2, L3
             },
             memory_info: MemoryInfo {
-                total_memory: 16_000_000_000, // 16GB
+                total_memory: 16_000_000_000,    // 16GB
                 available_memory: 8_000_000_000, // 8GB
                 memory_pressure: 0.3,
             },
@@ -957,7 +971,7 @@ pub fn create_enhanced_error_context(
         timestamp: Instant::now(),
         stack_trace: None,
     };
-    
+
     engine.enhance_error(error, context)
 }
 
@@ -968,16 +982,18 @@ mod tests {
     #[test]
     fn test_error_enhancement_creation() {
         let error = StatsError::invalid_argument("Test error");
-        let enhanced = create_enhanced_error_context(
-            error,
-            "test_function",
-            "test_module",
-            100,
-        );
+        let enhanced = create_enhanced_error_context(error, "test_function", "test_module", 100);
 
         assert_eq!(enhanced.operation_context.function_name, "test_function");
         assert_eq!(enhanced.operation_context.module_path, "test_module");
-        assert_eq!(enhanced.operation_context.data_characteristics.size_info.total_elements, 100);
+        assert_eq!(
+            enhanced
+                .operation_context
+                .data_characteristics
+                .size_info
+                .total_elements,
+            100
+        );
         assert!(!enhanced.recovery_strategies.is_empty());
     }
 
@@ -1041,7 +1057,7 @@ mod tests {
         };
 
         let root_cause = engine.determine_root_cause(&error, &context);
-        
+
         match root_cause {
             RootCause::DataIssue(DataIssueType::InsufficientData) => {
                 // This is the expected root cause
@@ -1110,8 +1126,11 @@ mod tests {
         };
 
         let enhanced = engine.enhance_error(error, context);
-        
+
         assert!(!enhanced.recovery_strategies.is_empty());
-        assert!(enhanced.recovery_strategies.iter().any(|s| s.name.contains("Data Augmentation")));
+        assert!(enhanced
+            .recovery_strategies
+            .iter()
+            .any(|s| s.name.contains("Data Augmentation")));
     }
 }

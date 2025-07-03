@@ -2,7 +2,7 @@
 //!
 //! This module contains algorithms for computing various properties of graphs.
 
-use crate::algorithms::shortest_path::shortest_path;
+use crate::algorithms::shortest_path::dijkstra_path;
 use crate::base::{EdgeWeight, Graph, IndexType, Node};
 use std::hash::Hash;
 
@@ -36,7 +36,7 @@ where
     // Compute all-pairs shortest paths
     for i in 0..n {
         for j in i + 1..n {
-            match shortest_path(graph, &nodes[i], &nodes[j]) {
+            match dijkstra_path(graph, &nodes[i], &nodes[j]) {
                 Ok(Some(path)) => {
                     let distance: f64 = path.total_weight.into();
                     if distance > max_distance {
@@ -86,7 +86,7 @@ where
 
         for j in 0..n {
             if i != j {
-                match shortest_path(graph, &nodes[i], &nodes[j]) {
+                match dijkstra_path(graph, &nodes[i], &nodes[j]) {
                     Ok(Some(path)) => {
                         let distance: f64 = path.total_weight.into();
                         if distance > max_distance_from_i {
@@ -141,7 +141,7 @@ where
 
         for j in 0..n {
             if i != j {
-                match shortest_path(graph, &nodes[i], &nodes[j]) {
+                match dijkstra_path(graph, &nodes[i], &nodes[j]) {
                     Ok(Some(path)) => {
                         let distance: f64 = path.total_weight.into();
                         if distance > max_distance_from_i {

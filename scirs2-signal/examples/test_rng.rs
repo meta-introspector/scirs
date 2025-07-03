@@ -10,7 +10,7 @@ fn main() {
     let mut rng2 = StdRng::from_seed([0u8; 32]);
     println!("Random number from seed: {}", rng2.random::<u64>());
 
-    // Test rng (renamed from thread_rng)
+    // Test rng (renamed from rng)
     let mut rng3 = rand::rng();
     println!("Random number from rng: {}", rng3.random::<u64>());
 

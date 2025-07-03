@@ -114,8 +114,8 @@ where
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
             // In rand 0.9.0, from_rng returns the RNG directly, not a Result
-            let mut r = rand::rng();
-            StdRng::from_rng(&mut r)
+            let r = rand::rng();
+            StdRng::from_rng(r).unwrap()
         }
     };
 

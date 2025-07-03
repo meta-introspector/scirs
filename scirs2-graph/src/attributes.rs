@@ -92,12 +92,17 @@ impl AttributeValue {
     /// Get the attribute as a typed value from JSON
     pub fn as_json<T: DeserializeOwned>(&self) -> Result<T> {
         match self {
-            AttributeValue::Json(json) => serde_json::from_value(json.clone()).map_err(|_| {
-                GraphError::SerializationError("Failed to deserialize from JSON".to_string())
+            AttributeValue::Json(json) => {
+                serde_json::from_value(json.clone()).map_err(|_| GraphError::SerializationError {
+                    format: "JSON".to_string(),
+                    details: "Failed to deserialize from JSON".to_string(),
+                })
+            }
+            _ => Err(GraphError::InvalidAttribute {
+                attribute: "value".to_string(),
+                target_type: "JSON".to_string(),
+                details: "Attribute is not JSON".to_string(),
             }),
-            _ => Err(GraphError::InvalidAttribute(
-                "Attribute is not JSON".to_string(),
-            )),
         }
     }
 
@@ -269,7 +274,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> AttributedGraph<N, E, Ix> {
         value: AttributeValue,
     ) -> Result<()> {
         if !self.graph.has_edge(source, target) {
-            return Err(GraphError::EdgeNotFound);
+            return Err(GraphError::edge_not_found(source, target));
         }
         self.edge_attributes
             .entry((source.clone(), target.clone()))
@@ -572,7 +577,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> AttributedDiGraph<N, E, Ix> {
         value: AttributeValue,
     ) -> Result<()> {
         if !self.graph.has_edge(source, target) {
-            return Err(GraphError::EdgeNotFound);
+            return Err(GraphError::edge_not_found(source, target));
         }
         self.edge_attributes
             .entry((source.clone(), target.clone()))

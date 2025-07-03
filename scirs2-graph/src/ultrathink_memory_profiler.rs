@@ -7,9 +7,9 @@
 use crate::base::{EdgeWeight, Graph, Node};
 use crate::error::Result;
 use crate::ultrathink::UltrathinkProcessor;
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, SystemTime};
-use rand::Rng;
 
 /// Memory usage statistics for different components
 #[derive(Debug, Clone)]
@@ -1112,9 +1112,7 @@ pub fn generate_profiled_large_graph(
         );
 
         for i in batch_start..batch_end {
-            graph
-                .add_node(i)
-                .map_err(|e| format!("Failed to add node {}: {:?}", i, e))?;
+            graph.add_node(i);
         }
 
         if batch_start % (NODE_BATCH_SIZE * 10) == 0 {
@@ -1266,8 +1264,11 @@ pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
                         |g| {
                             // Force memory allocation to test memory management
                             let nodes: Vec<_> = g.nodes().into_iter().collect();
-                            let edges: Vec<_> =
-                                g.edges().into_iter().map(|e| (e.source, e.target, e.weight)).collect();
+                            let edges: Vec<_> = g
+                                .edges()
+                                .into_iter()
+                                .map(|e| (e.source, e.target, e.weight))
+                                .collect();
                             let _memory_intensive: Vec<f64> = edges
                                 .iter()
                                 .flat_map(|(s, t, w)| vec![*s as f64, *t as f64, *w])

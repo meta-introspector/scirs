@@ -117,7 +117,7 @@ where
     A: Float + ScalarOperand + Debug,
     D: Dimension,
 {
-    fn step(&mut self, params: &Array<A, D>, gradients: &Array<A, D>) -> Result<Array<A, D>, OptimError> {
+    fn step(&mut self, params: &Array<A, D>, gradients: &Array<A, D>) -> Result<Array<A, D>> {
         // Check if we have any optimizers
         if self.optimizers.is_empty() {
             return Err(OptimError::InvalidConfig(
@@ -277,7 +277,7 @@ where
         &mut self,
         params: Array<A, D>,
         optimizer_index: usize,
-    ) -> Result<usize, OptimError> {
+    ) -> Result<usize> {
         // Check if the optimizer index is valid
         if optimizer_index >= self.optimizers.len() {
             return Err(OptimError::InvalidConfig(format!(
@@ -559,7 +559,7 @@ where
     A: Float + ScalarOperand + Debug,
     D: Dimension,
 {
-    fn step(&mut self, params: &Array<A, D>, gradients: &Array<A, D>) -> Result<Array<A, D>, OptimError> {
+    fn step(&mut self, params: &Array<A, D>, gradients: &Array<A, D>) -> Result<Array<A, D>> {
         // Apply the inner optimizer first
         let intermediate_params = self.inner.step(params, gradients)?;
 

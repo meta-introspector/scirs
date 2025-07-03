@@ -8,9 +8,10 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::error::{IoError, Result};
-use ndarray::{Array1, Array2};
+use ndarray::{Array1, Array2, Array3};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::f32::consts::PI;
 use std::sync::{Arc, RwLock};
 
@@ -23,6 +24,12 @@ pub struct QuantumState {
     phases: Array1<f32>,
     /// Entanglement matrix for correlated operations
     entanglement: Array2<f32>,
+    /// Quantum error correction codes
+    error_correction: QuantumErrorCorrection,
+    /// Decoherence noise model
+    decoherence_rate: f32,
+    /// Quantum gate history for reversibility
+    gate_history: Vec<QuantumGate>,
 }
 
 impl QuantumState {
@@ -610,7 +617,7 @@ mod tests {
         let result = optimizer.optimize(&initial_params).unwrap();
 
         assert_eq!(result.len(), 5);
-        assert!(result.iter().all(|&x| x >= 0.0 && x <= 1.0));
+        assert!(result.iter().all(|&x| (0.0..=1.0).contains(&x)));
     }
 
     #[test]

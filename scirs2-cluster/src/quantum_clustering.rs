@@ -7,11 +7,11 @@
 //! These algorithms leverage quantum computing principles while running on classical computers,
 //! offering potential advantages in optimization landscapes and finding global optima.
 
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis, s};
-use num_traits::{Float, FromPrimitive, Zero, One};
+use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use num_traits::{Float, FromPrimitive, One, Zero};
 use std::collections::HashMap;
-use std::fmt::Debug;
 use std::f64::consts::PI;
+use std::fmt::Debug;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -174,28 +174,30 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     /// Fit the QAOA clustering model to data
     pub fn fit(&mut self, data: ArrayView2<F>) -> Result<()> {
         let (n_samples, n_features) = data.dim();
-        
+
         if n_samples == 0 || n_features == 0 {
-            return Err(ClusteringError::InvalidInput("Data cannot be empty".to_string()));
+            return Err(ClusteringError::InvalidInput(
+                "Data cannot be empty".to_string(),
+            ));
         }
 
         // Encode clustering problem as QUBO
         self.n_qubits = n_samples * self.n_clusters;
         self.setup_hamiltonian(data)?;
-        
+
         // Initialize variational parameters
         self.initialize_parameters();
-        
+
         // Initialize quantum state to uniform superposition
         let n_states = 1 << self.n_qubits;
         self.quantum_state = Array1::from_elem(n_states, 1.0 / (n_states as f64).sqrt());
-        
+
         // QAOA optimization loop
         self.optimize_parameters(data)?;
-        
+
         // Extract final clustering assignments
         self.extract_assignments()?;
-        
+
         self.fitted = true;
         Ok(())
     }
@@ -204,126 +206,132 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     fn setup_hamiltonian(&mut self, data: ArrayView2<F>) -> Result<()> {
         let n_samples = data.nrows();
         let n_vars = self.n_qubits;
-        
+
         // Initialize Hamiltonians
         self.cost_hamiltonian = Array2::zeros((n_vars, n_vars));
         self.mixer_hamiltonian = Array2::eye(n_vars);
-        
+
         match self.config.cost_function {
             QAOACostFunction::KMeans => self.setup_kmeans_hamiltonian(data)?,
             QAOACostFunction::Modularity => self.setup_modularity_hamiltonian(data)?,
             QAOACostFunction::MaxCut => self.setup_maxcut_hamiltonian(data)?,
             QAOACostFunction::Weighted => self.setup_weighted_hamiltonian(data)?,
         }
-        
+
         Ok(())
     }
 
     /// Setup K-means cost Hamiltonian
     fn setup_kmeans_hamiltonian(&mut self, data: ArrayView2<F>) -> Result<()> {
         let n_samples = data.nrows();
-        
+
         // QUBO encoding: x_ik = 1 if point i is in cluster k, 0 otherwise
         // Objective: minimize sum over clusters of within-cluster distances
         // Constraint: each point must be in exactly one cluster
-        
+
         for i in 0..n_samples {
             for j in 0..n_samples {
                 if i != j {
-                    let distance = euclidean_distance(data.row(i), data.row(j)).to_f64().unwrap();
-                    
+                    let distance = euclidean_distance(data.row(i), data.row(j))
+                        .to_f64()
+                        .unwrap();
+
                     // Add terms for points in the same cluster
                     for k in 0..self.n_clusters {
                         let idx_i = i * self.n_clusters + k;
                         let idx_j = j * self.n_clusters + k;
-                        
+
                         // Reward assigning close points to the same cluster
                         self.cost_hamiltonian[[idx_i, idx_j]] -= distance;
                     }
                 }
             }
-            
+
             // Constraint: each point in exactly one cluster
             for k1 in 0..self.n_clusters {
                 for k2 in 0..self.n_clusters {
                     if k1 != k2 {
                         let idx1 = i * self.n_clusters + k1;
                         let idx2 = i * self.n_clusters + k2;
-                        
+
                         // Penalize assigning point to multiple clusters
                         self.cost_hamiltonian[[idx1, idx2]] += 10.0; // Large penalty
                     }
                 }
             }
         }
-        
+
         Ok(())
     }
 
     /// Setup modularity cost Hamiltonian for graph clustering
     fn setup_modularity_hamiltonian(&mut self, data: ArrayView2<F>) -> Result<()> {
         let n_samples = data.nrows();
-        
+
         // Build adjacency matrix based on similarity
         let mut adjacency = Array2::zeros((n_samples, n_samples));
         let mut total_edges = 0.0;
-        
+
         for i in 0..n_samples {
-            for j in i+1..n_samples {
-                let distance = euclidean_distance(data.row(i), data.row(j)).to_f64().unwrap();
+            for j in i + 1..n_samples {
+                let distance = euclidean_distance(data.row(i), data.row(j))
+                    .to_f64()
+                    .unwrap();
                 let similarity = (-distance).exp(); // Gaussian similarity
-                
+
                 adjacency[[i, j]] = similarity;
                 adjacency[[j, i]] = similarity;
                 total_edges += 2.0 * similarity;
             }
         }
-        
+
         // Modularity matrix: B_ij = A_ij - (k_i * k_j) / (2m)
         let degrees: Array1<f64> = adjacency.sum_axis(Axis(1));
-        
+
         for i in 0..n_samples {
             for j in 0..n_samples {
                 let modularity_term = adjacency[[i, j]] - (degrees[i] * degrees[j]) / total_edges;
-                
+
                 // QUBO encoding for modularity maximization
                 for k in 0..self.n_clusters {
                     let idx_i = i * self.n_clusters + k;
                     let idx_j = j * self.n_clusters + k;
-                    
+
                     // Reward high modularity assignments
                     self.cost_hamiltonian[[idx_i, idx_j]] += modularity_term;
                 }
             }
         }
-        
+
         Ok(())
     }
 
     /// Setup max-cut cost Hamiltonian
     fn setup_maxcut_hamiltonian(&mut self, data: ArrayView2<F>) -> Result<()> {
         let n_samples = data.nrows();
-        
+
         // Create similarity graph
         for i in 0..n_samples {
-            for j in i+1..n_samples {
-                let distance = euclidean_distance(data.row(i), data.row(j)).to_f64().unwrap();
+            for j in i + 1..n_samples {
+                let distance = euclidean_distance(data.row(i), data.row(j))
+                    .to_f64()
+                    .unwrap();
                 let weight = (-distance / 2.0).exp(); // Edge weight
-                
+
                 // Max-cut: maximize edges between different clusters
                 for k1 in 0..self.n_clusters {
                     for k2 in 0..self.n_clusters {
                         if k1 != k2 {
                             let idx_i = i * self.n_clusters + k1;
                             let idx_j = j * self.n_clusters + k2;
-                            
+
                             self.cost_hamiltonian[[idx_i, idx_j]] += weight;
                         }
                     }
                 }
             }
         }
-        
+
         Ok(())
     }
 
@@ -332,21 +340,21 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
         // Combine multiple objectives with weights
         let w1 = 0.7; // K-means weight
         let w2 = 0.3; // Modularity weight
-        
+
         let mut kmeans_hamiltonian = self.cost_hamiltonian.clone();
         let mut modularity_hamiltonian = self.cost_hamiltonian.clone();
-        
+
         // Temporarily set up each Hamiltonian
         self.setup_kmeans_hamiltonian(data)?;
         kmeans_hamiltonian = self.cost_hamiltonian.clone();
-        
+
         self.cost_hamiltonian.fill(0.0);
         self.setup_modularity_hamiltonian(data)?;
         modularity_hamiltonian = self.cost_hamiltonian.clone();
-        
+
         // Combine with weights
         self.cost_hamiltonian = &kmeans_hamiltonian * w1 + &modularity_hamiltonian * w2;
-        
+
         Ok(())
     }
 
@@ -354,14 +362,14 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     fn initialize_parameters(&mut self) {
         self.gamma_params = Array1::zeros(self.config.p_layers);
         self.beta_params = Array1::zeros(self.config.p_layers);
-        
+
         // Initialize with random small values
         use rand::Rng;
         let mut rng = rand::rng();
-        
+
         for i in 0..self.config.p_layers {
             self.gamma_params[i] = rng.random_range(0.0..PI);
-            self.beta_params[i] = rng.random_range(0.0..PI/2.0);
+            self.beta_params[i] = rng.random_range(0.0..PI / 2.0);
         }
     }
 
@@ -370,37 +378,37 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
         let mut best_energy = f64::INFINITY;
         let mut best_gamma = self.gamma_params.clone();
         let mut best_beta = self.beta_params.clone();
-        
+
         for iteration in 0..self.config.max_iterations {
             // Apply QAOA circuit
             self.apply_qaoa_circuit()?;
-            
+
             // Measure expectation value
             let energy = self.measure_expectation_value()?;
-            
+
             if energy < best_energy {
                 best_energy = energy;
                 best_gamma = self.gamma_params.clone();
                 best_beta = self.beta_params.clone();
             }
-            
+
             // Update parameters using gradient descent
             self.update_parameters()?;
-            
+
             // Check convergence
             if iteration > 10 && (best_energy - energy).abs() < self.config.tolerance {
                 break;
             }
         }
-        
+
         // Set best parameters
         self.gamma_params = best_gamma;
         self.beta_params = best_beta;
         self.final_energy = Some(best_energy);
-        
+
         // Final circuit application
         self.apply_qaoa_circuit()?;
-        
+
         Ok(())
     }
 
@@ -409,15 +417,15 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
         // Start with uniform superposition
         let n_states = self.quantum_state.len();
         self.quantum_state.fill(1.0 / (n_states as f64).sqrt());
-        
+
         for layer in 0..self.config.p_layers {
             // Apply cost unitary U_C(gamma)
             self.apply_cost_unitary(self.gamma_params[layer])?;
-            
+
             // Apply mixer unitary U_M(beta)
             self.apply_mixer_unitary(self.beta_params[layer])?;
         }
-        
+
         Ok(())
     }
 
@@ -425,13 +433,13 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     fn apply_cost_unitary(&mut self, gamma: f64) -> Result<()> {
         // Simplified cost unitary application
         // In practice, this would involve matrix exponentiation
-        
+
         let n_states = self.quantum_state.len();
         let mut new_state = Array1::zeros(n_states);
-        
+
         for i in 0..n_states {
             let mut phase_shift = 0.0;
-            
+
             // Calculate phase based on cost Hamiltonian
             // This is a simplified version - full implementation would be more complex
             for j in 0..self.n_qubits {
@@ -439,12 +447,12 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
                     phase_shift += gamma * self.cost_hamiltonian[[j, j]];
                 }
             }
-            
+
             let amplitude = self.quantum_state[i];
             // Apply phase rotation: e^(i*theta) = cos(theta) + i*sin(theta), taking real part
             new_state[i] = amplitude * phase_shift.cos();
         }
-        
+
         self.quantum_state = new_state;
         Ok(())
     }
@@ -454,14 +462,14 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
         // Apply X rotations to all qubits
         let n_qubits = self.n_qubits;
         let n_states = self.quantum_state.len();
-        
+
         let mut new_state = Array1::zeros(n_states);
-        
+
         for state in 0..n_states {
             let amplitude = self.quantum_state[state];
             let cos_beta = (beta).cos();
             let sin_beta = (beta).sin();
-            
+
             // Apply X rotation to each qubit
             for qubit in 0..n_qubits {
                 let flipped_state = state ^ (1 << qubit);
@@ -469,13 +477,13 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
                 new_state[flipped_state] += sin_beta * amplitude;
             }
         }
-        
+
         // Normalize
         let norm = new_state.mapv(|x| x * x).sum().sqrt();
         if norm > 1e-10 {
             self.quantum_state = new_state / norm;
         }
-        
+
         Ok(())
     }
 
@@ -483,18 +491,18 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     fn measure_expectation_value(&self) -> Result<f64> {
         let mut expectation = 0.0;
         let n_states = self.quantum_state.len();
-        
+
         for i in 0..n_states {
             for j in 0..n_states {
                 let prob_i = self.quantum_state[i] * self.quantum_state[i];
                 let prob_j = self.quantum_state[j] * self.quantum_state[j];
-                
+
                 // Calculate Hamiltonian matrix element for states i, j
                 let hamiltonian_element = self.calculate_hamiltonian_element(i, j);
                 expectation += prob_i * hamiltonian_element;
             }
         }
-        
+
         Ok(expectation)
     }
 
@@ -503,19 +511,19 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
         if state_i != state_j {
             return 0.0; // Diagonal Hamiltonian
         }
-        
+
         let mut energy = 0.0;
-        
+
         // Calculate energy based on qubit configuration
         for i in 0..self.n_qubits {
             for j in 0..self.n_qubits {
                 let bit_i = (state_i >> i) & 1;
                 let bit_j = (state_i >> j) & 1;
-                
+
                 energy += self.cost_hamiltonian[[i, j]] * (bit_i * bit_j) as f64;
             }
         }
-        
+
         energy
     }
 
@@ -523,39 +531,39 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     fn update_parameters(&mut self) -> Result<()> {
         // Simplified gradient calculation using finite differences
         let epsilon = 1e-8;
-        
+
         for i in 0..self.config.p_layers {
             // Gradient for gamma
             let gamma_plus = self.gamma_params[i] + epsilon;
             let gamma_minus = self.gamma_params[i] - epsilon;
-            
+
             self.gamma_params[i] = gamma_plus;
             self.apply_qaoa_circuit()?;
             let energy_plus = self.measure_expectation_value()?;
-            
+
             self.gamma_params[i] = gamma_minus;
             self.apply_qaoa_circuit()?;
             let energy_minus = self.measure_expectation_value()?;
-            
+
             let gamma_gradient = (energy_plus - energy_minus) / (2.0 * epsilon);
             self.gamma_params[i] -= self.config.learning_rate * gamma_gradient;
-            
+
             // Gradient for beta
             let beta_plus = self.beta_params[i] + epsilon;
             let beta_minus = self.beta_params[i] - epsilon;
-            
+
             self.beta_params[i] = beta_plus;
             self.apply_qaoa_circuit()?;
             let energy_plus = self.measure_expectation_value()?;
-            
+
             self.beta_params[i] = beta_minus;
             self.apply_qaoa_circuit()?;
             let energy_minus = self.measure_expectation_value()?;
-            
+
             let beta_gradient = (energy_plus - energy_minus) / (2.0 * epsilon);
             self.beta_params[i] -= self.config.learning_rate * beta_gradient;
         }
-        
+
         Ok(())
     }
 
@@ -563,11 +571,11 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     fn extract_assignments(&mut self) -> Result<()> {
         let n_samples = self.n_qubits / self.n_clusters;
         let mut assignments = Array1::zeros(n_samples);
-        
+
         // Sample from quantum state to get most likely configuration
         let mut best_probability = 0.0;
         let mut best_state = 0;
-        
+
         for state in 0..self.quantum_state.len() {
             let probability = self.quantum_state[state] * self.quantum_state[state];
             if probability > best_probability {
@@ -575,7 +583,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
                 best_state = state;
             }
         }
-        
+
         // Decode bit string to cluster assignments
         for i in 0..n_samples {
             for k in 0..self.n_clusters {
@@ -586,7 +594,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
                 }
             }
         }
-        
+
         self.final_assignments = Some(assignments);
         Ok(())
     }
@@ -595,10 +603,10 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     pub fn predict(&self, data: ArrayView2<F>) -> Result<Array1<usize>> {
         if !self.fitted {
             return Err(ClusteringError::InvalidInput(
-                "Model must be fitted before prediction".to_string()
+                "Model must be fitted before prediction".to_string(),
             ));
         }
-        
+
         // For new data, use nearest cluster assignment based on learned parameters
         // This is a simplified implementation
         let assignments = self.final_assignments.as_ref().unwrap();
@@ -649,21 +657,22 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     /// Fit the VQE clustering model
     pub fn fit(&mut self, data: ArrayView2<F>) -> Result<()> {
         let (n_samples, _) = data.dim();
-        
+
         // Set up problem encoding
-        self.n_qubits = (n_samples as f64).log2().ceil() as usize + (self.n_clusters as f64).log2().ceil() as usize;
-        
+        self.n_qubits = (n_samples as f64).log2().ceil() as usize
+            + (self.n_clusters as f64).log2().ceil() as usize;
+
         // Initialize circuit parameters
         let n_params = self.calculate_parameter_count();
         self.circuit_parameters = Array1::zeros(n_params);
         self.initialize_circuit_parameters();
-        
+
         // Build clustering Hamiltonian
         self.build_clustering_hamiltonian(data)?;
-        
+
         // VQE optimization loop
         self.optimize_circuit_parameters()?;
-        
+
         self.fitted = true;
         Ok(())
     }
@@ -694,7 +703,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     fn initialize_circuit_parameters(&mut self) {
         use rand::Rng;
         let mut rng = rand::rng();
-        
+
         for i in 0..self.circuit_parameters.len() {
             self.circuit_parameters[i] = rng.random_range(-PI..PI);
         }
@@ -705,34 +714,36 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
         let n_samples = data.nrows();
         let hamiltonian_size = 1 << self.n_qubits;
         self.hamiltonian = Array2::zeros((hamiltonian_size, hamiltonian_size));
-        
+
         // Encode clustering problem as a Hamiltonian
         // H = sum_i sum_j w_ij (1 - Z_i Z_j) / 2  (for points in same cluster)
-        
+
         for i in 0..n_samples {
-            for j in i+1..n_samples {
-                let distance = euclidean_distance(data.row(i), data.row(j)).to_f64().unwrap();
+            for j in i + 1..n_samples {
+                let distance = euclidean_distance(data.row(i), data.row(j))
+                    .to_f64()
+                    .unwrap();
                 let weight = (-distance).exp(); // Similarity weight
-                
+
                 // Add Hamiltonian terms for this pair
                 self.add_ising_term(i, j, weight);
             }
         }
-        
+
         Ok(())
     }
 
     /// Add Ising model term to Hamiltonian
     fn add_ising_term(&mut self, qubit_i: usize, qubit_j: usize, weight: f64) {
         let n_states = self.hamiltonian.nrows();
-        
+
         for state in 0..n_states {
             let bit_i = (state >> qubit_i) & 1;
             let bit_j = (state >> qubit_j) & 1;
-            
+
             // Z_i Z_j = +1 if bits are same, -1 if different
             let zz_value = if bit_i == bit_j { 1.0 } else { -1.0 };
-            
+
             // H term: w_ij (1 - Z_i Z_j) / 2
             self.hamiltonian[[state, state]] += weight * (1.0 - zz_value) / 2.0;
         }
@@ -742,19 +753,19 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     fn optimize_circuit_parameters(&mut self) -> Result<()> {
         let mut best_energy = f64::INFINITY;
         let mut best_parameters = self.circuit_parameters.clone();
-        
+
         for iteration in 0..self.config.max_iterations {
             // Prepare quantum state with current parameters
             let quantum_state = self.prepare_ansatz_state()?;
-            
+
             // Calculate expectation value
             let energy = self.calculate_expectation_value(&quantum_state)?;
-            
+
             if energy < best_energy {
                 best_energy = energy;
                 best_parameters = self.circuit_parameters.clone();
             }
-            
+
             // Update parameters
             match self.config.optimizer {
                 VQEOptimizer::GradientDescent => self.gradient_descent_update()?,
@@ -762,16 +773,16 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
                 VQEOptimizer::COBYLA => self.cobyla_update()?,
                 VQEOptimizer::SPSA => self.spsa_update(iteration)?,
             }
-            
+
             // Check convergence
             if iteration > 10 && (best_energy - energy).abs() < self.config.tolerance {
                 break;
             }
         }
-        
+
         self.ground_state_energy = Some(best_energy);
         self.optimal_parameters = Some(best_parameters);
-        
+
         Ok(())
     }
 
@@ -780,21 +791,21 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
         let n_states = 1 << self.n_qubits;
         let mut state = Array1::zeros(n_states);
         state[0] = 1.0; // Start with |0...0⟩ state
-        
+
         match self.config.ansatz {
             VQEAnsatz::HardwareEfficient => self.apply_hardware_efficient_ansatz(&mut state)?,
             VQEAnsatz::ClusteringSpecific => self.apply_clustering_ansatz(&mut state)?,
             VQEAnsatz::UCC => self.apply_ucc_ansatz(&mut state)?,
             VQEAnsatz::Adaptive => self.apply_adaptive_ansatz(&mut state)?,
         }
-        
+
         Ok(state)
     }
 
     /// Apply hardware-efficient ansatz
     fn apply_hardware_efficient_ansatz(&self, state: &mut Array1<f64>) -> Result<()> {
         let mut param_idx = 0;
-        
+
         for layer in 0..self.config.circuit_depth {
             // Single-qubit rotations
             for qubit in 0..self.n_qubits {
@@ -802,16 +813,16 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
                 let ry_angle = self.circuit_parameters[param_idx + 1];
                 let rz_angle = self.circuit_parameters[param_idx + 2];
                 param_idx += 3;
-                
+
                 self.apply_rotation(state, qubit, rx_angle, ry_angle, rz_angle)?;
             }
-            
+
             // Entangling gates (CNOT ladder)
             for qubit in 0..self.n_qubits - 1 {
                 self.apply_cnot(state, qubit, qubit + 1)?;
             }
         }
-        
+
         Ok(())
     }
 
@@ -819,25 +830,25 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     fn apply_clustering_ansatz(&self, state: &mut Array1<f64>) -> Result<()> {
         // Custom ansatz designed for clustering problems
         let mut param_idx = 0;
-        
+
         for layer in 0..self.config.circuit_depth {
             // Rotation layer
             for qubit in 0..self.n_qubits {
                 let angle1 = self.circuit_parameters[param_idx];
                 let angle2 = self.circuit_parameters[param_idx + 1];
                 param_idx += 2;
-                
+
                 self.apply_rotation(state, qubit, angle1, angle2, 0.0)?;
             }
-            
+
             // Entangling pattern specific to clustering
-            for i in 0..self.n_qubits/2 {
-                for j in self.n_qubits/2..self.n_qubits {
+            for i in 0..self.n_qubits / 2 {
+                for j in self.n_qubits / 2..self.n_qubits {
                     self.apply_cnot(state, i, j)?;
                 }
             }
         }
-        
+
         Ok(())
     }
 
@@ -845,19 +856,19 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     fn apply_ucc_ansatz(&self, state: &mut Array1<f64>) -> Result<()> {
         // Simplified unitary coupled cluster ansatz
         let mut param_idx = 0;
-        
+
         for i in 0..self.n_qubits {
-            for j in i+1..self.n_qubits {
+            for j in i + 1..self.n_qubits {
                 if param_idx < self.circuit_parameters.len() {
                     let angle = self.circuit_parameters[param_idx];
                     param_idx += 1;
-                    
+
                     // Apply parameterized two-qubit gate
                     self.apply_parameterized_two_qubit_gate(state, i, j, angle)?;
                 }
             }
         }
-        
+
         Ok(())
     }
 
@@ -865,40 +876,47 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     fn apply_adaptive_ansatz(&self, state: &mut Array1<f64>) -> Result<()> {
         // Start with simple ansatz, can be expanded
         let mut param_idx = 0;
-        
+
         for qubit in 0..self.n_qubits {
             if param_idx + 1 < self.circuit_parameters.len() {
                 let rx_angle = self.circuit_parameters[param_idx];
                 let ry_angle = self.circuit_parameters[param_idx + 1];
                 param_idx += 2;
-                
+
                 self.apply_rotation(state, qubit, rx_angle, ry_angle, 0.0)?;
             }
         }
-        
+
         Ok(())
     }
 
     /// Apply single-qubit rotations
-    fn apply_rotation(&self, state: &mut Array1<f64>, qubit: usize, rx: f64, ry: f64, rz: f64) -> Result<()> {
+    fn apply_rotation(
+        &self,
+        state: &mut Array1<f64>,
+        qubit: usize,
+        rx: f64,
+        ry: f64,
+        rz: f64,
+    ) -> Result<()> {
         // Simplified rotation application (would be more complex in practice)
         let n_states = state.len();
         let mut new_state = state.clone();
-        
-        let cos_rx = (rx/2.0).cos();
-        let sin_rx = (rx/2.0).sin();
-        
+
+        let cos_rx = (rx / 2.0).cos();
+        let sin_rx = (rx / 2.0).sin();
+
         for s in 0..n_states {
             let bit = (s >> qubit) & 1;
             let flipped_state = s ^ (1 << qubit);
-            
+
             if bit == 0 {
                 new_state[s] = cos_rx * state[s] + sin_rx * state[flipped_state];
             } else {
                 new_state[s] = cos_rx * state[s] - sin_rx * state[flipped_state];
             }
         }
-        
+
         *state = new_state;
         Ok(())
     }
@@ -907,7 +925,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     fn apply_cnot(&self, state: &mut Array1<f64>, control: usize, target: usize) -> Result<()> {
         let n_states = state.len();
         let mut new_state = state.clone();
-        
+
         for s in 0..n_states {
             let control_bit = (s >> control) & 1;
             if control_bit == 1 {
@@ -916,56 +934,62 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
                 new_state[s] = 0.0;
             }
         }
-        
+
         *state = new_state;
         Ok(())
     }
 
     /// Apply parameterized two-qubit gate
-    fn apply_parameterized_two_qubit_gate(&self, state: &mut Array1<f64>, qubit1: usize, qubit2: usize, angle: f64) -> Result<()> {
+    fn apply_parameterized_two_qubit_gate(
+        &self,
+        state: &mut Array1<f64>,
+        qubit1: usize,
+        qubit2: usize,
+        angle: f64,
+    ) -> Result<()> {
         // Simplified implementation
         let cos_angle = angle.cos();
         let sin_angle = angle.sin();
-        
+
         // Apply entangling rotation
         self.apply_rotation(state, qubit1, angle, 0.0, 0.0)?;
         self.apply_cnot(state, qubit1, qubit2)?;
         self.apply_rotation(state, qubit2, 0.0, angle, 0.0)?;
-        
+
         Ok(())
     }
 
     /// Calculate expectation value of Hamiltonian
     fn calculate_expectation_value(&self, state: &Array1<f64>) -> Result<f64> {
         let mut expectation = 0.0;
-        
+
         for i in 0..state.len() {
             for j in 0..state.len() {
                 expectation += state[i] * self.hamiltonian[[i, j]] * state[j];
             }
         }
-        
+
         Ok(expectation)
     }
 
     /// Gradient descent parameter update
     fn gradient_descent_update(&mut self) -> Result<()> {
         let epsilon = 1e-8;
-        
+
         for i in 0..self.circuit_parameters.len() {
             // Calculate gradient using finite differences
             self.circuit_parameters[i] += epsilon;
             let state_plus = self.prepare_ansatz_state()?;
             let energy_plus = self.calculate_expectation_value(&state_plus)?;
-            
+
             self.circuit_parameters[i] -= 2.0 * epsilon;
             let state_minus = self.prepare_ansatz_state()?;
             let energy_minus = self.calculate_expectation_value(&state_minus)?;
-            
+
             let gradient = (energy_plus - energy_minus) / (2.0 * epsilon);
             self.circuit_parameters[i] += epsilon - self.config.learning_rate * gradient;
         }
-        
+
         Ok(())
     }
 
@@ -985,36 +1009,36 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     fn spsa_update(&mut self, iteration: usize) -> Result<()> {
         use rand::Rng;
         let mut rng = rand::rng();
-        
+
         let ak = 0.1 / (iteration as f64 + 1.0).powf(0.602);
         let ck = 0.1 / (iteration as f64 + 1.0).powf(0.101);
-        
+
         // Generate random perturbation
         let mut delta = Array1::zeros(self.circuit_parameters.len());
         for i in 0..delta.len() {
             delta[i] = if rng.random::<f64>() > 0.5 { 1.0 } else { -1.0 };
         }
-        
+
         // Evaluate at perturbed points
         let params_plus = &self.circuit_parameters + &(&delta * ck);
         let params_minus = &self.circuit_parameters - &(&delta * ck);
-        
+
         self.circuit_parameters = params_plus;
         let state_plus = self.prepare_ansatz_state()?;
         let energy_plus = self.calculate_expectation_value(&state_plus)?;
-        
+
         self.circuit_parameters = params_minus;
         let state_minus = self.prepare_ansatz_state()?;
         let energy_minus = self.calculate_expectation_value(&state_minus)?;
-        
+
         // SPSA gradient estimate
         let gradient_estimate = (energy_plus - energy_minus) / (2.0 * ck);
-        
+
         // Update parameters
         for i in 0..self.circuit_parameters.len() {
             self.circuit_parameters[i] -= ak * gradient_estimate / delta[i];
         }
-        
+
         Ok(())
     }
 
@@ -1022,19 +1046,19 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     pub fn predict(&self, data: ArrayView2<F>) -> Result<Array1<usize>> {
         if !self.fitted {
             return Err(ClusteringError::InvalidInput(
-                "Model must be fitted before prediction".to_string()
+                "Model must be fitted before prediction".to_string(),
             ));
         }
-        
+
         // Simplified prediction - in practice would use the learned state
         let n_samples = data.nrows();
         let mut assignments = Array1::zeros(n_samples);
-        
+
         // Assign based on simple nearest neighbor to learned clusters
         for i in 0..n_samples {
             assignments[i] = i % self.n_clusters; // Simplified
         }
-        
+
         Ok(assignments)
     }
 
@@ -1059,10 +1083,10 @@ pub fn qaoa_clustering<F: Float + FromPrimitive + Debug>(
     let config = QAOAConfig::default();
     let mut qaoa = QAOAClustering::new(n_clusters, config);
     qaoa.fit(data)?;
-    
+
     let assignments = qaoa.predict(data)?;
     let energy = qaoa.final_energy().unwrap_or(0.0);
-    
+
     Ok((assignments, energy))
 }
 
@@ -1074,10 +1098,10 @@ pub fn vqe_clustering<F: Float + FromPrimitive + Debug>(
     let config = VQEConfig::default();
     let mut vqe = VQEClustering::new(n_clusters, config);
     vqe.fit(data)?;
-    
+
     let assignments = vqe.predict(data)?;
     let energy = vqe.ground_state_energy().unwrap_or(0.0);
-    
+
     Ok((assignments, energy))
 }
 
@@ -1159,23 +1183,25 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
     /// Fit the quantum annealing clustering model
     pub fn fit(&mut self, data: ArrayView2<F>) -> Result<()> {
         let (n_samples, _) = data.dim();
-        
+
         if n_samples == 0 {
-            return Err(ClusteringError::InvalidInput("Data cannot be empty".to_string()));
+            return Err(ClusteringError::InvalidInput(
+                "Data cannot be empty".to_string(),
+            ));
         }
 
         // Build Ising model from data
         self.build_ising_model(data)?;
-        
+
         // Initialize spin configuration
         self.initialize_spins(n_samples)?;
-        
+
         // Create temperature schedule
         self.create_temperature_schedule();
-        
+
         // Run quantum annealing
         self.run_annealing()?;
-        
+
         self.fitted = true;
         Ok(())
     }
@@ -1186,22 +1212,24 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
         // Use log encoding: ceil(log2(n_clusters)) qubits per sample
         let qubits_per_sample = (self.n_clusters as f64).log2().ceil() as usize;
         let total_qubits = n_samples * qubits_per_sample;
-        
+
         self.ising_matrix = Some(Array2::zeros((total_qubits, total_qubits)));
         let ising_matrix = self.ising_matrix.as_mut().unwrap();
-        
+
         // Build interaction matrix based on data similarities
         for i in 0..n_samples {
-            for j in i+1..n_samples {
-                let distance = euclidean_distance(data.row(i), data.row(j)).to_f64().unwrap();
+            for j in i + 1..n_samples {
+                let distance = euclidean_distance(data.row(i), data.row(j))
+                    .to_f64()
+                    .unwrap();
                 let similarity = (-distance / 2.0).exp(); // Gaussian similarity
-                
+
                 // Add interactions between qubits representing these samples
                 for qi in 0..qubits_per_sample {
                     for qj in 0..qubits_per_sample {
                         let qubit_i = i * qubits_per_sample + qi;
                         let qubit_j = j * qubits_per_sample + qj;
-                        
+
                         // Ising interaction: encourage similar samples to have similar spin patterns
                         ising_matrix[[qubit_i, qubit_j]] = similarity;
                         ising_matrix[[qubit_j, qubit_i]] = similarity;
@@ -1209,7 +1237,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
                 }
             }
         }
-        
+
         Ok(())
     }
 
@@ -1217,7 +1245,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
     fn initialize_spins(&mut self, n_samples: usize) -> Result<()> {
         let qubits_per_sample = (self.n_clusters as f64).log2().ceil() as usize;
         let total_qubits = n_samples * qubits_per_sample;
-        
+
         use rand::Rng;
         let mut rng = if let Some(seed) = self.config.random_seed {
             use rand::SeedableRng;
@@ -1225,34 +1253,36 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
         } else {
             rand::rng()
         };
-        
+
         let mut spins = Array1::zeros(total_qubits);
         for i in 0..total_qubits {
             spins[i] = if rng.random::<f64>() > 0.5 { 1 } else { -1 };
         }
-        
+
         self.spin_configuration = Some(spins.clone());
         self.best_configuration = Some(spins);
-        self.best_energy = Some(self.calculate_ising_energy(&self.spin_configuration.as_ref().unwrap()));
-        
+        self.best_energy =
+            Some(self.calculate_ising_energy(&self.spin_configuration.as_ref().unwrap()));
+
         Ok(())
     }
 
     /// Create temperature schedule for annealing
     fn create_temperature_schedule(&mut self) {
         let mut schedule = Vec::with_capacity(self.config.annealing_steps);
-        
+
         for step in 0..self.config.annealing_steps {
             let progress = step as f64 / (self.config.annealing_steps - 1) as f64;
-            
+
             let temperature = match self.config.cooling_schedule {
                 CoolingSchedule::Linear => {
-                    self.config.initial_temperature * (1.0 - progress) + 
-                    self.config.final_temperature * progress
+                    self.config.initial_temperature * (1.0 - progress)
+                        + self.config.final_temperature * progress
                 }
                 CoolingSchedule::Exponential => {
-                    self.config.initial_temperature * 
-                    (self.config.final_temperature / self.config.initial_temperature).powf(progress)
+                    self.config.initial_temperature
+                        * (self.config.final_temperature / self.config.initial_temperature)
+                            .powf(progress)
                 }
                 CoolingSchedule::Logarithmic => {
                     self.config.initial_temperature / (1.0 + progress.ln())
@@ -1261,10 +1291,10 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
                     self.config.initial_temperature * (1.0 - progress).powf(alpha)
                 }
             };
-            
+
             schedule.push(temperature.max(self.config.final_temperature));
         }
-        
+
         self.temperature_schedule = schedule;
     }
 
@@ -1277,23 +1307,23 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
         } else {
             rand::rng()
         };
-        
+
         let spins = self.spin_configuration.as_mut().unwrap();
         let n_qubits = spins.len();
-        
+
         for temperature in &self.temperature_schedule {
             for _ in 0..self.config.mc_sweeps {
                 // Monte Carlo sweep with quantum tunneling
                 for qubit in 0..n_qubits {
                     // Calculate energy change for flipping this qubit
                     let delta_e = self.calculate_flip_energy_change(spins, qubit);
-                    
+
                     // Quantum tunneling probability (includes classical thermal + quantum effects)
                     let tunnel_probability = self.quantum_tunnel_probability(delta_e, *temperature);
-                    
+
                     if rng.random::<f64>() < tunnel_probability {
                         spins[qubit] *= -1; // Flip spin
-                        
+
                         // Update best configuration if we found a better one
                         let current_energy = self.calculate_ising_energy(spins);
                         if current_energy < self.best_energy.unwrap() {
@@ -1304,7 +1334,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
                 }
             }
         }
-        
+
         Ok(())
     }
 
@@ -1312,16 +1342,17 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
     fn calculate_flip_energy_change(&self, spins: &Array1<i8>, qubit: usize) -> f64 {
         let ising_matrix = self.ising_matrix.as_ref().unwrap();
         let current_spin = spins[qubit];
-        
+
         let mut delta_e = 0.0;
-        
+
         // Calculate interaction energy change
         for j in 0..spins.len() {
             if j != qubit {
-                delta_e += 2.0 * (current_spin as f64) * (spins[j] as f64) * ising_matrix[[qubit, j]];
+                delta_e +=
+                    2.0 * (current_spin as f64) * (spins[j] as f64) * ising_matrix[[qubit, j]];
             }
         }
-        
+
         delta_e
     }
 
@@ -1341,13 +1372,13 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
     fn calculate_ising_energy(&self, spins: &Array1<i8>) -> f64 {
         let ising_matrix = self.ising_matrix.as_ref().unwrap();
         let mut energy = 0.0;
-        
+
         for i in 0..spins.len() {
-            for j in i+1..spins.len() {
+            for j in i + 1..spins.len() {
                 energy -= ising_matrix[[i, j]] * (spins[i] as f64) * (spins[j] as f64);
             }
         }
-        
+
         energy
     }
 
@@ -1356,7 +1387,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
         let n_samples = spins.len() / (self.n_clusters as f64).log2().ceil() as usize;
         let qubits_per_sample = (self.n_clusters as f64).log2().ceil() as usize;
         let mut assignments = Array1::zeros(n_samples);
-        
+
         for sample in 0..n_samples {
             let mut cluster_id = 0;
             for bit in 0..qubits_per_sample {
@@ -1367,7 +1398,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
             }
             assignments[sample] = (cluster_id % self.n_clusters);
         }
-        
+
         assignments
     }
 
@@ -1375,10 +1406,10 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
     pub fn predict(&self, data: ArrayView2<F>) -> Result<Array1<usize>> {
         if !self.fitted {
             return Err(ClusteringError::InvalidInput(
-                "Model must be fitted before prediction".to_string()
+                "Model must be fitted before prediction".to_string(),
             ));
         }
-        
+
         let best_spins = self.best_configuration.as_ref().unwrap();
         Ok(self.spins_to_clusters(best_spins))
     }
@@ -1402,10 +1433,10 @@ pub fn quantum_annealing_clustering<F: Float + FromPrimitive + Debug>(
     let config = QuantumAnnealingConfig::default();
     let mut annealer = QuantumAnnealingClustering::new(n_clusters, config);
     annealer.fit(data)?;
-    
+
     let assignments = annealer.predict(data)?;
     let energy = annealer.best_energy().unwrap_or(0.0);
-    
+
     Ok((assignments, energy))
 }
 
@@ -1438,7 +1469,7 @@ mod tests {
         assert_eq!(config.cost_function, QAOACostFunction::KMeans);
     }
 
-    #[test] 
+    #[test]
     fn test_vqe_config_defaults() {
         let config = VQEConfig::default();
         assert_eq!(config.ansatz, VQEAnsatz::HardwareEfficient);
@@ -1448,16 +1479,12 @@ mod tests {
 
     #[test]
     fn test_small_qaoa_clustering() {
-        let data = Array2::from_shape_vec((4, 2), vec![
-            1.0, 1.0,
-            1.1, 1.1,
-            5.0, 5.0,
-            5.1, 5.1,
-        ]).unwrap();
+        let data =
+            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
 
         let result = qaoa_clustering(data.view(), 2);
         assert!(result.is_ok());
-        
+
         let (assignments, energy) = result.unwrap();
         assert_eq!(assignments.len(), 4);
         assert!(energy.is_finite());
@@ -1486,7 +1513,7 @@ mod tests {
         let exponential = CoolingSchedule::Exponential;
         let logarithmic = CoolingSchedule::Logarithmic;
         let power_law = CoolingSchedule::PowerLaw(2.0);
-        
+
         assert_eq!(linear, CoolingSchedule::Linear);
         assert_eq!(exponential, CoolingSchedule::Exponential);
         assert_eq!(logarithmic, CoolingSchedule::Logarithmic);
@@ -1495,16 +1522,12 @@ mod tests {
 
     #[test]
     fn test_small_quantum_annealing_clustering() {
-        let data = Array2::from_shape_vec((4, 2), vec![
-            1.0, 1.0,
-            1.1, 1.1,
-            5.0, 5.0,
-            5.1, 5.1,
-        ]).unwrap();
+        let data =
+            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
 
         let result = quantum_annealing_clustering(data.view(), 2);
         assert!(result.is_ok());
-        
+
         let (assignments, energy) = result.unwrap();
         assert_eq!(assignments.len(), 4);
         assert!(energy.is_finite());
@@ -1512,14 +1535,11 @@ mod tests {
 
     #[test]
     fn test_quantum_annealing_with_custom_config() {
-        let data = Array2::from_shape_vec((6, 2), vec![
-            0.0, 0.0,
-            0.1, 0.1,
-            0.2, 0.2,
-            5.0, 5.0,
-            5.1, 5.1,
-            5.2, 5.2,
-        ]).unwrap();
+        let data = Array2::from_shape_vec(
+            (6, 2),
+            vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
+        )
+        .unwrap();
 
         let config = QuantumAnnealingConfig {
             initial_temperature: 5.0,
@@ -1537,7 +1557,7 @@ mod tests {
         let assignments = annealer.predict(data.view());
         assert!(assignments.is_ok());
         assert_eq!(assignments.unwrap().len(), 6);
-        
+
         assert!(annealer.best_energy().is_some());
         assert_eq!(annealer.temperature_schedule().len(), 100);
     }

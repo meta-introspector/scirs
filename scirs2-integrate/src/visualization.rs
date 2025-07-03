@@ -6135,7 +6135,7 @@ pub mod advanced_interactive_3d {
     }
 
     /// Visual appearance controls
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     pub struct Appearance3DControls {
         /// Color mapping configuration
         pub color_mapping: ColorMapping3D,
@@ -6498,7 +6498,7 @@ pub mod advanced_interactive_3d {
     }
 
     /// Data filtering controls for 3D visualization
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     pub struct DataFiltering3D {
         /// Spatial filters
         pub spatial_filters: Vec<SpatialFilter>,
@@ -6830,7 +6830,7 @@ pub mod advanced_interactive_3d {
     }
 
     /// Post-processing effects
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     pub struct PostProcessingEffects {
         /// Anti-aliasing
         pub anti_aliasing: AntiAliasingConfig,
@@ -6844,19 +6844,6 @@ pub mod advanced_interactive_3d {
         pub tone_mapping: ToneMappingConfig,
         /// Color grading
         pub color_grading: ColorGradingConfig,
-    }
-
-    impl Default for PostProcessingEffects {
-        fn default() -> Self {
-            Self {
-                anti_aliasing: AntiAliasingConfig::default(),
-                depth_of_field: DepthOfFieldConfig::default(),
-                motion_blur: MotionBlurConfig::default(),
-                bloom: BloomConfig::default(),
-                tone_mapping: ToneMappingConfig::default(),
-                color_grading: ColorGradingConfig::default(),
-            }
-        }
     }
 
     /// Anti-aliasing configuration
@@ -7890,7 +7877,6 @@ pub mod advanced_interactive_3d {
         }
     }
 
-
     impl Default for Camera3DControls {
         fn default() -> Self {
             Self {
@@ -7944,7 +7930,6 @@ pub mod advanced_interactive_3d {
         }
     }
 
-
     impl Default for FadeEffectConfig {
         fn default() -> Self {
             Self {
@@ -7974,19 +7959,6 @@ pub mod advanced_interactive_3d {
                 path_decay: true,
                 path_colors: PathColorScheme::VelocityBased,
                 path_thickness: 1.0,
-            }
-        }
-    }
-
-    impl Default for Appearance3DControls {
-        fn default() -> Self {
-            Self {
-                color_mapping: ColorMapping3D::default(),
-                lighting: Lighting3DConfig::default(),
-                transparency: TransparencyConfig::default(),
-                surface_rendering: SurfaceRenderingConfig::default(),
-                point_rendering: PointRenderingConfig::default(),
-                volume_rendering: VolumeRenderingConfig::default(),
             }
         }
     }
@@ -8125,17 +8097,6 @@ pub mod advanced_interactive_3d {
         }
     }
 
-    impl Default for DataFiltering3D {
-        fn default() -> Self {
-            Self {
-                spatial_filters: Vec::new(),
-                temporal_filters: Vec::new(),
-                value_filters: Vec::new(),
-                custom_filters: Vec::new(),
-            }
-        }
-    }
-
     impl Default for ParameterControls3D {
         fn default() -> Self {
             Self {
@@ -8217,7 +8178,6 @@ pub mod advanced_interactive_3d {
             }
         }
     }
-
 
     impl Default for AntiAliasingConfig {
         fn default() -> Self {

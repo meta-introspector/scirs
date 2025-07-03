@@ -201,14 +201,14 @@ impl<T: Float> ShamirSecretSharing<T> {
     }
 
     /// Share a secret value
-    pub fn share_secret(&mut self, secret: T) -> Result<Vec<(usize, T)>, OptimError> {
+    pub fn share_secret(&mut self, secret: T) -> Result<Vec> {
         // Generate random polynomial coefficients
         let mut rng = ChaCha20Rng::from_entropy();
         self.coefficients.clear();
         self.coefficients.push(secret); // a0 = secret
 
         for _ in 1..self.threshold {
-            let coeff = T::from(rng.gen::<f64>()).unwrap();
+            let coeff = T::from(rng.random::<f64>()).unwrap();
             self.coefficients.push(coeff);
         }
 
@@ -224,7 +224,7 @@ impl<T: Float> ShamirSecretSharing<T> {
     }
 
     /// Reconstruct secret from shares
-    pub fn reconstruct_secret(&self, shares: &[(usize, T)]) -> Result<T, OptimError> {
+    pub fn reconstruct_secret(&self, shares: &[(usize, T)]) -> Result<T> {
         if shares.len() < self.threshold {
             return Err(OptimError::InvalidConfig(
                 "Insufficient shares for reconstruction".to_string(),
@@ -296,7 +296,7 @@ impl<T: Float> CryptographicAggregator<T> {
         &mut self,
         participant_inputs: &HashMap<String, Array1<T>>,
         participants: &HashMap<String, Participant>,
-    ) -> Result<SecureAggregationResult<T>, OptimError> {
+    ) -> Result<SecureAggregationResult<T>> {
         // Phase 1: Input commitment
         let commitments = self.commit_inputs(participant_inputs)?;
 
@@ -337,7 +337,7 @@ impl<T: Float> CryptographicAggregator<T> {
         &self,
         participants: &HashMap<String, Participant>,
         commitments: &HashMap<String, Vec<u8>>,
-    ) -> Result<Vec<String>, OptimError> {
+    ) -> Result<Vec<String>> {
         let mut honest_participants = Vec::new();
 
         for (participant_id, participant) in participants {
@@ -366,7 +366,7 @@ impl<T: Float> CryptographicAggregator<T> {
         &self,
         inputs: &HashMap<String, Array1<T>>,
         honest_participants: &[String],
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         if honest_participants.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No honest participants for aggregation".to_string(),
@@ -401,7 +401,7 @@ impl<T: Float> CryptographicAggregator<T> {
         &mut self,
         aggregate: &Array1<T>,
         commitments: &HashMap<String, Vec<u8>>,
-    ) -> Result<AggregationProof<T>, OptimError> {
+    ) -> Result<AggregationProof<T>> {
         let proof = AggregationProof {
             aggregate_commitment: self.commitment_scheme.commit(aggregate)?,
             participant_commitments: commitments.clone(),
@@ -420,7 +420,7 @@ impl<T: Float> CryptographicAggregator<T> {
         &self,
         participant: &Participant,
         commitment: &[u8],
-    ) -> Result<bool, OptimError> {
+    ) -> Result<bool> {
         // Check participant status
         if matches!(
             participant.status,
@@ -451,13 +451,13 @@ impl<T: Float> CommitmentScheme<T> {
     /// Create new commitment scheme
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
-        let commitment_key: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
+        let commitment_key: Vec<u8> = (0..32).map(|_| rng.random()).collect();
 
         Self { commitment_key }
     }
 
     /// Commit to a value
-    pub fn commit(&self, value: &Array1<T>) -> Result<Vec<u8>, OptimError> {
+    pub fn commit(&self, value: &Array1<T>) -> Result<Vec<u8>> {
         use sha2::{Digest, Sha256};
 
         let mut hasher = Sha256::new();
@@ -486,7 +486,7 @@ impl<T: Float> VerificationParameters<T> {
     /// Create new verification parameters
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
-        let verification_key: Vec<u8> = (0..64).map(|_| rng.gen()).collect();
+        let verification_key: Vec<u8> = (0..64).map(|_| rng.random()).collect();
 
         Self {
             verification_key,
@@ -495,10 +495,7 @@ impl<T: Float> VerificationParameters<T> {
     }
 
     /// Generate verification data for aggregation result
-    pub fn generate_verification_data(
-        &self,
-        aggregate: &Array1<T>,
-    ) -> Result<Vec<u8>, OptimError> {
+    pub fn generate_verification_data(&self, aggregate: &Array1<T>) -> Result<Vec<u8>> {
         use sha2::{Digest, Sha256};
 
         let mut hasher = Sha256::new();
@@ -527,9 +524,9 @@ impl<T: Float> ProofParameters<T> {
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
         let generators: Vec<T> = (0..16)
-            .map(|_| T::from(rng.gen::<f64>()).unwrap())
+            .map(|_| T::from(rng.random::<f64>()).unwrap())
             .collect();
-        let system_params: Vec<u8> = (0..128).map(|_| rng.gen()).collect();
+        let system_params: Vec<u8> = (0..128).map(|_| rng.random()).collect();
 
         Self {
             generators,
@@ -554,8 +551,8 @@ impl<T: Float> HomomorphicEngine<T> {
     /// Create new homomorphic encryption engine
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
-        let public_key: Vec<u8> = (0..256).map(|_| rng.gen()).collect();
-        let private_key: Vec<u8> = (0..256).map(|_| rng.gen()).collect();
+        let public_key: Vec<u8> = (0..256).map(|_| rng.random()).collect();
+        let private_key: Vec<u8> = (0..256).map(|_| rng.random()).collect();
 
         Self {
             params: HomomorphicParameters::new(),
@@ -565,7 +562,7 @@ impl<T: Float> HomomorphicEngine<T> {
     }
 
     /// Encrypt array homomorphically
-    pub fn encrypt(&self, data: &Array1<T>) -> Result<HomomorphicCiphertext<T>, OptimError> {
+    pub fn encrypt(&self, data: &Array1<T>) -> Result<HomomorphicCiphertext<T>> {
         // Simplified homomorphic encryption (in practice would use FHE libraries)
         let mut encrypted_data = Vec::new();
 
@@ -581,10 +578,7 @@ impl<T: Float> HomomorphicEngine<T> {
     }
 
     /// Decrypt homomorphic ciphertext
-    pub fn decrypt(
-        &self,
-        ciphertext: &HomomorphicCiphertext<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    pub fn decrypt(&self, ciphertext: &HomomorphicCiphertext<T>) -> Result<Array1<T>> {
         let mut decrypted_data = Vec::new();
 
         for encrypted_value in &ciphertext.data {
@@ -600,7 +594,7 @@ impl<T: Float> HomomorphicEngine<T> {
         &self,
         a: &HomomorphicCiphertext<T>,
         b: &HomomorphicCiphertext<T>,
-    ) -> Result<HomomorphicCiphertext<T>, OptimError> {
+    ) -> Result<HomomorphicCiphertext<T>> {
         if a.data.len() != b.data.len() {
             return Err(OptimError::InvalidConfig(
                 "Ciphertext dimensions don't match".to_string(),
@@ -621,7 +615,7 @@ impl<T: Float> HomomorphicEngine<T> {
     }
 
     /// Encrypt single value
-    fn encrypt_value(&self, value: T) -> Result<Vec<u8>, OptimError> {
+    fn encrypt_value(&self, value: T) -> Result<Vec<u8>> {
         use sha2::{Digest, Sha256};
 
         let mut hasher = Sha256::new();
@@ -632,7 +626,7 @@ impl<T: Float> HomomorphicEngine<T> {
     }
 
     /// Decrypt single value
-    fn decrypt_value(&self, encrypted: &[u8]) -> Result<T, OptimError> {
+    fn decrypt_value(&self, encrypted: &[u8]) -> Result<T> {
         // Simplified decryption (in practice would use proper FHE decryption)
         let mut value_bytes = [0u8; 8];
         value_bytes.copy_from_slice(&encrypted[0..8]);
@@ -642,7 +636,7 @@ impl<T: Float> HomomorphicEngine<T> {
     }
 
     /// Add encrypted values
-    fn add_encrypted_values(&self, a: &[u8], b: &[u8]) -> Result<Vec<u8>, OptimError> {
+    fn add_encrypted_values(&self, a: &[u8], b: &[u8]) -> Result<Vec<u8>> {
         // Simplified homomorphic addition
         let mut result = Vec::with_capacity(a.len());
 
@@ -671,7 +665,9 @@ impl<T: Float> HomomorphicParameters<T> {
     /// Create new homomorphic parameters
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
-        let noise_params: Vec<T> = (0..8).map(|_| T::from(rng.gen::<f64>()).unwrap()).collect();
+        let noise_params: Vec<T> = (0..8)
+            .map(|_| T::from(rng.random::<f64>()).unwrap())
+            .collect();
 
         Self {
             security_level: 128,
@@ -704,7 +700,7 @@ impl<T: Float> ZKProofSystem<T> {
     /// Create new zero-knowledge proof system
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
-        let crs: Vec<u8> = (0..512).map(|_| rng.gen()).collect();
+        let crs: Vec<u8> = (0..512).map(|_| rng.random()).collect();
 
         Self {
             params: ZKProofParameters::new(),
@@ -718,7 +714,7 @@ impl<T: Float> ZKProofSystem<T> {
         input: &Array1<T>,
         output: &Array1<T>,
         computation: &str,
-    ) -> Result<ZKProof<T>, OptimError> {
+    ) -> Result<ZKProof<T>> {
         // Simplified ZK proof generation
         let proof = ZKProof {
             statement: format!("Computed {} on input", computation),
@@ -731,17 +727,13 @@ impl<T: Float> ZKProofSystem<T> {
     }
 
     /// Verify zero-knowledge proof
-    pub fn verify_proof(&self, proof: &ZKProof<T>) -> Result<bool, OptimError> {
+    pub fn verify_proof(&self, proof: &ZKProof<T>) -> Result<bool> {
         // Simplified verification (in practice would use proper ZK verification)
         Ok(!proof.proof_data.is_empty() && proof.verification_key == self.crs)
     }
 
     /// Generate witness for proof
-    fn generate_witness(
-        &self,
-        input: &Array1<T>,
-        output: &Array1<T>,
-    ) -> Result<Vec<u8>, OptimError> {
+    fn generate_witness(&self, input: &Array1<T>, output: &Array1<T>) -> Result<Vec<u8>> {
         use sha2::{Digest, Sha256};
 
         let mut hasher = Sha256::new();
@@ -758,11 +750,7 @@ impl<T: Float> ZKProofSystem<T> {
     }
 
     /// Generate proof data
-    fn generate_proof_data(
-        &self,
-        input: &Array1<T>,
-        output: &Array1<T>,
-    ) -> Result<Vec<u8>, OptimError> {
+    fn generate_proof_data(&self, input: &Array1<T>, output: &Array1<T>) -> Result<Vec<u8>> {
         use sha2::{Digest, Sha256};
 
         let mut hasher = Sha256::new();
@@ -793,7 +781,7 @@ impl<T: Float> ZKProofParameters<T> {
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
         let circuit_params: Vec<T> = (0..16)
-            .map(|_| T::from(rng.gen::<f64>()).unwrap())
+            .map(|_| T::from(rng.random::<f64>()).unwrap())
             .collect();
 
         Self {
@@ -867,7 +855,7 @@ pub struct SecureAggregationResult<T: Float> {
 
 impl<T: Float> SMPCCoordinator<T> {
     /// Create new SMPC coordinator
-    pub fn new(config: SMPCConfig) -> Result<Self, OptimError> {
+    pub fn new(config: SMPCConfig) -> Result<Self> {
         let secret_sharing = ShamirSecretSharing::new(config.threshold, config.num_participants);
         let secure_aggregator = CryptographicAggregator::new(config.clone());
         let homomorphic_engine = HomomorphicEngine::new();
@@ -885,7 +873,7 @@ impl<T: Float> SMPCCoordinator<T> {
     }
 
     /// Add participant to the protocol
-    pub fn add_participant(&mut self, participant: Participant) -> Result<(), OptimError> {
+    pub fn add_participant(&mut self, participant: Participant) -> Result<()> {
         if self.participants.len() >= self.config.num_participants {
             return Err(OptimError::InvalidConfig(
                 "Maximum number of participants reached".to_string(),
@@ -902,7 +890,7 @@ impl<T: Float> SMPCCoordinator<T> {
         &mut self,
         participant_inputs: HashMap<String, Array1<T>>,
         computation: SMPCComputation,
-    ) -> Result<SMPCResult<T>, OptimError> {
+    ) -> Result<SMPCResult<T>> {
         // Phase 1: Setup and initialization
         self.protocol_state = SMPCProtocolState::Setup;
         self.verify_participants()?;
@@ -933,7 +921,7 @@ impl<T: Float> SMPCCoordinator<T> {
     }
 
     /// Verify participants are ready for protocol
-    fn verify_participants(&self) -> Result<(), OptimError> {
+    fn verify_participants(&self) -> Result<()> {
         if self.participants.len() < self.config.threshold {
             return Err(OptimError::InvalidConfig(
                 "Insufficient participants for protocol".to_string(),
@@ -982,7 +970,7 @@ impl<T: Float> SMPCCoordinator<T> {
         &self,
         shared_inputs: &HashMap<String, Vec<(usize, T)>>,
         computation: SMPCComputation,
-    ) -> Result<Vec<(usize, T)>, OptimError> {
+    ) -> Result<Vec> {
         match computation {
             SMPCComputation::Sum => self.secure_sum(shared_inputs),
             SMPCComputation::Average => self.secure_average(shared_inputs),
@@ -992,14 +980,12 @@ impl<T: Float> SMPCCoordinator<T> {
     }
 
     /// Secure sum computation
-    fn secure_sum(
-        &self,
-        shared_inputs: &HashMap<String, Vec<(usize, T)>>,
-    ) -> Result<Vec<(usize, T)>, OptimError> {
+    fn secure_sum(&self, shared_inputs: &HashMap<String, Vec<(usize, T)>>) -> Result<Vec> {
         // Get the first participant's shares to determine structure
-        let first_shares = shared_inputs.values().next().ok_or_else(|| {
-            OptimError::InvalidConfig("No shared inputs provided".to_string())
-        })?;
+        let first_shares = shared_inputs
+            .values()
+            .next()
+            .ok_or_else(|| OptimError::InvalidConfig("No shared inputs provided".to_string()))?;
 
         let mut result_shares = vec![(0usize, T::zero()); first_shares.len()];
 
@@ -1016,10 +1002,7 @@ impl<T: Float> SMPCCoordinator<T> {
     }
 
     /// Secure average computation
-    fn secure_average(
-        &self,
-        shared_inputs: &HashMap<String, Vec<(usize, T)>>,
-    ) -> Result<Vec<(usize, T)>, OptimError> {
+    fn secure_average(&self, shared_inputs: &HashMap<String, Vec<(usize, T)>>) -> Result<Vec> {
         let sum_shares = self.secure_sum(shared_inputs)?;
         let num_participants = T::from(shared_inputs.len()).unwrap();
 
@@ -1036,7 +1019,7 @@ impl<T: Float> SMPCCoordinator<T> {
     fn secure_weighted_sum(
         &self,
         _shared_inputs: &HashMap<String, Vec<(usize, T)>>,
-    ) -> Result<Vec<(usize, T)>, OptimError> {
+    ) -> Result<Vec> {
         // Placeholder for weighted sum implementation
         Err(OptimError::InvalidConfig(
             "Weighted sum not implemented yet".to_string(),
@@ -1047,7 +1030,7 @@ impl<T: Float> SMPCCoordinator<T> {
     fn secure_custom_computation(
         &self,
         _shared_inputs: &HashMap<String, Vec<(usize, T)>>,
-    ) -> Result<Vec<(usize, T)>, OptimError> {
+    ) -> Result<Vec> {
         // Placeholder for custom computation implementation
         Err(OptimError::InvalidConfig(
             "Custom computation not implemented yet".to_string(),
@@ -1055,7 +1038,7 @@ impl<T: Float> SMPCCoordinator<T> {
     }
 
     /// Reconstruct output from shares
-    fn reconstruct_output(&self, shares: &[(usize, T)]) -> Result<Array1<T>, OptimError> {
+    fn reconstruct_output(&self, shares: &[(usize, T)]) -> Result<Array1<T>> {
         // For simplicity, assume shares represent a single value
         // In practice, would need to handle multi-dimensional reconstruction
         let reconstructed_value = self.secret_sharing.reconstruct_secret(shares)?;
@@ -1067,7 +1050,7 @@ impl<T: Float> SMPCCoordinator<T> {
         &self,
         inputs: &HashMap<String, Array1<T>>,
         result: &Array1<T>,
-    ) -> Result<ZKProof<T>, OptimError> {
+    ) -> Result<ZKProof<T>> {
         // Combine all inputs for proof generation
         let combined_input = self.combine_inputs(inputs)?;
 
@@ -1076,10 +1059,7 @@ impl<T: Float> SMPCCoordinator<T> {
     }
 
     /// Combine inputs for proof generation
-    fn combine_inputs(
-        &self,
-        inputs: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn combine_inputs(&self, inputs: &HashMap<String, Array1<T>>) -> Result<Array1<T>> {
         let mut combined = Vec::new();
 
         for input in inputs.values() {

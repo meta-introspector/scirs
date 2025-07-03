@@ -62,9 +62,9 @@ where
     let mut h = Array2::zeros((krylov_dim + 1, krylov_dim));
     
     // Start with random initial vector
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     for i in 0..n {
-        v[[i, 0]] = T::from(rand::Rng::random_range(&mut rng, -0.5..0.5)).unwrap();
+        v[[i, 0]] = T::from(rng.gen_range(-0.5..0.5)).unwrap();
     }
     
     // Normalize initial vector
@@ -205,9 +205,9 @@ where
     let mut beta = Array1::zeros(lanczos_dim + 1);
     
     // Start with random initial vector
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     for i in 0..n {
-        v[[i, 0]] = T::from(rand::Rng::random_range(&mut rng, -0.5..0.5)).unwrap();
+        v[[i, 0]] = T::from(rng.gen_range(-0.5..0.5)).unwrap();
     }
     
     // Normalize initial vector
@@ -429,7 +429,7 @@ where
 /// # Returns
 ///
 /// Eigenvalues and eigenvectors within the specified range
-pub fn sparse_eigen_range<T>(
+pub fn sparse_eirandom_range<T>(
     matrix: &SparseMatrixView<T>,
     range: (T, T),
     max_iter: usize,
@@ -509,7 +509,7 @@ mod tests {
     }
     
     #[test] 
-    fn test_sparse_eigen_range() {
+    fn test_sparse_eirandom_range() {
         // Create a test matrix with known eigenvalues
         let dense = array![
             [3.0, 1.0, 0.0],
@@ -520,7 +520,7 @@ mod tests {
         let sparse = sparse_from_ndarray(&dense.view(), 1e-12).unwrap();
         
         // Find eigenvalues in range [2.0, 4.0]
-        let result = sparse_eigen_range(&sparse, (2.0, 4.0), 50, 1e-8);
+        let result = sparse_eirandom_range(&sparse, (2.0, 4.0), 50, 1e-8);
         assert!(result.is_ok());
         
         let (eigenvals, eigenvecs) = result.unwrap();

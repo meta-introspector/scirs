@@ -48,7 +48,14 @@ use rand_distr::{Distribution, Uniform};
 use std::cell::RefCell;
 
 // Re-export traits for external use
-pub use rand::Rng;
+pub use rand::{Rng, RngCore};
+
+/// Compatibility wrapper for updated rand API
+/// In rand 0.9, provides a convenient alias for rng() wrapped in Random
+/// This allows usage like: scirs2_core::random::rng().random_range(0, 100)
+pub fn rng() -> Random<rand::rngs::ThreadRng> {
+    Random { rng: rand::rng() }
+}
 
 /// Wrapper around the rand crate's RNG for a consistent interface
 #[derive(Debug)]
@@ -78,6 +85,16 @@ impl<R: Rng> Random<R> {
         max: T,
     ) -> T {
         self.sample(rand_distr::Uniform::new(min, max).unwrap())
+    }
+
+    /// Generate a random f64 value between 0.0 and 1.0
+    pub fn random_f64(&mut self) -> f64 {
+        self.sample(rand_distr::Uniform::new(0.0, 1.0).unwrap())
+    }
+
+    /// Generate a random f64 value using the underlying RNG (convenience method)
+    pub fn random_f64_raw(&mut self) -> f64 {
+        self.rng.random()
     }
 
     /// Generate a random boolean value
@@ -129,13 +146,28 @@ impl Random {
     }
 }
 
+// Implement RngCore for Random to forward to inner RNG
+impl<R: RngCore> RngCore for Random<R> {
+    fn next_u32(&mut self) -> u32 {
+        self.rng.next_u32()
+    }
+
+    fn next_u64(&mut self) -> u64 {
+        self.rng.next_u64()
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.rng.fill_bytes(dest)
+    }
+}
+
 // Thread-local random number generator for convenient access
 thread_local! {
     static THREAD_RNG: RefCell<Random> = RefCell::new(Random::default());
 }
 
 /// Get a reference to the thread-local random number generator
-pub fn get_thread_rng<F, R>(f: F) -> R
+pub fn get_rng<F, R>(f: F) -> R
 where
     F: FnOnce(&mut Random) -> R,
 {

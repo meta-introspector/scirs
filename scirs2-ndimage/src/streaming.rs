@@ -156,7 +156,7 @@ where
 
             chunks.par_iter().try_for_each(|chunk_info| {
                 let chunk = self.extract_chunk(input, chunk_info)?;
-                let result = op.apply_chunk(&chunk.view())?;
+                let _result = op.apply_chunk(&chunk.view())?;
 
                 // Thread-safe writing would be needed here
                 // For now, we'll process sequentially
@@ -294,7 +294,7 @@ where
         &self,
         file: &mut BufWriter<File>,
         chunk: &ArrayView<T, IxDyn>,
-        chunk_info: &ChunkInfo,
+        _chunk_info: &ChunkInfo,
     ) -> NdimageResult<()> {
         let element_size = std::mem::size_of::<T>();
 
@@ -342,27 +342,27 @@ struct ChunkInfo {
 }
 
 /// Iterator over chunks
-struct ChunkIterator<'a> {
-    shape: &'a [usize],
-    chunk_dims: &'a [usize],
-    overlap: &'a [usize],
+struct ChunkIterator {
+    shape: Vec<usize>,
+    chunk_dims: Vec<usize>,
+    overlap: Vec<usize>,
     current: Vec<usize>,
     done: bool,
 }
 
-impl<'a> ChunkIterator<'a> {
-    fn new(shape: &'a [usize], chunk_dims: &'a [usize], overlap: &'a [usize]) -> Self {
+impl ChunkIterator {
+    fn new(shape: &[usize], chunk_dims: &[usize], overlap: &[usize]) -> Self {
         Self {
-            shape,
-            chunk_dims,
-            overlap,
+            shape: shape.to_vec(),
+            chunk_dims: chunk_dims.to_vec(),
+            overlap: overlap.to_vec(),
             current: vec![0; shape.len()],
             done: false,
         }
     }
 }
 
-impl<'a> Iterator for ChunkIterator<'a> {
+impl Iterator for ChunkIterator {
     type Item = ChunkInfo;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -596,7 +596,7 @@ where
     pub fn process_adaptive<D, Op>(
         &mut self,
         input: &ArrayView<T, D>,
-        mut op: Op,
+        op: Op,
     ) -> NdimageResult<Array<T, D>>
     where
         D: Dimension,
@@ -955,7 +955,7 @@ impl MemoryManager {
         complexity: OperationComplexity,
     ) -> usize {
         let total_elements: usize = shape.iter().product();
-        let total_bytes = total_elements * element_size;
+        let _total_bytes = total_elements * element_size;
 
         // Use fraction of available memory based on complexity
         let memory_fraction = match complexity {

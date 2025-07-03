@@ -385,7 +385,7 @@ impl ErrorDiagnostics {
 
                 // Check for memory-related environment variables
                 if let Some(threads) = self.environment.env_vars.get("OMP_NUM_THREADS") {
-                    diagnostics.push(format!("OpenMP threads: {}", threads));
+                    diagnostics.push(format!("OpenMP threads: {threads}"));
                 }
 
                 // Check for memory management features
@@ -403,7 +403,7 @@ impl ErrorDiagnostics {
 
             CoreError::ComputationError(_) => {
                 if let Some(cores) = self.environment.cpu_cores {
-                    diagnostics.push(format!("CPU cores available: {}", cores));
+                    diagnostics.push(format!("CPU cores available: {cores}"));
 
                     // Enhanced CPU analysis
                     if cores == 1 {
@@ -866,7 +866,7 @@ impl ErrorDiagnosticReport {
 
         // Error information
         report.push_str("🚨 Error Details:\n");
-        report.push_str(&format!("   {}\n\n", self.error));
+        report.push_str(&format!("   {error}\n\n", error = self.error));
 
         // Performance impact
         report.push_str(&format!(
@@ -877,11 +877,18 @@ impl ErrorDiagnosticReport {
         // Environment information
         if let Some(env) = &self.environment {
             report.push_str("🖥️  Environment Information:\n");
-            report.push_str(&format!("   OS: {} ({})\n", env.os, env.arch));
-            report.push_str(&format!("   `SciRS2` Version: {}\n", env.scirs2_version));
+            report.push_str(&format!(
+                "   OS: {os} ({arch})\n",
+                os = env.os,
+                arch = env.arch
+            ));
+            report.push_str(&format!(
+                "   `SciRS2` Version: {version}\n",
+                version = env.scirs2_version
+            ));
 
             if let Some(cores) = env.cpu_cores {
-                report.push_str(&format!("   CPU Cores: {}\n", cores));
+                report.push_str(&format!("   CPU Cores: {cores}\n"));
             }
 
             if let Some(memory) = env.available_memory {
@@ -905,7 +912,7 @@ impl ErrorDiagnosticReport {
         if !self.environment_diagnostics.is_empty() {
             report.push_str("🔧 Environment Diagnostics:\n");
             for diagnostic in &self.environment_diagnostics {
-                report.push_str(&format!("   • {}\n", diagnostic));
+                report.push_str(&format!("   • {diagnostic}\n"));
             }
             report.push('\n');
         }
@@ -914,11 +921,14 @@ impl ErrorDiagnosticReport {
         if !self.patterns.is_empty() {
             report.push_str("📊 Matching Error Patterns:\n");
             for pattern in &self.patterns {
-                report.push_str(&format!("   • {}\n", pattern.description));
+                report.push_str(&format!(
+                    "   • {description}\n",
+                    description = pattern.description
+                ));
                 if !pattern.suggestions.is_empty() {
                     report.push_str("     Suggestions:\n");
                     for suggestion in &pattern.suggestions {
-                        report.push_str(&format!("     - {}\n", suggestion));
+                        report.push_str(&format!("     - {suggestion}\n"));
                     }
                 }
             }
@@ -943,7 +953,7 @@ impl ErrorDiagnosticReport {
         if !self.predictions.is_empty() {
             report.push_str("🔮 Predictive Analysis:\n");
             for prediction in &self.predictions {
-                report.push_str(&format!("   • {}\n", prediction));
+                report.push_str(&format!("   • {prediction}\n"));
             }
             report.push('\n');
         }
@@ -952,7 +962,7 @@ impl ErrorDiagnosticReport {
         if !self.domain_strategies.is_empty() {
             report.push_str("🎯 Domain-Specific Recovery Strategies:\n");
             for (i, strategy) in self.domain_strategies.iter().enumerate() {
-                report.push_str(&format!("   {}. {}\n", i + 1, strategy));
+                report.push_str(&format!("   {}. {strategy}\n", i + 1));
             }
             report.push('\n');
         }
@@ -961,7 +971,7 @@ impl ErrorDiagnosticReport {
         if !self.contextual_suggestions.is_empty() {
             report.push_str("💡 Contextual Suggestions:\n");
             for (i, suggestion) in self.contextual_suggestions.iter().enumerate() {
-                report.push_str(&format!("   {}. {}\n", i + 1, suggestion));
+                report.push_str(&format!("   {}. {suggestion}\n", i + 1));
             }
             report.push('\n');
         }

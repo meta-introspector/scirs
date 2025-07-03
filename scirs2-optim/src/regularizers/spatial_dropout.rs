@@ -279,9 +279,9 @@ mod tests {
                     }
                 } else {
                     // Mixed values - this shouldn't happen
-                    println!("Channel {} in batch {} has mixed values:", c, b);
+                    println!("Channel {c} in batch {b} has mixed values:");
                     for val in channel_clone.iter() {
-                        println!("  Value: {}", val);
+                        println!("  Value: {val}");
                     }
                     panic!("Channel should be entirely dropped or kept");
                 }

@@ -385,7 +385,11 @@ impl RecoverableError {
     pub fn recovery_report(&self) -> String {
         let mut report = String::new();
 
-        report.push_str(&format!("🚨 {} Error: {}\n\n", self.severity, self.error));
+        report.push_str(&format!(
+            "🚨 {severity} Error: {error}\n\n",
+            severity = self.severity,
+            error = self.error
+        ));
 
         if self.retryable {
             report.push_str("✅ This error may be retryable\n");
@@ -398,14 +402,14 @@ impl RecoverableError {
         if !self.hints.is_empty() {
             report.push_str("🔍 Recovery suggestions:\n");
             for (i, hint) in self.hints.iter().enumerate() {
-                report.push_str(&format!("{}. {}\n", i + 1, hint));
+                report.push_str(&format!("{}. {hint}\n", i + 1));
             }
         }
 
         if !self.metadata.is_empty() {
             report.push_str("\n📋 Additional information:\n");
             for (key, value) in &self.metadata {
-                report.push_str(&format!("   {}: {}\n", key, value));
+                report.push_str(&format!("   {key}: {value}\n"));
             }
         }
 
@@ -724,15 +728,18 @@ impl ErrorAggregator {
 
         for (i, error) in self.errors.iter().enumerate() {
             summary.push_str(&format!(
-                "{}. [{}] {}\n",
+                "{}. [{severity}] {error}\n",
                 i + 1,
-                error.severity,
-                error.error
+                severity = error.severity,
+                error = error.error
             ));
         }
 
         if let Some(most_severe) = self.most_severe_error() {
-            summary.push_str(&format!("\nMost severe: {}\n", most_severe.error));
+            summary.push_str(&format!(
+                "\nMost severe: {error}\n",
+                error = most_severe.error
+            ));
         }
 
         summary

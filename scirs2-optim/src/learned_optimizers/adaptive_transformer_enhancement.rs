@@ -890,7 +890,7 @@ impl<T: Float> Default for AdaptiveConfig<T> {
 
 impl<T: Float> AdaptiveTransformerEnhancement<T> {
     /// Create new adaptive transformer enhancement
-    pub fn new(config: AdaptiveConfig<T>) -> Result<Self, OptimError> {
+    pub fn new(config: AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             sequence_processor: AdaptiveSequenceProcessor::new(&config)?,
             attention_manager: MemoryEfficientAttentionManager::new(&config)?,
@@ -907,7 +907,7 @@ impl<T: Float> AdaptiveTransformerEnhancement<T> {
         transformer: &mut TransformerOptimizer<T>,
         gradient_history: &[Array1<T>],
         loss_history: &[T],
-    ) -> Result<EnhancementResult<T>, OptimError> {
+    ) -> Result<EnhancementResult<T>> {
         // Analyze optimization landscape
         let landscape_analysis = self
             .landscape_analyzer
@@ -1104,7 +1104,7 @@ pub struct EnhancementStatistics<T: Float> {
 
 // Main implementation for AdaptiveTransformerEnhancement
 impl<T: Float> AdaptiveTransformerEnhancement<T> {
-    pub fn new(config: AdaptiveConfig<T>) -> Result<Self, OptimError> {
+    pub fn new(config: AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             sequence_processor: AdaptiveSequenceProcessor::new(&config)?,
             attention_manager: MemoryEfficientAttentionManager::new(&config)?,
@@ -1122,7 +1122,7 @@ impl<T: Float> AdaptiveTransformerEnhancement<T> {
         gradients: &Array1<T>,
         loss_history: &[T],
         gradient_history: &[Array1<T>],
-    ) -> Result<EnhancementResult<T>, OptimError> {
+    ) -> Result<EnhancementResult<T>> {
         // Analyze the optimization landscape
         let landscape = self
             .landscape_analyzer
@@ -1173,7 +1173,7 @@ impl<T: Float> AdaptiveTransformerEnhancement<T> {
         sequence_adaptation: &SequenceAdaptation<T>,
         attention_optimization: &AttentionOptimization<T>,
         architecture_adaptation: &ArchitectureAdaptation<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Apply sequence-adaptive learning rate scaling
         let sequence_scale = sequence_adaptation.efficiency_gain;
 
@@ -1197,11 +1197,7 @@ impl<T: Float> AdaptiveTransformerEnhancement<T> {
     }
 
     /// Calculate adaptive learning rate for each parameter
-    fn calculate_adaptive_learning_rate(
-        &self,
-        param_index: usize,
-        base_scale: T,
-    ) -> Result<T, OptimError> {
+    fn calculate_adaptive_learning_rate(&self, param_index: usize, base_scale: T) -> Result<T> {
         let base_lr = T::from(0.001).unwrap(); // Base learning rate
 
         // Parameter-specific adaptation
@@ -1280,7 +1276,7 @@ impl<T: Float> AdaptiveTransformerEnhancement<T> {
     pub fn update_enhancement_state(
         &mut self,
         enhancement_result: &EnhancementResult<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Update landscape analyzer cache
         let cache_key = format!(
             "analysis_{}",
@@ -1382,7 +1378,7 @@ impl<T: Float> AdaptiveTransformerEnhancement<T> {
 
 // Implementation stubs for the complex components
 impl<T: Float> AdaptiveSequenceProcessor<T> {
-    fn new(_config: &AdaptiveConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             current_length: 512,
             importance_scores: VecDeque::new(),
@@ -1395,7 +1391,7 @@ impl<T: Float> AdaptiveSequenceProcessor<T> {
     fn adapt_to_landscape(
         &mut self,
         analysis: &LandscapeAnalysis<T>,
-    ) -> Result<SequenceAdaptation<T>, OptimError> {
+    ) -> Result<SequenceAdaptation<T>> {
         // Enhanced implementation based on landscape complexity
         let complexity_factor = analysis.complexity.to_f64().unwrap_or(0.5);
         let difficulty_factor = analysis.difficulty.to_f64().unwrap_or(0.3);
@@ -1446,10 +1442,7 @@ impl<T: Float> AdaptiveSequenceProcessor<T> {
         })
     }
 
-    fn update_importance_scores(
-        &mut self,
-        analysis: &LandscapeAnalysis<T>,
-    ) -> Result<(), OptimError> {
+    fn update_importance_scores(&mut self, analysis: &LandscapeAnalysis<T>) -> Result<()> {
         // Generate importance scores based on landscape analysis
         let base_importance = T::from(0.5).unwrap();
         let complexity_boost = analysis.complexity * T::from(0.3).unwrap();
@@ -1470,7 +1463,7 @@ impl<T: Float> AdaptiveSequenceProcessor<T> {
 }
 
 impl<T: Float> MemoryEfficientAttentionManager<T> {
-    fn new(_config: &AdaptiveConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             pattern_cache: AttentionPatternCache::new(),
             sparse_mask: Array2::default((0, 0)),
@@ -1483,7 +1476,7 @@ impl<T: Float> MemoryEfficientAttentionManager<T> {
     fn optimize_attention(
         &mut self,
         analysis: &LandscapeAnalysis<T>,
-    ) -> Result<AttentionOptimization<T>, OptimError> {
+    ) -> Result<AttentionOptimization<T>> {
         // Enhanced attention optimization based on landscape analysis
         let complexity = analysis.complexity.to_f64().unwrap_or(0.5);
         let difficulty = analysis.difficulty.to_f64().unwrap_or(0.3);
@@ -1543,11 +1536,7 @@ impl<T: Float> MemoryEfficientAttentionManager<T> {
         })
     }
 
-    fn determine_attention_dimensions(
-        &self,
-        complexity: f64,
-        difficulty: f64,
-    ) -> Result<(usize, usize), OptimError> {
+    fn determine_attention_dimensions(&self, complexity: f64, difficulty: f64) -> Result<usize> {
         let base_heads = 8;
         let base_seq_len = 512;
 
@@ -1579,7 +1568,7 @@ impl<T: Float> MemoryEfficientAttentionManager<T> {
         &self,
         patterns: &mut Array3<T>,
         analysis: &LandscapeAnalysis<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         let (num_heads, seq_len, _) = patterns.dim();
 
         for head in 0..num_heads {
@@ -1601,11 +1590,7 @@ impl<T: Float> MemoryEfficientAttentionManager<T> {
         Ok(())
     }
 
-    fn apply_sparsity_mask(
-        &self,
-        patterns: &mut Array3<T>,
-        sparsity_level: T,
-    ) -> Result<(), OptimError> {
+    fn apply_sparsity_mask(&self, patterns: &mut Array3<T>, sparsity_level: T) -> Result<()> {
         let sparsity_threshold = sparsity_level.to_f64().unwrap_or(0.1);
 
         patterns.map_inplace(|x| {
@@ -1619,7 +1604,7 @@ impl<T: Float> MemoryEfficientAttentionManager<T> {
 }
 
 impl<T: Float> DynamicArchitectureAdapter<T> {
-    fn new(_config: &AdaptiveConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             current_config: TransformerOptimizerConfig::default(),
             performance_history: VecDeque::new(),
@@ -1634,7 +1619,7 @@ impl<T: Float> DynamicArchitectureAdapter<T> {
         _landscape: &LandscapeAnalysis<T>,
         _sequence: &SequenceAdaptation<T>,
         _attention: &AttentionOptimization<T>,
-    ) -> Result<ArchitectureAdaptation<T>, OptimError> {
+    ) -> Result<ArchitectureAdaptation<T>> {
         // Simplified implementation
         Ok(ArchitectureAdaptation {
             adapted_config: self.current_config.clone(),
@@ -1646,7 +1631,7 @@ impl<T: Float> DynamicArchitectureAdapter<T> {
 }
 
 impl<T: Float> OptimizationLandscapeAnalyzer<T> {
-    fn new(_config: &AdaptiveConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             landscape_features: LandscapeFeatures::default(),
             complexity_estimator: ComplexityEstimator::new(),
@@ -1660,7 +1645,7 @@ impl<T: Float> OptimizationLandscapeAnalyzer<T> {
         &mut self,
         _gradient_history: &[Array1<T>],
         _loss_history: &[T],
-    ) -> Result<LandscapeAnalysis<T>, OptimError> {
+    ) -> Result<LandscapeAnalysis<T>> {
         // Simplified implementation
         Ok(LandscapeAnalysis {
             complexity: T::from(0.5).unwrap(),
@@ -1672,7 +1657,7 @@ impl<T: Float> OptimizationLandscapeAnalyzer<T> {
 }
 
 impl<T: Float> TransformerPerformancePredictor<T> {
-    fn new(_config: &AdaptiveConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             predictor_network: PredictorNetwork::new(vec![64, 128, 64, 1])?,
             feature_extractor: PerformanceFeatureExtractor::new(64)?,
@@ -1685,7 +1670,7 @@ impl<T: Float> TransformerPerformancePredictor<T> {
         &mut self,
         _landscape: &LandscapeAnalysis<T>,
         _adaptation: &ArchitectureAdaptation<T>,
-    ) -> Result<PerformancePrediction<T>, OptimError> {
+    ) -> Result<PerformancePrediction<T>> {
         // Simplified implementation
         Ok(PerformancePrediction {
             convergence_improvement: T::from(0.15).unwrap(),
@@ -1698,7 +1683,7 @@ impl<T: Float> TransformerPerformancePredictor<T> {
 
 // Additional implementation stubs for completeness
 impl<T: Float> SequenceCompressor<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             algorithm: CompressionAlgorithm::PCA,
             params: CompressionParams::default(),
@@ -1761,7 +1746,7 @@ impl<T: Float> GlobalStructureDetector<T> {
 }
 
 impl<T: Float> PredictorNetwork<T> {
-    fn new(architecture: Vec<usize>) -> Result<Self, OptimError> {
+    fn new(architecture: Vec<usize>) -> Result<Self> {
         let mut weights = Vec::new();
         let mut biases = Vec::new();
         let activations = vec![ActivationType::ReLU; architecture.len() - 1];
@@ -1783,7 +1768,7 @@ impl<T: Float> PredictorNetwork<T> {
 }
 
 impl<T: Float> PerformanceFeatureExtractor<T> {
-    fn new(dims: usize) -> Result<Self, OptimError> {
+    fn new(dims: usize) -> Result<Self> {
         Ok(Self {
             feature_dims: dims,
             feature_cache: HashMap::new(),

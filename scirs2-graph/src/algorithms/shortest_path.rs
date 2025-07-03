@@ -366,6 +366,47 @@ where
     }))
 }
 
+/// Finds the shortest path between source and target nodes in a directed graph using Dijkstra's algorithm
+///
+/// This is the modern API that provides a clearer name for directed graph path finding.
+/// This is the recommended function to use for directed graphs.
+///
+/// # Arguments
+/// * `graph` - The directed graph to search in
+/// * `source` - The source node
+/// * `target` - The target node
+///
+/// # Returns
+/// * `Ok(Some(Path))` - If a path exists
+/// * `Ok(None)` - If no path exists
+/// * `Err(GraphError)` - If the source or target node is not in the graph
+///
+/// # Time Complexity
+/// O((V + E) log V) where V is the number of vertices and E is the number of edges.
+///
+/// # Space Complexity
+/// O(V) for the distance array and predecessor tracking.
+pub fn dijkstra_path_digraph<N, E, Ix>(
+    graph: &DiGraph<N, E, Ix>,
+    source: &N,
+    target: &N,
+) -> Result<Option<Path<N, E>>>
+where
+    N: Node + std::fmt::Debug,
+    E: EdgeWeight
+        + num_traits::Zero
+        + num_traits::One
+        + std::ops::Add<Output = E>
+        + PartialOrd
+        + std::marker::Copy
+        + std::fmt::Debug
+        + std::default::Default,
+    Ix: petgraph::graph::IndexType,
+{
+    #[allow(deprecated)]
+    shortest_path_digraph(graph, source, target)
+}
+
 /// Computes all-pairs shortest paths using the Floyd-Warshall algorithm
 ///
 /// Returns a matrix where entry (i, j) contains the shortest distance from node i to node j.

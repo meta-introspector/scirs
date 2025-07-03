@@ -42,7 +42,10 @@ impl ProgressRenderer {
 
     /// Render percentage-only progress
     pub fn render_percentage(&self, description: &str, stats: &ProgressStats) {
-        let output = format!("{}: {:.1}%", description, stats.percentage);
+        let output = format!(
+            "{description}: {percentage:.1}%",
+            percentage = stats.percentage
+        );
         self.print_progress(&output);
     }
 
@@ -67,10 +70,10 @@ impl ProgressRenderer {
             symbols.end,
         );
 
-        let mut output = format!("{}: {} {:.1}%", description, progress_bar, percentage);
+        let mut output = format!("{description}: {progress_bar} {percentage:.1}%");
 
         if show_eta && stats.processed < stats.total {
-            output.push_str(&format!(" ETA: {}", format_duration(&stats.eta)));
+            output.push_str(&format!(" ETA: {eta}", eta = format_duration(&stats.eta)));
         }
 
         self.print_progress(&output);
@@ -93,7 +96,7 @@ impl ProgressRenderer {
         );
 
         if show_eta && stats.processed < stats.total {
-            output.push_str(&format!(" ETA: {}", format_duration(&stats.eta)));
+            output.push_str(&format!(" ETA: {eta}", eta = format_duration(&stats.eta)));
         }
 
         self.print_progress(&output);
@@ -128,18 +131,27 @@ impl ProgressRenderer {
         );
 
         if show_speed {
-            output.push_str(&format!(" [{}]", format_rate(stats.items_per_second)));
+            output.push_str(&format!(
+                " [{rate}]",
+                rate = format_rate(stats.items_per_second)
+            ));
         }
 
         if show_eta && stats.processed < stats.total {
-            output.push_str(&format!(" ETA: {}", format_duration(&stats.eta)));
+            output.push_str(&format!(" ETA: {eta}", eta = format_duration(&stats.eta)));
         }
 
         if show_statistics {
-            output.push_str(&format!(" | Elapsed: {}", format_duration(&stats.elapsed)));
+            output.push_str(&format!(
+                " | Elapsed: {elapsed}",
+                elapsed = format_duration(&stats.elapsed)
+            ));
 
             if stats.max_speed > 0.0 {
-                output.push_str(&format!(" | Peak: {}", format_rate(stats.max_speed)));
+                output.push_str(&format!(
+                    " | Peak: {peak}",
+                    peak = format_rate(stats.max_speed)
+                ));
             }
         }
 
@@ -238,7 +250,7 @@ pub fn ascii_art_progress(percentage: f64) -> String {
     let remaining = width - full_blocks - if partial_block > 0 { 1 } else { 0 };
     result.push_str(&" ".repeat(remaining));
 
-    format!("│{}│", result)
+    format!("│{result}│")
 }
 
 #[cfg(test)]

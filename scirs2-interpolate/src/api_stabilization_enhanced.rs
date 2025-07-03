@@ -855,6 +855,8 @@ impl ApiStabilizationAnalyzer {
                 confidence: 0.9,
                 risk_factors,
                 mitigations: recommendations.clone(),
+                breaking_changes: 0,
+                experimental_features: 0,
             },
             issues,
             recommendations,
@@ -920,6 +922,8 @@ impl ApiStabilizationAnalyzer {
                 confidence: 0.85,
                 risk_factors,
                 mitigations: recommendations.clone(),
+                breaking_changes: 0,
+                experimental_features: 0,
             },
             issues,
             recommendations,
@@ -1051,8 +1055,9 @@ impl ApiStabilizationAnalyzer {
             .analysis_results
             .iter()
             .map(|r| r.consistency_score)
-            .sum::<f32>() / self.analysis_results.len() as f32;
-        
+            .sum::<f32>()
+            / self.analysis_results.len() as f32;
+
         total_score += basic_score;
         check_count += 1;
 
@@ -1075,7 +1080,7 @@ impl ApiStabilizationAnalyzer {
     /// Check semantic versioning compliance for stable release
     fn check_semver_compliance(&self) -> InterpolateResult<f32> {
         let mut score: f32 = 1.0;
-        
+
         // Check if all public APIs follow semver-compatible patterns
         for result in &self.analysis_results {
             match &result.item_type {
@@ -1084,13 +1089,17 @@ impl ApiStabilizationAnalyzer {
                     if result.stability.breaking_changes > 0 {
                         score -= 0.1;
                     }
-                },
+                }
                 ApiItemType::TypeAlias => {
                     // Public types should be stable
-                    if result.stability.risk_factors.contains(&RiskFactor::BreakingChangePotential) {
+                    if result
+                        .stability
+                        .risk_factors
+                        .contains(&RiskFactor::BreakingChangePotential)
+                    {
                         score -= 0.1;
                     }
-                },
+                }
                 _ => {}
             }
         }
@@ -1101,14 +1110,14 @@ impl ApiStabilizationAnalyzer {
     /// Check breaking change policy compliance
     fn check_breaking_change_policy_compliance(&self) -> InterpolateResult<f32> {
         let total_breaking_changes: usize = self.breaking_changes.len();
-        
+
         if total_breaking_changes == 0 {
             return Ok(1.0);
         }
 
         // For stable release, we should have very few breaking changes
         let max_allowed = self.config.max_breaking_changes;
-        
+
         if total_breaking_changes <= max_allowed {
             Ok(1.0 - (total_breaking_changes as f32 / (max_allowed + 1) as f32) * 0.5)
         } else {
@@ -1149,21 +1158,27 @@ impl ApiStabilizationAnalyzer {
 
     /// Check deprecation policy compliance
     fn check_deprecation_policy_compliance(&self) -> InterpolateResult<f32> {
-        let mut score = 1.0;
+        let mut score: f32 = 1.0;
 
         for deprecation in &self.deprecations {
             match deprecation.timeline {
                 DeprecationTimeline::Immediate => {
                     // Immediate deprecations are problematic for stable release
                     score -= 0.2;
-                },
+                }
                 DeprecationTimeline::NextMajorVersion => {
                     // This is acceptable
-                },
+                }
                 DeprecationTimeline::GracePeriod(_) => {
                     // Grace period deprecations are good
                     score += 0.1;
-                },
+                }
+                DeprecationTimeline::Custom { warning_period, .. } => {
+                    // Custom timelines are good if they have adequate warning period
+                    if warning_period >= 2 {
+                        score += 0.05;
+                    }
+                }
             }
         }
 
@@ -1246,13 +1261,15 @@ impl ApiStabilizationAnalyzer {
         let critical_issues = self.get_critical_issues();
         let documentation_coverage = self.check_documentation_coverage().unwrap_or(0.0);
         let consistency_score = self.assess_api_consistency().unwrap_or(0.0);
-        
+
         // Enhanced readiness checks for 0.1.0 stable release
         let semver_compliance = self.check_semver_compliance().unwrap_or(0.0);
-        let breaking_change_compliance = self.check_breaking_change_policy_compliance().unwrap_or(0.0);
+        let breaking_change_compliance = self
+            .check_breaking_change_policy_compliance()
+            .unwrap_or(0.0);
         let experimental_handling = self.check_experimental_feature_handling().unwrap_or(0.0);
         let deprecation_compliance = self.check_deprecation_policy_compliance().unwrap_or(0.0);
-        
+
         // Check for production readiness indicators
         let performance_validation_score = self.assess_performance_validation_readiness();
         let stability_validation_score = self.assess_stability_validation_readiness();
@@ -1297,15 +1314,16 @@ impl ApiStabilizationAnalyzer {
         // This would check if performance benchmarks are in place
         // For now, we'll assess based on API stability patterns
         let mut score: f32 = 0.8; // Base score assuming basic performance considerations
-        
+
         // Check if performance-critical APIs are stable
         for result in &self.analysis_results {
-            if result.item_name.contains("interpolate") && 
-               result.stability.level == ApiStabilityLevel::Stable {
+            if result.item_name.contains("interpolate")
+                && result.stability.level == ApiStabilityLevel::Stable
+            {
                 score += 0.05;
             }
         }
-        
+
         score.min(1.0)
     }
 
@@ -1313,11 +1331,11 @@ impl ApiStabilizationAnalyzer {
     fn assess_stability_validation_readiness(&self) -> f32 {
         let stable_count = self.count_stable_items();
         let total_count = self.count_total_api_items();
-        
+
         if total_count == 0 {
             return 0.0;
         }
-        
+
         // At least 90% of APIs should be stable for stable release
         let stability_ratio = stable_count as f32 / total_count as f32;
         stability_ratio
@@ -1328,7 +1346,7 @@ impl ApiStabilizationAnalyzer {
         // This would ideally check actual test coverage
         // For now, we'll assess based on API completeness and documentation
         let documented_ratio = self.check_documentation_coverage().unwrap_or(0.0) / 100.0;
-        
+
         // Well-documented APIs are more likely to be well-tested
         documented_ratio * 0.9 // Conservative estimate
     }

@@ -1772,8 +1772,8 @@ pub mod blas {
 
             // Convert convolution to GEMM using im2col transformation
             let col_matrix = self.im2col_transform(input, kernel_height, kernel_width, stride)?;
-            let kernel_matrix = kernel
-                .view()
+            let kernel_view = kernel.view();
+            let kernel_matrix = kernel_view
                 .to_shape((1, kernel_height * kernel_width))
                 .unwrap();
 
@@ -1791,7 +1791,8 @@ pub mod blas {
             // Reshape to output format
             Ok(output_matrix
                 .to_shape((output_height, output_width))
-                .unwrap())
+                .unwrap()
+                .to_owned())
         }
 
         /// Im2col transformation for convolution
@@ -2011,9 +2012,12 @@ pub mod algorithms {
         ) -> Result<Vec<Array1<F>>> {
             // Advanced parallel processing using GPU-optimized algorithms
             match method {
-                ForecastMethod::ExponentialSmoothing { alpha } => {
-                    self.gpu_batch_exponential_smoothing(batch, F::from(*alpha).unwrap_or_else(|| F::from(0.3).unwrap()), forecast_steps)
-                }
+                ForecastMethod::ExponentialSmoothing { alpha } => self
+                    .gpu_batch_exponential_smoothing(
+                        batch,
+                        F::from(*alpha).unwrap_or_else(|| F::from(0.3).unwrap()),
+                        forecast_steps,
+                    ),
                 ForecastMethod::LinearTrend => self.gpu_batch_linear_trend(batch, forecast_steps),
                 ForecastMethod::MovingAverage { window } => {
                     self.gpu_batch_moving_average(batch, *window, forecast_steps)
@@ -2335,9 +2339,12 @@ pub mod algorithms {
             method: &ForecastMethod,
         ) -> Result<Array1<F>> {
             match method {
-                ForecastMethod::ExponentialSmoothing { alpha } => {
-                    self.gpu_exponential_smoothing_forecast(series, F::from(*alpha).unwrap_or_else(|| F::from(0.3).unwrap()), forecast_steps)
-                }
+                ForecastMethod::ExponentialSmoothing { alpha } => self
+                    .gpu_exponential_smoothing_forecast(
+                        series,
+                        F::from(*alpha).unwrap_or_else(|| F::from(0.3).unwrap()),
+                        forecast_steps,
+                    ),
                 ForecastMethod::LinearTrend => {
                     self.gpu_linear_trend_forecast(series, forecast_steps)
                 }
@@ -2431,7 +2438,7 @@ pub mod algorithms {
             }
 
             // Calculate last moving average
-            let last_window = &series[series.len() - window..];
+            let last_window = series.slice(s![series.len() - window..]);
             let avg = last_window.sum() / F::from(window).unwrap();
 
             // Simple moving average forecast (constant)
@@ -2603,7 +2610,7 @@ pub mod algorithms {
                 let mut stat_values = Array1::zeros(num_windows);
 
                 for i in 0..num_windows {
-                    let window = &series[i..i + window_size];
+                    let window = series.slice(s![i..i + window_size]);
                     stat_values[i] = match stat {
                         WindowStatistic::Mean => window.sum() / F::from(window_size).unwrap(),
                         WindowStatistic::Variance => {

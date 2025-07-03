@@ -30,6 +30,7 @@ pub struct UltraGpuOptimizer {
 
 /// GPU performance profiling data
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct GpuPerformanceProfile {
     /// Optimal block size for kernels
     optimal_block_size: usize,
@@ -51,13 +52,17 @@ pub enum DataLayout {
     /// Column-major layout (Fortran-style)
     ColumnMajor,
     /// Tiled layout for cache efficiency
-    Tiled { tile_size: usize },
+    Tiled {
+        /// Size of each tile
+        tile_size: usize,
+    },
     /// Adaptive layout based on access patterns
     Adaptive,
 }
 
 /// Ultra-advanced GPU kernel configuration
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct UltraKernelConfig {
     /// Kernel specialization level
     specialization_level: SpecializationLevel,
@@ -92,9 +97,15 @@ pub enum MemoryAccessPattern {
     /// Random access pattern
     Random,
     /// Strided access pattern
-    Strided { stride: usize },
+    Strided {
+        /// Stride size for access pattern
+        stride: usize,
+    },
     /// Blocked access pattern
-    Blocked { block_size: usize },
+    Blocked {
+        /// Size of each block
+        block_size: usize,
+    },
 }
 
 /// Vectorization strategies
@@ -440,8 +451,12 @@ impl UltraGpuOptimizer {
         config: &UltraKernelConfig,
     ) -> Result<Array2<f64>> {
         match gpu_context.backend() {
-            GpuBackend::Cuda { .. } => self.execute_cuda_generation(rows, cols, distribution, config),
-            GpuBackend::OpenCl { .. } => self.execute_opencl_generation(rows, cols, distribution, config),
+            GpuBackend::Cuda { .. } => {
+                self.execute_cuda_generation(rows, cols, distribution, config)
+            }
+            GpuBackend::OpenCl { .. } => {
+                self.execute_opencl_generation(rows, cols, distribution, config)
+            }
             _ => self.execute_cpu_fallback(rows, cols, distribution),
         }
     }
@@ -817,7 +832,8 @@ impl UltraGpuOptimizer {
             .flat_map(|chunk| {
                 let mut local_rng = rand::rng();
                 chunk
-                    .into_iter().map(|_| match distribution {
+                    .into_iter()
+                    .map(|_| match distribution {
                         "normal" => {
                             let normal = Normal::new(0.0, 1.0).unwrap();
                             normal.sample(&mut local_rng)
@@ -879,7 +895,7 @@ impl UltraGpuOptimizer {
         let gpu_factor = match gpu_context.backend() {
             GpuBackend::Cuda { .. } => 0.1,   // 10x speedup
             GpuBackend::OpenCl { .. } => 0.2, // 5x speedup
-            _ => 1.0,                  // No speedup for CPU backend
+            _ => 1.0,                         // No speedup for CPU backend
         };
 
         // Apply optimization factors
@@ -1018,6 +1034,7 @@ pub struct AIPerformancePredictor {
 
 /// Performance data point for ML training
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct PerformanceDataPoint {
     /// Input features: [problem_size, memory_access_pattern, compute_intensity, parallelism_factor]
     features: Vec<f64>,
@@ -1235,6 +1252,7 @@ pub struct RealTimePerformanceMonitor {
 
 /// Performance snapshot at a specific point in time
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct PerformanceSnapshot {
     /// Timestamp
     timestamp: std::time::Instant,
@@ -1254,6 +1272,7 @@ pub struct PerformanceSnapshot {
 
 /// Adaptive optimization state
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct AdaptiveOptimizationState {
     /// Current performance trend
     trend: PerformanceTrend,
@@ -1280,6 +1299,7 @@ pub enum PerformanceTrend {
 
 /// Optimization adjustment made by the adaptive system
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct OptimizationAdjustment {
     /// Type of adjustment
     adjustment_type: AdjustmentType,
@@ -1308,6 +1328,7 @@ pub enum AdjustmentType {
 
 /// Monitoring configuration
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct MonitoringConfig {
     /// Maximum history size
     max_history_size: usize,

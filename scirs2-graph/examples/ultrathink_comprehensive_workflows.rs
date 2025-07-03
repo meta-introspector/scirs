@@ -5,17 +5,16 @@
 
 #![allow(dead_code)]
 
-use scirs2_graph::algorithms::community::{label_propagation, louvain_communities};
-use scirs2_graph::algorithms::connectivity::{connected_components, strongly_connected_components};
-use scirs2_graph::algorithms::paths::{all_pairs_shortest_paths, shortest_path_dijkstra};
-use scirs2_graph::algorithms::properties::{betweenness_centrality, closeness_centrality};
-use scirs2_graph::base::Graph;
-use scirs2_graph::generators::{barabasi_albert_graph, erdos_renyi_graph, random_graph};
-use scirs2_graph::measures::pagerank;
+use rand::Rng;
 use scirs2_graph::ultrathink::{
     create_enhanced_ultrathink_processor, create_large_graph_ultrathink_processor,
     create_performance_ultrathink_processor, create_realtime_ultrathink_processor,
     execute_with_enhanced_ultrathink, ExplorationStrategy, UltrathinkConfig, UltrathinkProcessor,
+};
+use scirs2_graph::{
+    barabasi_albert_graph, betweenness_centrality, closeness_centrality, connected_components,
+    dijkstra_path, erdos_renyi_graph, floyd_warshall, label_propagation_result,
+    louvain_communities_result, pagerank_centrality, strongly_connected_components, Graph,
 };
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -30,7 +29,8 @@ fn social_network_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> 
 
     // Create a social network-like graph (scale-free with high clustering)
     println!("📊 Generating social network graph...");
-    let graph = barabasi_albert_graph(5000, 10)?; // 5K users, preferential attachment
+    let mut rng = rand::rng();
+    let graph = barabasi_albert_graph(5000, 10, &mut rng)?; // 5K users, preferential attachment
 
     println!("✅ Social network created:");
     println!("   - Users: {}", graph.node_count());
@@ -52,7 +52,7 @@ fn social_network_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> 
         &mut processor,
         &graph,
         "social_community_detection",
-        |g| louvain_communities(g, None),
+        |g| louvain_communities_result(g, None, None),
     )?;
     let community_time = start.elapsed();
 
@@ -87,7 +87,7 @@ fn social_network_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> 
         &mut processor,
         &graph,
         "social_influence_analysis",
-        |g| pagerank(g, 0.85, Some(100), Some(1e-6)),
+        |g| pagerank_centrality(g, 0.85, 1e-6),
     )?;
     let influence_time = start.elapsed();
 

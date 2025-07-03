@@ -4,7 +4,7 @@
 //! multiple nodes using Message Passing Interface (MPI), enabling optimization
 //! of computationally expensive problems across compute clusters.
 
-use crate::error::{ScirsResult, ScirsError};
+use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1};
 
 /// MPI interface abstraction for distributed optimization
@@ -218,7 +218,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
 
     /// Broadcast parameters from master to all workers
     pub fn broadcast_parameters(&self, params: &mut Array1<f64>) -> ScirsResult<()> {
-        let mut data = params.as_slice_mut().unwrap();
+        let data = params.as_slice_mut().unwrap();
         self.mpi.broadcast(data, 0)
     }
 
@@ -548,8 +548,8 @@ pub mod algorithms {
             let local_best = local_population.row(best_idx).to_owned();
 
             // Find global best across all processes
-            let mut global_fitness = Array1::from_elem(1, best_fitness);
-            let global_fitness_sum = self.context.allreduce_sum(&global_fitness)?;
+            let global_fitness = Array1::from_elem(1, best_fitness);
+            let _global_fitness_sum = self.context.allreduce_sum(&global_fitness)?;
 
             // For simplicity, we'll use the local best for now
             // In a full implementation, we'd need to communicate the actual best individual
@@ -624,12 +624,12 @@ pub mod algorithms {
                 .map(|(i, _)| i)
                 .unwrap_or(0);
 
-            let next_rank = (self.context.rank() + 1) % self.context.size();
-            let prev_rank = (self.context.rank() - 1 + self.context.size()) % self.context.size();
+            let _next_rank = (self.context.rank() + 1) % self.context.size();
+            let _prev_rank = (self.context.rank() - 1 + self.context.size()) % self.context.size();
 
             // Send best individual to next process
-            let best_individual = population.row(best_idx).to_owned();
-            let best_fitness_val = fitness[best_idx];
+            let _best_individual = population.row(best_idx).to_owned();
+            let _best_fitness_val = fitness[best_idx];
 
             // In a real implementation, we would use MPI send/recv here
             // For now, we'll skip the actual communication

@@ -5,14 +5,14 @@ use crate::gpu::{GpuContext, GpuDeviceInfo};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
-use rand::rngs::StdRng;
 use rand::rng;
+use rand::rngs::StdRng;
 use rand_distr::Distribution;
 // Use local GPU implementation instead of core to avoid feature flag issues
 use crate::gpu::GpuBackend as LocalGpuBackend;
-// Use rayon directly for parallel operations
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
+// Parallel operations will be added as needed
+// #[cfg(feature = "parallel")]
+// use scirs2_core::parallel_ops::*;
 use std::f64::consts::PI;
 
 /// Generate a random classification dataset with clusters
@@ -1761,54 +1761,54 @@ fn generate_classification_gpu_optimized(
     // CPU fallback implementation since GPU features are not available
     use rand_distr::Distribution;
     let normal = rand_distr::Normal::new(0.0, 1.0).unwrap();
-    
+
     let mut data = vec![0.0; n_samples * n_features];
     let mut targets = vec![0.0; n_samples];
 
     // Samples per class
     let samples_per_class = n_samples / n_classes;
     let remainder = n_samples % n_classes;
-    
+
     let mut sample_idx = 0;
-    
+
     for class in 0..n_classes {
         let n_samples_class = if class < remainder {
             samples_per_class + 1
         } else {
             samples_per_class
         };
-        
+
         // Samples per cluster within this class
         let samples_per_cluster = n_samples_class / n_clusters_per_class;
         let cluster_remainder = n_samples_class % n_clusters_per_class;
-        
+
         for cluster in 0..n_clusters_per_class {
             let n_samples_cluster = if cluster < cluster_remainder {
                 samples_per_cluster + 1
             } else {
                 samples_per_cluster
             };
-            
+
             let centroid_idx = class * n_clusters_per_class + cluster;
-            
+
             for _ in 0..n_samples_cluster {
                 // Generate informative features around cluster centroid
                 for j in 0..n_informative {
                     let centroid_val = centroids[centroid_idx * n_informative + j];
                     data[sample_idx * n_features + j] = centroid_val + 0.3 * normal.sample(rng);
                 }
-                
+
                 // Generate noise features
                 for j in n_informative..n_features {
                     data[sample_idx * n_features + j] = normal.sample(rng);
                 }
-                
+
                 targets[sample_idx] = class as f64;
                 sample_idx += 1;
             }
         }
     }
-    
+
     // TODO: Future GPU implementation placeholder - currently using CPU fallback
 
     Ok((data, targets))
@@ -2008,21 +2008,21 @@ fn generate_regression_gpu_optimized(
     // CPU fallback implementation since GPU features are not available
     use rand_distr::Distribution;
     let normal = rand_distr::Normal::new(0.0, 1.0).unwrap();
-    
+
     let mut targets = vec![0.0; n_samples];
-    
+
     // Matrix multiplication for regression targets
     for i in 0..n_samples {
         let mut target = 0.0;
         for j in 0..n_informative {
             target += data[i * n_features + j] * coefficients[j];
         }
-        
+
         // Add noise
         if noise > 0.0 {
             target += noise * normal.sample(rng);
         }
-        
+
         targets[i] = target;
     }
 
@@ -2193,9 +2193,9 @@ fn generate_blobs_center_gpu(
     // CPU fallback implementation since GPU features are not available
     use rand_distr::Distribution;
     let normal = rand_distr::Normal::new(0.0, cluster_std).unwrap();
-    
+
     let mut result = Vec::with_capacity(n_samples_center);
-    
+
     for _ in 0..n_samples_center {
         let mut sample = Vec::with_capacity(n_features);
         for j in 0..n_features {
@@ -2205,9 +2205,9 @@ fn generate_blobs_center_gpu(
         }
         result.push(sample);
     }
-    
+
     return Ok(result);
-    
+
     // TODO: GPU implementation placeholder - using CPU fallback above
     /*
     let _center_buffer = (); // gpu_context.create_buffer_from_slice(&center_coords);
@@ -2223,25 +2223,25 @@ fn generate_blobs_center_gpu(
             let kernel_source = r#"
             #version 450
             layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
-            
+
             layout(set = 0, binding = 0) buffer CenterBuffer {
                 double center_coords[];
             };
-            
+
             layout(set = 0, binding = 1) buffer DataBuffer {
                 double data[];
             };
-            
+
             layout(set = 0, binding = 2) buffer SeedsBuffer {
                 uint64_t seeds[];
             };
-            
+
             layout(push_constant) uniform Params {
                 uint n_samples_center;
                 uint n_features;
                 double cluster_std;
             } params;
-            
+
             // High-quality pseudo-random number generator
             uint wang_hash(uint seed) {
                 seed = (seed ^ 61u) ^ (seed >> 16u);
@@ -2251,35 +2251,35 @@ fn generate_blobs_center_gpu(
                 seed = seed ^ (seed >> 15u);
                 return seed;
             }
-            
+
             // Generate Gaussian random numbers using Box-Muller transform
             double random_normal(uint seed, uint index) {
                 uint h1 = wang_hash(seed + index * 2u);
                 uint h2 = wang_hash(seed + index * 2u + 1u);
                 double u1 = double(h1) / double(0xFFFFFFFFu);
                 double u2 = double(h2) / double(0xFFFFFFFFu);
-                
+
                 // Ensure u1 is not zero to avoid log(0)
                 u1 = max(u1, 1e-8);
-                
+
                 // Box-Muller transform
                 return sqrt(-2.0 * log(u1)) * cos(6.28318530718 * u2);
             }
-            
+
             void main() {
                 uint sample_idx = gl_GlobalInvocationID.x;
                 if (sample_idx >= params.n_samples_center) return;
-                
+
                 uint seed = uint(seeds[sample_idx]);
-                
+
                 // Generate all features for this sample
                 for (uint j = 0; j < params.n_features; j++) {
                     // Get center coordinate for this feature
                     double center_val = center_coords[j];
-                    
+
                     // Generate Gaussian noise
                     double noise = random_normal(seed, j) * params.cluster_std;
-                    
+
                     // Set the data point
                     data[sample_idx * params.n_features + j] = center_val + noise;
                 }
@@ -2839,18 +2839,26 @@ pub enum ManifoldType {
     /// S-curve manifold
     SCurve,
     /// Swiss roll (with optional hole)
-    SwissRoll { hole: bool },
+    SwissRoll {
+        /// Whether to create a hole in the middle
+        hole: bool,
+    },
     /// Severed sphere
     SeveredSphere,
     /// Twin peaks
     TwinPeaks,
     /// Helix with specified turns
-    Helix { n_turns: f64 },
+    Helix {
+        /// Number of turns in the helix
+        n_turns: f64,
+    },
     /// Intersecting manifolds
     IntersectingManifolds,
     /// Torus with major and minor radii
     Torus {
+        /// Major radius of the torus
         major_radius: f64,
+        /// Minor radius of the torus
         minor_radius: f64,
     },
 }

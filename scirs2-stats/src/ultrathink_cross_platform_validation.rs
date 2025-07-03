@@ -38,7 +38,7 @@ pub struct PlatformInfo {
 impl Default for PlatformInfo {
     fn default() -> Self {
         let capabilities = PlatformCapabilities::detect();
-        
+
         Self {
             architecture: std::env::consts::ARCH.to_string(),
             operating_system: std::env::consts::OS.to_string(),
@@ -49,7 +49,8 @@ impl Default for PlatformInfo {
             l2_cache_kb: capabilities.l2_cache_size() / 1024,
             l3_cache_kb: capabilities.l3_cache_size() / 1024,
             memory_gb: capabilities.total_memory() as f64 / (1024.0 * 1024.0 * 1024.0),
-            compiler_version: std::env::var("RUSTC_VERSION").unwrap_or_else(|_| "unknown".to_string()),
+            compiler_version: std::env::var("RUSTC_VERSION")
+                .unwrap_or_else(|_| "unknown".to_string()),
             optimization_flags: get_compilation_flags(),
         }
     }
@@ -170,30 +171,30 @@ impl CrossPlatformValidator {
 
         // Test basic statistical functions
         test_results.extend(self.test_basic_statistics()?);
-        
+
         // Test SIMD optimizations
         test_results.extend(self.test_simd_optimizations()?);
-        
+
         // Test parallel processing
         test_results.extend(self.test_parallel_processing()?);
-        
+
         // Test numerical stability
         test_results.extend(self.test_numerical_stability()?);
-        
+
         // Test memory management
         test_results.extend(self.test_memory_management()?);
-        
+
         // Analyze platform-specific performance
         let performance_profile = self.analyze_platform_performance()?;
-        
+
         // Check for platform-specific issues
         self.detect_platform_issues(&mut platform_specific_issues, &platform_info);
-        
+
         // Calculate overall metrics
         let passed_tests = test_results.iter().filter(|r| r.passed).count();
         let failed_tests = test_results.len() - passed_tests;
         let overall_score = passed_tests as f64 / test_results.len() as f64;
-        
+
         let compatibility_rating = match overall_score {
             s if s >= 0.95 => CompatibilityRating::Excellent,
             s if s >= 0.85 => CompatibilityRating::Good,
@@ -221,7 +222,7 @@ impl CrossPlatformValidator {
     /// Test basic statistical functions across configurations
     fn test_basic_statistics(&self) -> StatsResult<Vec<CrossPlatformTestResult>> {
         let mut results = Vec::new();
-        
+
         // Test data sets with different characteristics
         let test_datasets = vec![
             ("normal_small", generate_normal_data(100)),
@@ -233,23 +234,32 @@ impl CrossPlatformValidator {
         ];
 
         for config in &self.test_configurations {
-            let mut processor = crate::ultrathink_unified_processor::UltrathinkUnifiedProcessor::new(config.clone());
-            
+            let mut processor =
+                crate::ultrathink_unified_processor::UltrathinkUnifiedProcessor::new(
+                    config.clone(),
+                );
+
             for (dataset_name, data) in &test_datasets {
-                let test_name = format!("basic_stats_{}_{:?}", dataset_name, config.optimization_mode);
-                
+                let test_name = format!(
+                    "basic_stats_{}_{:?}",
+                    dataset_name, config.optimization_mode
+                );
+
                 let start_time = Instant::now();
                 let result = processor.process_comprehensive_statistics(&data.view());
                 let execution_time = start_time.elapsed();
-                
+
                 match result {
                     Ok(stats_result) => {
-                        let accuracy = self.calculate_numerical_accuracy(&data.view(), &stats_result);
-                        let performance_score = self.calculate_performance_score(execution_time, data.len());
-                        let stability_score = stats_result.stability_report
+                        let accuracy =
+                            self.calculate_numerical_accuracy(&data.view(), &stats_result);
+                        let performance_score =
+                            self.calculate_performance_score(execution_time, data.len());
+                        let stability_score = stats_result
+                            .stability_report
                             .map(|r| r.overall_score)
                             .unwrap_or(1.0);
-                        
+
                         results.push(CrossPlatformTestResult {
                             function_name: "comprehensive_statistics".to_string(),
                             test_name,
@@ -289,27 +299,30 @@ impl CrossPlatformValidator {
     /// Test SIMD optimizations
     fn test_simd_optimizations(&self) -> StatsResult<Vec<CrossPlatformTestResult>> {
         let mut results = Vec::new();
-        
+
         // Test SIMD with different data sizes and alignments
         let test_sizes = vec![64, 256, 1024, 4096, 16384, 65536];
-        
+
         for size in test_sizes {
             for alignment in &[16, 32, 64] {
                 let data = generate_aligned_data(size, *alignment);
                 let test_name = format!("simd_test_size_{}_align_{}", size, alignment);
-                
+
                 let start_time = Instant::now();
-                let simd_result = crate::ultrathink_simd_optimizations::ultra_batch_statistics(&data.view());
+                let simd_result =
+                    crate::ultrathink_simd_optimizations::ultra_batch_statistics(&data.view());
                 let execution_time = start_time.elapsed();
-                
+
                 // Also compute reference result
                 let reference_mean = data.mean().unwrap();
-                
+
                 match simd_result {
                     Ok(stats) => {
-                        let accuracy = 1.0 - ((stats.mean - reference_mean).abs() / reference_mean.abs()).min(1.0);
-                        let performance_score = self.calculate_performance_score(execution_time, size);
-                        
+                        let accuracy = 1.0
+                            - ((stats.mean - reference_mean).abs() / reference_mean.abs()).min(1.0);
+                        let performance_score =
+                            self.calculate_performance_score(execution_time, size);
+
                         results.push(CrossPlatformTestResult {
                             function_name: "simd_batch_statistics".to_string(),
                             test_name,
@@ -318,10 +331,10 @@ impl CrossPlatformValidator {
                             performance_score,
                             stability_score: 1.0,
                             passed: accuracy > 0.9999,
-                            warnings: if accuracy < 0.999 { 
-                                vec!["SIMD accuracy below expected threshold".to_string()] 
-                            } else { 
-                                vec![] 
+                            warnings: if accuracy < 0.999 {
+                                vec!["SIMD accuracy below expected threshold".to_string()]
+                            } else {
+                                vec![]
                             },
                             recommendations: vec![],
                             execution_time_ns: execution_time.as_nanos() as u64,
@@ -354,30 +367,31 @@ impl CrossPlatformValidator {
     fn test_parallel_processing(&self) -> StatsResult<Vec<CrossPlatformTestResult>> {
         let mut results = Vec::new();
         let processor = create_ultrathink_processor();
-        
+
         // Test with different thread counts
         let available_cores = num_cpus::get();
         let thread_counts = vec![1, 2, 4, available_cores.min(8), available_cores];
-        
+
         for thread_count in thread_counts {
             let data = generate_large_dataset(100000);
             let test_name = format!("parallel_test_{}_threads", thread_count);
-            
+
             // Configure for specific thread count
             let start_time = Instant::now();
             let result = processor.process_parallel_statistics(&data.view(), thread_count);
             let execution_time = start_time.elapsed();
-            
+
             match result {
                 Ok(stats) => {
                     let reference_mean = data.mean().unwrap();
-                    let accuracy = 1.0 - ((stats.mean - reference_mean).abs() / reference_mean.abs()).min(1.0);
+                    let accuracy =
+                        1.0 - ((stats.mean - reference_mean).abs() / reference_mean.abs()).min(1.0);
                     let performance_score = self.calculate_parallel_performance_score(
-                        execution_time, 
-                        data.len(), 
-                        thread_count
+                        execution_time,
+                        data.len(),
+                        thread_count,
                     );
-                    
+
                     results.push(CrossPlatformTestResult {
                         function_name: "parallel_statistics".to_string(),
                         test_name,
@@ -406,7 +420,9 @@ impl CrossPlatformValidator {
                         stability_score: 0.0,
                         passed: false,
                         warnings: vec![format!("Parallel processing failed: {}", e)],
-                        recommendations: vec!["Check thread support and memory availability".to_string()],
+                        recommendations: vec![
+                            "Check thread support and memory availability".to_string()
+                        ],
                         execution_time_ns: 0,
                         memory_usage_bytes: 0,
                     });
@@ -420,21 +436,26 @@ impl CrossPlatformValidator {
     /// Test numerical stability across platforms
     fn test_numerical_stability(&self) -> StatsResult<Vec<CrossPlatformTestResult>> {
         let mut results = Vec::new();
-        
+
         // Test with challenging numerical scenarios
         let test_cases = vec![
             ("near_zero_values", generate_near_zero_data(1000)),
             ("large_values", generate_large_values_data(1000)),
             ("mixed_scale", generate_mixed_scale_data(1000)),
-            ("catastrophic_cancellation", generate_cancellation_data(1000)),
+            (
+                "catastrophic_cancellation",
+                generate_cancellation_data(1000),
+            ),
         ];
 
         for (test_name, data) in test_cases {
-            let stability_report = self.stability_analyzer.analyze_statistical_stability(&data.view());
-            
+            let stability_report = self
+                .stability_analyzer
+                .analyze_statistical_stability(&data.view());
+
             let accuracy_score = 1.0 - (stability_report.issues.len() as f64 / 10.0).min(1.0);
             let stability_score = stability_report.overall_score;
-            
+
             results.push(CrossPlatformTestResult {
                 function_name: "numerical_stability".to_string(),
                 test_name: test_name.to_string(),
@@ -456,41 +477,41 @@ impl CrossPlatformValidator {
     /// Test memory management
     fn test_memory_management(&self) -> StatsResult<Vec<CrossPlatformTestResult>> {
         let mut results = Vec::new();
-        
+
         // Test with different memory scenarios
         let memory_tests = vec![
-            ("small_frequent", 1000, 100),  // 1000 elements, 100 iterations
-            ("medium_batch", 10000, 10),    // 10000 elements, 10 iterations
-            ("large_single", 1000000, 1),   // 1000000 elements, 1 iteration
+            ("small_frequent", 1000, 100), // 1000 elements, 100 iterations
+            ("medium_batch", 10000, 10),   // 10000 elements, 10 iterations
+            ("large_single", 1000000, 1),  // 1000000 elements, 1 iteration
         ];
 
         for (test_name, size, iterations) in memory_tests {
             let mut memory_usage_peak = 0;
             let mut total_time = std::time::Duration::ZERO;
             let mut all_passed = true;
-            
+
             for i in 0..iterations {
                 let data = generate_normal_data(size);
                 let start_time = Instant::now();
-                
+
                 // Estimate memory usage (simplified)
                 let current_usage = estimate_memory_usage(data.len());
                 memory_usage_peak = memory_usage_peak.max(current_usage);
-                
+
                 let mut processor = create_ultrathink_processor();
                 let result = processor.process_comprehensive_statistics(&data.view());
-                
+
                 total_time += start_time.elapsed();
-                
+
                 if result.is_err() {
                     all_passed = false;
                     break;
                 }
             }
-            
+
             let avg_time_per_op = total_time / iterations as u32;
             let memory_efficiency = calculate_memory_efficiency(memory_usage_peak, size);
-            
+
             results.push(CrossPlatformTestResult {
                 function_name: "memory_management".to_string(),
                 test_name: test_name.to_string(),
@@ -516,27 +537,27 @@ impl CrossPlatformValidator {
     /// Analyze platform-specific performance characteristics
     fn analyze_platform_performance(&self) -> StatsResult<PerformancePlatformProfile> {
         let test_data = generate_performance_test_data(50000);
-        
+
         // Test SIMD speedup
         let scalar_time = time_scalar_operation(&test_data);
         let simd_time = time_simd_operation(&test_data);
         let simd_speedup = scalar_time.as_secs_f64() / simd_time.as_secs_f64();
-        
+
         // Test parallel efficiency
         let single_thread_time = time_single_thread_operation(&test_data);
         let multi_thread_time = time_multi_thread_operation(&test_data);
-        let parallel_efficiency = single_thread_time.as_secs_f64() / 
-                                  (multi_thread_time.as_secs_f64() * num_cpus::get() as f64);
-        
+        let parallel_efficiency = single_thread_time.as_secs_f64()
+            / (multi_thread_time.as_secs_f64() * num_cpus::get() as f64);
+
         // Estimate memory bandwidth (simplified)
         let memory_bandwidth = estimate_memory_bandwidth();
-        
+
         // Check cache efficiency
         let cache_efficiency = measure_cache_efficiency(&test_data);
-        
+
         // Thermal throttling detection (simplified)
         let thermal_throttling = detect_thermal_throttling();
-        
+
         // Recommend optimization mode based on platform characteristics
         let recommended_mode = if simd_speedup > 2.0 && parallel_efficiency > 0.8 {
             OptimizationMode::Performance
@@ -562,16 +583,17 @@ impl CrossPlatformValidator {
         if platform_info.architecture == "aarch64" && platform_info.simd_features.is_empty() {
             issues.push("ARM64 platform detected but no SIMD features available".to_string());
         }
-        
-        if platform_info.logical_cores != platform_info.physical_cores * 2 
-           && platform_info.logical_cores != platform_info.physical_cores {
+
+        if platform_info.logical_cores != platform_info.physical_cores * 2
+            && platform_info.logical_cores != platform_info.physical_cores
+        {
             issues.push("Unusual core configuration detected".to_string());
         }
-        
+
         if platform_info.l3_cache_kb == 0 {
             issues.push("No L3 cache detected - may impact large dataset performance".to_string());
         }
-        
+
         if platform_info.memory_gb < 4.0 {
             issues.push("Low memory configuration - consider reducing dataset sizes".to_string());
         }
@@ -579,48 +601,67 @@ impl CrossPlatformValidator {
 
     /// Generate platform-specific warnings and recommendations
     fn generate_platform_warnings(
-        &self, 
-        warnings: &mut Vec<String>, 
+        &self,
+        warnings: &mut Vec<String>,
         platform_info: &PlatformInfo,
-        performance_profile: &PerformancePlatformProfile
+        performance_profile: &PerformancePlatformProfile,
     ) {
         if performance_profile.simd_speedup_factor < 1.5 {
             warnings.push("SIMD acceleration below expected performance".to_string());
         }
-        
+
         if performance_profile.parallel_efficiency < 0.6 {
             warnings.push("Parallel processing efficiency is suboptimal".to_string());
         }
-        
+
         if performance_profile.thermal_throttling_detected {
             warnings.push("Thermal throttling detected - performance may be reduced".to_string());
         }
-        
-        if platform_info.operating_system == "windows" && performance_profile.memory_bandwidth_gbps < 10.0 {
+
+        if platform_info.operating_system == "windows"
+            && performance_profile.memory_bandwidth_gbps < 10.0
+        {
             warnings.push("Windows platform with low memory bandwidth detected".to_string());
         }
     }
 
     /// Calculate numerical accuracy compared to reference implementation
-    fn calculate_numerical_accuracy(&self, data: &ArrayView1<f64>, result: &crate::ultrathink_unified_processor::UltrathinkComprehensiveResult) -> f64 {
+    fn calculate_numerical_accuracy(
+        &self,
+        data: &ArrayView1<f64>,
+        result: &crate::ultrathink_unified_processor::UltrathinkComprehensiveResult<f64>,
+    ) -> f64 {
         // Simple accuracy calculation based on mean comparison
         let reference_mean = data.mean().unwrap_or(0.0);
         if reference_mean == 0.0 {
-            if result.statistics.mean.abs() < 1e-15 { 1.0 } else { 0.0 }
+            if result.statistics.mean.abs() < 1e-15 {
+                1.0
+            } else {
+                0.0
+            }
         } else {
             1.0 - ((result.statistics.mean - reference_mean).abs() / reference_mean.abs()).min(1.0)
         }
     }
 
     /// Calculate performance score based on execution time and data size
-    fn calculate_performance_score(&self, execution_time: std::time::Duration, data_size: usize) -> f64 {
+    fn calculate_performance_score(
+        &self,
+        execution_time: std::time::Duration,
+        data_size: usize,
+    ) -> f64 {
         let throughput = data_size as f64 / execution_time.as_secs_f64();
         let expected_throughput = estimate_expected_throughput(data_size);
         (throughput / expected_throughput).min(1.0)
     }
 
     /// Calculate parallel performance score
-    fn calculate_parallel_performance_score(&self, execution_time: std::time::Duration, data_size: usize, thread_count: usize) -> f64 {
+    fn calculate_parallel_performance_score(
+        &self,
+        execution_time: std::time::Duration,
+        data_size: usize,
+        thread_count: usize,
+    ) -> f64 {
         let throughput = data_size as f64 / execution_time.as_secs_f64();
         let expected_throughput = estimate_expected_parallel_throughput(data_size, thread_count);
         (throughput / expected_throughput).min(1.0)
@@ -680,9 +721,7 @@ fn generate_large_values_data(n: usize) -> Array1<f64> {
 }
 
 fn generate_mixed_scale_data(n: usize) -> Array1<f64> {
-    Array1::from_shape_fn(n, |i| {
-        if i % 10 == 0 { 1e12 } else { 1e-12 }
-    })
+    Array1::from_shape_fn(n, |i| if i % 10 == 0 { 1e12 } else { 1e-12 })
 }
 
 fn generate_cancellation_data(n: usize) -> Array1<f64> {
@@ -707,10 +746,10 @@ fn calculate_memory_efficiency(peak_usage: usize, data_size: usize) -> f64 {
 fn estimate_expected_throughput(data_size: usize) -> f64 {
     // Very rough estimate - should be calibrated per platform
     match data_size {
-        n if n < 1000 => 1e6,      // 1M elements/sec
-        n if n < 10000 => 5e6,     // 5M elements/sec  
-        n if n < 100000 => 10e6,   // 10M elements/sec
-        _ => 20e6,                 // 20M elements/sec
+        n if n < 1000 => 1e6,    // 1M elements/sec
+        n if n < 10000 => 5e6,   // 5M elements/sec
+        n if n < 100000 => 10e6, // 10M elements/sec
+        _ => 20e6,               // 20M elements/sec
     }
 }
 

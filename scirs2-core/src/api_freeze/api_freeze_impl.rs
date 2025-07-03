@@ -310,18 +310,18 @@ pub fn generate_frozen_api_report() -> String {
     modules.sort();
 
     for module in modules {
-        report.push_str(&format!("## Module: {}\n", module));
+        report.push_str(&format!("## Module: {module}\n"));
         if let Some(apis) = apis_by_module.get(module) {
             let mut sorted_apis = apis.clone();
             sorted_apis.sort();
             for api in sorted_apis {
-                report.push_str(&format!("- {}\n", api));
+                report.push_str(&format!("- {api}\n"));
             }
         }
         report.push('\n');
     }
 
-    report.push_str(&format!("\nTotal frozen APIs: {}\n", total_apis));
+    report.push_str(&format!("\nTotal frozen APIs: {total_apis}\n"));
 
     report
 }

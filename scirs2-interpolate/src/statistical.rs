@@ -91,8 +91,8 @@ impl<T: Float + FromPrimitive + Debug + Display + std::iter::Sum> BootstrapInter
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
-                let mut thread_rng = rand::rng();
-                StdRng::from_rng(&mut thread_rng)
+                let mut rng = rand::rng();
+                StdRng::from_rng(&mut rng)
             }
         };
 
@@ -1065,8 +1065,8 @@ impl CrossValidationUncertainty {
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
-                let mut thread_rng = rand::rng();
-                StdRng::from_rng(&mut thread_rng)
+                let mut rng = rand::rng();
+                StdRng::from_rng(&mut rng)
             }
         };
 

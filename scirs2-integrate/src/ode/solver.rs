@@ -647,10 +647,10 @@ where
 
                             // Solve the transformed system (base solver without recursion)
                             let base_result = solve_ivp(transformed_f, t_span, y0, Some(modified_options.base_options))?;
-                            
+
                             // Create empty event record since we're not actually detecting events in this path
                             let empty_events = crate::ode::utils::events::EventRecord::new();
-                            
+
                             // Convert base result to events result format
                             Ok(ODEResultWithEvents {
                                 base_result,

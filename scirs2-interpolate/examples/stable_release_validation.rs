@@ -13,27 +13,26 @@
 use scirs2_interpolate::{
     // API Stabilization
     analyze_api_for_stable_release,
-    StableReleaseReadiness as ApiReadiness,
-    
-    // Performance Validation
-    validate_stable_release_readiness,
-    StableReadiness as PerfReadiness,
-    
-    // Production Hardening
-    run_production_hardening,
-    ProductionReadiness as HardeningReadiness,
-    
     // SciPy Parity
     enhance_scipy_parity_for_stable_release,
-    ParityReadiness,
-    
     // Documentation Enhancement
     polish_documentation_for_stable_release,
-    DocumentationReadiness,
-    
+    // Production Hardening
+    run_production_hardening,
     // Stress Testing
     run_production_stress_tests,
+    // Performance Validation
+    validate_stable_release_readiness,
+    DocumentationReadiness,
+
+    ParityReadiness,
+
+    ProductionReadiness as HardeningReadiness,
+
     ProductionReadiness as StressReadiness,
+    StableReadiness as PerfReadiness,
+
+    StableReleaseReadiness as ApiReadiness,
 };
 
 /// Overall readiness assessment for stable release
@@ -61,20 +60,43 @@ pub struct StableReleaseValidationReport {
 
 impl std::fmt::Display for StableReleaseValidationReport {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "=== SCIRS2-INTERPOLATE 0.1.0 STABLE RELEASE VALIDATION ===")?;
+        writeln!(
+            f,
+            "=== SCIRS2-INTERPOLATE 0.1.0 STABLE RELEASE VALIDATION ==="
+        )?;
         writeln!(f)?;
         writeln!(f, "🎯 OVERALL READINESS: {:?}", self.overall_readiness)?;
         writeln!(f)?;
-        
+
         writeln!(f, "📊 COMPONENT READINESS:")?;
         writeln!(f, "  API Stabilization:     {:?}", self.api_readiness)?;
-        writeln!(f, "  Performance Validation: {:?}", self.performance_readiness)?;
-        writeln!(f, "  Production Hardening:   {:?}", self.production_readiness)?;
-        writeln!(f, "  SciPy Parity:          {:?}", self.scipy_parity_readiness)?;
-        writeln!(f, "  Documentation:         {:?}", self.documentation_readiness)?;
-        writeln!(f, "  Stress Testing:        {:?}", self.stress_test_readiness)?;
+        writeln!(
+            f,
+            "  Performance Validation: {:?}",
+            self.performance_readiness
+        )?;
+        writeln!(
+            f,
+            "  Production Hardening:   {:?}",
+            self.production_readiness
+        )?;
+        writeln!(
+            f,
+            "  SciPy Parity:          {:?}",
+            self.scipy_parity_readiness
+        )?;
+        writeln!(
+            f,
+            "  Documentation:         {:?}",
+            self.documentation_readiness
+        )?;
+        writeln!(
+            f,
+            "  Stress Testing:        {:?}",
+            self.stress_test_readiness
+        )?;
         writeln!(f)?;
-        
+
         if !self.critical_blockers.is_empty() {
             writeln!(f, "🚨 CRITICAL BLOCKERS:")?;
             for blocker in &self.critical_blockers {
@@ -82,7 +104,7 @@ impl std::fmt::Display for StableReleaseValidationReport {
             }
             writeln!(f)?;
         }
-        
+
         if !self.priority_tasks.is_empty() {
             writeln!(f, "⚠️  PRIORITY TASKS:")?;
             for task in &self.priority_tasks {
@@ -90,25 +112,25 @@ impl std::fmt::Display for StableReleaseValidationReport {
             }
             writeln!(f)?;
         }
-        
+
         writeln!(f, "📝 SUMMARY:")?;
         writeln!(f, "{}", self.summary)?;
-        
+
         Ok(())
     }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Starting Comprehensive Stable Release Validation ===\n");
-    
+
     let mut critical_blockers = Vec::new();
     let mut priority_tasks = Vec::new();
-    
+
     // 1. API Stabilization Analysis
     println!("1. 🔍 Analyzing API Stabilization...");
     let api_report = analyze_api_for_stable_release()?;
     let api_readiness = api_report.overall_readiness.clone();
-    
+
     match api_readiness {
         ApiReadiness::Ready => println!("   ✅ API is stable and ready"),
         ApiReadiness::NeedsWork => {
@@ -118,21 +140,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ApiReadiness::NotReady => {
             println!("   ❌ API has critical stability issues");
             critical_blockers.extend(
-                api_report.critical_issues.iter()
+                api_report
+                    .critical_issues
+                    .iter()
                     .take(3)
-                    .map(|issue| format!("API: {}", issue.description))
+                    .map(|issue| format!("API: {}", issue.description)),
             );
         }
     }
     println!("   Critical issues: {}", api_report.critical_issues.len());
     println!("   Recommendations: {}", api_report.recommendations.len());
     println!();
-    
+
     // 2. Performance Validation
     println!("2. ⚡ Validating Performance...");
     let perf_report = validate_stable_release_readiness::<f64>()?;
     let performance_readiness = perf_report.overall_readiness.clone();
-    
+
     match performance_readiness {
         PerfReadiness::Ready => println!("   ✅ Performance meets stable release criteria"),
         PerfReadiness::NearReady => {
@@ -142,51 +166,69 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         PerfReadiness::NeedsWork => {
             println!("   ❌ Performance issues prevent stable release");
             critical_blockers.extend(
-                perf_report.priority_items.iter()
+                perf_report
+                    .priority_items
+                    .iter()
                     .take(3)
-                    .map(|item| format!("Performance: {}", item))
+                    .map(|item| format!("Performance: {}", item)),
             );
         }
     }
-    println!("   Benchmarks passed: {}/{}", 
-             perf_report.results.iter().filter(|r| r.status.to_string().contains("Passed")).count(),
-             perf_report.results.len());
+    println!(
+        "   Benchmarks passed: {}/{}",
+        perf_report
+            .results
+            .iter()
+            .filter(|r| r.status.to_string().contains("Passed"))
+            .count(),
+        perf_report.results.len()
+    );
     println!();
-    
+
     // 3. Production Hardening
     println!("3. 🛡️  Validating Production Hardening...");
     let hardening_report = run_production_hardening::<f64>()?;
     let production_readiness = hardening_report.production_readiness.clone();
-    
+
     match production_readiness {
         HardeningReadiness::Ready => println!("   ✅ Production hardening complete"),
         HardeningReadiness::NeedsWork => {
             println!("   ⚠️  Some production concerns remain");
             priority_tasks.extend(
-                hardening_report.priority_issues.iter()
+                hardening_report
+                    .priority_issues
+                    .iter()
                     .take(2)
-                    .map(|issue| issue.description.clone())
+                    .map(|issue| issue.description.clone()),
             );
         }
         HardeningReadiness::NotReady => {
             println!("   ❌ Critical production issues found");
             critical_blockers.extend(
-                hardening_report.critical_issues.iter()
+                hardening_report
+                    .critical_issues
+                    .iter()
                     .take(3)
-                    .map(|issue| format!("Production: {}", issue.description))
+                    .map(|issue| format!("Production: {}", issue.description)),
             );
         }
     }
-    println!("   Tests passed: {}/{}", 
-             hardening_report.test_results.iter().filter(|r| r.status.to_string().contains("Passed")).count(),
-             hardening_report.test_results.len());
+    println!(
+        "   Tests passed: {}/{}",
+        hardening_report
+            .test_results
+            .iter()
+            .filter(|r| r.status.to_string().contains("Passed"))
+            .count(),
+        hardening_report.test_results.len()
+    );
     println!();
-    
+
     // 4. SciPy Parity Enhancement
     println!("4. 🐍 Validating SciPy Parity...");
     let scipy_report = enhance_scipy_parity_for_stable_release::<f64>()?;
     let scipy_readiness = scipy_report.readiness.clone();
-    
+
     match scipy_readiness {
         ParityReadiness::Ready => println!("   ✅ SciPy parity is complete"),
         ParityReadiness::NearReady => {
@@ -202,15 +244,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             critical_blockers.push("Critical SciPy features missing".to_string());
         }
     }
-    println!("   Feature coverage: {:.1}%", scipy_report.overall_coverage * 100.0);
-    println!("   Performance ratio: {:.2}x", scipy_report.performance_summary.overall_ratio);
+    println!(
+        "   Feature coverage: {:.1}%",
+        scipy_report.overall_coverage * 100.0
+    );
+    println!(
+        "   Performance ratio: {:.2}x",
+        scipy_report.performance_summary.overall_ratio
+    );
     println!();
-    
+
     // 5. Documentation Enhancement
     println!("5. 📚 Validating Documentation...");
     let doc_report = polish_documentation_for_stable_release();
     let doc_readiness = doc_report.readiness.clone();
-    
+
     match doc_readiness {
         DocumentationReadiness::Ready => println!("   ✅ Documentation is complete and polished"),
         DocumentationReadiness::NearReady => {
@@ -220,39 +268,52 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         DocumentationReadiness::NeedsWork => {
             println!("   ❌ Documentation gaps prevent stable release");
             critical_blockers.extend(
-                doc_report.priority_tasks.iter()
+                doc_report
+                    .priority_tasks
+                    .iter()
                     .take(3)
-                    .map(|task| format!("Documentation: {}", task))
+                    .map(|task| format!("Documentation: {}", task)),
             );
         }
     }
     println!("   Coverage: {:.1}%", doc_report.coverage_score * 100.0);
     println!("   Quality score: {:.1}/10", doc_report.quality_score);
     println!();
-    
+
     // 6. Stress Testing
     println!("6. 💪 Running Production Stress Tests...");
     let stress_report = run_production_stress_tests::<f64>()?;
     let stress_readiness = stress_report.production_readiness.clone();
-    
+
     match stress_readiness {
         StressReadiness::Ready => println!("   ✅ All stress tests passed"),
         StressReadiness::NeedsWork => {
             println!("   ⚠️  Some stress test concerns");
-            if stress_report.test_results.iter().any(|r| r.status.to_string().contains("Failed")) {
+            if stress_report
+                .test_results
+                .iter()
+                .any(|r| r.status.to_string().contains("Failed"))
+            {
                 priority_tasks.push("Address stress test failures".to_string());
             }
         }
         StressReadiness::NotReady => {
             println!("   ❌ Critical stress test failures");
-            critical_blockers.push("Critical stress test failures prevent production use".to_string());
+            critical_blockers
+                .push("Critical stress test failures prevent production use".to_string());
         }
     }
-    println!("   Stress tests passed: {}/{}", 
-             stress_report.test_results.iter().filter(|r| r.status.to_string().contains("Passed")).count(),
-             stress_report.test_results.len());
+    println!(
+        "   Stress tests passed: {}/{}",
+        stress_report
+            .test_results
+            .iter()
+            .filter(|r| r.status.to_string().contains("Passed"))
+            .count(),
+        stress_report.test_results.len()
+    );
     println!();
-    
+
     // Calculate overall readiness
     let overall_readiness = determine_overall_readiness(
         &api_readiness,
@@ -263,10 +324,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &stress_readiness,
         &critical_blockers,
     );
-    
+
     // Generate summary
-    let summary = generate_summary(&overall_readiness, critical_blockers.len(), priority_tasks.len());
-    
+    let summary = generate_summary(
+        &overall_readiness,
+        critical_blockers.len(),
+        priority_tasks.len(),
+    );
+
     // Create final report
     let final_report = StableReleaseValidationReport {
         api_readiness,
@@ -280,10 +345,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         priority_tasks,
         summary,
     };
-    
+
     // Display final results
     println!("{}", final_report);
-    
+
     // Exit with appropriate code
     match final_report.overall_readiness {
         OverallReadiness::Ready => {
@@ -318,17 +383,18 @@ fn determine_overall_readiness(
     if !critical_blockers.is_empty() {
         return OverallReadiness::NotReady;
     }
-    
+
     // Check for any "NotReady" components
-    if matches!(api, ApiReadiness::NotReady) ||
-       matches!(perf, PerfReadiness::NeedsWork) ||
-       matches!(prod, HardeningReadiness::NotReady) ||
-       matches!(scipy, ParityReadiness::NotReady) ||
-       matches!(doc, DocumentationReadiness::NeedsWork) ||
-       matches!(stress, StressReadiness::NotReady) {
+    if matches!(api, ApiReadiness::NotReady)
+        || matches!(perf, PerfReadiness::NeedsWork)
+        || matches!(prod, HardeningReadiness::NotReady)
+        || matches!(scipy, ParityReadiness::NotReady)
+        || matches!(doc, DocumentationReadiness::NeedsWork)
+        || matches!(stress, StressReadiness::NotReady)
+    {
         return OverallReadiness::NotReady;
     }
-    
+
     // Count components that need work
     let needs_work_count = [
         matches!(api, ApiReadiness::NeedsWork),
@@ -337,8 +403,11 @@ fn determine_overall_readiness(
         matches!(scipy, ParityReadiness::NeedsWork),
         matches!(doc, DocumentationReadiness::NearReady),
         matches!(stress, StressReadiness::NeedsWork),
-    ].iter().filter(|&&x| x).count();
-    
+    ]
+    .iter()
+    .filter(|&&x| x)
+    .count();
+
     match needs_work_count {
         0 => OverallReadiness::Ready,
         1..=2 => OverallReadiness::NearReady,
@@ -346,7 +415,11 @@ fn determine_overall_readiness(
     }
 }
 
-fn generate_summary(readiness: &OverallReadiness, critical_count: usize, priority_count: usize) -> String {
+fn generate_summary(
+    readiness: &OverallReadiness,
+    critical_count: usize,
+    priority_count: usize,
+) -> String {
     match readiness {
         OverallReadiness::Ready => {
             "All validation criteria have been met. The scirs2-interpolate library is ready for the 0.1.0 stable release with high confidence in API stability, performance, and production readiness.".to_string()

@@ -58,7 +58,7 @@ fn test_biomedical_signal_pipeline() -> SignalResult<()> {
     }
 
     // Add realistic noise (powerline interference + baseline wander + random noise)
-    let mut rng = thread_rng();
+    let mut rng = rand::thread_rng();
     let noisy_ecg: Vec<f64> = ecg_signal
         .iter()
         .enumerate()
@@ -66,7 +66,7 @@ fn test_biomedical_signal_pipeline() -> SignalResult<()> {
             let ti = t[i];
             let powerline_noise = 0.1 * (2.0 * PI * 50.0 * ti).sin(); // 50 Hz interference
             let baseline_wander = 0.2 * (2.0 * PI * 0.5 * ti).sin(); // Slow drift
-            let random_noise = 0.05 * rng.gen_range(-1.0..1.0);
+            let random_noise = 0.05 * rng.random_range(-1.0..1.0);
             signal + powerline_noise + baseline_wander + random_noise
         })
         .collect();
@@ -248,10 +248,10 @@ fn test_audio_processing_pipeline() -> SignalResult<()> {
     }
 
     // Add realistic audio noise
-    let mut rng = thread_rng();
+    let mut rng = rand::thread_rng();
     let noisy_audio: Vec<f64> = audio_signal
         .iter()
-        .map(|&signal| signal + 0.01 * rng.gen_range(-1.0..1.0))
+        .map(|&signal| signal + 0.01 * rng.random_range(-1.0..1.0))
         .collect();
 
     println!(
@@ -337,13 +337,13 @@ fn test_geophysical_processing_pipeline() -> SignalResult<()> {
     let n = (base_fs * duration) as usize;
 
     // Generate irregular sampling times (realistic for field data)
-    let mut rng = thread_rng();
+    let mut rng = rand::thread_rng();
     let mut times = Vec::with_capacity(n);
     let mut current_time = 0.0;
 
     for _ in 0..n {
         // Add some jitter to sampling times
-        current_time += (1.0 / base_fs) * (0.8 + 0.4 * rng.gen::<f64>());
+        current_time += (1.0 / base_fs) * (0.8 + 0.4 * rng.random::<f64>());
         times.push(current_time);
         if current_time >= duration {
             break;
@@ -364,7 +364,7 @@ fn test_geophysical_processing_pipeline() -> SignalResult<()> {
         }
 
         // Add some seismic noise (more complex than white noise)
-        let noise = 0.2 * rng.gen_range(-1.0..1.0) + 0.1 * (2.0 * PI * 50.0 * t).sin(); // Cultural noise
+        let noise = 0.2 * rng.random_range(-1.0..1.0) + 0.1 * (2.0 * PI * 50.0 * t).sin(); // Cultural noise
 
         seismic_signal.push(sample + noise);
     }
@@ -514,10 +514,10 @@ fn test_image_processing_pipeline() -> SignalResult<()> {
     }
 
     // Add noise
-    let mut rng = thread_rng();
+    let mut rng = rand::thread_rng();
     let mut noisy_image = clean_image.clone();
     for element in noisy_image.iter_mut() {
-        *element += 0.2 * rng.gen_range(-1.0..1.0);
+        *element += 0.2 * rng.random_range(-1.0..1.0);
     }
 
     println!("📊 Generated {}x{} test image", height, width);

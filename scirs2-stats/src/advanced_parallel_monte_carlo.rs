@@ -7,11 +7,11 @@
 //! - Sequential Monte Carlo with adaptive resampling
 //! - GPU acceleration support (when available)
 
-use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use crate::error::StatsResult;
+use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 

@@ -726,7 +726,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
                         self.memory_buffer.importance_scores.pop_front();
                     }
                     MemoryUpdateStrategy::Random => {
-                        let idx = rand::rng().gen_range(0..self.memory_buffer.examples.len());
+                        let idx = rand::rng().random_range(0..self.memory_buffer.examples.len());
                         self.memory_buffer.examples.remove(idx);
                         self.memory_buffer.importance_scores.remove(idx);
                     }

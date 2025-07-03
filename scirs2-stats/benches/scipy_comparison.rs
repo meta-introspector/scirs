@@ -13,7 +13,7 @@ use scirs2_stats::{
 
 /// Generate large datasets for throughput testing
 fn generate_large_dataset(n: usize) -> Array1<f64> {
-    let mut rng = thread_rng();
+    let mut rng = rng();
     Array1::from_shape_fn(n, |_| StandardNormal.sample(&mut rng))
 }
 
@@ -112,7 +112,7 @@ fn bench_correlation_matrix(c: &mut Criterion) {
 
     for (n_vars, n_obs) in configs {
         // Generate random data matrix
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let data: Vec<Array1<f64>> = (0..n_vars)
             .map(|_| Array1::from_shape_fn(n_obs, |_| StandardNormal.sample(&mut rng)))
             .collect();

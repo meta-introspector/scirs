@@ -35,34 +35,34 @@ pub struct EnhancedGpuEngine {
 }
 
 /// Trait for GPU compute backends (CUDA, OpenCL, WebGPU)
-pub trait GpuBackend {
+pub trait GpuBackend: std::fmt::Debug {
     /// Initialize the backend
     fn initialize(&mut self) -> Result<()>;
-    
+
     /// Get backend information
     fn get_info(&self) -> BackendInfo;
-    
+
     /// Allocate GPU memory
     fn allocate_memory(&self, size: usize) -> Result<GpuMemoryHandle>;
-    
+
     /// Copy data to GPU
     fn copy_to_gpu(&self, handle: &GpuMemoryHandle, data: &[f32]) -> Result<()>;
-    
+
     /// Copy data from GPU
     fn copy_from_gpu(&self, handle: &GpuMemoryHandle, data: &mut [f32]) -> Result<()>;
-    
+
     /// Execute compute kernel
     fn execute_kernel(&self, kernel: &ComputeKernel, params: &KernelParams) -> Result<()>;
-    
+
     /// Create compute kernel from source
     fn create_kernel(&self, source: &str, entry_point: &str) -> Result<ComputeKernel>;
-    
+
     /// Synchronize execution
     fn synchronize(&self) -> Result<()>;
-    
+
     /// Get backend name
     fn get_name(&self) -> &str;
-    
+
     /// Check if backend is available
     fn is_available(&self) -> bool;
 }
@@ -247,7 +247,7 @@ pub struct UtilizationMeasurement {
 #[derive(Debug, Clone)]
 pub struct BandwidthMeasurement {
     pub timestamp: Instant,
-    pub memory_bandwidth: f64, // GB/s
+    pub memory_bandwidth: f64,   // GB/s
     pub compute_throughput: f64, // GFLOPS
     pub kernel_name: String,
 }
@@ -269,7 +269,7 @@ pub struct OptimizationResult {
     pub timestamp: Instant,
     pub kernel_name: String,
     pub parameters: KernelOptimizationParams,
-    pub performance: f64, // GFLOPS or execution time
+    pub performance: f64,       // GFLOPS or execution time
     pub energy_efficiency: f64, // GFLOPS/Watt
 }
 
@@ -314,7 +314,10 @@ pub enum TuningStrategy {
     /// Random search
     Random { samples: usize },
     /// Genetic algorithm
-    Genetic { population: usize, generations: usize },
+    Genetic {
+        population: usize,
+        generations: usize,
+    },
     /// Bayesian optimization
     Bayesian { initial_samples: usize },
     /// Simulated annealing
@@ -322,13 +325,21 @@ pub enum TuningStrategy {
 }
 
 /// Machine learning model for kernel optimization
-pub trait OptimizationModel {
+pub trait OptimizationModel: std::fmt::Debug {
     /// Predict optimal parameters for a kernel
-    fn predict_parameters(&self, kernel_features: &KernelFeatures) -> Result<KernelOptimizationParams>;
-    
+    fn predict_parameters(
+        &self,
+        kernel_features: &KernelFeatures,
+    ) -> Result<KernelOptimizationParams>;
+
     /// Update model with new performance data
-    fn update(&mut self, features: &KernelFeatures, params: &KernelOptimizationParams, performance: f64) -> Result<()>;
-    
+    fn update(
+        &mut self,
+        features: &KernelFeatures,
+        params: &KernelOptimizationParams,
+        performance: f64,
+    ) -> Result<()>;
+
     /// Get model confidence for prediction
     fn get_confidence(&self, features: &KernelFeatures) -> f64;
 }
@@ -608,7 +619,7 @@ impl EnhancedGpuEngine {
     /// Create new enhanced GPU engine with auto-detection
     pub fn new() -> Result<Self> {
         let mut backends: Vec<Box<dyn GpuBackend + Send + Sync>> = Vec::new();
-        
+
         // Try to initialize CUDA backend
         if let Ok(mut cuda_backend) = CudaBackend::new() {
             if cuda_backend.is_available() {
@@ -616,7 +627,7 @@ impl EnhancedGpuEngine {
                 backends.push(Box::new(cuda_backend));
             }
         }
-        
+
         // Try to initialize OpenCL backend
         if let Ok(mut opencl_backend) = OpenClBackend::new() {
             if opencl_backend.is_available() {
@@ -624,7 +635,7 @@ impl EnhancedGpuEngine {
                 backends.push(Box::new(opencl_backend));
             }
         }
-        
+
         // Try to initialize WebGPU backend
         if let Ok(mut webgpu_backend) = WebGpuBackend::new() {
             if webgpu_backend.is_available() {
@@ -632,16 +643,16 @@ impl EnhancedGpuEngine {
                 backends.push(Box::new(webgpu_backend));
             }
         }
-        
+
         if backends.is_empty() {
             return Err(MetricsError::ComputationError(
                 "No GPU backends available".to_string(),
             ));
         }
-        
+
         // Select best backend based on capabilities
         let active_backend = Some(Self::select_best_backend(&backends));
-        
+
         Ok(Self {
             backends,
             active_backend,
@@ -652,26 +663,26 @@ impl EnhancedGpuEngine {
             stream_manager: StreamManager::new(),
         })
     }
-    
+
     /// Select the best available backend
     fn select_best_backend(backends: &[Box<dyn GpuBackend + Send + Sync>]) -> usize {
         let mut best_index = 0;
         let mut best_score = 0.0;
-        
+
         for (i, backend) in backends.iter().enumerate() {
             let info = backend.get_info();
             // Score based on compute units and memory
             let score = info.compute_units as f64 + (info.global_memory as f64 / 1_000_000_000.0);
-            
+
             if score > best_score {
                 best_score = score;
                 best_index = i;
             }
         }
-        
+
         best_index
     }
-    
+
     /// Compute correlation using optimized GPU kernels
     pub fn gpu_correlation<F>(&mut self, x: &ArrayView1<F>, y: &ArrayView1<F>) -> Result<F>
     where
@@ -682,79 +693,103 @@ impl EnhancedGpuEngine {
                 "Arrays must have same length".to_string(),
             ));
         }
-        
-        let backend_index = self.active_backend.ok_or_else(|| {
-            MetricsError::ComputationError("No active GPU backend".to_string())
-        })?;
-        
-        let backend = &self.backends[backend_index];
-        
+
+        let backend_index = self
+            .active_backend
+            .ok_or_else(|| MetricsError::ComputationError("No active GPU backend".to_string()))?;
+
         // Convert data to f32 for GPU computation
-        let x_f32: Vec<f32> = x.iter().map(|&v| v.to_f64().unwrap_or(0.0) as f32).collect();
-        let y_f32: Vec<f32> = y.iter().map(|&v| v.to_f64().unwrap_or(0.0) as f32).collect();
-        
+        let x_f32: Vec<f32> = x
+            .iter()
+            .map(|&v| v.to_f64().unwrap_or(0.0) as f32)
+            .collect();
+        let y_f32: Vec<f32> = y
+            .iter()
+            .map(|&v| v.to_f64().unwrap_or(0.0) as f32)
+            .collect();
+
         let n = x_f32.len();
-        
-        // Allocate GPU memory
-        let x_buffer = backend.allocate_memory(n * std::mem::size_of::<f32>())?;
-        let y_buffer = backend.allocate_memory(n * std::mem::size_of::<f32>())?;
-        let result_buffer = backend.allocate_memory(std::mem::size_of::<f32>())?;
-        
-        // Copy data to GPU
-        backend.copy_to_gpu(&x_buffer, &x_f32)?;
-        backend.copy_to_gpu(&y_buffer, &y_f32)?;
-        
-        // Get or create optimized correlation kernel
-        let kernel = self.get_or_create_correlation_kernel(backend, n)?;
-        
-        // Set up kernel parameters
-        let params = KernelParams {
-            buffers: vec![x_buffer, y_buffer, result_buffer.clone()],
-            scalars: vec![n as f32],
-            local_memory_sizes: vec![],
-            global_work_size: [((n + 255) / 256) * 256, 1, 1],
-            local_work_size: [256, 1, 1],
+
+        // Get or create optimized correlation kernel first
+        let kernel = self.get_or_create_correlation_kernel_by_index(backend_index, n)?;
+
+        // Allocate GPU memory and copy data, then execute
+        let (execution_time, result) = {
+            let backend = &self.backends[backend_index];
+            let x_buffer = backend.allocate_memory(n * std::mem::size_of::<f32>())?;
+            let y_buffer = backend.allocate_memory(n * std::mem::size_of::<f32>())?;
+            let result_buffer = backend.allocate_memory(std::mem::size_of::<f32>())?;
+
+            // Copy data to GPU
+            backend.copy_to_gpu(&x_buffer, &x_f32)?;
+            backend.copy_to_gpu(&y_buffer, &y_f32)?;
+
+            // Set up kernel parameters
+            let params = KernelParams {
+                buffers: vec![x_buffer.clone(), y_buffer.clone(), result_buffer.clone()],
+                scalars: vec![n as f32],
+                local_memory_sizes: vec![],
+                global_work_size: [((n + 255) / 256) * 256, 1, 1],
+                local_work_size: [256, 1, 1],
+            };
+
+            // Execute kernel with profiling
+            let start_time = Instant::now();
+            backend.execute_kernel(&kernel, &params)?;
+            backend.synchronize()?;
+            let execution_time = start_time.elapsed();
+
+            // Copy result back
+            let mut result = vec![0.0f32; 1];
+            backend.copy_from_gpu(&result_buffer, &mut result)?;
+
+            (execution_time, result[0])
         };
-        
-        // Execute kernel with profiling
-        let start_time = Instant::now();
-        backend.execute_kernel(&kernel, &params)?;
-        backend.synchronize()?;
-        let execution_time = start_time.elapsed();
-        
+
         // Record performance
-        self.profiler.record_kernel_execution("correlation", execution_time);
-        
-        // Copy result back
-        let mut result = vec![0.0f32; 1];
-        backend.copy_from_gpu(&result_buffer, &mut result)?;
-        
-        Ok(F::from(result[0] as f64).unwrap())
+        self.profiler
+            .record_kernel_execution("correlation", execution_time);
+
+        Ok(F::from(result as f64).unwrap())
     }
-    
+
     /// Get or create optimized correlation kernel
-    fn get_or_create_correlation_kernel(&mut self, backend: &Box<dyn GpuBackend + Send + Sync>, n: usize) -> Result<ComputeKernel> {
+    fn get_or_create_correlation_kernel(
+        &mut self,
+        backend: &Box<dyn GpuBackend + Send + Sync>,
+        n: usize,
+    ) -> Result<ComputeKernel> {
         let kernel_hash = self.compute_kernel_hash("correlation", n);
-        
+
         if let Some(kernel) = self.kernel_cache.get(kernel_hash) {
             return Ok(kernel.clone());
         }
-        
+
         // Generate optimized kernel source
         let source = self.generate_correlation_kernel_source(n)?;
         let kernel = backend.create_kernel(&source, "compute_correlation")?;
-        
+
         // Cache the kernel
         self.kernel_cache.insert(kernel_hash, kernel.clone());
-        
+
         Ok(kernel)
     }
-    
+
+    /// Get or create correlation kernel by backend index (wrapper to avoid borrow conflicts)
+    fn get_or_create_correlation_kernel_by_index(
+        &mut self,
+        backend_index: usize,
+        n: usize,
+    ) -> Result<ComputeKernel> {
+        let backend = &self.backends[backend_index];
+        self.get_or_create_correlation_kernel(backend, n)
+    }
+
     /// Generate optimized correlation kernel source
     fn generate_correlation_kernel_source(&self, n: usize) -> Result<String> {
         // Generate backend-specific optimized kernel
         let backend = &self.backends[self.active_backend.unwrap()];
-        
+
         match backend.get_name() {
             "CUDA" => self.generate_cuda_correlation_kernel(n),
             "OpenCL" => self.generate_opencl_correlation_kernel(n),
@@ -764,14 +799,21 @@ impl EnhancedGpuEngine {
             )),
         }
     }
-    
+
     /// Generate CUDA correlation kernel
     fn generate_cuda_correlation_kernel(&self, n: usize) -> Result<String> {
-        let vector_width = self.kernel_optimizer.get_optimal_vector_width("correlation", n);
-        let block_size = self.kernel_optimizer.get_optimal_block_size("correlation", n);
-        let unroll_factor = self.kernel_optimizer.get_optimal_unroll_factor("correlation", n);
-        
-        let source = format!(r#"
+        let vector_width = self
+            .kernel_optimizer
+            .get_optimal_vector_width("correlation", n);
+        let block_size = self
+            .kernel_optimizer
+            .get_optimal_block_size("correlation", n);
+        let unroll_factor = self
+            .kernel_optimizer
+            .get_optimal_unroll_factor("correlation", n);
+
+        let source = format!(
+            r#"
 extern "C" __global__ void compute_correlation(
     const float* __restrict__ x,
     const float* __restrict__ y,
@@ -886,21 +928,26 @@ extern "C" __global__ void compute_correlation(
         atomicAdd(result, correlation);
     }}
 }}
-"#, 
+"#,
             block_size = block_size,
             vector_width = vector_width,
             unroll_factor = unroll_factor
         );
-        
+
         Ok(source)
     }
-    
+
     /// Generate OpenCL correlation kernel
     fn generate_opencl_correlation_kernel(&self, n: usize) -> Result<String> {
-        let work_group_size = self.kernel_optimizer.get_optimal_work_group_size("correlation", n);
-        let vector_width = self.kernel_optimizer.get_optimal_vector_width("correlation", n);
-        
-        let source = format!(r#"
+        let work_group_size = self
+            .kernel_optimizer
+            .get_optimal_work_group_size("correlation", n);
+        let vector_width = self
+            .kernel_optimizer
+            .get_optimal_vector_width("correlation", n);
+
+        let source = format!(
+            r#"
 __kernel void compute_correlation(
     __global const float* restrict x,
     __global const float* restrict y,
@@ -1000,15 +1047,18 @@ __kernel void compute_correlation(
             work_group_size = work_group_size,
             vector_width = vector_width
         );
-        
+
         Ok(source)
     }
-    
+
     /// Generate WebGPU correlation kernel
     fn generate_webgpu_correlation_kernel(&self, n: usize) -> Result<String> {
-        let workgroup_size = self.kernel_optimizer.get_optimal_work_group_size("correlation", n);
-        
-        let source = format!(r#"
+        let workgroup_size = self
+            .kernel_optimizer
+            .get_optimal_work_group_size("correlation", n);
+
+        let source = format!(
+            r#"
 @group(0) @binding(0) var<storage, read> x: array<f32>;
 @group(0) @binding(1) var<storage, read> y: array<f32>;
 @group(0) @binding(2) var<storage, read_write> result: array<f32>;
@@ -1105,43 +1155,62 @@ fn compute_correlation(@builtin(local_invocation_id) local_id: vec3<u32>,
 "#,
             workgroup_size = workgroup_size
         );
-        
+
         Ok(source)
     }
-    
+
     /// Compute hash for kernel caching
     fn compute_kernel_hash(&self, kernel_name: &str, size: usize) -> u64 {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         let mut hasher = DefaultHasher::new();
         kernel_name.hash(&mut hasher);
         size.hash(&mut hasher);
         hasher.finish()
     }
-    
+
     /// Auto-tune kernel parameters for optimal performance
     pub fn auto_tune_kernels(&mut self) -> Result<()> {
         if !self.kernel_optimizer.auto_tuning.enabled {
             return Ok(());
         }
-        
+
         // Auto-tune correlation kernel
         self.auto_tune_correlation_kernel()?;
-        
+
         // Auto-tune other kernels as needed
         // self.auto_tune_matrix_multiplication_kernel()?;
         // self.auto_tune_reduction_kernel()?;
-        
+
         Ok(())
     }
-    
+
     /// Auto-tune correlation kernel
     fn auto_tune_correlation_kernel(&mut self) -> Result<()> {
         let test_sizes = vec![1000, 10000, 100000, 1000000];
-        
+
         for &size in &test_sizes {
-            let search_space = &self.kernel_optimizer.auto_tuning.search_space;
+            // Extract search space values to avoid borrow conflicts
+            let work_group_sizes = self
+                .kernel_optimizer
+                .auto_tuning
+                .search_space
+                .work_group_sizes
+                .clone();
+            let vector_widths = self
+                .kernel_optimizer
+                .auto_tuning
+                .search_space
+                .vector_widths
+                .clone();
+            let unroll_factors = self
+                .kernel_optimizer
+                .auto_tuning
+                .search_space
+                .unroll_factors
+                .clone();
+
             let mut best_params = KernelOptimizationParams {
                 work_group_size: [256, 1, 1],
                 vector_width: 1,
@@ -1151,11 +1220,11 @@ fn compute_correlation(@builtin(local_invocation_id) local_id: vec3<u32>,
                 register_pressure: 0.5,
             };
             let mut best_performance = 0.0;
-            
+
             // Test different parameter combinations
-            for &work_group_size in &search_space.work_group_sizes {
-                for &vector_width in &search_space.vector_widths {
-                    for &unroll_factor in &search_space.unroll_factors {
+            for &work_group_size in &work_group_sizes {
+                for &vector_width in &vector_widths {
+                    for &unroll_factor in &unroll_factors {
                         let params = KernelOptimizationParams {
                             work_group_size,
                             vector_width,
@@ -1164,10 +1233,10 @@ fn compute_correlation(@builtin(local_invocation_id) local_id: vec3<u32>,
                             shared_memory_usage: 1024,
                             register_pressure: 0.5,
                         };
-                        
+
                         // Benchmark this configuration
                         let performance = self.benchmark_correlation_kernel(size, &params)?;
-                        
+
                         if performance > best_performance {
                             best_performance = performance;
                             best_params = params;
@@ -1175,7 +1244,7 @@ fn compute_correlation(@builtin(local_invocation_id) local_id: vec3<u32>,
                     }
                 }
             }
-            
+
             // Store optimal parameters
             let optimization_result = OptimizationResult {
                 timestamp: Instant::now(),
@@ -1184,42 +1253,47 @@ fn compute_correlation(@builtin(local_invocation_id) local_id: vec3<u32>,
                 performance: best_performance,
                 energy_efficiency: best_performance / 100.0, // Simplified
             };
-            
-            self.kernel_optimizer.optimization_history
+
+            self.kernel_optimizer
+                .optimization_history
                 .entry("correlation".to_string())
                 .or_insert_with(Vec::new)
                 .push(optimization_result);
         }
-        
+
         Ok(())
     }
-    
+
     /// Benchmark correlation kernel with specific parameters
-    fn benchmark_correlation_kernel(&mut self, size: usize, _params: &KernelOptimizationParams) -> Result<f64> {
+    fn benchmark_correlation_kernel(
+        &mut self,
+        size: usize,
+        _params: &KernelOptimizationParams,
+    ) -> Result<f64> {
         // Generate test data
         let x: Vec<f32> = (0..size).map(|i| (i as f32) * 0.001).collect();
         let y: Vec<f32> = (0..size).map(|i| (i as f32) * 0.002 + 1.0).collect();
-        
+
         let x_array = Array1::from_vec(x);
         let y_array = Array1::from_vec(y);
-        
+
         // Benchmark execution time
         let start = Instant::now();
         let _result = self.gpu_correlation(&x_array.view(), &y_array.view())?;
         let duration = start.elapsed();
-        
+
         // Calculate performance in GFLOPS (rough estimation)
         let ops = size as f64 * 10.0; // Approximate operations for correlation
         let gflops = ops / (duration.as_secs_f64() * 1e9);
-        
+
         Ok(gflops)
     }
-    
+
     /// Get performance statistics
     pub fn get_performance_stats(&self) -> HashMap<String, f64> {
         self.profiler.get_statistics()
     }
-    
+
     /// Get memory usage statistics
     pub fn get_memory_usage(&self) -> Result<MemoryUsageStats> {
         Ok(self.memory_manager.get_usage_stats())
@@ -1244,7 +1318,7 @@ impl GpuMemoryPool {
         Self {
             size_classes: HashMap::new(),
             total_allocated: 0,
-            allocation_strategy: AllocationStrategy::SlabAllocation { 
+            allocation_strategy: AllocationStrategy::SlabAllocation {
                 min_size: 1024,
                 max_size: 1024 * 1024 * 1024,
             },
@@ -1255,7 +1329,7 @@ impl GpuMemoryPool {
             },
         }
     }
-    
+
     fn get_usage_stats(&self) -> MemoryUsageStats {
         MemoryUsageStats {
             total_allocated: self.total_allocated,
@@ -1281,7 +1355,7 @@ impl KernelCache {
             eviction_policy: EvictionPolicy::LRU,
         }
     }
-    
+
     fn get(&mut self, hash: u64) -> Option<&ComputeKernel> {
         if let Some(kernel) = self.kernels.get(&hash) {
             self.stats.hits += 1;
@@ -1291,7 +1365,7 @@ impl KernelCache {
             None
         }
     }
-    
+
     fn insert(&mut self, hash: u64, kernel: ComputeKernel) {
         self.kernels.insert(hash, kernel);
         self.stats.total_kernels = self.kernels.len();
@@ -1308,7 +1382,7 @@ impl GpuProfiler {
             enabled: true,
         }
     }
-    
+
     fn record_kernel_execution(&mut self, kernel_name: &str, duration: Duration) {
         if self.enabled {
             self.execution_times
@@ -1317,21 +1391,27 @@ impl GpuProfiler {
                 .push(duration);
         }
     }
-    
+
     fn get_statistics(&self) -> HashMap<String, f64> {
         let mut stats = HashMap::new();
-        
+
         for (kernel_name, times) in &self.execution_times {
             let avg_time = times.iter().map(|t| t.as_secs_f64()).sum::<f64>() / times.len() as f64;
             stats.insert(format!("{}_avg_time", kernel_name), avg_time);
-            
-            let min_time = times.iter().map(|t| t.as_secs_f64()).fold(f64::INFINITY, f64::min);
+
+            let min_time = times
+                .iter()
+                .map(|t| t.as_secs_f64())
+                .fold(f64::INFINITY, f64::min);
             stats.insert(format!("{}_min_time", kernel_name), min_time);
-            
-            let max_time = times.iter().map(|t| t.as_secs_f64()).fold(f64::NEG_INFINITY, f64::max);
+
+            let max_time = times
+                .iter()
+                .map(|t| t.as_secs_f64())
+                .fold(f64::NEG_INFINITY, f64::max);
             stats.insert(format!("{}_max_time", kernel_name), max_time);
         }
-        
+
         stats
     }
 }
@@ -1344,20 +1424,28 @@ impl KernelOptimizer {
                 enabled: true,
                 search_space: SearchSpace {
                     work_group_sizes: vec![
-                        [64, 1, 1], [128, 1, 1], [256, 1, 1], [512, 1, 1],
-                        [32, 32, 1], [16, 16, 1], [8, 8, 8],
+                        [64, 1, 1],
+                        [128, 1, 1],
+                        [256, 1, 1],
+                        [512, 1, 1],
+                        [32, 32, 1],
+                        [16, 16, 1],
+                        [8, 8, 8],
                     ],
                     vector_widths: vec![1, 2, 4, 8],
                     unroll_factors: vec![1, 2, 4, 8, 16],
                     shared_memory_configs: vec![512, 1024, 2048, 4096],
                 },
-                strategy: TuningStrategy::Genetic { population: 20, generations: 50 },
+                strategy: TuningStrategy::Genetic {
+                    population: 20,
+                    generations: 50,
+                },
                 max_tuning_time: Duration::from_secs(300),
             },
             ml_model: None,
         }
     }
-    
+
     fn get_optimal_vector_width(&self, kernel_name: &str, _size: usize) -> usize {
         if let Some(history) = self.optimization_history.get(kernel_name) {
             if let Some(latest) = history.last() {
@@ -1366,7 +1454,7 @@ impl KernelOptimizer {
         }
         4 // Default
     }
-    
+
     fn get_optimal_block_size(&self, kernel_name: &str, _size: usize) -> usize {
         if let Some(history) = self.optimization_history.get(kernel_name) {
             if let Some(latest) = history.last() {
@@ -1375,7 +1463,7 @@ impl KernelOptimizer {
         }
         256 // Default
     }
-    
+
     fn get_optimal_unroll_factor(&self, kernel_name: &str, _size: usize) -> usize {
         if let Some(history) = self.optimization_history.get(kernel_name) {
             if let Some(latest) = history.last() {
@@ -1384,7 +1472,7 @@ impl KernelOptimizer {
         }
         4 // Default
     }
-    
+
     fn get_optimal_work_group_size(&self, kernel_name: &str, _size: usize) -> usize {
         if let Some(history) = self.optimization_history.get(kernel_name) {
             if let Some(latest) = history.last() {
@@ -1450,7 +1538,7 @@ impl GpuBackend for CudaBackend {
             },
             streams: vec![100, 101, 102, 103],
         });
-        
+
         self.info = Some(BackendInfo {
             name: "CUDA".to_string(),
             version: "11.8".to_string(),
@@ -1462,10 +1550,10 @@ impl GpuBackend for CudaBackend {
             supports_double_precision: true,
             supports_half_precision: true,
         });
-        
+
         Ok(())
     }
-    
+
     fn get_info(&self) -> BackendInfo {
         self.info.clone().unwrap_or_else(|| BackendInfo {
             name: "CUDA".to_string(),
@@ -1479,7 +1567,7 @@ impl GpuBackend for CudaBackend {
             supports_half_precision: false,
         })
     }
-    
+
     fn allocate_memory(&self, size: usize) -> Result<GpuMemoryHandle> {
         // Simulate CUDA memory allocation
         Ok(GpuMemoryHandle {
@@ -1489,25 +1577,25 @@ impl GpuBackend for CudaBackend {
             allocated_at: Instant::now(),
         })
     }
-    
+
     fn copy_to_gpu(&self, _handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
         // Simulate memory copy
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
-    
+
     fn copy_from_gpu(&self, _handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
         // Simulate memory copy
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
-    
+
     fn execute_kernel(&self, _kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
         // Simulate kernel execution
         std::thread::sleep(Duration::from_micros(10));
         Ok(())
     }
-    
+
     fn create_kernel(&self, source: &str, entry_point: &str) -> Result<ComputeKernel> {
         // Simulate kernel compilation
         Ok(ComputeKernel {
@@ -1521,20 +1609,20 @@ impl GpuBackend for CudaBackend {
             parameters: Vec::new(),
         })
     }
-    
+
     fn synchronize(&self) -> Result<()> {
         // Simulate synchronization
         Ok(())
     }
-    
+
     fn get_name(&self) -> &str {
         "CUDA"
     }
-    
+
     fn is_available(&self) -> bool {
         // Check if CUDA is available (simplified)
-        std::env::var("CUDA_VISIBLE_DEVICES").is_ok() ||
-        std::path::Path::new("/usr/local/cuda").exists()
+        std::env::var("CUDA_VISIBLE_DEVICES").is_ok()
+            || std::path::Path::new("/usr/local/cuda").exists()
     }
 }
 
@@ -1565,10 +1653,10 @@ impl GpuBackend for OpenClBackend {
             supports_double_precision: true,
             supports_half_precision: true,
         });
-        
+
         Ok(())
     }
-    
+
     fn get_info(&self) -> BackendInfo {
         self.info.clone().unwrap_or_else(|| BackendInfo {
             name: "OpenCL".to_string(),
@@ -1582,7 +1670,7 @@ impl GpuBackend for OpenClBackend {
             supports_half_precision: false,
         })
     }
-    
+
     fn allocate_memory(&self, size: usize) -> Result<GpuMemoryHandle> {
         Ok(GpuMemoryHandle {
             id: rand::random(),
@@ -1591,22 +1679,22 @@ impl GpuBackend for OpenClBackend {
             allocated_at: Instant::now(),
         })
     }
-    
+
     fn copy_to_gpu(&self, _handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
-    
+
     fn copy_from_gpu(&self, _handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
-    
+
     fn execute_kernel(&self, _kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
         std::thread::sleep(Duration::from_micros(10));
         Ok(())
     }
-    
+
     fn create_kernel(&self, source: &str, entry_point: &str) -> Result<ComputeKernel> {
         Ok(ComputeKernel {
             id: rand::random(),
@@ -1619,18 +1707,18 @@ impl GpuBackend for OpenClBackend {
             parameters: Vec::new(),
         })
     }
-    
+
     fn synchronize(&self) -> Result<()> {
         Ok(())
     }
-    
+
     fn get_name(&self) -> &str {
         "OpenCL"
     }
-    
+
     fn is_available(&self) -> bool {
-        std::path::Path::new("/usr/lib/x86_64-linux-gnu/libOpenCL.so").exists() ||
-        std::path::Path::new("/usr/lib/libOpenCL.so").exists()
+        std::path::Path::new("/usr/lib/x86_64-linux-gnu/libOpenCL.so").exists()
+            || std::path::Path::new("/usr/lib/libOpenCL.so").exists()
     }
 }
 
@@ -1659,10 +1747,10 @@ impl GpuBackend for WebGpuBackend {
             supports_double_precision: false,
             supports_half_precision: true,
         });
-        
+
         Ok(())
     }
-    
+
     fn get_info(&self) -> BackendInfo {
         self.info.clone().unwrap_or_else(|| BackendInfo {
             name: "WebGPU".to_string(),
@@ -1676,7 +1764,7 @@ impl GpuBackend for WebGpuBackend {
             supports_half_precision: false,
         })
     }
-    
+
     fn allocate_memory(&self, size: usize) -> Result<GpuMemoryHandle> {
         Ok(GpuMemoryHandle {
             id: rand::random(),
@@ -1685,22 +1773,22 @@ impl GpuBackend for WebGpuBackend {
             allocated_at: Instant::now(),
         })
     }
-    
+
     fn copy_to_gpu(&self, _handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(2));
         Ok(())
     }
-    
+
     fn copy_from_gpu(&self, _handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(2));
         Ok(())
     }
-    
+
     fn execute_kernel(&self, _kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
         std::thread::sleep(Duration::from_micros(15));
         Ok(())
     }
-    
+
     fn create_kernel(&self, source: &str, entry_point: &str) -> Result<ComputeKernel> {
         Ok(ComputeKernel {
             id: rand::random(),
@@ -1713,15 +1801,15 @@ impl GpuBackend for WebGpuBackend {
             parameters: Vec::new(),
         })
     }
-    
+
     fn synchronize(&self) -> Result<()> {
         Ok(())
     }
-    
+
     fn get_name(&self) -> &str {
         "WebGPU"
     }
-    
+
     fn is_available(&self) -> bool {
         // WebGPU availability check (simplified)
         true // Always available in simulation
@@ -1732,7 +1820,7 @@ impl GpuBackend for WebGpuBackend {
 mod tests {
     use super::*;
     use ndarray::array;
-    
+
     #[test]
     fn test_enhanced_gpu_engine_creation() {
         // This test might fail in CI without GPU, so we'll make it conditional
@@ -1745,29 +1833,29 @@ mod tests {
             }
         }
     }
-    
+
     #[test]
     fn test_backend_info() {
         let cuda_backend = CudaBackend::new().unwrap();
         if cuda_backend.is_available() {
             println!("CUDA is available");
         }
-        
+
         let opencl_backend = OpenClBackend::new().unwrap();
         if opencl_backend.is_available() {
             println!("OpenCL is available");
         }
-        
+
         let webgpu_backend = WebGpuBackend::new().unwrap();
         if webgpu_backend.is_available() {
             println!("WebGPU is available");
         }
     }
-    
+
     #[test]
     fn test_kernel_cache() {
         let mut cache = KernelCache::new();
-        
+
         let kernel = ComputeKernel {
             id: 1,
             name: "test_kernel".to_string(),
@@ -1778,27 +1866,27 @@ mod tests {
             global_work_size: [1024, 1, 1],
             parameters: Vec::new(),
         };
-        
+
         let hash = 12345;
         cache.insert(hash, kernel);
-        
+
         assert!(cache.get(hash).is_some());
         assert_eq!(cache.stats.total_kernels, 1);
         assert_eq!(cache.stats.hits, 1);
     }
-    
+
     #[test]
     fn test_memory_pool() {
         let pool = GpuMemoryPool::new();
         let stats = pool.get_usage_stats();
         assert_eq!(stats.total_allocated, 0);
     }
-    
+
     #[test]
     fn test_profiler() {
         let mut profiler = GpuProfiler::new();
         profiler.record_kernel_execution("test_kernel", Duration::from_millis(10));
-        
+
         let stats = profiler.get_statistics();
         assert!(stats.contains_key("test_kernel_avg_time"));
     }

@@ -19,13 +19,10 @@ use crate::error::{OptimError, Result};
 /// Base trait for multi-objective optimizers
 pub trait MultiObjectiveOptimizer<T: Float>: Send + Sync {
     /// Initialize the optimizer
-    fn initialize(&mut self, config: &MultiObjectiveConfig<T>) -> Result<(), OptimError>;
+    fn initialize(&mut self, config: &MultiObjectiveConfig<T>) -> Result<()>;
 
     /// Update Pareto front with new results
-    fn update_pareto_front(
-        &mut self,
-        results: &[SearchResult<T>],
-    ) -> Result<ParetoFront<T>, OptimError>;
+    fn update_pareto_front(&mut self, results: &[SearchResult<T>]) -> Result<ParetoFront<T>>;
 
     /// Get current Pareto front
     fn get_pareto_front(&self) -> &ParetoFront<T>;
@@ -35,7 +32,7 @@ pub trait MultiObjectiveOptimizer<T: Float>: Send + Sync {
         &mut self,
         population: &[OptimizerArchitecture<T>],
         objectives: &[T],
-    ) -> Result<Vec<OptimizerArchitecture<T>>, OptimError>;
+    ) -> Result<Vec<OptimizerArchitecture<T>>>;
 
     /// Get algorithm name
     fn name(&self) -> &str;
@@ -576,7 +573,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NS
     }
 
     /// Initialize population
-    fn initialize_population(&mut self) -> Result<(), OptimError> {
+    fn initialize_population(&mut self) -> Result<()> {
         // Initialize with random architectures
         // This would be replaced with actual architecture generation
         self.population.clear();
@@ -599,7 +596,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NS
     }
 
     /// Generate random architecture (placeholder)
-    fn generate_random_architecture(&self) -> Result<OptimizerArchitecture<T>, OptimError> {
+    fn generate_random_architecture(&self) -> Result<OptimizerArchitecture<T>> {
         use super::architecture_space::{ComponentType, OptimizerComponent};
 
         // Simplified random architecture generation
@@ -1012,16 +1009,13 @@ enum DominanceRelation {
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd>
     MultiObjectiveOptimizer<T> for NSGA2<T>
 {
-    fn initialize(&mut self, config: &MultiObjectiveConfig<T>) -> Result<(), OptimError> {
+    fn initialize(&mut self, config: &MultiObjectiveConfig<T>) -> Result<()> {
         self.config = config.clone();
         self.initialize_population()?;
         Ok(())
     }
 
-    fn update_pareto_front(
-        &mut self,
-        results: &[SearchResult<T>],
-    ) -> Result<ParetoFront<T>, OptimError> {
+    fn update_pareto_front(&mut self, results: &[SearchResult<T>]) -> Result<ParetoFront<T>> {
         // Update population with new results
         for (i, result) in results.iter().enumerate() {
             if i < self.population.len() {
@@ -1067,7 +1061,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd>
         &mut self,
         _population: &[OptimizerArchitecture<T>],
         _objectives: &[T],
-    ) -> Result<Vec<OptimizerArchitecture<T>>, OptimError> {
+    ) -> Result<Vec<OptimizerArchitecture<T>>> {
         // Generate new candidates through crossover and mutation
         let mut new_population = Vec::new();
 
@@ -1105,14 +1099,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd>
 
 // Implementation of helper methods for NSGA2
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NSGA2<T> {
-    fn tournament_selection(
-        &self,
-        tournament_size: usize,
-    ) -> Result<Individual<T>, OptimError> {
+    fn tournament_selection(&self, tournament_size: usize) -> Result<Individual<T>> {
         if self.population.is_empty() {
-            return Err(OptimError::InvalidConfig(
-                "Empty population".to_string(),
-            ));
+            return Err(OptimError::InvalidConfig("Empty population".to_string()));
         }
 
         let mut best_idx = rand::random::<usize>() % self.population.len();
@@ -1133,11 +1122,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NS
         Ok(self.population[best_idx].clone())
     }
 
-    fn crossover(
-        &self,
-        parent1: &Individual<T>,
-        parent2: &Individual<T>,
-    ) -> Result<Individual<T>, OptimError> {
+    fn crossover(&self, parent1: &Individual<T>, parent2: &Individual<T>) -> Result<Individual<T>> {
         // Simplified crossover - in practice would be more sophisticated
         let mut offspring = parent1.clone();
         offspring.id = format!("offspring_{}", rand::random::<u32>());
@@ -1162,7 +1147,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NS
         Ok(offspring)
     }
 
-    fn mutate(&self, individual: &mut Individual<T>) -> Result<(), OptimError> {
+    fn mutate(&self, individual: &mut Individual<T>) -> Result<()> {
         // Simplified mutation - in practice would be more sophisticated
         if !individual.architecture.components.is_empty() {
             for (_key, value) in individual.architecture.components[0]

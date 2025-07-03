@@ -6,12 +6,13 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::error_standardization::ErrorMessages;
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2, s};
-use num_traits::{Float, NumCast, Zero, One};
+use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
+use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
-    simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps},
     parallel_ops::*,
+    simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps},
 };
+// Parallel operations provided by scirs2_core::parallel_ops
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -50,11 +51,11 @@ pub enum AccuracyLevel {
 /// Performance vs accuracy preference
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PerformancePreference {
-    MaxSpeed,      // 100% speed preference
-    SpeedBiased,   // 75% speed, 25% accuracy
-    Balanced,      // 50% speed, 50% accuracy
+    MaxSpeed,       // 100% speed preference
+    SpeedBiased,    // 75% speed, 25% accuracy
+    Balanced,       // 50% speed, 50% accuracy
     AccuracyBiased, // 25% speed, 75% accuracy
-    MaxAccuracy,   // 100% accuracy preference
+    MaxAccuracy,    // 100% accuracy preference
 }
 
 /// Memory usage constraints
@@ -86,11 +87,11 @@ pub struct ThreadingPreferences {
 /// Thread affinity strategies
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AffinityStrategy {
-    None,           // No affinity control
+    None,             // No affinity control
     PerformanceCores, // Prefer performance cores
     EfficiencyCores,  // Prefer efficiency cores (if available)
-    Spread,         // Spread across all cores
-    Compact,        // Pack onto fewer cores
+    Spread,           // Spread across all cores
+    Compact,          // Pack onto fewer cores
 }
 
 /// Ultra-Think SIMD Optimizer with Advanced Intelligence
@@ -133,11 +134,11 @@ pub struct OperationSignature {
 /// Size buckets for performance profiling
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SizeBucket {
-    Tiny,      // < 64 elements
-    Small,     // 64 - 1K elements
-    Medium,    // 1K - 64K elements
-    Large,     // 64K - 1M elements
-    Huge,      // > 1M elements
+    Tiny,   // < 64 elements
+    Small,  // 64 - 1K elements
+    Medium, // 1K - 64K elements
+    Large,  // 64K - 1M elements
+    Huge,   // > 1M elements
 }
 
 /// Data characteristics for optimization selection
@@ -175,19 +176,19 @@ pub enum DistributionPattern {
 /// Sparsity levels
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SparsityLevel {
-    Dense,        // < 5% zeros
-    Moderate,     // 5-50% zeros
-    Sparse,       // 50-95% zeros
-    VerySparse,   // > 95% zeros
+    Dense,      // < 5% zeros
+    Moderate,   // 5-50% zeros
+    Sparse,     // 50-95% zeros
+    VerySparse, // > 95% zeros
 }
 
 /// Numerical range categories
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NumericalRange {
-    SmallNumbers,  // |x| < 1e-6
-    Normal,        // 1e-6 <= |x| <= 1e6
-    LargeNumbers,  // |x| > 1e6
-    Mixed,         // Mix of different ranges
+    SmallNumbers, // |x| < 1e-6
+    Normal,       // 1e-6 <= |x| <= 1e6
+    LargeNumbers, // |x| > 1e6
+    Mixed,        // Mix of different ranges
 }
 
 /// Performance metrics for algorithm selection
@@ -211,9 +212,7 @@ pub struct PerformanceMetrics {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlgorithmChoice {
     /// Scalar implementation
-    Scalar {
-        algorithm: ScalarAlgorithm,
-    },
+    Scalar { algorithm: ScalarAlgorithm },
     /// SIMD implementation
     Simd {
         instruction_set: SimdInstructionSet,
@@ -237,10 +236,10 @@ pub enum AlgorithmChoice {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ScalarAlgorithm {
     Standard,
-    Kahan,          // Kahan summation
-    Pairwise,       // Pairwise summation
-    Compensated,    // Compensated summation
-    Welford,        // Welford's algorithm
+    Kahan,       // Kahan summation
+    Pairwise,    // Pairwise summation
+    Compensated, // Compensated summation
+    Welford,     // Welford's algorithm
 }
 
 /// SIMD instruction sets
@@ -261,12 +260,12 @@ pub enum SimdInstructionSet {
 /// SIMD algorithm variants
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SimdAlgorithm {
-    Vectorized,      // Standard vectorization
-    Unrolled,        // Loop unrolling
-    Prefetched,      // With prefetching
-    Interleaved,     // Interleaved operations
+    Vectorized,       // Standard vectorization
+    Unrolled,         // Loop unrolling
+    Prefetched,       // With prefetching
+    Interleaved,      // Interleaved operations
     FusedMultiplyAdd, // FMA optimization
-    BranchFree,      // Branch-free implementation
+    BranchFree,       // Branch-free implementation
 }
 
 /// Hardware profile with detailed capabilities
@@ -374,7 +373,11 @@ pub enum SelectionCondition {
     MemoryConstraint(usize),
     ThermalConstraint(f64),
     PowerConstraint(f64),
-    Complex(Box<SelectionCondition>, LogicalOperator, Box<SelectionCondition>),
+    Complex(
+        Box<SelectionCondition>,
+        LogicalOperator,
+        Box<SelectionCondition>,
+    ),
 }
 
 /// Logical operators for complex conditions
@@ -427,10 +430,10 @@ pub struct AdvancedMemoryManager {
 #[derive(Debug, Clone)]
 pub enum AllocationStrategy {
     Standard,
-    Aligned(usize),    // Alignment in bytes
-    Interleaved,       // NUMA interleaved
-    LocalFirst,        // NUMA local-first
-    HugePage,          // Use huge pages
+    Aligned(usize), // Alignment in bytes
+    Interleaved,    // NUMA interleaved
+    LocalFirst,     // NUMA local-first
+    HugePage,       // Use huge pages
 }
 
 /// Cache optimization strategies
@@ -511,7 +514,7 @@ impl UltraThinkSimdOptimizer {
 
         // Analyze data characteristics
         let characteristics = self.analyze_data_characteristics(x);
-        
+
         // Create operation signature
         let signature = OperationSignature {
             operation_type: "mean".to_string(),
@@ -527,7 +530,7 @@ impl UltraThinkSimdOptimizer {
 
         // Select optimal algorithm
         let algorithm = self.select_optimal_algorithm(&signature, x)?;
-        
+
         // Execute with performance monitoring
         let (result, metrics) = self.execute_with_monitoring(x, &algorithm)?;
 
@@ -627,11 +630,7 @@ impl UltraThinkSimdOptimizer {
     }
 
     /// Matrix operations with advanced SIMD optimization
-    pub fn ultra_matrix_multiply<F>(
-        &self,
-        a: &Array2<F>,
-        b: &Array2<F>,
-    ) -> StatsResult<Array2<F>>
+    pub fn ultra_matrix_multiply<F>(&self, a: &Array2<F>, b: &Array2<F>) -> StatsResult<Array2<F>>
     where
         F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static,
     {
@@ -653,7 +652,7 @@ impl UltraThinkSimdOptimizer {
 
         // Select optimal matrix multiplication algorithm
         let algorithm = self.select_matrix_algorithm(&signature, a, b)?;
-        
+
         // Execute matrix multiplication
         self.execute_matrix_multiply(a, b, &algorithm)
     }
@@ -675,18 +674,18 @@ impl UltraThinkSimdOptimizer {
         // Analyze batch characteristics
         let batch_size = data.len();
         let avg_array_size = data.iter().map(|arr| arr.len()).sum::<usize>() / batch_size;
-        
+
         // Select batch processing strategy
         let strategy = self.select_batch_strategy(batch_size, avg_array_size, operations)?;
-        
+
         // Execute batch operations
         self.execute_batch_operations(data, operations, &strategy)
     }
 
     /// Detect hardware profile
     fn detect_hardware_profile() -> HardwareProfile {
-        let capabilities = PlatformCapabilities::detect();
-        
+        let _capabilities = PlatformCapabilities::detect();
+
         // In a real implementation, this would use platform-specific APIs
         // to detect detailed hardware characteristics
         HardwareProfile {
@@ -714,7 +713,10 @@ impl UltraThinkSimdOptimizer {
                     ("L1".to_string(), 8),
                     ("L2".to_string(), 8),
                     ("L3".to_string(), 16),
-                ].iter().cloned().collect(),
+                ]
+                .iter()
+                .cloned()
+                .collect(),
             },
             memory_subsystem: MemorySubsystem {
                 memory_channels: 2,
@@ -732,22 +734,14 @@ impl UltraThinkSimdOptimizer {
             power_profile: PowerProfile {
                 base_power_watts: 15.0,
                 max_power_watts: 65.0,
-                power_efficiency_curve: vec![
-                    (0.1, 0.8),
-                    (0.5, 0.9),
-                    (1.0, 0.85),
-                ],
-                voltage_frequency_curve: vec![
-                    (1.0, 2.4),
-                    (1.2, 3.2),
-                    (1.35, 3.8),
-                ],
+                power_efficiency_curve: vec![(0.1, 0.8), (0.5, 0.9), (1.0, 0.85)],
+                voltage_frequency_curve: vec![(1.0, 2.4), (1.2, 3.2), (1.35, 3.8)],
             },
         }
     }
 
     /// Build intelligent algorithm selector
-    fn build_algorithm_selector(hardware: &HardwareProfile) -> AlgorithmSelector {
+    fn build_algorithm_selector(_hardware: &HardwareProfile) -> AlgorithmSelector {
         // Build decision tree based on hardware capabilities
         let nodes = vec![
             DecisionNode {
@@ -777,7 +771,7 @@ impl UltraThinkSimdOptimizer {
         ];
 
         let decision_tree = DecisionTree { nodes };
-        
+
         AlgorithmSelector {
             decision_tree,
             performance_predictor: PerformancePredictor {
@@ -849,10 +843,12 @@ impl UltraThinkSimdOptimizer {
         };
 
         // Analyze numerical range
-        let (min_abs, max_abs) = x.iter().fold((F::infinity(), F::zero()), |(min_abs, max_abs), &val| {
-            let abs_val = val.abs();
-            (min_abs.min(abs_val), max_abs.max(abs_val))
-        });
+        let (min_abs, max_abs) =
+            x.iter()
+                .fold((F::infinity(), F::zero()), |(min_abs, max_abs), &val| {
+                    let abs_val = val.abs();
+                    (min_abs.min(abs_val), max_abs.max(abs_val))
+                });
 
         let numerical_range = if max_abs < F::from(1e-6).unwrap() {
             NumericalRange::SmallNumbers
@@ -875,8 +871,8 @@ impl UltraThinkSimdOptimizer {
     /// Analyze characteristics for bivariate operations
     fn analyze_bivariate_characteristics<F, D1, D2>(
         &self,
-        x: &ArrayBase<D1, Ix1>,
-        y: &ArrayBase<D2, Ix1>,
+        _x: &ArrayBase<D1, Ix1>,
+        _y: &ArrayBase<D2, Ix1>,
     ) -> DataCharacteristics
     where
         F: Float + Copy,
@@ -884,8 +880,8 @@ impl UltraThinkSimdOptimizer {
         D2: Data<Elem = F>,
     {
         // For simplicity, analyze x and extend to bivariate
-        let x_chars = self.analyze_data_characteristics(x);
-        
+        let x_chars = self.analyze_data_characteristics(_x);
+
         // In a real implementation, would analyze correlation structure,
         // joint sparsity patterns, etc.
         x_chars
@@ -894,8 +890,8 @@ impl UltraThinkSimdOptimizer {
     /// Analyze matrix characteristics
     fn analyze_matrix_characteristics<F>(
         &self,
-        a: &Array2<F>,
-        b: &Array2<F>,
+        _a: &Array2<F>,
+        _b: &Array2<F>,
     ) -> DataCharacteristics
     where
         F: Float + Copy,
@@ -965,7 +961,7 @@ impl UltraThinkSimdOptimizer {
     fn select_optimal_algorithm<F, D>(
         &self,
         signature: &OperationSignature,
-        x: &ArrayBase<D, Ix1>,
+        _x: &ArrayBase<D, Ix1>,
     ) -> StatsResult<AlgorithmChoice>
     where
         F: Float + Copy,
@@ -1009,8 +1005,8 @@ impl UltraThinkSimdOptimizer {
     fn select_variance_algorithm<F, D>(
         &self,
         signature: &OperationSignature,
-        x: &ArrayBase<D, Ix1>,
-        ddof: usize,
+        _x: &ArrayBase<D, Ix1>,
+        _ddof: usize,
     ) -> StatsResult<AlgorithmChoice>
     where
         F: Float + Copy,
@@ -1045,8 +1041,8 @@ impl UltraThinkSimdOptimizer {
     fn select_correlation_algorithm<F, D1, D2>(
         &self,
         signature: &OperationSignature,
-        x: &ArrayBase<D1, Ix1>,
-        y: &ArrayBase<D2, Ix1>,
+        _x: &ArrayBase<D1, Ix1>,
+        _y: &ArrayBase<D2, Ix1>,
     ) -> StatsResult<AlgorithmChoice>
     where
         F: Float + Copy,
@@ -1083,7 +1079,7 @@ impl UltraThinkSimdOptimizer {
     /// Select matrix multiplication algorithm
     fn select_matrix_algorithm<F>(
         &self,
-        signature: &OperationSignature,
+        _signature: &OperationSignature,
         a: &Array2<F>,
         b: &Array2<F>,
     ) -> StatsResult<AlgorithmChoice>
@@ -1091,7 +1087,7 @@ impl UltraThinkSimdOptimizer {
         F: Float + Copy,
     {
         let total_ops = a.nrows() * a.ncols() * b.ncols();
-        
+
         let algorithm = if total_ops < 1000 {
             AlgorithmChoice::Scalar {
                 algorithm: ScalarAlgorithm::Standard,
@@ -1167,16 +1163,16 @@ impl UltraThinkSimdOptimizer {
         D: Data<Elem = F>,
     {
         match algorithm {
-            AlgorithmChoice::Scalar { algorithm } => {
-                self.execute_scalar_mean(x, algorithm)
-            }
+            AlgorithmChoice::Scalar { algorithm } => self.execute_scalar_mean(x, algorithm),
             AlgorithmChoice::Simd { .. } => {
                 // Use scirs2-core SIMD operations
                 Ok(F::simd_sum(&x.view()) / F::from(x.len()).unwrap())
             }
-            AlgorithmChoice::ParallelSimd { simd_choice, thread_count, .. } => {
-                self.execute_parallel_mean(x, simd_choice, *thread_count)
-            }
+            AlgorithmChoice::ParallelSimd {
+                simd_choice,
+                thread_count,
+                ..
+            } => self.execute_parallel_mean(x, simd_choice, *thread_count),
             AlgorithmChoice::Hybrid { .. } => {
                 // Execute hybrid algorithm (simplified)
                 Ok(F::simd_sum(&x.view()) / F::from(x.len()).unwrap())
@@ -1195,18 +1191,10 @@ impl UltraThinkSimdOptimizer {
         D: Data<Elem = F>,
     {
         let result = match algorithm {
-            ScalarAlgorithm::Standard => {
-                x.iter().fold(F::zero(), |acc, &val| acc + val)
-            }
-            ScalarAlgorithm::Kahan => {
-                self.kahan_sum(x)
-            }
-            ScalarAlgorithm::Pairwise => {
-                self.pairwise_sum(x)
-            }
-            ScalarAlgorithm::Compensated => {
-                self.compensated_sum(x)
-            }
+            ScalarAlgorithm::Standard => x.iter().fold(F::zero(), |acc, &val| acc + val),
+            ScalarAlgorithm::Kahan => self.kahan_sum(x),
+            ScalarAlgorithm::Pairwise => self.pairwise_sum(x),
+            ScalarAlgorithm::Compensated => self.compensated_sum(x),
             ScalarAlgorithm::Welford => {
                 // Welford's algorithm is primarily for variance, use standard for mean
                 x.iter().fold(F::zero(), |acc, &val| acc + val)
@@ -1280,9 +1268,10 @@ impl UltraThinkSimdOptimizer {
         }
 
         let chunk_size = (x.len() + thread_count - 1) / thread_count;
-        
+
         // Parallel computation using rayon
-        let sum: F = x.axis_chunks_iter(ndarray::Axis(0), chunk_size)
+        let sum: F = x
+            .axis_chunks_iter(ndarray::Axis(0), chunk_size)
             .into_par_iter()
             .map(|chunk| F::simd_sum(&chunk))
             .sum();
@@ -1306,7 +1295,8 @@ impl UltraThinkSimdOptimizer {
     {
         // Placeholder implementation
         let mean = self.execute_mean_algorithm(x, algorithm)?;
-        let sum_sq_dev = x.iter()
+        let sum_sq_dev = x
+            .iter()
             .map(|&val| {
                 let dev = val - mean;
                 dev * dev
@@ -1366,7 +1356,7 @@ impl UltraThinkSimdOptimizer {
         for (x_val, y_val) in x.iter().zip(y.iter()) {
             let x_dev = *x_val - mean_x;
             let y_dev = *y_val - mean_y;
-            
+
             sum_xy = sum_xy + x_dev * y_dev;
             sum_x2 = sum_x2 + x_dev * x_dev;
             sum_y2 = sum_y2 + y_dev * y_dev;
@@ -1413,7 +1403,7 @@ impl UltraThinkSimdOptimizer {
         &self,
         a: &Array2<F>,
         b: &Array2<F>,
-        algorithm: &AlgorithmChoice,
+        _algorithm: &AlgorithmChoice,
     ) -> StatsResult<Array2<F>>
     where
         F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + Zero,
@@ -1441,7 +1431,7 @@ impl UltraThinkSimdOptimizer {
         &self,
         batch_size: usize,
         avg_array_size: usize,
-        operations: &[BatchOperation],
+        _operations: &[BatchOperation],
     ) -> StatsResult<BatchStrategy> {
         // Simplified batch strategy selection
         if batch_size < 10 {
@@ -1458,7 +1448,7 @@ impl UltraThinkSimdOptimizer {
         &self,
         data: &[ArrayBase<D, Ix1>],
         operations: &[BatchOperation],
-        strategy: &BatchStrategy,
+        _strategy: &BatchStrategy,
     ) -> StatsResult<BatchResults<F>>
     where
         F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static,
@@ -1555,7 +1545,7 @@ mod tests {
     fn test_ultra_simd_optimizer_creation() {
         let config = UltraThinkSimdConfig::default();
         let optimizer = UltraThinkSimdOptimizer::new(config);
-        
+
         // Test basic functionality
         assert!(matches!(
             optimizer.hardware_profile.architecture,
@@ -1567,10 +1557,10 @@ mod tests {
     fn test_ultra_mean_calculation() {
         let config = UltraThinkSimdConfig::default();
         let optimizer = UltraThinkSimdOptimizer::new(config);
-        
+
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let result = optimizer.ultra_mean(&data.view()).unwrap();
-        
+
         assert!((result - 3.0).abs() < 1e-10);
     }
 
@@ -1578,10 +1568,10 @@ mod tests {
     fn test_ultra_variance_calculation() {
         let config = UltraThinkSimdConfig::default();
         let optimizer = UltraThinkSimdOptimizer::new(config);
-        
+
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let result = optimizer.ultra_variance(&data.view(), 1).unwrap();
-        
+
         // Expected variance for sample: 2.5
         assert!((result - 2.5).abs() < 1e-10);
     }
@@ -1590,11 +1580,11 @@ mod tests {
     fn test_ultra_correlation_calculation() {
         let config = UltraThinkSimdConfig::default();
         let optimizer = UltraThinkSimdOptimizer::new(config);
-        
+
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
         let result = optimizer.ultra_correlation(&x.view(), &y.view()).unwrap();
-        
+
         // Perfect negative correlation
         assert!((result - (-1.0)).abs() < 1e-10);
     }
@@ -1603,12 +1593,18 @@ mod tests {
     fn test_data_characteristics_analysis() {
         let config = UltraThinkSimdConfig::default();
         let optimizer = UltraThinkSimdOptimizer::new(config);
-        
+
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let characteristics = optimizer.analyze_data_characteristics(&data.view());
-        
-        assert!(matches!(characteristics.memory_layout, MemoryLayout::Contiguous));
-        assert!(matches!(characteristics.sparsity_level, SparsityLevel::Dense));
+
+        assert!(matches!(
+            characteristics.memory_layout,
+            MemoryLayout::Contiguous
+        ));
+        assert!(matches!(
+            characteristics.sparsity_level,
+            SparsityLevel::Dense
+        ));
     }
 
     #[test]
@@ -1631,11 +1627,11 @@ mod tests {
     fn test_kahan_summation() {
         let config = UltraThinkSimdConfig::default();
         let optimizer = UltraThinkSimdOptimizer::new(config);
-        
+
         // Test with numbers that would lose precision in naive summation
         let data = array![1e16, 1.0, -1e16];
         let result = optimizer.kahan_sum(&data.view());
-        
+
         // Kahan summation should preserve the 1.0
         assert!((result - 1.0).abs() < 1e-10);
     }
@@ -1644,14 +1640,16 @@ mod tests {
     fn test_batch_operations() {
         let config = UltraThinkSimdConfig::default();
         let optimizer = UltraThinkSimdOptimizer::new(config);
-        
+
         let data1 = array![1.0, 2.0, 3.0];
         let data2 = array![4.0, 5.0, 6.0];
         let data_arrays = vec![data1.view(), data2.view()];
-        
+
         let operations = vec![BatchOperation::Mean, BatchOperation::Variance];
-        let results = optimizer.ultra_batch_statistics(&data_arrays, &operations).unwrap();
-        
+        let results = optimizer
+            .ultra_batch_statistics(&data_arrays, &operations)
+            .unwrap();
+
         assert_eq!(results.means.len(), 2);
         assert_eq!(results.variances.len(), 2);
         assert!((results.means[0] - 2.0).abs() < 1e-10);

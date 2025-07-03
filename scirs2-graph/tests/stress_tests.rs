@@ -185,13 +185,13 @@ fn test_large_directed_graph_algorithms() -> CoreResult<()> {
 
     // Add edges with preferential attachment pattern
     use rand::prelude::*;
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     for i in 1..n {
         // Add edges from new nodes to existing nodes
-        let num_edges = (rng.gen::<f64>() * 5.0) as usize + 1;
+        let num_edges = (rng.random::<f64>() * 5.0) as usize + 1;
         for _ in 0..num_edges {
-            let target = rng.gen_range(0..i);
+            let target = rng.random_range(0..i);
             graph.add_edge(i, target, 1.0)?;
         }
     }
@@ -271,10 +271,10 @@ fn test_memory_efficient_operations() -> CoreResult<()> {
     let clustering_start = Instant::now();
     let sample_size = 1000;
     let mut clustering_sum = 0.0;
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     for _ in 0..sample_size {
-        let node = rng.gen_range(0..graph.node_count());
+        let node = rng.random_range(0..graph.node_count());
         if let Ok(cc) = measures::local_clustering_coefficient(&graph, node) {
             clustering_sum += cc;
         }
@@ -361,11 +361,11 @@ fn test_parallel_algorithms_on_large_graphs() -> CoreResult<()> {
 
 fn estimate_diameter(graph: &Graph, samples: usize) -> CoreResult<usize> {
     use rand::prelude::*;
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let mut max_distance = 0;
 
     for _ in 0..samples {
-        let source = rng.gen_range(0..graph.node_count());
+        let source = rng.random_range(0..graph.node_count());
         let distances = algorithms::bfs_distances(graph, source)?;
 
         for &dist in distances.values() {

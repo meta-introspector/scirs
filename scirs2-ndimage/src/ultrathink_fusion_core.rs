@@ -53,6 +53,14 @@ pub struct UltrathinkConfig {
     pub multi_scale_levels: usize,
     /// Adaptive resource allocation
     pub adaptive_resources: bool,
+    /// Adaptive learning capability
+    pub adaptive_learning: bool,
+    /// Quantum coherence threshold (0.0 to 1.0)
+    pub quantum_coherence_threshold: f64,
+    /// Neuromorphic plasticity factor (0.0 to 1.0)
+    pub neuromorphic_plasticity: f64,
+    /// Ultra processing intensity (0.0 to 1.0)
+    pub ultra_processing_intensity: f64,
 }
 
 impl Default for UltrathinkConfig {
@@ -71,6 +79,10 @@ impl Default for UltrathinkConfig {
             causal_depth: 16,
             multi_scale_levels: 10,
             adaptive_resources: true,
+            adaptive_learning: true,
+            quantum_coherence_threshold: 0.85,
+            neuromorphic_plasticity: 0.1,
+            ultra_processing_intensity: 0.75,
         }
     }
 }
@@ -527,11 +539,7 @@ where
 
                 // Apply self-organization learning
                 if config.self_organization {
-                    apply_self_organization_learning_safe(
-                        &mut topology,
-                        pixel_id,
-                        config,
-                    )?;
+                    apply_self_organization_learning_safe(&mut topology, pixel_id, config)?;
                 }
             }
         }

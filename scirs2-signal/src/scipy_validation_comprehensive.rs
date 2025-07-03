@@ -790,7 +790,7 @@ fn validate_sysid_implementations() -> SignalResult<SysIdValidationResult> {
     let n = 256;
     let true_ar_coeffs = vec![1.0, -0.8, 0.15]; // AR(2) system
     let mut signal = vec![0.0; n];
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Generate AR(2) process
     for i in 2..n {

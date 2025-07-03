@@ -4,15 +4,15 @@
 //! for ndimage operations, replacing the placeholder implementations with
 //! functional GPU compute capabilities.
 
+#[cfg(any(feature = "cuda", feature = "opencl"))]
 use std::collections::HashMap;
-use std::ffi::{CStr, CString};
-use std::ptr;
+#[cfg(any(feature = "cuda", feature = "opencl"))]
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
 
-use ndarray::{Array, ArrayView, ArrayView2, Dimension, Ix2};
+use ndarray::{Array, ArrayView2, Ix2};
 use num_traits::{Float, FromPrimitive};
 
+#[cfg(any(feature = "cuda", feature = "opencl"))]
 use crate::backend::gpu_acceleration_framework::{
     CompiledKernel, GpuBuffer, GpuBufferHandle, KernelHandle,
 };

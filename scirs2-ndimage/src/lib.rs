@@ -43,7 +43,9 @@ mod scipy_validation_tests;
 pub mod segmentation;
 pub mod streaming;
 pub mod threading;
+pub mod ultrathink_enhanced_validation;
 pub mod ultrathink_fusion_core;
+pub mod ultrathink_meta_learning;
 pub mod visualization;
 
 // Re-exports
@@ -278,7 +280,7 @@ pub use self::api_compatibility_verification::{
 
 // Comprehensive SciPy validation exports
 pub use self::comprehensive_scipy_validation::{
-    SciPyValidationSuite, ValidationConfig, ValidationResult,
+    SciPyValidationSuite, ValidationConfig as SciPyValidationConfig, ValidationResult,
 };
 
 // Comprehensive examples exports
@@ -309,4 +311,10 @@ pub use self::ultrathink_fusion_core::{
     QuantumAwareResourceScheduler, QuantumCoherenceOptimizer, QuantumConsciousnessEvolution,
     ResourceSchedulingDecision, StrategyEvolution, TemporalMemoryFusion, UltrathinkConfig,
     UltrathinkState, WorkloadCharacteristics,
+};
+
+// Enhanced validation exports
+pub use self::ultrathink_enhanced_validation::{
+    validated_ultrathink_processing, PerformanceBenchmark, PerformanceSummary, UltrathinkValidator,
+    ValidationConfig, ValidationError, ValidationReport,
 };

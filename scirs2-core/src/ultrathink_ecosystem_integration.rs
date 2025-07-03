@@ -764,11 +764,13 @@ pub struct OptimizationOpportunity {
 
 impl UltrathinkEcosystemCoordinator {
     /// Create a new ecosystem coordinator
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self::with_config(UltrathinkEcosystemConfig::default())
     }
 
     /// Create with custom configuration
+    #[allow(dead_code)]
     pub fn with_config(config: UltrathinkEcosystemConfig) -> Self {
         Self {
             modules: Arc::new(RwLock::new(HashMap::new())),

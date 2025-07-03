@@ -11,10 +11,10 @@ use std::path::Path;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::error::{ClusteringError, Result};
-use super::{ScatterPlot2D, ScatterPlot3D, VisualizationConfig};
 use super::animation::{AnimationFrame, StreamingFrame};
-use super::interactive::{ClusterStats, CameraState, ViewMode};
+use super::interactive::{CameraState, ClusterStats, ViewMode};
+use super::{ScatterPlot2D, ScatterPlot3D, VisualizationConfig};
+use crate::error::{ClusteringError, Result};
 
 /// Export format options
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -127,7 +127,7 @@ pub fn export_scatter_2d_to_file<P: AsRef<Path>>(
     config: &ExportConfig,
 ) -> Result<()> {
     let path = output_path.as_ref();
-    
+
     match config.format {
         ExportFormat::JSON => export_scatter_2d_to_json(plot, path, config),
         ExportFormat::HTML => export_scatter_2d_to_html(plot, path, config),
@@ -160,7 +160,7 @@ pub fn export_scatter_3d_to_file<P: AsRef<Path>>(
     config: &ExportConfig,
 ) -> Result<()> {
     let path = output_path.as_ref();
-    
+
     match config.format {
         ExportFormat::JSON => export_scatter_3d_to_json(plot, path, config),
         ExportFormat::HTML => export_scatter_3d_to_html(plot, path, config),
@@ -193,7 +193,7 @@ pub fn export_animation_to_file<P: AsRef<Path>>(
     config: &ExportConfig,
 ) -> Result<()> {
     let path = output_path.as_ref();
-    
+
     match config.format {
         ExportFormat::GIF => export_animation_to_gif(frames, path, config),
         ExportFormat::MP4 => export_animation_to_mp4(frames, path, config),
@@ -221,20 +221,21 @@ pub fn export_scatter_2d_to_json<P: AsRef<Path>>(
             plot_data: plot.clone(),
             metadata: create_metadata(),
         };
-        
-        let json_string = serde_json::to_string_pretty(&export_data)
-            .map_err(|e| ClusteringError::ComputationError(format!("JSON serialization failed: {}", e)))?;
-        
+
+        let json_string = serde_json::to_string_pretty(&export_data).map_err(|e| {
+            ClusteringError::ComputationError(format!("JSON serialization failed: {}", e))
+        })?;
+
         std::fs::write(output_path, json_string)
             .map_err(|e| ClusteringError::ComputationError(format!("File write failed: {}", e)))?;
-        
+
         Ok(())
     }
-    
+
     #[cfg(not(feature = "serde"))]
     {
         Err(ClusteringError::ComputationError(
-            "JSON export requires 'serde' feature".to_string()
+            "JSON export requires 'serde' feature".to_string(),
         ))
     }
 }
@@ -253,20 +254,21 @@ pub fn export_scatter_3d_to_json<P: AsRef<Path>>(
             plot_data: plot.clone(),
             metadata: create_metadata(),
         };
-        
-        let json_string = serde_json::to_string_pretty(&export_data)
-            .map_err(|e| ClusteringError::ComputationError(format!("JSON serialization failed: {}", e)))?;
-        
+
+        let json_string = serde_json::to_string_pretty(&export_data).map_err(|e| {
+            ClusteringError::ComputationError(format!("JSON serialization failed: {}", e))
+        })?;
+
         std::fs::write(output_path, json_string)
             .map_err(|e| ClusteringError::ComputationError(format!("File write failed: {}", e)))?;
-        
+
         Ok(())
     }
-    
+
     #[cfg(not(feature = "serde"))]
     {
         Err(ClusteringError::ComputationError(
-            "JSON export requires 'serde' feature".to_string()
+            "JSON export requires 'serde' feature".to_string(),
         ))
     }
 }
@@ -278,10 +280,10 @@ pub fn export_scatter_2d_to_html<P: AsRef<Path>>(
     config: &ExportConfig,
 ) -> Result<()> {
     let html_content = generate_scatter_2d_html(plot, config)?;
-    
+
     std::fs::write(output_path, html_content)
         .map_err(|e| ClusteringError::ComputationError(format!("File write failed: {}", e)))?;
-    
+
     Ok(())
 }
 
@@ -292,10 +294,10 @@ pub fn export_scatter_3d_to_html<P: AsRef<Path>>(
     config: &ExportConfig,
 ) -> Result<()> {
     let html_content = generate_scatter_3d_html(plot, config)?;
-    
+
     std::fs::write(output_path, html_content)
         .map_err(|e| ClusteringError::ComputationError(format!("File write failed: {}", e)))?;
-    
+
     Ok(())
 }
 
@@ -308,7 +310,7 @@ pub fn save_visualization_to_file<P: AsRef<Path>>(
     mut config: ExportConfig,
 ) -> Result<()> {
     let path = output_path.as_ref();
-    
+
     // Auto-detect format from file extension if not specified
     if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
         config.format = match extension.to_lowercase().as_str() {
@@ -325,7 +327,7 @@ pub fn save_visualization_to_file<P: AsRef<Path>>(
             _ => config.format, // Keep original format if not recognized
         };
     }
-    
+
     // Export based on available data
     if let Some(frames) = animation_frames {
         export_animation_to_file(frames, path, &config)
@@ -342,16 +344,17 @@ pub fn save_visualization_to_file<P: AsRef<Path>>(
 
 /// Generate HTML content for 2D scatter plot
 fn generate_scatter_2d_html(plot: &ScatterPlot2D, config: &ExportConfig) -> Result<String> {
-    let plot_data_json = serde_json::to_string(plot)
-        .map_err(|e| ClusteringError::ComputationError(format!("JSON serialization failed: {}", e)))?;
-    
-    let html_template = r#"<!DOCTYPE html>
-<html lang="en">
+    let plot_data_json = serde_json::to_string(plot).map_err(|e| {
+        ClusteringError::ComputationError(format!("JSON serialization failed: {}", e))
+    })?;
+
+    const HTML_TEMPLATE: &str = "<!DOCTYPE html>
+<html lang=\"en\">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
     <title>Clustering Visualization</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src=\"https://d3js.org/d3.v7.min.js\"></script>
     <style>
         body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background: {background}; }}
         .container {{ max-width: 1200px; margin: 0 auto; }}
@@ -364,13 +367,13 @@ fn generate_scatter_2d_html(plot: &ScatterPlot2D, config: &ExportConfig) -> Resu
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class=\"container\">
         <h1>Clustering Visualization</h1>
-        <div id="plot" class="visualization"></div>
-        <div class="legend" id="legend"></div>
-        <div class="controls">
-            <label>Point Size: <input type="range" id="point-size" min="1" max="20" value="{point_size}"></label>
-            <label>Opacity: <input type="range" id="opacity" min="0" max="100" value="{opacity}"></label>
+        <div id=\"plot\" class=\"visualization\"></div>
+        <div class=\"legend\" id=\"legend\"></div>
+        <div class=\"controls\">
+            <label>Point Size: <input type=\"range\" id=\"point-size\" min=\"1\" max=\"20\" value=\"{point_size}\"></label>
+            <label>Opacity: <input type=\"range\" id=\"opacity\" min=\"0\" max=\"100\" value=\"{opacity}\"></label>
         </div>
     </div>
     
@@ -382,21 +385,19 @@ fn generate_scatter_2d_html(plot: &ScatterPlot2D, config: &ExportConfig) -> Resu
             interactive: {interactive}
         }};
         
-        // D3.js visualization code
         function createVisualization() {{
-            const svg = d3.select("#plot")
-                .append("svg")
-                .attr("width", config.width)
-                .attr("height", config.height);
+            const svg = d3.select(\"HASH_PLOT\")
+                .append(\"svg\")
+                .attr(\"width\", config.width)
+                .attr(\"height\", config.height);
             
             const margin = {{top: 20, right: 30, bottom: 40, left: 40}};
             const width = config.width - margin.left - margin.right;
             const height = config.height - margin.top - margin.bottom;
             
-            const g = svg.append("g")
-                .attr("transform", `translate(${{margin.left}},${{margin.top}})`);
+            const g = svg.append(\"g\")
+                .attr(\"transform\", \"translate(\" + margin.left + \",\" + margin.top + \")\");
             
-            // Scales
             const xScale = d3.scaleLinear()
                 .domain(d3.extent(plotData.points.flat().filter((_, i) => i % 2 === 0)))
                 .range([0, width]);
@@ -405,15 +406,13 @@ fn generate_scatter_2d_html(plot: &ScatterPlot2D, config: &ExportConfig) -> Resu
                 .domain(d3.extent(plotData.points.flat().filter((_, i) => i % 2 === 1)))
                 .range([height, 0]);
             
-            // Axes
-            g.append("g")
-                .attr("transform", `translate(0,${{height}})`)
+            g.append(\"g\")
+                .attr(\"transform\", \"translate(0,\" + height + \")\")
                 .call(d3.axisBottom(xScale));
             
-            g.append("g")
+            g.append(\"g\")
                 .call(d3.axisLeft(yScale));
             
-            // Points
             const points = [];
             for (let i = 0; i < plotData.points.length; i++) {{
                 points.push({{
@@ -425,67 +424,79 @@ fn generate_scatter_2d_html(plot: &ScatterPlot2D, config: &ExportConfig) -> Resu
                 }});
             }}
             
-            g.selectAll(".point")
+            g.selectAll(\"DOT_POINT\")
                 .data(points)
-                .enter().append("circle")
-                .attr("class", "point")
-                .attr("cx", d => xScale(d.x))
-                .attr("cy", d => yScale(d.y))
-                .attr("r", d => d.size)
-                .attr("fill", d => d.color)
-                .attr("opacity", {opacity});
+                .enter().append(\"circle\")
+                .attr(\"class\", \"point\")
+                .attr(\"cx\", d => xScale(d.x))
+                .attr(\"cy\", d => yScale(d.y))
+                .attr(\"r\", d => d.size)
+                .attr(\"fill\", d => d.color)
+                .attr(\"opacity\", {opacity});
             
-            // Legend
-            const legend = d3.select("#legend");
+            const legend = d3.select(\"HASH_LEGEND\");
             plotData.legend.forEach(item => {{
-                const legendItem = legend.append("div")
-                    .attr("class", "legend-item");
+                const legendItem = legend.append(\"div\")
+                    .attr(\"class\", \"legend-item\");
                 
-                legendItem.append("div")
-                    .attr("class", "legend-color")
-                    .style("background-color", item.color);
+                legendItem.append(\"div\")
+                    .attr(\"class\", \"legend-color\")
+                    .style(\"background-color\", item.color);
                 
-                legendItem.append("span")
-                    .text(`${{item.label}} (${{item.count}} points)`);
+                legendItem.append(\"span\")
+                    .text(item.label + \" (\" + item.count + \" points)\");
             }});
         }}
         
         createVisualization();
         
-        // Interactive controls
         if (config.interactive) {{
-            d3.select("#point-size").on("input", function() {{
+            d3.select(\"HASH_POINT_SIZE\").on(\"input\", function() {{
                 const size = +this.value;
-                d3.selectAll(".point").attr("r", size);
+                d3.selectAll(\"DOT_POINT\").attr(\"r\", size);
             }});
             
-            d3.select("#opacity").on("input", function() {{
+            d3.select(\"HASH_OPACITY\").on(\"input\", function() {{
                 const opacity = +this.value / 100;
-                d3.selectAll(".point").attr("opacity", opacity);
+                d3.selectAll(\"DOT_POINT\").attr(\"opacity\", opacity);
             }});
         }}
     </script>
 </body>
-</html>"#;
-    
+</html>";
+
+    let html_template = HTML_TEMPLATE
+        .replace("HASH_PLOT", "#plot")
+        .replace("DOT_POINT", ".point")
+        .replace("HASH_LEGEND", "#legend")
+        .replace("HASH_POINT_SIZE", "#point-size")
+        .replace("HASH_OPACITY", "#opacity");
+
     let html_content = html_template
         .replace("{background}", &config.background_color)
         .replace("{plot_data}", &plot_data_json)
         .replace("{width}", &config.dimensions.0.to_string())
         .replace("{height}", &config.dimensions.1.to_string())
-        .replace("{point_size}", &plot.sizes.get(0).unwrap_or(&5.0).to_string())
+        .replace(
+            "{point_size}",
+            &plot.sizes.get(0).unwrap_or(&5.0).to_string(),
+        )
         .replace("{opacity}", &(config.quality as f32 / 100.0).to_string())
         .replace("{interactive}", &config.interactive.to_string())
-        .replace("{custom_css}", config.custom_styling.as_deref().unwrap_or(""));
-    
+        .replace(
+            "{custom_css}",
+            config.custom_styling.as_deref().unwrap_or(""),
+        );
+
     Ok(html_content)
 }
 
 /// Generate HTML content for 3D scatter plot with Three.js
 fn generate_scatter_3d_html(plot: &ScatterPlot3D, config: &ExportConfig) -> Result<String> {
-    let plot_data_json = serde_json::to_string(plot)
-        .map_err(|e| ClusteringError::ComputationError(format!("JSON serialization failed: {}", e)))?;
-    
+    let plot_data_json = serde_json::to_string(plot).map_err(|e| {
+        ClusteringError::ComputationError(format!("JSON serialization failed: {}", e))
+    })?;
+
     let html_template = r#"<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -659,20 +670,27 @@ fn generate_scatter_3d_html(plot: &ScatterPlot3D, config: &ExportConfig) -> Resu
     </script>
 </body>
 </html>"#;
-    
+
     let html_content = html_template
         .replace("{background}", &config.background_color)
         .replace("{plot_data}", &plot_data_json)
         .replace("{opacity}", &(config.quality as f32 / 100.0).to_string())
-        .replace("{custom_css}", config.custom_styling.as_deref().unwrap_or(""));
-    
+        .replace(
+            "{custom_css}",
+            config.custom_styling.as_deref().unwrap_or(""),
+        );
+
     Ok(html_content)
 }
 
 // Placeholder implementations for other export formats
-fn export_scatter_2d_to_csv<P: AsRef<Path>>(plot: &ScatterPlot2D, output_path: P, _config: &ExportConfig) -> Result<()> {
+fn export_scatter_2d_to_csv<P: AsRef<Path>>(
+    plot: &ScatterPlot2D,
+    output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
     let mut csv_content = String::from("x,y,cluster,color\n");
-    
+
     for i in 0..plot.points.nrows() {
         csv_content.push_str(&format!(
             "{},{},{},{}\n",
@@ -682,81 +700,164 @@ fn export_scatter_2d_to_csv<P: AsRef<Path>>(plot: &ScatterPlot2D, output_path: P
             plot.colors[i]
         ));
     }
-    
+
     std::fs::write(output_path, csv_content)
         .map_err(|e| ClusteringError::ComputationError(format!("File write failed: {}", e)))?;
-    
+
     Ok(())
 }
 
-fn export_scatter_2d_to_plotly<P: AsRef<Path>>(_plot: &ScatterPlot2D, _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("Plotly export not yet implemented".to_string()))
+fn export_scatter_2d_to_plotly<P: AsRef<Path>>(
+    _plot: &ScatterPlot2D,
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "Plotly export not yet implemented".to_string(),
+    ))
 }
 
-fn export_scatter_2d_to_d3<P: AsRef<Path>>(_plot: &ScatterPlot2D, _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("D3.js export not yet implemented".to_string()))
+fn export_scatter_2d_to_d3<P: AsRef<Path>>(
+    _plot: &ScatterPlot2D,
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "D3.js export not yet implemented".to_string(),
+    ))
 }
 
-fn export_scatter_2d_to_svg<P: AsRef<Path>>(_plot: &ScatterPlot2D, _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("SVG export not yet implemented".to_string()))
+fn export_scatter_2d_to_svg<P: AsRef<Path>>(
+    _plot: &ScatterPlot2D,
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "SVG export not yet implemented".to_string(),
+    ))
 }
 
-fn export_scatter_2d_to_png<P: AsRef<Path>>(_plot: &ScatterPlot2D, _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("PNG export requires image rendering library".to_string()))
+fn export_scatter_2d_to_png<P: AsRef<Path>>(
+    _plot: &ScatterPlot2D,
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "PNG export requires image rendering library".to_string(),
+    ))
 }
 
-fn export_scatter_3d_to_threejs<P: AsRef<Path>>(_plot: &ScatterPlot3D, _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("Three.js export not yet implemented".to_string()))
+fn export_scatter_3d_to_threejs<P: AsRef<Path>>(
+    _plot: &ScatterPlot3D,
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "Three.js export not yet implemented".to_string(),
+    ))
 }
 
-fn export_scatter_3d_to_gltf<P: AsRef<Path>>(_plot: &ScatterPlot3D, _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("GLTF export not yet implemented".to_string()))
+fn export_scatter_3d_to_gltf<P: AsRef<Path>>(
+    _plot: &ScatterPlot3D,
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "GLTF export not yet implemented".to_string(),
+    ))
 }
 
-fn export_scatter_3d_to_webgl<P: AsRef<Path>>(_plot: &ScatterPlot3D, _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("WebGL export not yet implemented".to_string()))
+fn export_scatter_3d_to_webgl<P: AsRef<Path>>(
+    _plot: &ScatterPlot3D,
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "WebGL export not yet implemented".to_string(),
+    ))
 }
 
-fn export_scatter_3d_to_unity<P: AsRef<Path>>(_plot: &ScatterPlot3D, _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("Unity3D export not yet implemented".to_string()))
+fn export_scatter_3d_to_unity<P: AsRef<Path>>(
+    _plot: &ScatterPlot3D,
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "Unity3D export not yet implemented".to_string(),
+    ))
 }
 
-fn export_scatter_3d_to_blender<P: AsRef<Path>>(_plot: &ScatterPlot3D, _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("Blender export not yet implemented".to_string()))
+fn export_scatter_3d_to_blender<P: AsRef<Path>>(
+    _plot: &ScatterPlot3D,
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "Blender export not yet implemented".to_string(),
+    ))
 }
 
-fn export_animation_to_gif<P: AsRef<Path>>(_frames: &[AnimationFrame], _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("GIF export requires animation library".to_string()))
+fn export_animation_to_gif<P: AsRef<Path>>(
+    _frames: &[AnimationFrame],
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "GIF export requires animation library".to_string(),
+    ))
 }
 
-fn export_animation_to_mp4<P: AsRef<Path>>(_frames: &[AnimationFrame], _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("MP4 export requires video encoding library".to_string()))
+fn export_animation_to_mp4<P: AsRef<Path>>(
+    _frames: &[AnimationFrame],
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "MP4 export requires video encoding library".to_string(),
+    ))
 }
 
-fn export_animation_to_webm<P: AsRef<Path>>(_frames: &[AnimationFrame], _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("WebM export requires video encoding library".to_string()))
+fn export_animation_to_webm<P: AsRef<Path>>(
+    _frames: &[AnimationFrame],
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "WebM export requires video encoding library".to_string(),
+    ))
 }
 
-fn export_animation_to_html<P: AsRef<Path>>(_frames: &[AnimationFrame], _output_path: P, _config: &ExportConfig) -> Result<()> {
-    Err(ClusteringError::ComputationError("Animation HTML export not yet implemented".to_string()))
+fn export_animation_to_html<P: AsRef<Path>>(
+    _frames: &[AnimationFrame],
+    _output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
+    Err(ClusteringError::ComputationError(
+        "Animation HTML export not yet implemented".to_string(),
+    ))
 }
 
-fn export_animation_to_json<P: AsRef<Path>>(frames: &[AnimationFrame], output_path: P, _config: &ExportConfig) -> Result<()> {
+fn export_animation_to_json<P: AsRef<Path>>(
+    frames: &[AnimationFrame],
+    output_path: P,
+    _config: &ExportConfig,
+) -> Result<()> {
     #[cfg(feature = "serde")]
     {
-        let json_string = serde_json::to_string_pretty(frames)
-            .map_err(|e| ClusteringError::ComputationError(format!("JSON serialization failed: {}", e)))?;
-        
+        let json_string = serde_json::to_string_pretty(frames).map_err(|e| {
+            ClusteringError::ComputationError(format!("JSON serialization failed: {}", e))
+        })?;
+
         std::fs::write(output_path, json_string)
             .map_err(|e| ClusteringError::ComputationError(format!("File write failed: {}", e)))?;
-        
+
         Ok(())
     }
-    
+
     #[cfg(not(feature = "serde"))]
     {
         Err(ClusteringError::ComputationError(
-            "JSON export requires 'serde' feature".to_string()
+            "JSON export requires 'serde' feature".to_string(),
         ))
     }
 }
@@ -826,15 +927,15 @@ mod tests {
             bounds: (0.0, 4.0, 0.0, 4.0),
             legend: Vec::new(),
         };
-        
+
         let config = ExportConfig {
             format: ExportFormat::CSV,
             ..Default::default()
         };
-        
+
         let temp_file = tempfile::NamedTempFile::new().unwrap();
         export_scatter_2d_to_csv(&plot, temp_file.path(), &config).unwrap();
-        
+
         let content = std::fs::read_to_string(temp_file.path()).unwrap();
         assert!(content.contains("x,y,cluster,color"));
         assert!(content.contains("1,2,0,#FF0000"));

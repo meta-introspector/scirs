@@ -285,8 +285,8 @@ impl ElasticDeformation {
             StdRng::seed_from_u64(seed_value)
         } else {
             // For rand 0.9.0+, we need to create a seeded RNG for reproducibility
-            let mut thread_rng = rand::rng();
-            StdRng::from_rng(&mut thread_rng)
+            let mut rng = rand::thread_rng();
+            StdRng::from_rng(&mut rng)
         };
 
         // Generate random displacement fields
@@ -295,8 +295,8 @@ impl ElasticDeformation {
 
         for y in 0..height as usize {
             for x in 0..width as usize {
-                dx_map[[y, x]] = rng.random_range(-1.0..1.0);
-                dy_map[[y, x]] = rng.random_range(-1.0..1.0);
+                dx_map[[y, x]] = rng.gen_range(-1.0..1.0);
+                dy_map[[y, x]] = rng.gen_range(-1.0..1.0);
             }
         }
 
@@ -649,7 +649,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix numerical precision issues  
+    #[ignore] // TODO: Fix numerical precision issues
     fn test_thin_plate_spline_interpolation() {
         // Create control points
         let source_points = vec![

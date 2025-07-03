@@ -5,13 +5,13 @@
 //! reinforcement learning optimization, and neural architecture search.
 
 use ndarray::Array2;
-use scirs2_cluster::ultrathink_enhanced_features::{
-    DeepUltrathinkClusterer, TransformerClusterEmbedder, GraphNeuralNetworkProcessor,
-    ReinforcementLearningAgent, NeuralArchitectureSearchEngine, DeepEnsembleCoordinator,
-};
 use scirs2_cluster::ultrathink_clustering::UltrathinkClusterer;
+use scirs2_cluster::ultrathink_enhanced_features::{
+    DeepEnsembleCoordinator, DeepUltrathinkClusterer, GraphNeuralNetworkProcessor,
+    NeuralArchitectureSearchEngine, ReinforcementLearningAgent, TransformerClusterEmbedder,
+};
 use scirs2_cluster::ultrathink_visualization::{
-    UltrathinkVisualizer, UltrathinkVisualizationConfig, QuantumColorScheme,
+    QuantumColorScheme, UltrathinkVisualizationConfig, UltrathinkVisualizer,
     VisualizationExportFormat,
 };
 
@@ -57,26 +57,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn transformer_embedding_demo() -> Result<(), Box<dyn std::error::Error>> {
     // Create high-dimensional complex data
     let data = create_complex_high_dimensional_data();
-    
-    println!("   📊 Data shape: {:?}", data.shape());
+
+    let shape = data.shape();
+    println!("   📊 Data shape: {shape:?}");
     println!("   🔬 Applying transformer-based feature embedding...");
-    
+
     // Create transformer embedder
     let mut embedder = TransformerClusterEmbedder::new();
-    
+
     // Generate deep embeddings
     let embeddings = embedder.embed_features(&data.view())?;
-    
+
     println!("   ✅ Transformer embeddings generated");
-    println!("   📐 Embedding shape: {:?}", embeddings.shape());
-    println!("   🧠 Multi-head attention with {} heads", 8);
+    let emb_shape = embeddings.shape();
+    println!("   📐 Embedding shape: {emb_shape:?}");
+    println!("   🧠 Multi-head attention with {heads} heads", heads = 8);
     println!("   🔄 Processed through 6 transformer layers");
     println!("   ⚡ Enhanced with positional encodings");
-    
+
     // Compute embedding quality metrics
     let embedding_variance = compute_embedding_variance(&embeddings);
-    println!("   📈 Embedding variance: {:.4}", embedding_variance);
-    
+    println!("   📈 Embedding variance: {embedding_variance:.4}");
+
     Ok(())
 }
 
@@ -84,23 +86,38 @@ fn transformer_embedding_demo() -> Result<(), Box<dyn std::error::Error>> {
 fn graph_neural_network_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_graph_structured_data();
     let embeddings = create_sample_embeddings(data.nrows());
-    
-    println!("   📊 Graph data shape: {:?}", data.shape());
+
+    let graph_shape = data.shape();
+    println!("   📊 Graph data shape: {graph_shape:?}");
     println!("   🕸️  Building k-NN graph structure...");
-    
+
     // Create GNN processor
     let mut gnn_processor = GraphNeuralNetworkProcessor::new();
-    
+
     // Process graph structure
     let graph_insights = gnn_processor.process_graph_structure(&data.view(), &embeddings)?;
-    
+
     println!("   ✅ Graph neural network processing completed");
-    println!("   🔗 Graph connectivity: {:.3}", graph_insights.graph_connectivity);
-    println!("   🏘️  Communities detected: {} groups", graph_insights.community_structure.len());
-    println!("   🎯 Centrality measures computed for {} nodes", graph_insights.centrality_measures.len());
-    println!("   🌊 Spectral clustering quality: {:.3}", graph_insights.spectral_properties.spectral_clustering_quality);
+    println!(
+        "   🔗 Graph connectivity: {:.3}",
+        graph_insights.graph_connectivity
+    );
+    println!(
+        "   🏘️  Communities detected: {} groups",
+        graph_insights.community_structure.len()
+    );
+    println!(
+        "   🎯 Centrality measures computed for {} nodes",
+        graph_insights.centrality_measures.len()
+    );
+    println!(
+        "   🌊 Spectral clustering quality: {:.3}",
+        graph_insights
+            .spectral_properties
+            .spectral_clustering_quality
+    );
     println!("   ⚡ Message passing through multiple GNN layers");
-    
+
     Ok(())
 }
 
@@ -108,23 +125,28 @@ fn graph_neural_network_demo() -> Result<(), Box<dyn std::error::Error>> {
 fn reinforcement_learning_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_dynamic_clustering_data();
     let embeddings = create_sample_embeddings(data.nrows());
-    
-    println!("   📊 Dynamic data shape: {:?}", data.shape());
+
+    let dyn_shape = data.shape();
+    println!("   📊 Dynamic data shape: {dyn_shape:?}");
     println!("   🎮 Initializing RL agent for clustering optimization...");
-    
+
     // Create RL agent
     let mut rl_agent = ReinforcementLearningAgent::new();
-    
+
     // Optimize clustering strategy
     let rl_rewards = rl_agent.optimize_clustering_strategy(&data.view(), &embeddings)?;
-    
+
     println!("   ✅ Reinforcement learning optimization completed");
-    println!("   🏆 Average reward: {:.4}", rl_rewards.mean().unwrap_or(0.0));
-    println!("   📈 Reward variance: {:.4}", rl_rewards.var(0.0));
+    println!(
+        "   🏆 Average reward: {:.4}",
+        rl_rewards.mean().unwrap_or(0.0)
+    );
+    let reward_var = rl_rewards.var(0.0);
+    println!("   📈 Reward variance: {reward_var:.4}");
     println!("   🎯 Q-network guided clustering decisions");
     println!("   🔄 Policy gradient optimization");
     println!("   💾 Experience replay for learning stability");
-    
+
     Ok(())
 }
 
@@ -132,113 +154,165 @@ fn reinforcement_learning_demo() -> Result<(), Box<dyn std::error::Error>> {
 fn neural_architecture_search_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_architecture_search_data();
     let embeddings = create_sample_embeddings(data.nrows());
-    
-    println!("   📊 Architecture search data shape: {:?}", data.shape());
+
+    let arch_shape = data.shape();
+    println!("   📊 Architecture search data shape: {arch_shape:?}");
     println!("   🔍 Searching for optimal clustering architecture...");
-    
+
     // Create NAS engine
     let mut nas_engine = NeuralArchitectureSearchEngine::new();
-    
+
     // Search optimal architecture
     let optimal_arch = nas_engine.search_optimal_architecture(&data.view(), &embeddings)?;
-    
+
     println!("   ✅ Neural architecture search completed");
-    println!("   🏗️  Optimal architecture: {}", optimal_arch.architecture_config);
-    println!("   📊 Performance score: {:.4}", optimal_arch.performance_score);
+    println!(
+        "   🏗️  Optimal architecture: {}",
+        optimal_arch.architecture_config
+    );
+    println!(
+        "   📊 Performance score: {:.4}",
+        optimal_arch.performance_score
+    );
     println!("   🧬 Evolution strategy optimization");
     println!("   🎯 DARTS differentiable architecture search");
     println!("   ⚡ Performance predictor guidance");
-    
+
     Ok(())
 }
 
 /// Demonstrates deep ensemble clustering
 fn deep_ensemble_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_ensemble_test_data();
-    
-    println!("   📊 Ensemble data shape: {:?}", data.shape());
+
+    let ens_shape = data.shape();
+    println!("   📊 Ensemble data shape: {ens_shape:?}");
     println!("   🎭 Creating deep ensemble with uncertainty quantification...");
-    
+
     // Create base ultrathink clusterer for comparison
     let mut base_clusterer = UltrathinkClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true);
-    
+
     let base_result = base_clusterer.cluster(&data.view())?;
-    
+
     // Create ensemble coordinator
     let mut ensemble_coordinator = DeepEnsembleCoordinator::new();
     let embeddings = create_sample_embeddings(data.nrows());
-    
+
     // Coordinate ensemble
-    let ensemble_consensus = ensemble_coordinator.coordinate_ensemble(
-        &data.view(), &embeddings, &base_result
-    )?;
-    
+    let ensemble_consensus =
+        ensemble_coordinator.coordinate_ensemble(&data.view(), &embeddings, &base_result)?;
+
     // Estimate uncertainties
     let uncertainties = ensemble_coordinator.estimate_uncertainties(&data.view(), &base_result)?;
-    
+
     println!("   ✅ Deep ensemble clustering completed");
-    println!("   🎯 Consensus clusters: {} unique labels", 
-        ensemble_consensus.consensus_clusters.iter().max().unwrap_or(&0) + 1);
-    println!("   📊 Average agreement: {:.3}", 
-        ensemble_consensus.agreement_scores.mean().unwrap_or(0.0));
-    println!("   🎲 Average uncertainty: {:.4}", uncertainties.mean().unwrap_or(0.0));
+    println!(
+        "   🎯 Consensus clusters: {} unique labels",
+        ensemble_consensus
+            .consensus_clusters
+            .iter()
+            .max()
+            .unwrap_or(&0)
+            + 1
+    );
+    println!(
+        "   📊 Average agreement: {:.3}",
+        ensemble_consensus.agreement_scores.mean().unwrap_or(0.0)
+    );
+    println!(
+        "   🎲 Average uncertainty: {:.4}",
+        uncertainties.mean().unwrap_or(0.0)
+    );
     println!("   🔒 Uncertainty quantification for reliability");
     println!("   🗳️  Majority voting consensus mechanism");
-    
+
     Ok(())
 }
 
 /// Demonstrates complete deep ultrathink pipeline
 fn complete_deep_ultrathink_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_comprehensive_test_data();
-    
-    println!("   📊 Comprehensive data shape: {:?}", data.shape());
+
+    let comp_shape = data.shape();
+    println!("   📊 Comprehensive data shape: {comp_shape:?}");
     println!("   🚀 Launching complete Deep Ultrathink pipeline...");
-    
+
     // Create deep ultrathink clusterer
-    let mut deep_clusterer = DeepUltrathinkClusterer::new()
-        .with_full_deep_learning();
-    
+    let mut deep_clusterer = DeepUltrathinkClusterer::new().with_full_deep_learning();
+
     // Perform deep clustering
     let deep_result = deep_clusterer.deep_cluster(&data.view())?;
-    
+
     println!("   ✅ Complete Deep Ultrathink clustering completed!");
     println!("   🧠 Base ultrathink results:");
-    println!("      - AI speedup: {:.2}x", deep_result.base_result.ai_speedup);
-    println!("      - Quantum advantage: {:.2}x", deep_result.base_result.quantum_advantage);
-    println!("      - Neuromorphic benefit: {:.2}x", deep_result.base_result.neuromorphic_benefit);
-    println!("      - Meta-learning improvement: {:.2}x", deep_result.base_result.meta_learning_improvement);
-    
+    println!(
+        "      - AI speedup: {:.2}x",
+        deep_result.base_result.ai_speedup
+    );
+    println!(
+        "      - Quantum advantage: {:.2}x",
+        deep_result.base_result.quantum_advantage
+    );
+    println!(
+        "      - Neuromorphic benefit: {:.2}x",
+        deep_result.base_result.neuromorphic_benefit
+    );
+    println!(
+        "      - Meta-learning improvement: {:.2}x",
+        deep_result.base_result.meta_learning_improvement
+    );
+
     println!("   🎯 Deep learning enhancements:");
-    println!("      - Deep embeddings shape: {:?}", deep_result.deep_embeddings.shape());
-    println!("      - Graph connectivity: {:.3}", deep_result.graph_insights.graph_connectivity);
-    println!("      - RL average reward: {:.4}", deep_result.rl_rewards.mean().unwrap_or(0.0));
-    println!("      - Optimal architecture: {}", deep_result.optimal_architecture.architecture_config);
-    println!("      - Ensemble agreement: {:.3}", 
-        deep_result.ensemble_consensus.agreement_scores.mean().unwrap_or(0.0));
-    println!("      - Average uncertainty: {:.4}", 
-        deep_result.uncertainty_estimates.mean().unwrap_or(0.0));
-    
+    println!(
+        "      - Deep embeddings shape: {:?}",
+        deep_result.deep_embeddings.shape()
+    );
+    println!(
+        "      - Graph connectivity: {:.3}",
+        deep_result.graph_insights.graph_connectivity
+    );
+    println!(
+        "      - RL average reward: {:.4}",
+        deep_result.rl_rewards.mean().unwrap_or(0.0)
+    );
+    println!(
+        "      - Optimal architecture: {}",
+        deep_result.optimal_architecture.architecture_config
+    );
+    println!(
+        "      - Ensemble agreement: {:.3}",
+        deep_result
+            .ensemble_consensus
+            .agreement_scores
+            .mean()
+            .unwrap_or(0.0)
+    );
+    println!(
+        "      - Average uncertainty: {:.4}",
+        deep_result.uncertainty_estimates.mean().unwrap_or(0.0)
+    );
+
     Ok(())
 }
 
 /// Demonstrates advanced visualization capabilities
 fn advanced_visualization_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_visualization_data();
-    
-    println!("   📊 Visualization data shape: {:?}", data.shape());
+
+    let vis_shape = data.shape();
+    println!("   📊 Visualization data shape: {vis_shape:?}");
     println!("   🎨 Creating advanced deep learning visualizations...");
-    
+
     // Create base clustering result
     let mut clusterer = UltrathinkClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true)
         .with_meta_learning(true);
-    
+
     let result = clusterer.cluster(&data.view())?;
-    
+
     // Create advanced visualization configuration
     let vis_config = UltrathinkVisualizationConfig {
         show_quantum_coherence: true,
@@ -248,14 +322,14 @@ fn advanced_visualization_demo() -> Result<(), Box<dyn std::error::Error>> {
         animation_speed: 1.5,
         export_format: VisualizationExportFormat::InteractiveHTML,
     };
-    
+
     // Create visualizer
     let mut visualizer = UltrathinkVisualizer::new(vis_config);
     let vis_output = visualizer.visualize_results(&data.view(), &result)?;
-    
+
     // Export visualization
     visualizer.export_visualization(&vis_output, "deep_ultrathink_visualization")?;
-    
+
     println!("   ✅ Advanced visualization completed");
     println!("   🌈 Quantum phase wheel color scheme applied");
     println!("   ⚛️  Quantum coherence evolution visualized");
@@ -263,7 +337,7 @@ fn advanced_visualization_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("   🤖 AI algorithm selection insights displayed");
     println!("   📈 Performance dashboard with deep metrics");
     println!("   💾 Interactive HTML visualization exported");
-    
+
     Ok(())
 }
 
@@ -273,63 +347,63 @@ fn create_complex_high_dimensional_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 50;
     let n_features = 20;
-    
+
     // Create complex high-dimensional clusters
     for i in 0..n_samples {
         let cluster_id = i / (n_samples / 4); // 4 clusters
         let base_values = [2.0, 5.0, 8.0, 11.0];
         let base = base_values[cluster_id.min(3)];
-        
+
         for j in 0..n_features {
             let feature_offset = (j as f64) * 0.1;
             let noise = ((i * 7 + j * 11) % 100) as f64 / 500.0;
             let complex_pattern = (j as f64 * std::f64::consts::PI / n_features as f64).sin() * 0.5;
-            
+
             data_vec.push(base + feature_offset + noise + complex_pattern);
         }
     }
-    
+
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 fn create_graph_structured_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 30;
-    
+
     // Create data with clear graph structure
     for i in 0..n_samples {
         let angle = 2.0 * std::f64::consts::PI * i as f64 / n_samples as f64;
         let radius = 1.0 + 0.3 * (i as f64 / 5.0).sin();
-        
+
         let x = radius * angle.cos() + (i / 10) as f64 * 3.0;
         let y = radius * angle.sin() + (i / 10) as f64 * 3.0;
         let z = (angle * 2.0).sin() + (i / 15) as f64;
-        
+
         data_vec.extend_from_slice(&[x, y, z]);
     }
-    
+
     Array2::from_shape_vec((n_samples, 3), data_vec).unwrap()
 }
 
 fn create_dynamic_clustering_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 40;
-    
+
     // Create dynamic data with concept drift
     for i in 0..n_samples {
         let time_factor = i as f64 / n_samples as f64;
         let drift_factor = time_factor * 2.0;
-        
+
         let cluster_id = (i / 10) % 4;
         let base_x = cluster_id as f64 * 4.0 + drift_factor;
         let base_y = (cluster_id as f64 * 3.0).sin() + drift_factor * 0.5;
-        
+
         let noise_x = ((i * 13) % 50) as f64 / 100.0;
         let noise_y = ((i * 17) % 50) as f64 / 100.0;
-        
+
         data_vec.extend_from_slice(&[base_x + noise_x, base_y + noise_y]);
     }
-    
+
     Array2::from_shape_vec((n_samples, 2), data_vec).unwrap()
 }
 
@@ -337,37 +411,37 @@ fn create_architecture_search_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 35;
     let n_features = 8;
-    
+
     // Create data requiring optimal architecture
     for i in 0..n_samples {
         for j in 0..n_features {
             let pattern1 = (i as f64 * j as f64 * 0.1).sin();
             let pattern2 = ((i + j) as f64 * 0.2).cos();
             let complexity = pattern1 * pattern2 + (i as f64 / 10.0);
-            
+
             data_vec.push(complexity);
         }
     }
-    
+
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 fn create_ensemble_test_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 45;
-    
+
     // Create challenging data for ensemble methods
     for i in 0..n_samples {
         let cluster_uncertainty = ((i * 7) % 20) as f64 / 20.0;
         let base_cluster = (i / 15) % 3;
-        
+
         let x = base_cluster as f64 * 5.0 + cluster_uncertainty * 2.0;
         let y = (base_cluster as f64 * 2.0).cos() + cluster_uncertainty;
         let z = (i as f64 * 0.1).sin() + cluster_uncertainty * 0.5;
-        
+
         data_vec.extend_from_slice(&[x, y, z]);
     }
-    
+
     Array2::from_shape_vec((n_samples, 3), data_vec).unwrap()
 }
 
@@ -375,54 +449,54 @@ fn create_comprehensive_test_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 60;
     let n_features = 12;
-    
+
     // Create comprehensive test dataset
     for i in 0..n_samples {
         let cluster_id = i / 20; // 3 main clusters
-        
+
         for j in 0..n_features {
             let base_value = cluster_id as f64 * 8.0;
             let feature_pattern = (j as f64 * std::f64::consts::PI / 6.0).sin() * 2.0;
             let interaction = (i as f64 * j as f64 * 0.01).cos() * 0.5;
             let noise = ((i * 19 + j * 23) % 100) as f64 / 200.0;
-            
+
             data_vec.push(base_value + feature_pattern + interaction + noise);
         }
     }
-    
+
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 fn create_visualization_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 25;
-    
+
     // Create visually interesting data
     for i in 0..n_samples {
         let angle = 2.0 * std::f64::consts::PI * i as f64 / n_samples as f64;
         let spiral_radius = 1.0 + i as f64 * 0.1;
-        
+
         let x = spiral_radius * angle.cos();
         let y = spiral_radius * angle.sin();
         let z = angle * 0.5;
-        
+
         data_vec.extend_from_slice(&[x, y, z]);
     }
-    
+
     Array2::from_shape_vec((n_samples, 3), data_vec).unwrap()
 }
 
 fn create_sample_embeddings(n_samples: usize) -> Array2<f64> {
     let embed_dim = 128;
     let mut embeddings = Array2::zeros((n_samples, embed_dim));
-    
+
     for i in 0..n_samples {
         for j in 0..embed_dim {
             let val = ((i * 7 + j * 11) as f64 * 0.01).sin() * 0.5;
             embeddings[[i, j]] = val;
         }
     }
-    
+
     embeddings
 }
 
@@ -430,11 +504,11 @@ fn compute_embedding_variance(embeddings: &Array2<f64>) -> f64 {
     let mean = embeddings.mean().unwrap_or(0.0);
     let mut variance = 0.0;
     let total_elements = embeddings.len();
-    
+
     for &value in embeddings.iter() {
         let diff = value - mean;
         variance += diff * diff;
     }
-    
+
     variance / total_elements as f64
 }

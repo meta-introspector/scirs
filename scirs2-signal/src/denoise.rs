@@ -508,7 +508,7 @@ mod tests {
         // a signal of the correct length
 
         // Add noise with a fixed seed for reproducibility
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut noisy_signal = clean_signal.clone();
         for val in noisy_signal.iter_mut() {
             *val += 0.2 * rng.random_range(-1.0..1.0);

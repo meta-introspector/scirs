@@ -1035,7 +1035,7 @@ impl OptimError {
 
 impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
     /// Create a new TPU pod coordinator
-    pub fn new(config: PodCoordinationConfig) -> Result<Self, OptimError> {
+    pub fn new(config: PodCoordinationConfig) -> Result<Self> {
         let topology_manager = TopologyManager::new(&config)?;
         let communication_manager = CommunicationManager::new(&config)?;
         let synchronization_manager = SynchronizationManager::new(&config)?;
@@ -1065,7 +1065,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
         &mut self,
         batch_data: BatchData<T>,
         optimization_step: OptimizationStep<T>,
-    ) -> Result<BatchExecutionResult<T>, OptimError> {
+    ) -> Result<BatchExecutionResult<T>> {
         let start_time = Instant::now();
 
         // Create batch execution
@@ -1112,7 +1112,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
         batch_id: BatchId,
         optimization_step: OptimizationStep<T>,
         resource_allocation: &ResourceAllocation,
-    ) -> Result<DistributedExecutionResult<T>, OptimError> {
+    ) -> Result<DistributedExecutionResult<T>> {
         // Execute on all allocated devices concurrently
         let mut device_futures = Vec::new();
 
@@ -1148,14 +1148,12 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
         device_id: DeviceId,
         batch_id: BatchId,
         optimization_step: OptimizationStep<T>,
-    ) -> Result<DeviceExecutionResult<T>, OptimError> {
+    ) -> Result<DeviceExecutionResult<T>> {
         // Get batch partition for this device
         let partition = self
             .batch_coordinator
             .get_partition(batch_id, device_id)
-            .map_err(|_| {
-                OptimError::ConfigurationError("Failed to get partition".to_string())
-            })?;
+            .map_err(|_| OptimError::ConfigurationError("Failed to get partition".to_string()))?;
 
         // Execute optimization step on the partition
         let start_time = Instant::now();
@@ -1186,7 +1184,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
         &mut self,
         data: &mut [Array<T, ndarray::IxDyn>],
         operation: ReduceOperation,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         self.communication_manager.all_reduce(data, operation).await
     }
 
@@ -1195,7 +1193,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
         &mut self,
         data: &[Array<T, ndarray::IxDyn>],
         source_device: DeviceId,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         self.communication_manager
             .broadcast(data, source_device)
             .await
@@ -1274,7 +1272,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
     }
 
     /// Shutdown the pod coordinator gracefully
-    pub async fn shutdown(&mut self) -> Result<(), OptimError> {
+    pub async fn shutdown(&mut self) -> Result<()> {
         self.batch_coordinator.shutdown().await?;
         self.communication_manager.shutdown().await?;
         self.synchronization_manager.shutdown().await?;
@@ -1286,11 +1284,8 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
 #[derive(Debug)]
 pub struct OptimizationStep<T: Float> {
     /// Step function
-    pub step_fn: Arc<
-        dyn Fn(BatchPartition<T>) -> Result<Vec<Array<T, ndarray::IxDyn>>, OptimError>
-            + Send
-            + Sync,
-    >,
+    pub step_fn:
+        Arc<dyn Fn(BatchPartition<T>) -> Result<Vec<Array<T, ndarray::IxDyn>>> + Send + Sync>,
 }
 
 impl<T: Float> Clone for OptimizationStep<T> {
@@ -1463,7 +1458,7 @@ pub struct PodPerformanceAnalyzer {
 }
 
 impl PodPerformanceAnalyzer {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimError> {
+    pub fn new(config: &PodCoordinationConfig) -> Result<Self> {
         Ok(Self {
             config: config.clone(),
             metrics_history: VecDeque::with_capacity(1000),
@@ -1581,7 +1576,7 @@ pub struct ResourceScheduler<T: Float> {
 }
 
 impl<T: Float> ResourceScheduler<T> {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimError> {
+    pub fn new(config: &PodCoordinationConfig) -> Result<Self> {
         let mut device_availability = HashMap::new();
 
         // Initialize device availability for all devices in the pod
@@ -1608,10 +1603,7 @@ impl<T: Float> ResourceScheduler<T> {
         })
     }
 
-    pub async fn allocate_resources(
-        &mut self,
-        batch_id: BatchId,
-    ) -> Result<ResourceAllocation, OptimError> {
+    pub async fn allocate_resources(&mut self, batch_id: BatchId) -> Result<ResourceAllocation> {
         // Find available devices
         let available_devices: Vec<DeviceId> = self
             .device_availability
@@ -1654,7 +1646,7 @@ impl<T: Float> ResourceScheduler<T> {
         Ok(allocation)
     }
 
-    pub fn release_resources(&mut self, batch_id: BatchId) -> Result<(), OptimError> {
+    pub fn release_resources(&mut self, batch_id: BatchId) -> Result<()> {
         if let Some(allocation) = self.active_allocations.remove(&batch_id) {
             // Release device resources
             for device_id in allocation.devices {
@@ -1733,27 +1725,31 @@ impl LoadBalancer {
                         device_availability.get(&device_id).map(|availability| {
                             // Calculate weight based on available capacity
                             let capacity_weight = availability.compute_capacity;
-                            let memory_weight = availability.available_memory as f64 / (16.0 * 1024.0 * 1024.0 * 1024.0); // Normalize to 16GB
+                            let memory_weight = availability.available_memory as f64
+                                / (16.0 * 1024.0 * 1024.0 * 1024.0); // Normalize to 16GB
                             let load_weight = 1.0 - availability.current_load;
                             let bandwidth_weight = availability.communication_bandwidth / 100.0; // Normalize to 100 GB/s
-                            
-                            let combined_weight = (capacity_weight + memory_weight + load_weight + bandwidth_weight) / 4.0;
+
+                            let combined_weight =
+                                (capacity_weight + memory_weight + load_weight + bandwidth_weight)
+                                    / 4.0;
                             (device_id, combined_weight)
                         })
                     })
                     .collect();
 
                 // Sort by weight (highest first)
-                weighted_devices.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+                weighted_devices
+                    .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
                 // Select devices based on weighted round robin
                 let mut selected = Vec::new();
                 let total_weight: f64 = weighted_devices.iter().map(|(_, weight)| weight).sum();
-                
+
                 if total_weight > 0.0 {
                     let mut accumulated_weight = 0.0;
                     let weight_per_device = total_weight / 4.0; // Target 4 devices
-                    
+
                     for (device_id, weight) in &weighted_devices {
                         accumulated_weight += weight;
                         if accumulated_weight >= weight_per_device * (selected.len() + 1) as f64 {
@@ -1763,7 +1759,7 @@ impl LoadBalancer {
                             }
                         }
                     }
-                    
+
                     // Fill remaining slots if needed
                     while selected.len() < 4 && selected.len() < weighted_devices.len() {
                         for (device_id, _) in &weighted_devices {
@@ -1774,7 +1770,7 @@ impl LoadBalancer {
                         }
                     }
                 }
-                
+
                 selected
             }
             LoadBalancingAlgorithm::CapacityBased => {
@@ -1785,24 +1781,27 @@ impl LoadBalancer {
                         device_availability.get(&device_id).map(|availability| {
                             // Calculate comprehensive capacity score
                             let compute_score = availability.compute_capacity;
-                            let memory_score = availability.available_memory as f64 / (32_u64 * 1024 * 1024 * 1024) as f64; // Normalize to 32GB max
+                            let memory_score = availability.available_memory as f64
+                                / (32_u64 * 1024 * 1024 * 1024) as f64; // Normalize to 32GB max
                             let bandwidth_score = availability.communication_bandwidth / 200.0; // Normalize to 200 GB/s max
                             let load_efficiency = (1.0 - availability.current_load).max(0.1); // Avoid division by zero
-                            
+
                             // Weighted capacity score prioritizing compute > memory > bandwidth
                             let capacity_score = (
                                 compute_score * 0.5 +      // 50% weight on compute capacity
                                 memory_score * 0.3 +       // 30% weight on memory capacity  
-                                bandwidth_score * 0.2      // 20% weight on communication bandwidth
-                            ) * load_efficiency;           // Adjusted by current load efficiency
-                            
+                                bandwidth_score * 0.2
+                                // 20% weight on communication bandwidth
+                            ) * load_efficiency; // Adjusted by current load efficiency
+
                             (device_id, capacity_score)
                         })
                     })
                     .collect();
 
                 // Sort by capacity score (highest first)
-                capacity_ranked_devices.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+                capacity_ranked_devices
+                    .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
                 // Select top capacity devices up to limit
                 let selected_devices: Vec<DeviceId> = capacity_ranked_devices
@@ -1845,7 +1844,7 @@ pub struct PodPerformanceMetrics {
 // Complete implementations for all supporting manager structures
 
 impl TopologyManager {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimError> {
+    pub fn new(config: &PodCoordinationConfig) -> Result<Self> {
         let device_layout = DeviceLayout {
             grid: vec![
                 vec![DeviceId(0), DeviceId(1)],
@@ -1905,7 +1904,7 @@ impl TopologyManager {
 }
 
 impl<T: Float + Default + Clone> CommunicationManager<T> {
-    pub fn new(_config: &PodCoordinationConfig) -> Result<Self, OptimError> {
+    pub fn new(_config: &PodCoordinationConfig) -> Result<Self> {
         Ok(Self {
             active_communications: HashMap::new(),
             scheduler: HashMap::new(),
@@ -1920,7 +1919,7 @@ impl<T: Float + Default + Clone> CommunicationManager<T> {
         &mut self,
         data: &mut [Array<T, ndarray::IxDyn>],
         operation: ReduceOperation,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Simplified all-reduce implementation
         match operation {
             ReduceOperation::Sum => {
@@ -1943,7 +1942,7 @@ impl<T: Float + Default + Clone> CommunicationManager<T> {
         &mut self,
         _data: &[Array<T, ndarray::IxDyn>],
         _source_device: DeviceId,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Simplified broadcast implementation
         // In real implementation, this would coordinate actual data transfer
         Ok(())
@@ -1957,14 +1956,14 @@ impl<T: Float + Default + Clone> CommunicationManager<T> {
         stats
     }
 
-    pub async fn shutdown(&mut self) -> Result<(), OptimError> {
+    pub async fn shutdown(&mut self) -> Result<()> {
         self.active_communications.clear();
         Ok(())
     }
 }
 
 impl SynchronizationManager {
-    pub fn new(_config: &PodCoordinationConfig) -> Result<Self, OptimError> {
+    pub fn new(_config: &PodCoordinationConfig) -> Result<Self> {
         Ok(Self {
             active_barriers: HashMap::new(),
             sync_events: VecDeque::new(),
@@ -1974,9 +1973,9 @@ impl SynchronizationManager {
         })
     }
 
-    pub async fn global_barrier(&mut self) -> Result<(), OptimError> {
+    pub async fn global_barrier(&mut self) -> Result<()> {
         // Simplified barrier implementation
-        let barrier_id = BarrierId(rng().gen());
+        let barrier_id = BarrierId(rng().random());
         let barrier_state = BarrierState {
             participants: HashSet::new(),
             arrived: HashSet::new(),
@@ -2004,7 +2003,7 @@ impl SynchronizationManager {
         stats
     }
 
-    pub async fn shutdown(&mut self) -> Result<(), OptimError> {
+    pub async fn shutdown(&mut self) -> Result<()> {
         self.active_barriers.clear();
         self.sync_events.clear();
         Ok(())
@@ -2012,7 +2011,7 @@ impl SynchronizationManager {
 }
 
 impl PodLoadBalancer {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimError> {
+    pub fn new(config: &PodCoordinationConfig) -> Result<Self> {
         Ok(Self {
             strategy: config.load_balancing_strategy,
             device_loads: HashMap::new(),
@@ -2034,7 +2033,7 @@ impl PodLoadBalancer {
 }
 
 impl FaultToleranceManager {
-    pub fn new(_config: &PodCoordinationConfig) -> Result<Self, OptimError> {
+    pub fn new(_config: &PodCoordinationConfig) -> Result<Self> {
         Ok(Self {
             failure_detector: FailureDetector {
                 monitored_devices: HashSet::new(),
@@ -2061,7 +2060,7 @@ impl FaultToleranceManager {
 }
 
 impl<T: Float + Default + Clone> BatchCoordinator<T> {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimError> {
+    pub fn new(config: &PodCoordinationConfig) -> Result<Self> {
         Ok(Self {
             strategy: config.batch_strategy,
             active_batches: HashMap::new(),
@@ -2072,11 +2071,8 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
         })
     }
 
-    pub async fn create_batch(
-        &mut self,
-        batch_data: BatchData<T>,
-    ) -> Result<BatchId, OptimError> {
-        let batch_id = BatchId(rng().gen());
+    pub async fn create_batch(&mut self, batch_data: BatchData<T>) -> Result<BatchId> {
+        let batch_id = BatchId(rng().random());
         let batch_execution = BatchExecution {
             id: batch_id,
             data: batch_data,
@@ -2100,7 +2096,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
         &mut self,
         batch_id: BatchId,
         resource_allocation: &ResourceAllocation,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Simplified data distribution
         if let Some(batch) = self.active_batches.get_mut(&batch_id) {
             for &device_id in &resource_allocation.devices {
@@ -2120,7 +2116,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
         &self,
         batch_id: BatchId,
         device_id: DeviceId,
-    ) -> Result<BatchPartition<T>, OptimError> {
+    ) -> Result<BatchPartition<T>> {
         if let Some(batch) = self.active_batches.get(&batch_id) {
             if let Some(partition) = batch.device_assignments.get(&device_id) {
                 return Ok(partition.clone());
@@ -2141,14 +2137,14 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
         stats
     }
 
-    pub async fn shutdown(&mut self) -> Result<(), OptimError> {
+    pub async fn shutdown(&mut self) -> Result<()> {
         self.active_batches.clear();
         Ok(())
     }
 }
 
 impl<T: Float + Default + Clone> GradientAggregator<T> {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimError> {
+    pub fn new(config: &PodCoordinationConfig) -> Result<Self> {
         Ok(Self {
             method: config.gradient_aggregation,
             gradient_buffers: HashMap::new(),

@@ -202,7 +202,7 @@ where
             options.popsize
         };
 
-        let seed = options.seed.unwrap_or_else(rand::random);
+        let seed = options.seed.unwrap_or_else(|| rand::rng().random());
         let rng = StdRng::seed_from_u64(seed);
 
         let strategy_enum = Strategy::from_str(strategy).unwrap_or(Strategy::Best1Bin);

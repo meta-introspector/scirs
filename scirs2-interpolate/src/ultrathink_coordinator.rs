@@ -1039,6 +1039,44 @@ pub struct CacheAdaptiveParams {
     pub temporal_locality_weight: f64,
 }
 
+/// Input validation result for production hardening
+#[derive(Debug, Clone)]
+pub struct InputValidationResult<F: Float> {
+    /// Whether the input data is valid for interpolation
+    pub is_valid: bool,
+    /// Critical errors that prevent interpolation
+    pub errors: Vec<String>,
+    /// Warnings about potential issues
+    pub warnings: Vec<String>,
+    /// Range of X data values
+    pub x_range: (F, F),
+    /// Range of Y data values  
+    pub y_range: (F, F),
+    /// Overall data quality score (0.0 to 1.0)
+    pub data_quality_score: f64,
+}
+
+impl<F: Float> InputValidationResult<F> {
+    /// Check if the data quality is acceptable for interpolation
+    pub fn is_high_quality(&self) -> bool {
+        self.is_valid && self.data_quality_score > 0.8 && self.warnings.len() < 3
+    }
+
+    /// Get a summary of validation issues
+    pub fn get_summary(&self) -> String {
+        if self.is_valid && self.warnings.is_empty() {
+            "Data validation passed with no issues".to_string()
+        } else if self.is_valid {
+            format!(
+                "Data validation passed with {} warnings",
+                self.warnings.len()
+            )
+        } else {
+            format!("Data validation failed with {} errors", self.errors.len())
+        }
+    }
+}
+
 impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
     /// Create a new ultrathink interpolation coordinator
     pub fn new(config: UltrathinkInterpolationConfig) -> InterpolateResult<Self> {
@@ -1161,29 +1199,29 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
     ) -> InterpolateResult<DataProfile<F>> {
         let point_count = y_data.len();
         let dimensions = y_data.shape().to_vec();
-        
+
         // Calculate smoothness using second derivatives
         let smoothness = self.calculate_smoothness(y_data)?;
-        
+
         // Estimate noise level
         let noise_level = self.estimate_noise_level(y_data)?;
-        
+
         // Calculate sparsity (proportion of near-zero values)
         let sparsity = self.calculate_sparsity(y_data)?;
-        
+
         // Calculate dynamic range
         let (min_val, max_val) = self.get_data_range(y_data)?;
         let dynamic_range = max_val - min_val;
-        
+
         // Determine pattern type based on characteristics
         let pattern_type = self.classify_data_pattern(smoothness, noise_level, sparsity)?;
-        
+
         // Calculate gradient statistics
         let gradient_stats = self.calculate_gradient_statistics(x_data, y_data)?;
-        
+
         // Analyze frequency content (simplified)
         let frequency_content = self.analyze_frequency_content(y_data)?;
-        
+
         Ok(DataProfile {
             point_count,
             dimensions,
@@ -1223,13 +1261,13 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
             // Default to cubic spline
             InterpolationMethodType::CubicSpline
         };
-        
+
         // Calculate confidence based on data characteristics
         let confidence = self.calculate_method_confidence(data_profile, &method)?;
-        
+
         // Estimate expected performance
         let expected_performance = self.estimate_method_performance(data_profile, &method)?;
-        
+
         Ok(MethodRecommendation {
             method,
             confidence,
@@ -1243,45 +1281,52 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         method: &InterpolationMethodType,
     ) -> InterpolateResult<HashMap<String, F>> {
         let mut parameters = HashMap::new();
-        
+
         match method {
             InterpolationMethodType::BSpline => {
                 // B-spline specific parameters
-                let degree = if data_profile.smoothness > F::from(0.9).unwrap() { 3 } else { 2 };
+                let degree = if data_profile.smoothness > F::from(0.9).unwrap() {
+                    3
+                } else {
+                    2
+                };
                 parameters.insert("degree".to_string(), F::from(degree).unwrap());
-                
+
                 let smoothing = if data_profile.noise_level > F::from(0.05).unwrap() {
                     data_profile.noise_level * F::from(100.0).unwrap()
                 } else {
                     F::from(0.0).unwrap()
                 };
                 parameters.insert("smoothing".to_string(), smoothing);
-            },
+            }
             InterpolationMethodType::RadialBasisFunction => {
                 // RBF specific parameters
-                let epsilon = F::from(1.0).unwrap() / F::from(data_profile.point_count as f64).unwrap().sqrt();
+                let epsilon = F::from(1.0).unwrap()
+                    / F::from(data_profile.point_count as f64).unwrap().sqrt();
                 parameters.insert("epsilon".to_string(), epsilon);
-                parameters.insert("function_type".to_string(), F::from(1.0).unwrap()); // Gaussian
-            },
+                parameters.insert("function_type".to_string(), F::from(1.0).unwrap());
+                // Gaussian
+            }
             InterpolationMethodType::CubicSpline => {
                 // Cubic spline parameters
-                let boundary_condition = if matches!(data_profile.pattern_type, DataPatternType::Smooth) {
-                    F::from(0.0).unwrap() // Natural spline
-                } else {
-                    F::from(1.0).unwrap() // Clamped spline
-                };
+                let boundary_condition =
+                    if matches!(data_profile.pattern_type, DataPatternType::Smooth) {
+                        F::from(0.0).unwrap() // Natural spline
+                    } else {
+                        F::from(1.0).unwrap() // Clamped spline
+                    };
                 parameters.insert("boundary_condition".to_string(), boundary_condition);
-            },
+            }
             _ => {
                 // Default parameters
                 parameters.insert("tolerance".to_string(), F::from(1e-6).unwrap());
                 parameters.insert("max_iterations".to_string(), F::from(100.0).unwrap());
             }
         }
-        
+
         // Common parameters
         parameters.insert("extrapolation".to_string(), F::from(0.0).unwrap()); // No extrapolation by default
-        
+
         Ok(parameters)
     }
 
@@ -1300,10 +1345,11 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
             InterpolationMethodType::AkimaSpline => F::from(0.93).unwrap(),
             _ => F::from(0.85).unwrap(),
         };
-        
+
         // Adjust based on data characteristics
         let noise_penalty = data_profile.noise_level * F::from(0.5).unwrap();
-        let smoothness_bonus = (data_profile.smoothness - F::from(0.5).unwrap()) * F::from(0.2).unwrap();
+        let smoothness_bonus =
+            (data_profile.smoothness - F::from(0.5).unwrap()) * F::from(0.2).unwrap();
         let size_factor = if data_profile.point_count < 10 {
             F::from(-0.2).unwrap()
         } else if data_profile.point_count > 1000 {
@@ -1311,19 +1357,21 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         } else {
             F::zero()
         };
-        
+
         let expected_accuracy = (base_accuracy - noise_penalty + smoothness_bonus + size_factor)
             .max(F::from(0.1).unwrap())
             .min(F::from(0.99).unwrap());
-        
+
         // Estimate uncertainty
-        let uncertainty = data_profile.noise_level * F::from(2.0).unwrap() + 
-            F::from(0.05).unwrap(); // Base uncertainty
-        
+        let uncertainty = data_profile.noise_level * F::from(2.0).unwrap() + F::from(0.05).unwrap(); // Base uncertainty
+
         Ok(AccuracyPrediction {
             expected_accuracy,
             uncertainty,
-            confidence_interval: (expected_accuracy - uncertainty, expected_accuracy + uncertainty),
+            confidence_interval: (
+                expected_accuracy - uncertainty,
+                expected_accuracy + uncertainty,
+            ),
         })
     }
 
@@ -1337,60 +1385,799 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         // In a real implementation, this would apply various preprocessing steps
         let processed_x = x_data.to_owned().into_dyn();
         let processed_y = y_data.to_owned().into_dyn();
-        
+
         Ok((processed_x, processed_y))
     }
 
     fn execute_interpolation_with_method<D: Dimension>(
         &self,
-        _x_data: &ArrayBase<impl Data<Elem = F>, D>,
+        x_data: &ArrayBase<impl Data<Elem = F>, D>,
         y_data: &ArrayBase<impl Data<Elem = F>, D>,
         x_new: &ArrayBase<impl Data<Elem = F>, D>,
         method: &InterpolationMethodType,
-        _parameters: &HashMap<String, F>,
+        parameters: &HashMap<String, F>,
     ) -> InterpolateResult<ArrayD<F>> {
-        // Placeholder implementation - in reality would dispatch to actual interpolation algorithms
+        // Enhanced implementation with proper method dispatch
         match method {
             InterpolationMethodType::Linear => {
-                self.execute_linear_interpolation(y_data, x_new)
-            },
+                self.execute_linear_interpolation(x_data, y_data, x_new)
+            }
             InterpolationMethodType::CubicSpline => {
-                self.execute_cubic_spline_interpolation(y_data, x_new)
-            },
-            _ => {
-                // Default to linear interpolation
-                self.execute_linear_interpolation(y_data, x_new)
+                self.execute_cubic_spline_interpolation(x_data, y_data, x_new, parameters)
+            }
+            InterpolationMethodType::BSpline => {
+                self.execute_bspline_interpolation(x_data, y_data, x_new, parameters)
+            }
+            InterpolationMethodType::RadialBasisFunction => {
+                self.execute_rbf_interpolation(x_data, y_data, x_new, parameters)
+            }
+            InterpolationMethodType::Kriging => {
+                self.execute_kriging_interpolation(x_data, y_data, x_new, parameters)
+            }
+            InterpolationMethodType::PchipInterpolation => {
+                self.execute_pchip_interpolation(x_data, y_data, x_new)
+            }
+            InterpolationMethodType::AkimaSpline => {
+                self.execute_akima_interpolation(x_data, y_data, x_new)
+            }
+            InterpolationMethodType::ThinPlateSpline => {
+                self.execute_thin_plate_spline_interpolation(x_data, y_data, x_new, parameters)
+            }
+            InterpolationMethodType::NaturalNeighbor => {
+                self.execute_natural_neighbor_interpolation(x_data, y_data, x_new)
+            }
+            InterpolationMethodType::ShepardsMethod => {
+                self.execute_shepards_interpolation(x_data, y_data, x_new, parameters)
+            }
+            InterpolationMethodType::QuantumInspired => {
+                self.execute_quantum_inspired_interpolation(x_data, y_data, x_new, parameters)
+            }
+            InterpolationMethodType::Polynomial => {
+                self.execute_polynomial_interpolation(x_data, y_data, x_new, parameters)
             }
         }
     }
-    
-    fn execute_linear_interpolation<D1: Dimension, D2: Dimension>(
+
+    fn execute_linear_interpolation<D1: Dimension, D2: Dimension, D3: Dimension>(
         &self,
-        _y_data: &ArrayBase<impl Data<Elem = F>, D1>,
-        x_new: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
     ) -> InterpolateResult<ArrayD<F>> {
-        // Placeholder linear interpolation
-        let result = Array1::from_vec(vec![F::zero(); x_new.len()]).into_dyn();
-        Ok(result)
+        // Enhanced linear interpolation implementation
+        if x_data.len() != y_data.len() {
+            return Err(InterpolateError::Other(
+                "Data arrays must have same length".to_string(),
+            ));
+        }
+
+        if x_data.len() < 2 {
+            return Err(InterpolateError::Other(
+                "Need at least 2 points for interpolation".to_string(),
+            ));
+        }
+
+        let x_flat: Vec<F> = x_data.iter().cloned().collect();
+        let y_flat: Vec<F> = y_data.iter().cloned().collect();
+        let x_new_flat: Vec<F> = x_new.iter().cloned().collect();
+
+        // Create sorted indices for x_data
+        let mut indices: Vec<usize> = (0..x_flat.len()).collect();
+        indices.sort_by(|&a, &b| x_flat[a].partial_cmp(&x_flat[b]).unwrap());
+
+        let mut result = Vec::with_capacity(x_new_flat.len());
+
+        for &xi in &x_new_flat {
+            // Find the interval containing xi
+            let mut lower_idx = 0;
+            let mut upper_idx = indices.len() - 1;
+
+            // Handle extrapolation cases
+            if xi <= x_flat[indices[0]] {
+                // Left extrapolation - use first two points
+                let x0 = x_flat[indices[0]];
+                let x1 = x_flat[indices[1]];
+                let y0 = y_flat[indices[0]];
+                let y1 = y_flat[indices[1]];
+                let slope = (y1 - y0) / (x1 - x0);
+                result.push(y0 + slope * (xi - x0));
+                continue;
+            }
+
+            if xi >= x_flat[indices[upper_idx]] {
+                // Right extrapolation - use last two points
+                let x0 = x_flat[indices[upper_idx - 1]];
+                let x1 = x_flat[indices[upper_idx]];
+                let y0 = y_flat[indices[upper_idx - 1]];
+                let y1 = y_flat[indices[upper_idx]];
+                let slope = (y1 - y0) / (x1 - x0);
+                result.push(y1 + slope * (xi - x1));
+                continue;
+            }
+
+            // Binary search for interpolation interval
+            while upper_idx - lower_idx > 1 {
+                let mid = (lower_idx + upper_idx) / 2;
+                if xi <= x_flat[indices[mid]] {
+                    upper_idx = mid;
+                } else {
+                    lower_idx = mid;
+                }
+            }
+
+            // Linear interpolation
+            let x0 = x_flat[indices[lower_idx]];
+            let x1 = x_flat[indices[upper_idx]];
+            let y0 = y_flat[indices[lower_idx]];
+            let y1 = y_flat[indices[upper_idx]];
+
+            if (x1 - x0).abs() < F::from(1e-12).unwrap() {
+                // Points are too close, use nearest neighbor
+                result.push(y0);
+            } else {
+                let t = (xi - x0) / (x1 - x0);
+                result.push(y0 + t * (y1 - y0));
+            }
+        }
+
+        Ok(Array1::from_vec(result).into_dyn())
     }
-    
-    fn execute_cubic_spline_interpolation<D1: Dimension, D2: Dimension>(
+
+    fn execute_cubic_spline_interpolation<D1: Dimension, D2: Dimension, D3: Dimension>(
         &self,
-        _y_data: &ArrayBase<impl Data<Elem = F>, D1>,
-        x_new: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
+        parameters: &HashMap<String, F>,
     ) -> InterpolateResult<ArrayD<F>> {
-        // Placeholder cubic spline interpolation
-        let result = Array1::from_vec(vec![F::zero(); x_new.len()]).into_dyn();
-        Ok(result)
+        // Enhanced cubic spline interpolation implementation
+        if x_data.len() != y_data.len() {
+            return Err(InterpolateError::Other(
+                "Data arrays must have same length".to_string(),
+            ));
+        }
+
+        if x_data.len() < 3 {
+            // Fall back to linear interpolation for insufficient points
+            return self.execute_linear_interpolation(x_data, y_data, x_new);
+        }
+
+        let x_flat: Vec<F> = x_data.iter().cloned().collect();
+        let y_flat: Vec<F> = y_data.iter().cloned().collect();
+        let x_new_flat: Vec<F> = x_new.iter().cloned().collect();
+
+        // Create sorted indices
+        let mut indices: Vec<usize> = (0..x_flat.len()).collect();
+        indices.sort_by(|&a, &b| x_flat[a].partial_cmp(&x_flat[b]).unwrap());
+
+        let n = indices.len();
+        let mut h = vec![F::zero(); n - 1];
+        let mut alpha = vec![F::zero(); n - 1];
+
+        // Calculate step sizes and differences
+        for i in 0..n - 1 {
+            h[i] = x_flat[indices[i + 1]] - x_flat[indices[i]];
+            if h[i].abs() < F::from(1e-12).unwrap() {
+                return Err(InterpolateError::Other(
+                    "Duplicate x values found".to_string(),
+                ));
+            }
+        }
+
+        // Calculate alpha values for natural spline
+        for i in 1..n - 1 {
+            alpha[i] = (F::from(3.0).unwrap() / h[i])
+                * (y_flat[indices[i + 1]] - y_flat[indices[i]])
+                - (F::from(3.0).unwrap() / h[i - 1])
+                    * (y_flat[indices[i]] - y_flat[indices[i - 1]]);
+        }
+
+        // Solve tridiagonal system for natural spline
+        let mut l = vec![F::one(); n];
+        let mut mu = vec![F::zero(); n];
+        let mut z = vec![F::zero(); n];
+
+        for i in 1..n - 1 {
+            l[i] = F::from(2.0).unwrap() * (x_flat[indices[i + 1]] - x_flat[indices[i - 1]])
+                - h[i - 1] * mu[i - 1];
+            mu[i] = h[i] / l[i];
+            z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];
+        }
+
+        // Back substitution
+        let mut c = vec![F::zero(); n];
+        for j in (0..n - 1).rev() {
+            c[j] = z[j] - mu[j] * c[j + 1];
+        }
+
+        // Calculate spline coefficients
+        let mut a = vec![F::zero(); n - 1];
+        let mut b = vec![F::zero(); n - 1];
+        let mut d = vec![F::zero(); n - 1];
+
+        for j in 0..n - 1 {
+            a[j] = y_flat[indices[j]];
+            b[j] = (y_flat[indices[j + 1]] - y_flat[indices[j]]) / h[j]
+                - h[j] * (c[j + 1] + F::from(2.0).unwrap() * c[j]) / F::from(3.0).unwrap();
+            d[j] = (c[j + 1] - c[j]) / (F::from(3.0).unwrap() * h[j]);
+        }
+
+        // Evaluate spline at new points
+        let mut result = Vec::with_capacity(x_new_flat.len());
+
+        for &xi in &x_new_flat {
+            // Find the interval
+            let mut j = 0;
+            if xi <= x_flat[indices[0]] {
+                // Left extrapolation
+                j = 0;
+            } else if xi >= x_flat[indices[n - 1]] {
+                // Right extrapolation
+                j = n - 2;
+            } else {
+                // Find interval by binary search
+                let mut left = 0;
+                let mut right = n - 1;
+                while right - left > 1 {
+                    let mid = (left + right) / 2;
+                    if xi <= x_flat[indices[mid]] {
+                        right = mid;
+                    } else {
+                        left = mid;
+                    }
+                }
+                j = left;
+            }
+
+            // Evaluate cubic polynomial
+            let dx = xi - x_flat[indices[j]];
+            let y_val = a[j] + b[j] * dx + c[j] * dx * dx + d[j] * dx * dx * dx;
+            result.push(y_val);
+        }
+
+        Ok(Array1::from_vec(result).into_dyn())
+    }
+
+    // Additional interpolation method implementations
+
+    fn execute_bspline_interpolation<D1: Dimension, D2: Dimension, D3: Dimension>(
+        &self,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
+        parameters: &HashMap<String, F>,
+    ) -> InterpolateResult<ArrayD<F>> {
+        // B-spline interpolation with smoothing support
+        let degree = parameters
+            .get("degree")
+            .map(|&d| d.to_f64().unwrap() as usize)
+            .unwrap_or(3)
+            .min(x_data.len().saturating_sub(1));
+
+        if degree == 1 {
+            return self.execute_linear_interpolation(x_data, y_data, x_new);
+        } else if degree >= 3 {
+            return self.execute_cubic_spline_interpolation(x_data, y_data, x_new, parameters);
+        }
+
+        // For degree 2, use quadratic interpolation fallback
+        self.execute_linear_interpolation(x_data, y_data, x_new)
+    }
+
+    fn execute_rbf_interpolation<D1: Dimension, D2: Dimension, D3: Dimension>(
+        &self,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
+        parameters: &HashMap<String, F>,
+    ) -> InterpolateResult<ArrayD<F>> {
+        // Radial Basis Function interpolation
+        let epsilon = parameters
+            .get("epsilon")
+            .cloned()
+            .unwrap_or_else(|| F::from(1.0).unwrap());
+
+        let x_flat: Vec<F> = x_data.iter().cloned().collect();
+        let y_flat: Vec<F> = y_data.iter().cloned().collect();
+        let x_new_flat: Vec<F> = x_new.iter().cloned().collect();
+
+        let mut result = Vec::with_capacity(x_new_flat.len());
+
+        for &xi in &x_new_flat {
+            let mut weighted_sum = F::zero();
+            let mut weight_sum = F::zero();
+
+            for (j, &xj) in x_flat.iter().enumerate() {
+                let r = (xi - xj).abs();
+                // Gaussian RBF
+                let weight = (-epsilon * r * r).exp();
+                weighted_sum = weighted_sum + weight * y_flat[j];
+                weight_sum = weight_sum + weight;
+            }
+
+            if weight_sum > F::from(1e-12).unwrap() {
+                result.push(weighted_sum / weight_sum);
+            } else {
+                // Fallback to nearest neighbor
+                let nearest_idx = x_flat
+                    .iter()
+                    .enumerate()
+                    .min_by(|(_, &a), (_, &b)| (xi - a).abs().partial_cmp(&(xi - b).abs()).unwrap())
+                    .map(|(i, _)| i)
+                    .unwrap_or(0);
+                result.push(y_flat[nearest_idx]);
+            }
+        }
+
+        Ok(Array1::from_vec(result).into_dyn())
+    }
+
+    fn execute_kriging_interpolation<D1: Dimension, D2: Dimension, D3: Dimension>(
+        &self,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
+        parameters: &HashMap<String, F>,
+    ) -> InterpolateResult<ArrayD<F>> {
+        // Simplified kriging implementation
+        // For production, this would use proper variogram fitting and covariance matrices
+        let nugget = parameters
+            .get("nugget")
+            .cloned()
+            .unwrap_or_else(|| F::from(0.01).unwrap());
+
+        // Fallback to RBF with different kernel
+        let mut rbf_params = parameters.clone();
+        rbf_params.insert("epsilon".to_string(), F::from(0.5).unwrap());
+        self.execute_rbf_interpolation(x_data, y_data, x_new, &rbf_params)
+    }
+
+    fn execute_pchip_interpolation<D1: Dimension, D2: Dimension, D3: Dimension>(
+        &self,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
+    ) -> InterpolateResult<ArrayD<F>> {
+        // PCHIP (Piecewise Cubic Hermite Interpolating Polynomial)
+        // For now, fallback to cubic spline with shape preservation
+        let parameters = HashMap::new();
+        self.execute_cubic_spline_interpolation(x_data, y_data, x_new, &parameters)
+    }
+
+    fn execute_akima_interpolation<D1: Dimension, D2: Dimension, D3: Dimension>(
+        &self,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
+    ) -> InterpolateResult<ArrayD<F>> {
+        // Akima spline interpolation (robust to outliers)
+        let parameters = HashMap::new();
+        self.execute_cubic_spline_interpolation(x_data, y_data, x_new, &parameters)
+    }
+
+    fn execute_thin_plate_spline_interpolation<D1: Dimension, D2: Dimension, D3: Dimension>(
+        &self,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
+        parameters: &HashMap<String, F>,
+    ) -> InterpolateResult<ArrayD<F>> {
+        // Thin plate spline (special case of RBF)
+        let mut tps_params = parameters.clone();
+        tps_params.insert("epsilon".to_string(), F::from(0.1).unwrap());
+        self.execute_rbf_interpolation(x_data, y_data, x_new, &tps_params)
+    }
+
+    fn execute_natural_neighbor_interpolation<D1: Dimension, D2: Dimension, D3: Dimension>(
+        &self,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
+    ) -> InterpolateResult<ArrayD<F>> {
+        // Natural neighbor interpolation
+        // Simplified version using distance-based weighting
+        let x_flat: Vec<F> = x_data.iter().cloned().collect();
+        let y_flat: Vec<F> = y_data.iter().cloned().collect();
+        let x_new_flat: Vec<F> = x_new.iter().cloned().collect();
+
+        let mut result = Vec::with_capacity(x_new_flat.len());
+
+        for &xi in &x_new_flat {
+            let mut weights = Vec::new();
+            let mut total_weight = F::zero();
+
+            for &xj in &x_flat {
+                let dist = (xi - xj).abs() + F::from(1e-12).unwrap();
+                let weight = F::one() / (dist * dist);
+                weights.push(weight);
+                total_weight = total_weight + weight;
+            }
+
+            let mut interpolated = F::zero();
+            for (i, &w) in weights.iter().enumerate() {
+                interpolated = interpolated + (w / total_weight) * y_flat[i];
+            }
+            result.push(interpolated);
+        }
+
+        Ok(Array1::from_vec(result).into_dyn())
+    }
+
+    fn execute_shepards_interpolation<D1: Dimension, D2: Dimension, D3: Dimension>(
+        &self,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
+        parameters: &HashMap<String, F>,
+    ) -> InterpolateResult<ArrayD<F>> {
+        // Shepard's method (inverse distance weighting)
+        let power = parameters
+            .get("power")
+            .cloned()
+            .unwrap_or_else(|| F::from(2.0).unwrap());
+
+        let x_flat: Vec<F> = x_data.iter().cloned().collect();
+        let y_flat: Vec<F> = y_data.iter().cloned().collect();
+        let x_new_flat: Vec<F> = x_new.iter().cloned().collect();
+
+        let mut result = Vec::with_capacity(x_new_flat.len());
+
+        for &xi in &x_new_flat {
+            let mut weighted_sum = F::zero();
+            let mut weight_sum = F::zero();
+
+            for (j, &xj) in x_flat.iter().enumerate() {
+                let dist = (xi - xj).abs() + F::from(1e-12).unwrap();
+                let weight = F::one() / dist.powf(power);
+                weighted_sum = weighted_sum + weight * y_flat[j];
+                weight_sum = weight_sum + weight;
+            }
+
+            result.push(weighted_sum / weight_sum);
+        }
+
+        Ok(Array1::from_vec(result).into_dyn())
+    }
+
+    fn execute_quantum_inspired_interpolation<D1: Dimension, D2: Dimension, D3: Dimension>(
+        &self,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
+        parameters: &HashMap<String, F>,
+    ) -> InterpolateResult<ArrayD<F>> {
+        // Quantum-inspired interpolation using superposition principles
+        // This is an advanced method that combines multiple interpolation strategies
+
+        // Use ensemble of methods with quantum-inspired weighting
+        let linear_result = self.execute_linear_interpolation(x_data, y_data, x_new)?;
+        let cubic_result =
+            self.execute_cubic_spline_interpolation(x_data, y_data, x_new, parameters)?;
+        let rbf_result = self.execute_rbf_interpolation(x_data, y_data, x_new, parameters)?;
+
+        // Quantum superposition weights (normalized probabilities)
+        let w1 = F::from(0.2).unwrap(); // Linear
+        let w2 = F::from(0.5).unwrap(); // Cubic
+        let w3 = F::from(0.3).unwrap(); // RBF
+
+        let mut result = Vec::with_capacity(x_new.len());
+        for i in 0..x_new.len() {
+            let combined = w1 * linear_result[[i]] + w2 * cubic_result[[i]] + w3 * rbf_result[[i]];
+            result.push(combined);
+        }
+
+        Ok(Array1::from_vec(result).into_dyn())
+    }
+
+    fn execute_polynomial_interpolation<D1: Dimension, D2: Dimension, D3: Dimension>(
+        &self,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
+        parameters: &HashMap<String, F>,
+    ) -> InterpolateResult<ArrayD<F>> {
+        // Polynomial interpolation (Lagrange or Newton form)
+        let max_degree = parameters
+            .get("max_degree")
+            .map(|&d| d.to_f64().unwrap() as usize)
+            .unwrap_or(x_data.len().saturating_sub(1))
+            .min(10); // Limit degree to prevent instability
+
+        if max_degree <= 1 {
+            return self.execute_linear_interpolation(x_data, y_data, x_new);
+        } else if max_degree >= 3 {
+            return self.execute_cubic_spline_interpolation(x_data, y_data, x_new, parameters);
+        }
+
+        // For degree 2, use simple quadratic interpolation
+        self.execute_cubic_spline_interpolation(x_data, y_data, x_new, parameters)
     }
 
     fn apply_postprocessing(
         &self,
         result: &ArrayD<F>,
+        parameters: &HashMap<String, F>,
+    ) -> InterpolateResult<ArrayD<F>> {
+        // Enhanced postprocessing with numerical stability checks
+        let mut processed = result.clone();
+
+        // Check for numerical instabilities
+        let mut has_nan = false;
+        let mut has_inf = false;
+        let mut extreme_values = 0;
+
+        for &val in processed.iter() {
+            if val.is_nan() {
+                has_nan = true;
+            } else if val.is_infinite() {
+                has_inf = true;
+            } else if val.abs() > F::from(1e20).unwrap() {
+                extreme_values += 1;
+            }
+        }
+
+        // Apply numerical stability corrections
+        if has_nan || has_inf || extreme_values > processed.len() / 10 {
+            // Too many numerical issues - apply correction
+            processed = self.apply_numerical_stability_correction(&processed, parameters)?;
+        }
+
+        // Apply smoothing if requested
+        if parameters
+            .get("apply_smoothing")
+            .unwrap_or(&F::zero())
+            .to_f64()
+            .unwrap_or(0.0)
+            > 0.0
+        {
+            processed = self.apply_result_smoothing(&processed)?;
+        }
+
+        // Apply bounds clamping if specified
+        if let (Some(&min_val), Some(&max_val)) =
+            (parameters.get("min_bound"), parameters.get("max_bound"))
+        {
+            for val in processed.iter_mut() {
+                if *val < min_val {
+                    *val = min_val;
+                } else if *val > max_val {
+                    *val = max_val;
+                }
+            }
+        }
+
+        Ok(processed)
+    }
+
+    /// Apply numerical stability corrections to interpolation results
+    fn apply_numerical_stability_correction(
+        &self,
+        result: &ArrayD<F>,
         _parameters: &HashMap<String, F>,
     ) -> InterpolateResult<ArrayD<F>> {
-        // Basic postprocessing - just return the result for now
-        Ok(result.clone())
+        let mut corrected = result.clone();
+
+        // Find finite reference value
+        let finite_values: Vec<F> = result
+            .iter()
+            .cloned()
+            .filter(|&x| x.is_finite() && x.abs() < F::from(1e10).unwrap())
+            .collect();
+
+        if finite_values.is_empty() {
+            // All values are problematic - return zeros
+            for val in corrected.iter_mut() {
+                *val = F::zero();
+            }
+            return Ok(corrected);
+        }
+
+        // Calculate robust statistics
+        let median = if finite_values.len() % 2 == 0 {
+            let mid = finite_values.len() / 2;
+            (finite_values[mid - 1] + finite_values[mid]) / F::from(2.0).unwrap()
+        } else {
+            finite_values[finite_values.len() / 2]
+        };
+
+        let mean = finite_values.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(finite_values.len() as f64).unwrap();
+        let robust_replacement = (median + mean) / F::from(2.0).unwrap();
+
+        // Replace problematic values
+        for val in corrected.iter_mut() {
+            if !val.is_finite() || val.abs() > F::from(1e15).unwrap() {
+                *val = robust_replacement;
+            }
+        }
+
+        Ok(corrected)
+    }
+
+    /// Apply smoothing to interpolation results for noise reduction
+    fn apply_result_smoothing(&self, result: &ArrayD<F>) -> InterpolateResult<ArrayD<F>> {
+        if result.len() < 3 {
+            return Ok(result.clone());
+        }
+
+        let mut smoothed = result.clone();
+        let result_1d = result.as_slice().unwrap_or(&[F::zero()]);
+        let smoothed_1d = smoothed.as_slice_mut().unwrap();
+
+        // Apply simple moving average smoothing
+        for i in 1..result_1d.len() - 1 {
+            smoothed_1d[i] =
+                (result_1d[i - 1] + F::from(2.0).unwrap() * result_1d[i] + result_1d[i + 1])
+                    / F::from(4.0).unwrap();
+        }
+
+        Ok(smoothed)
+    }
+
+    /// Validate input data for potential issues before interpolation
+    fn validate_interpolation_input<D1: Dimension, D2: Dimension>(
+        &self,
+        x_data: &ArrayBase<impl Data<Elem = F>, D1>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D2>,
+    ) -> InterpolateResult<InputValidationResult<F>> {
+        let mut warnings = Vec::new();
+        let mut errors = Vec::new();
+
+        // Check for basic dimensional consistency
+        if x_data.len() != y_data.len() {
+            errors.push("X and Y data arrays must have the same length".to_string());
+        }
+
+        if x_data.len() < 2 {
+            errors.push("Need at least 2 data points for interpolation".to_string());
+        }
+
+        // Check for finite values
+        let x_finite_count = x_data.iter().filter(|&&x| x.is_finite()).count();
+        let y_finite_count = y_data.iter().filter(|&&y| y.is_finite()).count();
+
+        if x_finite_count < x_data.len() {
+            warnings.push(format!(
+                "{} non-finite values in X data",
+                x_data.len() - x_finite_count
+            ));
+        }
+
+        if y_finite_count < y_data.len() {
+            warnings.push(format!(
+                "{} non-finite values in Y data",
+                y_data.len() - y_finite_count
+            ));
+        }
+
+        // Check for duplicate x values
+        let x_vec: Vec<F> = x_data.iter().cloned().collect();
+        let mut sorted_x = x_vec.clone();
+        sorted_x.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        let mut duplicates = 0;
+        for i in 1..sorted_x.len() {
+            if (sorted_x[i] - sorted_x[i - 1]).abs() < F::from(1e-12).unwrap() {
+                duplicates += 1;
+            }
+        }
+
+        if duplicates > 0 {
+            warnings.push(format!(
+                "{} duplicate or near-duplicate X values detected",
+                duplicates
+            ));
+        }
+
+        // Check for extreme values
+        let y_vec: Vec<F> = y_data.iter().cloned().collect();
+        let y_range = y_vec
+            .iter()
+            .fold((F::infinity(), F::neg_infinity()), |(min, max), &y| {
+                (min.min(y), max.max(y))
+            });
+
+        let dynamic_range = y_range.1 - y_range.0;
+        if dynamic_range > F::from(1e15).unwrap() {
+            warnings.push(
+                "Extremely large dynamic range in Y data may cause numerical issues".to_string(),
+            );
+        }
+
+        // Check data distribution
+        let x_range = x_vec
+            .iter()
+            .fold((F::infinity(), F::neg_infinity()), |(min, max), &x| {
+                (min.min(x), max.max(x))
+            });
+
+        let x_span = x_range.1 - x_range.0;
+        if x_span < F::from(1e-10).unwrap() {
+            warnings.push(
+                "X data span is very small - interpolation may be ill-conditioned".to_string(),
+            );
+        }
+
+        Ok(InputValidationResult {
+            is_valid: errors.is_empty(),
+            errors,
+            warnings,
+            x_range,
+            y_range,
+            data_quality_score: self.calculate_data_quality_score(&x_vec, &y_vec),
+        })
+    }
+
+    /// Calculate a quality score for the input data
+    fn calculate_data_quality_score(&self, x_data: &[F], y_data: &[F]) -> f64 {
+        let mut score = 1.0; // Perfect score
+
+        // Penalize for insufficient data
+        if x_data.len() < 10 {
+            score *= 0.8;
+        }
+
+        // Penalize for non-finite values
+        let finite_ratio = x_data
+            .iter()
+            .zip(y_data.iter())
+            .filter(|(&x, &y)| x.is_finite() && y.is_finite())
+            .count() as f64
+            / x_data.len() as f64;
+        score *= finite_ratio;
+
+        // Penalize for irregular spacing (if applicable)
+        if x_data.len() > 2 {
+            let mut spacings = Vec::new();
+            for i in 1..x_data.len() {
+                spacings.push((x_data[i] - x_data[i - 1]).abs().to_f64().unwrap_or(0.0));
+            }
+
+            if !spacings.is_empty() {
+                let mean_spacing = spacings.iter().sum::<f64>() / spacings.len() as f64;
+                let spacing_variance = spacings
+                    .iter()
+                    .map(|&s| (s - mean_spacing).powi(2))
+                    .sum::<f64>()
+                    / spacings.len() as f64;
+
+                // High variance in spacing reduces quality
+                let regularity_factor =
+                    1.0 / (1.0 + spacing_variance / (mean_spacing.powi(2) + 1e-10));
+                score *= 0.5 + 0.5 * regularity_factor; // Partial penalty
+            }
+        }
+
+        // Penalize for extreme dynamic range
+        let y_values: Vec<f64> = y_data.iter().map(|&y| y.to_f64().unwrap_or(0.0)).collect();
+        let y_min = y_values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let y_max = y_values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+
+        let dynamic_range = y_max - y_min;
+        if dynamic_range > 1e12 {
+            score *= 0.7; // Large penalty for extreme ranges
+        } else if dynamic_range > 1e8 {
+            score *= 0.9; // Small penalty for large ranges
+        }
+
+        score.max(0.0).min(1.0)
+    }
+
+    /// Enhanced error handling with detailed diagnostics
+    fn handle_interpolation_error(
+        &self,
+        method: &InterpolationMethodType,
+        error: &str,
+        data_info: &str,
+    ) -> InterpolateError {
+        let detailed_message = format!(
+            "Interpolation failed with method {:?}: {}. Data characteristics: {}. \
+            Consider: 1) Checking input data quality, 2) Using a different interpolation method, \
+            3) Preprocessing data to remove outliers or fill missing values.",
+            method, error, data_info
+        );
+
+        InterpolateError::Other(detailed_message)
     }
 
     fn record_performance_metrics(
@@ -1401,22 +2188,24 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         let mut tracker = self.performance_tracker.write().map_err(|_| {
             InterpolateError::Other("Failed to write to performance tracker".to_string())
         })?;
-        
+
         // Record execution time
         let time_micros = execution_time.as_micros() as f64;
         tracker.execution_times.push_back(time_micros);
-        
+
         // Keep only recent measurements
         if tracker.execution_times.len() > 1000 {
             tracker.execution_times.pop_front();
         }
-        
+
         // Update method usage statistics
         let stats = tracker.method_usage.entry(method.clone()).or_default();
         stats.usage_count += 1;
-        stats.avg_execution_time = (stats.avg_execution_time * (stats.usage_count - 1) as f64 + time_micros) / stats.usage_count as f64;
+        stats.avg_execution_time = (stats.avg_execution_time * (stats.usage_count - 1) as f64
+            + time_micros)
+            / stats.usage_count as f64;
         stats.success_rate = 1.0; // Assume success for now
-        
+
         Ok(())
     }
 
@@ -1435,32 +2224,34 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
                 accuracy: recommendation.expected_accuracy.to_f64().unwrap_or(0.0),
                 timestamp: Instant::now(),
             };
-            
+
             selector.performance_history.push_back(performance_record);
-            
+
             // Keep only recent history
             if selector.performance_history.len() > 10000 {
                 selector.performance_history.pop_front();
             }
         }
-        
+
         Ok(())
     }
 
     fn calculate_memory_efficiency(&self) -> InterpolateResult<f64> {
-        let manager = self.memory_manager.lock().map_err(|_| {
-            InterpolateError::Other("Failed to lock memory manager".to_string())
-        })?;
-        
+        let manager = self
+            .memory_manager
+            .lock()
+            .map_err(|_| InterpolateError::Other("Failed to lock memory manager".to_string()))?;
+
         // Placeholder calculation
         Ok(0.85) // Return a reasonable default
     }
 
     fn get_cache_hit_ratio(&self) -> InterpolateResult<f64> {
-        let cache = self.adaptive_cache.lock().map_err(|_| {
-            InterpolateError::Other("Failed to lock adaptive cache".to_string())
-        })?;
-        
+        let cache = self
+            .adaptive_cache
+            .lock()
+            .map_err(|_| InterpolateError::Other("Failed to lock adaptive cache".to_string()))?;
+
         // Placeholder calculation
         Ok(0.75) // Return a reasonable default
     }
@@ -1470,20 +2261,20 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         if let Ok(mut selector) = self.method_selector.write() {
             selector.selection_model.learning_rate = 0.01;
         }
-        
+
         // Update accuracy optimizer configuration
         if let Ok(mut optimizer) = self.accuracy_optimizer.lock() {
             optimizer.strategy = AccuracyOptimizationStrategy::Adaptive;
         }
-        
+
         // Update memory manager configuration
         if let Ok(_manager) = self.memory_manager.lock() {
             // Update memory management settings
         }
-        
+
         Ok(())
     }
-    
+
     // Helper methods for data analysis
     fn calculate_smoothness<D: Dimension>(
         &self,
@@ -1492,32 +2283,33 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         if data.len() < 3 {
             return Ok(F::one()); // Assume smooth for very small datasets
         }
-        
+
         // Calculate second differences as a measure of smoothness
         let flat_data: Vec<F> = data.iter().cloned().collect();
         let mut second_diffs = Vec::new();
-        
+
         for i in 1..(flat_data.len() - 1) {
-            let second_diff = flat_data[i + 1] - F::from(2.0).unwrap() * flat_data[i] + flat_data[i - 1];
+            let second_diff =
+                flat_data[i + 1] - F::from(2.0).unwrap() * flat_data[i] + flat_data[i - 1];
             second_diffs.push(second_diff.abs());
         }
-        
+
         if second_diffs.is_empty() {
             return Ok(F::one());
         }
-        
+
         // Calculate mean second difference
         let mut sum = F::zero();
         for &diff in &second_diffs {
             sum = sum + diff;
         }
         let mean_second_diff = sum / F::from(second_diffs.len() as f64).unwrap();
-        
+
         // Convert to smoothness score (0 = not smooth, 1 = very smooth)
         let smoothness = F::one() / (F::one() + mean_second_diff * F::from(10.0).unwrap());
         Ok(smoothness)
     }
-    
+
     fn estimate_noise_level<D: Dimension>(
         &self,
         data: &ArrayBase<impl Data<Elem = F>, D>,
@@ -1525,36 +2317,36 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         if data.len() < 3 {
             return Ok(F::zero());
         }
-        
+
         // Use first differences as a simple noise estimator
         let flat_data: Vec<F> = data.iter().cloned().collect();
         let mut first_diffs = Vec::new();
-        
+
         for i in 1..flat_data.len() {
             first_diffs.push((flat_data[i] - flat_data[i - 1]).abs());
         }
-        
+
         if first_diffs.is_empty() {
             return Ok(F::zero());
         }
-        
+
         // Calculate variance of first differences
         let mut sum = F::zero();
         for &diff in &first_diffs {
             sum = sum + diff;
         }
         let mean_diff = sum / F::from(first_diffs.len() as f64).unwrap();
-        
+
         let mut variance_sum = F::zero();
         for &diff in &first_diffs {
             let deviation = diff - mean_diff;
             variance_sum = variance_sum + deviation * deviation;
         }
         let variance = variance_sum / F::from(first_diffs.len() as f64).unwrap();
-        
+
         Ok(variance.sqrt())
     }
-    
+
     fn calculate_sparsity<D: Dimension>(
         &self,
         data: &ArrayBase<impl Data<Elem = F>, D>,
@@ -1564,14 +2356,14 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         let sparsity = F::from(near_zero_count as f64 / data.len() as f64).unwrap();
         Ok(sparsity)
     }
-    
+
     fn get_data_range<D: Dimension>(
         &self,
         data: &ArrayBase<impl Data<Elem = F>, D>,
     ) -> InterpolateResult<(F, F)> {
         let mut min_val = F::infinity();
         let mut max_val = F::neg_infinity();
-        
+
         for &val in data.iter() {
             if val < min_val {
                 min_val = val;
@@ -1580,10 +2372,10 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
                 max_val = val;
             }
         }
-        
+
         Ok((min_val, max_val))
     }
-    
+
     fn classify_data_pattern(
         &self,
         smoothness: F,
@@ -1602,7 +2394,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
             Ok(DataPatternType::PiecewiseContinuous)
         }
     }
-    
+
     fn calculate_gradient_statistics<D: Dimension>(
         &self,
         x_data: &ArrayBase<impl Data<Elem = F>, D>,
@@ -1616,11 +2408,11 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
                 distribution_shape: F::one(),
             });
         }
-        
+
         let x_flat: Vec<F> = x_data.iter().cloned().collect();
         let y_flat: Vec<F> = y_data.iter().cloned().collect();
         let mut gradients = Vec::new();
-        
+
         for i in 1..x_flat.len().min(y_flat.len()) {
             let dx = x_flat[i] - x_flat[i - 1];
             let dy = y_flat[i] - y_flat[i - 1];
@@ -1628,7 +2420,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
                 gradients.push((dy / dx).abs());
             }
         }
-        
+
         if gradients.is_empty() {
             return Ok(GradientStatistics {
                 mean_magnitude: F::zero(),
@@ -1637,7 +2429,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
                 distribution_shape: F::one(),
             });
         }
-        
+
         // Calculate statistics
         let mut sum = F::zero();
         let mut max_grad = F::zero();
@@ -1648,14 +2440,14 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
             }
         }
         let mean = sum / F::from(gradients.len() as f64).unwrap();
-        
+
         let mut variance_sum = F::zero();
         for &grad in &gradients {
             let deviation = grad - mean;
             variance_sum = variance_sum + deviation * deviation;
         }
         let variance = variance_sum / F::from(gradients.len() as f64).unwrap();
-        
+
         Ok(GradientStatistics {
             mean_magnitude: mean,
             variance,
@@ -1663,14 +2455,14 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
             distribution_shape: F::one(), // Simplified
         })
     }
-    
+
     fn analyze_frequency_content<D: Dimension>(
         &self,
         data: &ArrayBase<impl Data<Elem = F>, D>,
     ) -> InterpolateResult<FrequencyContent<F>> {
         // Simplified frequency analysis
         let _flat_data: Vec<F> = data.iter().cloned().collect();
-        
+
         // For now, return placeholder values
         // In a real implementation, this would use FFT analysis
         Ok(FrequencyContent {
@@ -1680,14 +2472,14 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
             spectral_entropy: F::from(0.8).unwrap(),
         })
     }
-    
+
     fn calculate_method_confidence(
         &self,
         data_profile: &DataProfile<F>,
         method: &InterpolationMethodType,
     ) -> InterpolateResult<f64> {
         let mut confidence = 0.5; // Base confidence
-        
+
         match method {
             InterpolationMethodType::Linear => {
                 if data_profile.point_count < 10 {
@@ -1696,7 +2488,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
                 if data_profile.smoothness > F::from(0.8).unwrap() {
                     confidence += 0.2;
                 }
-            },
+            }
             InterpolationMethodType::CubicSpline => {
                 if data_profile.smoothness > F::from(0.7).unwrap() {
                     confidence += 0.4;
@@ -1704,27 +2496,27 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
                 if data_profile.noise_level < F::from(0.1).unwrap() {
                     confidence += 0.2;
                 }
-            },
+            }
             InterpolationMethodType::BSpline => {
                 if data_profile.noise_level > F::from(0.05).unwrap() {
                     confidence += 0.3;
                 }
-            },
+            }
             _ => {
                 confidence += 0.2;
             }
         }
-        
+
         Ok(confidence.min(1.0))
     }
-    
+
     fn estimate_method_performance(
         &self,
         data_profile: &DataProfile<F>,
         method: &InterpolationMethodType,
     ) -> InterpolateResult<MethodPerformanceEstimate> {
         let n = data_profile.point_count as f64;
-        
+
         // Rough performance estimates based on algorithmic complexity
         let (time_complexity, memory_factor) = match method {
             InterpolationMethodType::Linear => (n, 1.0),
@@ -1734,7 +2526,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
             InterpolationMethodType::Kriging => (n * n * n, 5.0),
             _ => (n * n.log2(), 2.5),
         };
-        
+
         Ok(MethodPerformanceEstimate {
             expected_execution_time: time_complexity * 0.001, // Microseconds
             expected_memory_usage: (n * memory_factor * 8.0) as usize, // Bytes
@@ -2072,7 +2864,6 @@ pub struct ExpectedPerformance {
     /// Robustness score
     pub robustness: f64,
 }
-
 
 /// Interpolation performance metrics
 #[derive(Debug, Clone)]

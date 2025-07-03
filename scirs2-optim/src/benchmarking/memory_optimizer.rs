@@ -3,7 +3,7 @@
 //! This module provides advanced memory analysis, leak detection, and optimization
 //! recommendations specifically for machine learning optimizers and their usage patterns.
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;

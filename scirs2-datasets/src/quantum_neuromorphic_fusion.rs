@@ -10,13 +10,14 @@ use crate::neuromorphic_data_processor::NeuromorphicProcessor;
 use crate::quantum_enhanced_generators::QuantumDatasetGenerator;
 use crate::utils::Dataset;
 use ndarray::{s, Array1, Array2, Array3};
-use rand::{Rng, SeedableRng, rngs::StdRng};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
 /// Quantum-Neuromorphic Fusion Processor
 /// The ultimate synthesis of quantum computing and biological neural networks
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct QuantumNeuromorphicFusion {
     /// Quantum subsystem for quantum computational advantages
     quantum_engine: QuantumDatasetGenerator,
@@ -36,6 +37,7 @@ pub struct QuantumNeuromorphicFusion {
 
 /// Quantum-enhanced synaptic state
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct QuantumSynapse {
     /// Classical synaptic weight
     classical_weight: f64,

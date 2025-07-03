@@ -878,7 +878,7 @@ pub mod advanced {
             match perturbation {
                 PerturbationType::GaussianNoise { std_dev } => {
                     for elem in perturbed.iter_mut() {
-                        let noise = rng.gen::<f64>() * std_dev;
+                        let noise = rng.random::<f64>() * std_dev;
                         *elem = *elem + F::from(noise).unwrap();
                     }
                 }
@@ -898,7 +898,7 @@ pub mod advanced {
                 }
                 PerturbationType::FeatureNoise { noise_level } => {
                     for elem in perturbed.iter_mut() {
-                        let noise = (rng.gen::<f64>() - 0.5) * 2.0 * noise_level;
+                        let noise = (rng.random::<f64>() - 0.5) * 2.0 * noise_level;
                         *elem = *elem + F::from(noise).unwrap();
                     }
                 }
@@ -912,7 +912,7 @@ pub mod advanced {
                     for _ in 0..n_outliers {
                         let sample_idx = rng.random_range(0..n_samples);
                         let feature_idx = rng.random_range(0..data.shape()[1]);
-                        let outlier_value = rng.gen::<f64>() * outlier_magnitude;
+                        let outlier_value = rng.random::<f64>() * outlier_magnitude;
                         perturbed[[sample_idx, feature_idx]] = F::from(outlier_value).unwrap();
                     }
                 }
@@ -1597,7 +1597,7 @@ pub mod advanced {
 
                 for _ in 0..self.n_samples_per_range {
                     // Perturb parameters (here we vary k as an example)
-                    let k_perturbation = (rng.gen::<f64>() - 0.5) * 2.0 * perturbation_level;
+                    let k_perturbation = (rng.random::<f64>() - 0.5) * 2.0 * perturbation_level;
                     let perturbed_k = (self.base_k as f64 * (1.0 + k_perturbation))
                         .round()
                         .max(1.0) as usize;

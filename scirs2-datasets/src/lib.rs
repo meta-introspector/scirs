@@ -131,9 +131,9 @@ pub mod quantum_neuromorphic_fusion;
 // Re-export commonly used functionality
 pub use adaptive_streaming_engine::{
     create_adaptive_engine, create_adaptive_engine_with_config, AdaptiveStreamConfig,
-    AdaptiveStreamingEngine, AlertSeverity, AlertType, DataCharacteristics, MemoryStrategy,
-    PatternType, PerformanceMetrics, QualityAlert, QualityMetrics, StreamChunk, TrendDirection,
-    TrendIndicators,
+    AdaptiveStreamingEngine, AlertSeverity, AlertType, ChunkMetadata, DataCharacteristics,
+    MemoryStrategy, PatternType, PerformanceMetrics, QualityAlert, QualityMetrics,
+    StatisticalMoments, StreamChunk, TrendDirection, TrendIndicators,
 };
 pub use advanced_generators::{
     make_adversarial_examples, make_anomaly_dataset, make_continual_learning_dataset,

@@ -400,7 +400,7 @@ impl OptimizationVisualizer {
     pub fn new(config: VisualizationConfig) -> Result<Self> {
         // Create output directory if it doesn't exist
         std::fs::create_dir_all(&config.output_dir).map_err(|e| {
-            OptimError::InvalidConfig(format!("Failed to create output directory: {}", e))
+            OptimError::InvalidConfig(format!("Failed to create output directory: {e}"))
         })?;
 
         let dashboard_state = DashboardState {
@@ -446,7 +446,7 @@ impl OptimizationVisualizer {
 
         if self.current_step - self.last_update_step >= self.config.update_frequency {
             if let Err(e) = self.update_dashboard() {
-                eprintln!("Failed to update dashboard: {}", e);
+                eprintln!("Failed to update dashboard: {e}");
             }
             self.last_update_step = self.current_step;
         }
@@ -455,7 +455,7 @@ impl OptimizationVisualizer {
     /// Create loss curve plot
     pub fn plot_loss_curve(&self, metric_name: &str) -> Result<String> {
         let metric = self.metrics.get(metric_name).ok_or_else(|| {
-            OptimError::InvalidConfig(format!("Metric '{}' not found", metric_name))
+            OptimError::InvalidConfig(format!("Metric '{metric_name}' not found"))
         })?;
 
         let steps: Vec<f64> = metric.steps.iter().map(|&s| s as f64).collect();
@@ -469,7 +469,7 @@ impl OptimizationVisualizer {
             &format!("{} ({})", metric.name, metric.units),
         )?;
 
-        self.save_plot(&plot_data, &format!("{}_curve", metric_name))
+        self.save_plot(&plot_data, &format!("{metric_name}_curve"))
     }
 
     /// Create learning rate schedule plot
@@ -524,13 +524,13 @@ impl OptimizationVisualizer {
             plot_data.push_str("Plotly.newPlot('comparison-plot', traces, {\n");
             plot_data.push_str("  title: 'Optimizer Comparison',\n");
             plot_data.push_str("  xaxis: {title: 'Training Steps'},\n");
-            writeln!(&mut plot_data, "  yaxis: {{title: '{}'}}", metric_name).unwrap();
+            writeln!(&mut plot_data, "  yaxis: {{title: '{metric_name}'}}").unwrap();
             plot_data.push_str("});\n");
             plot_data.push_str("</script>\n");
             plot_data.push_str("</body></html>\n");
         }
 
-        self.save_plot(&plot_data, &format!("{}_comparison", metric_name))
+        self.save_plot(&plot_data, &format!("{metric_name}_comparison"))
     }
 
     /// Create gradient norm visualization

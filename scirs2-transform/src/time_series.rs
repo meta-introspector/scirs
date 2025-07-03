@@ -73,7 +73,7 @@ impl FourierFeatures {
         }
 
         // Compute FFT
-        fft(&mut complex_data, None);
+        let _ = fft(&mut complex_data, None);
 
         // Extract features (only positive frequencies due to symmetry)
         let n_freq = (n / 2).min(self.n_components);
@@ -277,6 +277,7 @@ impl WaveletFeatures {
     }
 
     /// Haar wavelet transform (simplified)
+    #[allow(dead_code)]
     fn haar_transform(&self, x: &[f64]) -> (Vec<f64>, Vec<f64>) {
         let n = x.len();
         let mut approx = Vec::with_capacity(n / 2);

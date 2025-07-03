@@ -1479,6 +1479,6 @@ mod tests {
         assert!(features.is_ok());
 
         let feature_vector = features.unwrap();
-        assert!(feature_vector.len() > 0);
+        assert!(!feature_vector.is_empty());
     }
 }

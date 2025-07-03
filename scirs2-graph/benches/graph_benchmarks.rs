@@ -8,7 +8,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use rand::{thread_rng, SeedableRng};
+use rand::{rng, SeedableRng};
 use scirs2_graph::{
     barabasi_albert_graph,
     betweenness_centrality,
@@ -143,10 +143,10 @@ fn bench_connectivity(c: &mut Criterion) {
         for i in 0..*size {
             directed_graph.add_node(i);
         }
-        let mut rng = thread_rng();
+        let mut rng = rng();
         for _ in 0..(size * 2) {
-            let u = rng.gen_range(0..*size);
-            let v = rng.gen_range(0..*size);
+            let u = rng.random_range(0..*size);
+            let v = rng.random_range(0..*size);
             if u != v {
                 let _ = directed_graph.add_edge(u, v, 1.0);
             }
@@ -239,10 +239,10 @@ fn bench_io(c: &mut Criterion) {
         );
 
         group.bench_with_input(BenchmarkId::new("has_edge", size), &graph, |b, graph| {
-            let mut rng = thread_rng();
+            let mut rng = rng();
             b.iter(|| {
-                let u = rng.gen_range(0..*size);
-                let v = rng.gen_range(0..*size);
+                let u = rng.random_range(0..*size);
+                let v = rng.random_range(0..*size);
                 let result = graph.has_edge(&u, &v);
                 black_box(result)
             });

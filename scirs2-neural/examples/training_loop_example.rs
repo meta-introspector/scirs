@@ -6,12 +6,14 @@ use scirs2_neural::callbacks::{
 };
 use scirs2_neural::data::{
     DataLoader, InMemoryDataset, OneHotEncoder, StandardScaler, TransformedDataset,
+};
 use scirs2_neural::error::Result;
 use scirs2_neural::layers::{Dense, Layer};
 use scirs2_neural::losses::CrossEntropyLoss;
 use scirs2_neural::optimizers::Adam;
 use scirs2_neural::utils::{
     analyze_training_history, ascii_plot, export_history_to_csv, LearningRateSchedule, PlotOptions,
+};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -263,23 +265,37 @@ fn main() -> Result<()> {
     lr_data.insert(
         "learning_rate".to_string(),
         history.get("learning_rate").unwrap().clone(),
+    );
     // Plot learning rate
     let lr_plot = ascii_plot(
         &lr_data,
         Some("Learning Rate Schedule"),
+        PlotOptions {
+            width: 60,
+            height: 15,
             point_char: '■',
+        },
+    )?;
     println!("{}", lr_plot);
     // Visualize both train and validation losses in a single plot
     let mut loss_data = HashMap::new();
     loss_data.insert(
         "train_loss".to_string(),
         history.get("train_loss").unwrap().clone(),
+    );
+    loss_data.insert(
         "val_loss".to_string(),
         history.get("val_loss").unwrap().clone(),
+    );
     let loss_plot = ascii_plot(
         &loss_data,
         Some("Training and Validation Loss"),
+        PlotOptions {
+            width: 60,
             height: 20,
+            point_char: '●',
+        },
+    )?;
     println!("{}", loss_plot);
     Ok(())
 }
@@ -300,6 +316,8 @@ fn create_model(input_size: usize, num_classes: usize) -> Result<impl Layer<f32>
     // Create a dense layer with ReLU activation
     let model = Dense::<f32>::new(input_size, hidden_size1, Some("relu"), &mut rng)?;
     Ok(model)
+}
+
 // Helper function to create a directory if it doesn't exist
 fn create_dir_if_not_exists(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();

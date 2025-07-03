@@ -218,7 +218,7 @@ pub fn ultrathink_simd_fft(
 ) -> SignalResult<SimdFftResult> {
     let start_time = std::time::Instant::now();
     let n = input.len();
-    
+
     // Detect platform capabilities
     let caps = PlatformCapabilities::detect();
     let mut simd_stats = SimdUtilizationStats {
@@ -227,7 +227,7 @@ pub fn ultrathink_simd_fft(
         instruction_throughput: 0.0,
         capabilities_used: caps.available_features.clone(),
     };
-    
+
     // Choose optimal FFT algorithm based on size and capabilities
     let output = if n.is_power_of_two() {
         // Power-of-2 FFT with radix-2 or radix-4
@@ -243,20 +243,20 @@ pub fn ultrathink_simd_fft(
         // Fallback to DFT for small or non-optimizable sizes
         simd_dft_direct(input, &mut simd_stats)?
     };
-    
+
     let computation_time = start_time.elapsed().as_nanos() as u64;
-    
+
     // Calculate performance metrics
     let reference_time = estimate_scalar_fft_time(n);
     let simd_acceleration = reference_time as f64 / computation_time as f64;
-    
+
     let performance_metrics = FftPerformanceMetrics {
         computation_time_ns: computation_time,
         simd_acceleration,
         memory_bandwidth: estimate_memory_bandwidth(n, computation_time),
         cache_hit_ratio: estimate_cache_performance(n),
     };
-    
+
     Ok(SimdFftResult {
         output,
         performance_metrics,
@@ -271,34 +271,34 @@ pub fn ultrathink_simd_rfft(
 ) -> SignalResult<SimdFftResult> {
     let start_time = std::time::Instant::now();
     let n = input.len();
-    
+
     // Real FFT optimization: only compute positive frequencies
     let output_len = n / 2 + 1;
     let caps = PlatformCapabilities::detect();
-    
+
     let mut simd_stats = SimdUtilizationStats {
         vectorization_ratio: 0.9, // Real FFT has higher vectorization ratio
         vector_width: if caps.supports_avx2 { 8 } else { 4 },
         instruction_throughput: 0.0,
         capabilities_used: caps.available_features.clone(),
     };
-    
+
     // Use specialized real FFT algorithm
     let output = if caps.supports_avx2 && n >= 64 {
         simd_rfft_avx2(input, &mut simd_stats)?
     } else {
         simd_rfft_sse(input, &mut simd_stats)?
     };
-    
+
     let computation_time = start_time.elapsed().as_nanos() as u64;
-    
+
     let performance_metrics = FftPerformanceMetrics {
         computation_time_ns: computation_time,
         simd_acceleration: estimate_rfft_speedup(n),
         memory_bandwidth: estimate_memory_bandwidth(n, computation_time),
         cache_hit_ratio: estimate_cache_performance(n),
     };
-    
+
     Ok(SimdFftResult {
         output,
         performance_metrics,
@@ -316,26 +316,28 @@ pub fn ultrathink_simd_stft(
 ) -> SignalResult<SimdStftResult> {
     let start_time = std::time::Instant::now();
     let signal_len = signal.len();
-    
+
     // Calculate number of frames
     let num_frames = (signal_len - window_size) / hop_size + 1;
     let num_freqs = window_size / 2 + 1;
-    
+
     // Pre-allocate output arrays
     let mut magnitude = Array2::<f64>::zeros((num_freqs, num_frames));
     let mut phase = Array2::<f64>::zeros((num_freqs, num_frames));
-    
+
     // Create or use provided window
     let window_fn = if let Some(w) = window {
         w.clone()
     } else {
         create_simd_hann_window(window_size)?
     };
-    
+
     let caps = PlatformCapabilities::detect();
-    
+
     // Process frames with SIMD optimization
-    if config.stft_optimizations.parallel_frames > 0 && num_frames >= config.stft_optimizations.parallel_frames {
+    if config.stft_optimizations.parallel_frames > 0
+        && num_frames >= config.stft_optimizations.parallel_frames
+    {
         // Parallel frame processing
         process_stft_frames_parallel(
             signal,
@@ -358,21 +360,22 @@ pub fn ultrathink_simd_stft(
             &caps,
         )?;
     }
-    
+
     // Create time and frequency axes
     let time_axis = Array1::from_shape_fn(num_frames, |i| i as f64 * hop_size as f64);
-    let frequency_axis = Array1::from_shape_fn(num_freqs, |i| i as f64 * 0.5 / (num_freqs - 1) as f64);
-    
+    let frequency_axis =
+        Array1::from_shape_fn(num_freqs, |i| i as f64 * 0.5 / (num_freqs - 1) as f64);
+
     let total_time = start_time.elapsed().as_nanos() as u64;
     let per_frame_time = total_time as f64 / num_frames as f64;
-    
+
     let performance_metrics = StftPerformanceMetrics {
         total_time_ns: total_time,
         per_frame_time_ns: per_frame_time,
         overlap_efficiency: calculate_overlap_efficiency(window_size, hop_size),
         simd_utilization: 0.85, // Estimated SIMD utilization
     };
-    
+
     Ok(SimdStftResult {
         magnitude,
         phase,
@@ -390,44 +393,44 @@ pub fn ultrathink_simd_dwt(
     config: &UltrathinkSimdConfig,
 ) -> SignalResult<SimdWaveletResult> {
     let start_time = std::time::Instant::now();
-    
+
     // Get wavelet filter coefficients
     let (h0, h1, g0, g1) = get_wavelet_filters(wavelet)?;
-    
+
     let mut coefficients = Vec::new();
     let mut current_signal = signal.clone();
-    
+
     let caps = PlatformCapabilities::detect();
-    
+
     // Multi-level decomposition with SIMD
     for level in 0..levels {
         if current_signal.len() < 4 {
             break; // Signal too short for further decomposition
         }
-        
+
         // Apply SIMD-optimized wavelet filters
         let (approximation, detail) = if config.wavelet_optimizations.lifting_scheme {
             simd_dwt_lifting(&current_signal, &h0, &h1, &caps)?
         } else {
             simd_dwt_convolution(&current_signal, &h0, &h1, &g0, &g1, &caps)?
         };
-        
+
         coefficients.push(detail);
         current_signal = approximation;
     }
-    
+
     // Add final approximation
     coefficients.push(current_signal);
-    
+
     let decomposition_time = start_time.elapsed().as_nanos() as u64;
-    
+
     let performance_metrics = WaveletPerformanceMetrics {
         decomposition_time_ns: decomposition_time,
         reconstruction_time_ns: None,
         memory_efficiency: calculate_wavelet_memory_efficiency(&coefficients),
         simd_speedup: estimate_wavelet_simd_speedup(signal.len(), levels),
     };
-    
+
     Ok(SimdWaveletResult {
         coefficients,
         levels,
@@ -445,9 +448,9 @@ pub fn ultrathink_simd_resample(
 ) -> SignalResult<Array1<f64>> {
     let ratio = target_rate / original_rate;
     let output_len = (signal.len() as f64 * ratio).round() as usize;
-    
+
     let caps = PlatformCapabilities::detect();
-    
+
     if config.resampling_optimizations.polyphase_filters {
         // Use polyphase filter implementation
         simd_resample_polyphase(signal, ratio, output_len, &caps)
@@ -466,26 +469,27 @@ fn simd_fft_radix4_avx2(
 ) -> SignalResult<Array1<Complex64>> {
     let n = input.len();
     let mut output = input.clone();
-    
+
     // Bit-reversal permutation with SIMD
     bit_reverse_simd(&mut output)?;
-    
+
     // Radix-4 butterfly operations
     let mut step = 4;
     while step <= n {
         let substeps = n / step;
-        
-        for i in (0..substeps).step_by(8) { // Process 8 butterflies at once with AVX2
+
+        for i in (0..substeps).step_by(8) {
+            // Process 8 butterflies at once with AVX2
             // SIMD butterfly computation
             perform_radix4_butterfly_avx2(&mut output, i, step)?;
         }
-        
+
         step *= 4;
     }
-    
+
     stats.vectorization_ratio = 0.95; // High vectorization for radix-4
     stats.instruction_throughput = estimate_fft_throughput(n);
-    
+
     Ok(output)
 }
 
@@ -496,15 +500,15 @@ fn simd_fft_radix2_sse(
 ) -> SignalResult<Array1<Complex64>> {
     let n = input.len();
     let mut output = input.clone();
-    
+
     // Bit-reversal with SSE
     bit_reverse_simd(&mut output)?;
-    
+
     // Radix-2 Cooley-Tukey with SSE
     let mut step = 2;
     while step <= n {
         let half_step = step / 2;
-        
+
         for i in (0..n).step_by(step) {
             for j in 0..half_step {
                 let u = output[i + j];
@@ -513,13 +517,13 @@ fn simd_fft_radix2_sse(
                 output[i + j + half_step] = u - t;
             }
         }
-        
+
         step *= 2;
     }
-    
+
     stats.vectorization_ratio = 0.85;
     stats.instruction_throughput = estimate_fft_throughput(n);
-    
+
     Ok(output)
 }
 
@@ -529,17 +533,17 @@ fn simd_fft_mixed_radix(
     stats: &mut SimdUtilizationStats,
 ) -> SignalResult<Array1<Complex64>> {
     let n = input.len();
-    
+
     // Factor n into prime factors
     let factors = prime_factorization(n);
-    
+
     // Use Bluestein's algorithm for efficient mixed-radix FFT
     let padded_size = next_power_of_2(2 * n - 1);
     let result = bluestein_fft(input, padded_size)?;
-    
+
     stats.vectorization_ratio = 0.75; // Lower due to irregular access patterns
     stats.instruction_throughput = estimate_fft_throughput(n) * 0.8;
-    
+
     Ok(result.slice(s![..n]).to_owned())
 }
 
@@ -550,11 +554,11 @@ fn simd_dft_direct(
 ) -> SignalResult<Array1<Complex64>> {
     let n = input.len();
     let mut output = Array1::<Complex64>::zeros(n);
-    
+
     // Direct DFT computation with SIMD
     for k in 0..n {
         let mut sum = Complex64::zero();
-        
+
         // Vectorize the inner loop
         for j in (0..n).step_by(4) {
             let end = (j + 4).min(n);
@@ -564,13 +568,13 @@ fn simd_dft_direct(
                 sum += input[l] * twiddle;
             }
         }
-        
+
         output[k] = sum;
     }
-    
+
     stats.vectorization_ratio = 0.6; // Moderate vectorization for DFT
     stats.instruction_throughput = estimate_dft_throughput(n);
-    
+
     Ok(output)
 }
 
@@ -581,18 +585,18 @@ fn simd_rfft_avx2(
 ) -> SignalResult<Array1<Complex64>> {
     let n = input.len();
     let output_len = n / 2 + 1;
-    
+
     // Pack real data into complex format
     let complex_input = pack_real_to_complex(input);
-    
+
     // Perform half-size complex FFT
     let half_fft = simd_fft_radix2_sse(&complex_input, stats)?;
-    
+
     // Post-process to get real FFT result
     let output = unpack_complex_to_real_fft(&half_fft, output_len)?;
-    
+
     stats.vectorization_ratio = 0.9; // High efficiency for real FFT
-    
+
     Ok(output)
 }
 
@@ -616,11 +620,12 @@ fn process_stft_frames_parallel(
     caps: &PlatformCapabilities,
 ) -> SignalResult<()> {
     use scirs2_core::parallel_ops::*;
-    
+
     let num_frames = magnitude.shape()[1];
-    
+
     // Process frames in parallel chunks
-    magnitude.axis_iter_mut(Axis(1))
+    magnitude
+        .axis_iter_mut(Axis(1))
         .zip(phase.axis_iter_mut(Axis(1)))
         .enumerate()
         .collect::<Vec<_>>()
@@ -628,16 +633,16 @@ fn process_stft_frames_parallel(
         .try_for_each(|(frame_idx, (mut mag_col, mut phase_col))| {
             let start = frame_idx * hop_size;
             let end = (start + window_size).min(signal.len());
-            
+
             if end - start == window_size {
                 // Extract windowed frame
                 let frame = signal.slice(s![start..end]);
                 let windowed: Array1<f64> = &frame * window;
-                
+
                 // Compute FFT of windowed frame
                 let complex_signal: Array1<Complex64> = windowed.mapv(|x| Complex64::new(x, 0.0));
                 let fft_result = simd_fft_frame(&complex_signal, caps)?;
-                
+
                 // Extract magnitude and phase
                 let half_len = fft_result.len() / 2 + 1;
                 for i in 0..half_len.min(mag_col.len()) {
@@ -645,11 +650,11 @@ fn process_stft_frames_parallel(
                     phase_col[i] = fft_result[i].arg();
                 }
             }
-            
+
             Ok::<(), SignalError>(())
         })
         .map_err(|_| SignalError::InvalidInput("Parallel STFT processing failed".to_string()))?;
-    
+
     Ok(())
 }
 
@@ -664,20 +669,20 @@ fn process_stft_frames_sequential(
     caps: &PlatformCapabilities,
 ) -> SignalResult<()> {
     let num_frames = magnitude.shape()[1];
-    
+
     for frame_idx in 0..num_frames {
         let start = frame_idx * hop_size;
         let end = (start + window_size).min(signal.len());
-        
+
         if end - start == window_size {
             // Extract and window frame
             let frame = signal.slice(s![start..end]);
             let windowed: Array1<f64> = &frame * window;
-            
+
             // SIMD FFT
             let complex_signal: Array1<Complex64> = windowed.mapv(|x| Complex64::new(x, 0.0));
             let fft_result = simd_fft_frame(&complex_signal, caps)?;
-            
+
             // Extract results
             let half_len = fft_result.len() / 2 + 1;
             for i in 0..half_len.min(magnitude.shape()[0]) {
@@ -686,7 +691,7 @@ fn process_stft_frames_sequential(
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -699,11 +704,11 @@ fn simd_dwt_lifting(
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     let n = signal.len();
     let half_n = n / 2;
-    
+
     // Lifting scheme implementation with SIMD
     let mut even = Array1::<f64>::zeros(half_n);
     let mut odd = Array1::<f64>::zeros(half_n);
-    
+
     // Split into even/odd samples with SIMD
     for i in 0..half_n {
         even[i] = signal[2 * i];
@@ -711,21 +716,21 @@ fn simd_dwt_lifting(
             odd[i] = signal[2 * i + 1];
         }
     }
-    
+
     // Predict step (SIMD optimized)
     let predict_filter = Array1::from_vec(vec![-0.5]); // Simplified lifting filter
     let predicted = simd_convolve_valid(&even, &predict_filter)?;
     for i in 0..(predicted.len().min(odd.len())) {
         odd[i] += predicted[i];
     }
-    
+
     // Update step (SIMD optimized)
     let update_filter = Array1::from_vec(vec![0.25]); // Simplified lifting filter
     let updated = simd_convolve_valid(&odd, &update_filter)?;
     for i in 0..(updated.len().min(even.len())) {
         even[i] += updated[i];
     }
-    
+
     Ok((even, odd))
 }
 
@@ -741,11 +746,11 @@ fn simd_dwt_convolution(
     // Low-pass filtering and downsampling
     let low_pass = simd_convolve_same(signal, h0)?;
     let approximation = downsample_simd(&low_pass, 2)?;
-    
+
     // High-pass filtering and downsampling
     let high_pass = simd_convolve_same(signal, h1)?;
     let detail = downsample_simd(&high_pass, 2)?;
-    
+
     Ok((approximation, detail))
 }
 
@@ -758,18 +763,18 @@ fn simd_resample_polyphase(
 ) -> SignalResult<Array1<f64>> {
     // Polyphase filter implementation with SIMD
     let mut output = Array1::<f64>::zeros(output_len);
-    
+
     // Design anti-aliasing filter
     let filter_order = 64;
     let cutoff = 0.5 / ratio.max(1.0);
     let filter = design_lowpass_filter(filter_order, cutoff)?;
-    
+
     // Polyphase decomposition and processing
     for i in 0..output_len {
         let input_pos = i as f64 / ratio;
         let base_idx = input_pos.floor() as usize;
         let fractional = input_pos.fract();
-        
+
         if base_idx + filter_order < signal.len() {
             // SIMD interpolation
             let mut sum = 0.0;
@@ -781,7 +786,7 @@ fn simd_resample_polyphase(
             output[i] = sum;
         }
     }
-    
+
     Ok(output)
 }
 
@@ -793,20 +798,20 @@ fn simd_resample_interpolation(
     caps: &PlatformCapabilities,
 ) -> SignalResult<Array1<f64>> {
     let mut output = Array1::<f64>::zeros(output_len);
-    
+
     // Linear interpolation with SIMD
     for i in 0..output_len {
         let input_pos = i as f64 / ratio;
         let base_idx = input_pos.floor() as usize;
         let fractional = input_pos.fract();
-        
+
         if base_idx + 1 < signal.len() {
             output[i] = signal[base_idx] * (1.0 - fractional) + signal[base_idx + 1] * fractional;
         } else if base_idx < signal.len() {
             output[i] = signal[base_idx];
         }
     }
-    
+
     Ok(output)
 }
 
@@ -815,12 +820,12 @@ fn simd_resample_interpolation(
 /// Create SIMD-optimized Hann window
 fn create_simd_hann_window(size: usize) -> SignalResult<Array1<f64>> {
     let mut window = Array1::<f64>::zeros(size);
-    
+
     // Vectorized Hann window computation
     for i in 0..size {
         window[i] = 0.5 * (1.0 - (2.0 * PI * i as f64 / (size - 1) as f64).cos());
     }
-    
+
     Ok(window)
 }
 
@@ -836,7 +841,7 @@ fn simd_fft_frame(
         instruction_throughput: 0.0,
         capabilities_used: vec![],
     };
-    
+
     if signal.len().is_power_of_two() && caps.supports_avx2 {
         simd_fft_radix4_avx2(signal, &mut stats)
     } else {
@@ -851,9 +856,9 @@ fn simd_convolve_valid(signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResu
     } else {
         0
     };
-    
+
     let mut output = Array1::<f64>::zeros(output_len);
-    
+
     for i in 0..output_len {
         let mut sum = 0.0;
         for j in 0..kernel.len() {
@@ -861,7 +866,7 @@ fn simd_convolve_valid(signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResu
         }
         output[i] = sum;
     }
-    
+
     Ok(output)
 }
 
@@ -870,7 +875,7 @@ fn simd_convolve_same(signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResul
     // Simplified implementation - would use actual SIMD convolution
     let mut output = Array1::<f64>::zeros(signal.len());
     let half_kernel = kernel.len() / 2;
-    
+
     for i in 0..signal.len() {
         let mut sum = 0.0;
         for j in 0..kernel.len() {
@@ -881,7 +886,7 @@ fn simd_convolve_same(signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResul
         }
         output[i] = sum;
     }
-    
+
     Ok(output)
 }
 
@@ -889,11 +894,11 @@ fn simd_convolve_same(signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResul
 fn downsample_simd(signal: &Array1<f64>, factor: usize) -> SignalResult<Array1<f64>> {
     let output_len = signal.len() / factor;
     let mut output = Array1::<f64>::zeros(output_len);
-    
+
     for i in 0..output_len {
         output[i] = signal[i * factor];
     }
-    
+
     Ok(output)
 }
 
@@ -902,7 +907,7 @@ fn downsample_simd(signal: &Array1<f64>, factor: usize) -> SignalResult<Array1<f
 fn bit_reverse_simd(data: &mut Array1<Complex64>) -> SignalResult<()> {
     let n = data.len();
     let mut j = 0;
-    
+
     for i in 1..n {
         let mut bit = n >> 1;
         while j & bit != 0 {
@@ -910,12 +915,12 @@ fn bit_reverse_simd(data: &mut Array1<Complex64>) -> SignalResult<()> {
             bit >>= 1;
         }
         j ^= bit;
-        
+
         if i < j {
             data.swap(i, j);
         }
     }
-    
+
     Ok(())
 }
 
@@ -976,7 +981,7 @@ fn next_power_of_2(n: usize) -> usize {
 fn prime_factorization(mut n: usize) -> Vec<usize> {
     let mut factors = Vec::new();
     let mut d = 2;
-    
+
     while d * d <= n {
         while n % d == 0 {
             factors.push(d);
@@ -984,11 +989,11 @@ fn prime_factorization(mut n: usize) -> Vec<usize> {
         }
         d += 1;
     }
-    
+
     if n > 1 {
         factors.push(n);
     }
-    
+
     factors
 }
 
@@ -1001,7 +1006,10 @@ fn pack_real_to_complex(input: &Array1<f64>) -> Array1<Complex64> {
     let n = input.len();
     let complex_len = n / 2;
     Array1::from_shape_fn(complex_len, |i| {
-        Complex64::new(input[2 * i], if 2 * i + 1 < n { input[2 * i + 1] } else { 0.0 })
+        Complex64::new(
+            input[2 * i],
+            if 2 * i + 1 < n { input[2 * i + 1] } else { 0.0 },
+        )
     })
 }
 
@@ -1010,11 +1018,11 @@ fn unpack_complex_to_real_fft(
     output_len: usize,
 ) -> SignalResult<Array1<Complex64>> {
     let mut output = Array1::<Complex64>::zeros(output_len);
-    
+
     for i in 0..output_len.min(half_fft.len()) {
         output[i] = half_fft[i];
     }
-    
+
     Ok(output)
 }
 
@@ -1023,7 +1031,9 @@ fn calculate_overlap_efficiency(window_size: usize, hop_size: usize) -> f64 {
     overlap as f64 / window_size as f64
 }
 
-fn get_wavelet_filters(wavelet: &str) -> SignalResult<(Array1<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
+fn get_wavelet_filters(
+    wavelet: &str,
+) -> SignalResult<(Array1<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
     // Simplified wavelet filter retrieval - would implement full filter database
     match wavelet {
         "haar" => {
@@ -1032,8 +1042,11 @@ fn get_wavelet_filters(wavelet: &str) -> SignalResult<(Array1<f64>, Array1<f64>,
             let g0 = h0.clone();
             let g1 = h1.clone();
             Ok((h0, h1, g0, g1))
-        },
-        _ => Err(SignalError::InvalidInput(format!("Unsupported wavelet: {}", wavelet))),
+        }
+        _ => Err(SignalError::InvalidInput(format!(
+            "Unsupported wavelet: {}",
+            wavelet
+        ))),
     }
 }
 
@@ -1051,7 +1064,7 @@ fn design_lowpass_filter(order: usize, cutoff: f64) -> SignalResult<Array1<f64>>
     // Simplified low-pass filter design using windowed sinc
     let mut filter = Array1::<f64>::zeros(order);
     let center = (order - 1) as f64 / 2.0;
-    
+
     for i in 0..order {
         let x = i as f64 - center;
         if x == 0.0 {
@@ -1059,11 +1072,11 @@ fn design_lowpass_filter(order: usize, cutoff: f64) -> SignalResult<Array1<f64>>
         } else {
             filter[i] = (2.0 * PI * cutoff * x).sin() / (PI * x);
         }
-        
+
         // Apply Hann window
         filter[i] *= 0.5 * (1.0 - (2.0 * PI * i as f64 / (order - 1) as f64).cos());
     }
-    
+
     Ok(filter)
 }
 
@@ -1082,9 +1095,9 @@ pub fn generate_simd_performance_report(
     wavelet_result: Option<&SimdWaveletResult>,
 ) -> String {
     let mut report = String::new();
-    
+
     report.push_str("# Ultrathink SIMD Performance Report\n\n");
-    
+
     if let Some(fft) = fft_result {
         report.push_str("## 🚀 FFT Performance Analysis\n\n");
         report.push_str(&format!(
@@ -1108,7 +1121,7 @@ pub fn generate_simd_performance_report(
             fft.simd_stats.vector_width
         ));
     }
-    
+
     if let Some(stft) = stft_result {
         report.push_str("\n## 📊 STFT Performance Analysis\n\n");
         report.push_str(&format!(
@@ -1124,7 +1137,7 @@ pub fn generate_simd_performance_report(
             stft.performance_metrics.simd_utilization * 100.0
         ));
     }
-    
+
     if let Some(wavelet) = wavelet_result {
         report.push_str("\n## 🌊 Wavelet Transform Performance\n\n");
         report.push_str(&format!(
@@ -1140,10 +1153,13 @@ pub fn generate_simd_performance_report(
             wavelet.performance_metrics.decomposition_time_ns as f64 / 1000.0
         ));
     }
-    
+
     report.push_str("\n---\n");
     report.push_str("🎯 **Ultrathink SIMD Optimization Suite**\n");
-    report.push_str(&format!("Generated at: {:?}\n", std::time::SystemTime::now()));
-    
+    report.push_str(&format!(
+        "Generated at: {:?}\n",
+        std::time::SystemTime::now()
+    ));
+
     report
 }

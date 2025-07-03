@@ -1256,9 +1256,9 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
 
             // Generate white noise for simulation (in practice, this would be estimated)
             use rand::prelude::*;
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             for i in 0..n {
-                noise[i] = rng.gen_range(-1.0..1.0) * 0.1; // Small noise
+                noise[i] = rng.random_range(-1.0..1.0) * 0.1; // Small noise
             }
 
             for t in (*delay + b.len().max(c.len())).max(a.len())..n {
@@ -1319,9 +1319,9 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
 
             // Generate white noise for simulation
             use rand::prelude::*;
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             for i in 0..n {
-                noise[i] = rng.gen_range(-1.0..1.0) * 0.1;
+                noise[i] = rng.random_range(-1.0..1.0) * 0.1;
             }
 
             for t in (*delay + b.len()).max(f.len()).max(c.len()).max(d.len())..n {

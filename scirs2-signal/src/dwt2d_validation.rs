@@ -599,7 +599,7 @@ pub fn generate_test_images() -> Vec<(&'static str, Array2<f64>)> {
 
     // 5. Random noise
     let mut noise = Array2::zeros((64, 64));
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     for i in 0..64 {
         for j in 0..64 {
             noise[[i, j]] = rng.random_range(0.0..1.0);

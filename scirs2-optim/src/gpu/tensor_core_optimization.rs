@@ -18,7 +18,7 @@ use std::sync::Arc;
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{CudaStream, GpuContext, GpuKernel};
 
-use crate::gpu::{GpuOptimizerConfig, GpuOptimError};
+use crate::gpu::{GpuOptimError, GpuOptimizerConfig};
 
 /// Tensor core matrix multiplication configuration
 #[derive(Debug, Clone)]
@@ -304,9 +304,7 @@ impl TensorCoreOptimizer {
                 TensorCorePrecision::BF16 => &self.kernels.bf16_gemm,
                 TensorCorePrecision::TF32 => &self.kernels.tf32_gemm,
                 TensorCorePrecision::FP8 => self.kernels.fp8_gemm.as_ref().ok_or_else(|| {
-                    GpuOptimError::InvalidParameters(
-                        "FP8 tensor cores not available".to_string(),
-                    )
+                    GpuOptimError::InvalidParameters("FP8 tensor cores not available".to_string())
                 })?,
             };
 
@@ -451,9 +449,7 @@ impl TensorCoreOptimizer {
     }
 
     /// Automatic mixed precision trainer for optimizers
-    pub fn create_mixed_precision_trainer(
-        &self,
-    ) -> Result<MixedPrecisionTrainer, GpuOptimError> {
+    pub fn create_mixed_precision_trainer(&self) -> Result<MixedPrecisionTrainer, GpuOptimError> {
         MixedPrecisionTrainer::new(self.get_tensor_core_info(), &self.config)
     }
 

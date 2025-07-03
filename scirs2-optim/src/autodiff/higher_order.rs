@@ -235,7 +235,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
         config: &HessianConfig,
-    ) -> Result<Array2<T>, OptimError> {
+    ) -> Result<Array2<T>> {
         let n = point.len();
 
         if config.diagonal_only {
@@ -289,7 +289,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
         config: &HessianConfig,
-    ) -> Result<Array2<T>, OptimError> {
+    ) -> Result<Array2<T>> {
         let n = point.len();
         let mut hessian = Array2::zeros((n, n));
 
@@ -323,7 +323,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         &self,
         function: &impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
-    ) -> Result<Array2<T>, OptimError> {
+    ) -> Result<Array2<T>> {
         let n = point.len();
         let mut hessian = Array2::zeros((n, n));
 
@@ -355,7 +355,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
         config: &HessianConfig,
-    ) -> Result<SparseHessian<T>, OptimError> {
+    ) -> Result<SparseHessian<T>> {
         let dense_hessian = self.hessian_forward_over_reverse(function, point, config)?;
 
         let mut rows = Vec::new();
@@ -389,7 +389,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         &mut self,
         function: impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
-    ) -> Result<ThirdOrderTensor<T>, OptimError> {
+    ) -> Result<ThirdOrderTensor<T>> {
         let n = point.len();
         let mut tensor = Array3::zeros((n, n, n));
 
@@ -418,7 +418,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         variables: &[usize],
         orders: &[usize],
         method: MixedPartialMethod,
-    ) -> Result<MixedPartials<T>, OptimError> {
+    ) -> Result<MixedPartials<T>> {
         if variables.len() != orders.len() {
             return Err(OptimError::InvalidConfig(
                 "Variables and orders length mismatch".to_string(),
@@ -454,7 +454,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
         vector: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         // Use forward-over-reverse mode for efficient Hv computation
         let grad_fn = |x: &Array1<T>| -> Array1<T> {
             self.gradient_at_point(&function, x)
@@ -470,7 +470,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
         vector: &Array1<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let hv = self.hessian_vector_product(function, point, vector)?;
         Ok(vector.dot(&hv))
     }
@@ -481,7 +481,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
         computed_hessian: &Array2<T>,
-    ) -> Result<DerivativeVerification<T>, OptimError> {
+    ) -> Result<DerivativeVerification<T>> {
         let fd_hessian = self.finite_difference_hessian(&function, point)?;
 
         let max_error = self.compute_max_error(computed_hessian, &fd_hessian);
@@ -521,7 +521,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         point: &Array1<T>,
         vector: &Array1<T>,
         mode: Option<HvpMode>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         let n = point.len();
         let selected_mode = mode.unwrap_or_else(|| self.select_optimal_hvp_mode(n));
 
@@ -539,7 +539,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
         vector: &Array1<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         // Use forward-mode to compute directional derivative of gradient
         let grad_fn = |x: &Array1<T>| -> Array1<T> {
             self.gradient_at_point(&function, x)
@@ -556,7 +556,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: F,
         point: &Array1<T>,
         output_dim: usize,
-    ) -> Result<Array2<T>, OptimError>
+    ) -> Result<Array2<T>>
     where
         F: Fn(&Array1<T>) -> Array1<T> + Send + Sync,
     {
@@ -578,7 +578,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         layers: &[LayerInfo<T>],
         activations: &[Array1<T>],
         gradients: &[Array1<T>],
-    ) -> Result<Array2<T>, OptimError> {
+    ) -> Result<Array2<T>> {
         let mut kfac_blocks = Vec::new();
 
         for (i, layer) in layers.iter().enumerate() {
@@ -604,7 +604,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         log_likelihood: impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
         gradient: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         // Compute Fisher Information Matrix (FIM)
         let fim = self.compute_fisher_information_matrix(&log_likelihood, point)?;
 
@@ -620,9 +620,9 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         gradient: &Array1<T>,
         max_cg_iterations: usize,
         cg_tolerance: T,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         // Use Conjugate Gradient to approximately solve Hx = -g
-        let hvp_fn = |v: &Array1<T>| -> Result<Array1<T>, OptimError> {
+        let hvp_fn = |v: &Array1<T>| -> Result<Array1<T>> {
             self.hessian_vector_product_advanced(&function, point, v, None)
         };
 
@@ -635,7 +635,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         &self,
         function: &impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         let n = point.len();
         let mut gradient = Array1::zeros(n);
 
@@ -658,7 +658,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         grad_fn: &impl Fn(&Array1<T>) -> Array1<T>,
         point: &Array1<T>,
         direction: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         let eps = self.finite_diff_eps;
         let point_plus = point + &(direction * eps);
         let point_minus = point - &(direction * eps);
@@ -673,7 +673,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         &self,
         function: &impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
-    ) -> Result<Array2<T>, OptimError> {
+    ) -> Result<Array2<T>> {
         let n = point.len();
         let mut hessian = Array2::zeros((n, n));
 
@@ -733,7 +733,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         i: usize,
         j: usize,
         k: usize,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let eps = self.finite_diff_eps;
 
         // Use finite differences to approximate third derivative
@@ -761,7 +761,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         point: &Array1<T>,
         variables: &[usize],
         orders: &[usize],
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         // Simplified implementation
         // Real implementation would use proper forward-over-reverse mode
         self.mixed_partial_finite_difference(function, point, variables, orders)
@@ -773,7 +773,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         point: &Array1<T>,
         variables: &[usize],
         orders: &[usize],
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         // Simplified implementation
         self.mixed_partial_finite_difference(function, point, variables, orders)
     }
@@ -784,7 +784,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         point: &Array1<T>,
         variables: &[usize],
         orders: &[usize],
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         // Simplified implementation
         self.mixed_partial_finite_difference(function, point, variables, orders)
     }
@@ -795,7 +795,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         point: &Array1<T>,
         variables: &[usize],
         orders: &[usize],
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         // Simple finite difference approximation for mixed partials
         let eps = self.finite_diff_eps;
         let total_order: usize = orders.iter().sum();
@@ -838,11 +838,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         }
     }
 
-    fn verify_hessian_accuracy(
-        &self,
-        computed: &Array2<T>,
-        reference: &Array2<T>,
-    ) -> Result<(), OptimError> {
+    fn verify_hessian_accuracy(&self, computed: &Array2<T>, reference: &Array2<T>) -> Result<()> {
         let max_error = self.compute_max_error(computed, reference);
         let threshold = T::from(1e-3).unwrap();
 
@@ -920,11 +916,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
     }
 
     /// Apply adaptive sparsity to dense matrix
-    fn apply_adaptive_sparsity(
-        &self,
-        mut matrix: Array2<T>,
-        threshold: f64,
-    ) -> Result<Array2<T>, OptimError> {
+    fn apply_adaptive_sparsity(&self, mut matrix: Array2<T>, threshold: f64) -> Result<Array2<T>> {
         let sparsity_threshold = T::from(threshold).unwrap();
 
         for elem in matrix.iter_mut() {
@@ -942,7 +934,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: &impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
         vector: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         let grad_fn = |x: &Array1<T>| -> Array1<T> {
             self.gradient_at_point(function, x)
                 .unwrap_or_else(|_| Array1::zeros(x.len()))
@@ -957,7 +949,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: &impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
         vector: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         // Use R-operator (reverse-over-forward)
         let eps = self.finite_diff_eps;
 
@@ -976,7 +968,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: &impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
         vector: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         let eps = self.finite_diff_eps;
 
         let point_plus = point + &(vector * eps);
@@ -994,7 +986,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: &impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
         vector: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         // For quadratic functions: Hv = (∇f(x+v) - ∇f(x)) / ε can be exact
         let eps = T::one(); // Use 1.0 for exact computation on quadratic functions
 
@@ -1011,7 +1003,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: &F,
         point: &Array1<T>,
         output_dim: usize,
-    ) -> Result<Array2<T>, OptimError>
+    ) -> Result<Array2<T>>
     where
         F: Fn(&Array1<T>) -> Array1<T>,
     {
@@ -1048,7 +1040,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         function: &F,
         point: &Array1<T>,
         output_dim: usize,
-    ) -> Result<Array2<T>, OptimError>
+    ) -> Result<Array2<T>>
     where
         F: Fn(&Array1<T>) -> Array1<T>,
     {
@@ -1072,10 +1064,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
     }
 
     /// K-FAC helper methods
-    fn compute_activation_factor(
-        &self,
-        activation: &Array1<T>,
-    ) -> Result<Array2<T>, OptimError> {
+    fn compute_activation_factor(&self, activation: &Array1<T>) -> Result<Array2<T>> {
         let n = activation.len();
         let mut factor = Array2::zeros((n, n));
 
@@ -1089,7 +1078,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         Ok(factor)
     }
 
-    fn compute_gradient_factor(&self, gradient: &Array1<T>) -> Result<Array2<T>, OptimError> {
+    fn compute_gradient_factor(&self, gradient: &Array1<T>) -> Result<Array2<T>> {
         let n = gradient.len();
         let mut factor = Array2::zeros((n, n));
 
@@ -1103,11 +1092,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         Ok(factor)
     }
 
-    fn kronecker_product_approximation(
-        &self,
-        a: &Array2<T>,
-        g: &Array2<T>,
-    ) -> Result<Array2<T>, OptimError> {
+    fn kronecker_product_approximation(&self, a: &Array2<T>, g: &Array2<T>) -> Result<Array2<T>> {
         // Simplified Kronecker product approximation
         // In practice, this would be more sophisticated
         let n_a = a.nrows();
@@ -1131,11 +1116,9 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         Ok(result)
     }
 
-    fn combine_kfac_blocks(&self, blocks: &[Array2<T>]) -> Result<Array2<T>, OptimError> {
+    fn combine_kfac_blocks(&self, blocks: &[Array2<T>]) -> Result<Array2<T>> {
         if blocks.is_empty() {
-            return Err(OptimError::InvalidConfig(
-                "Empty K-FAC blocks".to_string(),
-            ));
+            return Err(OptimError::InvalidConfig("Empty K-FAC blocks".to_string()));
         }
 
         // Simplified block combination - would be more sophisticated in practice
@@ -1165,17 +1148,13 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         &mut self,
         log_likelihood: &impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
-    ) -> Result<Array2<T>, OptimError> {
+    ) -> Result<Array2<T>> {
         // Fisher Information Matrix: F = E[∇log p(x) ∇log p(x)^T]
         // Approximated as F ≈ -H[log p(x)] (for exponential family)
         self.hessian_forward_over_reverse(log_likelihood, point, &HessianConfig::default())
     }
 
-    fn solve_linear_system(
-        &self,
-        matrix: &Array2<T>,
-        rhs: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn solve_linear_system(&self, matrix: &Array2<T>, rhs: &Array1<T>) -> Result<Array1<T>> {
         // Simplified linear system solver
         // In practice, would use more sophisticated methods like LU decomposition
         let n = matrix.nrows();
@@ -1207,9 +1186,9 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         rhs: &Array1<T>,
         max_iterations: usize,
         tolerance: T,
-    ) -> Result<Array1<T>, OptimError>
+    ) -> Result<Array1<T>>
     where
-        F: Fn(&Array1<T>) -> Result<Array1<T>, OptimError>,
+        F: Fn(&Array1<T>) -> Result<Array1<T>>,
     {
         let n = rhs.len();
         let mut x = Array1::zeros(n);

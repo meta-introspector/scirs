@@ -497,7 +497,7 @@ mod tests {
         let _client = HttpClient::new(config);
 
         // Client should be created successfully
-        assert!(true); // Basic creation test
+        // Test passes if no panic occurs during creation
     }
 
     #[test]

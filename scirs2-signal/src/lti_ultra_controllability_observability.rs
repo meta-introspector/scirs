@@ -10,12 +10,12 @@
 //! - Multi-scale temporal controllability analysis
 
 use crate::error::{SignalError, SignalResult};
-use crate::lti::systems::StateSpace;
-use crate::lti::analysis::{ControllabilityAnalysis, ObservabilityAnalysis, KalmanDecomposition};
+use crate::lti::analysis::{ControllabilityAnalysis, KalmanDecomposition, ObservabilityAnalysis};
 use crate::lti::robust_analysis::{
-    EnhancedControllabilityAnalysis, EnhancedObservabilityAnalysis, 
-    RobustControlObservabilityAnalysis, RobustAnalysisConfig
+    EnhancedControllabilityAnalysis, EnhancedObservabilityAnalysis, RobustAnalysisConfig,
+    RobustControlObservabilityAnalysis,
 };
+use crate::lti::systems::StateSpace;
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
@@ -922,7 +922,12 @@ pub fn ultra_controllability_observability_analysis(
 
     // Step 3: Geometric analysis
     let geometric_analysis = if config.enable_geometric_analysis {
-        perform_geometric_analysis(ss, &enhanced_controllability, &enhanced_observability, config)?
+        perform_geometric_analysis(
+            ss,
+            &enhanced_controllability,
+            &enhanced_observability,
+            config,
+        )?
     } else {
         create_default_geometric_analysis(n)
     };
@@ -950,7 +955,12 @@ pub fn ultra_controllability_observability_analysis(
 
     // Step 7: Quantum-inspired metrics
     let quantum_metrics = if config.enable_quantum_methods {
-        compute_quantum_inspired_metrics(ss, &enhanced_controllability, &enhanced_observability, config)?
+        compute_quantum_inspired_metrics(
+            ss,
+            &enhanced_controllability,
+            &enhanced_observability,
+            config,
+        )?
     } else {
         create_default_quantum_metrics()
     };
@@ -960,8 +970,16 @@ pub fn ultra_controllability_observability_analysis(
     let performance_metrics = AnalysisPerformanceMetrics {
         computation_time,
         memory_usage: estimate_analysis_memory_usage(n),
-        simd_acceleration: if config.base_config.enable_parallel { 2.5 } else { 1.0 },
-        parallel_efficiency: if config.base_config.enable_parallel { 0.88 } else { 1.0 },
+        simd_acceleration: if config.base_config.enable_parallel {
+            2.5
+        } else {
+            1.0
+        },
+        parallel_efficiency: if config.base_config.enable_parallel {
+            0.88
+        } else {
+            1.0
+        },
         numerical_accuracy: estimate_numerical_accuracy(config),
     };
 
@@ -983,7 +1001,8 @@ fn perform_ultra_controllability_analysis(
     config: &UltraAnalysisConfig,
 ) -> SignalResult<UltraControllabilityAnalysis> {
     // Get base enhanced analysis
-    let base_analysis = crate::lti::robust_analysis::enhanced_controllability_analysis(ss, &config.base_config)?;
+    let base_analysis =
+        crate::lti::robust_analysis::enhanced_controllability_analysis(ss, &config.base_config)?;
 
     // Quantum coherence analysis
     let quantum_coherence = if config.enable_quantum_methods {
@@ -1020,7 +1039,10 @@ fn perform_ultra_observability_analysis(
     config: &UltraAnalysisConfig,
 ) -> SignalResult<UltraObservabilityAnalysis> {
     // Get base enhanced analysis using available public function
-    let control_obs_analysis = crate::lti::robust_analysis::robust_control_observability_analysis(ss, &config.base_config)?;
+    let control_obs_analysis = crate::lti::robust_analysis::robust_control_observability_analysis(
+        ss,
+        &config.base_config,
+    )?;
     let base_analysis = control_obs_analysis.observability_analysis;
 
     // Neuromorphic measures
@@ -1054,9 +1076,12 @@ fn perform_ultra_observability_analysis(
 
 // Implementation of helper functions (simplified for this demonstration)
 
-fn compute_quantum_coherence(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<QuantumCoherence> {
+fn compute_quantum_coherence(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<QuantumCoherence> {
     let n = ss.n_states;
-    
+
     Ok(QuantumCoherence {
         entanglement_measure: 0.8,
         subspace_coherence: 0.9,
@@ -1076,9 +1101,12 @@ fn create_default_quantum_coherence() -> QuantumCoherence {
     }
 }
 
-fn compute_geometric_controllability(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<GeometricControllability> {
+fn compute_geometric_controllability(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<GeometricControllability> {
     let n = ss.n_states;
-    
+
     Ok(GeometricControllability {
         reachable_set_volume: 1.0,
         reachable_set_diameter: 2.0,
@@ -1094,10 +1122,13 @@ fn compute_geometric_controllability(ss: &StateSpace, config: &UltraAnalysisConf
     })
 }
 
-fn compute_temporal_controllability(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<TemporalControllability> {
+fn compute_temporal_controllability(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<TemporalControllability> {
     let n = ss.n_states;
     let time_steps = 10;
-    
+
     Ok(TemporalControllability {
         time_varying_gramian: Array3::ones((time_steps, n, n)),
         evolution_rate: Array1::ones(time_steps) * 0.1,
@@ -1107,9 +1138,12 @@ fn compute_temporal_controllability(ss: &StateSpace, config: &UltraAnalysisConfi
     })
 }
 
-fn perform_reachability_analysis(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<ReachabilityAnalysis> {
+fn perform_reachability_analysis(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<ReachabilityAnalysis> {
     let n = ss.n_states;
-    
+
     Ok(ReachabilityAnalysis {
         forward_reachable_set: create_default_reachable_set_characterization(n),
         backward_reachable_set: create_default_reachable_set_characterization(n),
@@ -1124,10 +1158,13 @@ fn perform_reachability_analysis(ss: &StateSpace, config: &UltraAnalysisConfig) 
     })
 }
 
-fn perform_energy_optimal_analysis(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<EnergyOptimalAnalysis> {
+fn perform_energy_optimal_analysis(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<EnergyOptimalAnalysis> {
     let n = ss.n_states;
     let m = ss.n_inputs;
-    
+
     Ok(EnergyOptimalAnalysis {
         min_energy_control_law: Array2::ones((m, n)),
         energy_time_tradeoffs: Array2::ones((10, 2)),
@@ -1137,7 +1174,10 @@ fn perform_energy_optimal_analysis(ss: &StateSpace, config: &UltraAnalysisConfig
     })
 }
 
-fn compute_neuromorphic_observability(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<NeuromorphicObservability> {
+fn compute_neuromorphic_observability(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<NeuromorphicObservability> {
     Ok(NeuromorphicObservability {
         spike_observability: 0.85,
         temporal_coding_efficiency: 0.9,
@@ -1187,9 +1227,12 @@ fn create_default_neuromorphic_observability() -> NeuromorphicObservability {
     }
 }
 
-fn compute_information_theoretic_observability(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<InformationTheoreticObservability> {
+fn compute_information_theoretic_observability(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<InformationTheoreticObservability> {
     let n = ss.n_states;
-    
+
     Ok(InformationTheoreticObservability {
         mutual_information: 1.5,
         conditional_entropy: 0.8,
@@ -1204,10 +1247,13 @@ fn compute_information_theoretic_observability(ss: &StateSpace, config: &UltraAn
     })
 }
 
-fn compute_temporal_observability(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<TemporalObservability> {
+fn compute_temporal_observability(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<TemporalObservability> {
     let n = ss.n_states;
     let time_steps = 10;
-    
+
     Ok(TemporalObservability {
         time_varying_gramian: Array3::ones((time_steps, n, n)),
         evolution_rate: Array1::ones(time_steps) * 0.1,
@@ -1217,9 +1263,12 @@ fn compute_temporal_observability(ss: &StateSpace, config: &UltraAnalysisConfig)
     })
 }
 
-fn perform_observable_set_analysis(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<ObservableSetAnalysis> {
+fn perform_observable_set_analysis(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<ObservableSetAnalysis> {
     let n = ss.n_states;
-    
+
     Ok(ObservableSetAnalysis {
         observable_set: create_default_reachable_set_characterization(n),
         unobservable_subspace: Array2::zeros((n, 1)),
@@ -1238,10 +1287,13 @@ fn perform_observable_set_analysis(ss: &StateSpace, config: &UltraAnalysisConfig
     })
 }
 
-fn perform_estimation_theoretic_analysis(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<EstimationTheoreticAnalysis> {
+fn perform_estimation_theoretic_analysis(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<EstimationTheoreticAnalysis> {
     let n = ss.n_states;
     let p = ss.n_outputs;
-    
+
     Ok(EstimationTheoreticAnalysis {
         kalman_performance: KalmanFilterPerformance {
             steady_state_covariance: Array2::eye(n) * 0.1,
@@ -1299,7 +1351,9 @@ fn create_default_invariant_set_characterization(n: usize) -> InvariantSetCharac
     }
 }
 
-fn create_default_null_controllable_set_characterization(n: usize) -> NullControllableSetCharacterization {
+fn create_default_null_controllable_set_characterization(
+    n: usize,
+) -> NullControllableSetCharacterization {
     NullControllableSetCharacterization {
         set_representation: create_default_reachable_set_characterization(n),
         min_control_energy: 1.0,
@@ -1314,7 +1368,7 @@ fn perform_geometric_analysis(
     config: &UltraAnalysisConfig,
 ) -> SignalResult<GeometricAnalysis> {
     let n = ss.n_states;
-    
+
     Ok(GeometricAnalysis {
         controllability_geometry: ControllabilityGeometry {
             reachable_set_geometry: create_default_set_geometry(),
@@ -1430,7 +1484,10 @@ fn create_default_geometric_analysis(n: usize) -> GeometricAnalysis {
     }
 }
 
-fn perform_temporal_dynamics_analysis(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<TemporalDynamicsAnalysis> {
+fn perform_temporal_dynamics_analysis(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<TemporalDynamicsAnalysis> {
     Ok(TemporalDynamicsAnalysis {
         time_scale_separation: TimeScaleSeparation {
             fast_timescales: Array1::from_vec(vec![0.1, 0.2]),
@@ -1504,9 +1561,12 @@ fn create_default_temporal_analysis(n: usize) -> TemporalDynamicsAnalysis {
     }
 }
 
-fn perform_multi_scale_analysis(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<MultiScaleAnalysis> {
+fn perform_multi_scale_analysis(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<MultiScaleAnalysis> {
     let n = ss.n_states;
-    
+
     Ok(MultiScaleAnalysis {
         microscale: MicroscaleAnalysis {
             local_controllability: Array1::ones(n) * 0.9,
@@ -1574,7 +1634,10 @@ fn create_default_multi_scale_analysis(n: usize) -> MultiScaleAnalysis {
     }
 }
 
-fn setup_real_time_monitoring(ss: &StateSpace, config: &UltraAnalysisConfig) -> SignalResult<RealTimeMonitoring> {
+fn setup_real_time_monitoring(
+    ss: &StateSpace,
+    config: &UltraAnalysisConfig,
+) -> SignalResult<RealTimeMonitoring> {
     Ok(RealTimeMonitoring {
         online_controllability: OnlineEstimation {
             recursive_algorithms: vec!["RLS".to_string(), "Kalman".to_string()],
@@ -1599,7 +1662,8 @@ fn setup_real_time_monitoring(ss: &StateSpace, config: &UltraAnalysisConfig) -> 
         adaptive_thresholds: AdaptiveThresholds {
             adaptation_rules: vec!["Exponential".to_string(), "Linear".to_string()],
             adaptation_rates: Array1::from_vec(vec![0.01, 0.001]),
-            threshold_bounds: Array2::from_shape_vec((2, 2), vec![0.001, 0.1, 0.0005, 0.05]).unwrap(),
+            threshold_bounds: Array2::from_shape_vec((2, 2), vec![0.001, 0.1, 0.0005, 0.05])
+                .unwrap(),
             performance_metrics: Array1::ones(2) * 0.95,
         },
     })
@@ -1718,7 +1782,7 @@ mod tests {
     #[test]
     fn test_config_defaults() {
         let config = UltraAnalysisConfig::default();
-        
+
         assert!(config.enable_quantum_methods);
         assert!(config.enable_neuromorphic);
         assert!(config.enable_geometric_analysis);
@@ -1732,7 +1796,7 @@ mod tests {
     fn test_geometric_analysis() {
         let n = 3;
         let geometry = create_default_set_geometry();
-        
+
         assert!(geometry.volume > 0.0);
         assert!(geometry.surface_area > 0.0);
         assert!(geometry.compactness >= 0.0 && geometry.compactness <= 1.0);
@@ -1742,7 +1806,7 @@ mod tests {
     #[test]
     fn test_quantum_coherence() {
         let coherence = create_default_quantum_coherence();
-        
+
         assert_eq!(coherence.entanglement_measure, 0.0);
         assert_eq!(coherence.subspace_coherence, 0.0);
         assert_eq!(coherence.quantum_mutual_information, 0.0);

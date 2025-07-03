@@ -1,5 +1,5 @@
 //! Ultrathink Enhanced Lomb-Scargle Validation Suite
-//! 
+//!
 //! This module provides complete implementation of critical validation functions
 //! that were previously stubs, with focus on real SciPy comparison, SIMD validation,
 //! memory profiling, and statistical validation.
@@ -12,8 +12,7 @@ use ndarray::{Array1, Array2, ArrayView1, Axis};
 use num_complex::Complex64;
 use num_traits::Float;
 use rand::prelude::*;
-use rand::thread_rng;
-use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities};
+use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
@@ -272,31 +271,31 @@ pub struct PerformanceTrendAnalysis {
 /// Run complete ultrathink enhanced Lomb-Scargle validation
 pub fn run_ultrathink_lombscargle_validation() -> SignalResult<UltrathinkLombScargleResult> {
     println!("🚀 Starting Ultrathink Enhanced Lomb-Scargle Validation...");
-    
+
     // 1. Comprehensive accuracy validation
     println!("📊 Running comprehensive accuracy validation...");
     let accuracy_validation = validate_comprehensive_accuracy()?;
-    
+
     // 2. Real SciPy comparison
     println!("🐍 Running SciPy reference comparison...");
     let scipy_comparison = perform_scipy_comparison()?;
-    
+
     // 3. Complete SIMD validation
     println!("⚡ Running complete SIMD validation...");
     let simd_validation = validate_simd_implementation_complete()?;
-    
+
     // 4. Memory profiling
     println!("💾 Running memory profiling...");
     let memory_profiling = profile_memory_usage()?;
-    
+
     // 5. Statistical validation
     println!("📈 Running statistical validation...");
     let statistical_validation = validate_statistical_properties()?;
-    
+
     // 6. Performance regression detection
     println!("⏱️ Running performance regression detection...");
     let performance_regression = detect_performance_regression()?;
-    
+
     // Calculate overall quality score
     let quality_score = calculate_quality_score(
         &accuracy_validation,
@@ -304,7 +303,7 @@ pub fn run_ultrathink_lombscargle_validation() -> SignalResult<UltrathinkLombSca
         &simd_validation,
         &statistical_validation,
     );
-    
+
     // Identify critical issues
     let mut critical_issues = Vec::new();
     identify_critical_issues(
@@ -313,7 +312,7 @@ pub fn run_ultrathink_lombscargle_validation() -> SignalResult<UltrathinkLombSca
         &simd_validation,
         &mut critical_issues,
     );
-    
+
     // Generate recommendations
     let mut recommendations = Vec::new();
     generate_optimization_recommendations(
@@ -322,9 +321,9 @@ pub fn run_ultrathink_lombscargle_validation() -> SignalResult<UltrathinkLombSca
         &performance_regression,
         &mut recommendations,
     );
-    
+
     println!("✅ Ultrathink validation complete!");
-    
+
     Ok(UltrathinkLombScargleResult {
         accuracy_validation,
         scipy_comparison,
@@ -342,34 +341,34 @@ pub fn run_ultrathink_lombscargle_validation() -> SignalResult<UltrathinkLombSca
 fn validate_comprehensive_accuracy() -> SignalResult<ComprehensiveAccuracyResult> {
     // Generate comprehensive test signals
     let test_signals = generate_comprehensive_test_signals()?;
-    
+
     let mut frequency_errors = Vec::new();
     let mut power_errors = Vec::new();
     let mut phase_coherences = Vec::new();
-    
+
     for (signal_name, (t, y, true_freqs, true_powers)) in test_signals {
         // Compute Lomb-Scargle periodogram
         let (freqs, power) = lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
-        
+
         // Validate frequency accuracy
         let freq_accuracy = validate_frequency_detection(&freqs, &power, &true_freqs)?;
         frequency_errors.push(freq_accuracy);
-        
-        // Validate power accuracy  
+
+        // Validate power accuracy
         let power_accuracy = validate_power_estimation(&freqs, &power, &true_freqs, &true_powers)?;
         power_errors.push(power_accuracy);
-        
+
         // Validate phase coherence (for complex signals)
         let phase_coherence = validate_phase_coherence(&t, &y, &freqs, &power)?;
         phase_coherences.push(phase_coherence);
     }
-    
+
     // Analyze spectral leakage with windowing
     let spectral_leakage = analyze_spectral_leakage()?;
-    
+
     // Test dynamic range handling
     let dynamic_range = test_dynamic_range_handling()?;
-    
+
     Ok(ComprehensiveAccuracyResult {
         frequency_accuracy: FrequencyAccuracyMetrics {
             single_tone_accuracy: frequency_errors.get(0).copied().unwrap_or(0.0),
@@ -379,14 +378,15 @@ fn validate_comprehensive_accuracy() -> SignalResult<ComprehensiveAccuracyResult
         },
         power_accuracy: PowerAccuracyMetrics {
             amplitude_linearity: power_errors.iter().sum::<f64>() / power_errors.len() as f64,
-            power_conservation: 0.98, // Placeholder
-            noise_floor_accuracy: 0.96, // Placeholder
+            power_conservation: 0.98,      // Placeholder
+            noise_floor_accuracy: 0.96,    // Placeholder
             dynamic_range_linearity: 0.94, // Placeholder
         },
         phase_coherence: PhaseCoherenceMetrics {
-            phase_preservation: phase_coherences.iter().sum::<f64>() / phase_coherences.len() as f64,
+            phase_preservation: phase_coherences.iter().sum::<f64>()
+                / phase_coherences.len() as f64,
             coherence_across_segments: 0.93, // Placeholder
-            phase_noise_impact: 0.02, // Placeholder
+            phase_noise_impact: 0.02,        // Placeholder
         },
         spectral_leakage,
         dynamic_range,
@@ -394,57 +394,72 @@ fn validate_comprehensive_accuracy() -> SignalResult<ComprehensiveAccuracyResult
 }
 
 /// Generate comprehensive test signals for validation
-fn generate_comprehensive_test_signals() -> SignalResult<HashMap<String, (Array1<f64>, Array1<f64>, Vec<f64>, Vec<f64>)>> {
+fn generate_comprehensive_test_signals(
+) -> SignalResult<HashMap<String, (Array1<f64>, Array1<f64>, Vec<f64>, Vec<f64>)>> {
     let mut signals = HashMap::new();
-    let mut rng = thread_rng();
-    
+    let mut rng = rand::thread_rng();
+
     // 1. Single tone signal
     let n = 200;
     let fs = 100.0;
     let mut t = Array1::linspace(0.0, (n as f64 - 1.0) / fs, n);
     // Add irregular sampling
     for i in 1..n {
-        t[i] += 0.001 * rng.gen_range(-1.0..1.0);
+        t[i] += 0.001 * rng.random_range(-1.0..1.0);
     }
     let f0 = 10.0;
-    let y1: Array1<f64> = t.mapv(|ti| (2.0 * PI * f0 * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0));
-    signals.insert("single_tone".to_string(), (t.clone(), y1, vec![f0], vec![1.0]));
-    
+    let y1: Array1<f64> =
+        t.mapv(|ti| (2.0 * PI * f0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
+    signals.insert(
+        "single_tone".to_string(),
+        (t.clone(), y1, vec![f0], vec![1.0]),
+    );
+
     // 2. Multi-tone signal
     let f1 = 5.0;
     let f2 = 15.0;
     let f3 = 25.0;
     let y2: Array1<f64> = t.mapv(|ti| {
-        (2.0 * PI * f1 * ti).sin() + 
-        0.7 * (2.0 * PI * f2 * ti).sin() + 
-        0.5 * (2.0 * PI * f3 * ti).sin() +
-        0.1 * rng.gen_range(-1.0..1.0)
+        (2.0 * PI * f1 * ti).sin()
+            + 0.7 * (2.0 * PI * f2 * ti).sin()
+            + 0.5 * (2.0 * PI * f3 * ti).sin()
+            + 0.1 * rng.random_range(-1.0..1.0)
     });
-    signals.insert("multi_tone".to_string(), (t.clone(), y2, vec![f1, f2, f3], vec![1.0, 0.7, 0.5]));
-    
+    signals.insert(
+        "multi_tone".to_string(),
+        (t.clone(), y2, vec![f1, f2, f3], vec![1.0, 0.7, 0.5]),
+    );
+
     // 3. Close frequencies
     let fc1 = 12.0;
     let fc2 = 12.5; // Close frequency
     let y3: Array1<f64> = t.mapv(|ti| {
-        (2.0 * PI * fc1 * ti).sin() + 
-        0.8 * (2.0 * PI * fc2 * ti).sin() +
-        0.1 * rng.gen_range(-1.0..1.0)
+        (2.0 * PI * fc1 * ti).sin()
+            + 0.8 * (2.0 * PI * fc2 * ti).sin()
+            + 0.1 * rng.random_range(-1.0..1.0)
     });
-    signals.insert("close_frequencies".to_string(), (t, y3, vec![fc1, fc2], vec![1.0, 0.8]));
-    
+    signals.insert(
+        "close_frequencies".to_string(),
+        (t, y3, vec![fc1, fc2], vec![1.0, 0.8]),
+    );
+
     Ok(signals)
 }
 
 /// Validate frequency detection accuracy
-fn validate_frequency_detection(freqs: &Array1<f64>, power: &Array1<f64>, true_freqs: &[f64]) -> SignalResult<f64> {
+fn validate_frequency_detection(
+    freqs: &Array1<f64>,
+    power: &Array1<f64>,
+    true_freqs: &[f64],
+) -> SignalResult<f64> {
     let mut total_error = 0.0;
     let mut detected_count = 0;
-    
+
     for &true_freq in true_freqs {
         // Find peak near true frequency
         let mut best_idx = 0;
         let mut best_diff = f64::INFINITY;
-        
+
         for (i, &freq) in freqs.iter().enumerate() {
             let diff = (freq - true_freq).abs();
             if diff < best_diff {
@@ -452,11 +467,11 @@ fn validate_frequency_detection(freqs: &Array1<f64>, power: &Array1<f64>, true_f
                 best_idx = i;
             }
         }
-        
+
         // Check if it's actually a peak
-        let is_peak = (best_idx == 0 || power[best_idx] > power[best_idx - 1]) &&
-                     (best_idx == power.len() - 1 || power[best_idx] > power[best_idx + 1]);
-        
+        let is_peak = (best_idx == 0 || power[best_idx] > power[best_idx - 1])
+            && (best_idx == power.len() - 1 || power[best_idx] > power[best_idx + 1]);
+
         if is_peak {
             let detected_freq = freqs[best_idx];
             let relative_error = (detected_freq - true_freq).abs() / true_freq;
@@ -464,7 +479,7 @@ fn validate_frequency_detection(freqs: &Array1<f64>, power: &Array1<f64>, true_f
             detected_count += 1;
         }
     }
-    
+
     Ok(if detected_count > 0 {
         total_error / detected_count as f64
     } else {
@@ -474,19 +489,19 @@ fn validate_frequency_detection(freqs: &Array1<f64>, power: &Array1<f64>, true_f
 
 /// Validate power estimation accuracy
 fn validate_power_estimation(
-    freqs: &Array1<f64>, 
-    power: &Array1<f64>, 
-    true_freqs: &[f64], 
-    true_powers: &[f64]
+    freqs: &Array1<f64>,
+    power: &Array1<f64>,
+    true_freqs: &[f64],
+    true_powers: &[f64],
 ) -> SignalResult<f64> {
     let mut power_errors = Vec::new();
-    
+
     for (i, &true_freq) in true_freqs.iter().enumerate() {
         if let Some(true_power) = true_powers.get(i) {
             // Find corresponding frequency bin
             let mut best_idx = 0;
             let mut best_diff = f64::INFINITY;
-            
+
             for (j, &freq) in freqs.iter().enumerate() {
                 let diff = (freq - true_freq).abs();
                 if diff < best_diff {
@@ -494,43 +509,50 @@ fn validate_power_estimation(
                     best_idx = j;
                 }
             }
-            
+
             let detected_power = power[best_idx];
             let relative_error = (detected_power.sqrt() - true_power).abs() / true_power;
             power_errors.push(relative_error);
         }
     }
-    
+
     Ok(power_errors.iter().sum::<f64>() / power_errors.len() as f64)
 }
 
 /// Validate phase coherence preservation
 fn validate_phase_coherence(
-    t: &Array1<f64>, 
-    y: &Array1<f64>, 
-    freqs: &Array1<f64>, 
-    power: &Array1<f64>
+    t: &Array1<f64>,
+    y: &Array1<f64>,
+    freqs: &Array1<f64>,
+    power: &Array1<f64>,
 ) -> SignalResult<f64> {
     // For phase coherence, we need to analyze the signal in segments
     // and ensure phase relationships are preserved
-    
+
     let segment_size = t.len() / 4;
     let mut coherences = Vec::new();
-    
+
     for i in 0..3 {
         let start = i * segment_size;
         let end = (i + 1) * segment_size;
-        
+
         let t_seg = t.slice(ndarray::s![start..end]).to_owned();
         let y_seg = y.slice(ndarray::s![start..end]).to_owned();
-        
-        let (_, power_seg) = lombscargle(&t_seg, &y_seg, Some(freqs.clone()), Some("standard"), Some(true), Some(false))?;
-        
+
+        let (_, power_seg) = lombscargle(
+            &t_seg,
+            &y_seg,
+            Some(freqs.clone()),
+            Some("standard"),
+            Some(true),
+            Some(false),
+        )?;
+
         // Compute cross-correlation between power spectra
         let correlation = compute_correlation(power, &power_seg);
         coherences.push(correlation);
     }
-    
+
     Ok(coherences.iter().sum::<f64>() / coherences.len() as f64)
 }
 
@@ -542,32 +564,33 @@ fn analyze_spectral_leakage() -> SignalResult<SpectralLeakageMetrics> {
     let t = Array1::linspace(0.0, (n as f64 - 1.0) / fs, n);
     let f0 = 12.345; // Non-bin-centered frequency to test leakage
     let y: Array1<f64> = t.mapv(|ti| (2.0 * PI * f0 * ti).sin());
-    
+
     let (freqs, power) = lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
-    
+
     // Find main lobe
-    let peak_idx = power.iter()
+    let peak_idx = power
+        .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
         .map(|(i, _)| i)
         .unwrap();
-    
+
     // Analyze main lobe width (3dB bandwidth)
     let peak_power = power[peak_idx];
     let half_power = peak_power / 2.0;
-    
+
     let mut left_idx = peak_idx;
     let mut right_idx = peak_idx;
-    
+
     while left_idx > 0 && power[left_idx] > half_power {
         left_idx -= 1;
     }
     while right_idx < power.len() - 1 && power[right_idx] > half_power {
         right_idx += 1;
     }
-    
+
     let main_lobe_width = freqs[right_idx] - freqs[left_idx];
-    
+
     // Analyze side lobe levels
     let mut side_lobe_max = 0.0;
     for (i, &p) in power.iter().enumerate() {
@@ -576,11 +599,11 @@ fn analyze_spectral_leakage() -> SignalResult<SpectralLeakageMetrics> {
         }
     }
     let side_lobe_level = side_lobe_max / peak_power;
-    
+
     Ok(SpectralLeakageMetrics {
         main_lobe_width,
         side_lobe_level,
-        scalloping_loss: 0.05, // Placeholder
+        scalloping_loss: 0.05,        // Placeholder
         window_function_impact: 0.02, // Placeholder
     })
 }
@@ -590,32 +613,31 @@ fn test_dynamic_range_handling() -> SignalResult<DynamicRangeMetrics> {
     let n = 512;
     let fs = 100.0;
     let t = Array1::linspace(0.0, (n as f64 - 1.0) / fs, n);
-    
+
     // Test with different amplitude ratios
     let strong_amp = 1.0;
     let weak_amp = 0.001; // 60 dB down
     let f_strong = 10.0;
     let f_weak = 20.0;
-    
+
     let y: Array1<f64> = t.mapv(|ti| {
-        strong_amp * (2.0 * PI * f_strong * ti).sin() +
-        weak_amp * (2.0 * PI * f_weak * ti).sin()
+        strong_amp * (2.0 * PI * f_strong * ti).sin() + weak_amp * (2.0 * PI * f_weak * ti).sin()
     });
-    
+
     let (freqs, power) = lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
-    
+
     // Find peaks
     let strong_peak_idx = find_peak_near_frequency(&freqs, &power, f_strong)?;
     let weak_peak_idx = find_peak_near_frequency(&freqs, &power, f_weak)?;
-    
+
     let strong_power = power[strong_peak_idx];
     let weak_power = power[weak_peak_idx];
     let dynamic_range = (strong_power / weak_power).log10() * 10.0; // dB
-    
+
     // Check if weak signal is detected above noise floor
     let noise_floor = estimate_noise_floor(&power);
     let weak_snr = (weak_power / noise_floor).log10() * 10.0;
-    
+
     Ok(DynamicRangeMetrics {
         weak_signal_detection: if weak_snr > 3.0 { 1.0 } else { weak_snr / 3.0 },
         strong_signal_handling: 1.0, // Strong signals are typically handled well
@@ -629,18 +651,19 @@ fn perform_scipy_comparison() -> SignalResult<ScipyComparisonResult> {
     let test_signals = generate_scipy_test_signals()?;
     let mut correlations = Vec::new();
     let mut relative_errors = Vec::new();
-    
+
     for (t, y) in test_signals {
         // Compute our implementation
-        let (freqs_ours, power_ours) = lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
-        
+        let (freqs_ours, power_ours) =
+            lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
+
         // Simulate SciPy reference (in practice, this would call Python)
         let (freqs_scipy, power_scipy) = simulate_scipy_lombscargle(&t, &y)?;
-        
+
         // Compare results
         let correlation = compute_correlation(&power_ours, &power_scipy);
         correlations.push(correlation);
-        
+
         // Compute relative errors
         for (p_ours, p_scipy) in power_ours.iter().zip(power_scipy.iter()) {
             if *p_scipy > 1e-12 {
@@ -649,19 +672,19 @@ fn perform_scipy_comparison() -> SignalResult<ScipyComparisonResult> {
             }
         }
     }
-    
+
     let correlation = correlations.iter().sum::<f64>() / correlations.len() as f64;
     let max_relative_error = relative_errors.iter().cloned().fold(0.0, f64::max);
     let mean_relative_error = relative_errors.iter().sum::<f64>() / relative_errors.len() as f64;
-    
+
     // Statistical tests
     let statistical_tests = perform_statistical_tests(&relative_errors)?;
-    
+
     Ok(ScipyComparisonResult {
         correlation,
         max_relative_error,
         mean_relative_error,
-        peak_detection_agreement: 0.95, // Placeholder
+        peak_detection_agreement: 0.95,           // Placeholder
         normalization_comparison: HashMap::new(), // Placeholder
         statistical_tests,
     })
@@ -670,107 +693,118 @@ fn perform_scipy_comparison() -> SignalResult<ScipyComparisonResult> {
 /// Generate test signals for SciPy comparison
 fn generate_scipy_test_signals() -> SignalResult<Vec<(Array1<f64>, Array1<f64>)>> {
     let mut signals = Vec::new();
-    let mut rng = thread_rng();
-    
+    let mut rng = rand::thread_rng();
+
     // Signal 1: Simple sinusoid with irregular sampling
     let n = 100;
     let mut t1 = Array1::linspace(0.0, 10.0, n);
     for i in 1..n {
-        t1[i] += 0.1 * rng.gen_range(-1.0..1.0);
+        t1[i] += 0.1 * rng.random_range(-1.0..1.0);
     }
-    t1.as_slice_mut().unwrap().sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let y1: Array1<f64> = t1.mapv(|ti| (2.0 * PI * 1.0 * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0));
+    t1.as_slice_mut()
+        .unwrap()
+        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let y1: Array1<f64> =
+        t1.mapv(|ti| (2.0 * PI * 1.0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
     signals.push((t1, y1));
-    
+
     // Signal 2: Multi-component signal
     let n = 150;
     let mut t2 = Array1::linspace(0.0, 15.0, n);
     for i in 1..n {
-        t2[i] += 0.05 * rng.gen_range(-1.0..1.0);
+        t2[i] += 0.05 * rng.random_range(-1.0..1.0);
     }
-    t2.as_slice_mut().unwrap().sort_by(|a, b| a.partial_cmp(b).unwrap());
+    t2.as_slice_mut()
+        .unwrap()
+        .sort_by(|a, b| a.partial_cmp(b).unwrap());
     let y2: Array1<f64> = t2.mapv(|ti| {
-        (2.0 * PI * 0.5 * ti).sin() + 
-        0.7 * (2.0 * PI * 1.5 * ti).sin() +
-        0.2 * rng.gen_range(-1.0..1.0)
+        (2.0 * PI * 0.5 * ti).sin()
+            + 0.7 * (2.0 * PI * 1.5 * ti).sin()
+            + 0.2 * rng.random_range(-1.0..1.0)
     });
     signals.push((t2, y2));
-    
+
     Ok(signals)
 }
 
 /// Simulate SciPy Lomb-Scargle implementation (placeholder)
-fn simulate_scipy_lombscargle(t: &Array1<f64>, y: &Array1<f64>) -> SignalResult<(Array1<f64>, Array1<f64>)> {
+fn simulate_scipy_lombscargle(
+    t: &Array1<f64>,
+    y: &Array1<f64>,
+) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     // In a real implementation, this would call SciPy via Python bindings
     // For now, add small perturbations to our results to simulate differences
     let (freqs, mut power) = lombscargle(t, y, None, Some("standard"), Some(true), Some(false))?;
-    
+
     // Add small random perturbations to simulate SciPy differences
-    let mut rng = thread_rng();
+    let mut rng = rand::thread_rng();
     for p in power.iter_mut() {
-        *p *= 1.0 + 0.001 * rng.gen_range(-1.0..1.0); // 0.1% random variation
+        *p *= 1.0 + 0.001 * rng.random_range(-1.0..1.0); // 0.1% random variation
     }
-    
+
     Ok((freqs, power))
 }
 
 /// Validate SIMD implementation completely
 fn validate_simd_implementation_complete() -> SignalResult<CompleteSimdValidation> {
     let capabilities = PlatformCapabilities::detect();
-    
+
     // Generate test data
     let n = 1024;
-    let mut rng = thread_rng();
-    let t: Array1<f64> = Array1::from_shape_fn(n, |i| i as f64 * 0.01 + 0.001 * rng.gen_range(-1.0..1.0));
-    let y: Array1<f64> = t.mapv(|ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0));
-    
+    let mut rng = rand::thread_rng();
+    let t: Array1<f64> =
+        Array1::from_shape_fn(n, |i| i as f64 * 0.01 + 0.001 * rng.random_range(-1.0..1.0));
+    let y: Array1<f64> =
+        t.mapv(|ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
+
     // Compute with scalar implementation
     let start_scalar = Instant::now();
-    let (freqs_scalar, power_scalar) = lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
+    let (freqs_scalar, power_scalar) =
+        lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
     let scalar_time = start_scalar.elapsed();
-    
+
     // Compute with SIMD implementation
     let start_simd = Instant::now();
     let simd_result = simd_lombscargle(&t, &y, None)?;
     let simd_time = start_simd.elapsed();
-    
+
     // Compare accuracy
     let mut max_diff = 0.0;
     let mut relative_errors = Vec::new();
-    
+
     for (scalar_val, simd_val) in power_scalar.iter().zip(simd_result.power.iter()) {
         let abs_diff = (scalar_val - simd_val).abs();
         max_diff = max_diff.max(abs_diff);
-        
+
         if *scalar_val > 1e-12 {
             let rel_error = abs_diff / scalar_val;
             relative_errors.push(rel_error);
         }
     }
-    
+
     let correlation = compute_correlation(&power_scalar, &simd_result.power);
     let performance_improvement = scalar_time.as_secs_f64() / simd_time.as_secs_f64();
-    
+
     let accuracy_comparison = SimdAccuracyComparison {
         max_absolute_difference: max_diff,
         relative_error_distribution: relative_errors,
         correlation_coefficient: correlation,
         significant_differences_count: 0, // Count differences > threshold
     };
-    
+
     let platform_utilization = PlatformUtilizationMetrics {
         simd_instructions_used: capabilities.available_features,
         vector_width_utilization: if capabilities.supports_avx2 { 0.8 } else { 0.4 },
         cache_efficiency: 0.85, // Placeholder
         instruction_throughput: performance_improvement,
     };
-    
+
     let precision_preservation = PrecisionPreservationMetrics {
         mantissa_precision_loss: max_diff,
-        accumulation_error: 0.0, // Placeholder
+        accumulation_error: 0.0,            // Placeholder
         catastrophic_cancellation_count: 0, // Placeholder
     };
-    
+
     Ok(CompleteSimdValidation {
         accuracy_comparison,
         performance_improvement,
@@ -783,7 +817,7 @@ fn validate_simd_implementation_complete() -> SignalResult<CompleteSimdValidatio
 fn profile_memory_usage() -> SignalResult<MemoryProfilingResult> {
     // Simulate memory profiling
     // In practice, this would use actual memory profiling tools
-    
+
     Ok(MemoryProfilingResult {
         peak_memory_mb: 15.2,
         allocation_patterns: MemoryAllocationMetrics {
@@ -809,16 +843,16 @@ fn profile_memory_usage() -> SignalResult<MemoryProfilingResult> {
 fn validate_statistical_properties() -> SignalResult<StatisticalValidationResult> {
     // False alarm probability validation
     let false_alarm_validation = validate_false_alarm_probability()?;
-    
+
     // PSD theoretical comparison
     let psd_comparison = compare_with_theoretical_psd()?;
-    
+
     // Confidence interval validation
     let confidence_validation = validate_confidence_intervals()?;
-    
+
     // Hypothesis testing validation
     let hypothesis_testing = validate_hypothesis_testing()?;
-    
+
     Ok(StatisticalValidationResult {
         false_alarm_validation,
         psd_theoretical_comparison: psd_comparison,
@@ -834,24 +868,24 @@ fn validate_false_alarm_probability() -> SignalResult<FalseAlarmValidation> {
     let n_samples = 200;
     let mut false_alarms = 0;
     let threshold = 10.0; // Arbitrary threshold
-    
-    let mut rng = thread_rng();
-    
+
+    let mut rng = rand::thread_rng();
+
     for _ in 0..n_trials {
         let t = Array1::linspace(0.0, 10.0, n_samples);
-        let y: Array1<f64> = Array1::from_shape_fn(n_samples, |_| rng.gen_range(-1.0..1.0));
-        
+        let y: Array1<f64> = Array1::from_shape_fn(n_samples, |_| rng.random_range(-1.0..1.0));
+
         let (_, power) = lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
-        
+
         if power.iter().any(|&p| p > threshold) {
             false_alarms += 1;
         }
     }
-    
+
     let empirical_fap = false_alarms as f64 / n_trials as f64;
     let theoretical_fap = 0.05; // Expected 5% false alarm rate
     let fap_accuracy = 1.0 - (empirical_fap - theoretical_fap).abs() / theoretical_fap;
-    
+
     Ok(FalseAlarmValidation {
         theoretical_fap,
         empirical_fap,
@@ -864,22 +898,22 @@ fn validate_false_alarm_probability() -> SignalResult<FalseAlarmValidation> {
 fn compare_with_theoretical_psd() -> SignalResult<PsdTheoreticalComparison> {
     // Test with white noise (flat PSD)
     let n = 512;
-    let mut rng = thread_rng();
+    let mut rng = rand::thread_rng();
     let t = Array1::linspace(0.0, 10.0, n);
-    let white_noise: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen_range(-1.0..1.0));
-    
+    let white_noise: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(-1.0..1.0));
+
     let (freqs, power) = lombscargle(&t, &white_noise, None, Some("psd"), Some(true), Some(false))?;
-    
+
     // For white noise, PSD should be approximately flat
     let mean_power = power.mean().unwrap();
     let power_variance = power.var(0.0);
     let flatness = 1.0 - (power_variance / (mean_power * mean_power)).sqrt();
-    
+
     Ok(PsdTheoreticalComparison {
         white_noise_comparison: flatness,
-        colored_noise_comparison: 0.92, // Placeholder
+        colored_noise_comparison: 0.92,     // Placeholder
         sinusoidal_signal_comparison: 0.95, // Placeholder
-        theoretical_psd_correlation: 0.88, // Placeholder
+        theoretical_psd_correlation: 0.88,  // Placeholder
     })
 }
 
@@ -912,26 +946,29 @@ fn detect_performance_regression() -> SignalResult<PerformanceRegressionResult> 
         memory_usage_mb: 12.5,
         throughput_samples_per_second: 50000.0,
     };
-    
+
     // Current metrics (measured now)
     let current_metrics = CurrentPerformanceMetrics {
-        computation_time_ms: 14.8, // Slightly faster
-        memory_usage_mb: 12.1,     // Slightly less memory
+        computation_time_ms: 14.8,              // Slightly faster
+        memory_usage_mb: 12.1,                  // Slightly less memory
         throughput_samples_per_second: 52000.0, // Higher throughput
     };
-    
+
     // Analyze trends
-    let time_improvement = (baseline_metrics.computation_time_ms - current_metrics.computation_time_ms) / baseline_metrics.computation_time_ms;
-    let memory_improvement = (baseline_metrics.memory_usage_mb - current_metrics.memory_usage_mb) / baseline_metrics.memory_usage_mb;
-    
+    let time_improvement = (baseline_metrics.computation_time_ms
+        - current_metrics.computation_time_ms)
+        / baseline_metrics.computation_time_ms;
+    let memory_improvement = (baseline_metrics.memory_usage_mb - current_metrics.memory_usage_mb)
+        / baseline_metrics.memory_usage_mb;
+
     let regression_detected = time_improvement < -0.1 || memory_improvement < -0.2; // 10% time or 20% memory regression
-    
+
     let trend_analysis = PerformanceTrendAnalysis {
         time_trend_slope: time_improvement,
         memory_trend_slope: memory_improvement,
         regression_confidence: 0.95,
     };
-    
+
     Ok(PerformanceRegressionResult {
         baseline_metrics,
         current_metrics,
@@ -949,13 +986,14 @@ fn calculate_quality_score(
     simd: &CompleteSimdValidation,
     statistical: &StatisticalValidationResult,
 ) -> f64 {
-    let accuracy_score = (accuracy.frequency_accuracy.single_tone_accuracy + 
-                         accuracy.power_accuracy.amplitude_linearity + 
-                         accuracy.phase_coherence.phase_preservation) / 3.0;
+    let accuracy_score = (accuracy.frequency_accuracy.single_tone_accuracy
+        + accuracy.power_accuracy.amplitude_linearity
+        + accuracy.phase_coherence.phase_preservation)
+        / 3.0;
     let scipy_score = scipy.correlation;
     let simd_score = simd.accuracy_comparison.correlation_coefficient;
     let statistical_score = statistical.false_alarm_validation.fap_accuracy;
-    
+
     ((1.0 - accuracy_score) + scipy_score + simd_score + statistical_score) / 4.0 * 100.0
 }
 
@@ -969,11 +1007,11 @@ fn identify_critical_issues(
     if accuracy.frequency_accuracy.single_tone_accuracy > 0.1 {
         issues.push("High frequency estimation error in single tone signals".to_string());
     }
-    
+
     if scipy.correlation < 0.9 {
         issues.push("Low correlation with SciPy reference implementation".to_string());
     }
-    
+
     if simd.accuracy_comparison.correlation_coefficient < 0.999 {
         issues.push("SIMD implementation shows accuracy degradation".to_string());
     }
@@ -987,17 +1025,20 @@ fn generate_optimization_recommendations(
     recommendations: &mut Vec<String>,
 ) {
     if accuracy.spectral_leakage.side_lobe_level > 0.1 {
-        recommendations.push("Consider implementing better window functions to reduce spectral leakage".to_string());
+        recommendations.push(
+            "Consider implementing better window functions to reduce spectral leakage".to_string(),
+        );
     }
-    
+
     if scipy.max_relative_error > 0.01 {
-        recommendations.push("Review numerical algorithms for better SciPy compatibility".to_string());
+        recommendations
+            .push("Review numerical algorithms for better SciPy compatibility".to_string());
     }
-    
+
     if performance.regression_detected {
         recommendations.push("Performance regression detected - review recent changes".to_string());
     }
-    
+
     recommendations.push("Consider caching DPSS tapers for repeated use".to_string());
     recommendations.push("Implement frequency grid optimization for large datasets".to_string());
 }
@@ -1009,11 +1050,11 @@ fn compute_correlation(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
     let n = a.len().min(b.len());
     let mean_a = a.slice(ndarray::s![..n]).mean().unwrap();
     let mean_b = b.slice(ndarray::s![..n]).mean().unwrap();
-    
+
     let mut numerator = 0.0;
     let mut sum_sq_a = 0.0;
     let mut sum_sq_b = 0.0;
-    
+
     for i in 0..n {
         let da = a[i] - mean_a;
         let db = b[i] - mean_b;
@@ -1021,7 +1062,7 @@ fn compute_correlation(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
         sum_sq_a += da * da;
         sum_sq_b += db * db;
     }
-    
+
     if sum_sq_a > 0.0 && sum_sq_b > 0.0 {
         numerator / (sum_sq_a * sum_sq_b).sqrt()
     } else {
@@ -1030,10 +1071,14 @@ fn compute_correlation(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
 }
 
 /// Find peak near a specific frequency
-fn find_peak_near_frequency(freqs: &Array1<f64>, power: &Array1<f64>, target_freq: f64) -> SignalResult<usize> {
+fn find_peak_near_frequency(
+    freqs: &Array1<f64>,
+    power: &Array1<f64>,
+    target_freq: f64,
+) -> SignalResult<usize> {
     let mut best_idx = 0;
     let mut best_diff = f64::INFINITY;
-    
+
     for (i, &freq) in freqs.iter().enumerate() {
         let diff = (freq - target_freq).abs();
         if diff < best_diff {
@@ -1041,7 +1086,7 @@ fn find_peak_near_frequency(freqs: &Array1<f64>, power: &Array1<f64>, target_fre
             best_idx = i;
         }
     }
-    
+
     Ok(best_idx)
 }
 
@@ -1067,10 +1112,13 @@ fn perform_statistical_tests(errors: &[f64]) -> SignalResult<StatisticalTestResu
 /// Generate comprehensive validation report
 pub fn generate_ultrathink_lombscargle_report(result: &UltrathinkLombScargleResult) -> String {
     let mut report = String::new();
-    
+
     report.push_str("# Ultrathink Enhanced Lomb-Scargle Validation Report\n\n");
-    report.push_str(&format!("🎯 **Overall Quality Score: {:.1}/100**\n\n", result.quality_score));
-    
+    report.push_str(&format!(
+        "🎯 **Overall Quality Score: {:.1}/100**\n\n",
+        result.quality_score
+    ));
+
     // Executive Summary
     if result.quality_score >= 95.0 {
         report.push_str("✅ **EXCELLENT** - Implementation exceeds industry standards\n\n");
@@ -1081,30 +1129,42 @@ pub fn generate_ultrathink_lombscargle_report(result: &UltrathinkLombScargleResu
     } else {
         report.push_str("❌ **NEEDS IMPROVEMENT** - Significant issues require attention\n\n");
     }
-    
+
     // Accuracy Validation Summary
     report.push_str("## 📊 Accuracy Validation Summary\n\n");
     report.push_str(&format!(
         "- **Single Tone Accuracy**: {:.4} (lower is better)\n",
-        result.accuracy_validation.frequency_accuracy.single_tone_accuracy
+        result
+            .accuracy_validation
+            .frequency_accuracy
+            .single_tone_accuracy
     ));
     report.push_str(&format!(
         "- **Multi Tone Accuracy**: {:.4}\n",
-        result.accuracy_validation.frequency_accuracy.multi_tone_accuracy
+        result
+            .accuracy_validation
+            .frequency_accuracy
+            .multi_tone_accuracy
     ));
     report.push_str(&format!(
         "- **Power Estimation Linearity**: {:.3}\n",
-        result.accuracy_validation.power_accuracy.amplitude_linearity
+        result
+            .accuracy_validation
+            .power_accuracy
+            .amplitude_linearity
     ));
     report.push_str(&format!(
         "- **Phase Coherence Preservation**: {:.3}\n",
-        result.accuracy_validation.phase_coherence.phase_preservation
+        result
+            .accuracy_validation
+            .phase_coherence
+            .phase_preservation
     ));
     report.push_str(&format!(
         "- **Spectral Leakage Control**: {:.3}\n",
         1.0 - result.accuracy_validation.spectral_leakage.side_lobe_level
     ));
-    
+
     // SciPy Comparison
     report.push_str("\n## 🐍 SciPy Reference Comparison\n\n");
     report.push_str(&format!(
@@ -1123,7 +1183,7 @@ pub fn generate_ultrathink_lombscargle_report(result: &UltrathinkLombScargleResu
         "- **Peak Detection Agreement**: {:.1}%\n",
         result.scipy_comparison.peak_detection_agreement * 100.0
     ));
-    
+
     // SIMD Validation
     report.push_str("\n## ⚡ SIMD Performance & Accuracy\n\n");
     report.push_str(&format!(
@@ -1132,17 +1192,27 @@ pub fn generate_ultrathink_lombscargle_report(result: &UltrathinkLombScargleResu
     ));
     report.push_str(&format!(
         "- **Accuracy Correlation**: {:.6}\n",
-        result.simd_validation.accuracy_comparison.correlation_coefficient
+        result
+            .simd_validation
+            .accuracy_comparison
+            .correlation_coefficient
     ));
     report.push_str(&format!(
         "- **Maximum Difference**: {:.2e}\n",
-        result.simd_validation.accuracy_comparison.max_absolute_difference
+        result
+            .simd_validation
+            .accuracy_comparison
+            .max_absolute_difference
     ));
     report.push_str(&format!(
         "- **Platform Utilization**: {:.1}%\n",
-        result.simd_validation.platform_utilization.vector_width_utilization * 100.0
+        result
+            .simd_validation
+            .platform_utilization
+            .vector_width_utilization
+            * 100.0
     ));
-    
+
     // Memory Profiling
     report.push_str("\n## 💾 Memory Profiling Results\n\n");
     report.push_str(&format!(
@@ -1159,25 +1229,42 @@ pub fn generate_ultrathink_lombscargle_report(result: &UltrathinkLombScargleResu
     ));
     report.push_str(&format!(
         "- **Allocation Efficiency**: {:.1}%\n",
-        (1.0 - result.memory_profiling.allocation_patterns.allocation_fragmentation) * 100.0
+        (1.0 - result
+            .memory_profiling
+            .allocation_patterns
+            .allocation_fragmentation)
+            * 100.0
     ));
-    
+
     // Statistical Validation
     report.push_str("\n## 📈 Statistical Validation\n\n");
     report.push_str(&format!(
         "- **False Alarm Probability**: {:.3} (target: {:.3})\n",
-        result.statistical_validation.false_alarm_validation.empirical_fap,
-        result.statistical_validation.false_alarm_validation.theoretical_fap
+        result
+            .statistical_validation
+            .false_alarm_validation
+            .empirical_fap,
+        result
+            .statistical_validation
+            .false_alarm_validation
+            .theoretical_fap
     ));
     report.push_str(&format!(
         "- **FAP Accuracy**: {:.1}%\n",
-        result.statistical_validation.false_alarm_validation.fap_accuracy * 100.0
+        result
+            .statistical_validation
+            .false_alarm_validation
+            .fap_accuracy
+            * 100.0
     ));
     report.push_str(&format!(
         "- **White Noise PSD Flatness**: {:.3}\n",
-        result.statistical_validation.psd_theoretical_comparison.white_noise_comparison
+        result
+            .statistical_validation
+            .psd_theoretical_comparison
+            .white_noise_comparison
     ));
-    
+
     // Performance Regression
     report.push_str("\n## ⏱️ Performance Analysis\n\n");
     if result.performance_regression.regression_detected {
@@ -1187,20 +1274,38 @@ pub fn generate_ultrathink_lombscargle_report(result: &UltrathinkLombScargleResu
     }
     report.push_str(&format!(
         "- **Computation Time**: {:.1} ms (baseline: {:.1} ms)\n",
-        result.performance_regression.current_metrics.computation_time_ms,
-        result.performance_regression.baseline_metrics.computation_time_ms
+        result
+            .performance_regression
+            .current_metrics
+            .computation_time_ms,
+        result
+            .performance_regression
+            .baseline_metrics
+            .computation_time_ms
     ));
     report.push_str(&format!(
         "- **Memory Usage**: {:.1} MB (baseline: {:.1} MB)\n",
-        result.performance_regression.current_metrics.memory_usage_mb,
-        result.performance_regression.baseline_metrics.memory_usage_mb
+        result
+            .performance_regression
+            .current_metrics
+            .memory_usage_mb,
+        result
+            .performance_regression
+            .baseline_metrics
+            .memory_usage_mb
     ));
     report.push_str(&format!(
         "- **Throughput**: {:.0} samples/sec (baseline: {:.0})\n",
-        result.performance_regression.current_metrics.throughput_samples_per_second,
-        result.performance_regression.baseline_metrics.throughput_samples_per_second
+        result
+            .performance_regression
+            .current_metrics
+            .throughput_samples_per_second,
+        result
+            .performance_regression
+            .baseline_metrics
+            .throughput_samples_per_second
     ));
-    
+
     // Critical Issues
     if !result.critical_issues.is_empty() {
         report.push_str("\n## ⚠️ Critical Issues\n\n");
@@ -1208,7 +1313,7 @@ pub fn generate_ultrathink_lombscargle_report(result: &UltrathinkLombScargleResu
             report.push_str(&format!("- ❌ {}\n", issue));
         }
     }
-    
+
     // Recommendations
     if !result.recommendations.is_empty() {
         report.push_str("\n## 💡 Optimization Recommendations\n\n");
@@ -1216,12 +1321,15 @@ pub fn generate_ultrathink_lombscargle_report(result: &UltrathinkLombScargleResu
             report.push_str(&format!("{}. {}\n", i + 1, recommendation));
         }
     }
-    
+
     // Footer
     report.push_str("\n---\n");
     report.push_str("**Ultrathink Enhanced Validation Suite**\n");
-    report.push_str(&format!("Generated at: {:?}\n", std::time::SystemTime::now()));
+    report.push_str(&format!(
+        "Generated at: {:?}\n",
+        std::time::SystemTime::now()
+    ));
     report.push_str("🚀 Powered by SciRS2 Signal Processing\n");
-    
+
     report
 }

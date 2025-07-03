@@ -622,7 +622,7 @@ impl PerformanceRegressionDetector {
                 confidence: statistical_result.confidence,
                 p_value: statistical_result.p_value,
                 effect_size: statistical_result.effect_size,
-                baseline_value: baseline.map(|b| b.value).unwrap_or(0.0),
+                baseline_value: baseline.clone().map(|b| b.value).unwrap_or(0.0),
                 current_value: *values.last().unwrap(),
                 change_percentage: self.calculate_change_percentage(&values, baseline.as_ref()),
                 regression_type: self.classify_regression_type(metric_type, &values),

@@ -79,11 +79,11 @@ impl Hypervector {
     pub fn random(dim: usize, sparsity: f64) -> Self {
         let num_nonzero = (dim as f64 * sparsity) as usize;
         let mut sparse_data = Vec::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut used_indices = HashSet::new();
 
         while sparse_data.len() < num_nonzero {
-            let idx = rng.gen_range(0..dim);
+            let idx = rng.random_range(0..dim);
             if !used_indices.contains(&idx) {
                 used_indices.insert(idx);
                 let value = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };

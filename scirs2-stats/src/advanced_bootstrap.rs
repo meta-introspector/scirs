@@ -252,7 +252,7 @@ pub struct AdvancedBootstrapProcessor<F> {
 
 impl<F> AdvancedBootstrapProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync + std::fmt::Display,
 {
     /// Create new advanced bootstrap processor
     pub fn new(config: AdvancedBootstrapConfig) -> Self {
@@ -363,7 +363,7 @@ where
                     let mut resample = Array1::zeros(n);
 
                     for i in 0..n {
-                        let idx = local_rng.gen_range(0..n);
+                        let idx = local_rng.random_range(0..n);
                         resample[i] = data[idx];
                     }
 
@@ -381,7 +381,7 @@ where
                 let mut resample = Array1::zeros(n);
 
                 for j in 0..n {
-                    let idx = self.rng.gen_range(0..n);
+                    let idx = self.rng.random_range(0..n);
                     resample[j] = data[idx];
                 }
 
@@ -429,7 +429,7 @@ where
                 let group_size = group_data.len();
 
                 for _ in 0..group_size {
-                    let idx = self.rng.gen_range(0..group_size);
+                    let idx = self.rng.random_range(0..group_size);
                     resample[resample_idx] = group_data[idx].1;
                     resample_idx += 1;
                 }
@@ -502,7 +502,7 @@ where
                 break;
             }
 
-            let start_idx = self.rng.gen_range(0..=(n - block_length));
+            let start_idx = self.rng.random_range(0..=(n - block_length));
             let copy_length = std::cmp::min(block_length, n - pos);
 
             for i in 0..copy_length {
@@ -530,7 +530,7 @@ where
                 break;
             }
 
-            let start_idx = self.rng.gen_range(0..n);
+            let start_idx = self.rng.random_range(0..n);
             let copy_length = std::cmp::min(block_length, n - pos);
 
             for i in 0..copy_length {
@@ -572,7 +572,7 @@ where
         let mut pos = 0;
 
         while pos < n {
-            let block_idx = self.rng.gen_range(0..blocks.len());
+            let block_idx = self.rng.random_range(0..blocks.len());
             let block = &blocks[block_idx];
             let copy_length = std::cmp::min(block.len(), n - pos);
 
@@ -597,11 +597,11 @@ where
         let mut pos = 0;
 
         while pos < n {
-            let start_idx = self.rng.gen_range(0..n);
+            let start_idx = self.rng.random_range(0..n);
             let mut block_length = 1;
 
             // Generate random block length using geometric distribution
-            while self.rng.gen::<f64>() > p && block_length < n - pos {
+            while self.rng.random::<f64>() > p && block_length < n - pos {
                 block_length += 1;
             }
 
@@ -637,7 +637,7 @@ where
                 break;
             }
 
-            let start_idx = self.rng.gen_range(0..=(n - block_length));
+            let start_idx = self.rng.random_range(0..=(n - block_length));
             let copy_length = std::cmp::min(block_length, n - pos);
 
             // Apply tapering weights
@@ -698,7 +698,7 @@ where
             let mut weight_sum = F::zero();
 
             for j in 0..n {
-                let exp_sample = -self.rng.gen::<f64>().ln(); // Exponential(1) sample
+                let exp_sample = -self.rng.random::<f64>().ln(); // Exponential(1) sample
                 weights[j] = F::from(exp_sample).unwrap();
                 weight_sum = weight_sum + weights[j];
             }
@@ -739,7 +739,7 @@ where
             for j in 0..n {
                 let multiplier = match distribution {
                     WildDistribution::Rademacher => {
-                        if self.rng.gen::<f64>() < 0.5 {
+                        if self.rng.random::<f64>() < 0.5 {
                             -1.0
                         } else {
                             1.0
@@ -748,7 +748,7 @@ where
                     WildDistribution::Mammen => {
                         let golden_ratio = (1.0 + 5.0_f64.sqrt()) / 2.0;
                         let p = (5.0_f64.sqrt() + 1.0) / (2.0 * 5.0_f64.sqrt());
-                        if self.rng.gen::<f64>() < p {
+                        if self.rng.random::<f64>() < p {
                             -(5.0_f64.sqrt() - 1.0) / 2.0
                         } else {
                             (5.0_f64.sqrt() + 1.0) / 2.0
@@ -756,12 +756,12 @@ where
                     }
                     WildDistribution::Normal => {
                         // Box-Muller transform for standard normal
-                        let u1 = self.rng.gen::<f64>();
-                        let u2 = self.rng.gen::<f64>();
+                        let u1 = self.rng.random::<f64>();
+                        let u2 = self.rng.random::<f64>();
                         (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
                     }
                     WildDistribution::TwoPoint { prob_positive } => {
-                        if self.rng.gen::<f64>() < *prob_positive {
+                        if self.rng.random::<f64>() < *prob_positive {
                             1.0
                         } else {
                             -1.0
@@ -843,7 +843,7 @@ where
 
         // Shuffle the indices
         for i in (1..all_indices.len()).rev() {
-            let j = self.rng.gen_range(0..=i);
+            let j = self.rng.random_range(0..=i);
             all_indices.swap(i, j);
         }
 
@@ -868,8 +868,8 @@ where
         let mut sample = Array1::zeros(n);
 
         for i in 0..n {
-            let u1 = self.rng.gen::<f64>();
-            let u2 = self.rng.gen::<f64>();
+            let u1 = self.rng.random::<f64>();
+            let u2 = self.rng.random::<f64>();
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             sample[i] = F::from(mean + std * z).unwrap();
         }
@@ -882,7 +882,7 @@ where
         let mut sample = Array1::zeros(n);
 
         for i in 0..n {
-            let u = self.rng.gen::<f64>();
+            let u = self.rng.random::<f64>();
             let x = -u.ln() / rate;
             sample[i] = F::from(x).unwrap();
         }
@@ -904,8 +904,8 @@ where
             // Using normal approximation for simplicity
             let mean = shape * scale;
             let std = (shape * scale * scale).sqrt();
-            let u1 = self.rng.gen::<f64>();
-            let u2 = self.rng.gen::<f64>();
+            let u1 = self.rng.random::<f64>();
+            let u2 = self.rng.random::<f64>();
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             sample[i] = F::from((mean + std * z).max(0.0)).unwrap();
         }
@@ -919,8 +919,8 @@ where
         let mut sample = Array1::zeros(n);
 
         for i in 0..n {
-            let x = self.rng.gen::<f64>().powf(1.0 / alpha);
-            let y = self.rng.gen::<f64>().powf(1.0 / beta);
+            let x = self.rng.random::<f64>().powf(1.0 / alpha);
+            let y = self.rng.random::<f64>().powf(1.0 / beta);
             let value = x / (x + y);
             sample[i] = F::from(value).unwrap();
         }
@@ -1155,7 +1155,7 @@ pub fn stratified_bootstrap<F, T>(
     config: Option<AdvancedBootstrapConfig>,
 ) -> StatsResult<AdvancedBootstrapResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync + std::fmt::Display,
     T: Into<F> + Copy + Send + Sync,
 {
     let mut config = config.unwrap_or_default();
@@ -1175,7 +1175,7 @@ pub fn block_bootstrap<F, T>(
     config: Option<AdvancedBootstrapConfig>,
 ) -> StatsResult<AdvancedBootstrapResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync + std::fmt::Display,
     T: Into<F> + Copy + Send + Sync,
 {
     let mut config = config.unwrap_or_default();
@@ -1193,7 +1193,7 @@ pub fn moving_block_bootstrap<F, T>(
     n_bootstrap: Option<usize>,
 ) -> StatsResult<AdvancedBootstrapResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync + std::fmt::Display,
     T: Into<F> + Copy + Send + Sync,
 {
     let mut config = AdvancedBootstrapConfig::default();
@@ -1215,7 +1215,7 @@ pub fn circular_block_bootstrap<F, T>(
     n_bootstrap: Option<usize>,
 ) -> StatsResult<AdvancedBootstrapResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync + std::fmt::Display,
     T: Into<F> + Copy + Send + Sync,
 {
     let mut config = AdvancedBootstrapConfig::default();
@@ -1237,7 +1237,7 @@ pub fn stationary_bootstrap<F, T>(
     n_bootstrap: Option<usize>,
 ) -> StatsResult<AdvancedBootstrapResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + FromPrimitive + Copy + Send + Sync + std::fmt::Display,
     T: Into<F> + Copy + Send + Sync,
 {
     let mut config = AdvancedBootstrapConfig::default();

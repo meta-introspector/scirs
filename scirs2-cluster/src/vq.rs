@@ -50,13 +50,6 @@ pub use self::distance_metrics::{
 pub use distance_simd::{
     distance_to_centroids_simd, pairwise_euclidean_parallel, pairwise_euclidean_simd,
 };
-pub use simd_optimizations::{
-    calculate_distortion_simd, compute_centroids_simd, euclidean_distance_simd, 
-    vq_simd, whiten_simd, SimdOptimizationConfig,
-};
-pub use simd_kmeans::{
-    kmeans_simd, kmeans_plus_plus_simd, mini_batch_kmeans_simd,
-};
 pub use kmeans::{
     kmeans, kmeans_init, kmeans_plus_plus, kmeans_with_metric, kmeans_with_options, KMeansInit,
     KMeansOptions,
@@ -64,6 +57,11 @@ pub use kmeans::{
 pub use kmeans2::{kmeans2, kmeans2_str, MinitMethod, MissingMethod};
 pub use minibatch_kmeans::*;
 pub use parallel_kmeans::{parallel_kmeans, ParallelKMeansOptions};
+pub use simd_kmeans::{kmeans_plus_plus_simd, kmeans_simd, mini_batch_kmeans_simd};
+pub use simd_optimizations::{
+    calculate_distortion_simd, compute_centroids_simd, euclidean_distance_simd, vq_simd,
+    whiten_simd, SimdOptimizationConfig,
+};
 pub use weighted_kmeans::{weighted_kmeans, weighted_kmeans_plus_plus, WeightedKMeansOptions};
 
 /// Computes the Euclidean distance between two vectors

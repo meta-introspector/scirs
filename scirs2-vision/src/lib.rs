@@ -65,6 +65,22 @@ pub mod visual_slam;
 /// * **Performance Tracking** - Comprehensive monitoring and optimization
 pub mod ultrathink_integration;
 
+/// Advanced Performance Benchmarking for Ultrathink Mode
+///
+/// This module provides comprehensive performance benchmarking capabilities
+/// for all ultrathink mode features, including quantum-inspired processing,
+/// neuromorphic computing, AI optimization, and cross-module coordination.
+///
+/// # Features
+///
+/// * **Comprehensive Benchmarking** - Full performance analysis across all ultrathink features
+/// * **Statistical Analysis** - Advanced statistical metrics and trend analysis
+/// * **Resource Monitoring** - Detailed resource usage tracking and optimization
+/// * **Quality Assessment** - Accuracy, consistency, and quality metrics
+/// * **Scalability Analysis** - Performance scaling with different workloads
+/// * **Comparative Analysis** - Speedup and advantage measurements vs baseline
+pub mod performance_benchmark;
+
 // Comment out problematic modules during tests to focus on fixing other issues
 #[cfg(not(test))]
 /// Private transform module for compatibility
@@ -207,4 +223,11 @@ pub use ultrathink_integration::{
     CrossModuleUltrathinkProcessingResult, EmergentBehavior, FusionQuality,
     NeuralQuantumHybridProcessor, PerformanceMetrics, UltrathinkProcessingResult,
     UncertaintyQuantification as UltrathinkUncertaintyQuantification,
+};
+
+// Re-export performance benchmarking functionality
+pub use performance_benchmark::{
+    BenchmarkConfig, BenchmarkResult, ComparisonMetrics,
+    PerformanceMetrics as BenchmarkPerformanceMetrics, QualityMetrics, ResourceUsage,
+    ScalabilityMetrics, StatisticalSummary, UltrathinkBenchmarkSuite,
 };

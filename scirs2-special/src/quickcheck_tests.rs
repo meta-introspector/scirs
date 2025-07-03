@@ -491,7 +491,6 @@ pub fn run_all_quickcheck_tests() {
 
 #[cfg(test)]
 mod integration {
-    use super::TestConfig;
 
     #[test]
     fn test_quickcheck_infrastructure() {

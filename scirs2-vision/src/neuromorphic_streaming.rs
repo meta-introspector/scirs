@@ -14,12 +14,12 @@
 //! - Energy-efficient processing inspired by biological neurons
 
 use crate::error::Result;
-use crate::streaming::{Frame, ProcessingStage};
 #[cfg(test)]
 use crate::streaming::FrameMetadata;
+use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2, ArrayView2};
 use rand::prelude::*;
-use rand::rng;
+use rand::thread_rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -270,7 +270,7 @@ impl SpikingNeuralNetwork {
         let mut neurons = Vec::with_capacity(num_neurons);
         let mut synapses = Vec::new();
         let mut connectivity = HashMap::new();
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         // Initialize neurons
         for _ in 0..num_neurons {
@@ -281,11 +281,11 @@ impl SpikingNeuralNetwork {
         for i in 0..num_neurons {
             let mut connections = Vec::new();
             for j in 0..num_neurons {
-                if i != j && rng.random::<f64>() < connectivity_probability {
+                if i != j && rng.gen::<f64>() < connectivity_probability {
                     connections.push(j);
 
                     // Create synapse
-                    let weight = rng.random_range(0.1..0.8);
+                    let weight = rng.gen_range(0.1..0.8);
                     synapses.push(PlasticSynapse::new(i, j, weight));
                 }
             }
@@ -792,8 +792,8 @@ impl EventDrivenProcessor {
 
                 // Simple enhancement based on cluster activity
                 let enhancement_radius = 2;
-                for dy in -(enhancement_radius as i32)..=enhancement_radius as i32 {
-                    for dx in -(enhancement_radius as i32)..=enhancement_radius as i32 {
+                for dy in -enhancement_radius..=enhancement_radius {
+                    for dx in -enhancement_radius..=enhancement_radius {
                         let x = (cluster_x as i32 + dx).clamp(0, width as i32 - 1) as usize;
                         let y = (cluster_y as i32 + dy).clamp(0, height as i32 - 1) as usize;
 

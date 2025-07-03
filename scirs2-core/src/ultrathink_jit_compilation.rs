@@ -836,11 +836,13 @@ pub struct MemoryUsageStats {
 
 impl UltrathinkJitCompiler {
     /// Create a new JIT compiler with default configuration
+    #[allow(dead_code)]
     pub fn new() -> CoreResult<Self> {
         Self::with_config(JitCompilerConfig::default())
     }
 
     /// Create a new JIT compiler with custom configuration
+    #[allow(dead_code)]
     pub fn with_config(config: JitCompilerConfig) -> CoreResult<Self> {
         let llvm_engine = Arc::new(Mutex::new(LlvmCompilationEngine::new(&config)?));
         let kernel_cache = Arc::new(RwLock::new(KernelCache::new(&config)?));

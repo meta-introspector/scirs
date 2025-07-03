@@ -1249,7 +1249,7 @@ impl<T: Float> Default for NASConfig<T> {
 
 impl<T: Float> NeuralArchitectureSearch<T> {
     /// Create a new Neural Architecture Search engine
-    pub fn new(config: NASConfig<T>) -> Result<Self, OptimError> {
+    pub fn new(config: NASConfig<T>) -> Result<Self> {
         // Initialize search strategy
         let search_strategy = Self::create_search_strategy(&config)?;
 
@@ -1303,7 +1303,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     }
 
     /// Run the neural architecture search
-    pub fn run_search(&mut self) -> Result<SearchResults<T>, OptimError> {
+    pub fn run_search(&mut self) -> Result<SearchResults<T>> {
         let start_time = Instant::now();
 
         // Initialize search
@@ -1340,7 +1340,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     }
 
     /// Initialize the search process
-    fn initialize_search(&mut self) -> Result<(), OptimError> {
+    fn initialize_search(&mut self) -> Result<()> {
         // Initialize search strategy
         self.search_strategy.initialize(&self.config.search_space)?;
 
@@ -1363,7 +1363,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     }
 
     /// Generate candidate architectures
-    fn generate_candidates(&mut self) -> Result<Vec<OptimizerArchitecture<T>>, OptimError> {
+    fn generate_candidates(&mut self) -> Result<Vec<OptimizerArchitecture<T>>> {
         let population_size = self.config.population_size;
         let mut candidates = Vec::with_capacity(population_size);
 
@@ -1393,7 +1393,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     fn evaluate_candidates(
         &mut self,
         candidates: Vec<OptimizerArchitecture<T>>,
-    ) -> Result<Vec<SearchResult<T>>, OptimError> {
+    ) -> Result<Vec<SearchResult<T>>> {
         let mut results = Vec::new();
 
         for architecture in candidates {
@@ -1432,7 +1432,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     }
 
     /// Update search state with new results
-    fn update_search_state(&mut self, results: Vec<SearchResult<T>>) -> Result<(), OptimError> {
+    fn update_search_state(&mut self, results: Vec<SearchResult<T>>) -> Result<()> {
         // Add results to history
         for result in &results {
             self.search_history.push_back(result.clone());
@@ -1632,9 +1632,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     /// Helper method implementations would continue...
 
     // Helper method implementations
-    fn create_search_strategy(
-        config: &NASConfig<T>,
-    ) -> Result<Box<dyn SearchStrategy<T>>, OptimError> {
+    fn create_search_strategy(config: &NASConfig<T>) -> Result<Box<dyn SearchStrategy<T>>> {
         match config.search_strategy {
             SearchStrategyType::Random => {
                 let strategy = search_strategies::RandomSearch::new(Some(42));
@@ -1693,12 +1691,13 @@ impl<T: Float> NeuralArchitectureSearch<T> {
 
     fn create_multi_objective_optimizer(
         config: &MultiObjectiveConfig<T>,
-    ) -> Result<Box<dyn MultiObjectiveOptimizer<T>>, OptimError> {
+    ) -> Result<Box<dyn MultiObjectiveOptimizer<T>>> {
         match config.algorithm {
             MultiObjectiveAlgorithm::NSGA2 => Ok(Box::new(multi_objective::NSGA2::new(
                 config.pareto_front_size,
-                config.diversity_strategy,
-            )?)),
+                0.9, // crossover probability
+                0.1, // mutation probability
+            ))),
             MultiObjectiveAlgorithm::MOEAD => Ok(Box::new(multi_objective::MOEADOptimizer::new(
                 config.pareto_front_size,
                 config.objectives.len(),
@@ -1710,15 +1709,16 @@ impl<T: Float> NeuralArchitectureSearch<T> {
                 // Default to NSGA2
                 Ok(Box::new(multi_objective::NSGA2::new(
                     config.pareto_front_size,
-                    config.diversity_strategy,
-                )?))
+                    0.9, // crossover probability
+                    0.1, // mutation probability
+                )))
             }
         }
     }
 
     fn create_architecture_controller(
         config: &NASConfig<T>,
-    ) -> Result<Box<dyn ArchitectureController<T>>, OptimError> {
+    ) -> Result<Box<dyn ArchitectureController<T>>> {
         match config.search_strategy {
             SearchStrategyType::ReinforcementLearning => {
                 Ok(Box::new(controllers::RNNController::new(
@@ -1740,10 +1740,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
         }
     }
 
-    fn validate_architecture(
-        &self,
-        architecture: &OptimizerArchitecture<T>,
-    ) -> Result<bool, OptimError> {
+    fn validate_architecture(&self, architecture: &OptimizerArchitecture<T>) -> Result<bool> {
         // Use architecture validator for proper validation
         let validator = architecture_space::ArchitectureValidator::new(
             architecture_space::SearchSpace::default(),
@@ -1766,7 +1763,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
         &self,
         architecture: &OptimizerArchitecture<T>,
         eval_time: Duration,
-    ) -> Result<ResourceUsage<T>, OptimError> {
+    ) -> Result<ResourceUsage<T>> {
         let mut memory_gb = T::from(0.1).unwrap(); // Base memory
         let cpu_time_seconds = T::from(eval_time.as_secs_f64()).unwrap();
         let mut gpu_time_seconds = T::zero();
@@ -1821,7 +1818,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     fn encode_architecture(
         &self,
         architecture: &OptimizerArchitecture<T>,
-    ) -> Result<ArchitectureEncoding, OptimError> {
+    ) -> Result<ArchitectureEncoding> {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
@@ -1890,10 +1887,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
         })
     }
 
-    fn update_best_architectures(
-        &mut self,
-        results: &[SearchResult<T>],
-    ) -> Result<(), OptimError> {
+    fn update_best_architectures(&mut self, results: &[SearchResult<T>]) -> Result<()> {
         for result in results {
             let performance = result
                 .evaluation_results
@@ -1977,12 +1971,12 @@ impl<T: Float> NeuralArchitectureSearch<T> {
         self.search_statistics.total_evaluated = self.search_history.len();
     }
 
-    fn check_resource_constraints(&mut self) -> Result<(), OptimError> {
+    fn check_resource_constraints(&mut self) -> Result<()> {
         // Placeholder implementation
         Ok(())
     }
 
-    fn finalize_search(&self, _search_time: Duration) -> Result<SearchResults<T>, OptimError> {
+    fn finalize_search(&self, _search_time: Duration) -> Result<SearchResults<T>> {
         Ok(SearchResults {
             best_architectures: self.best_architectures.clone(),
             pareto_front: self.pareto_front.clone(),
@@ -2052,7 +2046,7 @@ impl<T: Float> ResourceMonitor<T> {
         }
     }
 
-    fn start_monitoring(&mut self) -> Result<(), OptimError> {
+    fn start_monitoring(&mut self) -> Result<()> {
         self.monitoring_enabled = true;
         Ok(())
     }

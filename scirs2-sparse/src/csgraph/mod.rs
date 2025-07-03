@@ -195,9 +195,15 @@ where
         if !weight.is_zero() {
             adj_list[row].push((col, weight));
 
-            // For undirected graphs, add the reverse edge
+            // For undirected graphs, add the reverse edge only if it doesn't already exist
             if !directed && row != col {
-                adj_list[col].push((row, weight));
+                // Check if the reverse edge already exists in the matrix
+                let reverse_exists = row_indices.iter().zip(col_indices.iter())
+                    .any(|(r, c)| *r == col && *c == row);
+                
+                if !reverse_exists {
+                    adj_list[col].push((row, weight));
+                }
             }
         }
     }

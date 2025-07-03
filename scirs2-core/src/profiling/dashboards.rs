@@ -631,7 +631,7 @@ impl PerformanceDashboard {
         self.widgets.insert(widget_id.clone(), widget);
 
         // Initialize metric time series for this widget
-        let metrics_name = format!("widget_{}", widget_id);
+        let metrics_name = format!("widget_{widget_id}");
         if let Ok(mut metrics) = self.metrics.write() {
             metrics.insert(metrics_name, MetricTimeSeries::new(&widget_id));
         }
@@ -644,7 +644,7 @@ impl PerformanceDashboard {
         self.widgets.remove(widget_id);
 
         // Remove associated metric data
-        let metrics_name = format!("widget_{}", widget_id);
+        let metrics_name = format!("widget_{widget_id}");
         if let Ok(mut metrics) = self.metrics.write() {
             metrics.remove(&metrics_name);
         }
@@ -748,13 +748,13 @@ impl PerformanceDashboard {
             serde_json::to_string_pretty(&export_data).map_err(|e| {
                 CoreError::from(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Failed to serialize dashboard config: {}", e),
+                    format!("Failed to serialize dashboard config: {e}"),
                 ))
             })
         }
         #[cfg(not(feature = "serde"))]
         {
-            Ok(format!("Dashboard: {}", self.config.title))
+            Ok(format!("Dashboard: {title}", title = self.config.title))
         }
     }
 
@@ -765,7 +765,7 @@ impl PerformanceDashboard {
             let import_data: DashboardExport = serde_json::from_str(config_json).map_err(|e| {
                 CoreError::from(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Failed to parse dashboard config: {}", e),
+                    format!("Failed to parse dashboard config: {e}"),
                 ))
             })?;
 
@@ -855,7 +855,7 @@ impl PerformanceDashboard {
         for channel in &config.notification_channels {
             match channel {
                 NotificationChannel::Console => {
-                    println!("[DASHBOARD ALERT] {}", alert.message);
+                    println!("[DASHBOARD ALERT] {message}", message = alert.message);
                 }
                 NotificationChannel::File(path) => {
                     use std::fs::OpenOptions;
@@ -896,10 +896,10 @@ impl PerformanceDashboard {
             MetricSource::SystemMemory => "system.memory".to_string(),
             MetricSource::NetworkIO => "system.network_io".to_string(),
             MetricSource::DiskIO => "system.disk_io".to_string(),
-            MetricSource::Application(name) => format!("app.{}", name),
-            MetricSource::Custom(name) => format!("custom.{}", name),
-            MetricSource::Database(name) => format!("db.{}", name),
-            MetricSource::Cache(name) => format!("cache.{}", name),
+            MetricSource::Application(name) => format!("app.{name}"),
+            MetricSource::Custom(name) => format!("custom.{name}"),
+            MetricSource::Database(name) => format!("db.{name}"),
+            MetricSource::Cache(name) => format!("cache.{name}"),
         }
     }
 
@@ -1063,7 +1063,7 @@ mod tests {
 
         // Add some widgets
         for i in 0..3 {
-            let widget = Widget::new().with_title(&format!("Widget {}", i));
+            let widget = Widget::new().with_title(&format!("Widget {i}"));
             dashboard.add_widget(widget).unwrap();
         }
 

@@ -499,7 +499,7 @@ fn example_batchnorm() -> Result<()> {
     let width = 16;
     // Create random input tensor
     let x = Array4::from_shape_fn((batch_size, channels, height, width), |_| {
-        rng.gen::<f32>() * 2.0 - 1.0 // Random values between -1 and 1
+        rng.random::<f32>() * 2.0 - 1.0 // Random values between -1 and 1
     });
     // Create a BatchNorm2D layer
     let mut bn = BatchNorm2D::new(channels, 1e-5, 0.1);
@@ -563,11 +563,11 @@ fn compare_normalization_methods() -> Result<()> {
     let n_classes = 10;
     // Generate synthetic data
     let x_train = Array2::from_shape_fn((n_samples, n_features), |_| {
-        rng.gen::<f32>() // Values between 0 and 1
+        rng.random::<f32>() // Values between 0 and 1
     // Generate one-hot encoded labels
     let mut y_train = Array2::zeros((n_samples, n_classes));
     for i in 0..n_samples {
-        let class = (rng.gen::<f32>() * n_classes as f32).floor() as usize;
+        let class = (rng.random::<f32>() * n_classes as f32).floor() as usize;
         y_train[[i, class]] = 1.0;
     // Split into training and validation sets
     let train_size = (n_samples as f32 * 0.8) as usize;

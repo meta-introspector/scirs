@@ -177,7 +177,7 @@ impl OptimizedLinearRegression {
         let mut rng = Xoshiro256Plus::seed_from_u64(42);
 
         // Initialize parameters
-        let weights_data = Array1::from_shape_fn(n_features, |_| rng.gen_range(-0.1..0.1));
+        let weights_data = Array1::from_shape_fn(n_features, |_| rng.random_range(-0.1..0.1));
         let weights = Parameter::new(weights_data);
         let bias = Parameter::new(Array1::from_elem(1, 0.0));
 
@@ -482,15 +482,15 @@ fn create_synthetic_dataset(n_samples: usize, n_features: usize, noise_level: f6
     let mut rng = Xoshiro256Plus::seed_from_u64(42);
 
     // Generate random features
-    let features = Array2::from_shape_fn((n_samples, n_features), |_| rng.gen_range(-1.0..1.0));
+    let features = Array2::from_shape_fn((n_samples, n_features), |_| rng.random_range(-1.0..1.0));
 
     // Generate true weights
-    let true_weights = Array1::from_shape_fn(n_features, |_| rng.gen_range(-2.0..2.0));
+    let true_weights = Array1::from_shape_fn(n_features, |_| rng.random_range(-2.0..2.0));
     let true_bias = 0.5;
 
     // Generate targets with noise
     let clean_targets = features.dot(&true_weights) + true_bias;
-    let targets = clean_targets.mapv(|y| y + rng.gen_range(-noise_level..noise_level));
+    let targets = clean_targets.mapv(|y| y + rng.random_range(-noise_level..noise_level));
 
     Dataset::new(features, targets)
 }

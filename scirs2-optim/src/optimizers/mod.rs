@@ -25,7 +25,7 @@ where
     /// # Returns
     ///
     /// The updated parameters
-    fn step(&mut self, params: &Array<A, D>, gradients: &Array<A, D>) -> Result<Array<A, D>, OptimError>;
+    fn step(&mut self, params: &Array<A, D>, gradients: &Array<A, D>) -> Result<Array<A, D>>;
 
     /// Gets the current learning rate
     fn get_learning_rate(&self) -> A;

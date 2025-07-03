@@ -203,10 +203,7 @@ where
     O: Optimizer<A> + Send + Sync,
 {
     /// Create a new DP-SGD optimizer
-    pub fn new(
-        base_optimizer: O,
-        config: DifferentialPrivacyConfig,
-    ) -> Result<Self, OptimError> {
+    pub fn new(base_optimizer: O, config: DifferentialPrivacyConfig) -> Result<Self> {
         let accountant = MomentsAccountant::new(
             config.noise_multiplier,
             config.target_delta,
@@ -249,7 +246,7 @@ where
         params: &ArrayBase<S, D>,
         gradients: &mut ArrayBase<S, D>,
         batch_size: usize,
-    ) -> Result<Array<A, D>, OptimError>
+    ) -> Result<Array<A, D>>
     where
         S: Data<Elem = A> + DataMut<Elem = A>,
         D: Dimension + Clone,
@@ -320,7 +317,7 @@ where
     }
 
     /// Check if privacy budget is available
-    pub fn has_privacy_budget(&self) -> Result<bool, OptimError> {
+    pub fn has_privacy_budget(&self) -> Result<bool> {
         Ok(
             self.privacy_budget.epsilon_consumed < self.privacy_budget.target_epsilon
                 && self.privacy_budget.delta_consumed < self.privacy_budget.target_delta,
@@ -377,10 +374,7 @@ where
     }
 
     /// Update privacy configuration
-    pub fn update_privacy_config(
-        &mut self,
-        new_config: DifferentialPrivacyConfig,
-    ) -> Result<(), OptimError> {
+    pub fn update_privacy_config(&mut self, new_config: DifferentialPrivacyConfig) -> Result<()> {
         // Validate that privacy budget doesn't decrease
         if new_config.target_epsilon < self.config.target_epsilon
             || new_config.target_delta < self.config.target_delta
@@ -424,11 +418,7 @@ where
     }
 
     /// Clip gradients to threshold
-    fn clip_gradients<S, D>(
-        &self,
-        gradients: &mut ArrayBase<S, D>,
-        threshold: f64,
-    ) -> Result<bool, OptimError>
+    fn clip_gradients<S, D>(&self, gradients: &mut ArrayBase<S, D>, threshold: f64) -> Result<bool>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
@@ -450,7 +440,7 @@ where
         &mut self,
         gradients: &mut ArrayBase<S, D>,
         clipping_threshold: f64,
-    ) -> Result<(), OptimError>
+    ) -> Result<()>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
@@ -459,9 +449,8 @@ where
 
         match self.config.noise_mechanism {
             NoiseMechanism::Gaussian => {
-                let normal = Normal::new(0.0, noise_scale).map_err(|_| {
-                    OptimError::InvalidConfig("Invalid noise scale".to_string())
-                })?;
+                let normal = Normal::new(0.0, noise_scale)
+                    .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
 
                 gradients.mapv_inplace(|g| {
                     let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
@@ -470,9 +459,8 @@ where
             }
             NoiseMechanism::Laplace => {
                 // Simplified Laplace noise using Normal distribution approximation
-                let normal = Normal::new(0.0, noise_scale * 1.414).map_err(|_| {
-                    OptimError::InvalidConfig("Invalid noise scale".to_string())
-                })?;
+                let normal = Normal::new(0.0, noise_scale * 1.414)
+                    .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
 
                 gradients.mapv_inplace(|g| {
                     let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
@@ -481,9 +469,8 @@ where
             }
             _ => {
                 // Default to Gaussian
-                let normal = Normal::new(0.0, noise_scale).map_err(|_| {
-                    OptimError::InvalidConfig("Invalid noise scale".to_string())
-                })?;
+                let normal = Normal::new(0.0, noise_scale)
+                    .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
 
                 gradients.mapv_inplace(|g| {
                     let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
@@ -542,7 +529,7 @@ where
     }
 
     /// Validate DP-SGD configuration
-    pub fn validate_configuration(&self) -> Result<ConfigurationValidation, OptimError> {
+    pub fn validate_configuration(&self) -> Result<ConfigurationValidation> {
         let mut warnings = Vec::new();
         let mut errors = Vec::new();
 
@@ -623,7 +610,7 @@ where
 // Implementation of helper structures
 
 impl AdaptiveClippingState {
-    fn new(initial_threshold: f64, adaptation_lr: f64) -> Result<Self, OptimError> {
+    fn new(initial_threshold: f64, adaptation_lr: f64) -> Result<Self> {
         Ok(Self {
             current_threshold: initial_threshold,
             target_quantile: 0.5,

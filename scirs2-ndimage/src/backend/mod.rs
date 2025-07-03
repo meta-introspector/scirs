@@ -20,6 +20,14 @@ pub use gpu_acceleration_framework::{
 };
 pub use kernels::{GpuBuffer, GpuKernelExecutor, KernelInfo};
 
+#[cfg(feature = "cuda")]
+pub use concrete_gpu_backends::CudaContext;
+#[cfg(feature = "opencl")]
+pub use concrete_gpu_backends::OpenCLContext;
+// TODO: Implement MetalContext in concrete_gpu_backends.rs
+// #[cfg(all(target_os = "macos", feature = "metal"))]
+// pub use concrete_gpu_backends::MetalContext;
+
 use ndarray::{Array, ArrayView, Dimension};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
@@ -115,8 +123,9 @@ impl BackendExecutor {
             Backend::Cuda => Some(Arc::new(CudaContext::new(config.device_id)?)),
             #[cfg(feature = "opencl")]
             Backend::OpenCL => Some(Arc::new(OpenCLContext::new(config.device_id)?)),
-            #[cfg(all(target_os = "macos", feature = "metal"))]
-            Backend::Metal => Some(Arc::new(MetalContext::new(config.device_id)?)),
+            // TODO: Implement Metal backend
+            // #[cfg(all(target_os = "macos", feature = "metal"))]
+            // Backend::Metal => Some(Arc::new(MetalContext::new(config.device_id)?)),
             _ => None,
         };
 

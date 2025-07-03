@@ -740,13 +740,13 @@ pub fn compute_expected_gradients_attribution<F>(
                 let input_min = input.iter().fold(F::infinity(), |a, &b| a.min(b));
                 let input_max = input.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
                 input.mapv(|_| {
-                    let rand_val = rng.gen::<f64>();
+                    let rand_val = rng.random::<f64>();
                     input_min + (input_max - input_min) * F::from(rand_val).unwrap()
             2 => {
                 // Zero baseline
                 ArrayD::zeros(input.raw_dim())
                 // Blurred version of input
-                input.mapv(|x| x * F::from(0.5 + 0.5 * rng.gen::<f64>()).unwrap())
+                input.mapv(|x| x * F::from(0.5 + 0.5 * rng.random::<f64>()).unwrap())
         // Compute integrated gradients with respect to this reference
         let attribution = compute_integrated_gradients(
             interpreter,

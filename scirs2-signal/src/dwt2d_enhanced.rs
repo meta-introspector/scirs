@@ -3029,7 +3029,7 @@ mod tests {
     #[test]
     fn test_denoising() {
         // Create noisy image
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let clean_data = Array2::from_shape_fn((32, 32), |(i, j)| {
             (2.0 * std::f64::consts::PI * i as f64 / 16.0).sin()
                 * (2.0 * std::f64::consts::PI * j as f64 / 16.0).cos()

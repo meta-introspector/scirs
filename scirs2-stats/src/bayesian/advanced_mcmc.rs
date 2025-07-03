@@ -4,11 +4,11 @@
 //! Hamiltonian Monte Carlo, No-U-Turn Sampler (NUTS), and adaptive algorithms.
 
 use crate::error::{StatsError, StatsResult as Result};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, NumCast};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use num_traits::Float;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use scirs2_core::{parallel_ops::*, validation::*};
 
 /// Trait for defining log probability density functions
 pub trait LogDensity {
@@ -142,7 +142,7 @@ impl HamiltonianMonteCarlo {
                 + 0.5 * self.kinetic_energy(&proposed_momentum, &mass_matrix_inv)?;
 
             let accept_prob = (-proposed_energy + current_energy).exp().min(1.0);
-            let accept = rng.gen::<f64>() < accept_prob;
+            let accept = rng.random::<f64>() < accept_prob;
 
             if accept {
                 current_state = proposed_state;
@@ -184,7 +184,7 @@ impl HamiltonianMonteCarlo {
 
         // Sample from N(0, mass_matrix)
         for i in 0..ndim {
-            momentum[i] = rng.gen::<f64>() * 2.0 - 1.0; // Simplified - should use proper normal sampling
+            momentum[i] = rng.random::<f64>() * 2.0 - 1.0; // Simplified - should use proper normal sampling
         }
 
         // Transform by Cholesky factor of mass matrix (simplified)
@@ -423,8 +423,8 @@ impl NoUTurnSampler {
         let mut momentum = Array1::zeros(ndim);
         for i in 0..ndim {
             // Simplified normal sampling using Box-Muller
-            let u1: f64 = rng.gen();
-            let u2: f64 = rng.gen();
+            let u1: f64 = rng.random();
+            let u2: f64 = rng.random();
             momentum[i] = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
         }
         momentum
@@ -559,7 +559,7 @@ impl AdaptiveMetropolis {
 
             // Metropolis acceptance
             let log_accept_prob = proposal_log_prob - current_log_prob;
-            let accept = log_accept_prob.exp() > rng.gen::<f64>();
+            let accept = log_accept_prob.exp() > rng.random::<f64>();
 
             if accept {
                 current_state = proposal;
@@ -623,8 +623,8 @@ impl AdaptiveMetropolis {
         // Sample from N(0, I)
         let mut z = Array1::zeros(ndim);
         for i in 0..ndim {
-            let u1: f64 = rng.gen();
-            let u2: f64 = rng.gen();
+            let u1: f64 = rng.random();
+            let u2: f64 = rng.random();
             z[i] = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
         }
 
@@ -777,7 +777,7 @@ impl ParallelTempering {
                     let beta_j = 1.0 / temp_j;
                     let log_swap_prob = (beta_i - beta_j) * (log_prob_j - log_prob_i);
 
-                    if log_swap_prob.exp() > rng.gen::<f64>() {
+                    if log_swap_prob.exp() > rng.random::<f64>() {
                         // Accept swap
                         current_states.swap(i, i + 1);
                         current_log_probs.swap(i, i + 1);
@@ -818,8 +818,8 @@ impl ParallelTempering {
         let mut proposal = current.clone();
 
         for i in 0..ndim {
-            let u1: f64 = rng.gen();
-            let u2: f64 = rng.gen();
+            let u1: f64 = rng.random();
+            let u2: f64 = rng.random();
             let normal_sample = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             proposal[i] += self.step_size * normal_sample;
         }
@@ -829,7 +829,7 @@ impl ParallelTempering {
         // Tempered acceptance probability
         let log_accept_prob = (proposal_log_prob - current_log_prob) / temperature;
 
-        if log_accept_prob.exp() > rng.gen::<f64>() {
+        if log_accept_prob.exp() > rng.random::<f64>() {
             Ok((proposal, proposal_log_prob))
         } else {
             Ok((current.clone(), current_log_prob))

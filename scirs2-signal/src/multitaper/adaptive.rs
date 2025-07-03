@@ -39,7 +39,7 @@ use std::fmt::Debug;
 /// let fs = 100.0;
 /// let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
 /// use rand::Rng;
-/// let mut rng = rand::rng();
+/// let mut rng = rand::thread_rng();
 /// let signal: Vec<f64> = t.iter()
 ///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(0.0..1.0))
 ///     .collect();

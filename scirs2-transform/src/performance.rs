@@ -3,7 +3,7 @@
 //! This module provides optimized implementations of common transformation algorithms
 //! with memory efficiency, SIMD acceleration, and adaptive processing strategies.
 
-use ndarray::{Array1, Array2, ArrayView2, Axis, par_azip};
+use ndarray::{par_azip, Array1, Array2, ArrayView2, Axis};
 use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_not_empty, check_positive};
@@ -40,7 +40,7 @@ impl EnhancedStandardScaler {
     /// Fit the scaler to the data with adaptive processing
     pub fn fit(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         check_not_empty(x, "x")?;
-        
+
         // Check finite values
         for &val in x.iter() {
             if !val.is_finite() {
@@ -65,7 +65,7 @@ impl EnhancedStandardScaler {
     }
 
     /// Fit using out-of-core processing
-    fn fit_out_of_core(&mut self, x: &ArrayView2<f64>, chunk_size: usize) -> Result<()> {
+    fn fit_out_of_core(&mut self, x: &ArrayView2<f64>, _chunk_size: usize) -> Result<()> {
         let (n_samples, n_features) = x.dim();
         let chunker = DataChunker::new(self.memory_limit_mb);
 
@@ -82,7 +82,7 @@ impl EnhancedStandardScaler {
         for (start_idx, end_idx) in chunker.chunk_indices(n_samples, n_features) {
             let chunk = x.slice(ndarray::s![start_idx..end_idx, ..]);
 
-            for (i, row) in chunk.rows().into_iter().enumerate() {
+            for (_i, row) in chunk.rows().into_iter().enumerate() {
                 count += 1;
                 let delta = &row - &means;
                 means = &means + &delta / count as f64;
@@ -154,7 +154,7 @@ impl EnhancedStandardScaler {
         let means = x.mean_axis(Axis(0)).unwrap();
 
         // SIMD-optimized variance computation
-        let (n_samples, n_features) = x.dim();
+        let (_n_samples, n_features) = x.dim();
         let mut variances = Array1::zeros(n_features);
 
         // Process in SIMD-friendly chunks
@@ -242,7 +242,7 @@ impl EnhancedStandardScaler {
             .ok_or_else(|| TransformError::NotFitted("StandardScaler not fitted".to_string()))?;
 
         check_not_empty(x, "x")?;
-        
+
         // Check finite values
         for &val in x.iter() {
             if !val.is_finite() {
@@ -252,7 +252,7 @@ impl EnhancedStandardScaler {
             }
         }
 
-        let (n_samples, n_features) = x.dim();
+        let (_n_samples, n_features) = x.dim();
 
         if n_features != means.len() {
             return Err(TransformError::InvalidInput(format!(
@@ -278,7 +278,7 @@ impl EnhancedStandardScaler {
         x: &ArrayView2<f64>,
         means: &Array1<f64>,
         stds: &Array1<f64>,
-        chunk_size: usize,
+        _chunk_size: usize,
     ) -> Result<Array2<f64>> {
         let (n_samples, n_features) = x.dim();
         let mut result = Array2::zeros((n_samples, n_features));
@@ -309,13 +309,14 @@ impl EnhancedStandardScaler {
         let mut result = Array2::zeros((n_samples, n_features));
 
         // Process each column separately to handle broadcasting
-        for (j, ((mean, std), mut col)) in means.iter()
+        for (j, ((mean, std), col)) in means
+            .iter()
             .zip(stds.iter())
             .zip(result.columns_mut())
             .enumerate()
         {
             let x_col = x.column(j);
-            par_azip!((mut out in col, &inp in x_col) {
+            par_azip!((out in col, &inp in x_col) {
                 *out = (inp - mean) / std;
             });
         }
@@ -417,7 +418,7 @@ impl EnhancedPCA {
     /// Fit the PCA model with adaptive processing
     pub fn fit(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         check_not_empty(x, "x")?;
-        
+
         // Check finite values
         for &val in x.iter() {
             if !val.is_finite() {
@@ -465,7 +466,7 @@ impl EnhancedPCA {
 
         // Initialize running statistics
         let mut running_mean = Array1::<f64>::zeros(n_features);
-        let mut running_var = Array1::<f64>::zeros(n_features);
+        let _running_var = Array1::<f64>::zeros(n_features);
         let mut n_samples_seen = 0;
 
         // First pass: compute mean
@@ -499,7 +500,7 @@ impl EnhancedPCA {
         &mut self,
         x: &ArrayView2<f64>,
         mean: &Array1<f64>,
-        chunk_size: usize,
+        _chunk_size: usize,
     ) -> Result<()> {
         let (n_samples, n_features) = x.dim();
         let chunker = DataChunker::new(self.memory_limit_mb);
@@ -577,7 +578,7 @@ impl EnhancedPCA {
         n_samples_seen: usize,
         forgetting_factor: f64,
     ) -> Result<()> {
-        let (chunk_rows, n_features) = new_chunk.dim();
+        let (chunk_rows, _n_features) = new_chunk.dim();
 
         if n_samples_seen == 0 {
             // Initialize with first chunk using standard SVD
@@ -810,7 +811,7 @@ impl EnhancedPCA {
             eigenvecs.column_mut(k).assign(&v);
 
             // Deflate the matrix for next eigenvalue (simplified)
-            let vv = &v
+            let _vv = &v
                 .view()
                 .insert_axis(Axis(1))
                 .dot(&v.view().insert_axis(Axis(0)));
@@ -824,7 +825,7 @@ impl EnhancedPCA {
     /// This implements the randomized SVD algorithm for efficient PCA on large datasets
     /// Based on "Finding structure with randomness" by Halko, Martinsson & Tropp (2011)
     fn fit_randomized_pca(&mut self, x: &ArrayView2<f64>) -> Result<()> {
-        let (n_samples, n_features) = x.dim();
+        let (_n_samples, _n_features) = x.dim();
 
         // Center the data if requested
         let mean = if self.center {
@@ -1016,7 +1017,7 @@ impl EnhancedPCA {
             .ok_or_else(|| TransformError::NotFitted("PCA not fitted".to_string()))?;
 
         check_not_empty(x, "x")?;
-        
+
         // Check finite values
         for &val in x.iter() {
             if !val.is_finite() {
@@ -1108,7 +1109,8 @@ impl EnhancedPCA {
         // Start with a random vector
         use rand::Rng;
         let mut rng = rand::rng();
-        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(0.0..1.0) - 0.5);
+        let mut vector: Array1<f64> =
+            Array1::from_shape_fn(n, |_| rng.random_range(0.0..1.0) - 0.5);
 
         // Normalize the initial vector
         let norm = vector.dot(&vector).sqrt();
@@ -1166,6 +1168,7 @@ impl EnhancedPCA {
     }
 
     /// Alternative eigendecomposition using QR algorithm for smaller matrices
+    #[allow(dead_code)]
     fn qr_eigendecomposition(
         &self,
         matrix: &Array2<f64>,
@@ -1210,7 +1213,7 @@ impl EnhancedPCA {
         }
 
         // Extract eigenvalues from diagonal
-        let mut eigenvals: Vec<f64> = (0..n).map(|i| a[[i, i]]).collect();
+        let eigenvals: Vec<f64> = (0..n).map(|i| a[[i, i]]).collect();
         let eigenvecs = q_total;
 
         // Sort eigenvalues and corresponding eigenvectors in descending order
@@ -1234,6 +1237,7 @@ impl EnhancedPCA {
     }
 
     /// QR decomposition using Gram-Schmidt process
+    #[allow(dead_code)]
     fn qr_decomposition(&self, matrix: &Array2<f64>) -> Result<(Array2<f64>, Array2<f64>)> {
         let (m, n) = matrix.dim();
         let mut q = Array2::zeros((m, n));
@@ -1896,7 +1900,7 @@ impl UltraFastPCA {
     /// Fit ultra-fast PCA with advanced algorithms
     pub fn fit(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         check_not_empty(x, "x")?;
-        
+
         // Check finite values
         for &val in x.iter() {
             if !val.is_finite() {
@@ -2154,7 +2158,7 @@ impl UltraFastPCA {
             .ok_or_else(|| TransformError::NotFitted("UltraFastPCA not fitted".to_string()))?;
 
         check_not_empty(x, "x")?;
-        
+
         // Check finite values
         for &val in x.iter() {
             if !val.is_finite() {
@@ -2858,12 +2862,19 @@ pub struct UltraFastMemoryPool {
 /// Memory pool statistics for performance monitoring
 #[derive(Debug, Clone)]
 pub struct PoolStats {
+    /// Total number of memory allocations
     pub total_allocations: usize,
+    /// Number of successful cache hits
     pub pool_hits: usize,
+    /// Number of cache misses
     pub pool_misses: usize,
+    /// Total memory usage in MB
     pub total_memory_mb: f64,
+    /// Peak memory usage in MB
     pub peak_memory_mb: f64,
+    /// Current number of matrices in pool
     pub current_matrices: usize,
+    /// Current number of vectors in pool
     pub current_vectors: usize,
 }
 
@@ -3068,7 +3079,9 @@ pub struct UltraFastPCA {
 /// Cached PCA computation results
 #[derive(Clone)]
 struct CachedPCAResult {
+    #[allow(dead_code)]
     components: Array2<f64>,
+    #[allow(dead_code)]
     explained_variance_ratio: Array1<f64>,
     data_hash: u64,
     timestamp: std::time::Instant,
@@ -3076,7 +3089,7 @@ struct CachedPCAResult {
 
 impl UltraFastPCA {
     /// Create a new ultra-fast PCA with memory pooling
-    pub fn new(n_components: usize, n_samples_hint: usize, n_features_hint: usize) -> Self {
+    pub fn new(n_components: usize, _n_samples_hint: usize, _n_features_hint: usize) -> Self {
         let enhanced_pca = EnhancedPCA::new(n_components, true, 1024).unwrap();
         let memory_pool = UltraFastMemoryPool::new(
             100, // max matrices per size

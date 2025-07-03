@@ -260,7 +260,7 @@ impl DeepWalk {
 
         // Training loop
         for epoch in 0..self.n_epochs {
-            let mut total_loss = 0.0;
+            let mut _total_loss = 0.0;
             let lr = self.learning_rate * (1.0 - epoch as f64 / self.n_epochs as f64);
 
             for walk in walks {
@@ -293,7 +293,7 @@ impl DeepWalk {
                             .row_mut(context)
                             .scaled_add(1.0, &context_grad);
 
-                        total_loss += -(sigmoid.ln());
+                        _total_loss += -(sigmoid.ln());
 
                         // Negative samples
                         for _ in 0..self.negative_samples {
@@ -317,7 +317,7 @@ impl DeepWalk {
                                 .row_mut(negative)
                                 .scaled_add(1.0, &neg_grad);
 
-                            total_loss += -((1.0 - neg_sigmoid).ln());
+                            _total_loss += -((1.0 - neg_sigmoid).ln());
                         }
                     }
                 }

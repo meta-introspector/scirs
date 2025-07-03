@@ -12,7 +12,7 @@ use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::Float;
 
 use crate::error::{OptimError, Result};
-use crate::gpu::{GpuOptimizerConfig, GpuOptimError};
+use crate::gpu::{GpuOptimError, GpuOptimizerConfig};
 
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBackend, GpuContext};
@@ -464,10 +464,10 @@ impl GpuOptimizerBenchmark {
                         ) {
                             Ok(result) => {
                                 self.results.insert(test_id.clone(), result);
-                                println!("✓ Completed benchmark: {}", test_id);
+                                println!("✓ Completed benchmark: {test_id}");
                             }
                             Err(e) => {
-                                eprintln!("✗ Failed benchmark {}: {}", test_id, e);
+                                eprintln!("✗ Failed benchmark {test_id}: {e}");
                             }
                         }
                     }
@@ -488,7 +488,7 @@ impl GpuOptimizerBenchmark {
         problem_size: usize,
         data_generator: &dyn DataGenerator,
     ) -> Result<BenchmarkResult> {
-        println!("Running benchmark: {}", test_id);
+        println!("Running benchmark: {test_id}");
 
         // Generate test data
         let (params, gradients) = data_generator.generate(problem_size)?;
@@ -1298,15 +1298,15 @@ pub fn quick_performance_comparison() -> Result<()> {
     );
 
     for (backend, speedup) in &summary.backend_comparisons {
-        println!("{:?}: {:.2}x average speedup", backend, speedup);
+        println!("{backend:?}: {speedup:.2}x average speedup");
     }
 
     for insight in &summary.performance_insights {
-        println!("📊 {}", insight);
+        println!("📊 {insight}");
     }
 
     for recommendation in &summary.recommendations {
-        println!("💡 {}", recommendation);
+        println!("💡 {recommendation}");
     }
 
     Ok(())

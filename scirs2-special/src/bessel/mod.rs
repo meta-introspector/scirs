@@ -192,7 +192,10 @@
 // No imports needed at the module level
 
 // Re-export all public functions
-pub use self::derivatives::{j0_prime, j1_prime, jn_prime, jv_prime, y0_prime, y1_prime, yn_prime};
+pub use self::derivatives::{
+    h1vp, h2vp, i0_prime, i1_prime, iv_prime, ivp, j0_prime, j1_prime, jn_prime, jv_prime, jvp,
+    k0_prime, k1_prime, kv_prime, kvp, y0_prime, y1_prime, yn_prime, yvp,
+};
 pub use self::first_kind::{j0, j0e, j1, j1e, jn, jne, jv, jve};
 pub use self::modified::{i0, i0e, i1, i1e, iv, ive, k0, k0e, k1, k1e, kv, kve};
 pub use self::second_kind::{y0, y0e, y1, y1e, yn, yne};

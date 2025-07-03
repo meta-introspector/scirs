@@ -16,9 +16,9 @@
 //! - **Collaborative Features**: Real-time sharing and annotation capabilities
 //! - **Accessibility Features**: Screen reader support and color-blind friendly palettes
 
+use crate::error::{Result, TimeSeriesError};
 use ndarray::{Array1, Array2};
 use std::collections::VecDeque;
-use crate::error::{Result, TimeSeriesError};
 
 /// Ultra-advanced plot configuration with AI assistance
 #[derive(Debug, Clone)]
@@ -26,25 +26,25 @@ pub struct UltraPlotConfig {
     /// Basic plot dimensions
     pub width: u32,
     pub height: u32,
-    
+
     /// Advanced rendering options
     pub renderer: RenderingEngine,
     pub anti_aliasing: bool,
     pub hardware_acceleration: bool,
     pub max_fps: u32,
-    
+
     /// AI-powered features
     pub enable_ai_insights: bool,
     pub auto_pattern_detection: bool,
     pub smart_axis_scaling: bool,
     pub intelligent_color_schemes: bool,
-    
+
     /// Accessibility features
     pub color_blind_friendly: bool,
     pub high_contrast_mode: bool,
     pub screen_reader_support: bool,
     pub keyboard_navigation: bool,
-    
+
     /// Performance optimization
     pub level_of_detail: LevelOfDetail,
     pub data_decimation: DataDecimationConfig,
@@ -215,16 +215,38 @@ impl Ultra3DVisualization {
             config,
             surfaces: Vec::new(),
             lighting: LightingConfig {
-                ambient_light: Color { r: 0.2, g: 0.2, b: 0.2, a: 1.0 },
+                ambient_light: Color {
+                    r: 0.2,
+                    g: 0.2,
+                    b: 0.2,
+                    a: 1.0,
+                },
                 point_lights: Vec::new(),
                 directional_light: Some(DirectionalLight {
-                    direction: Point3D { x: -1.0, y: -1.0, z: -1.0 },
-                    color: Color { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+                    direction: Point3D {
+                        x: -1.0,
+                        y: -1.0,
+                        z: -1.0,
+                    },
+                    color: Color {
+                        r: 1.0,
+                        g: 1.0,
+                        b: 1.0,
+                        a: 1.0,
+                    },
                     intensity: 0.8,
                 }),
             },
-            camera_position: Point3D { x: 0.0, y: 0.0, z: 10.0 },
-            camera_target: Point3D { x: 0.0, y: 0.0, z: 0.0 },
+            camera_position: Point3D {
+                x: 0.0,
+                y: 0.0,
+                z: 10.0,
+            },
+            camera_target: Point3D {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
         }
     }
 
@@ -241,7 +263,7 @@ impl Ultra3DVisualization {
                 let x = j as f32 - cols as f32 / 2.0;
                 let z = i as f32 - rows as f32 / 2.0;
                 let y = data[[i, j]] as f32;
-                
+
                 vertices.push(Point3D { x, y, z });
                 colors.push(self.value_to_color(data[[i, j]]));
             }
@@ -251,12 +273,12 @@ impl Ultra3DVisualization {
         for i in 0..(rows - 1) {
             for j in 0..(cols - 1) {
                 let base = (i * cols + j) as u32;
-                
+
                 // First triangle
                 indices.push(base);
                 indices.push(base + 1);
                 indices.push(base + cols as u32);
-                
+
                 // Second triangle
                 indices.push(base + 1);
                 indices.push(base + cols as u32 + 1);
@@ -265,7 +287,14 @@ impl Ultra3DVisualization {
         }
 
         // Calculate normals (simplified)
-        let normals = vertices.iter().map(|_| Point3D { x: 0.0, y: 1.0, z: 0.0 }).collect();
+        let normals = vertices
+            .iter()
+            .map(|_| Point3D {
+                x: 0.0,
+                y: 1.0,
+                z: 0.0,
+            })
+            .collect();
 
         self.surfaces.push(Surface3D {
             vertices,
@@ -285,29 +314,29 @@ impl Ultra3DVisualization {
             intensity,
             attenuation: (1.0, 0.1, 0.01), // Realistic attenuation
         };
-        
+
         self.lighting.point_lights.push(light);
     }
-    
+
     /// Export VR/AR compatible visualization
     pub fn export_vr_compatible(&self, path: &str) -> Result<()> {
         let vr_content = format!(
             "<html><head><title>Ultra VR Time Series</title></head><body><h1>VR Visualization with {} surfaces</h1></body></html>",
             self.surfaces.len()
         );
-        
+
         std::fs::write(path, vr_content)
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to write VR content: {}", e)))?;
-        
+
         Ok(())
     }
-    
+
     /// Convert data value to color
     fn value_to_color(&self, value: f64) -> Color {
         // Simple blue-to-red color mapping
         let normalized = (value + 1.0) / 2.0; // Assume values in [-1, 1]
         let clamped = normalized.max(0.0).min(1.0);
-        
+
         Color {
             r: clamped as f32,
             g: 0.0,
@@ -359,15 +388,12 @@ pub struct UltraExporter;
 
 impl UltraExporter {
     /// Export to interactive HTML with embedded JavaScript
-    pub fn export_interactive_html(
-        plot: &StreamingVisualization,
-        path: &str,
-    ) -> Result<()> {
+    pub fn export_interactive_html(plot: &StreamingVisualization, path: &str) -> Result<()> {
         let html_content = plot.generate_plot()?;
-        
+
         std::fs::write(path, html_content)
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to write HTML: {}", e)))?;
-        
+
         Ok(())
     }
 }

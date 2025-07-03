@@ -131,10 +131,12 @@ mod zeta;
 // Re-export common functions
 // Note: These functions require various trait bounds in their implementation,
 // including Float, FromPrimitive, Debug, AddAssign, etc.
-pub use airy::{ai, aip, bi, bip};
+pub use airy::{ai, ai_zeros, aie, aip, airye, bi, bi_zeros, bie, bip, itairy};
 // Complex Airy functions
 pub use airy::complex::{ai_complex, aip_complex, bi_complex, bip_complex};
 pub use bessel::{
+    h1vp,
+    h2vp,
     // Hankel functions
     hankel1,
     hankel1e,
@@ -142,11 +144,16 @@ pub use bessel::{
     hankel2e,
     // Regular Bessel functions
     i0,
+    // Derivatives of modified Bessel functions
+    i0_prime,
     i0e,
     i1,
+    i1_prime,
     i1e,
     iv,
+    iv_prime,
     ive,
+    ivp,
     j0,
     // Derivatives of Bessel functions
     j0_prime,
@@ -160,12 +167,18 @@ pub use bessel::{
     jv,
     jv_prime,
     jve,
+    // SciPy-compatible derivative interfaces
+    jvp,
     k0,
+    k0_prime,
     k0e,
     k1,
+    k1_prime,
     k1e,
     kv,
+    kv_prime,
     kve,
+    kvp,
     // Spherical Bessel functions
     spherical_jn,
     spherical_yn,
@@ -178,6 +191,7 @@ pub use bessel::{
     yn,
     yn_prime,
     yne,
+    yvp,
 };
 pub use bessel_zeros::{
     besselpoly,
@@ -200,8 +214,8 @@ pub use boxcox::{
 };
 pub use carlson::{elliprc, elliprd, elliprf, elliprf_array, elliprg, elliprj};
 pub use combinatorial::{
-    bell_number, bernoulli_number, binomial, double_factorial, euler_number, factorial, factorial2,
-    factorialk, perm, permutations, stirling2, stirling_first, stirling_second,
+    bell_number, bernoulli_number, binomial, comb, double_factorial, euler_number, factorial,
+    factorial2, factorialk, perm, permutations, stirling2, stirling_first, stirling_second,
 };
 pub use coulomb::{coulomb_f, coulomb_g, coulomb_h_minus, coulomb_h_plus, coulomb_phase_shift};
 pub use distributions::{
@@ -210,19 +224,33 @@ pub use distributions::{
     bdtr_array,
     bdtrc,
     bdtri,
+    bdtrik,
+    bdtrin,
+    // Beta distribution inverse functions
+    btdtria,
+    btdtrib,
     // Chi-square distribution
     chdtr,
     chdtrc,
+    chdtri,
     // F distribution
     fdtr,
     fdtrc,
+    fdtridfd,
     // Gamma distribution
     gdtr,
     gdtrc,
+    gdtria,
+    gdtrib,
+    gdtrix,
     kolmogi,
     // Kolmogorov-Smirnov distribution
     kolmogorov,
     log_ndtr,
+    // Negative binomial distribution
+    nbdtr,
+    nbdtrc,
+    nbdtri,
     // Normal distribution
     ndtr,
     ndtr_array,
@@ -231,6 +259,8 @@ pub use distributions::{
     // Poisson distribution
     pdtr,
     pdtrc,
+    pdtri,
+    pdtrik,
     // Student's t distribution
     stdtr,
 };
@@ -239,8 +269,8 @@ pub use ellipsoidal::{
     ellip_normal,
 };
 pub use elliptic::{
-    elliptic_e, elliptic_e_inc, elliptic_f, elliptic_k, elliptic_pi, jacobi_cn, jacobi_dn,
-    jacobi_sn,
+    ellipe, ellipeinc, ellipj, ellipk, ellipkinc, ellipkm1, elliptic_e, elliptic_e_inc, elliptic_f,
+    elliptic_k, elliptic_pi, jacobi_cn, jacobi_dn, jacobi_sn,
 };
 pub use fresnel::{
     fresnel, fresnel_complex, fresnelc, fresnels, mod_fresnel_minus, mod_fresnel_plus,
@@ -342,7 +372,9 @@ pub use voigt::{
     voigt_profile_normalized,
 };
 pub use wright::{wright_omega_optimized, wright_omega_real_optimized};
-pub use wright_bessel::{wright_bessel, wright_bessel_complex, wright_bessel_zeros};
+pub use wright_bessel::{
+    log_wright_bessel, wright_bessel, wright_bessel_complex, wright_bessel_zeros,
+};
 pub use wright_simplified::{wright_omega, wright_omega_real};
 pub use zeta::{hurwitz_zeta, zeta, zetac};
 

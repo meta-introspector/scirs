@@ -65,7 +65,7 @@ pub enum MetricsError {
     /// Memory allocation error
     #[error("Memory error: {0}")]
     MemoryError(String),
-    
+
     /// Index error
     #[error("Index error: {0}")]
     IndexError(String),

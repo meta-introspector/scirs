@@ -24,7 +24,8 @@ impl EvolutionaryStrategy {
     pub fn new(population_size: usize, dimensions: usize, sigma: f64) -> Self {
         let mut population = Vec::with_capacity(population_size);
         for _ in 0..population_size {
-            let individual = Array1::from_shape_fn(dimensions, |_| rand::random::<f64>() - 0.5);
+            let individual =
+                Array1::from_shape_fn(dimensions, |_| rand::rng().random::<f64>() - 0.5);
             population.push(individual);
         }
 
@@ -56,13 +57,13 @@ impl EvolutionaryStrategy {
 
         // Generate new population
         for i in elite_size..self.population_size {
-            let parent_idx = indices[rand::random::<usize>() % elite_size];
+            let parent_idx = indices[rand::rng().random::<usize>() % elite_size];
             let parent = &self.population[parent_idx];
 
             // Mutate
             let mut offspring = parent.clone();
             for j in 0..offspring.len() {
-                offspring[j] += self.sigma * (rand::random::<f64>() - 0.5);
+                offspring[j] += self.sigma * (rand::rng().random::<f64>() - 0.5);
             }
 
             self.population[i] = offspring;

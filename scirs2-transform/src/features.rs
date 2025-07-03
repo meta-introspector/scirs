@@ -772,7 +772,7 @@ where
     // Optionally standardize the transformed data
     if standardize {
         for j in 0..n_features {
-            let mut column_data: Vec<f64> = transformed.column(j).to_vec();
+            let column_data: Vec<f64> = transformed.column(j).to_vec();
             let mean = column_data.iter().sum::<f64>() / column_data.len() as f64;
             let variance = column_data.iter().map(|x| (x - mean).powi(2)).sum::<f64>()
                 / column_data.len() as f64;
@@ -956,7 +956,6 @@ fn golden_section_search(
 
     Ok((a + b) / 2.0)
 }
-
 
 /// Apply Yeo-Johnson transformation to a single value
 fn yeo_johnson_transform(x: f64, lambda: f64) -> f64 {

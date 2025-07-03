@@ -5530,9 +5530,7 @@ pub mod ultra_gpu_acceleration {
             buffer.in_use = false;
             let mut pool = self.buffer_pool.lock().unwrap();
 
-            pool.entry(buffer.size)
-                .or_default()
-                .push(buffer);
+            pool.entry(buffer.size).or_default().push(buffer);
         }
 
         /// Get memory usage statistics

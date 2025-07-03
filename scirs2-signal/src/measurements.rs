@@ -178,7 +178,7 @@ where
 /// let clean = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
 ///
 /// // Add noise to create signal_plus_noise
-/// let mut rng = rand::rng();
+/// let mut rng = rand::thread_rng();
 /// let noisy: Vec<f64> = clean.iter()
 ///     .map(|&x| x + rng.random_range(-0.1f64..0.1f64))
 ///     .collect();
@@ -455,7 +455,7 @@ mod tests {
         let noise_amplitude = 0.1; // -20 dB relative to signal
                                    // Using rand API that's compatible with 0.9.0
         use rand::Rng; // Import the Rng trait to access its methods
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let noisy: Vec<f64> = clean
             .iter()
             .map(|&x| x + noise_amplitude * (2.0 * PI * rng.random_range(0.0..1.0)).sin())

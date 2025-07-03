@@ -2247,8 +2247,7 @@ mod gpu_implementation {
         pub fn get_performance_analytics(&self) -> CoreResult<TensorCoreAnalytics> {
             let analytics_engine = self.analytics_engine.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire analytics engine lock: {}",
-                    e
+                    "Failed to acquire analytics engine lock: {e}"
                 )))
             })?;
 
@@ -2286,8 +2285,7 @@ mod gpu_implementation {
             // Get current power profile
             let monitoring = self.monitoring.read().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire monitoring lock: {}",
-                    e
+                    "Failed to acquire monitoring lock: {e}"
                 )))
             })?;
 
@@ -2296,7 +2294,7 @@ mod gpu_implementation {
             // Apply energy optimization strategies
             let optimization_result = self.apply_energy_optimizations(backend, &power_info)?;
 
-            println!("⚡ Energy optimization completed for {:?}:", backend);
+            println!("⚡ Energy optimization completed for {backend:?}:");
             println!(
                 "   - Power savings: {:.2}W",
                 optimization_result.power_savings_watts
@@ -2321,8 +2319,7 @@ mod gpu_implementation {
         ) -> CoreResult<Option<CachedConfiguration>> {
             let smart_cache = self.smart_cache.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire smart cache lock: {}",
-                    e
+                    "Failed to acquire smart cache lock: {e}"
                 )))
             })?;
 
@@ -2336,8 +2333,7 @@ mod gpu_implementation {
         ) -> CoreResult<OptimizedTensorOperation> {
             let mut ai_optimizer = self.ai_optimizer.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire AI optimizer lock: {}",
-                    e
+                    "Failed to acquire AI optimizer lock: {e}"
                 )))
             })?;
 
@@ -2351,8 +2347,7 @@ mod gpu_implementation {
         ) -> CoreResult<()> {
             let mut smart_cache = self.smart_cache.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire smart cache lock: {}",
-                    e
+                    "Failed to acquire smart cache lock: {e}"
                 )))
             })?;
 
@@ -2366,8 +2361,7 @@ mod gpu_implementation {
         ) -> CoreResult<()> {
             let mut analytics_engine = self.analytics_engine.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire analytics engine lock: {}",
-                    e
+                    "Failed to acquire analytics engine lock: {e}"
                 )))
             })?;
 
@@ -2428,8 +2422,7 @@ mod gpu_implementation {
         fn learn_from_tuning_result(&self, result: &TuningResult) -> CoreResult<()> {
             let mut ai_optimizer = self.ai_optimizer.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire AI optimizer lock: {}",
-                    e
+                    "Failed to acquire AI optimizer lock: {e}"
                 )))
             })?;
 
@@ -2444,8 +2437,7 @@ mod gpu_implementation {
         ) -> CoreResult<()> {
             let mut adaptive_scheduler = self.adaptive_scheduler.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire adaptive scheduler lock: {}",
-                    e
+                    "Failed to acquire adaptive scheduler lock: {e}"
                 )))
             })?;
 
@@ -2455,8 +2447,7 @@ mod gpu_implementation {
         fn initialize_monitoring(&self, backend: GpuBackend) -> CoreResult<()> {
             let mut monitoring = self.monitoring.write().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                    "Failed to acquire monitoring lock: {}",
-                    e
+                    "Failed to acquire monitoring lock: {e}"
                 )))
             })?;
 

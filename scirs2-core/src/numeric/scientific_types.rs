@@ -988,7 +988,7 @@ mod tests {
     #[test]
     fn test_quantity_display() {
         let length = Length::new(5.5);
-        let formatted = format!("{}", length);
+        let formatted = format!("{length}");
         assert!(formatted.contains("5.5"));
         assert!(formatted.contains("m"));
     }

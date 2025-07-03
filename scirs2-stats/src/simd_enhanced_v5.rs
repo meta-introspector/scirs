@@ -19,7 +19,7 @@ pub fn rolling_statistics_simd<F>(
     statistics: &[RollingStatistic],
 ) -> StatsResult<RollingStatsResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
     check_positive(window_size, "window_size")?;
@@ -116,7 +116,7 @@ fn compute_window_statistics<F>(
     results: &mut RollingStatsResult<F>,
     window_idx: usize,
 ) where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display,
 {
     let window_size = window.len();
     let window_size_f = F::from(window_size).unwrap();
@@ -283,7 +283,7 @@ pub fn matrix_statistics_simd<F>(
     operations: &[MatrixOperation],
 ) -> StatsResult<MatrixStatsResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
 
@@ -344,7 +344,7 @@ fn compute_column_wise_stats<F>(
     operations: &[MatrixOperation],
 ) -> StatsResult<MatrixStatsResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
 {
     let (n_rows, n_cols) = data.dim();
     let mut results = MatrixStatsResult::new_column_wise(n_cols, operations);
@@ -372,7 +372,7 @@ fn compute_row_wise_stats<F>(
     operations: &[MatrixOperation],
 ) -> StatsResult<MatrixStatsResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
 {
     let (n_rows, n_cols) = data.dim();
     let mut results = MatrixStatsResult::new_row_wise(n_rows, operations);
@@ -400,7 +400,7 @@ fn compute_global_matrix_stats<F>(
     operations: &[MatrixOperation],
 ) -> StatsResult<MatrixStatsResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
 {
     let mut results = MatrixStatsResult::new_global(operations);
 
@@ -439,7 +439,7 @@ fn compute_column_statistics<F>(
     results: &mut MatrixStatsResult<F>,
     col_idx: usize,
 ) where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display,
 {
     for operation in operations {
         compute_vector_operation(column, operation, results, col_idx);
@@ -452,7 +452,7 @@ fn compute_row_statistics<F>(
     results: &mut MatrixStatsResult<F>,
     row_idx: usize,
 ) where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display,
 {
     for operation in operations {
         compute_vector_operation(row, operation, results, row_idx);
@@ -465,7 +465,7 @@ fn compute_vector_operation<F>(
     results: &mut MatrixStatsResult<F>,
     idx: usize,
 ) where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display,
 {
     let n = data.len();
     let n_f = F::from(n).unwrap();
@@ -723,7 +723,7 @@ pub fn bootstrap_confidence_interval_simd<F>(
     random_seed: Option<u64>,
 ) -> StatsResult<BootstrapResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
     check_positive(n_bootstrap, "n_bootstrap")?;
@@ -748,7 +748,7 @@ where
 
     // Parallel bootstrap sampling for large numbers of bootstrap samples
     if n_bootstrap > 1000 {
-        let seeds: Vec<u64> = (0..n_bootstrap).map(|_| rng.gen()).collect();
+        let seeds: Vec<u64> = (0..n_bootstrap).map(|_| rng.random()).collect();
 
         parallel_for_indexed(0..n_bootstrap, |chunk, chunk_start| {
             let mut local_rng = StdRng::seed_from_u64(seeds[chunk_start]);
@@ -844,7 +844,7 @@ where
 
 fn compute_bootstrap_statistic<F>(data: &ArrayView1<F>, statistic: &BootstrapStatistic) -> F
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display,
 {
     let n = data.len();
     let n_f = F::from(n).unwrap();
@@ -1065,7 +1065,7 @@ pub fn kernel_density_estimation_simd<F>(
     kernel: KernelType,
 ) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
     check_array_finite(eval_points, "eval_points")?;

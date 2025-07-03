@@ -908,7 +908,7 @@ mod tests {
         });
 
         // Add noise
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let noisy_image = clean_image.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
 
         let config = AdvancedWaveletConfig::default();

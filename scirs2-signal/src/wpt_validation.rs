@@ -757,14 +757,14 @@ fn analyze_best_basis_stability(
 
     // Test stability under noise
     let mut noise_stability_scores = Vec::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for _ in 0..5 {
         // Add small amount of noise
         let noise_level = 0.01 * compute_energy(signal).sqrt() / signal.len() as f64;
         let noisy_signal: Vec<f64> = signal
             .iter()
-            .map(|&x| x + noise_level * rng.gen_range(-1.0..1.0))
+            .map(|&x| x + noise_level * rng.random_range(-1.0..1.0))
             .collect();
 
         // Decompose noisy signal
@@ -1104,7 +1104,7 @@ where
     let signal_f64: Vec<f64> = signal.iter().map(|&x| NumCast::from(x).unwrap()).collect();
 
     // Analyze signal characteristics
-    let signal_analysis = analyze_signal_characteristics(&signal_f64)?;
+    let _signal_analysis = analyze_signal_characteristics(&signal_f64)?;
 
     // Adjust validation based on signal type
     match signal_type {

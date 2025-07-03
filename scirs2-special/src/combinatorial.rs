@@ -694,6 +694,14 @@ fn efficient_binomial(n: u32, k: u32) -> SpecialResult<f64> {
     }
 }
 
+/// Combination function - alias for binomial coefficient
+///
+/// This function provides SciPy compatibility for `comb(n, k)`
+/// which is the number of ways to choose k items from n items.
+pub fn comb(n: u32, k: u32) -> SpecialResult<f64> {
+    binomial(n, k)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

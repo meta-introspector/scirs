@@ -9,8 +9,9 @@ use crate::auto_feature_engineering::{
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2};
 use rand::Rng;
+// use scirs2_core::parallel_ops::*; // Currently unused
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_not_empty, check_positive};
-use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, VecDeque};
 
 /// Spiking neuron model for neuromorphic processing
@@ -152,6 +153,7 @@ pub struct NeuromorphicAdaptationNetwork {
     /// Network connectivity matrix
     connectivity: Array2<f64>,
     /// Homeostatic scaling factors
+    #[allow(dead_code)]
     homeostatic_scaling: Array1<f64>,
     /// Global time step
     time_step: f64,
@@ -508,6 +510,7 @@ pub struct NeuromorphicMemorySystem {
     /// Semantic memory for transformation concepts
     semantic_memory: HashMap<String, SemanticConcept>,
     /// Working memory for current processing
+    #[allow(dead_code)]
     working_memory: VecDeque<TransformationConfig>,
     /// Memory consolidation threshold
     consolidation_threshold: f64,
@@ -525,6 +528,7 @@ pub struct TransformationEpisode {
     /// Performance outcome
     outcome: f64,
     /// Timestamp of episode
+    #[allow(dead_code)]
     timestamp: u64,
     /// Memory strength
     memory_strength: f64,
@@ -534,12 +538,14 @@ pub struct TransformationEpisode {
 #[derive(Debug, Clone)]
 pub struct SemanticConcept {
     /// Concept name
+    #[allow(dead_code)]
     name: String,
     /// Associated transformation types
     transformation_types: Vec<TransformationType>,
     /// Concept activation strength
     activation: f64,
     /// Links to other concepts
+    #[allow(dead_code)]
     associations: HashMap<String, f64>,
 }
 
@@ -683,10 +689,12 @@ impl NeuromorphicMemorySystem {
 
         // Update semantic concepts based on patterns
         // First compute all pattern matches to avoid borrowing conflicts
-        let pattern_matches: Vec<(String, f64)> = self.semantic_memory
+        let pattern_matches: Vec<(String, f64)> = self
+            .semantic_memory
             .iter()
             .map(|(concept_name, concept)| {
-                let pattern_match = self.compute_pattern_match(&sequence_pattern, &concept.transformation_types);
+                let pattern_match =
+                    self.compute_pattern_match(&sequence_pattern, &concept.transformation_types);
                 (concept_name.clone(), pattern_match)
             })
             .collect();
@@ -695,7 +703,8 @@ impl NeuromorphicMemorySystem {
         for (concept_name, pattern_match) in pattern_matches {
             if pattern_match > 0.5 {
                 if let Some(concept) = self.semantic_memory.get_mut(&concept_name) {
-                    concept.activation = (concept.activation + episode.outcome * pattern_match) / 2.0;
+                    concept.activation =
+                        (concept.activation + episode.outcome * pattern_match) / 2.0;
                 }
             }
         }
@@ -1112,7 +1121,12 @@ impl UltraThinkNeuromorphicProcessor {
 
         // ✅ ULTRATHINK OPTIMIZATION: SIMD normalization
         let features = Array1::from_vec(raw_features);
-        let normalized = f64::simd_normalize(&features.view())?;
+        let norm = f64::simd_norm(&features.view());
+        let normalized = if norm > 1e-8 {
+            f64::simd_scalar_mul(&features.view(), 1.0 / norm)
+        } else {
+            features.clone()
+        };
 
         Ok(normalized)
     }
@@ -1133,12 +1147,12 @@ impl UltraThinkNeuromorphicProcessor {
                 self.compute_layer_spikes_simd(&self.network.output_neurons, &hidden_spikes)?;
 
             // ✅ ULTRATHINK OPTIMIZATION: SIMD accumulation
-            f64::simd_add_inplace(&mut output_accumulator.view_mut(), &output_spikes.view())?;
+            output_accumulator = f64::simd_add(&output_accumulator.view(), &output_spikes.view());
         }
 
         // ✅ ULTRATHINK OPTIMIZATION: SIMD normalization
         let max_spikes = simulation_steps as f64;
-        f64::simd_scale_inplace(&mut output_accumulator.view_mut(), 1.0 / max_spikes)?;
+        output_accumulator = f64::simd_scalar_mul(&output_accumulator.view(), 1.0 / max_spikes);
 
         Ok(output_accumulator)
     }

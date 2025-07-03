@@ -363,7 +363,7 @@ impl LLE {
         let training_embedding = self.embedding.as_ref().unwrap();
 
         let (n_new, n_features) = x_new.dim();
-        let (n_training, _) = training_data.dim();
+        let (_n_training, _) = training_data.dim();
 
         if n_features != training_data.ncols() {
             return Err(TransformError::InvalidInput(format!(

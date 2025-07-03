@@ -8,9 +8,8 @@
 //! - Triplet STDP rules
 //! - Calcium-based synaptic dynamics
 
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{Array1, ArrayView1};
 use scirs2_core::error::CoreResult as Result;
-use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::VecDeque;
 
 /// Ultra-Advanced Multi-Timescale STDP with Metaplasticity
@@ -618,7 +617,7 @@ impl UltraSTDPNetwork {
             // For first layer, use parameter values to determine spike probability
             for i in 0..layer.size.min(params.len()) {
                 let spike_prob = ((params[i] + 1.0) / 2.0).max(0.0).min(1.0);
-                layer_spikes[i] = rand::random::<f64>() < spike_prob * 0.1;
+                layer_spikes[i] = rand::rng().random::<f64>() < spike_prob * 0.1;
             }
 
             spike_patterns.push(layer_spikes);
@@ -803,8 +802,8 @@ where
 
         // More sophisticated spike-based encoding
         for (i, rule) in stdp_rules.iter_mut().enumerate() {
-            let pre_spike = rand::random::<f64>() < (params[i].abs() * 0.1).min(0.5);
-            let post_spike = improvement > 0.0 && rand::random::<f64>() < 0.2;
+            let pre_spike = rand::rng().random::<f64>() < (params[i].abs() * 0.1).min(0.5);
+            let post_spike = improvement > 0.0 && rand::rng().random::<f64>() < 0.2;
 
             params[i] = rule.update_weight(params[i], pre_spike, post_spike, 0.001);
         }

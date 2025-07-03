@@ -1555,7 +1555,7 @@ let mut optimizer = factory.create_optimizer(config)?;
 
 ## Error Handling
 
-The plugin uses the standard `Result<T, OptimError>` pattern:
+The plugin uses the standard `Result<T>` pattern:
 
 ```rust
 match optimizer.step(&params, &gradients) {{

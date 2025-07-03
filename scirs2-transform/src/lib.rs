@@ -164,9 +164,7 @@ pub use out_of_core::{
     csv_chunks, ChunkedArrayReader, ChunkedArrayWriter, OutOfCoreConfig, OutOfCoreNormalizer,
     OutOfCoreTransformer,
 };
-pub use performance::{
-    EnhancedPCA, EnhancedStandardScaler, UltraFastMemoryPool, UltraFastPCA,
-};
+pub use performance::{EnhancedPCA, EnhancedStandardScaler, UltraFastMemoryPool, UltraFastPCA};
 pub use streaming::{
     OutlierMethod, StreamingFeatureSelector, StreamingMinMaxScaler, StreamingOutlierDetector,
     StreamingPCA, StreamingQuantileTracker, StreamingStandardScaler, StreamingTransformer,

@@ -293,7 +293,7 @@ pub fn linkage<
     if n_samples > 10000 {
         // Hierarchical clustering on large datasets can be very memory-intensive
         // and slow. We'll add a warning here.
-        eprintln!("Warning: Performing hierarchical clustering on {} samples. This may be slow and memory-intensive.", n_samples);
+        eprintln!("Warning: Performing hierarchical clustering on {n_samples} samples. This may be slow and memory-intensive.");
     }
 
     // Use optimized Ward's method if requested
@@ -370,7 +370,7 @@ pub fn parallel_linkage<
     if n_samples > 10000 {
         // Hierarchical clustering on large datasets can be very memory-intensive
         // and slow. We'll add a warning here.
-        eprintln!("Warning: Performing parallel hierarchical clustering on {} samples. This may still be slow for very large datasets.", n_samples);
+        eprintln!("Warning: Performing parallel hierarchical clustering on {n_samples} samples. This may still be slow for very large datasets.");
     }
 
     // Use optimized Ward's method if requested (already parallel-optimized)

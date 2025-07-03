@@ -5,15 +5,15 @@
 //! actual plotting backends to create publication-ready plots.
 
 use crate::error::{ClusteringError, Result};
+use crate::hierarchy::visualization::{create_dendrogram_plot, DendrogramConfig, DendrogramPlot};
 use crate::visualization::{ScatterPlot2D, ScatterPlot3D, VisualizationConfig};
-use crate::hierarchy::visualization::{DendrogramConfig, DendrogramPlot, create_dendrogram_plot};
 use ndarray::{Array1, Array2, ArrayView2};
 use std::path::Path;
 
-#[cfg(feature = "plotters")]
-use plotters::prelude::*;
 #[cfg(feature = "egui")]
 use egui::*;
+#[cfg(feature = "plotters")]
+use plotters::prelude::*;
 
 /// Plot output format
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -72,7 +72,7 @@ pub fn plot_dendrogram<P: AsRef<Path>>(
     output_config: &PlotOutput,
 ) -> Result<()> {
     let path = output_path.as_ref();
-    
+
     match output_config.format {
         PlotFormat::PNG => plot_dendrogram_png(dendrogram_plot, path, output_config),
         PlotFormat::SVG => plot_dendrogram_svg(dendrogram_plot, path, output_config),
@@ -88,16 +88,16 @@ fn plot_dendrogram_png<P: AsRef<Path>>(
     output_path: P,
     output_config: &PlotOutput,
 ) -> Result<()> {
-    let root = BitMapBackend::new(&output_path, output_config.dimensions)
-        .into_drawing_area();
-    root.fill(&WHITE)
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e)))?;
+    let root = BitMapBackend::new(&output_path, output_config.dimensions).into_drawing_area();
+    root.fill(&WHITE).map_err(|e| {
+        ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e))
+    })?;
 
     let bounds = dendrogram_plot.bounds;
     let margin = 0.1;
     let x_range = bounds.1 - bounds.0;
     let y_range = bounds.3 - bounds.2;
-    
+
     let mut chart = ChartBuilder::on(&root)
         .caption(
             output_config.title.as_deref().unwrap_or("Dendrogram"),
@@ -115,7 +115,13 @@ fn plot_dendrogram_png<P: AsRef<Path>>(
     // Configure chart
     chart
         .configure_mesh()
-        .x_desc(output_config.axis_labels.0.as_deref().unwrap_or("Sample Index"))
+        .x_desc(
+            output_config
+                .axis_labels
+                .0
+                .as_deref()
+                .unwrap_or("Sample Index"),
+        )
         .y_desc(output_config.axis_labels.1.as_deref().unwrap_or("Distance"))
         .draw()
         .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw mesh: {}", e)))?;
@@ -124,31 +130,38 @@ fn plot_dendrogram_png<P: AsRef<Path>>(
     for (i, branch) in dendrogram_plot.branches.iter().enumerate() {
         let color_hex = &dendrogram_plot.colors[i];
         let color = parse_hex_color_plotters(color_hex).unwrap_or(BLACK);
-        
+
         chart
             .draw_series(std::iter::once(PathElement::new(
-                vec![(branch.start.0, branch.start.1), (branch.end.0, branch.end.1)],
+                vec![
+                    (branch.start.0, branch.start.1),
+                    (branch.end.0, branch.end.1),
+                ],
                 color.stroke_width(2),
             )))
-            .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw branches: {}", e)))?;
+            .map_err(|e| {
+                ClusteringError::ComputationError(format!("Failed to draw branches: {}", e))
+            })?;
     }
 
     // Draw leaf labels
     for leaf in &dendrogram_plot.leaves {
         let text_style = ("sans-serif", 12).into_font().color(&BLACK);
-        
+
         chart
             .draw_series(std::iter::once(Text::new(
                 leaf.label.clone(),
                 (leaf.position.0, leaf.position.1),
                 text_style,
             )))
-            .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw labels: {}", e)))?;
+            .map_err(|e| {
+                ClusteringError::ComputationError(format!("Failed to draw labels: {}", e))
+            })?;
     }
 
     root.present()
         .map_err(|e| ClusteringError::ComputationError(format!("Failed to save plot: {}", e)))?;
-    
+
     Ok(())
 }
 
@@ -158,16 +171,16 @@ fn plot_dendrogram_svg<P: AsRef<Path>>(
     output_path: P,
     output_config: &PlotOutput,
 ) -> Result<()> {
-    let root = SVGBackend::new(&output_path, output_config.dimensions)
-        .into_drawing_area();
-    root.fill(&WHITE)
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e)))?;
+    let root = SVGBackend::new(&output_path, output_config.dimensions).into_drawing_area();
+    root.fill(&WHITE).map_err(|e| {
+        ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e))
+    })?;
 
     let bounds = dendrogram_plot.bounds;
     let margin = 0.1;
     let x_range = bounds.1 - bounds.0;
     let y_range = bounds.3 - bounds.2;
-    
+
     let mut chart = ChartBuilder::on(&root)
         .caption(
             output_config.title.as_deref().unwrap_or("Dendrogram"),
@@ -185,7 +198,13 @@ fn plot_dendrogram_svg<P: AsRef<Path>>(
     // Configure chart
     chart
         .configure_mesh()
-        .x_desc(output_config.axis_labels.0.as_deref().unwrap_or("Sample Index"))
+        .x_desc(
+            output_config
+                .axis_labels
+                .0
+                .as_deref()
+                .unwrap_or("Sample Index"),
+        )
         .y_desc(output_config.axis_labels.1.as_deref().unwrap_or("Distance"))
         .draw()
         .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw mesh: {}", e)))?;
@@ -194,31 +213,38 @@ fn plot_dendrogram_svg<P: AsRef<Path>>(
     for (i, branch) in dendrogram_plot.branches.iter().enumerate() {
         let color_hex = &dendrogram_plot.colors[i];
         let color = parse_hex_color_plotters(color_hex).unwrap_or(BLACK);
-        
+
         chart
             .draw_series(std::iter::once(PathElement::new(
-                vec![(branch.start.0, branch.start.1), (branch.end.0, branch.end.1)],
+                vec![
+                    (branch.start.0, branch.start.1),
+                    (branch.end.0, branch.end.1),
+                ],
                 color.stroke_width(2),
             )))
-            .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw branches: {}", e)))?;
+            .map_err(|e| {
+                ClusteringError::ComputationError(format!("Failed to draw branches: {}", e))
+            })?;
     }
 
     // Draw leaf labels
     for leaf in &dendrogram_plot.leaves {
         let text_style = ("sans-serif", 12).into_font().color(&BLACK);
-        
+
         chart
             .draw_series(std::iter::once(Text::new(
                 leaf.label.clone(),
                 (leaf.position.0, leaf.position.1),
                 text_style,
             )))
-            .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw labels: {}", e)))?;
+            .map_err(|e| {
+                ClusteringError::ComputationError(format!("Failed to draw labels: {}", e))
+            })?;
     }
 
     root.present()
         .map_err(|e| ClusteringError::ComputationError(format!("Failed to save plot: {}", e)))?;
-    
+
     Ok(())
 }
 
@@ -230,7 +256,7 @@ pub fn plot_scatter_2d<P: AsRef<Path>>(
     output_config: &PlotOutput,
 ) -> Result<()> {
     let path = output_path.as_ref();
-    
+
     match output_config.format {
         PlotFormat::PNG => plot_scatter_2d_png(scatter_plot, path, output_config),
         PlotFormat::SVG => plot_scatter_2d_svg(scatter_plot, path, output_config),
@@ -246,19 +272,22 @@ fn plot_scatter_2d_png<P: AsRef<Path>>(
     output_path: P,
     output_config: &PlotOutput,
 ) -> Result<()> {
-    let root = BitMapBackend::new(&output_path, output_config.dimensions)
-        .into_drawing_area();
-    root.fill(&WHITE)
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e)))?;
+    let root = BitMapBackend::new(&output_path, output_config.dimensions).into_drawing_area();
+    root.fill(&WHITE).map_err(|e| {
+        ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e))
+    })?;
 
     let (min_x, max_x, min_y, max_y) = scatter_plot.bounds;
     let margin = 0.1;
     let x_range = max_x - min_x;
     let y_range = max_y - min_y;
-    
+
     let mut chart = ChartBuilder::on(&root)
         .caption(
-            output_config.title.as_deref().unwrap_or("Cluster Visualization"),
+            output_config
+                .title
+                .as_deref()
+                .unwrap_or("Cluster Visualization"),
             ("sans-serif", 30),
         )
         .margin(20)
@@ -284,13 +313,15 @@ fn plot_scatter_2d_png<P: AsRef<Path>>(
         let y = point[1];
         let color_hex = &scatter_plot.colors[i];
         let size = scatter_plot.sizes[i] as i32;
-        
+
         // Parse hex color
         let color = parse_hex_color_plotters(color_hex).unwrap_or(RED);
-        
+
         chart
             .draw_series(std::iter::once(Circle::new((x, y), size, color.filled())))
-            .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw points: {}", e)))?;
+            .map_err(|e| {
+                ClusteringError::ComputationError(format!("Failed to draw points: {}", e))
+            })?;
     }
 
     // Plot centroids if available
@@ -298,16 +329,22 @@ fn plot_scatter_2d_png<P: AsRef<Path>>(
         for centroid in centroids.rows() {
             let x = centroid[0];
             let y = centroid[1];
-            
+
             chart
-                .draw_series(std::iter::once(Cross::new((x, y), 8, BLACK.stroke_width(3))))
-                .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw centroids: {}", e)))?;
+                .draw_series(std::iter::once(Cross::new(
+                    (x, y),
+                    8,
+                    BLACK.stroke_width(3),
+                )))
+                .map_err(|e| {
+                    ClusteringError::ComputationError(format!("Failed to draw centroids: {}", e))
+                })?;
         }
     }
 
     root.present()
         .map_err(|e| ClusteringError::ComputationError(format!("Failed to save plot: {}", e)))?;
-    
+
     Ok(())
 }
 
@@ -317,19 +354,22 @@ fn plot_scatter_2d_svg<P: AsRef<Path>>(
     output_path: P,
     output_config: &PlotOutput,
 ) -> Result<()> {
-    let root = SVGBackend::new(&output_path, output_config.dimensions)
-        .into_drawing_area();
-    root.fill(&WHITE)
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e)))?;
+    let root = SVGBackend::new(&output_path, output_config.dimensions).into_drawing_area();
+    root.fill(&WHITE).map_err(|e| {
+        ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e))
+    })?;
 
     let (min_x, max_x, min_y, max_y) = scatter_plot.bounds;
     let margin = 0.1;
     let x_range = max_x - min_x;
     let y_range = max_y - min_y;
-    
+
     let mut chart = ChartBuilder::on(&root)
         .caption(
-            output_config.title.as_deref().unwrap_or("Cluster Visualization"),
+            output_config
+                .title
+                .as_deref()
+                .unwrap_or("Cluster Visualization"),
             ("sans-serif", 30),
         )
         .margin(20)
@@ -355,13 +395,15 @@ fn plot_scatter_2d_svg<P: AsRef<Path>>(
         let y = point[1];
         let color_hex = &scatter_plot.colors[i];
         let size = scatter_plot.sizes[i] as i32;
-        
+
         // Parse hex color
         let color = parse_hex_color_plotters(color_hex).unwrap_or(RED);
-        
+
         chart
             .draw_series(std::iter::once(Circle::new((x, y), size, color.filled())))
-            .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw points: {}", e)))?;
+            .map_err(|e| {
+                ClusteringError::ComputationError(format!("Failed to draw points: {}", e))
+            })?;
     }
 
     // Plot centroids if available
@@ -369,16 +411,22 @@ fn plot_scatter_2d_svg<P: AsRef<Path>>(
         for centroid in centroids.rows() {
             let x = centroid[0];
             let y = centroid[1];
-            
+
             chart
-                .draw_series(std::iter::once(Cross::new((x, y), 8, BLACK.stroke_width(3))))
-                .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw centroids: {}", e)))?;
+                .draw_series(std::iter::once(Cross::new(
+                    (x, y),
+                    8,
+                    BLACK.stroke_width(3),
+                )))
+                .map_err(|e| {
+                    ClusteringError::ComputationError(format!("Failed to draw centroids: {}", e))
+                })?;
         }
     }
 
     root.present()
         .map_err(|e| ClusteringError::ComputationError(format!("Failed to save plot: {}", e)))?;
-    
+
     Ok(())
 }
 
@@ -438,38 +486,45 @@ impl eframe::App for InteractiveClusteringApp {
         egui::SidePanel::left("controls").show(ctx, |ui| {
             ui.heading("Clustering Visualization");
             ui.separator();
-            
+
             ui.checkbox(&mut self.show_centroids, "Show Centroids");
             ui.checkbox(&mut self.show_boundaries, "Show Boundaries");
             ui.checkbox(&mut self.show_legend, "Show Legend");
-            
+
             ui.separator();
             ui.label("Zoom:");
             ui.add(egui::Slider::new(&mut self.zoom, 0.1..=5.0));
-            
+
             if ui.button("Reset View").clicked() {
                 self.zoom = 1.0;
                 self.pan_offset = (0.0, 0.0);
             }
-            
+
             ui.separator();
             if let Some(ref plot) = self.scatter_plot_2d {
                 ui.label("Cluster Information:");
                 for legend_entry in &plot.legend {
                     let color = parse_hex_color(&legend_entry.color).unwrap_or([255, 0, 0]);
                     let color32 = Color32::from_rgb(color[0], color[1], color[2]);
-                    
+
                     ui.horizontal(|ui| {
                         ui.colored_label(color32, "●");
-                        if ui.selectable_label(
-                            self.selected_cluster == Some(legend_entry.cluster_id),
-                            format!("Cluster {} ({} points)", legend_entry.cluster_id, legend_entry.count)
-                        ).clicked() {
-                            self.selected_cluster = if self.selected_cluster == Some(legend_entry.cluster_id) {
-                                None
-                            } else {
-                                Some(legend_entry.cluster_id)
-                            };
+                        if ui
+                            .selectable_label(
+                                self.selected_cluster == Some(legend_entry.cluster_id),
+                                format!(
+                                    "Cluster {} ({} points)",
+                                    legend_entry.cluster_id, legend_entry.count
+                                ),
+                            )
+                            .clicked()
+                        {
+                            self.selected_cluster =
+                                if self.selected_cluster == Some(legend_entry.cluster_id) {
+                                    None
+                                } else {
+                                    Some(legend_entry.cluster_id)
+                                };
                         }
                     });
                 }
@@ -492,44 +547,46 @@ impl eframe::App for InteractiveClusteringApp {
 impl InteractiveClusteringApp {
     fn draw_scatter_plot(&mut self, ui: &mut Ui, plot: &ScatterPlot2D) {
         let (response, painter) = ui.allocate_painter(ui.available_size(), Sense::drag());
-        
+
         let rect = response.rect;
         let (min_x, max_x, min_y, max_y) = plot.bounds;
-        
+
         // Handle pan and zoom
         if response.dragged() {
             self.pan_offset.0 += response.drag_delta().x;
             self.pan_offset.1 += response.drag_delta().y;
         }
-        
+
         // Convert data coordinates to screen coordinates
         let to_screen = |x: f64, y: f64| -> Pos2 {
             let norm_x = (x - min_x) / (max_x - min_x);
             let norm_y = (y - min_y) / (max_y - min_y);
-            
-            let screen_x = rect.left() + norm_x as f32 * rect.width() * self.zoom + self.pan_offset.0;
-            let screen_y = rect.bottom() - norm_y as f32 * rect.height() * self.zoom + self.pan_offset.1;
-            
+
+            let screen_x =
+                rect.left() + norm_x as f32 * rect.width() * self.zoom + self.pan_offset.0;
+            let screen_y =
+                rect.bottom() - norm_y as f32 * rect.height() * self.zoom + self.pan_offset.1;
+
             Pos2::new(screen_x, screen_y)
         };
-        
+
         // Draw points
         for (i, point) in plot.points.rows().into_iter().enumerate() {
             let x = point[0];
             let y = point[1];
             let screen_pos = to_screen(x, y);
-            
+
             if !rect.contains(screen_pos) {
                 continue; // Skip points outside visible area
             }
-            
+
             let color_hex = &plot.colors[i];
             let color = parse_hex_color(color_hex).unwrap_or([255, 0, 0]);
             let color32 = Color32::from_rgb(color[0], color[1], color[2]);
-            
+
             let radius = plot.sizes[i] * self.zoom;
             let cluster_id = plot.labels[i];
-            
+
             // Highlight selected cluster
             let point_color = if let Some(selected) = self.selected_cluster {
                 if cluster_id == selected {
@@ -540,10 +597,10 @@ impl InteractiveClusteringApp {
             } else {
                 color32
             };
-            
+
             painter.circle_filled(screen_pos, radius, point_color);
         }
-        
+
         // Draw centroids
         if self.show_centroids {
             if let Some(ref centroids) = plot.centroids {
@@ -551,17 +608,27 @@ impl InteractiveClusteringApp {
                     let x = centroid[0];
                     let y = centroid[1];
                     let screen_pos = to_screen(x, y);
-                    
+
                     if rect.contains(screen_pos) {
-                        painter.circle_stroke(screen_pos, 8.0 * self.zoom, Stroke::new(3.0, Color32::BLACK));
-                        painter.line_segment([
-                            Pos2::new(screen_pos.x - 6.0 * self.zoom, screen_pos.y),
-                            Pos2::new(screen_pos.x + 6.0 * self.zoom, screen_pos.y),
-                        ], Stroke::new(3.0, Color32::BLACK));
-                        painter.line_segment([
-                            Pos2::new(screen_pos.x, screen_pos.y - 6.0 * self.zoom),
-                            Pos2::new(screen_pos.x, screen_pos.y + 6.0 * self.zoom),
-                        ], Stroke::new(3.0, Color32::BLACK));
+                        painter.circle_stroke(
+                            screen_pos,
+                            8.0 * self.zoom,
+                            Stroke::new(3.0, Color32::BLACK),
+                        );
+                        painter.line_segment(
+                            [
+                                Pos2::new(screen_pos.x - 6.0 * self.zoom, screen_pos.y),
+                                Pos2::new(screen_pos.x + 6.0 * self.zoom, screen_pos.y),
+                            ],
+                            Stroke::new(3.0, Color32::BLACK),
+                        );
+                        painter.line_segment(
+                            [
+                                Pos2::new(screen_pos.x, screen_pos.y - 6.0 * self.zoom),
+                                Pos2::new(screen_pos.x, screen_pos.y + 6.0 * self.zoom),
+                            ],
+                            Stroke::new(3.0, Color32::BLACK),
+                        );
                     }
                 }
             }
@@ -574,11 +641,11 @@ fn parse_hex_color(hex: &str) -> Option<[u8; 3]> {
     if hex.len() != 7 || !hex.starts_with('#') {
         return None;
     }
-    
+
     let r = u8::from_str_radix(&hex[1..3], 16).ok()?;
     let g = u8::from_str_radix(&hex[3..5], 16).ok()?;
     let b = u8::from_str_radix(&hex[5..7], 16).ok()?;
-    
+
     Some([r, g, b])
 }
 
@@ -598,22 +665,22 @@ pub fn save_dendrogram_plot<P: AsRef<Path>>(
 ) -> Result<()> {
     let dend_config = dendrogram_config.unwrap_or(&DendrogramConfig::default());
     let out_config = output_config.unwrap_or(&PlotOutput::default());
-    
+
     // Create dendrogram plot data
     let dendrogram_plot = create_dendrogram_plot(linkage_matrix, labels, dend_config.clone())?;
-    
+
     #[cfg(feature = "plotters")]
     {
         plot_dendrogram(&dendrogram_plot, output_path, out_config)?;
     }
-    
+
     #[cfg(not(feature = "plotters"))]
     {
         return Err(ClusteringError::ComputationError(
             "Plotters feature not enabled. Enable with --features plotters".to_string(),
         ));
     }
-    
+
     Ok(())
 }
 
@@ -625,7 +692,7 @@ pub fn plot_scatter_3d<P: AsRef<Path>>(
     output_config: &PlotOutput,
 ) -> Result<()> {
     let path = output_path.as_ref();
-    
+
     match output_config.format {
         PlotFormat::PNG => plot_scatter_3d_png(scatter_plot, path, output_config),
         PlotFormat::SVG => plot_scatter_3d_svg(scatter_plot, path, output_config),
@@ -641,23 +708,26 @@ fn plot_scatter_3d_png<P: AsRef<Path>>(
     output_path: P,
     output_config: &PlotOutput,
 ) -> Result<()> {
-    use plotters::coord::types::RangedCoordf64;
     use plotters::coord::ranged3d::Cartesian3d;
-    
-    let root = BitMapBackend::new(&output_path, output_config.dimensions)
-        .into_drawing_area();
-    root.fill(&WHITE)
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e)))?;
+    use plotters::coord::types::RangedCoordf64;
+
+    let root = BitMapBackend::new(&output_path, output_config.dimensions).into_drawing_area();
+    root.fill(&WHITE).map_err(|e| {
+        ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e))
+    })?;
 
     let (min_x, max_x, min_y, max_y, min_z, max_z) = scatter_plot.bounds;
     let margin = 0.1;
     let x_range = max_x - min_x;
     let y_range = max_y - min_y;
     let z_range = max_z - min_z;
-    
+
     let chart_builder = ChartBuilder::on(&root)
         .caption(
-            output_config.title.as_deref().unwrap_or("3D Cluster Visualization"),
+            output_config
+                .title
+                .as_deref()
+                .unwrap_or("3D Cluster Visualization"),
             ("sans-serif", 30),
         )
         .margin(20)
@@ -666,10 +736,12 @@ fn plot_scatter_3d_png<P: AsRef<Path>>(
             (min_y - margin * y_range)..(max_y + margin * y_range),
             (min_z - margin * z_range)..(max_z + margin * z_range),
         )
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to build 3D chart: {}", e)))?;
+        .map_err(|e| {
+            ClusteringError::ComputationError(format!("Failed to build 3D chart: {}", e))
+        })?;
 
     let mut chart = chart_builder;
-    
+
     // Configure chart
     chart
         .configure_axes()
@@ -681,17 +753,23 @@ fn plot_scatter_3d_png<P: AsRef<Path>>(
     // Plot points
     for (i, point) in scatter_plot.points.rows().into_iter().enumerate() {
         let x = point[0];
-        let y = point[1]; 
+        let y = point[1];
         let z = point[2];
         let color_hex = &scatter_plot.colors[i];
         let size = scatter_plot.sizes[i] as i32;
-        
+
         // Parse hex color
         let color = parse_hex_color_plotters(color_hex).unwrap_or(RED);
-        
+
         chart
-            .draw_series(std::iter::once(Circle::new((x, y, z), size, color.filled())))
-            .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw 3D points: {}", e)))?;
+            .draw_series(std::iter::once(Circle::new(
+                (x, y, z),
+                size,
+                color.filled(),
+            )))
+            .map_err(|e| {
+                ClusteringError::ComputationError(format!("Failed to draw 3D points: {}", e))
+            })?;
     }
 
     // Plot centroids if available
@@ -700,16 +778,22 @@ fn plot_scatter_3d_png<P: AsRef<Path>>(
             let x = centroid[0];
             let y = centroid[1];
             let z = centroid[2];
-            
+
             chart
-                .draw_series(std::iter::once(Circle::new((x, y, z), 8, BLACK.stroke_width(3))))
-                .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw 3D centroids: {}", e)))?;
+                .draw_series(std::iter::once(Circle::new(
+                    (x, y, z),
+                    8,
+                    BLACK.stroke_width(3),
+                )))
+                .map_err(|e| {
+                    ClusteringError::ComputationError(format!("Failed to draw 3D centroids: {}", e))
+                })?;
         }
     }
 
     root.present()
         .map_err(|e| ClusteringError::ComputationError(format!("Failed to save 3D plot: {}", e)))?;
-    
+
     Ok(())
 }
 
@@ -719,23 +803,26 @@ fn plot_scatter_3d_svg<P: AsRef<Path>>(
     output_path: P,
     output_config: &PlotOutput,
 ) -> Result<()> {
-    use plotters::coord::types::RangedCoordf64;
     use plotters::coord::ranged3d::Cartesian3d;
-    
-    let root = SVGBackend::new(&output_path, output_config.dimensions)
-        .into_drawing_area();
-    root.fill(&WHITE)
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e)))?;
+    use plotters::coord::types::RangedCoordf64;
+
+    let root = SVGBackend::new(&output_path, output_config.dimensions).into_drawing_area();
+    root.fill(&WHITE).map_err(|e| {
+        ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e))
+    })?;
 
     let (min_x, max_x, min_y, max_y, min_z, max_z) = scatter_plot.bounds;
     let margin = 0.1;
     let x_range = max_x - min_x;
     let y_range = max_y - min_y;
     let z_range = max_z - min_z;
-    
+
     let chart_builder = ChartBuilder::on(&root)
         .caption(
-            output_config.title.as_deref().unwrap_or("3D Cluster Visualization"),
+            output_config
+                .title
+                .as_deref()
+                .unwrap_or("3D Cluster Visualization"),
             ("sans-serif", 30),
         )
         .margin(20)
@@ -744,10 +831,12 @@ fn plot_scatter_3d_svg<P: AsRef<Path>>(
             (min_y - margin * y_range)..(max_y + margin * y_range),
             (min_z - margin * z_range)..(max_z + margin * z_range),
         )
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to build 3D chart: {}", e)))?;
+        .map_err(|e| {
+            ClusteringError::ComputationError(format!("Failed to build 3D chart: {}", e))
+        })?;
 
     let mut chart = chart_builder;
-    
+
     // Configure chart
     chart
         .configure_axes()
@@ -759,17 +848,23 @@ fn plot_scatter_3d_svg<P: AsRef<Path>>(
     // Plot points
     for (i, point) in scatter_plot.points.rows().into_iter().enumerate() {
         let x = point[0];
-        let y = point[1]; 
+        let y = point[1];
         let z = point[2];
         let color_hex = &scatter_plot.colors[i];
         let size = scatter_plot.sizes[i] as i32;
-        
+
         // Parse hex color
         let color = parse_hex_color_plotters(color_hex).unwrap_or(RED);
-        
+
         chart
-            .draw_series(std::iter::once(Circle::new((x, y, z), size, color.filled())))
-            .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw 3D points: {}", e)))?;
+            .draw_series(std::iter::once(Circle::new(
+                (x, y, z),
+                size,
+                color.filled(),
+            )))
+            .map_err(|e| {
+                ClusteringError::ComputationError(format!("Failed to draw 3D points: {}", e))
+            })?;
     }
 
     // Plot centroids if available
@@ -778,16 +873,22 @@ fn plot_scatter_3d_svg<P: AsRef<Path>>(
             let x = centroid[0];
             let y = centroid[1];
             let z = centroid[2];
-            
+
             chart
-                .draw_series(std::iter::once(Circle::new((x, y, z), 8, BLACK.stroke_width(3))))
-                .map_err(|e| ClusteringError::ComputationError(format!("Failed to draw 3D centroids: {}", e)))?;
+                .draw_series(std::iter::once(Circle::new(
+                    (x, y, z),
+                    8,
+                    BLACK.stroke_width(3),
+                )))
+                .map_err(|e| {
+                    ClusteringError::ComputationError(format!("Failed to draw 3D centroids: {}", e))
+                })?;
         }
     }
 
     root.present()
         .map_err(|e| ClusteringError::ComputationError(format!("Failed to save 3D plot: {}", e)))?;
-    
+
     Ok(())
 }
 
@@ -802,24 +903,23 @@ pub fn save_clustering_plot<P: AsRef<Path>>(
 ) -> Result<()> {
     let vis_config = config.unwrap_or(&VisualizationConfig::default());
     let out_config = output_config.unwrap_or(&PlotOutput::default());
-    
+
     // Create scatter plot data
-    let scatter_plot = crate::visualization::create_scatter_plot_2d(
-        data, labels, centroids, vis_config
-    )?;
-    
+    let scatter_plot =
+        crate::visualization::create_scatter_plot_2d(data, labels, centroids, vis_config)?;
+
     #[cfg(feature = "plotters")]
     {
         plot_scatter_2d(&scatter_plot, output_path, out_config)?;
     }
-    
+
     #[cfg(not(feature = "plotters"))]
     {
         return Err(ClusteringError::ComputationError(
             "Plotters feature not enabled. Enable with --features plotters".to_string(),
         ));
     }
-    
+
     Ok(())
 }
 
@@ -834,24 +934,23 @@ pub fn save_clustering_plot_3d<P: AsRef<Path>>(
 ) -> Result<()> {
     let vis_config = config.unwrap_or(&VisualizationConfig::default());
     let out_config = output_config.unwrap_or(&PlotOutput::default());
-    
+
     // Create 3D scatter plot data
-    let scatter_plot = crate::visualization::create_scatter_plot_3d(
-        data, labels, centroids, vis_config
-    )?;
-    
+    let scatter_plot =
+        crate::visualization::create_scatter_plot_3d(data, labels, centroids, vis_config)?;
+
     #[cfg(feature = "plotters")]
     {
         plot_scatter_3d(&scatter_plot, output_path, out_config)?;
     }
-    
+
     #[cfg(not(feature = "plotters"))]
     {
         return Err(ClusteringError::ComputationError(
             "Plotters feature not enabled. Enable with --features plotters".to_string(),
         ));
     }
-    
+
     Ok(())
 }
 
@@ -864,27 +963,29 @@ pub fn launch_interactive_visualization(
     config: Option<&VisualizationConfig>,
 ) -> Result<()> {
     let vis_config = config.unwrap_or(&VisualizationConfig::default());
-    
+
     // Create scatter plot data
-    let scatter_plot = crate::visualization::create_scatter_plot_2d(
-        data, labels, centroids, vis_config
-    )?;
-    
+    let scatter_plot =
+        crate::visualization::create_scatter_plot_2d(data, labels, centroids, vis_config)?;
+
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([1200.0, 800.0])
             .with_title("Clustering Visualization"),
         ..Default::default()
     };
-    
+
     let app = InteractiveClusteringApp::new(scatter_plot);
-    
+
     eframe::run_native(
         "Clustering Visualization",
         options,
         Box::new(|_| Box::new(app)),
-    ).map_err(|e| ClusteringError::ComputationError(format!("Failed to launch visualization: {}", e)))?;
-    
+    )
+    .map_err(|e| {
+        ClusteringError::ComputationError(format!("Failed to launch visualization: {}", e))
+    })?;
+
     Ok(())
 }
 
@@ -904,7 +1005,7 @@ pub fn launch_interactive_visualization(
 mod tests {
     use super::*;
     use ndarray::arr2;
-    
+
     #[test]
     fn test_hex_color_parsing() {
         assert_eq!(parse_hex_color("#FF0000"), Some([255, 0, 0]));
@@ -913,7 +1014,7 @@ mod tests {
         assert_eq!(parse_hex_color("FF0000"), None); // Missing #
         assert_eq!(parse_hex_color("#FG0000"), None); // Invalid hex
     }
-    
+
     #[test]
     fn test_plot_output_default() {
         let output = PlotOutput::default();

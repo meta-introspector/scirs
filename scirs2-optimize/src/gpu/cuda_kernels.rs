@@ -4,10 +4,8 @@
 //! optimization operations, leveraging scirs2-core's GPU abstractions.
 
 use crate::error::OptimizeError;
-use ndarray::{Array1, Array2};
-use scirs2_core::gpu::{GpuBuffer, GpuContext, GpuKernel};
 use scirs2_core::gpu::async_execution::GpuStream;
-use scirs2_core::error::CoreResult;
+use scirs2_core::gpu::{GpuBuffer, GpuContext, GpuKernel};
 use std::sync::Arc;
 
 type ScirsResult<T> = Result<T, OptimizeError>;
@@ -58,7 +56,7 @@ impl FunctionEvaluationKernel {
         // Placeholder implementation
         let n_points = points.len();
         let results = self.context.create_buffer::<f64>(n_points);
-        
+
         // In a real implementation, we would launch the kernel here
         // For now, just return a buffer of zeros
         Ok(results)
@@ -112,7 +110,7 @@ impl GradientKernel {
         // Placeholder implementation
         let n_points = points.len();
         let gradients = self.context.create_buffer::<f64>(n_points);
-        
+
         // In a real implementation, we would launch the kernel here
         // For now, just return a buffer of zeros
         Ok(gradients)
@@ -220,7 +218,7 @@ impl DifferentialEvolutionKernel {
         // Placeholder implementation
         let n_points = population.len();
         let mutants = self.context.create_buffer::<f64>(n_points);
-        
+
         // In a real implementation, we would launch the kernel here
         // For now, just return a buffer of zeros
         Ok(mutants)

@@ -167,3 +167,177 @@ impl<F: Float + Debug> Activation<F> for Tanh {
         Ok(grad_input)
     }
 }
+
+/// Sigmoid activation function
+#[derive(Debug, Clone, Copy)]
+pub struct Sigmoid;
+
+impl Sigmoid {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl Default for Sigmoid {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<F: Float + Debug> Activation<F> for Sigmoid {
+    fn forward(&self, input: &Array<F, ndarray::IxDyn>) -> Result<Array<F, ndarray::IxDyn>> {
+        let mut output = input.clone();
+        let one = F::one();
+        Zip::from(&mut output).for_each(|x| {
+            *x = one / (one + (-*x).exp());
+        });
+        Ok(output)
+    }
+
+    fn backward(
+        &self,
+        grad_output: &Array<F, ndarray::IxDyn>,
+        input: &Array<F, ndarray::IxDyn>,
+    ) -> Result<Array<F, ndarray::IxDyn>> {
+        let mut grad_input = Array::zeros(grad_output.raw_dim());
+        let one = F::one();
+        
+        Zip::from(&mut grad_input)
+            .and(grad_output)
+            .and(input)
+            .for_each(|grad_in, &grad_out, &x| {
+                let sigmoid_x = one / (one + (-x).exp());
+                let derivative = sigmoid_x * (one - sigmoid_x);
+                *grad_in = grad_out * derivative;
+            });
+
+        Ok(grad_input)
+    }
+}
+
+/// ReLU activation function
+#[derive(Debug, Clone, Copy)]
+pub struct ReLU {
+    alpha: f64,
+}
+
+impl ReLU {
+    pub fn new() -> Self {
+        Self { alpha: 0.0 }
+    }
+    
+    pub fn leaky(alpha: f64) -> Self {
+        Self { alpha }
+    }
+}
+
+impl Default for ReLU {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<F: Float + Debug> Activation<F> for ReLU {
+    fn forward(&self, input: &Array<F, ndarray::IxDyn>) -> Result<Array<F, ndarray::IxDyn>> {
+        let mut output = input.clone();
+        let zero = F::zero();
+        let alpha = F::from(self.alpha).unwrap_or(zero);
+        
+        Zip::from(&mut output).for_each(|x| {
+            if *x < zero {
+                *x = alpha * *x;
+            }
+        });
+        Ok(output)
+    }
+
+    fn backward(
+        &self,
+        grad_output: &Array<F, ndarray::IxDyn>,
+        input: &Array<F, ndarray::IxDyn>,
+    ) -> Result<Array<F, ndarray::IxDyn>> {
+        let mut grad_input = Array::zeros(grad_output.raw_dim());
+        let zero = F::zero();
+        let one = F::one();
+        let alpha = F::from(self.alpha).unwrap_or(zero);
+        
+        Zip::from(&mut grad_input)
+            .and(grad_output)
+            .and(input)
+            .for_each(|grad_in, &grad_out, &x| {
+                let derivative = if x > zero { one } else { alpha };
+                *grad_in = grad_out * derivative;
+            });
+
+        Ok(grad_input)
+    }
+}
+
+/// Softmax activation function
+#[derive(Debug, Clone, Copy)]
+pub struct Softmax {
+    axis: isize,
+}
+
+impl Softmax {
+    pub fn new(axis: isize) -> Self {
+        Self { axis }
+    }
+}
+
+impl Default for Softmax {
+    fn default() -> Self {
+        Self::new(-1)
+    }
+}
+
+impl<F: Float + Debug> Activation<F> for Softmax {
+    fn forward(&self, input: &Array<F, ndarray::IxDyn>) -> Result<Array<F, ndarray::IxDyn>> {
+        let mut output = input.clone();
+        
+        // Simple softmax implementation for the last axis
+        if self.axis == -1 || self.axis as usize == input.ndim() - 1 {
+            // For 1D case or applying to last axis
+            let max_val = input.fold(F::neg_infinity(), |acc, &x| if x > acc { x } else { acc });
+            
+            // Subtract max for numerical stability
+            Zip::from(&mut output).for_each(|x| {
+                *x = (*x - max_val).exp();
+            });
+            
+            // Sum all exponentials
+            let sum = output.sum();
+            
+            // Normalize
+            Zip::from(&mut output).for_each(|x| {
+                *x = *x / sum;
+            });
+        }
+        
+        Ok(output)
+    }
+
+    fn backward(
+        &self,
+        grad_output: &Array<F, ndarray::IxDyn>,
+        input: &Array<F, ndarray::IxDyn>,
+    ) -> Result<Array<F, ndarray::IxDyn>> {
+        // Forward pass to get softmax output
+        let softmax_output = self.forward(input)?;
+        let mut grad_input = Array::zeros(grad_output.raw_dim());
+        
+        // For softmax: grad = softmax * (grad_out - (softmax * grad_out).sum())
+        let sum_grad = Zip::from(&softmax_output)
+            .and(grad_output)
+            .fold(F::zero(), |acc, &s, &g| acc + s * g);
+        
+        Zip::from(&mut grad_input)
+            .and(&softmax_output)
+            .and(grad_output)
+            .for_each(|grad_in, &s, &grad_out| {
+                *grad_in = s * (grad_out - sum_grad);
+            });
+
+        Ok(grad_input)
+    }
+}

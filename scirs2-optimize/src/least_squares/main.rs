@@ -37,7 +37,7 @@
 //! # }
 //! ```
 
-use crate::error::{OptimizeError, OptimizeResult};
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix1};
 use std::fmt;

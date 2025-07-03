@@ -62,3 +62,6 @@ wheels/
 **/CLAUDE.local.md
 scirs2-core/audit_logs/audit_*.log
 scirs2-core/example.bin
+
+
+*/temp_target/

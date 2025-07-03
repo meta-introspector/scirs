@@ -4,7 +4,6 @@
 //! for all special functions, including 2D/3D plots, animations, and interactive
 //! visualizations.
 
-use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 #[cfg(feature = "plotting")]
 use plotters::prelude::*;
@@ -230,7 +229,7 @@ pub mod gamma_plots {
 /// Bessel function visualization
 pub mod bessel_plots {
     use super::*;
-    use crate::bessel::{j0, j1, jn, y0, y1};
+    use crate::bessel::{j0, j1, jn};
 
     /// Plot Bessel functions of the first kind
     pub fn plot_bessel_j<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
@@ -250,7 +249,7 @@ pub mod bessel_plots {
 
     /// Plot zeros of Bessel functions
     pub fn plot_bessel_zeros<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
-        use crate::bessel_zeros::{j0_zeros, j1_zeros};
+        use crate::bessel_zeros::j0_zeros;
 
         #[cfg(feature = "plotting")]
         {
@@ -307,7 +306,7 @@ pub mod bessel_plots {
 /// Error function visualization
 pub mod error_function_plots {
     use super::*;
-    use crate::{erf, erfc, erfcinv, erfinv};
+    use crate::{erf, erfc, erfinv};
 
     /// Plot error functions and their inverses
     pub fn plot_error_functions<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
@@ -331,7 +330,7 @@ pub mod error_function_plots {
 /// Orthogonal polynomial visualization
 pub mod polynomial_plots {
     use super::*;
-    use crate::{chebyshev, hermite, laguerre, legendre};
+    use crate::legendre;
 
     /// Plot Legendre polynomials
     pub fn plot_legendre<P: AsRef<Path>>(path: P, max_n: usize) -> Result<(), Box<dyn Error>> {
@@ -820,7 +819,8 @@ pub mod interactive {
             function_name, // For the getSpecialFunction call
             x_json,
             y_json,
-            function_name
+            function_name,
+            function_name // For the CSV download filename
         )
     }
 

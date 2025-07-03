@@ -72,8 +72,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         model.add_layer(dropout);
         // Hidden to output layer
         let dense2 = Dense::new(
+            hidden_size,
             num_classes,
             Some("softmax"),
+            &mut seed_rng.clone(),
+        )?;
         model.add_layer(dense2);
         Ok(model)
     };

@@ -148,7 +148,7 @@ fn bench_community_detection(c: &mut Criterion) {
                 let end = (community + 1) * 100;
                 for i in start..end {
                     for j in (i + 1)..end {
-                        if generator.rng.gen::<f64>() < 0.3 {
+                        if generator.rng.random::<f64>() < 0.3 {
                             g.add_edge(i, j, 1.0).unwrap();
                         }
                     }
@@ -157,7 +157,7 @@ fn bench_community_detection(c: &mut Criterion) {
             // Add inter-community edges
             for i in 0..500 {
                 for j in (i + 1)..500 {
-                    if i / 100 != j / 100 && generator.rng.gen::<f64>() < 0.01 {
+                    if i / 100 != j / 100 && generator.rng.random::<f64>() < 0.01 {
                         g.add_edge(i, j, 1.0).unwrap();
                     }
                 }

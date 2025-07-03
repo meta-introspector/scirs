@@ -641,7 +641,7 @@ where
                 // Generate bootstrap sample
                 let mut bootstrap_sample = Array1::zeros(data_len);
                 for j in 0..data_len {
-                    let idx = rng.gen_range(0..data_len);
+                    let idx = rng.random_range(0..data_len);
                     bootstrap_sample[j] = data[idx];
                 }
                 
@@ -694,7 +694,7 @@ where
                 let mut bootstrap_sample = Vec::new();
                 
                 while bootstrap_sample.len() < data_len {
-                    let block_start = rng.gen_range(0..(data_len - block_size + 1));
+                    let block_start = rng.random_range(0..(data_len - block_size + 1));
                     let remaining = data_len - bootstrap_sample.len();
                     let current_block_size = block_size.min(remaining);
                     

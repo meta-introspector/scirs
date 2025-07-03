@@ -4,8 +4,6 @@
 //! to verify mathematical properties, identities, and invariants across
 //! all special functions in the module.
 
-#![cfg(test)]
-
 use num_complex::{Complex64, ComplexFloat};
 use quickcheck::{Arbitrary, Gen, TestResult};
 use quickcheck_macros::quickcheck;
@@ -375,7 +373,6 @@ mod orthogonal_polynomial_properties {
 // Spherical harmonics properties
 mod spherical_harmonics_properties {
     use super::*;
-    use crate::sph_harm;
 
     #[quickcheck]
     fn spherical_harmonics_normalization(
@@ -481,7 +478,7 @@ mod elliptic_properties {
 // Hypergeometric function properties
 mod hypergeometric_properties {
     use super::*;
-    use crate::{hyp1f1, hyp2f1};
+    use crate::hyp2f1;
 
     #[quickcheck]
     fn hyp1f1_special_case(b: Positive, z: f64) -> TestResult {

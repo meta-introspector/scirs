@@ -9,12 +9,9 @@
 //! - Learned iterative shrinkage thresholding (LISTA)
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, ArrayView1};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive};
-use std::collections::HashMap;
-use std::sync::Arc;
+use scirs2_core::validation::check_finite;
 
 /// Dictionary learning denoising configuration
 #[derive(Debug, Clone)]

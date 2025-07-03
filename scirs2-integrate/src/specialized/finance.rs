@@ -2227,9 +2227,9 @@ pub mod ultra_monte_carlo_engine {
         pub fn get_path_buffer(&mut self, n_paths: usize, n_steps: usize) -> &mut Array2<f64> {
             let key = n_paths * 1000 + n_steps; // Simple hash
 
-            self.path_buffers.entry(key).or_insert_with(|| {
-                vec![Array2::zeros((n_paths, n_steps))]
-            });
+            self.path_buffers
+                .entry(key)
+                .or_insert_with(|| vec![Array2::zeros((n_paths, n_steps))]);
 
             &mut self.path_buffers.get_mut(&key).unwrap()[0]
         }
@@ -2894,20 +2894,16 @@ pub mod realtime_risk_engine {
 
         /// Get risk analytics dashboard data
         pub fn get_risk_dashboard(&self) -> RiskDashboard {
-            let current_snapshot =
-                self.risk_history
-                    .back()
-                    .cloned()
-                    .unwrap_or(RiskSnapshot {
-                        timestamp: 0.0,
-                        var_95: 0.0,
-                        var_99: 0.0,
-                        cvar_95: 0.0,
-                        cvar_99: 0.0,
-                        volatility: 0.0,
-                        max_drawdown: 0.0,
-                        sharpe_ratio: 0.0,
-                    });
+            let current_snapshot = self.risk_history.back().cloned().unwrap_or(RiskSnapshot {
+                timestamp: 0.0,
+                var_95: 0.0,
+                var_99: 0.0,
+                cvar_95: 0.0,
+                cvar_99: 0.0,
+                volatility: 0.0,
+                max_drawdown: 0.0,
+                sharpe_ratio: 0.0,
+            });
 
             let recent_alerts = self
                 .alert_system

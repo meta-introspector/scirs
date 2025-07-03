@@ -63,73 +63,12 @@
 /// * **Dynamic Cluster Management**: Creates, merges, and removes clusters automatically
 /// * **Quantum Annealing**: Simulated quantum annealing for global optimization
 pub mod advanced;
-/// Ultrathink Clustering - AI-Driven Quantum-Neuromorphic Clustering (Ultrathink Mode)
-///
-/// This module represents the pinnacle of clustering intelligence, combining
-/// AI-driven algorithm selection with quantum-neuromorphic fusion algorithms
-/// to achieve unprecedented clustering performance. It leverages meta-learning,
-/// neural architecture search, and bio-quantum computing paradigms.
-///
-/// # Revolutionary Ultrathink Features
-///
-/// * **AI-Driven Clustering Selection** - Automatically select optimal clustering algorithms
-/// * **Quantum-Neuromorphic Clustering** - Fusion of quantum and spiking neural networks
-/// * **Meta-Learning Optimization** - Learn optimal hyperparameters from experience
-/// * **Adaptive Resource Allocation** - Dynamic GPU/CPU/QPU resource management
-/// * **Multi-Objective Clustering** - Optimize for accuracy, speed, and interpretability
-/// * **Continual Learning** - Adapt to changing data distributions in real-time
-/// * **Bio-Quantum Clustering** - Nature-inspired quantum clustering algorithms
-pub mod ultrathink_clustering;
-/// Enhanced visualization specifically for ultrathink clustering results.
-///
-/// This module provides specialized visualization capabilities for ultrathink clustering,
-/// including quantum state visualization, neuromorphic adaptation plots, and AI algorithm
-/// selection insights with real-time interactive capabilities.
-///
-/// # Features
-///
-/// * **Quantum State Visualization**: Real-time coherence and entanglement plots
-/// * **Neuromorphic Adaptation**: Spiking neuron activity and plasticity visualization
-/// * **AI Algorithm Selection**: Performance predictions and selection insights
-/// * **Performance Dashboard**: Comprehensive metrics comparison with classical methods
-/// * **Export Capabilities**: Multiple formats including interactive HTML and JSON
-pub mod ultrathink_visualization;
-/// Enhanced Ultrathink Features - Advanced AI-Driven Clustering Extensions
-///
-/// This module extends the ultrathink clustering capabilities with cutting-edge
-/// features including deep learning integration, quantum-inspired algorithms,
-/// and advanced ensemble methods for superior clustering performance.
-///
-/// # Revolutionary Deep Learning Features
-///
-/// * **Transformer-Based Embeddings** - Deep representations using attention mechanisms
-/// * **Graph Neural Networks** - Complex relationship modeling through graph convolutions
-/// * **Reinforcement Learning** - Adaptive clustering strategy optimization
-/// * **Neural Architecture Search** - Automatic design of optimal clustering networks
-/// * **Deep Ensemble Methods** - Robust clustering through uncertainty quantification
-/// * **Advanced Uncertainty Estimation** - Confidence intervals and reliability metrics
-pub mod ultrathink_enhanced_features;
-/// Ultrathink GPU and Distributed Computing Extensions
-///
-/// This module provides GPU acceleration and distributed computing capabilities
-/// for ultrathink clustering, enabling massive scalability and performance
-/// improvements for large-scale clustering tasks.
-///
-/// # High-Performance Computing Features
-///
-/// * **GPU Acceleration** - CUDA/OpenCL/ROCm GPU acceleration with automatic fallback
-/// * **Distributed Computing** - Multi-node clustering with fault tolerance
-/// * **Hybrid GPU-Distributed** - Combined GPU and distributed processing
-/// * **Advanced Memory Management** - Optimized GPU memory allocation and transfer
-/// * **Load Balancing** - Dynamic workload distribution across nodes
-/// * **Fault Tolerance** - Automatic recovery from worker node failures
-pub mod ultrathink_gpu_distributed;
 /// Advanced benchmarking and performance profiling system.
 ///
 /// This module provides cutting-edge benchmarking capabilities for clustering algorithms,
 /// including comprehensive performance analysis, memory profiling, scalability analysis,
 /// performance regression detection, and AI-powered optimization suggestions.
-/// 
+///
 /// # Features
 ///
 /// * **Statistical Performance Analysis**: Comprehensive timing statistics with confidence intervals
@@ -144,7 +83,6 @@ pub mod advanced_benchmarking;
 pub mod affinity;
 pub mod birch;
 pub mod density;
-pub mod quantum_clustering;
 /// Distributed clustering algorithms for large-scale datasets.
 ///
 /// This module provides distributed implementations of clustering algorithms that can
@@ -214,6 +152,21 @@ pub mod leader;
 pub mod meanshift;
 pub mod metrics;
 pub mod neighbor_search;
+/// Native plotting capabilities for clustering results.
+///
+/// This module provides native plotting implementations using popular Rust visualization
+/// libraries like plotters and egui. It bridges the visualization data structures with
+/// actual plotting backends to create publication-ready plots.
+///
+/// # Features
+///
+/// * **Static Plots**: PNG, SVG, PDF output using plotters
+/// * **Interactive Plots**: Real-time visualization using egui
+/// * **Publication Ready**: High-quality plots with customizable styling
+/// * **Multiple Backends**: Support for different rendering backends
+/// * **Performance Optimized**: Efficient rendering for large datasets
+#[cfg(any(feature = "plotters", feature = "egui"))]
+pub mod plotting;
 pub mod preprocess;
 /// Python bindings for scirs2-cluster using PyO3.
 ///
@@ -231,6 +184,7 @@ pub mod preprocess;
 /// * **Numpy Integration**: Seamless integration with NumPy arrays
 #[cfg(feature = "pyo3")]
 pub mod python_bindings;
+pub mod quantum_clustering;
 pub mod serialization;
 pub mod sparse;
 pub mod spectral;
@@ -270,6 +224,67 @@ pub mod time_series;
 /// for all clustering algorithms in the scirs2-cluster crate. It supports
 /// grid search, random search, Bayesian optimization, and adaptive strategies.
 pub mod tuning;
+/// Ultrathink Clustering - AI-Driven Quantum-Neuromorphic Clustering (Ultrathink Mode)
+///
+/// This module represents the pinnacle of clustering intelligence, combining
+/// AI-driven algorithm selection with quantum-neuromorphic fusion algorithms
+/// to achieve unprecedented clustering performance. It leverages meta-learning,
+/// neural architecture search, and bio-quantum computing paradigms.
+///
+/// # Revolutionary Ultrathink Features
+///
+/// * **AI-Driven Clustering Selection** - Automatically select optimal clustering algorithms
+/// * **Quantum-Neuromorphic Clustering** - Fusion of quantum and spiking neural networks
+/// * **Meta-Learning Optimization** - Learn optimal hyperparameters from experience
+/// * **Adaptive Resource Allocation** - Dynamic GPU/CPU/QPU resource management
+/// * **Multi-Objective Clustering** - Optimize for accuracy, speed, and interpretability
+/// * **Continual Learning** - Adapt to changing data distributions in real-time
+/// * **Bio-Quantum Clustering** - Nature-inspired quantum clustering algorithms
+pub mod ultrathink_clustering;
+/// Enhanced Ultrathink Features - Advanced AI-Driven Clustering Extensions
+///
+/// This module extends the ultrathink clustering capabilities with cutting-edge
+/// features including deep learning integration, quantum-inspired algorithms,
+/// and advanced ensemble methods for superior clustering performance.
+///
+/// # Revolutionary Deep Learning Features
+///
+/// * **Transformer-Based Embeddings** - Deep representations using attention mechanisms
+/// * **Graph Neural Networks** - Complex relationship modeling through graph convolutions
+/// * **Reinforcement Learning** - Adaptive clustering strategy optimization
+/// * **Neural Architecture Search** - Automatic design of optimal clustering networks
+/// * **Deep Ensemble Methods** - Robust clustering through uncertainty quantification
+/// * **Advanced Uncertainty Estimation** - Confidence intervals and reliability metrics
+pub mod ultrathink_enhanced_features;
+/// Ultrathink GPU and Distributed Computing Extensions
+///
+/// This module provides GPU acceleration and distributed computing capabilities
+/// for ultrathink clustering, enabling massive scalability and performance
+/// improvements for large-scale clustering tasks.
+///
+/// # High-Performance Computing Features
+///
+/// * **GPU Acceleration** - CUDA/OpenCL/ROCm GPU acceleration with automatic fallback
+/// * **Distributed Computing** - Multi-node clustering with fault tolerance
+/// * **Hybrid GPU-Distributed** - Combined GPU and distributed processing
+/// * **Advanced Memory Management** - Optimized GPU memory allocation and transfer
+/// * **Load Balancing** - Dynamic workload distribution across nodes
+/// * **Fault Tolerance** - Automatic recovery from worker node failures
+pub mod ultrathink_gpu_distributed;
+/// Enhanced visualization specifically for ultrathink clustering results.
+///
+/// This module provides specialized visualization capabilities for ultrathink clustering,
+/// including quantum state visualization, neuromorphic adaptation plots, and AI algorithm
+/// selection insights with real-time interactive capabilities.
+///
+/// # Features
+///
+/// * **Quantum State Visualization**: Real-time coherence and entanglement plots
+/// * **Neuromorphic Adaptation**: Spiking neuron activity and plasticity visualization
+/// * **AI Algorithm Selection**: Performance predictions and selection insights
+/// * **Performance Dashboard**: Comprehensive metrics comparison with classical methods
+/// * **Export Capabilities**: Multiple formats including interactive HTML and JSON
+pub mod ultrathink_visualization;
 /// Enhanced visualization capabilities for clustering results.
 ///
 /// This module provides comprehensive visualization tools for clustering algorithms,
@@ -285,36 +300,22 @@ pub mod tuning;
 /// * **Animation Support**: Animate iterative algorithms and streaming data
 /// * **Export Capabilities**: Export to various formats (JSON, HTML, images)
 pub mod visualization;
-/// Native plotting capabilities for clustering results.
-///
-/// This module provides native plotting implementations using popular Rust visualization
-/// libraries like plotters and egui. It bridges the visualization data structures with
-/// actual plotting backends to create publication-ready plots.
-///
-/// # Features
-///
-/// * **Static Plots**: PNG, SVG, PDF output using plotters
-/// * **Interactive Plots**: Real-time visualization using egui
-/// * **Publication Ready**: High-quality plots with customizable styling
-/// * **Multiple Backends**: Support for different rendering backends
-/// * **Performance Optimized**: Efficient rendering for large datasets
-#[cfg(any(feature = "plotters", feature = "egui"))]
-pub mod plotting;
 pub mod vq;
 
 // Re-exports
 pub use advanced::{
-    adaptive_online_clustering, quantum_kmeans, rl_clustering, transfer_learning_clustering,
-    deep_embedded_clustering, variational_deep_embedding, qaoa_clustering, vqe_clustering,
-    AdaptiveOnlineClustering, AdaptiveOnlineConfig, FeatureAlignment, QuantumConfig, QuantumKMeans,
+    adaptive_online_clustering, deep_embedded_clustering, qaoa_clustering, quantum_kmeans,
+    rl_clustering, transfer_learning_clustering, variational_deep_embedding, vqe_clustering,
+    AdaptiveOnlineClustering, AdaptiveOnlineConfig, DeepClusteringConfig, DeepEmbeddedClustering,
+    FeatureAlignment, QAOAClustering, QAOAConfig, QAOACostFunction, QuantumConfig, QuantumKMeans,
     RLClustering, RLClusteringConfig, RewardFunction, TransferLearningClustering,
-    TransferLearningConfig, DeepClusteringConfig, DeepEmbeddedClustering, VariationalDeepEmbedding,
-    QAOAConfig, QAOAClustering, QAOACostFunction, VQEConfig, VQEClustering, VQEAnsatz,
+    TransferLearningConfig, VQEAnsatz, VQEClustering, VQEConfig, VariationalDeepEmbedding,
 };
 
 // Re-export quantum clustering from quantum_clustering module
 pub use quantum_clustering::{
-    quantum_annealing_clustering, CoolingSchedule, QuantumAnnealingConfig, QuantumAnnealingClustering,
+    quantum_annealing_clustering, CoolingSchedule, QuantumAnnealingClustering,
+    QuantumAnnealingConfig,
 };
 
 // Re-export ultrathink clustering capabilities
@@ -324,35 +325,35 @@ pub use ultrathink_clustering::{
 
 // Re-export ultrathink visualization capabilities
 pub use ultrathink_visualization::{
-    UltrathinkVisualizer, UltrathinkVisualizationConfig, UltrathinkVisualizationOutput,
-    QuantumColorScheme, VisualizationExportFormat, QuantumCoherencePlot, NeuromorphicAdaptationPlot,
-    AISelectionPlot, PerformanceDashboard, ClusterPlot, visualize_ultrathink_results,
-    create_ultrathink_visualization_report,
+    create_ultrathink_visualization_report, visualize_ultrathink_results, AISelectionPlot,
+    ClusterPlot, NeuromorphicAdaptationPlot, PerformanceDashboard, QuantumCoherencePlot,
+    QuantumColorScheme, UltrathinkVisualizationConfig, UltrathinkVisualizationOutput,
+    UltrathinkVisualizer, VisualizationExportFormat,
 };
 
 // Re-export enhanced ultrathink features
 pub use ultrathink_enhanced_features::{
-    DeepUltrathinkClusterer, DeepUltrathinkResult, TransformerClusterEmbedder,
-    GraphNeuralNetworkProcessor, ReinforcementLearningAgent, NeuralArchitectureSearchEngine,
-    DeepEnsembleCoordinator, GraphStructureInsights, SpectralProperties,
-    OptimalArchitecture, EnsembleConsensus,
+    DeepEnsembleCoordinator, DeepUltrathinkClusterer, DeepUltrathinkResult, EnsembleConsensus,
+    GraphNeuralNetworkProcessor, GraphStructureInsights, NeuralArchitectureSearchEngine,
+    OptimalArchitecture, ReinforcementLearningAgent, SpectralProperties,
+    TransformerClusterEmbedder,
 };
 
 // Re-export GPU and distributed ultrathink features
 pub use ultrathink_gpu_distributed::{
-    GpuUltrathinkClusterer, DistributedUltrathinkClusterer, HybridGpuDistributedClusterer,
-    GpuUltrathinkResult, DistributedUltrathinkResult, HybridGpuDistributedResult,
-    GpuAccelerationConfig, GpuDeviceSelection, GpuMemoryStrategy, GpuOptimizationLevel,
-    WorkerNodeConfig, CoordinationStrategy, GpuAccelerationMetrics, DistributedProcessingMetrics,
-    LoadBalancingStats, CommunicationOverhead, WorkerPerformanceStats,
+    CommunicationOverhead, CoordinationStrategy, DistributedProcessingMetrics,
+    DistributedUltrathinkClusterer, DistributedUltrathinkResult, GpuAccelerationConfig,
+    GpuAccelerationMetrics, GpuDeviceSelection, GpuMemoryStrategy, GpuOptimizationLevel,
+    GpuUltrathinkClusterer, GpuUltrathinkResult, HybridGpuDistributedClusterer,
+    HybridGpuDistributedResult, LoadBalancingStats, WorkerNodeConfig, WorkerPerformanceStats,
 };
 
 // Re-export advanced benchmarking capabilities
 pub use advanced_benchmarking::{
-    AdvancedBenchmark, BenchmarkConfig, BenchmarkResults, AlgorithmBenchmark, AlgorithmComparison,
-    PerformanceStatistics, MemoryProfile, QualityMetrics, ScalabilityAnalysis, SystemInfo,
-    OptimizationSuggestion, OptimizationCategory, OptimizationPriority, ComplexityClass,
-    GpuVsCpuComparison, RegressionAlert, RegressionSeverity, create_comprehensive_report,
+    create_comprehensive_report, AdvancedBenchmark, AlgorithmBenchmark, AlgorithmComparison,
+    BenchmarkConfig, BenchmarkResults, ComplexityClass, GpuVsCpuComparison, MemoryProfile,
+    OptimizationCategory, OptimizationPriority, OptimizationSuggestion, PerformanceStatistics,
+    QualityMetrics, RegressionAlert, RegressionSeverity, ScalabilityAnalysis, SystemInfo,
 };
 
 pub use affinity::{affinity_propagation, AffinityPropagationOptions};
@@ -414,30 +415,82 @@ pub use neighbor_search::{
 };
 pub use preprocess::{min_max_scale, normalize, standardize, whiten, NormType};
 pub use serialization::{
-    affinity_propagation_to_model, birch_to_model, compatibility, dbscan_to_model, gmm_to_model,
-    hierarchy_to_model, kmeans_to_model, leader_to_model, leader_tree_to_model, meanshift_to_model,
-    save_affinity_propagation, save_birch, save_gmm, save_hierarchy, save_kmeans, save_leader,
-    save_leader_tree, save_spectral_clustering, spectral_clustering_to_model, AdvancedExport,
-    AffinityPropagationModel, BirchModel, DBSCANModel, ExportFormat, GMMModel, HierarchicalModel,
-    KMeansModel, LeaderModel, LeaderNodeModel, LeaderTreeModel, MeanShiftModel, ModelMetadata,
-    SerializableModel, SpectralClusteringModel,
-    // Enhanced serialization with metadata and versioning
-    EnhancedModel, EnhancedModelMetadata, TrainingMetrics, DataCharacteristics, PlatformInfo,
-    // Unified workflow management
-    ClusteringWorkflow, ClusteringWorkflowManager, AlgorithmState, TrainingStep, WorkflowConfig,
+    affinity_propagation_to_model,
+    birch_to_model,
+    compatibility,
+    dbscan_to_model,
+    gmm_to_model,
+    hierarchy_to_model,
+    kmeans_to_model,
+    leader_to_model,
+    leader_tree_to_model,
+    meanshift_to_model,
+    save_affinity_propagation,
+    save_birch,
+    save_gmm,
+    save_hierarchy,
+    save_kmeans,
+    save_leader,
+    save_leader_tree,
+    save_spectral_clustering,
+    spectral_clustering_to_model,
+    AdvancedExport,
+    AffinityPropagationModel,
+    AlgorithmState,
     AutoSaveConfig,
+    BirchModel,
+    // Unified workflow management
+    ClusteringWorkflow,
+    ClusteringWorkflowManager,
+    DBSCANModel,
+    DataCharacteristics,
+    // Enhanced serialization with metadata and versioning
+    EnhancedModel,
+    EnhancedModelMetadata,
+    ExportFormat,
+    GMMModel,
+    HierarchicalModel,
+    KMeansModel,
+    LeaderModel,
+    LeaderNodeModel,
+    LeaderTreeModel,
+    MeanShiftModel,
+    ModelMetadata,
+    PlatformInfo,
+    SerializableModel,
+    SpectralClusteringModel,
+    TrainingMetrics,
+    TrainingStep,
+    WorkflowConfig,
 };
 
 // Re-export compatibility utilities for scikit-learn and SciPy integration
 pub use serialization::compatibility::{
-    create_sklearn_param_grid, from_joblib_format, from_numpy_format, from_sklearn_format,
-    generate_sklearn_model_summary, to_arrow_schema, to_huggingface_card, to_joblib_format,
-    to_mlflow_format, to_numpy_format, to_onnx_metadata, to_pandas_clustering_report,
-    to_pandas_format, to_pickle_like_format, to_pytorch_checkpoint, to_r_format,
-    to_scipy_dendrogram_format, to_scipy_linkage_format, to_sklearn_clustering_result,
-    to_sklearn_format,
+    create_sklearn_param_grid,
+    export_to_scipy_json,
+    export_to_sklearn_json,
+    from_joblib_format,
+    from_numpy_format,
+    from_sklearn_format,
+    generate_sklearn_model_summary,
+    import_scipy_hierarchy,
     // Import functions for external model formats
-    import_sklearn_kmeans, import_scipy_hierarchy, export_to_sklearn_json, export_to_scipy_json,
+    import_sklearn_kmeans,
+    to_arrow_schema,
+    to_huggingface_card,
+    to_joblib_format,
+    to_mlflow_format,
+    to_numpy_format,
+    to_onnx_metadata,
+    to_pandas_clustering_report,
+    to_pandas_format,
+    to_pickle_like_format,
+    to_pytorch_checkpoint,
+    to_r_format,
+    to_scipy_dendrogram_format,
+    to_scipy_linkage_format,
+    to_sklearn_clustering_result,
+    to_sklearn_format,
 };
 pub use sparse::{
     sparse_epsilon_graph, sparse_knn_graph, SparseDistanceMatrix, SparseHierarchicalClustering,
@@ -462,14 +515,35 @@ pub use time_series::{
     TimeSeriesClusteringConfig,
 };
 pub use tuning::{
-    AcquisitionFunction, AutoTuner, BayesianState, CVStrategy, ConvergenceInfo,
-    CrossValidationConfig, EarlyStoppingConfig, EnsembleResults, EvaluationMetric,
-    EvaluationResult, ExplorationStats, HyperParameter, KernelType, LoadBalancingStrategy,
-    ParallelConfig, ResourceConstraints, SearchSpace, SearchStrategy, StandardSearchSpaces,
-    StoppingReason, SurrogateModel, TuningConfig, TuningResult,
+    auto_select_clustering_algorithm,
+    quick_algorithm_selection,
+    AcquisitionFunction,
+    AlgorithmSelectionResult,
     // Auto-selection functionality
-    AutoClusteringSelector, ClusteringAlgorithm, AlgorithmSelectionResult,
-    auto_select_clustering_algorithm, quick_algorithm_selection,
+    AutoClusteringSelector,
+    AutoTuner,
+    BayesianState,
+    CVStrategy,
+    ClusteringAlgorithm,
+    ConvergenceInfo,
+    CrossValidationConfig,
+    EarlyStoppingConfig,
+    EnsembleResults,
+    EvaluationMetric,
+    EvaluationResult,
+    ExplorationStats,
+    HyperParameter,
+    KernelType,
+    LoadBalancingStrategy,
+    ParallelConfig,
+    ResourceConstraints,
+    SearchSpace,
+    SearchStrategy,
+    StandardSearchSpaces,
+    StoppingReason,
+    SurrogateModel,
+    TuningConfig,
+    TuningResult,
 };
 
 // Re-export visualization and animation capabilities
@@ -499,14 +573,12 @@ pub use visualization::export::{
 // Re-export native plotting capabilities (when plotting features are enabled)
 #[cfg(feature = "plotters")]
 pub use plotting::{
-    plot_scatter_2d, plot_dendrogram, save_clustering_plot, save_dendrogram_plot, 
-    PlotFormat, PlotOutput,
+    plot_dendrogram, plot_scatter_2d, save_clustering_plot, save_dendrogram_plot, PlotFormat,
+    PlotOutput,
 };
 
 #[cfg(feature = "egui")]
-pub use plotting::{
-    launch_interactive_visualization, InteractiveClusteringApp,
-};
+pub use plotting::{launch_interactive_visualization, InteractiveClusteringApp};
 
 // Re-export distributed clustering capabilities
 pub use distributed::{

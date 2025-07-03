@@ -734,7 +734,9 @@ where
         // For 1x1 matrix, inverse is simple reciprocal
         let val = toeplitz.get(0, 0)?;
         if val.abs() < A::epsilon() {
-            return Err(LinalgError::SingularMatrixError("Matrix is singular: determinant is effectively zero".to_string()));
+            return Err(LinalgError::SingularMatrixError(
+                "Matrix is singular: determinant is effectively zero".to_string(),
+            ));
         }
         let mut result = Array2::zeros((1, 1));
         result[[0, 0]] = A::one() / val;
@@ -744,7 +746,7 @@ where
     // For larger matrices, use iterative approach building on smaller cases
     // This is a simplified implementation - full Gohberg-Semencul would be more complex
     let mut result = Array2::zeros((n, n));
-    
+
     // Start with identity as initial guess and use iterative refinement
     for i in 0..n {
         result[[i, i]] = A::one();
@@ -753,14 +755,14 @@ where
     // Simple iterative improvement (not the full algorithm, but functional)
     for _iter in 0..10 {
         let mut new_result = Array2::zeros((n, n));
-        
+
         for i in 0..n {
             for j in 0..n {
                 let mut sum = A::zero();
                 for k in 0..n {
                     sum += toeplitz.get(i, k)? * result[[k, j]];
                 }
-                
+
                 if i == j {
                     new_result[[i, j]] = A::from(2.0).unwrap() * result[[i, j]] - sum;
                 } else {
@@ -768,7 +770,7 @@ where
                 }
             }
         }
-        
+
         result = new_result;
     }
 
@@ -777,7 +779,7 @@ where
 
 /// Gohberg-Semencul formula for efficient Toeplitz matrix inversion
 ///
-/// This implements the Gohberg-Semencul formula which expresses the inverse of a 
+/// This implements the Gohberg-Semencul formula which expresses the inverse of a
 /// Toeplitz matrix in terms of solutions to two specific linear systems.
 ///
 /// # Arguments
@@ -810,10 +812,10 @@ where
     // 2. Solve two auxiliary systems to find vectors u and v
     // 3. Construct the inverse using the formula T^(-1) = (1/det) * (J*v*u^T*J - u*v^T)
     // where J is the anti-diagonal matrix
-    
+
     // Simplified implementation for now
     let mut result = Array2::zeros((n, n));
-    
+
     // Create anti-diagonal matrix J
     for i in 0..n {
         for j in 0..n {
@@ -822,7 +824,7 @@ where
             }
         }
     }
-    
+
     // This is a placeholder - the full Gohberg-Semencul formula is quite complex
     // For production use, this would need the complete implementation
     Ok(result)
@@ -852,13 +854,14 @@ where
     if n <= 4 {
         let mut result = Array1::zeros(n);
         let two_pi = A::from(2.0 * std::f64::consts::PI).unwrap();
-        
+
         for k in 0..n {
             for j in 0..n {
-                let angle = -two_pi * A::from(k as f64).unwrap() * A::from(j as f64).unwrap() / A::from(n as f64).unwrap();
+                let angle = -two_pi * A::from(k as f64).unwrap() * A::from(j as f64).unwrap()
+                    / A::from(n as f64).unwrap();
                 let real_part = angle.cos();
                 let _imag_part = angle.sin();
-                
+
                 // For real inputs, we only use the real part of the DFT
                 result[k] += x[j] * real_part;
             }
@@ -870,10 +873,11 @@ where
     // This is a simplified direct implementation
     let mut result = Array1::zeros(n);
     let two_pi = A::from(2.0 * std::f64::consts::PI).unwrap();
-    
+
     for k in 0..n {
         for j in 0..n {
-            let angle = -two_pi * A::from(k as f64).unwrap() * A::from(j as f64).unwrap() / A::from(n as f64).unwrap();
+            let angle = -two_pi * A::from(k as f64).unwrap() * A::from(j as f64).unwrap()
+                / A::from(n as f64).unwrap();
             result[k] += x[j] * angle.cos(); // Real part only for simplicity
         }
     }
@@ -897,7 +901,7 @@ where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug + Copy,
 {
     let n = x.len();
-    
+
     // Check if n is a power of 2
     if n == 0 || (n & (n - 1)) != 0 {
         return Err(LinalgError::InvalidInputError(

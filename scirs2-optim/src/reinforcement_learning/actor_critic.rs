@@ -4,8 +4,8 @@
 //! SAC (Soft Actor-Critic), and other modern actor-critic methods.
 
 use super::{
-    ActionDistribution, DistributionType, PolicyNetwork, RLOptimizationMetrics,
-    RLOptimizerConfig, RLScheduler, TrajectoryBatch, ValueNetwork,
+    ActionDistribution, DistributionType, PolicyNetwork, RLOptimizationMetrics, RLOptimizerConfig,
+    RLScheduler, TrajectoryBatch, ValueNetwork,
 };
 use crate::error::{OptimError, Result};
 use ndarray::{Array1, Array2, Dimension};
@@ -374,7 +374,7 @@ impl<T: Float> ExperienceReplayBuffer<T> {
 
         let mut samples = Vec::new();
         for _ in 0..sample_size {
-            let idx = rng().gen_range(0..available_size);
+            let idx = rng().random_range(0..available_size);
             samples.push(self.buffer[idx].clone());
         }
 
@@ -398,11 +398,7 @@ impl<T: Float> ExperienceReplayBuffer<T> {
 
 impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, P, V> {
     /// Create a new Actor-Critic optimizer
-    pub fn new(
-        config: ActorCriticConfig<T>,
-        actor: P,
-        critics: Vec<V>,
-    ) -> Result<Self, OptimError> {
+    pub fn new(config: ActorCriticConfig<T>, actor: P, critics: Vec<V>) -> Result<Self> {
         if critics.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "At least one critic required".to_string(),
@@ -436,10 +432,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     }
 
     /// Update using experience replay
-    pub fn update_from_replay(
-        &mut self,
-        batch_size: usize,
-    ) -> Result<ActorCriticMetrics<T>, OptimError> {
+    pub fn update_from_replay(&mut self, batch_size: usize) -> Result<ActorCriticMetrics<T>> {
         if self.replay_buffer.len() < batch_size {
             return Err(OptimError::InvalidConfig(
                 "Not enough experiences in buffer".to_string(),
@@ -463,7 +456,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     pub fn update_from_trajectory(
         &mut self,
         trajectory: TrajectoryBatch<T>,
-    ) -> Result<ActorCriticMetrics<T>, OptimError> {
+    ) -> Result<ActorCriticMetrics<T>> {
         match self.config.method {
             ActorCriticMethod::A2C => self.update_a2c(trajectory),
             ActorCriticMethod::A3C => self.update_a3c(trajectory),
@@ -474,10 +467,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     }
 
     /// SAC update
-    fn update_sac(
-        &mut self,
-        experiences: &[Experience<T>],
-    ) -> Result<ActorCriticMetrics<T>, OptimError> {
+    fn update_sac(&mut self, experiences: &[Experience<T>]) -> Result<ActorCriticMetrics<T>> {
         let _batch_size = experiences.len();
 
         // Extract batch data
@@ -528,10 +518,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     }
 
     /// TD3 update
-    fn update_td3(
-        &mut self,
-        experiences: &[Experience<T>],
-    ) -> Result<ActorCriticMetrics<T>, OptimError> {
+    fn update_td3(&mut self, experiences: &[Experience<T>]) -> Result<ActorCriticMetrics<T>> {
         let _batch_size = experiences.len();
 
         // Extract batch data
@@ -552,7 +539,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
 
                 // Add target policy smoothing noise (TD3 feature)
                 for action in target_actions.iter_mut() {
-                    let noise = T::from(rng().gen::<f64>() - 0.5).unwrap()
+                    let noise = T::from(rng().random::<f64>() - 0.5).unwrap()
                         * T::from(2.0).unwrap()
                         * self.config.td3_config.policy_noise;
                     let clipped_noise = noise
@@ -638,10 +625,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     }
 
     /// DDPG update
-    fn update_ddpg(
-        &mut self,
-        experiences: &[Experience<T>],
-    ) -> Result<ActorCriticMetrics<T>, OptimError> {
+    fn update_ddpg(&mut self, experiences: &[Experience<T>]) -> Result<ActorCriticMetrics<T>> {
         let _batch_size = experiences.len();
 
         // Extract batch data
@@ -700,7 +684,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     }
 
     /// Compute actor loss for TD3
-    fn compute_actor_loss_td3(&self, states: &Array2<T>) -> Result<T, OptimError> {
+    fn compute_actor_loss_td3(&self, states: &Array2<T>) -> Result<T> {
         // TD3 actor loss: maximize Q1(s, π(s))
         let action_dist = self.actor.get_action_distribution(states)?;
         let actions = self.sample_actions_from_distribution(&action_dist)?;
@@ -715,7 +699,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     }
 
     /// Compute actor loss for DDPG
-    fn compute_actor_loss_ddpg(&self, states: &Array2<T>) -> Result<T, OptimError> {
+    fn compute_actor_loss_ddpg(&self, states: &Array2<T>) -> Result<T> {
         // DDPG actor loss: maximize Q(s, π(s))
         let action_dist = self.actor.get_action_distribution(states)?;
         let actions = self.sample_actions_from_distribution(&action_dist)?;
@@ -729,14 +713,14 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     }
 
     /// Update Ornstein-Uhlenbeck noise for DDPG exploration
-    fn update_ou_noise(&mut self) -> Result<(), OptimError> {
+    fn update_ou_noise(&mut self) -> Result<()> {
         if let Some(ref mut ou_state) = self.ou_noise_state {
             let theta = self.config.ddpg_config.ou_noise_theta;
             let sigma = self.config.ddpg_config.ou_noise_sigma;
 
             // OU noise update: dx = theta * (0 - x) * dt + sigma * dW
             for noise in ou_state.iter_mut() {
-                let dx = -theta * *noise + sigma * T::from(rng().gen::<f64>() - 0.5).unwrap();
+                let dx = -theta * *noise + sigma * T::from(rng().random::<f64>() - 0.5).unwrap();
                 *noise = *noise + dx;
             }
         }
@@ -745,10 +729,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     }
 
     /// A2C update from trajectory
-    fn update_a2c(
-        &mut self,
-        trajectory: TrajectoryBatch<T>,
-    ) -> Result<ActorCriticMetrics<T>, OptimError> {
+    fn update_a2c(&mut self, trajectory: TrajectoryBatch<T>) -> Result<ActorCriticMetrics<T>> {
         // Compute advantages
         let mut traj_copy = trajectory;
         let next_value = if let Some(critic) = self.critics.first() {
@@ -792,10 +773,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     }
 
     /// A3C update (asynchronous)
-    fn update_a3c(
-        &mut self,
-        trajectory: TrajectoryBatch<T>,
-    ) -> Result<ActorCriticMetrics<T>, OptimError> {
+    fn update_a3c(&mut self, trajectory: TrajectoryBatch<T>) -> Result<ActorCriticMetrics<T>> {
         // A3C is similar to A2C but with asynchronous updates
         self.update_a2c(trajectory)
     }
@@ -804,7 +782,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     fn update_a2c_from_experiences(
         &mut self,
         experiences: &[Experience<T>],
-    ) -> Result<ActorCriticMetrics<T>, OptimError> {
+    ) -> Result<ActorCriticMetrics<T>> {
         // Convert experiences to trajectory format
         let trajectory = self.experiences_to_trajectory(experiences)?;
         self.update_a2c(trajectory)
@@ -822,7 +800,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
 
     // Helper methods
 
-    fn extract_states(&self, experiences: &[Experience<T>]) -> Result<Array2<T>, OptimError> {
+    fn extract_states(&self, experiences: &[Experience<T>]) -> Result<Array2<T>> {
         if experiences.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "Empty experience batch".to_string(),
@@ -840,7 +818,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
         Ok(states)
     }
 
-    fn extract_actions(&self, experiences: &[Experience<T>]) -> Result<Array2<T>, OptimError> {
+    fn extract_actions(&self, experiences: &[Experience<T>]) -> Result<Array2<T>> {
         let batch_size = experiences.len();
         let action_dim = experiences[0].action.len();
         let mut actions = Array2::zeros((batch_size, action_dim));
@@ -852,15 +830,12 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
         Ok(actions)
     }
 
-    fn extract_rewards(&self, experiences: &[Experience<T>]) -> Result<Array1<T>, OptimError> {
+    fn extract_rewards(&self, experiences: &[Experience<T>]) -> Result<Array1<T>> {
         let rewards: Vec<T> = experiences.iter().map(|exp| exp.reward).collect();
         Ok(Array1::from_vec(rewards))
     }
 
-    fn extract_next_states(
-        &self,
-        experiences: &[Experience<T>],
-    ) -> Result<Array2<T>, OptimError> {
+    fn extract_next_states(&self, experiences: &[Experience<T>]) -> Result<Array2<T>> {
         let batch_size = experiences.len();
         let state_dim = experiences[0].next_state.len();
         let mut next_states = Array2::zeros((batch_size, state_dim));
@@ -872,7 +847,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
         Ok(next_states)
     }
 
-    fn extract_dones(&self, experiences: &[Experience<T>]) -> Result<Array1<bool>, OptimError> {
+    fn extract_dones(&self, experiences: &[Experience<T>]) -> Result<Array1<bool>> {
         let dones: Vec<bool> = experiences.iter().map(|exp| exp.done).collect();
         Ok(Array1::from_vec(dones))
     }
@@ -882,7 +857,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
         critic: &V,
         states: &Array2<T>,
         _actions: &Array2<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         // Simplified Q-value computation
         critic.evaluate_value(states)
     }
@@ -892,23 +867,19 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
         _next_states: &Array2<T>,
         rewards: &Array1<T>,
         _dones: &Array1<bool>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         // Simplified target Q computation for SAC
         Ok(rewards.clone())
     }
 
-    fn compute_critic_loss(
-        &self,
-        q_values: &Array1<T>,
-        target_q: &Array1<T>,
-    ) -> Result<T, OptimError> {
+    fn compute_critic_loss(&self, q_values: &Array1<T>, target_q: &Array1<T>) -> Result<T> {
         Ok((q_values - target_q)
             .mapv(|x| x * x)
             .mean()
             .unwrap_or(T::zero()))
     }
 
-    fn compute_actor_loss_sac(&self, states: &Array2<T>) -> Result<T, OptimError> {
+    fn compute_actor_loss_sac(&self, states: &Array2<T>) -> Result<T> {
         // SAC actor loss: minimize Q(s,a) - alpha * H(π(·|s))
         let action_dist = self.actor.get_action_distribution(states)?;
 
@@ -942,7 +913,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
         Ok(actor_loss)
     }
 
-    fn update_temperature_sac(&mut self, states: &Array2<T>) -> Result<T, OptimError> {
+    fn update_temperature_sac(&mut self, states: &Array2<T>) -> Result<T> {
         if !self.config.sac_config.auto_entropy_tuning {
             return Ok(T::zero());
         }
@@ -976,7 +947,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     fn sample_actions_from_distribution(
         &self,
         action_dist: &ActionDistribution<T>,
-    ) -> Result<Array2<T>, OptimError> {
+    ) -> Result<Array2<T>> {
         match action_dist.distribution_type {
             DistributionType::Gaussian => {
                 if let (Some(ref mean), Some(ref std)) = (&action_dist.mean, &action_dist.std) {
@@ -985,7 +956,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
                     // Add Gaussian noise: action = mean + std * noise
                     for ((action, &m), &s) in actions.iter_mut().zip(mean.iter()).zip(std.iter()) {
                         let noise =
-                            T::from(rng().gen::<f64>() - 0.5).unwrap() * T::from(2.0).unwrap(); // Simplified noise
+                            T::from(rng().random::<f64>() - 0.5).unwrap() * T::from(2.0).unwrap(); // Simplified noise
                         *action = m + s * noise;
                     }
 
@@ -1041,7 +1012,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
         &self,
         action_dist: &ActionDistribution<T>,
         actions: &Array2<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         match action_dist.distribution_type {
             DistributionType::Gaussian => {
                 if let (Some(ref mean), Some(ref std)) = (&action_dist.mean, &action_dist.std) {
@@ -1111,7 +1082,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
         }
     }
 
-    fn soft_update_targets(&mut self) -> Result<(), OptimError> {
+    fn soft_update_targets(&mut self) -> Result<()> {
         let tau = self.config.target_update_rate;
         let one_minus_tau = T::one() - tau;
 
@@ -1153,7 +1124,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
     fn experiences_to_trajectory(
         &self,
         experiences: &[Experience<T>],
-    ) -> Result<TrajectoryBatch<T>, OptimError> {
+    ) -> Result<TrajectoryBatch<T>> {
         let states = self.extract_states(experiences)?;
         let actions = self.extract_actions(experiences)?;
         let rewards = self.extract_rewards(experiences)?;

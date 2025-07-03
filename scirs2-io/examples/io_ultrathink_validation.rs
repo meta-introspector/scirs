@@ -25,20 +25,27 @@ fn main() -> Result<()> {
     println!("✅ Test 3: Testing basic processing...");
     let test_data = vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5];
     let result = coordinator.process_ultra_intelligent(&test_data)?;
-    println!("   Processing completed: Strategy {:?}, Efficiency {:.3}", 
-             result.strategy_used, result.efficiency_score);
+    println!(
+        "   Processing completed: Strategy {:?}, Efficiency {:.3}",
+        result.strategy_used, result.efficiency_score
+    );
 
     // Test 4: Pattern analysis
     println!("✅ Test 4: Testing pattern analysis...");
     let analysis = recognizer.analyze_patterns(&test_data)?;
-    println!("   Pattern analysis completed: {} patterns detected, complexity {:.3}",
-             analysis.pattern_scores.len(), analysis.complexity_index);
+    println!(
+        "   Pattern analysis completed: {} patterns detected, complexity {:.3}",
+        analysis.pattern_scores.len(),
+        analysis.complexity_index
+    );
 
     // Test 5: Statistics
     println!("✅ Test 5: Testing statistics...");
     let stats = coordinator.get_comprehensive_statistics()?;
-    println!("   Statistics retrieved: Meta-learning accuracy {:.3}",
-             stats.meta_learning_accuracy);
+    println!(
+        "   Statistics retrieved: Meta-learning accuracy {:.3}",
+        stats.meta_learning_accuracy
+    );
 
     println!("\n🎉 All Ultra-Think mode validations passed!");
     println!("   The implementation is working correctly and compiles without errors.");

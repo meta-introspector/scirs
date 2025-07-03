@@ -602,7 +602,7 @@ impl SimdMetrics {
         gpu_info: &GpuInfo,
     ) -> Result<Vec<HashMap<String, F>>>
     where
-        F: Float + Send + Sync,
+        F: Float + Send + Sync + std::iter::Sum,
     {
         let batch_size = y_true_batch.nrows();
         let mut results = Vec::with_capacity(batch_size);
@@ -648,7 +648,7 @@ impl SimdMetrics {
     /// Simulated GPU kernel for MSE computation
     fn gpu_mse_kernel<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         // Simulate GPU parallel reduction
         let diff_squared: F = y_true
@@ -663,7 +663,7 @@ impl SimdMetrics {
     /// Simulated GPU kernel for MAE computation
     fn gpu_mae_kernel<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         let abs_diff: F = y_true
             .iter()
@@ -677,7 +677,7 @@ impl SimdMetrics {
     /// Simulated GPU kernel for R² computation
     fn gpu_r2_kernel<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         let mean_true = y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).unwrap();
 
@@ -702,7 +702,7 @@ impl SimdMetrics {
     /// Simulated GPU kernel for correlation computation
     fn gpu_correlation_kernel<F>(&self, x: &ArrayView1<F>, y: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         let n = F::from(x.len()).unwrap();
         let mean_x = x.iter().cloned().sum::<F>() / n;
@@ -786,7 +786,7 @@ impl SimdMetrics {
 
     fn scalar_mse<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         let mse = y_true
             .iter()
@@ -799,7 +799,7 @@ impl SimdMetrics {
 
     fn scalar_mae<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         let mae = y_true
             .iter()
@@ -812,7 +812,7 @@ impl SimdMetrics {
 
     fn scalar_r2_score<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         let mean_true = y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).unwrap();
 
@@ -836,7 +836,7 @@ impl SimdMetrics {
 
     fn scalar_correlation<F>(&self, x: &ArrayView1<F>, y: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         let n = F::from(x.len()).unwrap();
         let mean_x = x.iter().cloned().sum::<F>() / n;
@@ -1054,7 +1054,7 @@ impl SimdMetrics {
 impl Default for SimdMetrics {
     fn default() -> Self {
         Self::new().unwrap_or_else(|_| Self {
-            capabilities: PlatformCapabilities::default(),
+            capabilities: PlatformCapabilities::detect(),
             enable_simd: false,
             gpu_info: None,
             parallel_config: ParallelConfig::default(),

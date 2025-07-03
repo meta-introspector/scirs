@@ -362,7 +362,7 @@ where
 
         // Clone phi_list for read access during mutable iteration
         let phi_list_snapshot: Vec<_> = phi_list.iter().map(|phi| phi.clone()).collect();
-        
+
         for (phase_idx, phi) in phi_list.iter_mut().enumerate() {
             let phi_old = phi.clone();
             let curvature = compute_curvature(&phi.view());

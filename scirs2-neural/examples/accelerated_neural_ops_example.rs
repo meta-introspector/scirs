@@ -90,6 +90,7 @@ fn main() -> Result<()> {
 }
 fn demonstrate_performance_scaling() -> Result<()> {
     // Create progressively larger matrices to show scaling
+    let ops = create_neural_ops()?;
     let sizes = vec![10, 50, 100];
     for size in sizes {
         let a = Array2::ones((size, size));
@@ -101,6 +102,9 @@ fn demonstrate_performance_scaling() -> Result<()> {
             "Matrix {}x{} multiplication took: {:?}",
             size, size, duration
         );
+    }
+    Ok(())
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -108,5 +112,9 @@ mod tests {
     fn test_example_runs() {
         // Test that the example runs without panicking
         assert!(main().is_ok());
+    }
+    #[test]
     fn test_performance_demo() {
         assert!(demonstrate_performance_scaling().is_ok());
+    }
+}

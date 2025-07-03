@@ -3,7 +3,6 @@
 //! Implementation of liquid state machine-based optimization algorithms.
 
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::CoreResult;
 
 /// Liquid State Machine for optimization
 #[derive(Debug, Clone)]
@@ -35,8 +34,8 @@ impl LiquidStateMachine {
         // Random sparse connectivity for reservoir
         for i in 0..reservoir_size {
             for j in 0..reservoir_size {
-                if i != j && rand::random::<f64>() < 0.1 {
-                    reservoir_weights[[i, j]] = (rand::random::<f64>() - 0.5) * 0.1;
+                if i != j && rand::rng().random::<f64>() < 0.1 {
+                    reservoir_weights[[i, j]] = (rand::rng().random::<f64>() - 0.5) * 0.1;
                 }
             }
         }
@@ -44,7 +43,7 @@ impl LiquidStateMachine {
         // Random input weights
         for i in 0..reservoir_size {
             for j in 0..input_size {
-                input_weights[[i, j]] = (rand::random::<f64>() - 0.5) * 0.5;
+                input_weights[[i, j]] = (rand::rng().random::<f64>() - 0.5) * 0.5;
             }
         }
 

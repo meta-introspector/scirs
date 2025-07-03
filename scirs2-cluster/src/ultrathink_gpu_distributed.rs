@@ -225,7 +225,8 @@ impl GpuUltrathinkClusterer {
 
     /// Enable all GPU features
     pub fn with_full_gpu_acceleration(mut self) -> Self {
-        self.base_clusterer = self.base_clusterer
+        self.base_clusterer = self
+            .base_clusterer
             .with_ai_algorithm_selection(true)
             .with_quantum_neuromorphic_fusion(true)
             .with_meta_learning(true)
@@ -253,7 +254,9 @@ impl GpuUltrathinkClusterer {
 
         // Phase 4: GPU-accelerated clustering
         self.performance_monitor.start_timing("gpu_clustering");
-        let (gpu_clusters, gpu_centroids) = self.kernel_executor.execute_clustering(&preprocessed_data)?;
+        let (gpu_clusters, gpu_centroids) = self
+            .kernel_executor
+            .execute_clustering(&preprocessed_data)?;
         let clustering_time = self.performance_monitor.end_timing("gpu_clustering");
 
         // Phase 5: Transfer results back to CPU
@@ -263,13 +266,16 @@ impl GpuUltrathinkClusterer {
         let result_transfer_time = self.performance_monitor.end_timing("result_transfer");
 
         // Phase 6: Create ultrathink result from GPU computation
-        let base_result = self.create_ultrathink_result_from_gpu(
-            &cpu_clusters, &cpu_centroids, data
-        )?;
+        let base_result =
+            self.create_ultrathink_result_from_gpu(&cpu_clusters, &cpu_centroids, data)?;
 
         // Phase 7: Collect GPU metrics
         let gpu_metrics = self.collect_gpu_metrics(
-            init_time, transfer_time, preprocess_time, clustering_time, result_transfer_time
+            init_time,
+            transfer_time,
+            preprocess_time,
+            clustering_time,
+            result_transfer_time,
         );
         let memory_stats = self.memory_manager.get_memory_stats();
         let kernel_stats = self.kernel_executor.get_kernel_stats();
@@ -286,10 +292,10 @@ impl GpuUltrathinkClusterer {
         // Initialize GPU context and allocate memory
         let data_size = data.len() * std::mem::size_of::<f64>();
         self.memory_manager.allocate_gpu_memory(data_size * 3)?; // 3x for working space
-        
+
         // Initialize GPU kernels
         self.kernel_executor.initialize_kernels(data.dim())?;
-        
+
         Ok(())
     }
 
@@ -297,16 +303,20 @@ impl GpuUltrathinkClusterer {
         &self,
         clusters: &Array1<usize>,
         centroids: &Array2<f64>,
-        original_data: &ArrayView2<f64>
+        original_data: &ArrayView2<f64>,
     ) -> Result<UltrathinkClusteringResult> {
         // Create base ultrathink result with GPU-computed values
         // This would normally integrate with the base clusterer
-        
+
         // For demonstration, create a basic result structure
-        use crate::ultrathink_clustering::{UltrathinkPerformanceMetrics};
-        
+        use crate::ultrathink_clustering::UltrathinkPerformanceMetrics;
+
         let performance = UltrathinkPerformanceMetrics {
-            silhouette_score: self.calculate_gpu_silhouette_score(original_data, clusters, centroids)?,
+            silhouette_score: self.calculate_gpu_silhouette_score(
+                original_data,
+                clusters,
+                centroids,
+            )?,
             execution_time: self.performance_monitor.get_total_time(),
             memory_usage: self.memory_manager.get_peak_memory_usage(),
             quantum_coherence: 0.95, // Enhanced by GPU precision
@@ -332,43 +342,48 @@ impl GpuUltrathinkClusterer {
         &self,
         data: &ArrayView2<f64>,
         clusters: &Array1<usize>,
-        centroids: &Array2<f64>
+        centroids: &Array2<f64>,
     ) -> Result<f64> {
         // Simplified GPU-accelerated silhouette score calculation
         let n_samples = data.nrows();
         let mut total_score = 0.0;
-        
+
         for i in 0..n_samples {
             let cluster_id = clusters[i];
-            
+
             // Calculate intra-cluster distance (GPU-accelerated)
             let mut intra_distance = 0.0;
             let mut intra_count = 0;
-            
+
             for j in 0..n_samples {
                 if i != j && clusters[j] == cluster_id {
                     intra_distance += self.gpu_euclidean_distance(&data.row(i), &data.row(j));
                     intra_count += 1;
                 }
             }
-            
-            let a = if intra_count > 0 { intra_distance / intra_count as f64 } else { 0.0 };
-            
+
+            let a = if intra_count > 0 {
+                intra_distance / intra_count as f64
+            } else {
+                0.0
+            };
+
             // Calculate inter-cluster distance (GPU-accelerated)
             let mut min_inter_distance = f64::INFINITY;
-            
+
             for k in 0..centroids.nrows() {
                 if k != cluster_id {
                     let mut inter_distance = 0.0;
                     let mut inter_count = 0;
-                    
+
                     for j in 0..n_samples {
                         if clusters[j] == k {
-                            inter_distance += self.gpu_euclidean_distance(&data.row(i), &data.row(j));
+                            inter_distance +=
+                                self.gpu_euclidean_distance(&data.row(i), &data.row(j));
                             inter_count += 1;
                         }
                     }
-                    
+
                     if inter_count > 0 {
                         let avg_inter = inter_distance / inter_count as f64;
                         if avg_inter < min_inter_distance {
@@ -377,12 +392,18 @@ impl GpuUltrathinkClusterer {
                     }
                 }
             }
-            
+
             let b = min_inter_distance;
-            let silhouette = if a < b { 1.0 - a / b } else if a > b { b / a - 1.0 } else { 0.0 };
+            let silhouette = if a < b {
+                1.0 - a / b
+            } else if a > b {
+                b / a - 1.0
+            } else {
+                0.0
+            };
             total_score += silhouette;
         }
-        
+
         Ok(total_score / n_samples as f64)
     }
 
@@ -420,7 +441,10 @@ impl GpuUltrathinkClusterer {
 
 impl DistributedUltrathinkClusterer {
     /// Create new distributed ultrathink clusterer
-    pub fn new(worker_configs: Vec<WorkerNodeConfig>, coordination_strategy: CoordinationStrategy) -> Self {
+    pub fn new(
+        worker_configs: Vec<WorkerNodeConfig>,
+        coordination_strategy: CoordinationStrategy,
+    ) -> Self {
         Self {
             worker_configs: worker_configs.clone(),
             coordination_strategy,
@@ -431,27 +455,33 @@ impl DistributedUltrathinkClusterer {
     }
 
     /// Perform distributed ultrathink clustering
-    pub fn distributed_cluster(&mut self, data: &ArrayView2<f64>) -> Result<DistributedUltrathinkResult> {
+    pub fn distributed_cluster(
+        &mut self,
+        data: &ArrayView2<f64>,
+    ) -> Result<DistributedUltrathinkResult> {
         // Phase 1: Data partitioning and distribution
         let data_partitions = self.partition_data(data)?;
-        
+
         // Phase 2: Distribute clustering tasks to workers
         let worker_results = self.execute_distributed_clustering(&data_partitions)?;
-        
+
         // Phase 3: Aggregate results from all workers
         let aggregated_result = self.aggregate_worker_results(&worker_results)?;
-        
+
         // Phase 4: Collect distributed metrics
         let distributed_metrics = self.collect_distributed_metrics(&worker_results);
         let load_balance_stats = self.load_balancer.get_stats();
         let communication_overhead = self.communication_protocol.get_overhead_stats();
-        
+
         Ok(DistributedUltrathinkResult {
             base_result: aggregated_result,
             distributed_metrics,
             load_balance_stats,
             communication_overhead,
-            worker_stats: worker_results.into_iter().map(|r| r.performance_stats).collect(),
+            worker_stats: worker_results
+                .into_iter()
+                .map(|r| r.performance_stats)
+                .collect(),
         })
     }
 
@@ -460,9 +490,9 @@ impl DistributedUltrathinkClusterer {
         let n_workers = self.worker_configs.len();
         let n_samples = data.nrows();
         let samples_per_worker = n_samples / n_workers;
-        
+
         let mut partitions = Vec::new();
-        
+
         for i in 0..n_workers {
             let start_idx = i * samples_per_worker;
             let end_idx = if i == n_workers - 1 {
@@ -470,18 +500,21 @@ impl DistributedUltrathinkClusterer {
             } else {
                 (i + 1) * samples_per_worker
             };
-            
+
             let partition = data.slice(ndarray::s![start_idx..end_idx, ..]).to_owned();
             partitions.push(partition);
         }
-        
+
         Ok(partitions)
     }
 
-    fn execute_distributed_clustering(&mut self, partitions: &[Array2<f64>]) -> Result<Vec<WorkerClusteringResult>> {
+    fn execute_distributed_clustering(
+        &mut self,
+        partitions: &[Array2<f64>],
+    ) -> Result<Vec<WorkerClusteringResult>> {
         // Execute clustering on each worker node
         let mut worker_results = Vec::new();
-        
+
         // In a real implementation, this would use actual network communication
         // For demonstration, we simulate distributed execution
         for (worker_idx, partition) in partitions.iter().enumerate() {
@@ -489,28 +522,28 @@ impl DistributedUltrathinkClusterer {
             let worker_result = self.execute_worker_clustering(worker_config, partition)?;
             worker_results.push(worker_result);
         }
-        
+
         Ok(worker_results)
     }
 
     fn execute_worker_clustering(
         &self,
         worker_config: &WorkerNodeConfig,
-        partition: &Array2<f64>
+        partition: &Array2<f64>,
     ) -> Result<WorkerClusteringResult> {
         // Simulate worker clustering execution
         let start_time = std::time::Instant::now();
-        
+
         // Create local clusterer for this worker
         let mut local_clusterer = UltrathinkClusterer::new()
             .with_ai_algorithm_selection(true)
             .with_quantum_neuromorphic_fusion(true);
-        
+
         // Execute clustering on partition
         let local_result = local_clusterer.cluster(&partition.view())?;
-        
+
         let execution_time = start_time.elapsed().as_secs_f64();
-        
+
         // Create worker-specific performance stats
         let performance_stats = WorkerPerformanceStats {
             worker_id: worker_config.node_id.clone(),
@@ -521,7 +554,7 @@ impl DistributedUltrathinkClusterer {
             network_usage: 0.15,
             fault_count: 0,
         };
-        
+
         Ok(WorkerClusteringResult {
             worker_id: worker_config.node_id.clone(),
             local_result,
@@ -529,74 +562,93 @@ impl DistributedUltrathinkClusterer {
         })
     }
 
-    fn aggregate_worker_results(&self, worker_results: &[WorkerClusteringResult]) -> Result<UltrathinkClusteringResult> {
+    fn aggregate_worker_results(
+        &self,
+        worker_results: &[WorkerClusteringResult],
+    ) -> Result<UltrathinkClusteringResult> {
         // Aggregate clustering results from all workers
         if worker_results.is_empty() {
-            return Err(ClusteringError::InvalidInput("No worker results to aggregate".to_string()));
+            return Err(ClusteringError::InvalidInput(
+                "No worker results to aggregate".to_string(),
+            ));
         }
-        
+
         // Combine clusters and centroids from all workers
         let mut all_clusters = Vec::new();
         let mut all_centroids = Vec::new();
         let mut cluster_offset = 0;
-        
+
         for worker_result in worker_results {
             let mut adjusted_clusters = worker_result.local_result.clusters.clone();
             // Adjust cluster IDs to avoid conflicts between workers
             for cluster_id in adjusted_clusters.iter_mut() {
                 *cluster_id += cluster_offset;
             }
-            
+
             all_clusters.extend(adjusted_clusters.iter());
-            
+
             // Add centroids with offset
             for centroid_row in worker_result.local_result.centroids.outer_iter() {
                 all_centroids.push(centroid_row.to_owned());
             }
-            
+
             cluster_offset += worker_result.local_result.centroids.nrows();
         }
-        
+
         // Create aggregated arrays
         let aggregated_clusters = Array1::from_vec(all_clusters);
         let n_centroids = all_centroids.len();
-        let n_features = if n_centroids > 0 { all_centroids[0].len() } else { 0 };
-        
+        let n_features = if n_centroids > 0 {
+            all_centroids[0].len()
+        } else {
+            0
+        };
+
         let mut aggregated_centroids = Array2::zeros((n_centroids, n_features));
         for (i, centroid) in all_centroids.iter().enumerate() {
             aggregated_centroids.row_mut(i).assign(centroid);
         }
-        
+
         // Aggregate performance metrics
-        let total_execution_time: f64 = worker_results.iter()
+        let total_execution_time: f64 = worker_results
+            .iter()
             .map(|r| r.performance_stats.execution_time)
             .max_by(|a, b| a.partial_cmp(b).unwrap())
             .unwrap_or(0.0);
-        
-        let avg_ai_speedup: f64 = worker_results.iter()
+
+        let avg_ai_speedup: f64 = worker_results
+            .iter()
             .map(|r| r.local_result.ai_speedup)
-            .sum::<f64>() / worker_results.len() as f64;
-        
-        let avg_quantum_advantage: f64 = worker_results.iter()
+            .sum::<f64>()
+            / worker_results.len() as f64;
+
+        let avg_quantum_advantage: f64 = worker_results
+            .iter()
             .map(|r| r.local_result.quantum_advantage)
-            .sum::<f64>() / worker_results.len() as f64;
-        
-        let avg_confidence: f64 = worker_results.iter()
+            .sum::<f64>()
+            / worker_results.len() as f64;
+
+        let avg_confidence: f64 = worker_results
+            .iter()
             .map(|r| r.local_result.confidence)
-            .sum::<f64>() / worker_results.len() as f64;
-        
+            .sum::<f64>()
+            / worker_results.len() as f64;
+
         use crate::ultrathink_clustering::UltrathinkPerformanceMetrics;
-        
+
         let aggregated_performance = UltrathinkPerformanceMetrics {
             silhouette_score: 0.82, // Would be calculated from aggregated data
             execution_time: total_execution_time,
-            memory_usage: worker_results.iter().map(|r| r.performance_stats.memory_usage).sum(),
+            memory_usage: worker_results
+                .iter()
+                .map(|r| r.performance_stats.memory_usage)
+                .sum(),
             quantum_coherence: 0.88,
             neural_adaptation_rate: 0.11,
             ai_iterations: 120,
             energy_efficiency: 0.91,
         };
-        
+
         Ok(UltrathinkClusteringResult {
             clusters: aggregated_clusters,
             centroids: aggregated_centroids,
@@ -610,25 +662,33 @@ impl DistributedUltrathinkClusterer {
         })
     }
 
-    fn collect_distributed_metrics(&self, worker_results: &[WorkerClusteringResult]) -> DistributedProcessingMetrics {
+    fn collect_distributed_metrics(
+        &self,
+        worker_results: &[WorkerClusteringResult],
+    ) -> DistributedProcessingMetrics {
         let total_workers = worker_results.len();
-        let successful_workers = worker_results.iter()
+        let successful_workers = worker_results
+            .iter()
             .filter(|r| r.performance_stats.fault_count == 0)
             .count();
-        
-        let total_execution_time = worker_results.iter()
+
+        let total_execution_time = worker_results
+            .iter()
             .map(|r| r.performance_stats.execution_time)
             .max_by(|a, b| a.partial_cmp(b).unwrap())
             .unwrap_or(0.0);
-        
-        let total_data_processed = worker_results.iter()
+
+        let total_data_processed = worker_results
+            .iter()
             .map(|r| r.performance_stats.data_size)
             .sum::<usize>();
-        
-        let avg_cpu_utilization = worker_results.iter()
+
+        let avg_cpu_utilization = worker_results
+            .iter()
             .map(|r| r.performance_stats.cpu_utilization)
-            .sum::<f64>() / total_workers as f64;
-        
+            .sum::<f64>()
+            / total_workers as f64;
+
         DistributedProcessingMetrics {
             total_workers,
             successful_workers,
@@ -726,17 +786,17 @@ impl GpuKernelExecutor {
     pub fn execute_clustering(&mut self, data: &GpuTensor) -> Result<(GpuTensor, GpuTensor)> {
         // Execute GPU-accelerated clustering kernels
         self.kernel_stats.clustering_kernel_calls += 1;
-        
+
         let clusters = GpuTensor {
             shape: (data.shape.0, 1),
             data_ptr: 0x2000 as *mut f64,
         };
-        
+
         let centroids = GpuTensor {
             shape: (3, data.shape.1), // Assume 3 clusters
             data_ptr: 0x3000 as *mut f64,
         };
-        
+
         Ok((clusters, centroids))
     }
 
@@ -760,7 +820,8 @@ impl GpuPerformanceMonitor {
     }
 
     pub fn start_timing(&mut self, operation: &str) {
-        self.timers.insert(operation.to_string(), std::time::Instant::now());
+        self.timers
+            .insert(operation.to_string(), std::time::Instant::now());
     }
 
     pub fn end_timing(&mut self, operation: &str) -> f64 {

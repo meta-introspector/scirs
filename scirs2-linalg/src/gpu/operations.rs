@@ -4,7 +4,9 @@ use super::{AutoGpuSelector, GpuBuffer, GpuContext, GpuLinalgOps};
 use crate::error::{LinalgError, LinalgResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumAssign, Zero};
+use std::collections::HashMap;
 use std::fmt::Debug;
+use std::sync::{Arc, Mutex, RwLock};
 
 /// Default GPU threshold for switching from CPU to GPU (number of elements)
 pub const DEFAULT_GPU_THRESHOLD: usize = 50_000;
@@ -2114,10 +2116,10 @@ where
     /// Launch ROCm matrix multiplication kernel (f32)
     fn launch_rocm_matmul_f32(
         &self,
-        ctx: &dyn GpuContext,
-        a_ptr: *mut std::ffi::c_void,
-        b_ptr: *mut std::ffi::c_void,
-        c_ptr: *mut std::ffi::c_void,
+        _ctx: &dyn GpuContext,
+        _a_ptr: *mut std::ffi::c_void,
+        _b_ptr: *mut std::ffi::c_void,
+        _c_ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2129,10 +2131,10 @@ where
     /// Launch Metal matrix-vector multiplication kernel (f32)
     fn launch_metal_matvec_f32(
         &self,
-        ctx: &dyn GpuContext,
-        a_ptr: *mut std::ffi::c_void,
-        x_ptr: *mut std::ffi::c_void,
-        y_ptr: *mut std::ffi::c_void,
+        _ctx: &dyn GpuContext,
+        _a_ptr: *mut std::ffi::c_void,
+        _x_ptr: *mut std::ffi::c_void,
+        _y_ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2144,10 +2146,10 @@ where
     /// Launch Metal matrix multiplication kernel (f32)
     fn launch_metal_matmul_f32(
         &self,
-        ctx: &dyn GpuContext,
-        a_ptr: *mut std::ffi::c_void,
-        b_ptr: *mut std::ffi::c_void,
-        c_ptr: *mut std::ffi::c_void,
+        _ctx: &dyn GpuContext,
+        _a_ptr: *mut std::ffi::c_void,
+        _b_ptr: *mut std::ffi::c_void,
+        _c_ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2158,7 +2160,7 @@ where
 }
 
 /// ULTRATHINK MODE: Ultra-Intelligent GPU Dispatch System
-/// 
+///
 /// This advanced dispatch system uses machine learning-based performance prediction,
 /// workload analysis, and adaptive optimization to make optimal CPU/GPU decisions.
 pub struct UltraIntelligentGpuDispatcher<T>
@@ -2366,21 +2368,19 @@ where
         available_devices: &[GpuDeviceInfo],
     ) -> LinalgResult<DispatchDecision> {
         // 1. Analyze workload characteristics
-        let workload_analysis = self.analyze_workload(operation, matrix_shape, data_characteristics)?;
-        
+        let workload_analysis =
+            self.analyze_workload(operation, matrix_shape, data_characteristics)?;
+
         // 2. Predict performance for each option
-        let performance_predictions = self.predict_performance(
-            operation,
-            &workload_analysis,
-            available_devices,
-        )?;
-        
+        let performance_predictions =
+            self.predict_performance(operation, &workload_analysis, available_devices)?;
+
         // 3. Consider multi-dimensional objectives (time, energy, memory)
         let optimal_choice = self.optimize_multi_objective(&performance_predictions)?;
-        
+
         // 4. Apply adaptive threshold learning
         let final_decision = self.apply_adaptive_thresholds(operation, &optimal_choice)?;
-        
+
         Ok(final_decision)
     }
 
@@ -2476,7 +2476,10 @@ where
             let memory_score = 1.0 / (1.0 + prediction.estimated_memory as f64);
 
             // Weighted score with confidence factor
-            let total_score = (time_weight * time_score + energy_weight * energy_score + memory_weight * memory_score) * prediction.confidence_score;
+            let total_score = (time_weight * time_score
+                + energy_weight * energy_score
+                + memory_weight * memory_score)
+                * prediction.confidence_score;
 
             if total_score > best_score {
                 best_score = total_score;
@@ -2499,9 +2502,9 @@ where
         all_options: &[PerformancePrediction],
     ) -> String {
         let cpu_option = all_options.iter().find(|p| p.device_type == "CPU");
-        
+
         match cpu_option {
-            Some(cpu) if selected.device_type == "CPU" => {
+            Some(_cpu) if selected.device_type == "CPU" => {
                 format!(
                     "Selected CPU: {:.3}s execution time vs GPU alternatives. \
                      Lower overhead and better cache efficiency for this workload.",
@@ -2531,7 +2534,7 @@ where
             "matmul" => (shape.0 * shape.1 * shape.1) as f64 / (shape.0 * shape.1 * 2) as f64,
             "matvec" => (shape.0 * shape.1 * 2) as f64 / (shape.0 + shape.1) as f64,
             "norm" => 2.0, // 2 operations per element
-            _ => 1.0, // Default compute intensity
+            _ => 1.0,      // Default compute intensity
         }
     }
 
@@ -2561,10 +2564,14 @@ where
         parallel_efficiency.min(1.0)
     }
 
-    fn estimate_cache_efficiency(&self, shape: (usize, usize), pattern: &MemoryAccessPattern) -> f64 {
+    fn estimate_cache_efficiency(
+        &self,
+        _shape: (usize, usize),
+        pattern: &MemoryAccessPattern,
+    ) -> f64 {
         let cache_line_size = 64; // bytes
         let elements_per_line = cache_line_size / std::mem::size_of::<T>();
-        
+
         match pattern {
             MemoryAccessPattern::Sequential => 0.9,
             MemoryAccessPattern::Random => 0.1,
@@ -2590,7 +2597,7 @@ where
         })?;
 
         let use_gpu = !optimal_choice.selected_device.starts_with("CPU");
-        
+
         // Update threshold learning
         optimizer.update_threshold_performance(
             operation,
@@ -2665,7 +2672,11 @@ impl GpuPerformancePredictor {
         }
     }
 
-    pub fn predict_cpu_performance(&self, _operation: &str, _workload: &WorkloadAnalysis) -> LinalgResult<PerformancePrediction> {
+    pub fn predict_cpu_performance(
+        &self,
+        _operation: &str,
+        _workload: &WorkloadAnalysis,
+    ) -> LinalgResult<PerformancePrediction> {
         // Simplified prediction - in practice would use sophisticated ML models
         Ok(PerformancePrediction {
             device_type: "CPU".to_string(),
@@ -2676,7 +2687,12 @@ impl GpuPerformancePredictor {
         })
     }
 
-    pub fn predict_gpu_performance(&self, _operation: &str, _workload: &WorkloadAnalysis, _device: &GpuDeviceInfo) -> LinalgResult<PerformancePrediction> {
+    pub fn predict_gpu_performance(
+        &self,
+        _operation: &str,
+        _workload: &WorkloadAnalysis,
+        _device: &GpuDeviceInfo,
+    ) -> LinalgResult<PerformancePrediction> {
         // Simplified prediction - in practice would use sophisticated ML models
         Ok(PerformancePrediction {
             device_type: "GPU".to_string(),
@@ -2707,22 +2723,36 @@ impl AdaptiveThresholdOptimizer {
         }
     }
 
-    pub fn update_threshold_performance(&mut self, operation: &str, performance: f64, used_gpu: bool) {
-        let history = self.threshold_performance.entry(operation.to_string()).or_insert_with(VecDeque::new);
-        
+    pub fn update_threshold_performance(
+        &mut self,
+        operation: &str,
+        performance: f64,
+        used_gpu: bool,
+    ) {
+        let history = self
+            .threshold_performance
+            .entry(operation.to_string())
+            .or_insert_with(VecDeque::new);
+
         // Keep only recent history
         if history.len() >= 100 {
             history.pop_front();
         }
-        
-        let current_threshold = self.current_thresholds.get(operation).copied().unwrap_or(50000);
+
+        let current_threshold = self
+            .current_thresholds
+            .get(operation)
+            .copied()
+            .unwrap_or(50000);
         history.push_back((current_threshold, performance, used_gpu));
-        
+
         // Simple threshold adaptation logic
         if history.len() >= 10 {
-            let avg_performance = history.iter().map(|(_, p, _)| p).sum::<f64>() / history.len() as f64;
-            let gpu_usage_rate = history.iter().filter(|(_, _, gpu)| *gpu).count() as f64 / history.len() as f64;
-            
+            let avg_performance =
+                history.iter().map(|(_, p, _)| p).sum::<f64>() / history.len() as f64;
+            let gpu_usage_rate =
+                history.iter().filter(|(_, _, gpu)| *gpu).count() as f64 / history.len() as f64;
+
             // Adjust threshold based on performance and GPU usage
             let threshold_adjustment = if gpu_usage_rate > 0.8 && avg_performance > 0.5 {
                 -1000 // Lower threshold to use GPU more
@@ -2731,10 +2761,12 @@ impl AdaptiveThresholdOptimizer {
             } else {
                 0
             };
-            
+
             if threshold_adjustment != 0 {
-                let new_threshold = (current_threshold as i32 + threshold_adjustment).max(1000) as usize;
-                self.current_thresholds.insert(operation.to_string(), new_threshold);
+                let new_threshold =
+                    (current_threshold as i32 + threshold_adjustment).max(1000) as usize;
+                self.current_thresholds
+                    .insert(operation.to_string(), new_threshold);
             }
         }
     }
@@ -2814,7 +2846,7 @@ mod tests {
         assert!(manager.get_kernel("nonexistent").is_none());
 
         let kernels = manager.list_kernels();
-        assert!(kernels.contains(&"test_kernel"));
+        assert!(kernels.contains(&"test_kernel".to_string()));
     }
 
     #[test]

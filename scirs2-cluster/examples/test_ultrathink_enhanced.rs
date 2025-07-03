@@ -4,8 +4,8 @@
 use ndarray::Array2;
 use scirs2_cluster::ultrathink_clustering::UltrathinkClusterer;
 use scirs2_cluster::ultrathink_visualization::{
-    UltrathinkVisualizationConfig, UltrathinkVisualizer,
-    QuantumColorScheme, VisualizationExportFormat
+    QuantumColorScheme, UltrathinkVisualizationConfig, UltrathinkVisualizer,
+    VisualizationExportFormat,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -14,8 +14,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create sophisticated test data
     let data = create_complex_test_data();
-    println!("📊 Created test data with {} points in {} dimensions", 
-        data.nrows(), data.ncols());
+    println!(
+        "📊 Created test data with {} points in {} dimensions",
+        data.nrows(),
+        data.ncols()
+    );
 
     // Test 1: Basic enhanced ultrathink clustering
     println!("\n🧪 Test 1: Enhanced AI-driven algorithm selection");
@@ -89,43 +92,80 @@ fn create_complex_test_data() -> Array2<f64> {
 }
 
 fn test_enhanced_ai_selection(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
-    let mut clusterer = UltrathinkClusterer::new()
-        .with_ai_algorithm_selection(true);
+    let mut clusterer = UltrathinkClusterer::new().with_ai_algorithm_selection(true);
 
     let result = clusterer.cluster(&data.view())?;
 
     println!("   ✅ AI-enhanced algorithm selection completed");
-    println!("      Selected: {}", result.selected_algorithm);
-    println!("      AI speedup: {:.2}x", result.ai_speedup);
-    println!("      Confidence: {:.3}", result.confidence);
-    println!("      Execution time: {:.4}s", result.performance.execution_time);
+    let selected = &result.selected_algorithm;
+    println!("      Selected: {selected}");
+    let speedup = result.ai_speedup;
+    println!("      AI speedup: {speedup:.2}x");
+    let confidence = result.confidence;
+    println!("      Confidence: {confidence:.3}");
+    println!(
+        "      Execution time: {:.4}s",
+        result.performance.execution_time
+    );
 
     // Verify enhanced features
-    assert!(result.ai_speedup > 1.0, "AI speedup should be greater than 1.0");
+    assert!(
+        result.ai_speedup > 1.0,
+        "AI speedup should be greater than 1.0"
+    );
     assert!(result.confidence > 0.0, "Confidence should be positive");
-    assert!(!result.selected_algorithm.is_empty(), "Algorithm should be selected");
+    assert!(
+        !result.selected_algorithm.is_empty(),
+        "Algorithm should be selected"
+    );
 
     Ok(())
 }
 
-fn test_quantum_neuromorphic_enhanced(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
-    let mut clusterer = UltrathinkClusterer::new()
-        .with_quantum_neuromorphic_fusion(true);
+fn test_quantum_neuromorphic_enhanced(
+    data: &Array2<f64>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut clusterer = UltrathinkClusterer::new().with_quantum_neuromorphic_fusion(true);
 
     let result = clusterer.cluster(&data.view())?;
 
     println!("   ✅ Enhanced quantum-neuromorphic clustering completed");
-    println!("      Quantum advantage: {:.2}x", result.quantum_advantage);
-    println!("      Neuromorphic benefit: {:.2}x", result.neuromorphic_benefit);
-    println!("      Quantum coherence: {:.3}", result.performance.quantum_coherence);
-    println!("      Neural adaptation rate: {:.3}", result.performance.neural_adaptation_rate);
-    println!("      Energy efficiency: {:.3}", result.performance.energy_efficiency);
+    let advantage = result.quantum_advantage;
+    println!("      Quantum advantage: {advantage:.2}x");
+    println!(
+        "      Neuromorphic benefit: {:.2}x",
+        result.neuromorphic_benefit
+    );
+    println!(
+        "      Quantum coherence: {:.3}",
+        result.performance.quantum_coherence
+    );
+    println!(
+        "      Neural adaptation rate: {:.3}",
+        result.performance.neural_adaptation_rate
+    );
+    println!(
+        "      Energy efficiency: {:.3}",
+        result.performance.energy_efficiency
+    );
 
     // Verify quantum-neuromorphic enhancements
-    assert!(result.quantum_advantage > 1.0, "Quantum advantage should be enhanced");
-    assert!(result.neuromorphic_benefit > 1.0, "Neuromorphic benefit should be positive");
-    assert!(result.performance.quantum_coherence > 0.0, "Quantum coherence should be maintained");
-    assert!(result.performance.energy_efficiency > 0.0, "Energy efficiency should be positive");
+    assert!(
+        result.quantum_advantage > 1.0,
+        "Quantum advantage should be enhanced"
+    );
+    assert!(
+        result.neuromorphic_benefit > 1.0,
+        "Neuromorphic benefit should be positive"
+    );
+    assert!(
+        result.performance.quantum_coherence > 0.0,
+        "Quantum coherence should be maintained"
+    );
+    assert!(
+        result.performance.energy_efficiency > 0.0,
+        "Energy efficiency should be positive"
+    );
 
     Ok(())
 }
@@ -138,14 +178,30 @@ fn test_enhanced_meta_learning(data: &Array2<f64>) -> Result<(), Box<dyn std::er
     let result = clusterer.cluster(&data.view())?;
 
     println!("   ✅ Enhanced meta-learning optimization completed");
-    println!("      Meta-learning improvement: {:.2}x", result.meta_learning_improvement);
-    println!("      Final silhouette score: {:.3}", result.performance.silhouette_score);
-    println!("      AI iterations: {}", result.performance.ai_iterations);
+    println!(
+        "      Meta-learning improvement: {:.2}x",
+        result.meta_learning_improvement
+    );
+    println!(
+        "      Final silhouette score: {:.3}",
+        result.performance.silhouette_score
+    );
+    let iterations = result.performance.ai_iterations;
+    println!("      AI iterations: {iterations}");
 
     // Verify meta-learning enhancements
-    assert!(result.meta_learning_improvement >= 1.0, "Meta-learning should show improvement");
-    assert!(result.performance.silhouette_score > 0.0, "Silhouette score should be positive");
-    assert!(result.performance.ai_iterations > 0, "AI iterations should occur");
+    assert!(
+        result.meta_learning_improvement >= 1.0,
+        "Meta-learning should show improvement"
+    );
+    assert!(
+        result.performance.silhouette_score > 0.0,
+        "Silhouette score should be positive"
+    );
+    assert!(
+        result.performance.ai_iterations > 0,
+        "AI iterations should occur"
+    );
 
     Ok(())
 }
@@ -172,21 +228,45 @@ fn test_enhanced_visualization(data: &Array2<f64>) -> Result<(), Box<dyn std::er
     let visualization_output = visualizer.visualize_results(&data.view(), &result)?;
 
     println!("   ✅ Enhanced visualization with quantum PCA completed");
-    println!("      Quantum plot available: {}", visualization_output.quantum_plot.is_some());
-    println!("      Neuromorphic plot available: {}", visualization_output.neuromorphic_plot.is_some());
-    println!("      AI selection plot available: {}", visualization_output.ai_selection_plot.is_some());
-    println!("      Quantum enhancement factor: {:.2}", visualization_output.cluster_plot.quantum_enhancement);
+    println!(
+        "      Quantum plot available: {}",
+        visualization_output.quantum_plot.is_some()
+    );
+    println!(
+        "      Neuromorphic plot available: {}",
+        visualization_output.neuromorphic_plot.is_some()
+    );
+    println!(
+        "      AI selection plot available: {}",
+        visualization_output.ai_selection_plot.is_some()
+    );
+    println!(
+        "      Quantum enhancement factor: {:.2}",
+        visualization_output.cluster_plot.quantum_enhancement
+    );
 
     // Test export functionality
     match visualizer.export_visualization(&visualization_output, "test_ultrathink_enhanced") {
         Ok(_) => println!("      ✅ Visualization export successful"),
-        Err(e) => println!("      ⚠️  Visualization export error (expected in test): {}", e),
+        Err(e) => println!(
+            "      ⚠️  Visualization export error (expected in test): {}",
+            e
+        ),
     }
 
     // Verify visualization enhancements
-    assert!(visualization_output.quantum_plot.is_some(), "Quantum plot should be generated");
-    assert!(visualization_output.neuromorphic_plot.is_some(), "Neuromorphic plot should be generated");
-    assert!(visualization_output.ai_selection_plot.is_some(), "AI selection plot should be generated");
+    assert!(
+        visualization_output.quantum_plot.is_some(),
+        "Quantum plot should be generated"
+    );
+    assert!(
+        visualization_output.neuromorphic_plot.is_some(),
+        "Neuromorphic plot should be generated"
+    );
+    assert!(
+        visualization_output.ai_selection_plot.is_some(),
+        "AI selection plot should be generated"
+    );
 
     Ok(())
 }
@@ -202,33 +282,93 @@ fn test_full_enhanced_ultrathink(data: &Array2<f64>) -> Result<(), Box<dyn std::
     let result = clusterer.cluster(&data.view())?;
 
     println!("   ✅ Full enhanced ultrathink mode completed");
-    println!("      🤖 AI selected algorithm: {}", result.selected_algorithm);
-    println!("      ⚡ AI speedup: {:.2}x", result.ai_speedup);
-    println!("      🌟 Quantum advantage: {:.2}x", result.quantum_advantage);
-    println!("      🧠 Neuromorphic benefit: {:.2}x", result.neuromorphic_benefit);
-    println!("      🎓 Meta-learning improvement: {:.2}x", result.meta_learning_improvement);
-    println!("      🎯 Final confidence: {:.3}", result.confidence);
-    println!("      🏆 Silhouette score: {:.3}", result.performance.silhouette_score);
-    println!("      ⏱️  Total execution time: {:.4}s", result.performance.execution_time);
-    println!("      💾 Memory usage: {:.2} MB", result.performance.memory_usage);
-    println!("      🔗 Quantum coherence: {:.3}", result.performance.quantum_coherence);
-    println!("      🧬 Neural adaptation rate: {:.3}", result.performance.neural_adaptation_rate);
-    println!("      ⚡ Energy efficiency: {:.3}", result.performance.energy_efficiency);
+    println!(
+        "      🤖 AI selected algorithm: {}",
+        result.selected_algorithm
+    );
+    let ai_speedup = result.ai_speedup;
+    println!("      ⚡ AI speedup: {ai_speedup:.2}x");
+    println!(
+        "      🌟 Quantum advantage: {:.2}x",
+        result.quantum_advantage
+    );
+    println!(
+        "      🧠 Neuromorphic benefit: {:.2}x",
+        result.neuromorphic_benefit
+    );
+    println!(
+        "      🎓 Meta-learning improvement: {:.2}x",
+        result.meta_learning_improvement
+    );
+    let final_confidence = result.confidence;
+    println!("      🎯 Final confidence: {final_confidence:.3}");
+    println!(
+        "      🏆 Silhouette score: {:.3}",
+        result.performance.silhouette_score
+    );
+    println!(
+        "      ⏱️  Total execution time: {:.4}s",
+        result.performance.execution_time
+    );
+    println!(
+        "      💾 Memory usage: {:.2} MB",
+        result.performance.memory_usage
+    );
+    println!(
+        "      🔗 Quantum coherence: {:.3}",
+        result.performance.quantum_coherence
+    );
+    println!(
+        "      🧬 Neural adaptation rate: {:.3}",
+        result.performance.neural_adaptation_rate
+    );
+    println!(
+        "      ⚡ Energy efficiency: {:.3}",
+        result.performance.energy_efficiency
+    );
 
     // Verify all enhancements work together
     assert!(result.ai_speedup > 1.0, "AI speedup should be enhanced");
-    assert!(result.quantum_advantage > 1.0, "Quantum advantage should be significant");
-    assert!(result.neuromorphic_benefit > 1.0, "Neuromorphic benefit should be enhanced");
-    assert!(result.meta_learning_improvement >= 1.0, "Meta-learning should show improvement");
-    assert!(result.confidence > 0.8, "High confidence expected with all features");
-    assert!(result.performance.silhouette_score > 0.0, "Quality should be good");
-    assert!(result.performance.quantum_coherence > 0.0, "Quantum coherence maintained");
-    assert!(result.performance.energy_efficiency > 0.0, "Energy efficiency should be positive");
+    assert!(
+        result.quantum_advantage > 1.0,
+        "Quantum advantage should be significant"
+    );
+    assert!(
+        result.neuromorphic_benefit > 1.0,
+        "Neuromorphic benefit should be enhanced"
+    );
+    assert!(
+        result.meta_learning_improvement >= 1.0,
+        "Meta-learning should show improvement"
+    );
+    assert!(
+        result.confidence > 0.8,
+        "High confidence expected with all features"
+    );
+    assert!(
+        result.performance.silhouette_score > 0.0,
+        "Quality should be good"
+    );
+    assert!(
+        result.performance.quantum_coherence > 0.0,
+        "Quantum coherence maintained"
+    );
+    assert!(
+        result.performance.energy_efficiency > 0.0,
+        "Energy efficiency should be positive"
+    );
 
     // Verify cluster structure makes sense
     let num_clusters = result.centroids.nrows();
-    assert!(num_clusters >= 2 && num_clusters <= 8, "Reasonable number of clusters");
-    assert_eq!(result.clusters.len(), data.nrows(), "All points should be assigned");
+    assert!(
+        num_clusters >= 2 && num_clusters <= 8,
+        "Reasonable number of clusters"
+    );
+    assert_eq!(
+        result.clusters.len(),
+        data.nrows(),
+        "All points should be assigned"
+    );
 
     Ok(())
 }

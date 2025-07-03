@@ -778,7 +778,7 @@ mod tests {
         let mut x: Vec<f64> = t.iter().map(|&t| (2.0 * PI * f * t).sin()).collect();
 
         // Add noise
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         x.iter_mut().for_each(|val| {
             *val += rng.random_range(-0.1..0.1);
         });

@@ -871,7 +871,7 @@ fn bench_specialized_algorithms(c: &mut Criterion) {
     group.sample_size(15);
 
     for &size in &[100, 500, 1000] {
-        let _first_row = create_test_vector(size);
+        let first_row = create_test_vector(size);
         let autocorr_data = create_test_vector(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
@@ -895,7 +895,7 @@ fn bench_specialized_algorithms(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("fast_toeplitz_inverse", size),
                 &first_row,
-                |b, r| {
+                |b, r: &Array1<f64>| {
                     b.iter(|| {
                         let toeplitz =
                             ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
@@ -910,7 +910,7 @@ fn bench_specialized_algorithms(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("gohberg_semencul_inverse", size),
                 &first_row,
-                |b, r| {
+                |b, r: &Array1<f64>| {
                     b.iter(|| {
                         let toeplitz =
                             ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
@@ -924,7 +924,7 @@ fn bench_specialized_algorithms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("dft_matrix_multiply", size),
             &first_row,
-            |b, data| b.iter(|| dft_matrix_multiply(black_box(&data.view()))),
+            |b, data: &Array1<f64>| b.iter(|| dft_matrix_multiply(black_box(&data.view()))),
         );
 
         // Hadamard matrix operations (sizes must be powers of 2)

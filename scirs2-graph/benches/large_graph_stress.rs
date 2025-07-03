@@ -405,10 +405,10 @@ fn test_algorithm(
         "clustering_coefficient" => {
             // Sample-based for large graphs
             use rand::prelude::*;
-            let mut rng = thread_rng();
+            let mut rng = rng();
             let mut sum = 0.0;
             for _ in 0..config.sample_size.min(graph.node_count()) {
-                let node = rng.gen_range(0..graph.node_count());
+                let node = rng.random_range(0..graph.node_count());
                 if let Ok(cc) = measures::local_clustering_coefficient(graph, node) {
                     sum += cc;
                 }

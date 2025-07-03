@@ -3,7 +3,6 @@
 //! Implementation of neural ordinary differential equation-based optimization.
 
 use ndarray::{Array1, ArrayView1};
-use scirs2_core::error::CoreResult;
 
 /// Neural ODE system for optimization
 #[derive(Debug, Clone)]

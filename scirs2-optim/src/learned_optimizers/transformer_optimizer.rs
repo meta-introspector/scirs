@@ -2522,7 +2522,7 @@ pub struct ContinualLearningMetrics {
 
 impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
     /// Create a new Transformer optimizer
-    pub fn new(config: TransformerOptimizerConfig) -> Result<Self, OptimError> {
+    pub fn new(config: TransformerOptimizerConfig) -> Result<Self> {
         // Validate configuration
         Self::validate_config(&config)?;
 
@@ -2566,7 +2566,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
         parameters: &ArrayBase<S, D>,
         gradients: &ArrayBase<S, D>,
         loss: Option<T>,
-    ) -> Result<Array<T, D>, OptimError>
+    ) -> Result<Array<T, D>>
     where
         S: Data<Elem = T>,
         D: Dimension + Clone,
@@ -2612,7 +2612,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
     }
 
     /// Meta-learning step for Transformer optimizer
-    pub fn meta_learning_step(&mut self, tasks: &[TaskInfo<T>]) -> Result<T, OptimError> {
+    pub fn meta_learning_step(&mut self, tasks: &[TaskInfo<T>]) -> Result<T> {
         self.meta_learner
             .meta_training_step(tasks, &mut self.transformer_network)
     }
@@ -2622,7 +2622,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
         &mut self,
         support_set: &SupportSet<T>,
         target_task: &TaskInfo<T>,
-    ) -> Result<FewShotAdaptationResult<T>, OptimError> {
+    ) -> Result<FewShotAdaptationResult<T>> {
         self.meta_learner.few_shot_learner.adapt(
             support_set,
             target_task,
@@ -2631,10 +2631,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
     }
 
     /// Continual learning update
-    pub fn continual_update(
-        &mut self,
-        new_task: &TaskInfo<T>,
-    ) -> Result<ContinualUpdateResult<T>, OptimError> {
+    pub fn continual_update(&mut self, new_task: &TaskInfo<T>) -> Result<ContinualUpdateResult<T>> {
         self.meta_learner
             .continual_learning
             .update(new_task, &mut self.transformer_network)
@@ -2651,7 +2648,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
     }
 
     /// Prepare sequence input for Transformer
-    fn prepare_sequence_input(&self) -> Result<Array2<T>, OptimError> {
+    fn prepare_sequence_input(&self) -> Result<Array2<T>> {
         let sequence_len = self.sequence_buffer.current_length;
         let feature_dim = self.config.model_dim;
 
@@ -2672,7 +2669,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
         gradient: &Array1<T>,
         parameter: &Array1<T>,
         loss: &Option<&T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         let mut features = Vec::new();
 
         // Gradient statistics
@@ -2705,7 +2702,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
         transformer_output: &Array2<T>,
         gradients: &Array1<T>,
         strategy: OptimizationStrategy,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         // Get the last output from the sequence
         let last_output = transformer_output.slice(s![-1, ..]).to_owned();
 
@@ -2730,7 +2727,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
                 // Add controlled randomness
                 let mut rng = rand::rng();
                 last_output.mapv(|x| {
-                    let noise = T::from(rng.gen_range(-0.1..0.1)).unwrap();
+                    let noise = T::from(rng.random_range(-0.1..0.1)).unwrap();
                     x + noise
                 })
             }
@@ -2944,7 +2941,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
     }
 
     /// Validate configuration
-    fn validate_config(config: &TransformerOptimizerConfig) -> Result<(), OptimError> {
+    fn validate_config(config: &TransformerOptimizerConfig) -> Result<()> {
         if config.model_dim == 0 {
             return Err(OptimError::InvalidConfig(
                 "Model dimension must be positive".to_string(),
@@ -2979,7 +2976,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
     }
 
     /// Utility functions for array manipulation
-    fn flatten_to_1d<S, D>(&self, array: &ArrayBase<S, D>) -> Result<Array1<T>, OptimError>
+    fn flatten_to_1d<S, D>(&self, array: &ArrayBase<S, D>) -> Result<Array1<T>>
     where
         S: Data<Elem = T>,
         D: Dimension,
@@ -2987,7 +2984,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
         Ok(Array1::from_iter(array.iter().cloned()))
     }
 
-    fn reshape_from_1d<D>(&self, flat: &Array1<T>, shape: D) -> Result<Array<T, D>, OptimError>
+    fn reshape_from_1d<D>(&self, flat: &Array1<T>, shape: D) -> Result<Array<T, D>>
     where
         D: Dimension + Clone,
     {
@@ -3000,7 +2997,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
 // In a production system, these would be fully implemented
 
 impl<T: Float + Default + Clone> TransformerNetwork<T> {
-    fn new(config: &TransformerOptimizerConfig) -> Result<Self, OptimError> {
+    fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
         let mut rng = rand::rng();
 
         // Initialize input embedding
@@ -3032,7 +3029,7 @@ impl<T: Float + Default + Clone> TransformerNetwork<T> {
         })
     }
 
-    fn forward(&mut self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&mut self, input: &Array2<T>) -> Result<Array2<T>> {
         let (seq_len, _) = input.dim();
 
         // Input embedding
@@ -3109,7 +3106,7 @@ impl<T: Float + Default + Clone> SequenceBuffer<T> {
 }
 
 impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
-    fn new(config: &TransformerOptimizerConfig) -> Result<Self, OptimError> {
+    fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
         // Initialize meta-transformer (optional for higher-level meta-learning)
         let meta_transformer = if config.model_dim >= 256 {
             // Only create meta-transformer for larger models
@@ -3145,7 +3142,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         &mut self,
         tasks: &[TaskInfo<T>],
         network: &mut TransformerNetwork<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         if tasks.is_empty() {
             return Ok(T::zero());
         }
@@ -3202,7 +3199,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         tasks: &[TaskInfo<T>],
         network: &mut TransformerNetwork<T>,
         meta_gradients: &mut MetaGradients<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let mut total_loss = T::zero();
         let inner_lr = T::from(0.01).unwrap();
         let meta_lr = T::from(0.001).unwrap();
@@ -3244,7 +3241,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         &mut self,
         tasks: &[TaskInfo<T>],
         network: &mut TransformerNetwork<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let mut total_loss = T::zero();
         let inner_lr = T::from(0.01).unwrap();
         let meta_lr = T::from(0.001).unwrap();
@@ -3286,7 +3283,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         tasks: &[TaskInfo<T>],
         network: &mut TransformerNetwork<T>,
         meta_gradients: &mut MetaGradients<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         // Simplified ProtoMAML: combine prototypical networks with MAML
         // For now, just use MAML with prototype-based loss weighting
         self.maml_update(tasks, network, meta_gradients)
@@ -3296,7 +3293,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         &mut self,
         tasks: &[TaskInfo<T>],
         network: &mut TransformerNetwork<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let mut total_loss = T::zero();
         let lr = T::from(0.001).unwrap();
 
@@ -3312,7 +3309,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         Ok(total_loss / T::from(tasks.len()).unwrap())
     }
 
-    fn update_task_embeddings(&mut self, tasks: &[TaskInfo<T>]) -> Result<(), OptimError> {
+    fn update_task_embeddings(&mut self, tasks: &[TaskInfo<T>]) -> Result<()> {
         for task in tasks {
             let embedding = self.compute_task_embedding(task)?;
             self.task_embeddings.insert(task.task_id.clone(), embedding);
@@ -3320,7 +3317,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         Ok(())
     }
 
-    fn compute_task_embedding(&self, task: &TaskInfo<T>) -> Result<Array1<T>, OptimError> {
+    fn compute_task_embedding(&self, task: &TaskInfo<T>) -> Result<Array1<T>> {
         // Simple task embedding based on characteristics
         let mut embedding = Array1::zeros(64); // Fixed embedding size
 
@@ -3358,17 +3355,14 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
     fn initialize_meta_gradients(
         &self,
         network: &TransformerNetwork<T>,
-    ) -> Result<MetaGradients<T>, OptimError> {
+    ) -> Result<MetaGradients<T>> {
         // Simplified meta-gradients initialization
         Ok(MetaGradients {
             gradients: HashMap::new(),
         })
     }
 
-    fn save_network_params(
-        &self,
-        network: &TransformerNetwork<T>,
-    ) -> Result<NetworkParams<T>, OptimError> {
+    fn save_network_params(&self, network: &TransformerNetwork<T>) -> Result<NetworkParams<T>> {
         // Simplified parameter saving
         Ok(NetworkParams {
             params: HashMap::new(),
@@ -3379,16 +3373,12 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         &self,
         network: &mut TransformerNetwork<T>,
         params: &NetworkParams<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Simplified parameter restoration
         Ok(())
     }
 
-    fn compute_task_loss(
-        &self,
-        task: &TaskInfo<T>,
-        network: &TransformerNetwork<T>,
-    ) -> Result<T, OptimError> {
+    fn compute_task_loss(&self, task: &TaskInfo<T>, network: &TransformerNetwork<T>) -> Result<T> {
         // Simplified task loss computation
         Ok(task.difficulty) // Use difficulty as proxy for loss
     }
@@ -3397,7 +3387,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         &self,
         task: &TaskInfo<T>,
         network: &TransformerNetwork<T>,
-    ) -> Result<TaskGradients<T>, OptimError> {
+    ) -> Result<TaskGradients<T>> {
         // Simplified gradient computation
         Ok(TaskGradients {
             gradients: HashMap::new(),
@@ -3409,7 +3399,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         network: &mut TransformerNetwork<T>,
         gradients: &TaskGradients<T>,
         lr: T,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Simplified inner update
         Ok(())
     }
@@ -3419,7 +3409,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         network: &TransformerNetwork<T>,
         original_params: &NetworkParams<T>,
         loss: T,
-    ) -> Result<MetaGradient<T>, OptimError> {
+    ) -> Result<MetaGradient<T>> {
         // Simplified meta-gradient computation
         Ok(MetaGradient {
             gradient: HashMap::new(),
@@ -3430,7 +3420,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         &self,
         meta_gradients: &mut MetaGradients<T>,
         grad: &MetaGradient<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Simplified meta-gradient accumulation
         Ok(())
     }
@@ -3440,7 +3430,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         network: &mut TransformerNetwork<T>,
         meta_gradients: &MetaGradients<T>,
         lr: T,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Simplified meta-update
         Ok(())
     }
@@ -3449,12 +3439,12 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         &self,
         accumulated: &mut NetworkParams<T>,
         params: &NetworkParams<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Simplified parameter accumulation
         Ok(())
     }
 
-    fn scale_params(&self, params: &mut NetworkParams<T>, scale: T) -> Result<(), OptimError> {
+    fn scale_params(&self, params: &mut NetworkParams<T>, scale: T) -> Result<()> {
         // Simplified parameter scaling
         Ok(())
     }
@@ -3465,7 +3455,7 @@ impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
         original: &NetworkParams<T>,
         accumulated: &NetworkParams<T>,
         lr: T,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Simplified Reptile update
         Ok(())
     }
@@ -3494,7 +3484,7 @@ pub struct MetaGradient<T: Float> {
 
 // Placeholder implementations for complex meta-learning components
 impl<T: Float + Default + Clone> DomainAdapter<T> {
-    fn new(_config: &TransformerOptimizerConfig) -> Result<Self, OptimError> {
+    fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
         Ok(Self {
             adapters: HashMap::new(),
             similarity_estimator: DomainSimilarityEstimator {
@@ -3517,7 +3507,7 @@ impl<T: Float + Default + Clone> DomainAdapter<T> {
 }
 
 impl<T: Float + Default + Clone> FewShotLearner<T> {
-    fn new(_config: &TransformerOptimizerConfig) -> Result<Self, OptimError> {
+    fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
         Ok(Self {
             learner_type: FewShotLearnerType::MAML,
             support_set_encoder: SupportSetEncoder::new()?,
@@ -3532,7 +3522,7 @@ impl<T: Float + Default + Clone> FewShotLearner<T> {
         support_set: &SupportSet<T>,
         target_task: &TaskInfo<T>,
         network: &mut TransformerNetwork<T>,
-    ) -> Result<FewShotAdaptationResult<T>, OptimError> {
+    ) -> Result<FewShotAdaptationResult<T>> {
         // Simplified few-shot adaptation
         Ok(FewShotAdaptationResult {
             adaptation_steps: 5,
@@ -3543,7 +3533,7 @@ impl<T: Float + Default + Clone> FewShotLearner<T> {
 }
 
 impl<T: Float + Default + Clone> ContinualLearningState<T> {
-    fn new(_config: &TransformerOptimizerConfig) -> Result<Self, OptimError> {
+    fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
         Ok(Self {
             learning_strategy: ContinualLearningStrategy::EWC,
             memory_buffer: ContinualMemoryBuffer::new()?,
@@ -3556,7 +3546,7 @@ impl<T: Float + Default + Clone> ContinualLearningState<T> {
         &mut self,
         new_task: &TaskInfo<T>,
         network: &mut TransformerNetwork<T>,
-    ) -> Result<ContinualUpdateResult<T>, OptimError> {
+    ) -> Result<ContinualUpdateResult<T>> {
         // Simplified continual learning update
         Ok(ContinualUpdateResult {
             update_success: true,
@@ -3585,7 +3575,7 @@ pub struct SupportSetEncoder<T: Float> {
 }
 
 impl<T: Float + Default + Clone> SupportSetEncoder<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             encoder_type: "simple".to_string(),
             encoding_dim: 64,
@@ -3601,7 +3591,7 @@ pub struct PrototypeComputer<T: Float> {
 }
 
 impl<T: Float + Default + Clone> PrototypeComputer<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             prototype_type: "centroid".to_string(),
             _phantom: std::marker::PhantomData,
@@ -3616,7 +3606,7 @@ pub struct AdaptationNetwork<T: Float> {
 }
 
 impl<T: Float + Default + Clone> AdaptationNetwork<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             network_type: "linear".to_string(),
             _phantom: std::marker::PhantomData,
@@ -3631,7 +3621,7 @@ pub struct MemoryAugmentation<T: Float> {
 }
 
 impl<T: Float + Default + Clone> MemoryAugmentation<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             augmentation_type: "simple".to_string(),
             _phantom: std::marker::PhantomData,
@@ -3646,7 +3636,7 @@ pub struct ContinualMemoryBuffer<T: Float> {
 }
 
 impl<T: Float + Default + Clone> ContinualMemoryBuffer<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             buffer_type: "simple".to_string(),
             _phantom: std::marker::PhantomData,
@@ -3655,7 +3645,7 @@ impl<T: Float + Default + Clone> ContinualMemoryBuffer<T> {
 }
 
 impl<T: Float + Default + Clone> ForgettingPrevention<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             strategy: ForgettingPreventionStrategy::EWC,
             importance_weights: HashMap::new(),
@@ -3666,7 +3656,7 @@ impl<T: Float + Default + Clone> ForgettingPrevention<T> {
 }
 
 impl<T: Float + Default + Clone> ContinualPerformanceTracking<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             task_performance: HashMap::new(),
             overall_metrics: OverallPerformanceMetrics {
@@ -3698,21 +3688,21 @@ impl<T: Float + Default + Clone> ContinualPerformanceTracking<T> {
 }
 
 impl<T: Float + Default + Clone> PositionalEncoder<T> {
-    fn new(_config: &TransformerOptimizerConfig) -> Result<Self, OptimError> {
+    fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
         // Placeholder implementation for external interface
         Err(OptimError::InvalidConfig(
             "PositionalEncoder not fully implemented".to_string(),
         ))
     }
 
-    fn encode(&self, _input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn encode(&self, _input: &Array2<T>) -> Result<Array2<T>> {
         // Placeholder implementation for external interface
         Err(OptimError::InvalidConfig(
             "PositionalEncoder encode not implemented".to_string(),
         ))
     }
 
-    fn new_internal(config: &TransformerOptimizerConfig) -> Result<Self, OptimError> {
+    fn new_internal(config: &TransformerOptimizerConfig) -> Result<Self> {
         let max_seq_len = config.max_sequence_length;
         let model_dim = config.model_dim;
 
@@ -3748,7 +3738,7 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
                 // Xavier initialization
                 let bound = (6.0 / (max_seq_len + model_dim) as f64).sqrt();
                 for elem in embeddings.iter_mut() {
-                    *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
+                    *elem = T::from(rng.random_range(-bound..bound)).unwrap();
                 }
                 position_embeddings = Some(embeddings);
             }
@@ -3795,7 +3785,7 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
         })
     }
 
-    fn encode_internal(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn encode_internal(&self, input: &Array2<T>) -> Result<Array2<T>> {
         let (seq_len, model_dim) = input.dim();
 
         if seq_len > self.max_seq_len {
@@ -3838,7 +3828,7 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
 }
 
 impl<T: Float + Default + Clone> StrategyPredictor<T> {
-    fn new(config: &TransformerOptimizerConfig) -> Result<Self, OptimError> {
+    fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
         let mut rng = rand::rng();
 
         // Initialize strategy prediction network
@@ -3879,10 +3869,7 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
         })
     }
 
-    fn predict_strategy(
-        &mut self,
-        transformer_output: &Array2<T>,
-    ) -> Result<OptimizationStrategy, OptimError> {
+    fn predict_strategy(&mut self, transformer_output: &Array2<T>) -> Result<OptimizationStrategy> {
         let (seq_len, model_dim) = transformer_output.dim();
 
         if seq_len == 0 {
@@ -3930,14 +3917,14 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
         &self,
         predicted_idx: usize,
         strategy_scores: &Array1<T>,
-    ) -> Result<usize, OptimError> {
+    ) -> Result<usize> {
         // Apply epsilon-greedy exploration
         let mut rng = rand::rng();
         let epsilon = 0.1; // 10% exploration
 
-        if rng.gen::<f64>() < epsilon {
+        if rng.random::<f64>() < epsilon {
             // Explore: choose randomly
-            Ok(rng.gen_range(0..self.strategies.len()))
+            Ok(rng.random_range(0..self.strategies.len()))
         } else {
             // Exploit: use performance-weighted selection
             let mut weighted_scores = strategy_scores.clone();
@@ -3972,7 +3959,7 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
         &mut self,
         strategy_idx: usize,
         performance_metrics: &StrategyPerformanceUpdate<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         if let Some(ref mut performance) = self.strategy_performance.get_mut(&strategy_idx) {
             // Exponential moving average update
             let alpha = T::from(0.1).unwrap(); // Learning rate
@@ -3993,10 +3980,7 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
 }
 
 impl<T: Float + Default + Clone> StrategyNetwork<T> {
-    fn new(
-        config: &TransformerOptimizerConfig,
-        rng: &mut impl Rng,
-    ) -> Result<Self, OptimError> {
+    fn new(config: &TransformerOptimizerConfig, rng: &mut impl Rng) -> Result<Self> {
         let input_dim = config.model_dim;
         let hidden_dim = config.model_dim / 2;
         let num_strategies = 7; // Number of optimization strategies
@@ -4005,21 +3989,21 @@ impl<T: Float + Default + Clone> StrategyNetwork<T> {
         let bound_input = (6.0 / (input_dim + hidden_dim) as f64).sqrt();
         let mut input_layer = Array2::zeros((input_dim, hidden_dim));
         for elem in input_layer.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound_input..bound_input)).unwrap();
+            *elem = T::from(rng.random_range(-bound_input..bound_input)).unwrap();
         }
 
         // Initialize hidden layers (single hidden layer for simplicity)
         let bound_hidden = (6.0 / (hidden_dim + hidden_dim) as f64).sqrt();
         let mut hidden_layer = Array2::zeros((hidden_dim, hidden_dim));
         for elem in hidden_layer.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound_hidden..bound_hidden)).unwrap();
+            *elem = T::from(rng.random_range(-bound_hidden..bound_hidden)).unwrap();
         }
 
         // Initialize output layer
         let bound_output = (6.0 / (hidden_dim + num_strategies) as f64).sqrt();
         let mut output_layer = Array2::zeros((hidden_dim, num_strategies));
         for elem in output_layer.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound_output..bound_output)).unwrap();
+            *elem = T::from(rng.random_range(-bound_output..bound_output)).unwrap();
         }
 
         // Initialize strategy embeddings
@@ -4027,7 +4011,7 @@ impl<T: Float + Default + Clone> StrategyNetwork<T> {
         let mut strategy_embeddings = Array2::zeros((num_strategies, embedding_dim));
         let bound_embed = (6.0 / (num_strategies + embedding_dim) as f64).sqrt();
         for elem in strategy_embeddings.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound_embed..bound_embed)).unwrap();
+            *elem = T::from(rng.random_range(-bound_embed..bound_embed)).unwrap();
         }
 
         Ok(Self {
@@ -4038,7 +4022,7 @@ impl<T: Float + Default + Clone> StrategyNetwork<T> {
         })
     }
 
-    fn forward(&self, input: &Array1<T>) -> Result<Array1<T>, OptimError> {
+    fn forward(&self, input: &Array1<T>) -> Result<Array1<T>> {
         let input_dim = input.len();
 
         if input_dim != self.input_layer.shape()[0] {
@@ -4096,7 +4080,7 @@ impl<T: Float + Default + Clone> StrategyNetwork<T> {
         Ok(softmax_output)
     }
 
-    fn softmax(&self, input: &Array1<T>) -> Result<Array1<T>, OptimError> {
+    fn softmax(&self, input: &Array1<T>) -> Result<Array1<T>> {
         let mut output = Array1::zeros(input.len());
 
         // Find max for numerical stability
@@ -4140,7 +4124,7 @@ impl<T: Float + Default + Clone> InputEmbedding<T> {
         // Xavier initialization
         let bound = (6.0 / (input_dim + model_dim) as f64).sqrt();
         for elem in weights.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
         }
 
         Self {
@@ -4150,7 +4134,7 @@ impl<T: Float + Default + Clone> InputEmbedding<T> {
         }
     }
 
-    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>> {
         let (seq_len, input_dim) = input.dim();
 
         if input_dim != self.input_dim {
@@ -4178,10 +4162,7 @@ impl<T: Float + Default + Clone> InputEmbedding<T> {
 }
 
 impl<T: Float + Default + Clone> TransformerLayer<T> {
-    fn new(
-        config: &TransformerOptimizerConfig,
-        rng: &mut impl Rng,
-    ) -> Result<Self, OptimError> {
+    fn new(config: &TransformerOptimizerConfig, rng: &mut impl Rng) -> Result<Self> {
         let self_attention = MultiHeadAttention::new(config, rng)?;
         let cross_attention = if config.cross_attention {
             Some(MultiHeadAttention::new(config, rng)?)
@@ -4221,11 +4202,7 @@ impl<T: Float + Default + Clone> TransformerLayer<T> {
         })
     }
 
-    fn forward(
-        &mut self,
-        input: &Array2<T>,
-        pre_layer_norm: bool,
-    ) -> Result<Array2<T>, OptimError> {
+    fn forward(&mut self, input: &Array2<T>, pre_layer_norm: bool) -> Result<Array2<T>> {
         let mut x = input.clone();
 
         // Self-attention with residual connection
@@ -4284,10 +4261,7 @@ impl<T: Float + Default + Clone> TransformerLayer<T> {
 }
 
 impl<T: Float + Default + Clone> MultiHeadAttention<T> {
-    fn new(
-        config: &TransformerOptimizerConfig,
-        rng: &mut impl Rng,
-    ) -> Result<Self, OptimError> {
+    fn new(config: &TransformerOptimizerConfig, rng: &mut impl Rng) -> Result<Self> {
         let model_dim = config.model_dim;
         let num_heads = config.num_heads;
         let head_dim = model_dim / num_heads;
@@ -4307,16 +4281,16 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         let mut wo = Array2::zeros((model_dim, model_dim));
 
         for elem in wq.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
         }
         for elem in wk.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
         }
         for elem in wv.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
         }
         for elem in wo.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
         }
 
         let relative_bias = if config.relative_position_bias {
@@ -4356,7 +4330,7 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         query: &Array2<T>,
         key: &Array2<T>,
         value: &Array2<T>,
-    ) -> Result<Array2<T>, OptimError> {
+    ) -> Result<Array2<T>> {
         let (seq_len, model_dim) = query.dim();
 
         if model_dim != self.model_dim {
@@ -4386,11 +4360,7 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         Ok(final_output)
     }
 
-    fn linear_transform(
-        &self,
-        input: &Array2<T>,
-        weights: &Array2<T>,
-    ) -> Result<Array2<T>, OptimError> {
+    fn linear_transform(&self, input: &Array2<T>, weights: &Array2<T>) -> Result<Array2<T>> {
         let (seq_len, input_dim) = input.dim();
         let (weight_in, weight_out) = weights.dim();
 
@@ -4415,13 +4385,11 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         Ok(output)
     }
 
-    fn reshape_for_heads(&self, input: &Array2<T>) -> Result<Array3<T>, OptimError> {
+    fn reshape_for_heads(&self, input: &Array2<T>) -> Result<Array3<T>> {
         let (seq_len, model_dim) = input.dim();
 
         if model_dim != self.model_dim {
-            return Err(OptimError::InvalidConfig(
-                "Dimension mismatch".to_string(),
-            ));
+            return Err(OptimError::InvalidConfig("Dimension mismatch".to_string()));
         }
 
         let mut output = Array3::zeros((self.num_heads, seq_len, self.head_dim));
@@ -4438,13 +4406,11 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         Ok(output)
     }
 
-    fn reshape_from_heads(&self, input: &Array3<T>) -> Result<Array2<T>, OptimError> {
+    fn reshape_from_heads(&self, input: &Array3<T>) -> Result<Array2<T>> {
         let (num_heads, seq_len, head_dim) = input.dim();
 
         if num_heads != self.num_heads || head_dim != self.head_dim {
-            return Err(OptimError::InvalidConfig(
-                "Dimension mismatch".to_string(),
-            ));
+            return Err(OptimError::InvalidConfig("Dimension mismatch".to_string()));
         }
 
         let mut output = Array2::zeros((seq_len, self.model_dim));
@@ -4466,7 +4432,7 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         q: &Array3<T>,
         k: &Array3<T>,
         v: &Array3<T>,
-    ) -> Result<Array3<T>, OptimError> {
+    ) -> Result<Array3<T>> {
         let (num_heads, seq_len, head_dim) = q.dim();
         let mut output = Array3::zeros((num_heads, seq_len, head_dim));
 
@@ -4509,7 +4475,7 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         Ok(output)
     }
 
-    fn softmax(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn softmax(&self, input: &Array2<T>) -> Result<Array2<T>> {
         let (rows, cols) = input.dim();
         let mut output = Array2::zeros((rows, cols));
 
@@ -4541,10 +4507,7 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
 }
 
 impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
-    fn new(
-        config: &TransformerOptimizerConfig,
-        rng: &mut impl Rng,
-    ) -> Result<Self, OptimError> {
+    fn new(config: &TransformerOptimizerConfig, rng: &mut impl Rng) -> Result<Self> {
         let model_dim = config.model_dim;
         let ff_dim = config.ff_dim;
 
@@ -4556,10 +4519,10 @@ impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
         let mut linear2 = Array2::zeros((ff_dim, model_dim));
 
         for elem in linear1.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound1..bound1)).unwrap();
+            *elem = T::from(rng.random_range(-bound1..bound1)).unwrap();
         }
         for elem in linear2.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound2..bound2)).unwrap();
+            *elem = T::from(rng.random_range(-bound2..bound2)).unwrap();
         }
 
         let bias1 = Array1::zeros(ff_dim);
@@ -4575,7 +4538,7 @@ impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
         })
     }
 
-    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>> {
         // First linear layer
         let x1 = self.linear_transform(input, &self.linear1, &self.bias1)?;
 
@@ -4596,7 +4559,7 @@ impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
         input: &Array2<T>,
         weights: &Array2<T>,
         bias: &Array1<T>,
-    ) -> Result<Array2<T>, OptimError> {
+    ) -> Result<Array2<T>> {
         let (seq_len, input_dim) = input.dim();
         let (weight_in, weight_out) = weights.dim();
 
@@ -4627,7 +4590,7 @@ impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
         Ok(output)
     }
 
-    fn apply_activation(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn apply_activation(&self, input: &Array2<T>) -> Result<Array2<T>> {
         let mut output = input.clone();
 
         match self.activation {
@@ -4667,7 +4630,7 @@ impl<T: Float + Default + Clone> LayerNorm<T> {
         }
     }
 
-    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>> {
         let (seq_len, input_dim) = input.dim();
 
         if input_dim != self.dim {
@@ -4715,7 +4678,7 @@ impl<T: Float + Default + Clone> OutputProjectionLayer<T> {
         // Xavier initialization
         let bound = (6.0 / (input_dim + output_dim) as f64).sqrt();
         for elem in weights.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
         }
 
         let bias = Array1::zeros(output_dim);
@@ -4727,7 +4690,7 @@ impl<T: Float + Default + Clone> OutputProjectionLayer<T> {
         }
     }
 
-    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward(&self, input: &Array2<T>) -> Result<Array2<T>> {
         let (seq_len, input_dim) = input.dim();
         let (weight_in, weight_out) = self.weights.dim();
 
@@ -4778,7 +4741,7 @@ impl DropoutLayer {
         }
     }
 
-    fn forward<T: Float + Clone>(&self, input: &Array2<T>) -> Result<Array2<T>, OptimError> {
+    fn forward<T: Float + Clone>(&self, input: &Array2<T>) -> Result<Array2<T>> {
         if !self.training || self.prob == 0.0 {
             return Ok(input.clone());
         }
@@ -4791,17 +4754,13 @@ impl DropoutLayer {
 
 // Placeholder implementations for specialized components
 impl<T: Float + Default + Clone> RelativePositionBias<T> {
-    fn new(
-        max_distance: usize,
-        num_heads: usize,
-        rng: &mut impl Rng,
-    ) -> Result<Self, OptimError> {
+    fn new(max_distance: usize, num_heads: usize, rng: &mut impl Rng) -> Result<Self> {
         let bias_table_size = 2 * max_distance - 1;
         let mut bias_table = Array2::zeros((bias_table_size, num_heads));
 
         let bound = 0.1;
         for elem in bias_table.iter_mut() {
-            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
         }
 
         Ok(Self {
@@ -4813,7 +4772,7 @@ impl<T: Float + Default + Clone> RelativePositionBias<T> {
 }
 
 impl<T: Float + Default + Clone> RoPEEmbeddings<T> {
-    fn new(max_seq_len: usize, dim: usize) -> Result<Self, OptimError> {
+    fn new(max_seq_len: usize, dim: usize) -> Result<Self> {
         let mut cos_cached = Array2::zeros((max_seq_len, dim));
         let mut sin_cached = Array2::zeros((max_seq_len, dim));
 

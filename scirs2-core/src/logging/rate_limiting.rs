@@ -868,7 +868,7 @@ mod tests {
             strategy: "TokenBucket".to_string(),
         };
 
-        let display_str = format!("{}", summary);
+        let display_str = format!("{summary}");
         assert!(display_str.contains("10 events"));
         assert!(display_str.contains("TokenBucket"));
     }

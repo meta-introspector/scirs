@@ -122,10 +122,10 @@ pub use parallel_enhanced::{
 
 // Re-export ultrathink enhanced parallel filter functions
 pub use parallel_ultrathink_enhanced::{
-    UltrathinkParallelConfig, ParallelFilterMetrics, StreamingFilterState, StreamingStats,
-    ParallelMultiRateFilterBank, SparseParallelFilter, LockFreeStreamingFilter, 
-    ParallelSpectralFilter, benchmark_parallel_filtering_operations,
-    validate_parallel_filtering_accuracy,
+    benchmark_parallel_filtering_operations, validate_parallel_filtering_accuracy,
+    LockFreeStreamingFilter, ParallelFilterMetrics, ParallelMultiRateFilterBank,
+    ParallelSpectralFilter, SparseParallelFilter, StreamingFilterState, StreamingStats,
+    UltrathinkParallelConfig,
 };
 
 #[cfg(test)]

@@ -72,7 +72,7 @@ pub struct FunctionPattern {
 }
 
 /// Categories of functions for validation
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum FunctionCategory {
     /// Descriptive statistics functions
     DescriptiveStats,

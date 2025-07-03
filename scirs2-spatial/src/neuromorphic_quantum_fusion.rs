@@ -1706,7 +1706,7 @@ mod tests {
             for i in 0..n_sensors {
                 let x = params[i * 2];
                 let y = params[i * 2 + 1];
-                if x < 0.1 || x > 2.9 || y < 0.1 || y > 2.9 {
+                if !(0.1..=2.9).contains(&x) || !(0.1..=2.9).contains(&y) {
                     total_distance += 10.0; // Penalty
                 }
             }

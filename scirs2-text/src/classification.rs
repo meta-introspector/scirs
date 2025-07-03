@@ -443,7 +443,7 @@ impl TextDataset {
             let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
             indices.shuffle(&mut rng);
         } else {
-            // Use standard thread_rng
+            // Use standard rng
             let mut rng = rand::rng();
             indices.shuffle(&mut rng);
         }

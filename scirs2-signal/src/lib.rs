@@ -84,6 +84,7 @@ pub mod dwt2d_advanced_features;
 pub mod dwt2d_boundary_enhanced;
 pub mod dwt2d_enhanced;
 pub mod dwt2d_image;
+pub mod dwt2d_performance_optimization;
 pub mod dwt2d_ultra_refined;
 pub mod dwt2d_ultrathink_validation;
 pub mod dwt2d_validation;
@@ -106,6 +107,7 @@ pub mod kalman;
 pub mod lombscargle;
 pub mod lombscargle_advanced_validation;
 pub mod lombscargle_comprehensive_validation;
+pub mod lombscargle_edge_case_advanced_validation;
 pub mod lombscargle_edge_case_validation;
 pub mod lombscargle_enhanced;
 pub mod lombscargle_enhanced_validation;
@@ -133,6 +135,7 @@ pub mod parametric;
 pub mod parametric_adaptive;
 pub mod parametric_advanced;
 pub mod parametric_arma;
+pub mod parametric_comprehensive_optimization;
 pub mod parametric_enhanced;
 pub mod parametric_ultra_enhanced;
 pub mod parametric_validation;
@@ -166,6 +169,7 @@ pub mod sysid_robust_enhancements;
 pub mod sysid_ultra_enhanced;
 pub mod tv;
 pub mod ultrathink_comprehensive_validation;
+pub mod ultrathink_mode_coordinator;
 pub mod ultrathink_validation_suite;
 pub mod validation_runner;
 pub mod waveforms;
@@ -176,6 +180,7 @@ pub mod window;
 pub mod wpt;
 pub mod wpt2d;
 pub mod wpt_comprehensive_validation;
+pub mod wpt_enhanced_modern_validation;
 pub mod wpt_ultra_validation;
 pub mod wpt_ultrathink_validation;
 pub mod wpt_validation;
@@ -207,15 +212,40 @@ pub use deconvolution::{
     DeconvolutionConfig, DeconvolutionMethod,
 };
 pub use filter::{
-    allpass_filter, analyze_filter, bessel, bilinear_transform, butter, butter_bandpass_bandstop,
-    cheby1, cheby2, check_filter_stability, comb_filter, ellip, filtfilt, firwin, lfilter,
-    matched_filter, matched_filter_detect, minimum_phase, notch_filter, peak_filter,
-    prewarp_frequency, remez, FilterAnalysis, FilterStability,
-    // Ultrathink Enhanced Parallel Filtering
-    UltrathinkParallelConfig, ParallelFilterMetrics, StreamingFilterState, StreamingStats,
-    ParallelMultiRateFilterBank, SparseParallelFilter, LockFreeStreamingFilter, 
-    ParallelSpectralFilter, benchmark_parallel_filtering_operations,
+    allpass_filter,
+    analyze_filter,
+    benchmark_parallel_filtering_operations,
+    bessel,
+    bilinear_transform,
+    butter,
+    butter_bandpass_bandstop,
+    cheby1,
+    cheby2,
+    check_filter_stability,
+    comb_filter,
+    ellip,
+    filtfilt,
+    firwin,
+    lfilter,
+    matched_filter,
+    matched_filter_detect,
+    minimum_phase,
+    notch_filter,
+    peak_filter,
+    prewarp_frequency,
+    remez,
     validate_parallel_filtering_accuracy,
+    FilterAnalysis,
+    FilterStability,
+    LockFreeStreamingFilter,
+    ParallelFilterMetrics,
+    ParallelMultiRateFilterBank,
+    ParallelSpectralFilter,
+    SparseParallelFilter,
+    StreamingFilterState,
+    StreamingStats,
+    // Ultrathink Enhanced Parallel Filtering
+    UltrathinkParallelConfig,
 };
 pub use filter_banks::{
     CosineModulatedFilterBank, FilterBankAnalysis, FilterBankType, FilterBankWindow, IirStabilizer,
@@ -260,10 +290,25 @@ pub use lombscargle_simd::{simd_lombscargle, SimdLombScargleResult, ValidationMe
 
 // Ultrathink Enhanced Lomb-Scargle Validation
 pub use lombscargle_ultrathink_enhanced::{
-    run_ultrathink_lombscargle_validation, generate_ultrathink_lombscargle_report,
-    UltrathinkLombScargleResult, ComprehensiveAccuracyResult, ScipyComparisonResult,
-    CompleteSimdValidation, MemoryProfilingResult, StatisticalValidationResult,
-    PerformanceRegressionResult,
+    generate_ultrathink_lombscargle_report, run_ultrathink_lombscargle_validation,
+    CompleteSimdValidation, ComprehensiveAccuracyResult, MemoryProfilingResult,
+    PerformanceRegressionResult, ScipyComparisonResult, StatisticalValidationResult,
+    UltrathinkLombScargleResult,
+};
+
+// Ultra-enhanced Lomb-Scargle validation
+pub use lombscargle_ultrathink_enhanced_validation::{
+    run_ultra_enhanced_lombscargle_validation, generate_ultra_enhanced_validation_report,
+    UltraEnhancedLombScargleValidationResult, LombScargleAccuracyValidation,
+    StatisticalRobustnessMetrics, EdgeCaseValidationMetrics,
+};
+
+// Advanced Edge Case Validation for Lomb-Scargle
+pub use lombscargle_edge_case_advanced_validation::{
+    generate_advanced_edge_case_report, run_advanced_edge_case_validation,
+    AdvancedEdgeCaseValidationResult, AliasingDetectionResult, MultiScaleSignalResult,
+    NoiseToleranceResult, NonUniformGridResult, NumericalPrecisionResult, SparseSamplingResult,
+    StressPerformanceResult,
 };
 pub use median::{
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
@@ -306,6 +351,14 @@ pub use parametric_ultra_enhanced::{
     ultra_enhanced_arma_spectrum, ConvergenceInfo, ModelDiagnostics, PerformanceStats,
     UltraEnhancedARMAResult,
 };
+
+// Comprehensive Parametric Optimization
+pub use parametric_comprehensive_optimization::{
+    generate_comprehensive_optimization_report, run_comprehensive_parametric_optimization,
+    ComplexityMetrics, ComprehensiveOptimizationConfig, ComprehensiveParametricResult,
+    CrossValidationResults, ModelOrder, ModelTypePreference, OptimizationMethod,
+    OptimizationMetrics, PerformanceStatistics, StabilityAnalysis,
+};
 pub use peak::{find_peaks, peak_prominences, peak_widths};
 pub use realtime::{
     CircularBuffer, GainProcessor, LockFreeRingBuffer, MovingAverageProcessor, RealtimeConfig,
@@ -331,11 +384,10 @@ pub use simd_ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
 
 // Ultrathink Enhanced SIMD Operations
 pub use simd_ultrathink_enhanced::{
-    ultrathink_simd_fft, ultrathink_simd_rfft, ultrathink_simd_stft, ultrathink_simd_dwt,
-    ultrathink_simd_resample, generate_simd_performance_report,
-    UltrathinkSimdConfig, SimdFftResult, SimdStftResult, SimdWaveletResult,
-    FftPerformanceMetrics, StftPerformanceMetrics, WaveletPerformanceMetrics,
-    SimdUtilizationStats,
+    generate_simd_performance_report, ultrathink_simd_dwt, ultrathink_simd_fft,
+    ultrathink_simd_resample, ultrathink_simd_rfft, ultrathink_simd_stft, FftPerformanceMetrics,
+    SimdFftResult, SimdStftResult, SimdUtilizationStats, SimdWaveletResult, StftPerformanceMetrics,
+    UltrathinkSimdConfig, WaveletPerformanceMetrics,
 };
 pub use sparse::{
     basis_pursuit, compressed_sensing_recover, cosamp, estimate_rip_constant, fista, iht,
@@ -376,10 +428,10 @@ pub use multitaper::{
 
 // Enhanced multitaper validation with SciPy reference
 pub use multitaper_scipy_validation::{
-    run_scipy_multitaper_validation, generate_multitaper_validation_report,
-    MultitaperScipyValidationResult, TestResult, PerformanceComparison,
-    StatisticalValidationMetrics, SimdValidationMetrics, PrecisionAnalysisResult,
-    EnhancedTestSignalConfig, TestSignalType,
+    generate_multitaper_validation_report, run_scipy_multitaper_validation,
+    EnhancedTestSignalConfig, MultitaperScipyValidationResult, PerformanceComparison,
+    PrecisionAnalysisResult, SimdValidationMetrics, StatisticalValidationMetrics, TestResult,
+    TestSignalType,
 };
 
 // Wavelet transform functions already re-exported above
@@ -399,15 +451,20 @@ pub use dwt2d_boundary_enhanced::{
     BoundaryConfig2D, BoundaryInfo2D, BoundaryMode2D, BoundaryPreprocessing,
     BoundaryQualityMetrics, EnhancedDWT2DDecomposition, ExtensionInfo, WindowType, WindowingConfig,
 };
+pub use dwt2d_performance_optimization::{
+    generate_performance_report, optimized_dwt2d_decompose, MemoryConstraints, MemoryStatistics,
+    OptimizationFlags, OptimizedDwt2dResult, PerformanceConfig, PerformanceMetrics, PlatformConfig,
+    QualityAssessment,
+};
 
 // 2D wavelet ultrathink validation
 pub use dwt2d_ultrathink_validation::{
-    run_dwt2d_ultrathink_validation, run_quick_dwt2d_validation, generate_dwt2d_ultrathink_report,
-    Dwt2dUltrathinkConfig, Dwt2dUltrathinkResult, ReconstructionValidationResult,
-    OrthogonalityValidationResult, EnergyConservationResult, BoundaryValidationResult,
-    MultilevelValidationResult, DenoisingValidationResult, CompressionValidationResult,
-    StabilityValidationResult, PerformanceAnalysisResult, SimdOptimizationResult,
-    MemoryAnalysisResult, ConsistencyAnalysisResult,
+    generate_dwt2d_ultrathink_report, run_dwt2d_ultrathink_validation, run_quick_dwt2d_validation,
+    BoundaryValidationResult, CompressionValidationResult, ConsistencyAnalysisResult,
+    DenoisingValidationResult, Dwt2dUltrathinkConfig, Dwt2dUltrathinkResult,
+    EnergyConservationResult, MemoryAnalysisResult, MultilevelValidationResult,
+    OrthogonalityValidationResult, PerformanceAnalysisResult, ReconstructionValidationResult,
+    SimdOptimizationResult, StabilityValidationResult,
 };
 pub use swt::{iswt, swt, swt_decompose, swt_reconstruct};
 pub use swt2d::{iswt2d, swt2d, swt2d_decompose, swt2d_reconstruct, Swt2dResult};
@@ -437,20 +494,27 @@ pub use wpt::{
     get_level_coefficients, reconstruct_from_nodes, wp_decompose, WaveletPacket, WaveletPacketTree,
 };
 pub use wpt2d::{wpt2d_full, wpt2d_selective, WaveletPacket2D, WaveletPacketTree2D};
+pub use wpt_enhanced_modern_validation::{
+    generate_enhanced_modern_validation_report, run_enhanced_modern_validation,
+    AnomalyDetectionResult, CrossFrameworkValidationResult, EdgeCaseValidationResult,
+    EnhancedModernValidationConfig, EnhancedModernValidationResult, GpuValidationResult,
+    OptimizationValidationResult, PrecisionValidationResult, ResourceValidationResult,
+    StreamingValidationResult,
+};
 pub use wpt_ultra_validation::{run_ultra_wpt_validation, UltraWptValidationResult};
 
 // Wavelet packet ultrathink validation
 pub use wpt_ultrathink_validation::{
-    run_wpt_ultrathink_validation, run_quick_wpt_validation, generate_wpt_ultrathink_report,
-    WptUltrathinkConfig, WptUltrathinkResult, TreeValidationResult, CoefficientValidationResult,
-    ReconstructionValidationResult as WptReconstructionValidationResult, BestBasisValidationResult, 
+    generate_wpt_ultrathink_report, run_quick_wpt_validation, run_wpt_ultrathink_validation,
+    BestBasisValidationResult, CoefficientValidationResult,
     CompressionValidationResult as WptCompressionValidationResult,
-    DenoisingValidationResult as WptDenoisingValidationResult, TwoDValidationResult, 
-    StabilityValidationResult as WptStabilityValidationResult,
-    PerformanceAnalysisResult as WptPerformanceAnalysisResult, 
-    MemoryAnalysisResult as WptMemoryAnalysisResult, 
     ConsistencyAnalysisResult as WptConsistencyAnalysisResult,
-    TreeStructureType, EntropyMeasure,
+    DenoisingValidationResult as WptDenoisingValidationResult, EntropyMeasure,
+    MemoryAnalysisResult as WptMemoryAnalysisResult,
+    PerformanceAnalysisResult as WptPerformanceAnalysisResult,
+    ReconstructionValidationResult as WptReconstructionValidationResult,
+    StabilityValidationResult as WptStabilityValidationResult, TreeStructureType,
+    TreeValidationResult, TwoDValidationResult, WptUltrathinkConfig, WptUltrathinkResult,
 };
 
 // LTI systems functions
@@ -464,18 +528,17 @@ pub use lti::{
 
 // Enhanced LTI system identification functions
 pub use lti_enhanced_system_identification::{
-    ultra_enhanced_system_identification, UltraEnhancedSysIdConfig, UltraEnhancedSysIdResult,
-    ParameterWithUncertainty, UltraValidationMetrics, SystemModel, PerformanceMetrics,
-    StructureSelectionResults, AdaptationResults,
+    ultra_enhanced_system_identification, AdaptationResults, ParameterWithUncertainty,
+    PerformanceMetrics as LtiPerformanceMetrics, StructureSelectionResults, SystemModel,
+    UltraEnhancedSysIdConfig, UltraEnhancedSysIdResult, UltraValidationMetrics,
 };
 
 // Ultra-enhanced controllability and observability analysis
 pub use lti_ultra_controllability_observability::{
-    ultra_controllability_observability_analysis, UltraAnalysisConfig, 
-    UltraControllabilityObservabilityResult, UltraControllabilityAnalysis,
-    UltraObservabilityAnalysis, GeometricAnalysis, TemporalDynamicsAnalysis,
-    MultiScaleAnalysis, RealTimeMonitoring, QuantumInspiredMetrics,
-    OptimizationLevel, AnalysisPerformanceMetrics,
+    ultra_controllability_observability_analysis, AnalysisPerformanceMetrics, GeometricAnalysis,
+    MultiScaleAnalysis, OptimizationLevel, QuantumInspiredMetrics, RealTimeMonitoring,
+    TemporalDynamicsAnalysis, UltraAnalysisConfig, UltraControllabilityAnalysis,
+    UltraControllabilityObservabilityResult, UltraObservabilityAnalysis,
 };
 
 // LTI system functions (using what's available)
@@ -496,7 +559,9 @@ pub use detrend::{detrend, detrend_axis, detrend_poly};
 pub use denoise::{denoise_wavelet, ThresholdSelect};
 
 // 2D Wavelet image processing functions
-pub use dwt2d_image::{compress_image, denoise_image, detect_edges, DenoisingMethod as ImageDenoisingMethod};
+pub use dwt2d_image::{
+    compress_image, denoise_image, detect_edges, DenoisingMethod as ImageDenoisingMethod,
+};
 
 // Wavelet visualization utilities
 pub use wavelet_vis::{
@@ -569,8 +634,9 @@ pub use sysid::{
 };
 pub use sysid_robust_enhancements::{
     analyze_model_stability, enhanced_cross_validation, estimate_signal_noise_ratio_advanced,
-    robust_least_squares, CrossValidationResults, EnhancedModelValidation, PredictionIntervals,
-    RobustSysIdConfig, RobustnessMetrics, StabilityAnalysis,
+    robust_least_squares, CrossValidationResults as SysidCrossValidationResults,
+    EnhancedModelValidation, PredictionIntervals, RobustSysIdConfig, RobustnessMetrics,
+    StabilityAnalysis as SysidStabilityAnalysis,
 };
 
 // Synchrosqueezed wavelet transform functions
@@ -593,17 +659,25 @@ pub use ultrathink_comprehensive_validation::{
 
 // Ultrathink validation suite
 pub use ultrathink_validation_suite::{
-    generate_ultrathink_report as generate_ultra_validation_report, 
-    run_ultrathink_validation, run_quick_ultrathink_validation, run_full_ultrathink_validation,
-    UltrathinkValidationConfig, UltrathinkValidationResult as UltraValidationResult,
-    UltrathinkValidationSummary, MultitaperUltraResults, LombScargleUltraResults,
-    ParametricUltraResults, Wavelet2dUltraResults, WaveletPacketUltraResults,
+    generate_ultrathink_report as generate_ultra_validation_report, run_full_ultrathink_validation,
+    run_quick_ultrathink_validation, run_ultrathink_validation, LombScargleUltraResults,
+    MultitaperUltraResults, ParametricUltraResults, UltrathinkValidationConfig,
+    UltrathinkValidationResult as UltraValidationResult, UltrathinkValidationSummary,
+    Wavelet2dUltraResults, WaveletPacketUltraResults,
 };
 
 // Comprehensive performance benchmarking
 pub use benchmarking::{
     run_comprehensive_benchmarks, run_quick_benchmark, BenchmarkConfig, BenchmarkResult,
     BenchmarkSuite, BenchmarkSummary, EfficiencyMetrics, MemoryUsageStats, SystemInfo,
+};
+
+// Ultrathink mode coordination and comprehensive validation
+pub use ultrathink_mode_coordinator::{
+    run_quick_ultrathink_validation as run_quick_ultrathink_validation_coordinator,
+    run_ultrathink_validation_with_config, PerformanceMetrics as UltrathinkPerformanceMetrics,
+    UltrathinkConfig, UltrathinkCoordinator, UltrathinkResults,
+    ValidationResults as UltrathinkValidationResults,
 };
 
 #[cfg(test)]

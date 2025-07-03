@@ -131,11 +131,11 @@ impl ActorNetwork {
 
         Self {
             hidden_weights: Array2::from_shape_fn((hidden_size, input_size), |_| {
-                (rand::random::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
             output_weights: Array2::from_shape_fn((output_size, hidden_size), |_| {
-                (rand::random::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: Array1::zeros(output_size),
             input_size,
@@ -237,11 +237,11 @@ impl CriticNetwork {
 
         Self {
             hidden_weights: Array2::from_shape_fn((hidden_size, input_size), |_| {
-                (rand::random::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
             output_weights: Array1::from_shape_fn(hidden_size, |_| {
-                (rand::random::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: 0.0,
             input_size,
@@ -461,7 +461,7 @@ impl AdvantageActorCriticOptimizer {
         };
 
         let noisy_output =
-            policy_output.mapv(|x| x + (rand::random::<f64>() - 0.5) * exploration_noise);
+            policy_output.mapv(|x| x + (rand::rng().random::<f64>() - 0.5) * exploration_noise);
         let action_probs = self
             .actor
             .action_probabilities(&noisy_output.view(), self.temperature);
@@ -475,7 +475,7 @@ impl AdvantageActorCriticOptimizer {
             })
             .collect();
 
-        let rand_val = rand::random::<f64>();
+        let rand_val = rand::rng().random::<f64>();
         let action_idx = cumulative_probs
             .iter()
             .position(|&cp| rand_val <= cp)

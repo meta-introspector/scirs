@@ -382,7 +382,7 @@ fn bootstrap_confidence_intervals(
     let mut bootstrap_powers = vec![vec![0.0; n_freq]; n_iterations];
 
     // Random number generator
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for iter in 0..n_iterations {
         // Generate bootstrap sample

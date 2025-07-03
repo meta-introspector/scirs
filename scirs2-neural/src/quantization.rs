@@ -319,7 +319,7 @@ impl QuantizationAwareTraining {
     pub fn add_quantization_noise(&self, tensor: &ArrayD<f32>, noise_scale: f32) -> ArrayD<f32> {
         let mut rng = rng();
         tensor.mapv(|x| {
-            let noise = rng.gen::<f32>() - 0.5; // Uniform noise [-0.5, 0.5]
+            let noise = rng.random::<f32>() - 0.5; // Uniform noise [-0.5, 0.5]
             x + noise * noise_scale
 /// Mixed bit-width quantization support
 pub struct MixedBitWidthQuantizer {

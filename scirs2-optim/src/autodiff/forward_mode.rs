@@ -207,27 +207,27 @@ impl<T: Float + Default + Clone> ForwardModeEngine<T> {
     }
 
     /// Add two variables
-    pub fn add(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
+    pub fn add(&mut self, lhs: usize, rhs: usize) -> Result<usize> {
         self.binary_op(ForwardOpType::Add, lhs, rhs)
     }
 
     /// Subtract two variables
-    pub fn subtract(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
+    pub fn subtract(&mut self, lhs: usize, rhs: usize) -> Result<usize> {
         self.binary_op(ForwardOpType::Subtract, lhs, rhs)
     }
 
     /// Multiply two variables
-    pub fn multiply(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
+    pub fn multiply(&mut self, lhs: usize, rhs: usize) -> Result<usize> {
         self.binary_op(ForwardOpType::Multiply, lhs, rhs)
     }
 
     /// Divide two variables
-    pub fn divide(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
+    pub fn divide(&mut self, lhs: usize, rhs: usize) -> Result<usize> {
         self.binary_op(ForwardOpType::Divide, lhs, rhs)
     }
 
     /// Raise to power
-    pub fn power(&mut self, base: usize, exponent: T) -> Result<usize, OptimError> {
+    pub fn power(&mut self, base: usize, exponent: T) -> Result<usize> {
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
@@ -246,47 +246,42 @@ impl<T: Float + Default + Clone> ForwardModeEngine<T> {
     }
 
     /// Exponential function
-    pub fn exp(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn exp(&mut self, input: usize) -> Result<usize> {
         self.unary_op(ForwardOpType::Exp, input)
     }
 
     /// Natural logarithm
-    pub fn log(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn log(&mut self, input: usize) -> Result<usize> {
         self.unary_op(ForwardOpType::Log, input)
     }
 
     /// Sine function
-    pub fn sin(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn sin(&mut self, input: usize) -> Result<usize> {
         self.unary_op(ForwardOpType::Sin, input)
     }
 
     /// Cosine function
-    pub fn cos(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn cos(&mut self, input: usize) -> Result<usize> {
         self.unary_op(ForwardOpType::Cos, input)
     }
 
     /// Hyperbolic tangent
-    pub fn tanh(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn tanh(&mut self, input: usize) -> Result<usize> {
         self.unary_op(ForwardOpType::Tanh, input)
     }
 
     /// Sigmoid function
-    pub fn sigmoid(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn sigmoid(&mut self, input: usize) -> Result<usize> {
         self.unary_op(ForwardOpType::Sigmoid, input)
     }
 
     /// ReLU function
-    pub fn relu(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn relu(&mut self, input: usize) -> Result<usize> {
         self.unary_op(ForwardOpType::ReLU, input)
     }
 
     /// Matrix multiplication
-    pub fn matmul(
-        &mut self,
-        lhs: usize,
-        rhs: usize,
-        dims: (usize, usize, usize),
-    ) -> Result<usize, OptimError> {
+    pub fn matmul(&mut self, lhs: usize, rhs: usize, dims: (usize, usize, usize)) -> Result<usize> {
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
@@ -309,12 +304,12 @@ impl<T: Float + Default + Clone> ForwardModeEngine<T> {
     }
 
     /// Dot product
-    pub fn dot(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
+    pub fn dot(&mut self, lhs: usize, rhs: usize) -> Result<usize> {
         self.binary_op(ForwardOpType::Dot, lhs, rhs)
     }
 
     /// Sum reduction
-    pub fn sum(&mut self, input: usize, axis: Option<usize>) -> Result<usize, OptimError> {
+    pub fn sum(&mut self, input: usize, axis: Option<usize>) -> Result<usize> {
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
@@ -333,7 +328,7 @@ impl<T: Float + Default + Clone> ForwardModeEngine<T> {
     }
 
     /// Mean reduction
-    pub fn mean(&mut self, input: usize, axis: Option<usize>) -> Result<usize, OptimError> {
+    pub fn mean(&mut self, input: usize, axis: Option<usize>) -> Result<usize> {
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
@@ -352,7 +347,7 @@ impl<T: Float + Default + Clone> ForwardModeEngine<T> {
     }
 
     /// L2 norm
-    pub fn norm(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn norm(&mut self, input: usize) -> Result<usize> {
         self.unary_op(ForwardOpType::Norm, input)
     }
 
@@ -361,7 +356,7 @@ impl<T: Float + Default + Clone> ForwardModeEngine<T> {
         &self,
         inputs: &HashMap<String, Array1<T>>,
         seed_direction: &Array1<T>,
-    ) -> Result<Vec<VectorDual<T>>, OptimError> {
+    ) -> Result<Vec<VectorDual<T>>> {
         let mut values = Vec::with_capacity(self.tape.len());
 
         // Initialize with input values
@@ -421,13 +416,11 @@ impl<T: Float + Default + Clone> ForwardModeEngine<T> {
         inputs: &HashMap<String, Array1<T>>,
         output_id: usize,
         direction: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         let results = self.forward_pass(inputs, direction)?;
 
         if output_id >= results.len() {
-            return Err(OptimError::InvalidConfig(
-                "Invalid output ID".to_string(),
-            ));
+            return Err(OptimError::InvalidConfig("Invalid output ID".to_string()));
         }
 
         Ok(results[output_id].tangent.clone())
@@ -439,7 +432,7 @@ impl<T: Float + Default + Clone> ForwardModeEngine<T> {
         inputs: &HashMap<String, Array1<T>>,
         output_id: usize,
         input_size: usize,
-    ) -> Result<Array2<T>, OptimError> {
+    ) -> Result<Array2<T>> {
         let mut jacobian = Array2::zeros((inputs.len(), input_size));
 
         // Compute Jacobian one column at a time using unit vectors
@@ -459,12 +452,7 @@ impl<T: Float + Default + Clone> ForwardModeEngine<T> {
         Ok(jacobian)
     }
 
-    fn binary_op(
-        &mut self,
-        op_type: ForwardOpType,
-        lhs: usize,
-        rhs: usize,
-    ) -> Result<usize, OptimError> {
+    fn binary_op(&mut self, op_type: ForwardOpType, lhs: usize, rhs: usize) -> Result<usize> {
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
@@ -482,7 +470,7 @@ impl<T: Float + Default + Clone> ForwardModeEngine<T> {
         Ok(output_id)
     }
 
-    fn unary_op(&mut self, op_type: ForwardOpType, input: usize) -> Result<usize, OptimError> {
+    fn unary_op(&mut self, op_type: ForwardOpType, input: usize) -> Result<usize> {
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
@@ -504,7 +492,7 @@ impl<T: Float + Default + Clone> ForwardModeEngine<T> {
         &self,
         op: &ForwardOperation<T>,
         values: &[VectorDual<T>],
-    ) -> Result<VectorDual<T>, OptimError> {
+    ) -> Result<VectorDual<T>> {
         match op.op_type {
             ForwardOpType::Add => {
                 let lhs = &values[op.inputs[0]];

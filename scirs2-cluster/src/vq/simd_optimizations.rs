@@ -124,8 +124,8 @@ where
 
     let caps = PlatformCapabilities::detect();
     let optimizer = AutoOptimizer::new();
-    let use_simd = caps.simd_available && 
-        (optimizer.should_use_simd(n_samples * n_features) || config.force_simd);
+    let use_simd = caps.simd_available
+        && (optimizer.should_use_simd(n_samples * n_features) || config.force_simd);
 
     if use_simd && config.enable_parallel && n_features > config.parallel_chunk_size {
         whiten_simd_parallel(obs, config)
@@ -174,10 +174,10 @@ where
         let column = obs.column(j);
         let mean_array = Array1::from_elem(n_samples, means[j]);
         let std_array = Array1::from_elem(n_samples, stds[j]);
-        
+
         let centered = F::simd_sub(&column, &mean_array.view());
         let normalized = F::simd_div(&centered.view(), &std_array.view());
-        
+
         for i in 0..n_samples {
             whitened[[i, j]] = normalized[i];
         }
@@ -225,7 +225,7 @@ where
                 let squared_diff = F::simd_mul(&diff.view(), &diff.view());
                 let variance = F::simd_sum(&squared_diff) / F::from(n_samples - 1).unwrap();
                 let std = variance.sqrt();
-                
+
                 // Avoid division by zero
                 if std < F::from(1e-10).unwrap() {
                     F::one()
@@ -236,13 +236,15 @@ where
             .collect::<Vec<_>>()
             .into()
     } else {
-        whiten_simd_sequential(obs)?.into_shape((n_samples, n_features)).unwrap();
+        whiten_simd_sequential(obs)?
+            .into_shape((n_samples, n_features))
+            .unwrap();
         return whiten_simd_sequential(obs);
     };
 
     // Parallel whitening
     let mut whitened = Array2::<F>::zeros((n_samples, n_features));
-    
+
     if is_parallel_enabled() {
         // Process features in parallel chunks
         let chunk_size = config.parallel_chunk_size;
@@ -254,10 +256,10 @@ where
                     let column = obs.column(j);
                     let mean_array = Array1::from_elem(n_samples, means[j]);
                     let std_array = Array1::from_elem(n_samples, stds[j]);
-                    
+
                     let centered = F::simd_sub(&column, &mean_array.view());
                     let normalized = F::simd_div(&centered.view(), &std_array.view());
-                    
+
                     // Note: This requires unsafe access for parallel writing
                     // In a real implementation, we'd use a more sophisticated approach
                     for i in 0..n_samples {
@@ -272,10 +274,10 @@ where
             let column = obs.column(j);
             let mean_array = Array1::from_elem(n_samples, means[j]);
             let std_array = Array1::from_elem(n_samples, stds[j]);
-            
+
             let centered = F::simd_sub(&column, &mean_array.view());
             let normalized = F::simd_div(&centered.view(), &std_array.view());
-            
+
             for i in 0..n_samples {
                 whitened[[i, j]] = normalized[i];
             }
@@ -356,7 +358,8 @@ where
     if data.shape()[1] != centroids.shape()[1] {
         return Err(ClusteringError::InvalidInput(format!(
             "Data and centroids must have the same number of features: {} vs {}",
-            data.shape()[1], centroids.shape()[1]
+            data.shape()[1],
+            centroids.shape()[1]
         )));
     }
 
@@ -382,7 +385,7 @@ where
 {
     let n_samples = data.shape()[0];
     let n_centroids = centroids.shape()[0];
-    
+
     let mut labels = Array1::zeros(n_samples);
     let mut distances = Array1::zeros(n_samples);
 
@@ -396,7 +399,7 @@ where
 
         for j in 0..n_centroids {
             let centroid = centroids.slice(s![j, ..]);
-            
+
             let dist = if use_simd {
                 let diff = F::simd_sub(&point, &centroid);
                 F::simd_norm(&diff.view())
@@ -448,7 +451,7 @@ where
 
             for j in 0..n_centroids {
                 let centroid = centroids.slice(s![j, ..]);
-                
+
                 let dist = if use_simd {
                     let diff = F::simd_sub(&point, &centroid);
                     F::simd_norm(&diff.view())
@@ -539,7 +542,7 @@ where
 {
     let n_samples = data.shape()[0];
     let n_features = data.shape()[1];
-    
+
     let mut centroids = Array2::zeros((k, n_features));
     let mut counts = Array1::zeros(k);
 
@@ -552,7 +555,7 @@ where
                 cluster, k
             )));
         }
-        
+
         counts[cluster] += 1;
 
         if use_simd {
@@ -612,7 +615,7 @@ where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps + std::iter::Sum,
 {
     let n_features = data.shape()[1];
-    
+
     // Process clusters in parallel
     let centroids: Vec<Array1<F>> = (0..k)
         .into_par_iter()
@@ -625,7 +628,7 @@ where
                 if labels[i] == cluster_id {
                     count += 1;
                     let point = data.slice(s![i, ..]);
-                    
+
                     if use_simd {
                         let updated_sum = F::simd_add(&sum.view(), &point);
                         for j in 0..n_features {
@@ -734,7 +737,8 @@ where
         if cluster >= centroids.shape()[0] {
             return Err(ClusteringError::InvalidInput(format!(
                 "Label {} exceeds number of centroids {}",
-                cluster, centroids.shape()[0]
+                cluster,
+                centroids.shape()[0]
             )));
         }
 
@@ -778,7 +782,8 @@ where
         if label >= centroids.shape()[0] {
             return Err(ClusteringError::InvalidInput(format!(
                 "Label {} exceeds number of centroids {}",
-                label, centroids.shape()[0]
+                label,
+                centroids.shape()[0]
             )));
         }
     }
@@ -820,29 +825,23 @@ mod tests {
     fn test_euclidean_distance_simd() {
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let y = Array1::from_vec(vec![4.0, 5.0, 6.0]);
-        
+
         let distance = euclidean_distance_simd(x.view(), y.view(), None).unwrap();
         let expected = ((4.0 - 1.0).powi(2) + (5.0 - 2.0).powi(2) + (6.0 - 3.0).powi(2)).sqrt();
-        
+
         assert_abs_diff_eq!(distance, expected, epsilon = 1e-10);
     }
 
     #[test]
     fn test_whiten_simd() {
-        let data = Array2::from_shape_vec((4, 2), vec![
-            1.0, 2.0,
-            1.5, 2.5,
-            0.5, 1.5,
-            2.0, 3.0,
-        ]).unwrap();
+        let data =
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
 
         let whitened = whiten_simd(&data, None).unwrap();
-        
+
         // Check that means are approximately zero
-        let col_means: Vec<f64> = (0..2)
-            .map(|j| whitened.column(j).mean().unwrap())
-            .collect();
-        
+        let col_means: Vec<f64> = (0..2).map(|j| whitened.column(j).mean().unwrap()).collect();
+
         for mean in col_means {
             assert_abs_diff_eq!(mean, 0.0, epsilon = 1e-10);
         }
@@ -850,23 +849,16 @@ mod tests {
 
     #[test]
     fn test_vq_simd() {
-        let data = Array2::from_shape_vec((4, 2), vec![
-            0.0, 0.0,
-            1.0, 0.0,
-            0.0, 1.0,
-            1.0, 1.0,
-        ]).unwrap();
+        let data =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
-        let centroids = Array2::from_shape_vec((2, 2), vec![
-            0.25, 0.25,
-            0.75, 0.75,
-        ]).unwrap();
+        let centroids = Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).unwrap();
 
         let (labels, distances) = vq_simd(data.view(), centroids.view(), None).unwrap();
-        
+
         assert_eq!(labels.len(), 4);
         assert_eq!(distances.len(), 4);
-        
+
         // Check that all distances are non-negative
         for &distance in distances.iter() {
             assert!(distance >= 0.0);
@@ -875,23 +867,19 @@ mod tests {
 
     #[test]
     fn test_compute_centroids_simd() {
-        let data = Array2::from_shape_vec((4, 2), vec![
-            0.0, 0.0,
-            1.0, 0.0,
-            0.0, 1.0,
-            1.0, 1.0,
-        ]).unwrap();
+        let data =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
-        
+
         let centroids = compute_centroids_simd(data.view(), &labels, 2, None).unwrap();
-        
+
         assert_eq!(centroids.shape(), &[2, 2]);
-        
+
         // Centroid 0 should be average of (0,0) and (1,0) = (0.5, 0)
         assert_abs_diff_eq!(centroids[[0, 0]], 0.5, epsilon = 1e-10);
         assert_abs_diff_eq!(centroids[[0, 1]], 0.0, epsilon = 1e-10);
-        
+
         // Centroid 1 should be average of (0,1) and (1,1) = (0.5, 1)
         assert_abs_diff_eq!(centroids[[1, 0]], 0.5, epsilon = 1e-10);
         assert_abs_diff_eq!(centroids[[1, 1]], 1.0, epsilon = 1e-10);
@@ -899,25 +887,19 @@ mod tests {
 
     #[test]
     fn test_calculate_distortion_simd() {
-        let data = Array2::from_shape_vec((4, 2), vec![
-            0.0, 0.0,
-            1.0, 0.0,
-            0.0, 1.0,
-            1.0, 1.0,
-        ]).unwrap();
+        let data =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
-        let centroids = Array2::from_shape_vec((2, 2), vec![
-            0.5, 0.0,
-            0.5, 1.0,
-        ]).unwrap();
+        let centroids = Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.5, 1.0]).unwrap();
 
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
-        
-        let distortion = calculate_distortion_simd(data.view(), centroids.view(), &labels, None).unwrap();
-        
+
+        let distortion =
+            calculate_distortion_simd(data.view(), centroids.view(), &labels, None).unwrap();
+
         // Calculate expected distortion manually
         let expected = 0.5 * 0.5 + 0.5 * 0.5 + 0.5 * 0.5 + 0.5 * 0.5; // 1.0
-        
+
         assert_abs_diff_eq!(distortion, expected, epsilon = 1e-10);
     }
 }

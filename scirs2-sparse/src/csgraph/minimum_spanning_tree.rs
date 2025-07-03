@@ -509,9 +509,9 @@ mod tests {
         //  | /    |
         //  2 ---- 3
         //     4
-        let rows = vec![0, 0, 1, 1, 1, 2, 2, 3];
-        let cols = vec![1, 2, 0, 2, 3, 0, 3, 1];
-        let data = vec![1.0, 2.0, 1.0, 1.0, 3.0, 2.0, 4.0, 3.0];
+        let rows = vec![0, 0, 1, 1, 1, 2, 2, 2, 3, 3];
+        let cols = vec![1, 2, 0, 2, 3, 0, 1, 3, 1, 2];
+        let data = vec![1.0, 2.0, 1.0, 1.0, 3.0, 2.0, 1.0, 4.0, 3.0, 4.0];
 
         CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap()
     }

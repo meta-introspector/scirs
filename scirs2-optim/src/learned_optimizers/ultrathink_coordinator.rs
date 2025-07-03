@@ -124,13 +124,10 @@ pub trait AdvancedOptimizer<T: Float>: Send + Sync {
         parameters: &Array1<T>,
         gradients: &Array1<T>,
         context: &OptimizationContext<T>,
-    ) -> Result<Array1<T>, OptimError>;
+    ) -> Result<Array1<T>>;
 
     /// Adapt to new optimization landscape
-    fn adapt_to_landscape(
-        &mut self,
-        landscape_features: &LandscapeFeatures<T>,
-    ) -> Result<(), OptimError>;
+    fn adapt_to_landscape(&mut self, landscape_features: &LandscapeFeatures<T>) -> Result<()>;
 
     /// Get optimizer capabilities
     fn get_capabilities(&self) -> OptimizerCapabilities;
@@ -374,7 +371,7 @@ pub trait MetaLearningStrategy<T: Float>: Send + Sync {
         &mut self,
         meta_task: &MetaTask<T>,
         optimizers: &mut HashMap<String, Box<dyn AdvancedOptimizer<T>>>,
-    ) -> Result<MetaLearningResult<T>, OptimError>;
+    ) -> Result<MetaLearningResult<T>>;
 
     /// Get strategy name
     fn name(&self) -> &str;
@@ -466,10 +463,7 @@ pub struct PredictionModel<T: Float> {
 /// Feature extractor trait
 pub trait FeatureExtractor<T: Float>: Send + Sync {
     /// Extract features from optimization context
-    fn extract_features(
-        &self,
-        context: &OptimizationContext<T>,
-    ) -> Result<Array1<T>, OptimError>;
+    fn extract_features(&self, context: &OptimizationContext<T>) -> Result<Array1<T>>;
 
     /// Get feature dimension
     fn feature_dimension(&self) -> usize;
@@ -569,7 +563,7 @@ pub trait AdaptationStrategy<T: Float>: Send + Sync {
         &mut self,
         context: &OptimizationContext<T>,
         coordinator: &mut UltraThinkCoordinator<T>,
-    ) -> Result<AdaptationResult<T>, OptimError>;
+    ) -> Result<AdaptationResult<T>>;
 
     /// Get strategy name
     fn name(&self) -> &str;
@@ -1027,7 +1021,7 @@ impl<T: Float> Default for UltraThinkConfig<T> {
 
 impl<T: Float + 'static> UltraThinkCoordinator<T> {
     /// Create new UltraThink coordinator
-    pub fn new(config: UltraThinkConfig<T>) -> Result<Self, OptimError> {
+    pub fn new(config: UltraThinkConfig<T>) -> Result<Self> {
         let mut coordinator = Self {
             optimizer_ensemble: OptimizerEnsemble::new()?,
             nas_engine: if config.enable_nas {
@@ -1064,7 +1058,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
     }
 
     /// Initialize the UltraThink coordinator
-    fn initialize(&mut self) -> Result<(), OptimError> {
+    fn initialize(&mut self) -> Result<()> {
         // Register default optimizers
         self.register_default_optimizers()?;
 
@@ -1086,7 +1080,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         parameters: &Array1<T>,
         gradients: &Array1<T>,
         context: OptimizationContext<T>,
-    ) -> Result<UltraThinkResult<T>, OptimError> {
+    ) -> Result<UltraThinkResult<T>> {
         let start_time = Instant::now();
 
         // 1. Analyze optimization landscape
@@ -1145,7 +1139,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         parameters: &Array1<T>,
         gradients: &Array1<T>,
         context: &OptimizationContext<T>,
-    ) -> Result<LandscapeFeatures<T>, OptimError> {
+    ) -> Result<LandscapeFeatures<T>> {
         // Comprehensive landscape analysis
         let curvature = self.analyze_curvature(parameters, gradients)?;
         let gradient_chars = self.analyze_gradient_characteristics(gradients, context)?;
@@ -1163,7 +1157,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
     }
 
     /// Register default optimizers
-    fn register_default_optimizers(&mut self) -> Result<(), OptimError> {
+    fn register_default_optimizers(&mut self) -> Result<()> {
         // Create advanced optimizer wrappers for existing optimizers
         let lstm_config = LearnedOptimizerConfig::default();
         let lstm_optimizer =
@@ -1180,7 +1174,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
     }
 
     /// Initialize meta-learning strategies
-    fn initialize_meta_learning(&mut self) -> Result<(), OptimError> {
+    fn initialize_meta_learning(&mut self) -> Result<()> {
         // Add MAML strategy
         self.meta_learning_orchestrator
             .add_strategy(Box::new(MAMLStrategy::new()))?;
@@ -1193,7 +1187,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
     }
 
     /// Setup adaptation triggers
-    fn setup_adaptation_triggers(&mut self) -> Result<(), OptimError> {
+    fn setup_adaptation_triggers(&mut self) -> Result<()> {
         // Performance degradation trigger
         self.adaptation_controller
             .add_trigger(Box::new(PerformanceDegradationTrigger::new(
@@ -1211,7 +1205,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
     fn generate_recommendations(
         &self,
         results: &EnsembleOptimizationResults<T>,
-    ) -> Result<Vec<OptimizationRecommendation>, OptimError> {
+    ) -> Result<Vec<OptimizationRecommendation>> {
         let mut recommendations = Vec::new();
 
         // Performance-based recommendations
@@ -1243,7 +1237,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         parameters: &Array1<T>,
         gradients: &Array1<T>,
-    ) -> Result<CurvatureInfo<T>, OptimError> {
+    ) -> Result<CurvatureInfo<T>> {
         let n = parameters.len();
 
         // Estimate curvature using gradient differences
@@ -1298,7 +1292,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         gradients: &Array1<T>,
         context: &OptimizationContext<T>,
-    ) -> Result<GradientCharacteristics<T>, OptimError> {
+    ) -> Result<GradientCharacteristics<T>> {
         let n = gradients.len();
         let grad_norm = gradients.iter().map(|&g| g * g).sum::<T>().sqrt();
 
@@ -1388,7 +1382,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         parameters: &Array1<T>,
         gradients: &Array1<T>,
-    ) -> Result<LocalGeometry<T>, OptimError> {
+    ) -> Result<LocalGeometry<T>> {
         let n = parameters.len();
         let grad_norm = gradients.iter().map(|&g| g * g).sum::<T>().sqrt();
 
@@ -1491,7 +1485,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         _parameters: &Array1<T>,
         _context: &OptimizationContext<T>,
-    ) -> Result<GlobalStructure<T>, OptimError> {
+    ) -> Result<GlobalStructure<T>> {
         Ok(GlobalStructure {
             connectivity: T::from(0.8).unwrap(),
             symmetry: T::from(0.2).unwrap(),
@@ -1504,7 +1498,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         _gradients: &Array1<T>,
         _context: &OptimizationContext<T>,
-    ) -> Result<NoiseCharacteristics<T>, OptimError> {
+    ) -> Result<NoiseCharacteristics<T>> {
         Ok(NoiseCharacteristics {
             noise_level: T::from(0.05).unwrap(),
             noise_type: NoiseType::Gaussian,
@@ -1518,7 +1512,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         features: &LandscapeFeatures<T>,
         context: &OptimizationContext<T>,
-    ) -> Result<HashMap<String, T>, OptimError> {
+    ) -> Result<HashMap<String, T>> {
         let mut predictions = HashMap::new();
 
         // Extract key features for prediction
@@ -1568,7 +1562,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         features: &[T],
         context: &OptimizationContext<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let grad_norm = features[0];
         let mean_curvature = features[1];
         let escape_difficulty = features[3];
@@ -1607,7 +1601,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         features: &[T],
         context: &OptimizationContext<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let _grad_norm = features[0];
         let condition_number = features[2];
         let noise_level = features[4];
@@ -1638,7 +1632,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         features: &[T],
         _context: &OptimizationContext<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let grad_norm = features[0];
         let mean_curvature = features[1];
         let noise_level = features[4];
@@ -1669,7 +1663,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         features: &[T],
         context: &OptimizationContext<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let grad_norm = features[0];
         let mean_curvature = features[1];
         let escape_difficulty = features[3];
@@ -1705,7 +1699,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         features: &[T],
         context: &OptimizationContext<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let condition_number = features[2];
         let escape_difficulty = features[3];
 
@@ -1740,7 +1734,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         features: &[T],
         context: &OptimizationContext<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let _grad_norm = features[0];
         let condition_number = features[2];
         let escape_difficulty = features[3];
@@ -1803,7 +1797,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         predictions: &HashMap<String, T>,
         context: &OptimizationContext<T>,
-    ) -> Result<Vec<String>, OptimError> {
+    ) -> Result<Vec<String>> {
         let mut candidate_optimizers: Vec<_> = predictions.iter().collect();
 
         // Multi-objective scoring considering performance, diversity, and resource efficiency
@@ -1859,7 +1853,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         optimizer_name: &str,
         all_optimizers: &[(&String, &T)],
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         // Define optimizer categories and their diversity relationships
         let optimizer_categories = self.get_optimizer_categories();
 
@@ -1914,7 +1908,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         optimizer_name: &str,
         context: &OptimizationContext<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let efficiency = match optimizer_name {
             "lstm_advanced" => {
                 // LSTM has moderate computational cost
@@ -1967,7 +1961,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         optimizer_name: &str,
         context: &OptimizationContext<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let reliability = match optimizer_name {
             "lstm_advanced" => {
                 // LSTM optimizers have learned convergence patterns
@@ -2018,7 +2012,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         optimizer_name: &str,
         context: &OptimizationContext<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let robustness = match optimizer_name {
             "lstm_advanced" => {
                 // LSTM can adapt to changing conditions
@@ -2061,7 +2055,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &self,
         scored_optimizers: &[(String, T, T)],
         context: &OptimizationContext<T>,
-    ) -> Result<Vec<String>, OptimError> {
+    ) -> Result<Vec<String>> {
         let max_ensemble_size = self.config.max_parallel_optimizers;
         let mut selected = Vec::new();
         let mut available: Vec<_> = scored_optimizers.iter().collect();
@@ -2105,7 +2099,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         candidate: &str,
         current_ensemble: &[String],
         _context: &OptimizationContext<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let categories = self.get_optimizer_categories();
         let unknown_category = "unknown".to_string();
         let candidate_category = categories.get(candidate).unwrap_or(&unknown_category);
@@ -2139,7 +2133,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         _gradients: &Array1<T>,
         _selected: &[String],
         _context: &OptimizationContext<T>,
-    ) -> Result<EnsembleOptimizationResults<T>, OptimError> {
+    ) -> Result<EnsembleOptimizationResults<T>> {
         Ok(EnsembleOptimizationResults {
             updated_parameters: Array1::zeros(10), // Placeholder
             performance_score: T::from(0.85).unwrap(),
@@ -2166,7 +2160,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &mut self,
         _context: &OptimizationContext<T>,
         _results: &EnsembleOptimizationResults<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         Ok(()) // Placeholder
     }
 
@@ -2175,67 +2169,74 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &mut self,
         context: &OptimizationContext<T>,
         results: &EnsembleOptimizationResults<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // 1. Analyze current meta-learning performance
         let meta_performance = self.analyze_meta_learning_performance(context, results)?;
-        
+
         // 2. Update strategy performance history
         self.update_strategy_performance_history(&meta_performance)?;
-        
+
         // 3. Generate new meta-tasks based on current optimization state
         let meta_tasks = self.generate_adaptive_meta_tasks(context, results)?;
-        
+
         // 4. Execute meta-learning strategies on meta-tasks
         for meta_task in &meta_tasks {
             self.execute_meta_learning_step(meta_task)?;
         }
-        
+
         // 5. Perform cross-task knowledge transfer
         self.perform_knowledge_transfer(context, results)?;
-        
+
         // 6. Update meta-learning schedule based on performance
         self.adapt_meta_learning_schedule(&meta_performance)?;
-        
+
         // 7. Analyze task distribution and adjust clustering
-        self.meta_learning_orchestrator.task_analyzer.update_task_distribution(context)?;
-        
+        self.meta_learning_orchestrator
+            .task_analyzer
+            .update_task_distribution(context)?;
+
         // 8. Update meta-optimizer selection based on recent performance
         self.update_meta_optimizer_selection(&meta_performance)?;
-        
+
         Ok(())
     }
-    
+
     /// Analyze current meta-learning performance
     fn analyze_meta_learning_performance(
         &self,
         context: &OptimizationContext<T>,
         results: &EnsembleOptimizationResults<T>,
-    ) -> Result<MetaLearningPerformance<T>, OptimError> {
+    ) -> Result<MetaLearningPerformance<T>> {
         // Compute learning efficiency
-        let learning_efficiency = if !context.historical_performance.is_empty() && context.historical_performance.len() > 1 {
+        let learning_efficiency = if !context.historical_performance.is_empty()
+            && context.historical_performance.len() > 1
+        {
             let improvement_rate = self.compute_performance_trend(&context.historical_performance);
             improvement_rate.max(T::zero())
         } else {
             T::from(0.5).unwrap()
         };
-        
+
         // Compute adaptation speed
         let adaptation_speed = if results.adaptation_events.is_empty() {
             T::from(0.3).unwrap()
         } else {
             // Higher speed if more adaptations were successful
-            let successful_adaptations = results.adaptation_events.iter()
+            let successful_adaptations = results
+                .adaptation_events
+                .iter()
                 .filter(|event| event.performance_after > event.performance_before)
                 .count();
             T::from(successful_adaptations as f64 / results.adaptation_events.len() as f64).unwrap()
         };
-        
+
         // Compute transfer effectiveness
         let transfer_effectiveness = self.compute_transfer_effectiveness(context, results)?;
-        
+
         // Compute overall meta-learning score
-        let overall_score = (learning_efficiency + adaptation_speed + transfer_effectiveness) / T::from(3.0).unwrap();
-        
+        let overall_score = (learning_efficiency + adaptation_speed + transfer_effectiveness)
+            / T::from(3.0).unwrap();
+
         Ok(MetaLearningPerformance {
             learning_efficiency,
             adaptation_speed,
@@ -2245,131 +2246,147 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
             strategy_diversity: self.compute_strategy_diversity()?,
         })
     }
-    
+
     /// Update strategy performance history
     fn update_strategy_performance_history(
         &mut self,
-        _performance: &MetaLearningPerformance<T>
-    ) -> Result<(), OptimError> {
+        _performance: &MetaLearningPerformance<T>,
+    ) -> Result<()> {
         for strategy in &self.meta_learning_orchestrator.strategies {
             let strategy_name = strategy.name();
             let strategy_performance = strategy.get_performance();
-            
+
             // Add current performance to history
-            let history = self.meta_learning_orchestrator.strategy_performance
+            let history = self
+                .meta_learning_orchestrator
+                .strategy_performance
                 .entry(strategy_name.to_string())
                 .or_insert_with(VecDeque::new);
-            
+
             history.push_back(strategy_performance);
-            
+
             // Maintain history size
             if history.len() > 100 {
                 history.pop_front();
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Generate adaptive meta-tasks based on current optimization state
     fn generate_adaptive_meta_tasks(
         &self,
         context: &OptimizationContext<T>,
         results: &EnsembleOptimizationResults<T>,
-    ) -> Result<Vec<MetaTask<T>>, OptimError> {
+    ) -> Result<Vec<MetaTask<T>>> {
         let mut meta_tasks = Vec::new();
-        
+
         // Generate task based on current optimization challenges
         if results.performance_score < T::from(0.7).unwrap() {
             // Performance improvement task
             meta_tasks.push(self.create_performance_improvement_task(context)?);
         }
-        
+
         if results.resource_usage.cpu_utilization > T::from(0.9).unwrap() {
             // Resource efficiency task
             meta_tasks.push(self.create_resource_efficiency_task(context)?);
         }
-        
+
         // Always include adaptation task
         meta_tasks.push(self.create_adaptation_task(context, results)?);
-        
+
         // Few-shot learning task for new problem types
         if self.is_novel_problem_type(context)? {
             meta_tasks.push(self.create_few_shot_learning_task(context)?);
         }
-        
+
         Ok(meta_tasks)
     }
-    
+
     /// Execute meta-learning step for a given meta-task
-    fn execute_meta_learning_step(&mut self, meta_task: &MetaTask<T>) -> Result<(), OptimError> {
+    fn execute_meta_learning_step(&mut self, meta_task: &MetaTask<T>) -> Result<()> {
         // Select best strategy for this meta-task
         let best_strategy_idx = self.select_best_strategy_for_task(meta_task)?;
-        
-        if let Some(strategy) = self.meta_learning_orchestrator.strategies.get_mut(best_strategy_idx) {
+
+        if let Some(strategy) = self
+            .meta_learning_orchestrator
+            .strategies
+            .get_mut(best_strategy_idx)
+        {
             // Execute meta-learning step
             let result = strategy.meta_step(meta_task, &mut self.optimizer_ensemble.optimizers)?;
-            
+
             // Update strategy performance based on result
             self.update_strategy_performance(best_strategy_idx, &result)?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Perform cross-task knowledge transfer
     fn perform_knowledge_transfer(
         &mut self,
         context: &OptimizationContext<T>,
         results: &EnsembleOptimizationResults<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Find similar tasks in experience
         let similar_tasks = self.find_similar_tasks(context)?;
-        
+
         if !similar_tasks.is_empty() {
             // Transfer knowledge from similar tasks
             for similar_task in &similar_tasks {
                 self.transfer_task_knowledge(similar_task, context, results)?;
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Adapt meta-learning schedule based on performance
-    fn adapt_meta_learning_schedule(&mut self, performance: &MetaLearningPerformance<T>) -> Result<(), OptimError> {
+    fn adapt_meta_learning_schedule(
+        &mut self,
+        performance: &MetaLearningPerformance<T>,
+    ) -> Result<()> {
         let schedule = &mut self.meta_learning_orchestrator.schedule;
-        
+
         // Adjust update frequency based on learning efficiency
         if performance.learning_efficiency > T::from(0.8).unwrap() {
             // High efficiency - can reduce frequency
             schedule.update_frequency = std::cmp::max(
                 schedule.update_frequency + Duration::from_secs(10),
-                Duration::from_secs(30)
+                Duration::from_secs(30),
             );
         } else if performance.learning_efficiency < T::from(0.3).unwrap() {
             // Low efficiency - increase frequency
             schedule.update_frequency = std::cmp::max(
-                schedule.update_frequency.saturating_sub(Duration::from_secs(10)),
-                Duration::from_secs(5)
+                schedule
+                    .update_frequency
+                    .saturating_sub(Duration::from_secs(10)),
+                Duration::from_secs(5),
             );
         }
-        
+
         // Adjust batch size based on adaptation speed
         if performance.adaptation_speed > T::from(0.8).unwrap() {
             schedule.batch_size = std::cmp::min(schedule.batch_size + 8, 128);
         } else if performance.adaptation_speed < T::from(0.3).unwrap() {
             schedule.batch_size = std::cmp::max(schedule.batch_size.saturating_sub(8), 8);
         }
-        
+
         Ok(())
     }
-    
+
     /// Update meta-optimizer selection based on performance
-    fn update_meta_optimizer_selection(&mut self, _performance: &MetaLearningPerformance<T>) -> Result<(), OptimError> {
+    fn update_meta_optimizer_selection(
+        &mut self,
+        _performance: &MetaLearningPerformance<T>,
+    ) -> Result<()> {
         // Promote well-performing strategies
         // First collect strategy names that need boosting to avoid borrowing conflicts
-        let strategies_to_boost: Vec<String> = self.meta_learning_orchestrator.strategy_performance
+        let strategies_to_boost: Vec<String> = self
+            .meta_learning_orchestrator
+            .strategy_performance
             .iter()
             .filter_map(|(strategy_name, history)| {
                 if let Some(recent_performance) = history.back() {
@@ -2383,57 +2400,64 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
                 }
             })
             .collect();
-        
+
         // Now apply the boosts
         for strategy_name in strategies_to_boost {
             self.boost_strategy_selection_probability(&strategy_name)?;
         }
-        
+
         Ok(())
     }
-    
+
     // Helper methods for meta-learning
-    
+
     fn compute_transfer_effectiveness(
         &self,
         _context: &OptimizationContext<T>,
-        results: &EnsembleOptimizationResults<T>
-    ) -> Result<T, OptimError> {
+        results: &EnsembleOptimizationResults<T>,
+    ) -> Result<T> {
         // Estimate how well knowledge transfers between tasks
         let ensemble_diversity = self.compute_ensemble_diversity(&results.individual_results)?;
-        
+
         // Higher diversity suggests better transfer
         Ok(ensemble_diversity)
     }
-    
-    fn estimate_task_difficulty(&self, context: &OptimizationContext<T>) -> Result<T, OptimError> {
-        let complexity_score = 
-            T::from(context.problem_characteristics.dimensionality as f64 / 10000.0).unwrap() * T::from(0.3).unwrap() +
-            context.problem_characteristics.conditioning / T::from(1000.0).unwrap() * T::from(0.2).unwrap() +
-            context.problem_characteristics.noise_level * T::from(0.25).unwrap() +
-            context.problem_characteristics.multimodality * T::from(0.25).unwrap();
-        
+
+    fn estimate_task_difficulty(&self, context: &OptimizationContext<T>) -> Result<T> {
+        let complexity_score =
+            T::from(context.problem_characteristics.dimensionality as f64 / 10000.0).unwrap()
+                * T::from(0.3).unwrap()
+                + context.problem_characteristics.conditioning / T::from(1000.0).unwrap()
+                    * T::from(0.2).unwrap()
+                + context.problem_characteristics.noise_level * T::from(0.25).unwrap()
+                + context.problem_characteristics.multimodality * T::from(0.25).unwrap();
+
         Ok(complexity_score.min(T::from(1.0).unwrap()))
     }
-    
-    fn compute_strategy_diversity(&self) -> Result<T, OptimError> {
+
+    fn compute_strategy_diversity(&self) -> Result<T> {
         let num_strategies = self.meta_learning_orchestrator.strategies.len();
         if num_strategies <= 1 {
             return Ok(T::zero());
         }
-        
+
         // Simple diversity measure based on number of different strategies
-        Ok(T::from((num_strategies as f64).log2() / 4.0).unwrap().min(T::from(1.0).unwrap()))
+        Ok(T::from((num_strategies as f64).log2() / 4.0)
+            .unwrap()
+            .min(T::from(1.0).unwrap()))
     }
-    
-    fn create_performance_improvement_task(&self, context: &OptimizationContext<T>) -> Result<MetaTask<T>, OptimError> {
+
+    fn create_performance_improvement_task(
+        &self,
+        context: &OptimizationContext<T>,
+    ) -> Result<MetaTask<T>> {
         let mut parameters = HashMap::new();
         parameters.insert("target_improvement".to_string(), T::from(0.2).unwrap());
         parameters.insert("max_iterations".to_string(), T::from(100.0).unwrap());
-        
+
         let mut expected_outcomes = HashMap::new();
         expected_outcomes.insert("performance_gain".to_string(), T::from(0.15).unwrap());
-        
+
         Ok(MetaTask {
             task_id: "performance_improvement".to_string(),
             task_type: MetaTaskType::Optimization,
@@ -2442,15 +2466,18 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
             resource_constraints: context.resource_constraints.clone(),
         })
     }
-    
-    fn create_resource_efficiency_task(&self, context: &OptimizationContext<T>) -> Result<MetaTask<T>, OptimError> {
+
+    fn create_resource_efficiency_task(
+        &self,
+        context: &OptimizationContext<T>,
+    ) -> Result<MetaTask<T>> {
         let mut parameters = HashMap::new();
         parameters.insert("target_efficiency".to_string(), T::from(0.8).unwrap());
         parameters.insert("resource_limit".to_string(), T::from(0.9).unwrap());
-        
+
         let mut expected_outcomes = HashMap::new();
         expected_outcomes.insert("efficiency_gain".to_string(), T::from(0.2).unwrap());
-        
+
         Ok(MetaTask {
             task_id: "resource_efficiency".to_string(),
             task_type: MetaTaskType::Optimization,
@@ -2459,15 +2486,19 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
             resource_constraints: context.resource_constraints.clone(),
         })
     }
-    
-    fn create_adaptation_task(&self, context: &OptimizationContext<T>, _results: &EnsembleOptimizationResults<T>) -> Result<MetaTask<T>, OptimError> {
+
+    fn create_adaptation_task(
+        &self,
+        context: &OptimizationContext<T>,
+        _results: &EnsembleOptimizationResults<T>,
+    ) -> Result<MetaTask<T>> {
         let mut parameters = HashMap::new();
         parameters.insert("adaptation_rate".to_string(), T::from(0.1).unwrap());
         parameters.insert("stability_threshold".to_string(), T::from(0.05).unwrap());
-        
+
         let mut expected_outcomes = HashMap::new();
         expected_outcomes.insert("adaptation_success".to_string(), T::from(0.8).unwrap());
-        
+
         Ok(MetaTask {
             task_id: "adaptation".to_string(),
             task_type: MetaTaskType::Optimization,
@@ -2476,15 +2507,18 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
             resource_constraints: context.resource_constraints.clone(),
         })
     }
-    
-    fn create_few_shot_learning_task(&self, context: &OptimizationContext<T>) -> Result<MetaTask<T>, OptimError> {
+
+    fn create_few_shot_learning_task(
+        &self,
+        context: &OptimizationContext<T>,
+    ) -> Result<MetaTask<T>> {
         let mut parameters = HashMap::new();
         parameters.insert("few_shot_examples".to_string(), T::from(5.0).unwrap());
         parameters.insert("transfer_strength".to_string(), T::from(0.7).unwrap());
-        
+
         let mut expected_outcomes = HashMap::new();
         expected_outcomes.insert("learning_speed".to_string(), T::from(0.9).unwrap());
-        
+
         Ok(MetaTask {
             task_id: "few_shot_learning".to_string(),
             task_type: MetaTaskType::Classification,
@@ -2493,83 +2527,100 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
             resource_constraints: context.resource_constraints.clone(),
         })
     }
-    
-    fn is_novel_problem_type(&self, context: &OptimizationContext<T>) -> Result<bool, OptimError> {
+
+    fn is_novel_problem_type(&self, context: &OptimizationContext<T>) -> Result<bool> {
         // Check if this problem type is significantly different from seen before
         let similar_patterns = self.knowledge_base.find_similar_patterns(context)?;
         Ok(similar_patterns.len() < 3)
     }
-    
-    fn select_best_strategy_for_task(&self, meta_task: &MetaTask<T>) -> Result<usize, OptimError> {
+
+    fn select_best_strategy_for_task(&self, meta_task: &MetaTask<T>) -> Result<usize> {
         if self.meta_learning_orchestrator.strategies.is_empty() {
-            return Err(OptimError::InvalidParameters("No meta-learning strategies available".to_string()));
+            return Err(OptimError::InvalidParameters(
+                "No meta-learning strategies available".to_string(),
+            ));
         }
-        
+
         // Simple selection based on task type
         match meta_task.task_type {
             MetaTaskType::Classification | MetaTaskType::Regression => {
                 // Prefer MAML for supervised tasks
-                for (i, strategy) in self.meta_learning_orchestrator.strategies.iter().enumerate() {
+                for (i, strategy) in self
+                    .meta_learning_orchestrator
+                    .strategies
+                    .iter()
+                    .enumerate()
+                {
                     if strategy.name().contains("MAML") {
                         return Ok(i);
                     }
                 }
-            },
+            }
             MetaTaskType::Optimization => {
                 // Prefer any available strategy for optimization
                 return Ok(0);
-            },
+            }
             _ => {
                 return Ok(0);
             }
         }
-        
+
         Ok(0) // Default to first strategy
     }
-    
-    fn update_strategy_performance(&mut self, strategy_idx: usize, _result: &MetaLearningResult<T>) -> Result<(), OptimError> {
-        if let Some(_strategy) = self.meta_learning_orchestrator.strategies.get_mut(strategy_idx) {
+
+    fn update_strategy_performance(
+        &mut self,
+        strategy_idx: usize,
+        _result: &MetaLearningResult<T>,
+    ) -> Result<()> {
+        if let Some(_strategy) = self
+            .meta_learning_orchestrator
+            .strategies
+            .get_mut(strategy_idx)
+        {
             // Update strategy's internal performance based on result
             // This would typically involve updating the strategy's internal state
             // For now, we'll just track the performance improvement
         }
-        
+
         Ok(())
     }
-    
-    fn find_similar_tasks(&self, _context: &OptimizationContext<T>) -> Result<Vec<MetaTask<T>>, OptimError> {
+
+    fn find_similar_tasks(&self, _context: &OptimizationContext<T>) -> Result<Vec<MetaTask<T>>> {
         // Find tasks similar to current context
         // For now, return empty list
         Ok(Vec::new())
     }
-    
+
     fn transfer_task_knowledge(
         &mut self,
         _similar_task: &MetaTask<T>,
         _context: &OptimizationContext<T>,
-        _results: &EnsembleOptimizationResults<T>
-    ) -> Result<(), OptimError> {
+        _results: &EnsembleOptimizationResults<T>,
+    ) -> Result<()> {
         // Transfer knowledge from similar task to current optimization
         Ok(())
     }
-    
-    fn boost_strategy_selection_probability(&mut self, _strategy_name: &str) -> Result<(), OptimError> {
+
+    fn boost_strategy_selection_probability(&mut self, _strategy_name: &str) -> Result<()> {
         // Increase selection probability for well-performing strategy
         Ok(())
     }
-    
-    fn compute_ensemble_diversity(&self, individual_results: &HashMap<String, T>) -> Result<T, OptimError> {
+
+    fn compute_ensemble_diversity(&self, individual_results: &HashMap<String, T>) -> Result<T> {
         if individual_results.len() <= 1 {
             return Ok(T::zero());
         }
-        
+
         let scores: Vec<T> = individual_results.values().copied().collect();
         let mean = scores.iter().sum::<T>() / T::from(scores.len()).unwrap();
-        
-        let variance = scores.iter()
+
+        let variance = scores
+            .iter()
             .map(|&score| (score - mean) * (score - mean))
-            .sum::<T>() / T::from(scores.len()).unwrap();
-        
+            .sum::<T>()
+            / T::from(scores.len()).unwrap();
+
         // Diversity as normalized standard deviation
         Ok(variance.sqrt() / (mean + T::from(1e-8).unwrap()))
     }
@@ -2579,54 +2630,57 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &mut self,
         context: &OptimizationContext<T>,
         results: &EnsembleOptimizationResults<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // 1. Extract optimization pattern from current context and results
         let pattern = self.extract_optimization_pattern(context, results)?;
-        
+
         // 2. Update pattern database
         self.knowledge_base.update_pattern_database(&pattern)?;
-        
+
         // 3. Learn from failure/success patterns
         if results.performance_score > T::from(0.8).unwrap() {
             self.knowledge_base.record_success_pattern(&pattern)?;
         } else if results.performance_score < T::from(0.3).unwrap() {
-            self.knowledge_base.record_failure_pattern(&pattern, results)?;
+            self.knowledge_base
+                .record_failure_pattern(&pattern, results)?;
         }
-        
+
         // 4. Update best practices based on new evidence
-        self.knowledge_base.update_best_practices(context, results)?;
-        
+        self.knowledge_base
+            .update_best_practices(context, results)?;
+
         // 5. Perform incremental learning on dynamic learning system
         self.knowledge_base.learning_system.incremental_learn(
             &self.extract_learning_features(context, results)?,
-            results.performance_score
+            results.performance_score,
         )?;
-        
+
         // 6. Update research insights based on experimental results
-        self.knowledge_base.update_research_insights(context, results)?;
-        
+        self.knowledge_base
+            .update_research_insights(context, results)?;
+
         // 7. Prune outdated or irrelevant knowledge
         self.knowledge_base.prune_knowledge()?;
-        
+
         Ok(())
     }
-    
+
     /// Extract optimization pattern from context and results
     fn extract_optimization_pattern(
         &self,
         context: &OptimizationContext<T>,
         results: &EnsembleOptimizationResults<T>,
-    ) -> Result<OptimizationPattern<T>, OptimError> {
+    ) -> Result<OptimizationPattern<T>> {
         let pattern_characteristics = PatternCharacteristics {
             pattern_type: self.classify_pattern_type(context, results)?,
             complexity: self.compute_pattern_complexity(context)?,
             frequency: self.estimate_pattern_frequency(context)?,
             effectiveness: results.performance_score,
         };
-        
+
         // Generate pattern ID based on context fingerprint
         let pattern_id = self.generate_pattern_id(context)?;
-        
+
         // Identify which optimizers performed well
         let mut recommended_optimizers = Vec::new();
         for (optimizer_name, score) in &results.individual_results {
@@ -2634,10 +2688,10 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
                 recommended_optimizers.push(optimizer_name.clone());
             }
         }
-        
+
         // Estimate success probability based on historical data
         let success_probability = self.estimate_success_probability(&pattern_characteristics)?;
-        
+
         Ok(OptimizationPattern {
             pattern_id,
             characteristics: pattern_characteristics,
@@ -2646,108 +2700,109 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
             performance_expectation: results.performance_score,
         })
     }
-    
+
     /// Classify the type of optimization pattern
     fn classify_pattern_type(
         &self,
         context: &OptimizationContext<T>,
         results: &EnsembleOptimizationResults<T>,
-    ) -> Result<PatternType, OptimError> {
+    ) -> Result<PatternType> {
         // Analyze convergence behavior
         if !context.historical_performance.is_empty() {
             let convergence_rate = self.compute_performance_trend(&context.historical_performance);
-            
+
             if convergence_rate > T::from(0.05).unwrap() {
                 return Ok(PatternType::ConvergencePattern);
             }
         }
-        
+
         // Analyze performance characteristics
         if results.performance_score > T::from(0.85).unwrap() {
             return Ok(PatternType::PerformancePattern);
         }
-        
+
         // Analyze resource utilization
-        let avg_resource_usage = (
-            results.resource_usage.cpu_utilization + 
-            results.resource_usage.memory_utilization + 
-            results.resource_usage.gpu_utilization
-        ) / T::from(3.0).unwrap();
-        
+        let avg_resource_usage = (results.resource_usage.cpu_utilization
+            + results.resource_usage.memory_utilization
+            + results.resource_usage.gpu_utilization)
+            / T::from(3.0).unwrap();
+
         if avg_resource_usage > T::from(0.9).unwrap() {
             return Ok(PatternType::ResourcePattern);
         }
-        
+
         // Default to convergence pattern
         Ok(PatternType::ConvergencePattern)
     }
-    
+
     /// Compute pattern complexity based on problem characteristics
-    fn compute_pattern_complexity(
-        &self,
-        context: &OptimizationContext<T>,
-    ) -> Result<T, OptimError> {
-        let dimensionality_complexity = T::from(context.problem_characteristics.dimensionality as f64 / 10000.0).unwrap()
-            .min(T::from(1.0).unwrap());
-        
-        let conditioning_complexity = context.problem_characteristics.conditioning / T::from(1000.0).unwrap();
-        
+    fn compute_pattern_complexity(&self, context: &OptimizationContext<T>) -> Result<T> {
+        let dimensionality_complexity =
+            T::from(context.problem_characteristics.dimensionality as f64 / 10000.0)
+                .unwrap()
+                .min(T::from(1.0).unwrap());
+
+        let conditioning_complexity =
+            context.problem_characteristics.conditioning / T::from(1000.0).unwrap();
+
         let noise_complexity = context.problem_characteristics.noise_level;
-        
+
         let multimodality_complexity = context.problem_characteristics.multimodality;
-        
+
         // Weighted combination of complexity factors
-        let complexity = 
-            dimensionality_complexity * T::from(0.3).unwrap() +
-            conditioning_complexity * T::from(0.2).unwrap() +
-            noise_complexity * T::from(0.25).unwrap() +
-            multimodality_complexity * T::from(0.25).unwrap();
-        
+        let complexity = dimensionality_complexity * T::from(0.3).unwrap()
+            + conditioning_complexity * T::from(0.2).unwrap()
+            + noise_complexity * T::from(0.25).unwrap()
+            + multimodality_complexity * T::from(0.25).unwrap();
+
         Ok(complexity.min(T::from(1.0).unwrap()))
     }
-    
+
     /// Estimate how frequently this pattern occurs
-    fn estimate_pattern_frequency(
-        &self,
-        context: &OptimizationContext<T>,
-    ) -> Result<T, OptimError> {
+    fn estimate_pattern_frequency(&self, context: &OptimizationContext<T>) -> Result<T> {
         // Check against historical patterns in knowledge base
         let similar_patterns = self.knowledge_base.find_similar_patterns(context)?;
-        
+
         if similar_patterns.is_empty() {
             return Ok(T::from(0.1).unwrap()); // New pattern
         }
-        
+
         // Frequency based on similar patterns found
-        let frequency = T::from(similar_patterns.len() as f64 / 100.0).unwrap()
+        let frequency = T::from(similar_patterns.len() as f64 / 100.0)
+            .unwrap()
             .min(T::from(1.0).unwrap());
-        
+
         Ok(frequency)
     }
-    
+
     /// Generate unique pattern ID
-    fn generate_pattern_id(
-        &self,
-        context: &OptimizationContext<T>,
-    ) -> Result<String, OptimError> {
+    fn generate_pattern_id(&self, context: &OptimizationContext<T>) -> Result<String> {
         // Create a fingerprint based on problem characteristics
         let fingerprint = format!(
             "pattern_{}_{}_{}_{}_{}",
             context.problem_characteristics.dimensionality,
-            (context.problem_characteristics.conditioning * T::from(1000.0).unwrap()).to_f64().unwrap_or(0.0) as u32,
-            (context.problem_characteristics.noise_level * T::from(100.0).unwrap()).to_f64().unwrap_or(0.0) as u32,
-            (context.problem_characteristics.multimodality * T::from(100.0).unwrap()).to_f64().unwrap_or(0.0) as u32,
-            (context.problem_characteristics.convexity * T::from(100.0).unwrap()).to_f64().unwrap_or(0.0) as u32,
+            (context.problem_characteristics.conditioning * T::from(1000.0).unwrap())
+                .to_f64()
+                .unwrap_or(0.0) as u32,
+            (context.problem_characteristics.noise_level * T::from(100.0).unwrap())
+                .to_f64()
+                .unwrap_or(0.0) as u32,
+            (context.problem_characteristics.multimodality * T::from(100.0).unwrap())
+                .to_f64()
+                .unwrap_or(0.0) as u32,
+            (context.problem_characteristics.convexity * T::from(100.0).unwrap())
+                .to_f64()
+                .unwrap_or(0.0) as u32,
         );
-        
+
         Ok(fingerprint)
     }
-    
+
     /// Estimate success probability for a pattern
     fn estimate_success_probability(
         &self,
         characteristics: &PatternCharacteristics<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         // Base probability depends on pattern type
         let base_probability = match characteristics.pattern_type {
             PatternType::ConvergencePattern => T::from(0.7).unwrap(),
@@ -2755,50 +2810,53 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
             PatternType::ResourcePattern => T::from(0.6).unwrap(),
             PatternType::FailurePattern => T::from(0.2).unwrap(),
         };
-        
+
         // Adjust based on complexity
         let complexity_penalty = characteristics.complexity * T::from(0.2).unwrap();
         let adjusted_probability = base_probability - complexity_penalty;
-        
+
         // Boost based on frequency (common patterns are more reliable)
         let frequency_boost = characteristics.frequency * T::from(0.1).unwrap();
-        
+
         Ok((adjusted_probability + frequency_boost)
             .max(T::from(0.1).unwrap())
             .min(T::from(0.95).unwrap()))
     }
-    
+
     /// Extract features for learning system
     fn extract_learning_features(
         &self,
         context: &OptimizationContext<T>,
         results: &EnsembleOptimizationResults<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         let mut features = Vec::new();
-        
+
         // Problem characteristics
-        features.push(T::from(context.problem_characteristics.dimensionality as f64 / 10000.0).unwrap());
+        features.push(
+            T::from(context.problem_characteristics.dimensionality as f64 / 10000.0).unwrap(),
+        );
         features.push(context.problem_characteristics.conditioning / T::from(1000.0).unwrap());
         features.push(context.problem_characteristics.noise_level);
         features.push(context.problem_characteristics.multimodality);
         features.push(context.problem_characteristics.convexity);
-        
+
         // Optimization state features
-        features.push(T::from(context.optimization_state.current_iteration as f64 / 1000.0).unwrap());
+        features
+            .push(T::from(context.optimization_state.current_iteration as f64 / 1000.0).unwrap());
         features.push(context.optimization_state.current_loss);
         features.push(context.optimization_state.gradient_norm);
         features.push(context.optimization_state.step_size);
         features.push(context.optimization_state.convergence_measure);
-        
+
         // Resource utilization features
         features.push(results.resource_usage.cpu_utilization);
         features.push(results.resource_usage.memory_utilization);
         features.push(results.resource_usage.gpu_utilization);
         features.push(results.resource_usage.network_utilization);
-        
+
         // Performance features
         features.push(results.performance_score);
-        
+
         // Historical trend
         if !context.historical_performance.is_empty() {
             let trend = self.compute_performance_trend(&context.historical_performance);
@@ -2806,7 +2864,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         } else {
             features.push(T::zero());
         }
-        
+
         Ok(Array1::from_vec(features))
     }
 
@@ -2814,7 +2872,7 @@ impl<T: Float + 'static> UltraThinkCoordinator<T> {
         &mut self,
         results: &EnsembleOptimizationResults<T>,
         _execution_time: Duration,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         let snapshot = PerformanceSnapshot {
             timestamp: SystemTime::now(),
             overall_score: results.performance_score,
@@ -2893,7 +2951,7 @@ pub enum RecommendationType {
 
 // More implementation stubs for complex structures
 impl<T: Float> OptimizerEnsemble<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             optimizers: HashMap::new(),
             performance_scores: HashMap::new(),
@@ -2907,7 +2965,7 @@ impl<T: Float> OptimizerEnsemble<T> {
         &mut self,
         name: String,
         optimizer: Box<dyn AdvancedOptimizer<T>>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         self.optimizers.insert(name.clone(), optimizer);
         self.performance_scores
             .insert(name.clone(), T::from(0.5).unwrap());
@@ -2918,7 +2976,7 @@ impl<T: Float> OptimizerEnsemble<T> {
 
 // Placeholder implementations for other complex structures
 impl<T: Float> MetaLearningOrchestrator<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             strategies: Vec::new(),
             strategy_performance: HashMap::new(),
@@ -2933,10 +2991,7 @@ impl<T: Float> MetaLearningOrchestrator<T> {
         })
     }
 
-    fn add_strategy(
-        &mut self,
-        strategy: Box<dyn MetaLearningStrategy<T>>,
-    ) -> Result<(), OptimError> {
+    fn add_strategy(&mut self, strategy: Box<dyn MetaLearningStrategy<T>>) -> Result<()> {
         let name = strategy.name().to_string();
         self.strategy_performance.insert(name, VecDeque::new());
         self.strategies.push(strategy);
@@ -2945,7 +3000,7 @@ impl<T: Float> MetaLearningOrchestrator<T> {
 }
 
 impl<T: Float> PerformancePredictor<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             models: HashMap::new(),
             feature_extractors: Vec::new(),
@@ -2956,7 +3011,7 @@ impl<T: Float> PerformancePredictor<T> {
 }
 
 impl<T: Float> ResourceManager<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             available_resources: ResourcePool::default(),
             allocation_tracker: ResourceAllocationTracker::new(),
@@ -2967,7 +3022,7 @@ impl<T: Float> ResourceManager<T> {
 }
 
 impl<T: Float> AdaptationController<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             strategies: HashMap::new(),
             triggers: Vec::new(),
@@ -2981,17 +3036,14 @@ impl<T: Float> AdaptationController<T> {
         })
     }
 
-    fn add_trigger(
-        &mut self,
-        trigger: Box<dyn AdaptationTrigger<T>>,
-    ) -> Result<(), OptimError> {
+    fn add_trigger(&mut self, trigger: Box<dyn AdaptationTrigger<T>>) -> Result<()> {
         self.triggers.push(trigger);
         Ok(())
     }
 }
 
 impl<T: Float> OptimizationKnowledgeBase<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             optimization_patterns: HashMap::new(),
             best_practices: BestPracticesDatabase::new(),
@@ -3001,147 +3053,157 @@ impl<T: Float> OptimizationKnowledgeBase<T> {
         })
     }
 
-    fn initialize(&mut self) -> Result<(), OptimError> {
+    fn initialize(&mut self) -> Result<()> {
         // Load default patterns and practices
         self.load_default_patterns()?;
         self.load_default_best_practices()?;
         Ok(())
     }
-    
+
     /// Update the pattern database with a new pattern
-    fn update_pattern_database(&mut self, pattern: &OptimizationPattern<T>) -> Result<(), OptimError> {
+    fn update_pattern_database(&mut self, pattern: &OptimizationPattern<T>) -> Result<()> {
         // Check if pattern already exists
         if let Some(existing_pattern) = self.optimization_patterns.get_mut(&pattern.pattern_id) {
             // Update existing pattern with new evidence
-            existing_pattern.success_probability = 
-                (existing_pattern.success_probability + pattern.success_probability) / T::from(2.0).unwrap();
-            existing_pattern.performance_expectation = 
-                (existing_pattern.performance_expectation + pattern.performance_expectation) / T::from(2.0).unwrap();
-            
+            existing_pattern.success_probability = (existing_pattern.success_probability
+                + pattern.success_probability)
+                / T::from(2.0).unwrap();
+            existing_pattern.performance_expectation = (existing_pattern.performance_expectation
+                + pattern.performance_expectation)
+                / T::from(2.0).unwrap();
+
             // Merge recommended optimizers
             for optimizer in &pattern.recommended_optimizers {
                 if !existing_pattern.recommended_optimizers.contains(optimizer) {
-                    existing_pattern.recommended_optimizers.push(optimizer.clone());
+                    existing_pattern
+                        .recommended_optimizers
+                        .push(optimizer.clone());
                 }
             }
         } else {
             // Add new pattern
-            self.optimization_patterns.insert(pattern.pattern_id.clone(), pattern.clone());
+            self.optimization_patterns
+                .insert(pattern.pattern_id.clone(), pattern.clone());
         }
-        
+
         Ok(())
     }
-    
+
     /// Record a successful optimization pattern
-    fn record_success_pattern(&mut self, pattern: &OptimizationPattern<T>) -> Result<(), OptimError> {
+    fn record_success_pattern(&mut self, pattern: &OptimizationPattern<T>) -> Result<()> {
         // Increase success probability for this pattern type
         if let Some(existing_pattern) = self.optimization_patterns.get_mut(&pattern.pattern_id) {
-            existing_pattern.success_probability = (existing_pattern.success_probability + T::from(0.1).unwrap())
-                .min(T::from(0.95).unwrap());
+            existing_pattern.success_probability = (existing_pattern.success_probability
+                + T::from(0.1).unwrap())
+            .min(T::from(0.95).unwrap());
         }
-        
+
         // Update best practices based on successful pattern
         self.extract_best_practices_from_success(pattern)?;
-        
+
         Ok(())
     }
-    
+
     /// Record a failed optimization pattern
     fn record_failure_pattern(
-        &mut self, 
+        &mut self,
         pattern: &OptimizationPattern<T>,
-        results: &EnsembleOptimizationResults<T>
-    ) -> Result<(), OptimError> {
+        results: &EnsembleOptimizationResults<T>,
+    ) -> Result<()> {
         // Decrease success probability
         if let Some(existing_pattern) = self.optimization_patterns.get_mut(&pattern.pattern_id) {
-            existing_pattern.success_probability = (existing_pattern.success_probability - T::from(0.05).unwrap())
-                .max(T::from(0.05).unwrap());
+            existing_pattern.success_probability = (existing_pattern.success_probability
+                - T::from(0.05).unwrap())
+            .max(T::from(0.05).unwrap());
         }
-        
+
         // Analyze failure and add to failure analysis database
         self.analyze_and_record_failure(pattern, results)?;
-        
+
         Ok(())
     }
-    
+
     /// Update best practices based on new evidence
     fn update_best_practices(
         &mut self,
         context: &OptimizationContext<T>,
-        results: &EnsembleOptimizationResults<T>
-    ) -> Result<(), OptimError> {
+        results: &EnsembleOptimizationResults<T>,
+    ) -> Result<()> {
         if results.performance_score > T::from(0.8).unwrap() {
             // Extract successful practices
             let practice = self.extract_practice_from_success(context, results)?;
             self.best_practices.add_practice(practice)?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Update research insights based on experimental results
     fn update_research_insights(
         &mut self,
         context: &OptimizationContext<T>,
-        results: &EnsembleOptimizationResults<T>
-    ) -> Result<(), OptimError> {
+        results: &EnsembleOptimizationResults<T>,
+    ) -> Result<()> {
         // Analyze results for novel insights
         let insights = self.extract_research_insights(context, results)?;
-        
+
         for insight in insights {
             self.research_insights.add_insight(insight)?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Find similar patterns in the knowledge base
     fn find_similar_patterns(
         &self,
-        context: &OptimizationContext<T>
-    ) -> Result<Vec<OptimizationPattern<T>>, OptimError> {
+        context: &OptimizationContext<T>,
+    ) -> Result<Vec<OptimizationPattern<T>>> {
         let mut similar_patterns = Vec::new();
         let similarity_threshold = T::from(0.8).unwrap();
-        
+
         for pattern in self.optimization_patterns.values() {
             let similarity = self.compute_pattern_similarity(context, &pattern.characteristics)?;
             if similarity > similarity_threshold {
                 similar_patterns.push(pattern.clone());
             }
         }
-        
+
         Ok(similar_patterns)
     }
-    
+
     /// Prune outdated or irrelevant knowledge
-    fn prune_knowledge(&mut self) -> Result<(), OptimError> {
+    fn prune_knowledge(&mut self) -> Result<()> {
         // Remove patterns with very low success probability
-        self.optimization_patterns.retain(|_, pattern| {
-            pattern.success_probability > T::from(0.1).unwrap()
-        });
-        
+        self.optimization_patterns
+            .retain(|_, pattern| pattern.success_probability > T::from(0.1).unwrap());
+
         // Limit knowledge base size
         if self.optimization_patterns.len() > 10000 {
             // Keep only the most successful patterns
-            let mut patterns: Vec<_> = self.optimization_patterns
+            let mut patterns: Vec<_> = self
+                .optimization_patterns
                 .iter()
                 .map(|(k, v)| (k.clone(), v.clone()))
                 .collect();
-            patterns.sort_by(|a, b| b.1.success_probability.partial_cmp(&a.1.success_probability)
-                .unwrap_or(std::cmp::Ordering::Equal));
-            
+            patterns.sort_by(|a, b| {
+                b.1.success_probability
+                    .partial_cmp(&a.1.success_probability)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
+
             self.optimization_patterns.clear();
             for (pattern_id, pattern) in patterns.into_iter().take(8000) {
                 self.optimization_patterns.insert(pattern_id, pattern);
             }
         }
-        
+
         Ok(())
     }
-    
+
     // Helper methods
-    
-    fn load_default_patterns(&mut self) -> Result<(), OptimError> {
+
+    fn load_default_patterns(&mut self) -> Result<()> {
         // Add some default successful patterns
         let convex_pattern = OptimizationPattern {
             pattern_id: "default_convex".to_string(),
@@ -3155,9 +3217,10 @@ impl<T: Float> OptimizationKnowledgeBase<T> {
             success_probability: T::from(0.85).unwrap(),
             performance_expectation: T::from(0.9).unwrap(),
         };
-        
-        self.optimization_patterns.insert("default_convex".to_string(), convex_pattern);
-        
+
+        self.optimization_patterns
+            .insert("default_convex".to_string(), convex_pattern);
+
         let nonconvex_pattern = OptimizationPattern {
             pattern_id: "default_nonconvex".to_string(),
             characteristics: PatternCharacteristics {
@@ -3170,36 +3233,40 @@ impl<T: Float> OptimizationKnowledgeBase<T> {
             success_probability: T::from(0.75).unwrap(),
             performance_expectation: T::from(0.8).unwrap(),
         };
-        
-        self.optimization_patterns.insert("default_nonconvex".to_string(), nonconvex_pattern);
-        
+
+        self.optimization_patterns
+            .insert("default_nonconvex".to_string(), nonconvex_pattern);
+
         Ok(())
     }
-    
-    fn load_default_best_practices(&mut self) -> Result<(), OptimError> {
+
+    fn load_default_best_practices(&mut self) -> Result<()> {
         // Add some default best practices
         Ok(())
     }
-    
-    fn extract_best_practices_from_success(&mut self, _pattern: &OptimizationPattern<T>) -> Result<(), OptimError> {
+
+    fn extract_best_practices_from_success(
+        &mut self,
+        _pattern: &OptimizationPattern<T>,
+    ) -> Result<()> {
         // Analyze successful pattern to extract best practices
         Ok(())
     }
-    
+
     fn analyze_and_record_failure(
-        &mut self, 
+        &mut self,
         _pattern: &OptimizationPattern<T>,
-        _results: &EnsembleOptimizationResults<T>
-    ) -> Result<(), OptimError> {
+        _results: &EnsembleOptimizationResults<T>,
+    ) -> Result<()> {
         // Analyze failure patterns and record for future reference
         Ok(())
     }
-    
+
     fn extract_practice_from_success(
         &self,
         _context: &OptimizationContext<T>,
-        _results: &EnsembleOptimizationResults<T>
-    ) -> Result<BestPractice, OptimError> {
+        _results: &EnsembleOptimizationResults<T>,
+    ) -> Result<BestPractice> {
         Ok(BestPractice {
             practice_id: "auto_generated".to_string(),
             description: "Automatically extracted best practice".to_string(),
@@ -3208,30 +3275,32 @@ impl<T: Float> OptimizationKnowledgeBase<T> {
             evidence_level: EvidenceLevel::Empirical,
         })
     }
-    
+
     fn extract_research_insights(
         &self,
         _context: &OptimizationContext<T>,
-        _results: &EnsembleOptimizationResults<T>
-    ) -> Result<Vec<ResearchInsight>, OptimError> {
+        _results: &EnsembleOptimizationResults<T>,
+    ) -> Result<Vec<ResearchInsight>> {
         Ok(Vec::new()) // Placeholder
     }
-    
+
     fn compute_pattern_similarity(
         &self,
         context: &OptimizationContext<T>,
-        characteristics: &PatternCharacteristics<T>
-    ) -> Result<T, OptimError> {
+        characteristics: &PatternCharacteristics<T>,
+    ) -> Result<T> {
         // Compute similarity based on problem characteristics
-        let complexity_similarity = T::from(1.0).unwrap() - 
-            (characteristics.complexity - T::from(context.problem_characteristics.dimensionality as f64 / 10000.0).unwrap())
+        let complexity_similarity = T::from(1.0).unwrap()
+            - (characteristics.complexity
+                - T::from(context.problem_characteristics.dimensionality as f64 / 10000.0)
+                    .unwrap())
             .abs();
-        
+
         let effectiveness_similarity = characteristics.effectiveness;
-        
+
         // Simple weighted average
         let similarity = (complexity_similarity + effectiveness_similarity) / T::from(2.0).unwrap();
-        
+
         Ok(similarity)
     }
 }
@@ -3321,16 +3390,13 @@ impl<T: Float> AdvancedOptimizer<T> for AdvancedLSTMWrapper<T> {
         parameters: &Array1<T>,
         gradients: &Array1<T>,
         _context: &OptimizationContext<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         // Use the LSTM optimizer's learned_step method
         self.lstm_optimizer
             .learned_step(parameters, gradients, None)
     }
 
-    fn adapt_to_landscape(
-        &mut self,
-        _landscape_features: &LandscapeFeatures<T>,
-    ) -> Result<(), OptimError> {
+    fn adapt_to_landscape(&mut self, _landscape_features: &LandscapeFeatures<T>) -> Result<()> {
         // Implement landscape adaptation for LSTM
         Ok(())
     }
@@ -3369,7 +3435,7 @@ impl<T: Float> MetaLearningStrategy<T> for MAMLStrategy<T> {
         &mut self,
         _meta_task: &MetaTask<T>,
         _optimizers: &mut HashMap<String, Box<dyn AdvancedOptimizer<T>>>,
-    ) -> Result<MetaLearningResult<T>, OptimError> {
+    ) -> Result<MetaLearningResult<T>> {
         Ok(MetaLearningResult {
             performance_improvement: T::from(0.1).unwrap(),
             learning_efficiency: T::from(0.9).unwrap(),
@@ -3406,7 +3472,7 @@ impl<T: Float> MetaLearningStrategy<T> for ReptileStrategy<T> {
         &mut self,
         _meta_task: &MetaTask<T>,
         _optimizers: &mut HashMap<String, Box<dyn AdvancedOptimizer<T>>>,
-    ) -> Result<MetaLearningResult<T>, OptimError> {
+    ) -> Result<MetaLearningResult<T>> {
         Ok(MetaLearningResult {
             performance_improvement: T::from(0.08).unwrap(),
             learning_efficiency: T::from(0.85).unwrap(),
@@ -3502,44 +3568,45 @@ impl<T: Float> Default for TransferCapabilities<T> {
 
 // Continue with more implementations...
 impl<T: Float> TaskDistributionAnalyzer<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             distribution_models: HashMap::new(),
             clustering_algorithm: ClusteringAlgorithm::KMeans,
             analysis_results: TaskAnalysisResults::default(),
         })
     }
-    
-    fn update_task_distribution(&mut self, context: &OptimizationContext<T>) -> Result<(), OptimError> {
+
+    fn update_task_distribution(&mut self, context: &OptimizationContext<T>) -> Result<()> {
         // Extract task features for distribution analysis
         let task_features = self.extract_task_features(context)?;
-        
+
         // Update distribution models
         let model_key = "general_distribution".to_string();
         if !self.distribution_models.contains_key(&model_key) {
-            self.distribution_models.insert(model_key.clone(), DistributionModel::default());
+            self.distribution_models
+                .insert(model_key.clone(), DistributionModel::default());
         }
-        
+
         // Update clustering if needed
         self.update_clustering(&task_features)?;
-        
+
         Ok(())
     }
-    
-    fn extract_task_features(&self, context: &OptimizationContext<T>) -> Result<Array1<T>, OptimError> {
+
+    fn extract_task_features(&self, context: &OptimizationContext<T>) -> Result<Array1<T>> {
         let mut features = Vec::new();
-        
+
         // Problem characteristics as features
         features.push(T::from(context.problem_characteristics.dimensionality as f64).unwrap());
         features.push(context.problem_characteristics.conditioning);
         features.push(context.problem_characteristics.noise_level);
         features.push(context.problem_characteristics.multimodality);
         features.push(context.problem_characteristics.convexity);
-        
+
         Ok(Array1::from_vec(features))
     }
-    
-    fn update_clustering(&mut self, _features: &Array1<T>) -> Result<(), OptimError> {
+
+    fn update_clustering(&mut self, _features: &Array1<T>) -> Result<()> {
         // Update clustering analysis based on new task features
         // This would typically involve running clustering algorithms
         Ok(())
@@ -3604,19 +3671,18 @@ impl BestPracticesDatabase {
             last_updated: SystemTime::now(),
         }
     }
-    
-    fn add_practice(&mut self, practice: BestPractice) -> Result<(), OptimError> {
-        let domain_practices = self.practices_by_domain
+
+    fn add_practice(&mut self, practice: BestPractice) -> Result<()> {
+        let domain_practices = self
+            .practices_by_domain
             .entry(practice.domain.clone())
             .or_insert_with(Vec::new);
-        
+
         domain_practices.push(practice.clone());
-        
-        self.evidence_quality.insert(
-            practice.practice_id.clone(), 
-            practice.evidence_level.into()
-        );
-        
+
+        self.evidence_quality
+            .insert(practice.practice_id.clone(), practice.evidence_level.into());
+
         self.last_updated = SystemTime::now();
         Ok(())
     }
@@ -3640,17 +3706,18 @@ impl ResearchInsightsDatabase {
             emerging_trends: Vec::new(),
         }
     }
-    
-    fn add_insight(&mut self, insight: ResearchInsight) -> Result<(), OptimError> {
+
+    fn add_insight(&mut self, insight: ResearchInsight) -> Result<()> {
         let category = self.categorize_insight(&insight);
-        let category_insights = self.insights_by_category
+        let category_insights = self
+            .insights_by_category
             .entry(category)
             .or_insert_with(Vec::new);
-        
+
         category_insights.push(insight);
         Ok(())
     }
-    
+
     fn categorize_insight(&self, insight: &ResearchInsight) -> String {
         // Simple categorization based on title keywords
         if insight.title.to_lowercase().contains("optimization") {
@@ -3673,19 +3740,20 @@ impl<T: Float> DynamicLearningSystem<T> {
             validation_system: KnowledgeValidationSystem::new(),
         }
     }
-    
-    fn incremental_learn(&mut self, features: &Array1<T>, target: T) -> Result<(), OptimError> {
+
+    fn incremental_learn(&mut self, features: &Array1<T>, target: T) -> Result<()> {
         // Perform incremental learning on all available algorithms
         let feature_matrix = Array2::from_shape_vec((1, features.len()), features.to_vec())
             .map_err(|e| OptimError::ComputationError(format!("Shape error: {}", e)))?;
-        
+
         for algorithm in &mut self.learning_algorithms {
             algorithm.learn(&feature_matrix)?;
         }
-        
+
         // Update integration engine with new knowledge
-        self.integration_engine.integrate_new_knowledge(features, target)?;
-        
+        self.integration_engine
+            .integrate_new_knowledge(features, target)?;
+
         Ok(())
     }
 }
@@ -3844,8 +3912,8 @@ impl<T: Float> KnowledgeIntegrationEngine<T> {
             confidence_threshold: T::from(0.7).unwrap(),
         }
     }
-    
-    fn integrate_new_knowledge(&mut self, _features: &Array1<T>, _target: T) -> Result<(), OptimError> {
+
+    fn integrate_new_knowledge(&mut self, _features: &Array1<T>, _target: T) -> Result<()> {
         // Integrate new knowledge into existing knowledge base
         // This would typically involve updating internal models or knowledge graphs
         Ok(())
@@ -3888,9 +3956,9 @@ pub struct MetaLearningPerformance<T: Float> {
 // Additional supporting structures and traits
 
 pub trait LearningAlgorithm<T: Float>: Send + Sync {
-    fn learn(&mut self, data: &Array2<T>) -> Result<(), OptimError>;
-    fn predict(&self, input: &Array1<T>) -> Result<Array1<T>, OptimError>;
-    fn get_confidence(&self, input: &Array1<T>) -> Result<T, OptimError>;
+    fn learn(&mut self, data: &Array2<T>) -> Result<()>;
+    fn predict(&self, input: &Array1<T>) -> Result<Array1<T>>;
+    fn get_confidence(&self, input: &Array1<T>) -> Result<T>;
 }
 
 #[derive(Debug, Clone)]
@@ -4067,7 +4135,7 @@ pub struct AdaptationResult<T: Float> {
 
 // Stub implementations for missing constructors
 impl<T: Float> OptimizerEnsemble<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             optimizers: HashMap::new(),
             performance_scores: HashMap::new(),
@@ -4079,7 +4147,7 @@ impl<T: Float> OptimizerEnsemble<T> {
 }
 
 impl<T: Float> MetaLearningOrchestrator<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             strategies: Vec::new(),
             strategy_performance: HashMap::new(),
@@ -4096,7 +4164,7 @@ impl<T: Float> MetaLearningOrchestrator<T> {
 }
 
 impl<T: Float> PerformancePredictor<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             models: HashMap::new(),
             feature_extractors: Vec::new(),
@@ -4113,7 +4181,7 @@ impl<T: Float> PerformancePredictor<T> {
 }
 
 impl<T: Float> ResourceManager<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             available_resources: ResourcePool {
                 cpu_cores: 8,
@@ -4136,7 +4204,7 @@ impl<T: Float> ResourceManager<T> {
 }
 
 impl<T: Float> AdaptationController<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             strategies: HashMap::new(),
             triggers: Vec::new(),
@@ -4150,7 +4218,7 @@ impl<T: Float> AdaptationController<T> {
 }
 
 impl<T: Float> OptimizationKnowledgeBase<T> {
-    fn new() -> Result<Self, OptimError> {
+    fn new() -> Result<Self> {
         Ok(Self {
             optimization_patterns: HashMap::new(),
             best_practices: BestPracticesDatabase {
@@ -4169,7 +4237,7 @@ impl<T: Float> OptimizationKnowledgeBase<T> {
         })
     }
 
-    fn initialize(&mut self) -> Result<(), OptimError> {
+    fn initialize(&mut self) -> Result<()> {
         // Placeholder initialization
         Ok(())
     }

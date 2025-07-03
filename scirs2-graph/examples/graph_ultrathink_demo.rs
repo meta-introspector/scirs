@@ -3,12 +3,13 @@
 //! This example shows how to use ultrathink mode optimizations
 //! for graph processing algorithms.
 
-use scirs2_graph::algorithms::community::louvain_communities;
+use rand::Rng;
+use scirs2_graph::algorithms::community::louvain_communities_result;
 use scirs2_graph::algorithms::connectivity::connected_components;
-use scirs2_graph::algorithms::paths::shortest_path_dijkstra;
+use scirs2_graph::algorithms::dijkstra_path;
 use scirs2_graph::base::Graph;
-use scirs2_graph::generators::random_graph;
-use scirs2_graph::measures::pagerank;
+use scirs2_graph::generators::erdos_renyi_graph;
+use scirs2_graph::measures::pagerank_centrality;
 use scirs2_graph::ultrathink::{
     create_ultrathink_processor, execute_with_ultrathink, UltrathinkConfig, UltrathinkProcessor,
 };
@@ -27,7 +28,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         graph_size, edge_count
     );
 
-    let graph = random_graph(graph_size, edge_count, false)?;
+    let mut rng = rand::rng();
+    let probability = edge_count as f64 / (graph_size * (graph_size - 1) / 2) as f64;
+    let graph = erdos_renyi_graph(graph_size, probability, &mut rng)?;
 
     println!("✅ Graph generated successfully");
     println!("   - Nodes: {}", graph.node_count());
@@ -44,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Standard PageRank
     let start = Instant::now();
-    let standard_pagerank = pagerank(&graph, 0.85, Some(100), Some(1e-6))?;
+    let standard_pagerank = pagerank_centrality(&graph, 0.85, 1e-6)?;
     let standard_time = start.elapsed();
 
     println!("📈 Standard PageRank completed in: {:?}", standard_time);
@@ -54,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut processor = create_ultrathink_processor();
     let start = Instant::now();
     let ultrathink_pagerank = execute_with_ultrathink(&mut processor, &graph, "pagerank", |g| {
-        pagerank(g, 0.85, Some(100), Some(1e-6))
+        pagerank_centrality(g, 0.85, 1e-6)
     })?;
     let ultrathink_time = start.elapsed();
 
@@ -140,7 +143,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Standard Louvain
     let start = Instant::now();
-    let standard_communities = louvain_communities(&graph, None)?;
+    let standard_communities = louvain_communities_result(&graph, None, None)?;
     let standard_time = start.elapsed();
 
     println!(
@@ -154,7 +157,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     let ultrathink_communities =
         execute_with_ultrathink(&mut processor, &graph, "louvain_communities", |g| {
-            louvain_communities(g, None)
+            louvain_communities_result(g, None, None)
         })?;
     let ultrathink_time = start.elapsed();
 
@@ -198,12 +201,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             "pagerank" => {
                 let _ = execute_with_ultrathink(&mut adaptive_processor, &graph, alg_name, |g| {
-                    pagerank(g, 0.85, Some(50), Some(1e-6))
+                    pagerank_centrality(g, 0.85, 1e-6)
                 })?;
             }
             "louvain_communities" => {
                 let _ = execute_with_ultrathink(&mut adaptive_processor, &graph, alg_name, |g| {
-                    louvain_communities(g, None)
+                    louvain_communities_result(g, None, None)
                 })?;
             }
             _ => unreachable!(),
@@ -237,13 +240,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing ultrathink performance scaling...");
 
     for &size in &graph_sizes {
-        let test_graph = random_graph(size, size * 3, false)?;
+        let mut rng = rand::rng();
+        let probability = (size * 3) as f64 / (size * (size - 1) / 2) as f64;
+        let test_graph = erdos_renyi_graph(size, probability.min(1.0), &mut rng)?;
         let mut processor = create_ultrathink_processor();
 
         let start = Instant::now();
         let _ =
             execute_with_ultrathink(&mut processor, &test_graph, "pagerank_scaling_test", |g| {
-                pagerank(g, 0.85, Some(50), Some(1e-6))
+                pagerank_centrality(g, 0.85, 1e-6)
             })?;
         let elapsed = start.elapsed();
 
@@ -278,7 +283,8 @@ mod tests {
 
     #[test]
     fn test_ultrathink_basic_functionality() {
-        let graph = random_graph(100, 200, false).unwrap();
+        let mut rng = rand::rng();
+        let graph = erdos_renyi_graph(100, 0.02, &mut rng).unwrap();
         let mut processor = create_ultrathink_processor();
 
         // Test that ultrathink processing works
@@ -314,12 +320,13 @@ mod tests {
 
     #[test]
     fn test_ultrathink_performance_metrics() {
-        let graph = random_graph(50, 100, false).unwrap();
+        let mut rng = rand::rng();
+        let graph = erdos_renyi_graph(50, 0.04, &mut rng).unwrap();
         let mut processor = create_ultrathink_processor();
 
         // Run a test algorithm
         let _ = execute_with_ultrathink(&mut processor, &graph, "test_pagerank", |g| {
-            pagerank(g, 0.85, Some(10), Some(1e-4))
+            pagerank_centrality(g, 0.85, 1e-4)
         })
         .unwrap();
 

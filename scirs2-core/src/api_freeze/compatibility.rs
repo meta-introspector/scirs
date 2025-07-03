@@ -23,7 +23,7 @@ pub fn check_apis_available(apis: &[(&str, &str)]) -> CoreResult<()> {
 
     for (api_name, module) in apis {
         if !is_api_available(api_name, module) {
-            missing.push(format!("{}::{}", module, api_name));
+            missing.push(format!("{module}::{api_name}"));
         }
     }
 

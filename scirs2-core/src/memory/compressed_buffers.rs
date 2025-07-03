@@ -628,7 +628,7 @@ mod tests {
             algorithm: CompressionAlgorithm::Gzip,
         };
 
-        let display = format!("{}", stats);
+        let display = format!("{stats}");
         assert!(display.contains("Algorithm: Gzip"));
         assert!(display.contains("Buffers: 5"));
         assert!(display.contains("10.00 MB"));

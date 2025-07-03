@@ -4,7 +4,7 @@
 //! to select optimal quantization parameters for various data distributions.
 
 use ndarray::Array2;
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 use rand_distr::{Distribution, Normal, Uniform};
 use scirs2_linalg::quantization::calibration::{
     calibrate_matrix, CalibrationConfig, CalibrationMethod,

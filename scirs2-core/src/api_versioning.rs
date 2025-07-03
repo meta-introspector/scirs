@@ -37,7 +37,7 @@ impl Version {
         let parts: Vec<&str> = base_version.split('.').collect();
 
         if parts.len() < 3 {
-            return Err(format!("Invalid version format: {}", version_str));
+            return Err(format!("Invalid version format: {version_str}"));
         }
 
         let major = parts[0]
@@ -226,7 +226,7 @@ impl VersionRegistry {
             entry.replacement = replacement;
             Ok(())
         } else {
-            Err(format!("API '{}' not found in registry", name))
+            Err(format!("API '{name}' not found in registry"))
         }
     }
 
@@ -244,7 +244,7 @@ impl VersionRegistry {
             entry.migration_example = Some(migration_example.into());
             Ok(())
         } else {
-            Err(format!("API '{}' not found in registry", name))
+            Err(format!("API '{name}' not found in registry"))
         }
     }
 
@@ -258,7 +258,7 @@ impl VersionRegistry {
             entry.breaking_changes.push(change);
             Ok(())
         } else {
-            Err(format!("API '{}' not found in registry", api_name))
+            Err(format!("API '{api_name}' not found in registry"))
         }
     }
 
@@ -283,11 +283,10 @@ impl VersionRegistry {
 
     /// Generate migration guide between versions
     pub fn migration_guide(&self, from: &Version, to: &Version) -> String {
-        let mut guide = format!("# Migration Guide: {} → {}\n\n", from, to);
+        let mut guide = format!("# Migration Guide: {from} → {to}\n\n");
 
         guide.push_str(&format!(
-            "This guide helps you upgrade from scirs2-core {} to {}.\n\n",
-            from, to
+            "This guide helps you upgrade from scirs2-core {from} to {to}.\n\n"
         ));
 
         // Breaking changes analysis
@@ -316,7 +315,11 @@ impl VersionRegistry {
             guide.push_str("## ⚠️ Breaking Changes\n\n");
 
             for (api, changes) in breaking_changes {
-                guide.push_str(&format!("### {} ({})\n\n", api.name, api.module));
+                guide.push_str(&format!(
+                    "### {name} ({module})\n\n",
+                    name = api.name,
+                    module = api.module
+                ));
 
                 for change in changes {
                     let impact_icon = match change.impact {
@@ -348,10 +351,14 @@ impl VersionRegistry {
             guide.push_str("## 🗑️ Removed APIs\n\n");
 
             for api in removed {
-                guide.push_str(&format!("### {} ({})\n\n", api.name, api.module));
+                guide.push_str(&format!(
+                    "### {name} ({module})\n\n",
+                    name = api.name,
+                    module = api.module
+                ));
 
                 if let Some(ref replacement) = api.replacement {
-                    guide.push_str(&format!("**Replacement**: {}\n\n", replacement));
+                    guide.push_str(&format!("**Replacement**: {replacement}\n\n"));
                 }
 
                 if let Some(ref migration_example) = api.migration_example {
@@ -399,8 +406,7 @@ impl VersionRegistry {
 
         guide.push_str("## 📚 Additional Resources\n\n");
         guide.push_str(&format!(
-            "- [API Documentation](https://docs.rs/scirs2-core/{})\n",
-            to
+            "- [API Documentation](https://docs.rs/scirs2-core/{to})\n"
         ));
         guide.push_str(
             "- [Changelog](https://github.com/cool-japan/scirs/blob/main/CHANGELOG.md)\n",
@@ -428,14 +434,18 @@ impl VersionRegistry {
             let dep_version = api.deprecated.unwrap();
 
             if current_version != Some(dep_version) {
-                timeline.push_str(&format!("\n## Version {}\n\n", dep_version));
+                timeline.push_str(&format!("\n## Version {dep_version}\n\n"));
                 current_version = Some(dep_version);
             }
 
-            timeline.push_str(&format!("- **{}** ({})", api.name, api.module));
+            timeline.push_str(&format!(
+                "- **{name}** ({module})",
+                name = api.name,
+                module = api.module
+            ));
 
             if let Some(ref replacement) = api.replacement {
-                timeline.push_str(&format!(" → {}", replacement));
+                timeline.push_str(&format!(" → {replacement}"));
             }
 
             timeline.push('\n');
@@ -699,7 +709,11 @@ impl ApiCompatibilityChecker {
                     .any(|api| api.name == frozen_api.name && api.module == frozen_api.module)
             {
                 violations.push(CompatibilityViolation {
-                    api_name: format!("{}::{}", frozen_api.module, frozen_api.name),
+                    api_name: format!(
+                        "{module}::{name}",
+                        module = frozen_api.module,
+                        name = frozen_api.name
+                    ),
                     violation_type: CompatibilityRuleType::PublicApiRemoval,
                     severity: CompatibilitySeverity::Breaking,
                     description: "Public stable API was removed".to_string(),
@@ -725,7 +739,11 @@ impl ApiCompatibilityChecker {
 
                     if has_new_required {
                         violations.push(CompatibilityViolation {
-                            api_name: format!("{}::{}", current_api.module, current_api.name),
+                            api_name: format!(
+                                "{module}::{name}",
+                                module = current_api.module,
+                                name = current_api.name
+                            ),
                             violation_type: CompatibilityRuleType::NewRequiredParameter,
                             severity: CompatibilitySeverity::Breaking,
                             description: "New required parameter added".to_string(),
@@ -740,7 +758,11 @@ impl ApiCompatibilityChecker {
                 // Check visibility reduction
                 if Self::is_visibility_reduced(&frozen_api.visibility, &current_api.visibility) {
                     violations.push(CompatibilityViolation {
-                        api_name: format!("{}::{}", current_api.module, current_api.name),
+                        api_name: format!(
+                            "{module}::{name}",
+                            module = current_api.module,
+                            name = current_api.name
+                        ),
                         violation_type: CompatibilityRuleType::VisibilityReduction,
                         severity: CompatibilitySeverity::Breaking,
                         description: "API visibility was reduced".to_string(),
@@ -753,7 +775,11 @@ impl ApiCompatibilityChecker {
                 // Check return type changes
                 if frozen_api.return_type != current_api.return_type {
                     violations.push(CompatibilityViolation {
-                        api_name: format!("{}::{}", current_api.module, current_api.name),
+                        api_name: format!(
+                            "{module}::{name}",
+                            module = current_api.module,
+                            name = current_api.name
+                        ),
                         violation_type: CompatibilityRuleType::ReturnTypeChange,
                         severity: CompatibilitySeverity::Breaking,
                         description: "Return type changed".to_string(),
@@ -776,12 +802,12 @@ impl ApiCompatibilityChecker {
                             && old_param.type_name != new_param.type_name
                         {
                             violations.push(CompatibilityViolation {
-                                api_name: format!("{}::{}", current_api.module, current_api.name),
+                                api_name: format!("{module}::{name}", module = current_api.module, name = current_api.name),
                                 violation_type: CompatibilityRuleType::ParameterTypeChange,
                                 severity: CompatibilitySeverity::Breaking,
                                 description: format!(
-                                    "Parameter '{}' type changed from '{}' to '{}'",
-                                    old_param.name, old_param.type_name, new_param.type_name
+                                    "Parameter '{param_name}' type changed from '{old_type}' to '{new_type}'",
+                                    param_name = old_param.name, old_type = old_param.type_name, new_type = new_param.type_name
                                 ),
                                 old_signature: Some(frozen_api.clone()),
                                 new_signature: Some(current_api.clone()),
@@ -796,11 +822,20 @@ impl ApiCompatibilityChecker {
                 // Check signature hash changes (catch-all for other changes)
                 if frozen_api.signature_hash != current_api.signature_hash
                     && !violations.iter().any(|v| {
-                        v.api_name == format!("{}::{}", current_api.module, current_api.name)
+                        v.api_name
+                            == format!(
+                                "{module}::{name}",
+                                module = current_api.module,
+                                name = current_api.name
+                            )
                     })
                 {
                     violations.push(CompatibilityViolation {
-                        api_name: format!("{}::{}", current_api.module, current_api.name),
+                        api_name: format!(
+                            "{module}::{name}",
+                            module = current_api.module,
+                            name = current_api.name
+                        ),
                         violation_type: CompatibilityRuleType::SignatureChange,
                         severity: CompatibilitySeverity::Breaking,
                         description: "API signature changed in an unspecified way".to_string(),
@@ -822,7 +857,11 @@ impl ApiCompatibilityChecker {
                 .any(|api| api.name == current_api.name && api.module == current_api.module)
             {
                 suggestions.push(CompatibilitySuggestion {
-                    api_name: format!("{}::{}", current_api.module, current_api.name),
+                    api_name: format!(
+                        "{module}::{name}",
+                        module = current_api.module,
+                        name = current_api.name
+                    ),
                     suggestion: "New API detected - ensure proper documentation".to_string(),
                     rationale: "New APIs should be well-documented and tested".to_string(),
                 });
@@ -878,7 +917,7 @@ impl ApiCompatibilityChecker {
                 ));
 
                 if let Some(ref fix) = violation.fix_suggestion {
-                    report.push_str(&format!("   - **Fix**: {}\n", fix));
+                    report.push_str(&format!("   - **Fix**: {fix}\n"));
                 }
                 report.push('\n');
             }

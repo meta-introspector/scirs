@@ -47,7 +47,7 @@ impl Default for SimdConfig {
             force_scalar: false,
             simd_threshold: 64,
             align_memory: true,
-            use_advanced: true,
+            use_advanced: false, // Disable until AVX-512 features are stabilized
             enable_monitoring: false,
             adaptive_thresholds: false,
             cache_line_size: 64,
@@ -408,33 +408,11 @@ unsafe fn avx2_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> 
 #[cfg(feature = "unstable_avx512")] // Disabled by default
                                     // #[target_feature(enable = "avx512f")] // Disabled - unstable feature
 unsafe fn avx512_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    // Fallback to scalar implementation until AVX-512 is stabilized
     let n = input.len();
     let m = coeffs.len();
 
-    // Process 8 samples at a time with AVX-512
-    let simd_width = 8;
-    let simd_chunks = n / simd_width;
-
-    for chunk in 0..simd_chunks {
-        let base_idx = chunk * simd_width;
-        let mut result = _mm512_setzero_pd();
-
-        for j in 0..m {
-            if base_idx >= j {
-                let input_idx = base_idx - j;
-                if input_idx + simd_width <= n {
-                    let input_vec = _mm512_loadu_pd(input.as_ptr().add(input_idx));
-                    let coeff_broadcast = _mm512_set1_pd(coeffs[j]);
-                    result = _mm512_fmadd_pd(input_vec, coeff_broadcast, result);
-                }
-            }
-        }
-
-        _mm512_storeu_pd(output.as_mut_ptr().add(base_idx), result);
-    }
-
-    // Handle remaining elements
-    for i in (simd_chunks * simd_width)..n {
+    for i in 0..n {
         let mut sum = 0.0;
         for j in 0..m {
             if i >= j {
@@ -669,29 +647,17 @@ unsafe fn sse_complex_butterfly(
     scalar_complex_butterfly(data, twiddles)
 }
 
-// #[target_feature(enable = "avx512f")] // Disabled - unstable feature
+// AVX-512 implementation disabled due to unstable features
+// #[target_feature(enable = "avx512f")]
 unsafe fn avx512_apply_window(
     signal: &[f64],
     window: &[f64],
     output: &mut [f64],
 ) -> SignalResult<()> {
-    let n = signal.len();
-    let simd_width = 8;
-    let simd_chunks = n / simd_width;
-
-    for chunk in 0..simd_chunks {
-        let idx = chunk * simd_width;
-        let sig_vec = _mm512_loadu_pd(signal.as_ptr().add(idx));
-        let win_vec = _mm512_loadu_pd(window.as_ptr().add(idx));
-        let result_vec = _mm512_mul_pd(sig_vec, win_vec);
-        _mm512_storeu_pd(output.as_mut_ptr().add(idx), result_vec);
-    }
-
-    // Handle remaining elements
-    for i in (simd_chunks * simd_width)..n {
+    // Fallback to scalar implementation until AVX-512 is stabilized
+    for i in 0..signal.len() {
         output[i] = signal[i] * window[i];
     }
-
     Ok(())
 }
 
@@ -1630,45 +1596,26 @@ unsafe fn avx2_enhanced_convolution(
     Ok(())
 }
 
-/// AVX512 enhanced convolution with maximum parallelism
+/// AVX512 enhanced convolution - fallback to scalar implementation
 // #[target_feature(enable = "avx512f")] // Disabled - unstable feature
 unsafe fn avx512_enhanced_convolution(
     signal: &[f64],
     kernel: &[f64],
     output: &mut [f64],
 ) -> SignalResult<()> {
+    // Fallback to scalar implementation until AVX-512 is stabilized
     let signal_len = signal.len();
     let kernel_len = kernel.len();
-    let simd_width = 8;
 
-    for i in (0..output.len()).step_by(simd_width) {
-        if i + simd_width <= output.len() {
-            let mut result = _mm512_setzero_pd();
-
-            for j in 0..kernel_len {
-                let signal_idx = i.wrapping_sub(j);
-                if signal_idx < signal_len && signal_idx + simd_width <= signal_len {
-                    let signal_vec = _mm512_loadu_pd(signal.as_ptr().add(signal_idx));
-                    let kernel_broadcast = _mm512_set1_pd(kernel[j]);
-                    result = _mm512_fmadd_pd(signal_vec, kernel_broadcast, result);
-                }
+    for i in 0..output.len() {
+        let mut sum = 0.0;
+        for j in 0..kernel_len {
+            let signal_idx = i.wrapping_sub(j);
+            if signal_idx < signal_len {
+                sum += signal[signal_idx] * kernel[j];
             }
-
-            _mm512_storeu_pd(output.as_mut_ptr().add(i), result);
-        } else {
-            // Handle remaining elements with scalar code
-            for idx in i..output.len() {
-                let mut sum = 0.0;
-                for j in 0..kernel_len {
-                    let signal_idx = idx.wrapping_sub(j);
-                    if signal_idx < signal_len {
-                        sum += signal[signal_idx] * kernel[j];
-                    }
-                }
-                output[idx] = sum;
-            }
-            break;
         }
+        output[i] = sum;
     }
 
     Ok(())

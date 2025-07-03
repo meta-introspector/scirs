@@ -771,13 +771,13 @@ pub enum ConstraintFunctionType {
 /// Base trait for HPO strategies
 pub trait HPOStrategy<T: Float>: Send + Sync {
     /// Initialize the strategy
-    fn initialize(&mut self, config: &HPOConfig<T>) -> Result<(), OptimError>;
+    fn initialize(&mut self, config: &HPOConfig<T>) -> Result<()>;
     
     /// Suggest next parameter configuration
-    fn suggest(&mut self, history: &[HPOResult<T>]) -> Result<ParameterConfiguration<T>, OptimError>;
+    fn suggest(&mut self, history: &[HPOResult<T>]) -> Result<ParameterConfiguration<T>>;
     
     /// Update strategy with new results
-    fn update(&mut self, result: &HPOResult<T>) -> Result<(), OptimError>;
+    fn update(&mut self, result: &HPOResult<T>) -> Result<()>;
     
     /// Check if strategy should stop
     fn should_stop(&self) -> bool;
@@ -1634,7 +1634,7 @@ impl<T: Float> Default for EvaluationBudget {
 
 impl<T: Float> HyperparameterOptimizationPipeline<T> {
     /// Create new hyperparameter optimization pipeline
-    pub fn new(config: HPOConfig<T>) -> Result<Self, OptimError> {
+    pub fn new(config: HPOConfig<T>) -> Result<Self> {
         let strategies = Self::create_strategies(&config)?;
         let parameter_space = ParameterSpaceManager::new(config.parameter_space.clone())?;
         let evaluation_scheduler = EvaluationScheduler::new(
@@ -1664,7 +1664,7 @@ impl<T: Float> HyperparameterOptimizationPipeline<T> {
     }
     
     /// Run the hyperparameter optimization
-    pub fn optimize(&mut self) -> Result<HPOResults<T>, OptimError> {
+    pub fn optimize(&mut self) -> Result<HPOResults<T>> {
         let start_time = Instant::now();
         
         // Initialize optimization
@@ -1695,7 +1695,7 @@ impl<T: Float> HyperparameterOptimizationPipeline<T> {
     }
     
     /// Initialize optimization process
-    fn initialize_optimization(&mut self) -> Result<(), OptimError> {
+    fn initialize_optimization(&mut self) -> Result<()> {
         // Initialize all strategies
         for strategy in &mut self.strategies {
             strategy.initialize(&self.config)?;
@@ -1713,7 +1713,7 @@ impl<T: Float> HyperparameterOptimizationPipeline<T> {
     }
     
     /// Generate candidate configurations
-    fn generate_candidates(&mut self) -> Result<Vec<ParameterConfiguration<T>>, OptimError> {
+    fn generate_candidates(&mut self) -> Result<Vec<ParameterConfiguration<T>>> {
         let mut candidates = Vec::new();
         let history = self.result_database.get_all_results();
         
@@ -1747,7 +1747,7 @@ impl<T: Float> HyperparameterOptimizationPipeline<T> {
     fn schedule_evaluations(
         &mut self,
         candidates: Vec<ParameterConfiguration<T>>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         for candidate in candidates {
             let task = EvaluationTask {
                 id: format!("eval_{}", uuid::Uuid::new_v4()),
@@ -1763,7 +1763,7 @@ impl<T: Float> HyperparameterOptimizationPipeline<T> {
     }
     
     /// Process completed evaluations
-    fn process_completed_evaluations(&mut self) -> Result<(), OptimError> {
+    fn process_completed_evaluations(&mut self) -> Result<()> {
         let completed = self.evaluation_scheduler.get_completed_evaluations();
         
         for result in completed {
@@ -1795,7 +1795,7 @@ impl<T: Float> HyperparameterOptimizationPipeline<T> {
     }
     
     /// Update optimization state
-    fn update_optimization_state(&mut self) -> Result<(), OptimError> {
+    fn update_optimization_state(&mut self) -> Result<()> {
         self.optimization_state.iteration += 1;
         self.optimization_state.total_evaluations = self.result_database.total_evaluations();
         
@@ -1839,7 +1839,7 @@ impl<T: Float> HyperparameterOptimizationPipeline<T> {
     }
     
     /// Finalize optimization and return results
-    fn finalize_optimization(&self, total_time: Duration) -> Result<HPOResults<T>, OptimError> {
+    fn finalize_optimization(&self, total_time: Duration) -> Result<HPOResults<T>> {
         let best_result = self.result_database.get_best_result("performance");
         let pareto_front = self.result_database.get_pareto_front();
         let statistics = self.collect_optimization_statistics(total_time);
@@ -1855,12 +1855,12 @@ impl<T: Float> HyperparameterOptimizationPipeline<T> {
     }
     
     // Helper methods would be implemented here...
-    fn create_strategies(_config: &HPOConfig<T>) -> Result<Vec<Box<dyn HPOStrategy<T>>>, OptimError> {
+    fn create_strategies(_config: &HPOConfig<T>) -> Result<Vec<Box<dyn HPOStrategy<T>>>> {
         // Implementation would create strategy instances based on config
         Ok(vec![])
     }
     
-    fn estimate_resource_requirements(&self, _config: &ParameterConfiguration<T>) -> Result<ResourceRequirements<T>, OptimError> {
+    fn estimate_resource_requirements(&self, _config: &ParameterConfiguration<T>) -> Result<ResourceRequirements<T>> {
         // Placeholder implementation
         Ok(ResourceRequirements {
             cpu_cores: 1,
@@ -1969,7 +1969,7 @@ pub struct OptimizationTracePoint<T: Float> {
 
 // Implementation stubs for complex components - these would be fully implemented in practice
 impl<T: Float> ParameterSpaceManager<T> {
-    fn new(_space: ParameterSearchSpace) -> Result<Self, OptimError> {
+    fn new(_space: ParameterSearchSpace) -> Result<Self> {
         Ok(Self {
             space: _space,
             transformations: HashMap::new(),
@@ -1978,14 +1978,14 @@ impl<T: Float> ParameterSpaceManager<T> {
         })
     }
     
-    fn validate_configurations(&self, configs: Vec<ParameterConfiguration<T>>) -> Result<Vec<ParameterConfiguration<T>>, OptimError> {
+    fn validate_configurations(&self, configs: Vec<ParameterConfiguration<T>>) -> Result<Vec<ParameterConfiguration<T>>> {
         // Would implement validation logic
         Ok(configs)
     }
 }
 
 impl<T: Float> EvaluationScheduler<T> {
-    fn new(_config: SchedulerConfig, _constraints: ResourceConstraints<T>) -> Result<Self, OptimError> {
+    fn new(_config: SchedulerConfig, _constraints: ResourceConstraints<T>) -> Result<Self> {
         Ok(Self {
             pending_queue: VecDeque::new(),
             running_evaluations: HashMap::new(),
@@ -1995,11 +1995,11 @@ impl<T: Float> EvaluationScheduler<T> {
         })
     }
     
-    fn start_monitoring(&mut self) -> Result<(), OptimError> {
+    fn start_monitoring(&mut self) -> Result<()> {
         Ok(())
     }
     
-    fn schedule_task(&mut self, _task: EvaluationTask<T>) -> Result<(), OptimError> {
+    fn schedule_task(&mut self, _task: EvaluationTask<T>) -> Result<()> {
         Ok(())
     }
     
@@ -2023,7 +2023,7 @@ impl<T: Float> HPOResultDatabase<T> {
         }
     }
     
-    fn add_result(&mut self, _result: HPOResult<T>) -> Result<(), OptimError> {
+    fn add_result(&mut self, _result: HPOResult<T>) -> Result<()> {
         Ok(())
     }
     
@@ -2049,7 +2049,7 @@ impl<T: Float> HPOResultDatabase<T> {
 }
 
 impl<T: Float> MultiFidelityManager<T> {
-    fn new(_settings: MultiFidelitySettings<T>) -> Result<Self, OptimError> {
+    fn new(_settings: MultiFidelitySettings<T>) -> Result<Self> {
         Ok(Self {
             settings: _settings,
             fidelity_assignments: HashMap::new(),
@@ -2058,11 +2058,11 @@ impl<T: Float> MultiFidelityManager<T> {
         })
     }
     
-    fn assign_fidelities(&mut self, configs: Vec<ParameterConfiguration<T>>) -> Result<Vec<ParameterConfiguration<T>>, OptimError> {
+    fn assign_fidelities(&mut self, configs: Vec<ParameterConfiguration<T>>) -> Result<Vec<ParameterConfiguration<T>>> {
         Ok(configs)
     }
     
-    fn update_with_result(&mut self, _result: &HPOResult<T>) -> Result<(), OptimError> {
+    fn update_with_result(&mut self, _result: &HPOResult<T>) -> Result<()> {
         Ok(())
     }
 }
@@ -2088,7 +2088,7 @@ impl<T: Float> EarlyStoppingController<T> {
 }
 
 impl<T: Float> EnsembleOptimizer<T> {
-    fn new(_settings: EnsembleSettings<T>) -> Result<Self, OptimError> {
+    fn new(_settings: EnsembleSettings<T>) -> Result<Self> {
         Ok(Self {
             settings: _settings,
             strategies: Vec::new(),
@@ -2098,15 +2098,15 @@ impl<T: Float> EnsembleOptimizer<T> {
         })
     }
     
-    fn initialize(&mut self, _config: &HPOConfig<T>) -> Result<(), OptimError> {
+    fn initialize(&mut self, _config: &HPOConfig<T>) -> Result<()> {
         Ok(())
     }
     
-    fn suggest_batch(&mut self, _batch_size: &usize, _history: &[HPOResult<T>]) -> Result<Vec<ParameterConfiguration<T>>, OptimError> {
+    fn suggest_batch(&mut self, _batch_size: &usize, _history: &[HPOResult<T>]) -> Result<Vec<ParameterConfiguration<T>>> {
         Ok(vec![])
     }
     
-    fn update(&mut self, _result: &HPOResult<T>) -> Result<(), OptimError> {
+    fn update(&mut self, _result: &HPOResult<T>) -> Result<()> {
         Ok(())
     }
 }

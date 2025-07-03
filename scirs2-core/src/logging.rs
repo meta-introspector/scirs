@@ -194,7 +194,7 @@ impl LogHandler for ConsoleLogHandler {
             let fields_str = entry
                 .fields
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v))
+                .map(|(k, v)| format!("{k}={v}"))
                 .collect::<Vec<_>>()
                 .join(", ");
             output = output.replace("{fields}", &fields_str);
@@ -240,7 +240,7 @@ impl LogHandler for FileLogHandler {
             let fields_str = entry
                 .fields
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v))
+                .map(|(k, v)| format!("{k}={v}"))
                 .collect::<Vec<_>>()
                 .join(", ");
             output = output.replace("{fields}", &fields_str);
@@ -308,7 +308,7 @@ impl Logger {
         K: Into<String>,
         V: Display,
     {
-        self.fields.insert(key.into(), format!("{}", value));
+        self.fields.insert(key.into(), format!("{value}"));
         self
     }
 
@@ -320,7 +320,7 @@ impl Logger {
         I: IntoIterator<Item = (K, V)>,
     {
         for (key, value) in fields {
-            self.fields.insert(key.into(), format!("{}", value));
+            self.fields.insert(key.into(), format!("{value}"));
         }
         self
     }
@@ -496,7 +496,7 @@ impl ProgressTracker {
             let eta = if self.current > 0 {
                 let time_per_item = elapsed.as_secs_f64() / self.current as f64;
                 let remaining = time_per_item * (self.total - self.current) as f64;
-                format!("ETA: {:.1}s", remaining)
+                format!("ETA: {remaining:.1}s")
             } else {
                 "ETA: calculating...".to_string()
             };
@@ -1056,7 +1056,7 @@ pub mod distributed {
                     "id": entry.id,
                     "node_id": entry.node_id.to_string(),
                     "timestamp": entry.timestamp,
-                    "level": format!("{:?}", entry.level),
+                    "level": format!("{level:?}", level = entry.level),
                     "logger": entry.logger,
                     "message": entry.message,
                     "context": entry.context,
@@ -1177,13 +1177,13 @@ pub mod distributed {
                     "total_entries": stats.total_entries,
                     "dropped_entries": stats.dropped_entries,
                     "nodes_count": self.nodes.read().unwrap().len(),
-                    "entries_by_level": stats.entries_by_level.iter().map(|(k, v)| (format!("{:?}", k), v)).collect::<HashMap<_, _>>()
+                    "entries_by_level": stats.entries_by_level.iter().map(|(k, v)| (format!("{k:?}"), v)).collect::<HashMap<_, _>>()
                 },
                 "entries": entries.iter().map(|entry| serde_json::json!({
                     "id": entry.id,
                     "node_id": entry.node_id.to_string(),
                     "timestamp": entry.timestamp,
-                    "level": format!("{:?}", entry.level),
+                    "level": format!("{level:?}", level = entry.level),
                     "logger": entry.logger,
                     "message": entry.message,
                     "context": entry.context,

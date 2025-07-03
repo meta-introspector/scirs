@@ -184,7 +184,7 @@ use rand::rng;
                     .clients
                     .iter()
                     .enumerate()
-                    .map(|(i, _)| (i, 1.0 + rng.gen::<f32>()))
+                    .map(|(i, _)| (i, 1.0 + rng.random::<f32>()))
                     .collect();
                 weighted_indices.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
                 Ok(weighted_indices

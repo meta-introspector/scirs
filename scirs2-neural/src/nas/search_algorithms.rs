@@ -110,7 +110,7 @@ impl SearchAlgorithm for EvolutionarySearch {
             proposals.push(self.population[idx].clone());
         // Generate offspring
         while proposals.len() < n_proposals {
-            if rng.gen::<f32>() < self.crossover_rate && self.population.len() >= 2 {
+            if rng.random::<f32>() < self.crossover_rate && self.population.len() >= 2 {
                 // Crossover
                 let parent1_idx = self.tournament_select(&mut rng);
                 let parent2_idx = self.tournament_select(&mut rng);
@@ -261,7 +261,7 @@ impl ReinforcementSearch {
         let sum_exp = exp_logits.sum();
         let probs = exp_logits.mapv(|x| x / sum_exp);
         // Sample from distribution
-        let random_val: f32 = rng.gen();
+        let random_val: f32 = rng.random();
         let mut cumsum = 0.0;
         let mut selected_token = 0;
         for (i, &prob) in probs.iter().enumerate() {
@@ -396,7 +396,7 @@ impl DifferentiableSearch {
     fn gumbel_softmax(&self, logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
         // Add Gumbel noise
         let gumbel_noise: Array1<f32> = Array1::from_shape_fn(logits.len(), |_| {
-            let u: f32 = rng.gen();
+            let u: f32 = rng.random();
             -((-u.ln()).ln())
         let noisy_logits = logits + &gumbel_noise;
         // Apply softmax with temperature

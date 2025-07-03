@@ -876,24 +876,26 @@ where
             if ax.index() >= ndim {
                 return Err("Axis index out of bounds");
             }
-            
+
             // Create output shape by removing the specified axis
             let mut output_shape = array.shape().to_vec();
             output_shape.remove(ax.index());
-            
+
             // Handle case where removing axis results in scalar
             if output_shape.is_empty() {
                 output_shape.push(1);
             }
-            
+
             // Calculate mean along specified axis using ndarray's mean_axis
-            let result = array.mean_axis(ax)
+            let result = array
+                .mean_axis(ax)
                 .ok_or("Failed to compute mean along axis")?;
-            
+
             // Convert to 1D array as expected by function signature
-            let flat_result = result.to_shape((result.len(),))
+            let flat_result = result
+                .to_shape((result.len(),))
                 .map_err(|_| "Failed to reshape result to 1D")?;
-                
+
             Ok(flat_result.into_owned())
         }
         None => {
@@ -1003,23 +1005,24 @@ where
             if ax.index() >= ndim {
                 return Err("Axis index out of bounds");
             }
-            
+
             // Create output shape by removing the specified axis
             let mut output_shape = array.shape().to_vec();
             output_shape.remove(ax.index());
-            
+
             // Handle case where removing axis results in scalar
             if output_shape.is_empty() {
                 output_shape.push(1);
             }
-            
+
             // Calculate variance along specified axis using ndarray's var_axis
             let result = array.var_axis(ax, T::from_usize(ddof).unwrap());
-            
+
             // Convert to 1D array as expected by function signature
-            let flat_result = result.to_shape((result.len(),))
+            let flat_result = result
+                .to_shape((result.len(),))
                 .map_err(|_| "Failed to reshape variance result to 1D")?;
-                
+
             Ok(flat_result.into_owned())
         }
         None => {
@@ -1109,25 +1112,24 @@ where
             if ax.index() >= ndim {
                 return Err("Axis index out of bounds");
             }
-            
+
             // Create output shape by removing the specified axis
             let mut output_shape = array.shape().to_vec();
             output_shape.remove(ax.index());
-            
+
             // Handle case where removing axis results in scalar
             if output_shape.is_empty() {
                 output_shape.push(1);
             }
-            
+
             // Use ndarray's fold_axis to compute minimum along specified axis
-            let result = array.fold_axis(ax, T::infinity(), |&a, &b| {
-                if a < b { a } else { b }
-            });
-            
+            let result = array.fold_axis(ax, T::infinity(), |&a, &b| if a < b { a } else { b });
+
             // Convert to 1D array as expected by function signature
-            let flat_result = result.to_shape((result.len(),))
+            let flat_result = result
+                .to_shape((result.len(),))
                 .map_err(|_| "Failed to reshape minimum result to 1D")?;
-                
+
             Ok(flat_result.into_owned())
         }
         None => {
@@ -1175,25 +1177,24 @@ where
             if ax.index() >= ndim {
                 return Err("Axis index out of bounds");
             }
-            
+
             // Create output shape by removing the specified axis
             let mut output_shape = array.shape().to_vec();
             output_shape.remove(ax.index());
-            
+
             // Handle case where removing axis results in scalar
             if output_shape.is_empty() {
                 output_shape.push(1);
             }
-            
+
             // Use ndarray's fold_axis to compute maximum along specified axis
-            let result = array.fold_axis(ax, T::neg_infinity(), |&a, &b| {
-                if a > b { a } else { b }
-            });
-            
+            let result = array.fold_axis(ax, T::neg_infinity(), |&a, &b| if a > b { a } else { b });
+
             // Convert to 1D array as expected by function signature
-            let flat_result = result.to_shape((result.len(),))
+            let flat_result = result
+                .to_shape((result.len(),))
                 .map_err(|_| "Failed to reshape maximum result to 1D")?;
-                
+
             Ok(flat_result.into_owned())
         }
         None => {

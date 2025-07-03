@@ -126,13 +126,13 @@ impl AdvancedPatternRecognizer {
 
         // Create padded feature vectors and build the 2D array
         let mut padded_features = Vec::with_capacity(4 * max_features);
-        
+
         // Helper function to pad a feature vector
         let pad_features = |mut features: Vec<f32>, target_len: usize| {
             features.resize(target_len, 0.0);
             features
         };
-        
+
         // Add all feature scales with consistent padding
         padded_features.extend(pad_features(byte_features, max_features));
         padded_features.extend(pad_features(local_features_4, max_features));
@@ -972,6 +972,6 @@ mod tests {
         let features = Array2::from_shape_fn((2, 5), |_| rand::random::<f32>());
 
         let score = network.analyze(&features).unwrap();
-        assert!(score >= 0.0 && score <= 1.0);
+        assert!((0.0..=1.0).contains(&score));
     }
 }

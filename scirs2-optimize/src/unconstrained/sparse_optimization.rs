@@ -11,6 +11,7 @@ use crate::unconstrained::result::OptimizeResult;
 use crate::unconstrained::utils::check_convergence;
 use crate::unconstrained::Options;
 use ndarray::{Array1, Array2, ArrayView1, Axis};
+use rand::Rng;
 use scirs2_sparse::{csr_array::CsrArray, sparray::SparseArray};
 
 /// Options for sparse optimization algorithms
@@ -413,7 +414,7 @@ where
         // Create a small random perturbation
         let mut x_pert = x.to_owned();
         for i in 0..n {
-            x_pert[i] += 1e-6 * (rand::random::<f64>() - 0.5);
+            x_pert[i] += 1e-6 * (rand::rng().random::<f64>() - 0.5);
         }
 
         // Compute gradient at this point

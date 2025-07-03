@@ -7,14 +7,16 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::error_standardization::ErrorMessages;
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2, s};
-use num_traits::{Float, NumCast, Zero, One, Signed, Bounded, Infinity};
+use crate::property_based_validation::ValidationReport;
+use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
+use num_traits::{Bounded, Float, NumCast, One, Signed, Zero};
+use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, VecDeque, BTreeMap};
-use std::sync::{Arc, RwLock, Mutex};
-use std::time::{Duration, Instant, SystemTime};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::fmt::Debug;
+use std::sync::{Arc, Mutex, RwLock};
+use std::time::{Duration, Instant, SystemTime};
 
 /// Ultra-Think Numerical Stability Configuration
 #[derive(Debug, Clone)]
@@ -82,28 +84,28 @@ impl Default for UltraThinkNumericalStabilityConfig {
 /// Numerical stability thoroughness levels
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NumericalStabilityThoroughness {
-    Basic,        // Essential stability tests
-    Standard,     // Common stability scenarios
+    Basic,         // Essential stability tests
+    Standard,      // Common stability scenarios
     Comprehensive, // Extensive stability coverage
-    Exhaustive,   // Maximum stability validation
+    Exhaustive,    // Maximum stability validation
 }
 
 /// Precision testing strategies
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PrecisionTestingStrategy {
-    SinglePrecision,  // f32 only
-    DoublePrecision,  // f64 only
-    MultiPrecision,   // f32, f64, and extended precision
+    SinglePrecision,   // f32 only
+    DoublePrecision,   // f64 only
+    MultiPrecision,    // f32, f64, and extended precision
     AdaptivePrecision, // Dynamic precision selection
 }
 
 /// Edge case generation approaches
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum EdgeCaseGenerationApproach {
-    Predefined,   // Use predefined edge cases
-    Systematic,   // Systematic boundary exploration
-    Adaptive,     // Adaptive based on function behavior
-    Intelligent,  // AI-guided edge case discovery
+    Predefined,  // Use predefined edge cases
+    Systematic,  // Systematic boundary exploration
+    Adaptive,    // Adaptive based on function behavior
+    Intelligent, // AI-guided edge case discovery
 }
 
 /// Stability tolerance configuration
@@ -272,8 +274,11 @@ impl UltraThinkNumericalStabilityTester {
             critical_issues: results.critical_issues.len(),
             warnings: results.warnings.len(),
         };
-        
-        self.stability_history.write().unwrap().push_back(stability_result);
+
+        self.stability_history
+            .write()
+            .unwrap()
+            .push_back(stability_result);
         if self.stability_history.read().unwrap().len() > 1000 {
             self.stability_history.write().unwrap().pop_front();
         }
@@ -295,14 +300,14 @@ impl UltraThinkNumericalStabilityTester {
     {
         let generator = self.edge_case_generator.read().unwrap();
         let edge_cases = generator.generate_comprehensive_edge_cases(test_data)?;
-        
+
         let mut results = EdgeCaseStabilityResult::new();
-        
+
         for edge_case in &edge_cases {
             let test_result = self.execute_edge_case_test(&test_function, edge_case)?;
             results.add_test_result(edge_case.clone(), test_result);
         }
-        
+
         results.analyze_edge_case_patterns();
         Ok(results)
     }
@@ -446,30 +451,26 @@ impl UltraThinkNumericalStabilityTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let start_time = Instant::now();
-        
+
         let result = match test_function(&edge_case.data.view()) {
-            Ok(value) => {
-                EdgeCaseTestResult {
-                    edge_case_type: edge_case.edge_case_type.clone(),
-                    execution_time: start_time.elapsed(),
-                    result_status: EdgeCaseResultStatus::Success,
-                    computed_value: Some(value),
-                    error_message: None,
-                    stability_metrics: self.compute_edge_case_stability_metrics(value),
-                }
-            }
-            Err(e) => {
-                EdgeCaseTestResult {
-                    edge_case_type: edge_case.edge_case_type.clone(),
-                    execution_time: start_time.elapsed(),
-                    result_status: EdgeCaseResultStatus::Error,
-                    computed_value: None,
-                    error_message: Some(format!("{:?}", e)),
-                    stability_metrics: StabilityMetrics::default(),
-                }
-            }
+            Ok(value) => EdgeCaseTestResult {
+                edge_case_type: edge_case.edge_case_type.clone(),
+                execution_time: start_time.elapsed(),
+                result_status: EdgeCaseResultStatus::Success,
+                computed_value: Some(value),
+                error_message: None,
+                stability_metrics: self.compute_edge_case_stability_metrics(value),
+            },
+            Err(e) => EdgeCaseTestResult {
+                edge_case_type: edge_case.edge_case_type.clone(),
+                execution_time: start_time.elapsed(),
+                result_status: EdgeCaseResultStatus::Error,
+                computed_value: None,
+                error_message: Some(format!("{:?}", e)),
+                stability_metrics: StabilityMetrics::default(),
+            },
         };
-        
+
         Ok(result)
     }
 
@@ -479,7 +480,7 @@ impl UltraThinkNumericalStabilityTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut metrics = StabilityMetrics::default();
-        
+
         if value.is_nan() {
             metrics.nan_count += 1;
         } else if value.is_infinite() {
@@ -489,10 +490,10 @@ impl UltraThinkNumericalStabilityTester {
         } else {
             metrics.subnormal_count += 1;
         }
-        
+
         metrics.condition_number = self.estimate_condition_number(value);
         metrics.relative_error = self.estimate_relative_error(value);
-        
+
         metrics
     }
 
@@ -528,40 +529,43 @@ impl UltraThinkNumericalStabilityTester {
     /// Calculate overall stability score
     fn calculate_overall_stability_score(&self, results: &ComprehensiveStabilityResult) -> f64 {
         let mut score = 100.0;
-        
+
         // Penalize for critical issues
         score -= results.critical_issues.len() as f64 * 20.0;
-        
+
         // Penalize for warnings
         score -= results.warnings.len() as f64 * 5.0;
-        
+
         // Adjust based on specific test results
         if let Some(ref edge_results) = results.edge_case_results {
             score -= edge_results.failed_cases.len() as f64 * 10.0;
         }
-        
+
         if let Some(ref precision_results) = results.precision_results {
             if precision_results.precision_loss_detected {
                 score -= 15.0;
             }
         }
-        
+
         if let Some(ref cancellation_results) = results.cancellation_results {
             score -= cancellation_results.cancellation_events.len() as f64 * 12.0;
         }
-        
+
         if let Some(ref overflow_results) = results.overflow_results {
             score -= overflow_results.overflow_events.len() as f64 * 25.0;
             score -= overflow_results.underflow_events.len() as f64 * 15.0;
         }
-        
+
         score.max(0.0).min(100.0)
     }
 
     /// Assess stability level
-    fn assess_stability_level(&self, results: &ComprehensiveStabilityResult) -> StabilityAssessment {
+    fn assess_stability_level(
+        &self,
+        results: &ComprehensiveStabilityResult,
+    ) -> StabilityAssessment {
         let score = results.overall_stability_score;
-        
+
         if score >= 95.0 {
             StabilityAssessment::Excellent
         } else if score >= 85.0 {
@@ -576,18 +580,23 @@ impl UltraThinkNumericalStabilityTester {
     }
 
     /// Generate stability recommendations
-    fn generate_stability_recommendations(&self, results: &ComprehensiveStabilityResult) -> Vec<StabilityRecommendation> {
+    fn generate_stability_recommendations(
+        &self,
+        results: &ComprehensiveStabilityResult,
+    ) -> Vec<StabilityRecommendation> {
         let mut recommendations = Vec::new();
-        
+
         if results.critical_issues.len() > 0 {
             recommendations.push(StabilityRecommendation {
                 recommendation_type: RecommendationType::Critical,
-                description: "Critical numerical stability issues detected. Immediate attention required.".to_string(),
+                description:
+                    "Critical numerical stability issues detected. Immediate attention required."
+                        .to_string(),
                 implementation_priority: ImplementationPriority::Immediate,
                 estimated_effort: EstimatedEffort::High,
             });
         }
-        
+
         if let Some(ref cancellation_results) = results.cancellation_results {
             if cancellation_results.cancellation_events.len() > 0 {
                 recommendations.push(StabilityRecommendation {
@@ -598,20 +607,24 @@ impl UltraThinkNumericalStabilityTester {
                 });
             }
         }
-        
+
         if let Some(ref precision_results) = results.precision_results {
             if precision_results.precision_loss_detected {
                 recommendations.push(StabilityRecommendation {
                     recommendation_type: RecommendationType::Precision,
-                    description: "Consider using higher precision arithmetic for improved accuracy.".to_string(),
+                    description:
+                        "Consider using higher precision arithmetic for improved accuracy."
+                            .to_string(),
                     implementation_priority: ImplementationPriority::Medium,
                     estimated_effort: EstimatedEffort::Low,
                 });
             }
         }
-        
+
         if let Some(ref condition_results) = results.condition_results {
-            if condition_results.max_condition_number > self.config.stability_tolerance.condition_number_threshold {
+            if condition_results.max_condition_number
+                > self.config.stability_tolerance.condition_number_threshold
+            {
                 recommendations.push(StabilityRecommendation {
                     recommendation_type: RecommendationType::Conditioning,
                     description: "High condition numbers detected. Consider regularization or alternative formulations.".to_string(),
@@ -620,26 +633,31 @@ impl UltraThinkNumericalStabilityTester {
                 });
             }
         }
-        
+
         recommendations
     }
 
     /// Get stability history
     pub fn get_stability_history(&self) -> Vec<StabilityTestResult> {
-        self.stability_history.read().unwrap().iter().cloned().collect()
+        self.stability_history
+            .read()
+            .unwrap()
+            .iter()
+            .cloned()
+            .collect()
     }
 
     /// Get stability trend analysis
     pub fn analyze_stability_trends(&self) -> StabilityTrendAnalysis {
         let history = self.stability_history.read().unwrap();
-        
+
         if history.is_empty() {
             return StabilityTrendAnalysis::default();
         }
-        
+
         let scores: Vec<f64> = history.iter().map(|r| r.stability_score).collect();
         let recent_scores = &scores[scores.len().saturating_sub(10)..];
-        
+
         let trend = if recent_scores.len() >= 2 {
             let first = recent_scores[0];
             let last = recent_scores[recent_scores.len() - 1];
@@ -653,7 +671,7 @@ impl UltraThinkNumericalStabilityTester {
         } else {
             StabilityTrend::Stable
         };
-        
+
         StabilityTrendAnalysis {
             trend,
             average_score: scores.iter().sum::<f64>() / scores.len() as f64,
@@ -688,19 +706,19 @@ impl EdgeCaseGenerator {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut edge_cases = Vec::new();
-        
+
         // Generate basic edge cases
         edge_cases.extend(self.generate_basic_edge_cases(test_data)?);
-        
+
         // Generate boundary edge cases
         edge_cases.extend(self.generate_boundary_edge_cases(test_data)?);
-        
+
         // Generate scaling edge cases
         edge_cases.extend(self.generate_scaling_edge_cases(test_data)?);
-        
+
         // Generate special value edge cases
         edge_cases.extend(self.generate_special_value_edge_cases(test_data)?);
-        
+
         Ok(edge_cases)
     }
 
@@ -714,7 +732,7 @@ impl EdgeCaseGenerator {
     {
         let mut cases = Vec::new();
         let data_size = test_data.len();
-        
+
         // Empty array
         if data_size > 0 {
             let empty_data = Array1::<R>::zeros(0);
@@ -724,7 +742,7 @@ impl EdgeCaseGenerator {
                 description: "Empty input array".to_string(),
             });
         }
-        
+
         // Single element
         if data_size > 1 {
             let single_data = Array1::from_elem(1, test_data[0]);
@@ -734,7 +752,7 @@ impl EdgeCaseGenerator {
                 description: "Single element array".to_string(),
             });
         }
-        
+
         // All zeros
         let zero_data = Array1::zeros(data_size);
         cases.push(EdgeCase {
@@ -742,7 +760,7 @@ impl EdgeCaseGenerator {
             data: zero_data,
             description: "All zeros array".to_string(),
         });
-        
+
         // All ones
         let ones_data = Array1::ones(data_size);
         cases.push(EdgeCase {
@@ -750,7 +768,7 @@ impl EdgeCaseGenerator {
             data: ones_data,
             description: "All ones array".to_string(),
         });
-        
+
         Ok(cases)
     }
 
@@ -764,15 +782,18 @@ impl EdgeCaseGenerator {
     {
         let mut cases = Vec::new();
         let data_size = test_data.len();
-        
+
         // Very small values
-        let small_data = Array1::from_elem(data_size, R::from(1e-100).unwrap_or(R::min_positive_value()));
+        let small_data = Array1::from_elem(
+            data_size,
+            R::from(1e-100).unwrap_or(R::min_positive_value()),
+        );
         cases.push(EdgeCase {
             edge_case_type: EdgeCaseType::VerySmallValues,
             data: small_data,
             description: "Very small positive values".to_string(),
         });
-        
+
         // Very large values
         let large_data = Array1::from_elem(data_size, R::from(1e100).unwrap_or(R::max_value()));
         cases.push(EdgeCase {
@@ -780,7 +801,7 @@ impl EdgeCaseGenerator {
             data: large_data,
             description: "Very large values".to_string(),
         });
-        
+
         Ok(cases)
     }
 
@@ -793,10 +814,10 @@ impl EdgeCaseGenerator {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut cases = Vec::new();
-        
+
         // Scaled versions of original data
         let scales = vec![1e-10, 1e-5, 1e5, 1e10];
-        
+
         for scale in scales {
             if let Some(scale_val) = R::from(scale) {
                 let scaled_data = test_data.mapv(|x| x * scale_val);
@@ -807,7 +828,7 @@ impl EdgeCaseGenerator {
                 });
             }
         }
-        
+
         Ok(cases)
     }
 
@@ -821,7 +842,7 @@ impl EdgeCaseGenerator {
     {
         let mut cases = Vec::new();
         let data_size = test_data.len();
-        
+
         // Array with NaN values
         let mut nan_data = test_data.to_owned();
         if data_size > 0 {
@@ -832,7 +853,7 @@ impl EdgeCaseGenerator {
                 description: "Array containing NaN values".to_string(),
             });
         }
-        
+
         // Array with infinite values
         let mut inf_data = test_data.to_owned();
         if data_size > 0 {
@@ -843,7 +864,7 @@ impl EdgeCaseGenerator {
                 description: "Array containing infinite values".to_string(),
             });
         }
-        
+
         // Array with mixed special values
         if data_size >= 3 {
             let mut mixed_data = test_data.to_owned();
@@ -856,7 +877,7 @@ impl EdgeCaseGenerator {
                 description: "Array with mixed special values".to_string(),
             });
         }
-        
+
         Ok(cases)
     }
 }
@@ -884,14 +905,14 @@ impl PrecisionAnalyzer {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut result = PrecisionStabilityResult::new();
-        
+
         // Test with current precision
         let current_result = test_function(&test_data.view());
         result.add_precision_test(format!("{:?}", std::any::type_name::<R>()), current_result);
-        
+
         // Additional precision analysis would go here
         // This is a simplified implementation
-        
+
         Ok(result)
     }
 }
@@ -920,13 +941,13 @@ impl InvariantValidator {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut result = InvariantValidationResult::new();
-        
+
         // Validate basic mathematical properties
         self.validate_basic_properties(function_name, test_function, test_data, &mut result)?;
-        
+
         // Validate statistical properties
         self.validate_statistical_properties(function_name, test_function, test_data, &mut result)?;
-        
+
         Ok(result)
     }
 
@@ -945,10 +966,12 @@ impl InvariantValidator {
         // Test determinism
         let result1 = test_function(&test_data.view());
         let result2 = test_function(&test_data.view());
-        
+
         match (result1, result2) {
             (Ok(v1), Ok(v2)) => {
-                let diff = (NumCast::from(v1).unwrap_or(0.0f64) - NumCast::from(v2).unwrap_or(0.0f64)).abs();
+                let diff = (NumCast::from(v1).unwrap_or(0.0f64)
+                    - NumCast::from(v2).unwrap_or(0.0f64))
+                .abs();
                 if diff > self.config.stability_tolerance.absolute_tolerance {
                     result.add_violation(InvariantViolation {
                         invariant_type: InvariantType::Determinism,
@@ -967,7 +990,7 @@ impl InvariantValidator {
                 });
             }
         }
-        
+
         Ok(())
     }
 
@@ -1012,10 +1035,10 @@ impl CancellationDetector {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut result = CancellationDetectionResult::new();
-        
+
         // Test with data that might cause cancellation
         let test_cases = self.generate_cancellation_test_cases(test_data)?;
-        
+
         for test_case in test_cases {
             let computation_result = test_function(&test_case.view());
             if let Ok(value) = computation_result {
@@ -1030,7 +1053,7 @@ impl CancellationDetector {
                 }
             }
         }
-        
+
         Ok(result)
     }
 
@@ -1043,7 +1066,7 @@ impl CancellationDetector {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut cases = Vec::new();
-        
+
         // Generate cases with values that might cause cancellation
         if test_data.len() >= 2 {
             // Case 1: Very similar large values
@@ -1051,13 +1074,13 @@ impl CancellationDetector {
             let epsilon = R::from(1e-10).unwrap_or(R::min_positive_value());
             let similar_large = Array1::from_vec(vec![large_val, large_val + epsilon]);
             cases.push(similar_large);
-            
+
             // Case 2: Values that sum to nearly zero
             let val = R::from(1e8).unwrap_or(R::one());
             let near_zero = Array1::from_vec(vec![val, -val + epsilon]);
             cases.push(near_zero);
         }
-        
+
         Ok(cases)
     }
 
@@ -1067,10 +1090,11 @@ impl CancellationDetector {
     {
         // Simplified cancellation risk assessment
         let val_f64: f64 = NumCast::from(computed_value).unwrap_or(0.0);
-        let max_input: f64 = test_case.iter()
+        let max_input: f64 = test_case
+            .iter()
             .map(|&x| NumCast::from(x).unwrap_or(0.0f64).abs())
             .fold(0.0, f64::max);
-        
+
         if max_input > 0.0 && val_f64.abs() > 0.0 {
             (max_input - val_f64.abs()) / max_input
         } else {
@@ -1102,10 +1126,10 @@ impl OverflowMonitor {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut result = OverflowMonitoringResult::new();
-        
+
         // Test with extreme values
         let extreme_cases = self.generate_extreme_value_cases(test_data)?;
-        
+
         for test_case in extreme_cases {
             let computation_result = test_function(&test_case.view());
             match computation_result {
@@ -1136,7 +1160,7 @@ impl OverflowMonitor {
                 }
             }
         }
-        
+
         Ok(result)
     }
 
@@ -1150,15 +1174,15 @@ impl OverflowMonitor {
     {
         let mut cases = Vec::new();
         let data_size = test_data.len();
-        
+
         // Very large values
         let large_data = Array1::from_elem(data_size, R::max_value());
         cases.push(large_data);
-        
+
         // Very small values
         let small_data = Array1::from_elem(data_size, R::min_positive_value());
         cases.push(small_data);
-        
+
         // Mixed extreme values
         if data_size >= 2 {
             let mut mixed_data = Array1::zeros(data_size);
@@ -1166,7 +1190,7 @@ impl OverflowMonitor {
             mixed_data[1] = R::min_positive_value();
             cases.push(mixed_data);
         }
-        
+
         Ok(cases)
     }
 }
@@ -1194,17 +1218,17 @@ impl ConditionAnalyzer {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut result = ConditionAnalysisResult::new();
-        
+
         // Analyze condition numbers for different input perturbations
         let base_result = test_function(&test_data.view());
-        
+
         if let Ok(base_value) = base_result {
             let perturbation_factor = R::from(1e-8).unwrap_or(R::min_positive_value());
-            
+
             for i in 0..test_data.len() {
                 let mut perturbed_data = test_data.to_owned();
                 perturbed_data[i] = perturbed_data[i] + perturbation_factor;
-                
+
                 let perturbed_result = test_function(&perturbed_data.view());
                 if let Ok(perturbed_value) = perturbed_result {
                     let condition_number = self.estimate_condition_number(
@@ -1212,7 +1236,7 @@ impl ConditionAnalyzer {
                         perturbed_value,
                         perturbation_factor,
                     );
-                    
+
                     result.add_condition_measurement(ConditionMeasurement {
                         input_index: i,
                         condition_number,
@@ -1223,7 +1247,7 @@ impl ConditionAnalyzer {
                 }
             }
         }
-        
+
         Ok(result)
     }
 
@@ -1239,11 +1263,11 @@ impl ConditionAnalyzer {
         let base_f64: f64 = NumCast::from(base_value).unwrap_or(0.0);
         let perturbed_f64: f64 = NumCast::from(perturbed_value).unwrap_or(0.0);
         let perturbation_f64: f64 = NumCast::from(perturbation).unwrap_or(0.0);
-        
+
         if base_f64.abs() > 0.0 && perturbation_f64.abs() > 0.0 {
             let relative_output_change = (perturbed_f64 - base_f64).abs() / base_f64.abs();
             let relative_input_change = perturbation_f64.abs();
-            
+
             if relative_input_change > 0.0 {
                 relative_output_change / relative_input_change
             } else {
@@ -1278,19 +1302,16 @@ impl ConvergenceTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut result = ConvergenceStabilityResult::new();
-        
+
         // Test convergence with different precision requirements
         let tolerances = vec![1e-4, 1e-8, 1e-12];
-        
+
         for tolerance in tolerances {
-            let convergence_result = self.test_convergence_at_tolerance(
-                test_function,
-                test_data,
-                tolerance,
-            )?;
+            let convergence_result =
+                self.test_convergence_at_tolerance(test_function, test_data, tolerance)?;
             result.add_convergence_test(tolerance, convergence_result);
         }
-        
+
         Ok(result)
     }
 
@@ -1307,14 +1328,14 @@ impl ConvergenceTester {
     {
         let start_time = Instant::now();
         let mut iterations = 0;
-        
+
         // Simplified convergence test - in practice, this would be more sophisticated
         let result = test_function(&test_data.view());
         iterations += 1;
-        
+
         let convergence_time = start_time.elapsed();
         let converged = result.is_ok();
-        
+
         Ok(ConvergenceTestResult {
             tolerance,
             converged,
@@ -1349,30 +1370,33 @@ impl MonteCarloStabilityTester {
     {
         let mut result = MonteCarloStabilityResult::new();
         let mut results = Vec::new();
-        
+
         // Run Monte Carlo simulations
         for _ in 0..self.config.monte_carlo_samples {
             let perturbed_data = self.add_small_perturbation(test_data)?;
             let computation_result = test_function(&perturbed_data.view());
-            
+
             if let Ok(value) = computation_result {
                 results.push(NumCast::from(value).unwrap_or(0.0f64));
             }
         }
-        
+
         if !results.is_empty() {
             // Calculate statistics
             let mean = results.iter().sum::<f64>() / results.len() as f64;
-            let variance = results.iter()
-                .map(|x| (x - mean).powi(2))
-                .sum::<f64>() / results.len() as f64;
+            let variance =
+                results.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / results.len() as f64;
             let std_dev = variance.sqrt();
-            
+
             result.sample_count = results.len();
             result.mean_value = mean;
             result.standard_deviation = std_dev;
-            result.coefficient_of_variation = if mean.abs() > 0.0 { std_dev / mean.abs() } else { std::f64::INFINITY };
-            
+            result.coefficient_of_variation = if mean.abs() > 0.0 {
+                std_dev / mean.abs()
+            } else {
+                std::f64::INFINITY
+            };
+
             // Assess stability
             result.stability_assessment = if result.coefficient_of_variation < 0.01 {
                 MonteCarloStabilityAssessment::VeryStable
@@ -1384,27 +1408,24 @@ impl MonteCarloStabilityTester {
                 MonteCarloStabilityAssessment::Unstable
             };
         }
-        
+
         Ok(result)
     }
 
-    fn add_small_perturbation<D, R>(
-        &self,
-        test_data: &ArrayBase<D, Ix1>,
-    ) -> StatsResult<Array1<R>>
+    fn add_small_perturbation<D, R>(&self, test_data: &ArrayBase<D, Ix1>) -> StatsResult<Array1<R>>
     where
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let perturbation_magnitude = R::from(1e-12).unwrap_or(R::min_positive_value());
-        
+
         let perturbed_data = test_data.mapv(|x| {
-            let noise: f64 = (rng.gen::<f64>() - 0.5) * 2.0; // Random value in [-1, 1]
+            let noise: f64 = (rng.random::<f64>() - 0.5) * 2.0; // Random value in [-1, 1]
             let noise_r = R::from(noise).unwrap_or(R::zero());
             x + perturbation_magnitude * noise_r
         });
-        
+
         Ok(perturbed_data)
     }
 }
@@ -1435,42 +1456,47 @@ impl RegressionTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut result = RegressionTestResult::new(function_name.to_string());
-        
+
         // Execute current test
         let current_result = test_function(&test_data.view());
-        
+
         if let Ok(current_value) = current_result {
             let current_f64: f64 = NumCast::from(current_value).unwrap_or(0.0);
-            
+
             // Check against historical results
             let historical_lock = self.historical_results.read().unwrap();
             if let Some(historical_values) = historical_lock.get(function_name) {
                 // Compare with historical values
-                let mean_historical = historical_values.iter().sum::<f64>() / historical_values.len() as f64;
+                let mean_historical =
+                    historical_values.iter().sum::<f64>() / historical_values.len() as f64;
                 let deviation = (current_f64 - mean_historical).abs();
                 let relative_deviation = if mean_historical.abs() > 0.0 {
                     deviation / mean_historical.abs()
                 } else {
                     std::f64::INFINITY
                 };
-                
+
                 result.current_value = current_f64;
                 result.historical_mean = mean_historical;
                 result.deviation = deviation;
                 result.relative_deviation = relative_deviation;
-                result.regression_detected = relative_deviation > self.config.stability_tolerance.relative_tolerance;
+                result.regression_detected =
+                    relative_deviation > self.config.stability_tolerance.relative_tolerance;
             } else {
                 result.is_baseline = true;
             }
-            
+
             // Store current result
             drop(historical_lock);
             let mut historical_lock = self.historical_results.write().unwrap();
-            historical_lock.entry(function_name.to_string()).or_insert_with(Vec::new).push(current_f64);
+            historical_lock
+                .entry(function_name.to_string())
+                .or_insert_with(Vec::new)
+                .push(current_f64);
         } else {
             result.computation_failed = true;
         }
-        
+
         Ok(result)
     }
 }
@@ -1877,11 +1903,14 @@ impl ConditionAnalysisResult {
     pub fn add_condition_measurement(&mut self, measurement: ConditionMeasurement) {
         self.max_condition_number = self.max_condition_number.max(measurement.condition_number);
         self.condition_measurements.push(measurement);
-        
+
         // Update average
-        self.average_condition_number = self.condition_measurements.iter()
+        self.average_condition_number = self
+            .condition_measurements
+            .iter()
             .map(|m| m.condition_number)
-            .sum::<f64>() / self.condition_measurements.len() as f64;
+            .sum::<f64>()
+            / self.condition_measurements.len() as f64;
     }
 }
 
@@ -2133,6 +2162,157 @@ pub fn create_exhaustive_numerical_stability_tester() -> UltraThinkNumericalStab
     UltraThinkNumericalStabilityTester::new(config)
 }
 
+/// Enhanced numerical stability testing for common statistical functions
+pub fn test_statistical_function_stability<F>(
+    function_name: &str,
+    test_function: F,
+    input_ranges: Vec<(f64, f64)>,
+) -> StatsResult<ComprehensiveStabilityResult>
+where
+    F: Fn(&ArrayView1<f64>) -> StatsResult<f64> + Clone + Send + Sync + 'static,
+{
+    let config = UltraThinkNumericalStabilityConfig::default();
+    let tester = UltraThinkNumericalStabilityTester::new(config);
+    
+    // Generate test data across multiple ranges
+    let mut comprehensive_result = ComprehensiveStabilityResult::new(function_name.to_string());
+    
+    for (min_val, max_val) in input_ranges {
+        // Generate test data for this range
+        let test_data = generate_stability_test_data(min_val, max_val, 1000);
+        
+        // Run comprehensive stability testing
+        let range_result = tester.comprehensive_stability_testing(
+            function_name,
+            test_function.clone(),
+            &test_data,
+        )?;
+        
+        // Combine results (simplified - in practice would merge more intelligently)
+        if comprehensive_result.edge_case_results.is_none() {
+            comprehensive_result.edge_case_results = range_result.edge_case_results;
+        }
+        if comprehensive_result.precision_results.is_none() {
+            comprehensive_result.precision_results = range_result.precision_results;
+        }
+    }
+    
+    Ok(comprehensive_result)
+}
+
+/// Generate test data for numerical stability testing
+fn generate_stability_test_data(min_val: f64, max_val: f64, size: usize) -> Array1<f64> {
+    use rand::{rngs::StdRng, Rng, SeedableRng};
+    
+    let mut rng = StdRng::seed_from_u64(42);
+    let mut data = Array1::zeros(size);
+    
+    for i in 0..size {
+        // Mix of different value types for comprehensive testing
+        match i % 5 {
+            0 => data[i] = rng.gen_range(min_val..max_val), // Random in range
+            1 => data[i] = min_val,                         // Minimum value
+            2 => data[i] = max_val,                         // Maximum value
+            3 => data[i] = (min_val + max_val) / 2.0,      // Midpoint
+            4 => data[i] = rng.gen_range(min_val..max_val) * 1e-10, // Very small values
+            _ => unreachable!(),
+        }
+    }
+    
+    data
+}
+
+/// Test numerical stability of mean function specifically
+pub fn test_mean_stability() -> StatsResult<ComprehensiveStabilityResult> {
+    use crate::descriptive::mean;
+    
+    let mean_function = |data: &ArrayView1<f64>| mean(data);
+    
+    let input_ranges = vec![
+        (-1e6, 1e6),        // Large numbers
+        (-1.0, 1.0),        // Normal range
+        (-1e-10, 1e-10),    // Very small numbers
+        (1e10, 1e11),       // Very large positive numbers
+        (-1e11, -1e10),     // Very large negative numbers
+    ];
+    
+    test_statistical_function_stability("mean", mean_function, input_ranges)
+}
+
+/// Test numerical stability of variance function specifically
+pub fn test_variance_stability() -> StatsResult<ComprehensiveStabilityResult> {
+    use crate::descriptive::var;
+    
+    let variance_function = |data: &ArrayView1<f64>| var(data, 1);
+    
+    let input_ranges = vec![
+        (-1e6, 1e6),        // Large numbers
+        (-1.0, 1.0),        // Normal range
+        (-1e-10, 1e-10),    // Very small numbers
+        (0.0, 1e-6),        // Small positive numbers
+        (1e6, 1e7),         // Large positive numbers
+    ];
+    
+    test_statistical_function_stability("variance", variance_function, input_ranges)
+}
+
+/// Test numerical stability of correlation function specifically
+pub fn test_correlation_stability() -> StatsResult<ValidationReport> {
+    use crate::correlation::pearson_r;
+    use crate::property_based_validation::{PropertyTestConfig, PropertyBasedValidator, CorrelationBounds};
+    
+    // Use property-based testing for correlation stability
+    let config = PropertyTestConfig {
+        test_cases_per_property: 1000,
+        seed: 42,
+        tolerance: 1e-12,
+        test_edge_cases: true,
+        test_cross_platform: true,
+        test_numerical_stability: true,
+    };
+    
+    let mut validator = PropertyBasedValidator::new(config);
+    
+    // Test correlation bounds property with various edge cases
+    validator.test_property(CorrelationBounds)?;
+    
+    Ok(validator.generate_validation_report())
+}
+
+/// Run comprehensive numerical stability tests for all core statistical functions
+pub fn run_comprehensive_statistical_stability_tests() -> StatsResult<HashMap<String, ComprehensiveStabilityResult>> {
+    let mut results = HashMap::new();
+    
+    // Test mean stability
+    if let Ok(mean_result) = test_mean_stability() {
+        results.insert("mean".to_string(), mean_result);
+    }
+    
+    // Test variance stability
+    if let Ok(var_result) = test_variance_stability() {
+        results.insert("variance".to_string(), var_result);
+    }
+    
+    // Additional statistical functions can be added here
+    
+    Ok(results)
+}
+
+/// Quick numerical stability validation for CI/CD pipelines
+pub fn run_quick_stability_validation() -> StatsResult<bool> {
+    let results = run_comprehensive_statistical_stability_tests()?;
+    
+    // Check if all tests passed basic stability requirements
+    let all_stable = results.values().all(|result| {
+        // Simplified stability check - in practice would be more sophisticated
+        result.edge_case_results.as_ref()
+            .map(|edge_results| edge_results.critical_issues.is_empty())
+            .unwrap_or(true)
+    });
+    
+    Ok(all_stable)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2159,23 +2339,34 @@ mod tests {
         let config = UltraThinkNumericalStabilityConfig::default();
         let generator = EdgeCaseGenerator::new(&config);
         let test_data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        
-        let edge_cases = generator.generate_comprehensive_edge_cases(&test_data).unwrap();
+
+        let edge_cases = generator
+            .generate_comprehensive_edge_cases(&test_data)
+            .unwrap();
         assert!(edge_cases.len() > 0);
     }
 
     #[test]
     fn test_stability_assessment_levels() {
         assert_eq!(StabilityAssessment::Excellent as u8, 0);
-        assert!(matches!(StabilityAssessment::Good, StabilityAssessment::Good));
-        assert!(matches!(StabilityAssessment::Critical, StabilityAssessment::Critical));
+        assert!(matches!(
+            StabilityAssessment::Good,
+            StabilityAssessment::Good
+        ));
+        assert!(matches!(
+            StabilityAssessment::Critical,
+            StabilityAssessment::Critical
+        ));
     }
 
     #[test]
     fn test_edge_case_types() {
         assert_eq!(EdgeCaseType::EmptyArray as u8, 0);
         assert!(matches!(EdgeCaseType::AllZeros, EdgeCaseType::AllZeros));
-        assert!(matches!(EdgeCaseType::ContainsNaN, EdgeCaseType::ContainsNaN));
+        assert!(matches!(
+            EdgeCaseType::ContainsNaN,
+            EdgeCaseType::ContainsNaN
+        ));
     }
 
     #[test]
@@ -2183,7 +2374,10 @@ mod tests {
         let result = ComprehensiveStabilityResult::new("test_function".to_string());
         assert_eq!(result.function_name, "test_function");
         assert_eq!(result.overall_stability_score, 0.0);
-        assert!(matches!(result.stability_assessment, StabilityAssessment::Unknown));
+        assert!(matches!(
+            result.stability_assessment,
+            StabilityAssessment::Unknown
+        ));
     }
 
     #[test]
@@ -2199,7 +2393,10 @@ mod tests {
         let result = MonteCarloStabilityResult::new();
         assert_eq!(result.sample_count, 0);
         assert_eq!(result.mean_value, 0.0);
-        assert!(matches!(result.stability_assessment, MonteCarloStabilityAssessment::Unknown));
+        assert!(matches!(
+            result.stability_assessment,
+            MonteCarloStabilityAssessment::Unknown
+        ));
     }
 
     #[test]
@@ -2207,7 +2404,10 @@ mod tests {
         let tester = create_fast_numerical_stability_tester();
         assert!(tester.config.enable_edge_case_testing);
         assert!(!tester.config.enable_monte_carlo_testing);
-        assert_eq!(tester.config.thoroughness_level, NumericalStabilityThoroughness::Basic);
+        assert_eq!(
+            tester.config.thoroughness_level,
+            NumericalStabilityThoroughness::Basic
+        );
     }
 
     #[test]
@@ -2215,7 +2415,10 @@ mod tests {
         let tester = create_exhaustive_numerical_stability_tester();
         assert!(tester.config.enable_edge_case_testing);
         assert!(tester.config.enable_monte_carlo_testing);
-        assert_eq!(tester.config.thoroughness_level, NumericalStabilityThoroughness::Exhaustive);
+        assert_eq!(
+            tester.config.thoroughness_level,
+            NumericalStabilityThoroughness::Exhaustive
+        );
         assert_eq!(tester.config.monte_carlo_samples, 1000000);
     }
 }

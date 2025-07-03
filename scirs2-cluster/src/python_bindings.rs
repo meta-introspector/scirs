@@ -4,30 +4,30 @@
 //! accessible from Python with scikit-learn compatible APIs. Supports all major
 //! clustering algorithms with full feature parity to scikit-learn.
 
-use crate::error::{ClusteringError, Result};
-use crate::vq::{kmeans, kmeans2};
-use crate::hierarchy::{linkage, fcluster, LinkageMethod, Metric};
-use crate::density::{dbscan, optics};
-use crate::gmm::{gaussian_mixture, GaussianMixture, GMMOptions, CovarianceType};
-use crate::birch::{birch, BirchOptions};
-use crate::spectral::{spectral_clustering, SpectralClusteringOptions, AffinityMode};
-use crate::meanshift::{mean_shift, estimate_bandwidth, MeanShiftOptions};
 use crate::affinity::{affinity_propagation, AffinityPropagationOptions};
+use crate::birch::{birch, BirchOptions};
+use crate::density::{dbscan, optics};
+use crate::error::{ClusteringError, Result};
+use crate::gmm::{gaussian_mixture, CovarianceType, GMMOptions, GaussianMixture};
+use crate::hierarchy::{fcluster, linkage, LinkageMethod, Metric};
+use crate::meanshift::{estimate_bandwidth, mean_shift, MeanShiftOptions};
 use crate::metrics::{
-    silhouette_score, calinski_harabasz_score, davies_bouldin_score,
-    adjusted_rand_index, normalized_mutual_info, homogeneity_completeness_v_measure
+    adjusted_rand_index, calinski_harabasz_score, davies_bouldin_score,
+    homogeneity_completeness_v_measure, normalized_mutual_info, silhouette_score,
 };
+use crate::spectral::{spectral_clustering, AffinityMode, SpectralClusteringOptions};
+use crate::vq::{kmeans, kmeans2};
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 
 #[cfg(feature = "pyo3")]
-use pyo3::prelude::*;
-#[cfg(feature = "pyo3")]
-use pyo3::exceptions::{PyValueError, PyRuntimeError};
-#[cfg(feature = "pyo3")]
 use numpy::{PyArray1, PyArray2, ToPyArray};
+#[cfg(feature = "pyo3")]
+use pyo3::exceptions::{PyRuntimeError, PyValueError};
+#[cfg(feature = "pyo3")]
+use pyo3::prelude::*;
 
 /// Python-compatible K-means clustering implementation
 #[cfg(feature = "pyo3")]
@@ -86,7 +86,7 @@ impl PyKMeans {
     /// Fit K-means clustering to data
     fn fit(&mut self, py: Python, x: &PyArray2<f64>) -> PyResult<()> {
         let data = unsafe { x.as_array() };
-        
+
         match self.fit_internal(data) {
             Ok((centers, labels, inertia, n_iter)) => {
                 self.cluster_centers_ = Some(centers);
@@ -95,7 +95,10 @@ impl PyKMeans {
                 self.n_iter_ = Some(n_iter);
                 Ok(())
             }
-            Err(e) => Err(PyRuntimeError::new_err(format!("K-means fitting failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "K-means fitting failed: {}",
+                e
+            ))),
         }
     }
 
@@ -113,20 +116,21 @@ impl PyKMeans {
 
         let data = unsafe { x.as_array() };
         let centers = self.cluster_centers_.as_ref().unwrap();
-        
+
         let mut labels = Array1::zeros(data.nrows());
-        
+
         for (i, sample) in data.rows().into_iter().enumerate() {
             let mut min_dist = f64::INFINITY;
             let mut best_cluster = 0;
-            
+
             for (j, center) in centers.rows().into_iter().enumerate() {
-                let dist: f64 = sample.iter()
+                let dist: f64 = sample
+                    .iter()
                     .zip(center.iter())
                     .map(|(a, b)| (a - b).powi(2))
                     .sum::<f64>()
                     .sqrt();
-                
+
                 if dist < min_dist {
                     min_dist = dist;
                     best_cluster = j;
@@ -183,7 +187,12 @@ impl PyKMeans {
                 "random_state" => self.random_state = value.extract()?,
                 "n_init" => self.n_init = value.extract()?,
                 "init" => self.init = value.extract()?,
-                _ => return Err(PyValueError::new_err(format!("Unknown parameter: {}", key_str))),
+                _ => {
+                    return Err(PyValueError::new_err(format!(
+                        "Unknown parameter: {}",
+                        key_str
+                    )))
+                }
             }
         }
         Ok(())
@@ -205,7 +214,10 @@ impl PyKMeans {
 #[cfg(feature = "pyo3")]
 impl PyKMeans {
     /// Internal fitting logic
-    fn fit_internal(&self, data: ArrayView2<f64>) -> Result<(Array2<f64>, Array1<usize>, f64, usize)> {
+    fn fit_internal(
+        &self,
+        data: ArrayView2<f64>,
+    ) -> Result<(Array2<f64>, Array1<usize>, f64, usize)> {
         let mut best_centers = None;
         let mut best_labels = None;
         let mut best_inertia = f64::INFINITY;
@@ -227,7 +239,8 @@ impl PyKMeans {
                     for (i, sample) in data.rows().into_iter().enumerate() {
                         let cluster = labels[i];
                         let center = centers.row(cluster);
-                        let dist_sq: f64 = sample.iter()
+                        let dist_sq: f64 = sample
+                            .iter()
                             .zip(center.iter())
                             .map(|(a, b)| (a - b).powi(2))
                             .sum();
@@ -289,19 +302,21 @@ impl PyDBSCAN {
     /// Fit DBSCAN clustering to data
     fn fit(&mut self, py: Python, x: &PyArray2<f64>) -> PyResult<()> {
         let data = unsafe { x.as_array() };
-        
+
         match dbscan(data, self.eps, self.min_samples) {
             Ok((labels, core_indices)) => {
                 // Convert labels to i32 (with -1 for noise)
-                let labels_i32: Array1<i32> = labels.mapv(|x| {
-                    if x == usize::MAX { -1 } else { x as i32 }
-                });
-                
+                let labels_i32: Array1<i32> =
+                    labels.mapv(|x| if x == usize::MAX { -1 } else { x as i32 });
+
                 self.labels_ = Some(labels_i32);
                 self.core_sample_indices_ = Some(core_indices);
                 Ok(())
             }
-            Err(e) => Err(PyRuntimeError::new_err(format!("DBSCAN fitting failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "DBSCAN fitting failed: {}",
+                e
+            ))),
         }
     }
 
@@ -368,20 +383,30 @@ impl PyAgglomerativeClustering {
     /// Fit agglomerative clustering to data
     fn fit(&mut self, py: Python, x: &PyArray2<f64>) -> PyResult<()> {
         let data = unsafe { x.as_array() };
-        
+
         let linkage_method = match self.linkage.as_str() {
             "ward" => LinkageMethod::Ward,
             "complete" => LinkageMethod::Complete,
             "average" => LinkageMethod::Average,
             "single" => LinkageMethod::Single,
-            _ => return Err(PyValueError::new_err(format!("Unknown linkage: {}", self.linkage))),
+            _ => {
+                return Err(PyValueError::new_err(format!(
+                    "Unknown linkage: {}",
+                    self.linkage
+                )))
+            }
         };
 
         let distance_metric = match self.metric.as_str() {
             "euclidean" => Metric::Euclidean,
             "manhattan" => Metric::Manhattan,
             "cosine" => Metric::Cosine,
-            _ => return Err(PyValueError::new_err(format!("Unknown metric: {}", self.metric))),
+            _ => {
+                return Err(PyValueError::new_err(format!(
+                    "Unknown metric: {}",
+                    self.metric
+                )))
+            }
         };
 
         match linkage(data, linkage_method, distance_metric) {
@@ -395,10 +420,16 @@ impl PyAgglomerativeClustering {
                         self.n_connected_components_ = Some(1);
                         Ok(())
                     }
-                    Err(e) => Err(PyRuntimeError::new_err(format!("Cluster extraction failed: {}", e))),
+                    Err(e) => Err(PyRuntimeError::new_err(format!(
+                        "Cluster extraction failed: {}",
+                        e
+                    ))),
                 }
             }
-            Err(e) => Err(PyRuntimeError::new_err(format!("Hierarchical clustering failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "Hierarchical clustering failed: {}",
+                e
+            ))),
         }
     }
 
@@ -468,7 +499,7 @@ impl PyBirch {
     /// Fit BIRCH clustering to data
     fn fit(&mut self, py: Python, x: &PyArray2<f64>) -> PyResult<()> {
         let data = unsafe { x.as_array() };
-        
+
         let options = BirchOptions {
             n_clusters: self.n_clusters,
             threshold: self.threshold,
@@ -483,7 +514,10 @@ impl PyBirch {
                 self.n_features_in_ = Some(data.ncols());
                 Ok(())
             }
-            Err(e) => Err(PyRuntimeError::new_err(format!("BIRCH clustering failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "BIRCH clustering failed: {}",
+                e
+            ))),
         }
     }
 
@@ -559,12 +593,17 @@ impl PySpectralClustering {
     /// Fit spectral clustering to data
     fn fit(&mut self, py: Python, x: &PyArray2<f64>) -> PyResult<()> {
         let data = unsafe { x.as_array() };
-        
+
         let affinity_mode = match self.affinity.as_str() {
             "rbf" => AffinityMode::Rbf(self.gamma.unwrap_or(1.0)),
             "nearest_neighbors" => AffinityMode::NearestNeighbors(10),
             "precomputed" => AffinityMode::Precomputed,
-            _ => return Err(PyValueError::new_err(format!("Unknown affinity: {}", self.affinity))),
+            _ => {
+                return Err(PyValueError::new_err(format!(
+                    "Unknown affinity: {}",
+                    self.affinity
+                )))
+            }
         };
 
         let options = SpectralClusteringOptions {
@@ -581,7 +620,10 @@ impl PySpectralClustering {
                 self.affinity_matrix_ = Some(affinity_matrix);
                 Ok(())
             }
-            Err(e) => Err(PyRuntimeError::new_err(format!("Spectral clustering failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "Spectral clustering failed: {}",
+                e
+            ))),
         }
     }
 
@@ -649,12 +691,17 @@ impl PyMeanShift {
     /// Fit Mean Shift clustering to data
     fn fit(&mut self, py: Python, x: &PyArray2<f64>) -> PyResult<()> {
         let data = unsafe { x.as_array() };
-        
+
         let bandwidth = match self.bandwidth {
             Some(bw) => bw,
             None => match estimate_bandwidth(data, None, None) {
                 Ok(bw) => bw,
-                Err(e) => return Err(PyRuntimeError::new_err(format!("Bandwidth estimation failed: {}", e))),
+                Err(e) => {
+                    return Err(PyRuntimeError::new_err(format!(
+                        "Bandwidth estimation failed: {}",
+                        e
+                    )))
+                }
             },
         };
 
@@ -674,7 +721,10 @@ impl PyMeanShift {
                 self.n_iter_ = Some(n_iter);
                 Ok(())
             }
-            Err(e) => Err(PyRuntimeError::new_err(format!("Mean Shift clustering failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "Mean Shift clustering failed: {}",
+                e
+            ))),
         }
     }
 
@@ -768,13 +818,18 @@ impl PyGaussianMixture {
     /// Fit Gaussian Mixture Model to data
     fn fit(&mut self, py: Python, x: &PyArray2<f64>) -> PyResult<()> {
         let data = unsafe { x.as_array() };
-        
+
         let cov_type = match self.covariance_type.as_str() {
             "full" => CovarianceType::Full,
             "tied" => CovarianceType::Tied,
             "diag" => CovarianceType::Diagonal,
             "spherical" => CovarianceType::Spherical,
-            _ => return Err(PyValueError::new_err(format!("Unknown covariance_type: {}", self.covariance_type))),
+            _ => {
+                return Err(PyValueError::new_err(format!(
+                    "Unknown covariance_type: {}",
+                    self.covariance_type
+                )))
+            }
         };
 
         let options = GMMOptions {
@@ -805,7 +860,10 @@ impl PyGaussianMixture {
                 self.lower_bound_ = Some(gmm.lower_bound());
                 Ok(())
             }
-            Err(e) => Err(PyRuntimeError::new_err(format!("Gaussian Mixture fitting failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "Gaussian Mixture fitting failed: {}",
+                e
+            ))),
         }
     }
 
@@ -875,15 +933,16 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     ) -> PyResult<f64> {
         let data = unsafe { x.as_array() };
         let labels_array = unsafe { labels.as_array() };
-        
+
         // Convert i32 labels to usize
-        let labels_usize: Array1<usize> = labels_array.mapv(|x| {
-            if x < 0 { 0 } else { x as usize }
-        });
-        
+        let labels_usize: Array1<usize> = labels_array.mapv(|x| if x < 0 { 0 } else { x as usize });
+
         match silhouette_score(data, labels_usize.view()) {
             Ok(score) => Ok(score),
-            Err(e) => Err(PyRuntimeError::new_err(format!("Silhouette score calculation failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "Silhouette score calculation failed: {}",
+                e
+            ))),
         }
     }
 
@@ -896,14 +955,15 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     ) -> PyResult<f64> {
         let data = unsafe { x.as_array() };
         let labels_array = unsafe { labels.as_array() };
-        
-        let labels_usize: Array1<usize> = labels_array.mapv(|x| {
-            if x < 0 { 0 } else { x as usize }
-        });
-        
+
+        let labels_usize: Array1<usize> = labels_array.mapv(|x| if x < 0 { 0 } else { x as usize });
+
         match calinski_harabasz_score(data, labels_usize.view()) {
             Ok(score) => Ok(score),
-            Err(e) => Err(PyRuntimeError::new_err(format!("Calinski-Harabasz score calculation failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "Calinski-Harabasz score calculation failed: {}",
+                e
+            ))),
         }
     }
 
@@ -916,14 +976,15 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     ) -> PyResult<f64> {
         let data = unsafe { x.as_array() };
         let labels_array = unsafe { labels.as_array() };
-        
-        let labels_usize: Array1<usize> = labels_array.mapv(|x| {
-            if x < 0 { 0 } else { x as usize }
-        });
-        
+
+        let labels_usize: Array1<usize> = labels_array.mapv(|x| if x < 0 { 0 } else { x as usize });
+
         match davies_bouldin_score(data, labels_usize.view()) {
             Ok(score) => Ok(score),
-            Err(e) => Err(PyRuntimeError::new_err(format!("Davies-Bouldin score calculation failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "Davies-Bouldin score calculation failed: {}",
+                e
+            ))),
         }
     }
 
@@ -936,17 +997,16 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     ) -> PyResult<f64> {
         let true_labels = unsafe { labels_true.as_array() };
         let pred_labels = unsafe { labels_pred.as_array() };
-        
-        let true_usize: Array1<usize> = true_labels.mapv(|x| {
-            if x < 0 { 0 } else { x as usize }
-        });
-        let pred_usize: Array1<usize> = pred_labels.mapv(|x| {
-            if x < 0 { 0 } else { x as usize }
-        });
-        
+
+        let true_usize: Array1<usize> = true_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
+        let pred_usize: Array1<usize> = pred_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
+
         match adjusted_rand_index(true_usize.view(), pred_usize.view()) {
             Ok(score) => Ok(score),
-            Err(e) => Err(PyRuntimeError::new_err(format!("Adjusted Rand Index calculation failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "Adjusted Rand Index calculation failed: {}",
+                e
+            ))),
         }
     }
 
@@ -960,17 +1020,16 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     ) -> PyResult<f64> {
         let true_labels = unsafe { labels_true.as_array() };
         let pred_labels = unsafe { labels_pred.as_array() };
-        
-        let true_usize: Array1<usize> = true_labels.mapv(|x| {
-            if x < 0 { 0 } else { x as usize }
-        });
-        let pred_usize: Array1<usize> = pred_labels.mapv(|x| {
-            if x < 0 { 0 } else { x as usize }
-        });
-        
+
+        let true_usize: Array1<usize> = true_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
+        let pred_usize: Array1<usize> = pred_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
+
         match normalized_mutual_info(true_usize.view(), pred_usize.view()) {
             Ok(score) => Ok(score),
-            Err(e) => Err(PyRuntimeError::new_err(format!("Normalized Mutual Information calculation failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "Normalized Mutual Information calculation failed: {}",
+                e
+            ))),
         }
     }
 
@@ -984,17 +1043,16 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     ) -> PyResult<(f64, f64, f64)> {
         let true_labels = unsafe { labels_true.as_array() };
         let pred_labels = unsafe { labels_pred.as_array() };
-        
-        let true_usize: Array1<usize> = true_labels.mapv(|x| {
-            if x < 0 { 0 } else { x as usize }
-        });
-        let pred_usize: Array1<usize> = pred_labels.mapv(|x| {
-            if x < 0 { 0 } else { x as usize }
-        });
-        
+
+        let true_usize: Array1<usize> = true_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
+        let pred_usize: Array1<usize> = pred_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
+
         match homogeneity_completeness_v_measure(true_usize.view(), pred_usize.view()) {
             Ok((h, c, v)) => Ok((h, c, v)),
-            Err(e) => Err(PyRuntimeError::new_err(format!("H-C-V calculation failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "H-C-V calculation failed: {}",
+                e
+            ))),
         }
     }
 
@@ -1013,10 +1071,10 @@ fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PySpectralClustering>()?;
     m.add_class::<PyMeanShift>()?;
     m.add_class::<PyGaussianMixture>()?;
-    
+
     // Metrics submodule
     m.add_wrapped(wrap_pymodule!(metrics))?;
-    
+
     // Convenience functions for common workflows
     #[pyfn(m)]
     fn estimate_bandwidth_py(
@@ -1028,7 +1086,10 @@ fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
         let data = unsafe { x.as_array() };
         match estimate_bandwidth(data, quantile, n_samples) {
             Ok(bw) => Ok(bw),
-            Err(e) => Err(PyRuntimeError::new_err(format!("Bandwidth estimation failed: {}", e))),
+            Err(e) => Err(PyRuntimeError::new_err(format!(
+                "Bandwidth estimation failed: {}",
+                e
+            ))),
         }
     }
 
@@ -1043,7 +1104,7 @@ fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
         let data = unsafe { x.as_array() };
         let n_samples = data.nrows();
         let n_features = data.ncols();
-        
+
         // Simple heuristics for algorithm selection
         let recommended_algorithm = if let Some(_k) = n_clusters_hint {
             // User provided number of clusters hint
@@ -1068,7 +1129,7 @@ fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
                 "MeanShift"
             }
         };
-        
+
         Ok(recommended_algorithm.to_string())
     }
 
@@ -1082,12 +1143,19 @@ fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
         let data = unsafe { x.as_array() };
         let n_samples = data.nrows();
         let n_features = data.ncols();
-        
+
         let dict = PyDict::new(py);
-        
+
         match algorithm.to_lowercase().as_str() {
             "kmeans" => {
-                dict.set_item("n_clusters", if n_samples < 100 { 3 } else { (n_samples as f64).sqrt() as usize })?;
+                dict.set_item(
+                    "n_clusters",
+                    if n_samples < 100 {
+                        3
+                    } else {
+                        (n_samples as f64).sqrt() as usize
+                    },
+                )?;
                 dict.set_item("init", "k-means++")?;
                 dict.set_item("n_init", 10)?;
                 dict.set_item("max_iter", 300)?;
@@ -1108,29 +1176,48 @@ fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
                 dict.set_item("cluster_all", true)?;
             }
             _ => {
-                return Err(PyValueError::new_err(format!("Unknown algorithm: {}", algorithm)));
+                return Err(PyValueError::new_err(format!(
+                    "Unknown algorithm: {}",
+                    algorithm
+                )));
             }
         }
-        
+
         Ok(dict.into())
     }
 
     // Module metadata
     m.add("__version__", "0.1.0-beta.1")?;
     m.add("__author__", "SciRS2 Team")?;
-    m.add("__description__", "High-performance clustering algorithms with scikit-learn compatibility")?;
-    
+    m.add(
+        "__description__",
+        "High-performance clustering algorithms with scikit-learn compatibility",
+    )?;
+
     // Algorithm availability flags
-    m.add("__algorithms__", vec![
-        "KMeans", "DBSCAN", "AgglomerativeClustering", "Birch", 
-        "SpectralClustering", "MeanShift", "GaussianMixture"
-    ])?;
-    
+    m.add(
+        "__algorithms__",
+        vec![
+            "KMeans",
+            "DBSCAN",
+            "AgglomerativeClustering",
+            "Birch",
+            "SpectralClustering",
+            "MeanShift",
+            "GaussianMixture",
+        ],
+    )?;
+
     // Convenience functions
-    m.add("__convenience_functions__", vec![
-        "estimate_bandwidth_py", "auto_select_algorithm_py", "get_algorithm_defaults_py"
-    ])?;
-    
+    m.add(
+        "__convenience_functions__",
+        vec![
+            "estimate_bandwidth_py",
+            "auto_select_algorithm_py",
+            "get_algorithm_defaults_py",
+        ],
+    )?;
+
     Ok(())
 }
 

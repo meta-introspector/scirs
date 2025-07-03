@@ -23,7 +23,7 @@ pub mod message_passing {
     use std::sync::mpsc::{self, Receiver, Sender};
     use std::thread;
     use std::time::{Duration, Instant};
-    
+
     /// Message types for distributed clustering coordination
     #[derive(Debug, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -35,15 +35,9 @@ pub mod message_passing {
             initial_centroids: Array2<F>,
         },
         /// Update global centroids
-        UpdateCentroids {
-            round: usize,
-            centroids: Array2<F>,
-        },
+        UpdateCentroids { round: usize, centroids: Array2<F> },
         /// Request local computation
-        ComputeLocal {
-            round: usize,
-            max_iterations: usize,
-        },
+        ComputeLocal { round: usize, max_iterations: usize },
         /// Local computation result
         LocalResult {
             worker_id: usize,
@@ -74,9 +68,7 @@ pub mod message_passing {
         /// Terminate worker
         Terminate,
         /// Checkpoint creation request
-        CreateCheckpoint {
-            round: usize,
-        },
+        CreateCheckpoint { round: usize },
         /// Checkpoint data
         CheckpointData {
             worker_id: usize,
@@ -100,21 +92,18 @@ pub mod message_passing {
             data_subset: Array2<F>,
         },
         /// Acknowledgment message
-        Acknowledgment {
-            worker_id: usize,
-            message_id: u64,
-        },
+        Acknowledgment { worker_id: usize, message_id: u64 },
     }
-    
+
     /// Message priority levels
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
     pub enum MessagePriority {
-        Critical = 0,   // Immediate processing required
-        High = 1,       // High priority
-        Normal = 2,     // Normal processing
-        Low = 3,        // Background processing
+        Critical = 0, // Immediate processing required
+        High = 1,     // High priority
+        Normal = 2,   // Normal processing
+        Low = 3,      // Background processing
     }
-    
+
     /// Message envelope with metadata
     #[derive(Debug, Clone)]
     pub struct MessageEnvelope<F: Float> {
@@ -127,7 +116,7 @@ pub mod message_passing {
         pub timeout_ms: u64,
         pub message: ClusteringMessage<F>,
     }
-    
+
     /// Message passing coordinator for distributed clustering
     #[derive(Debug)]
     pub struct MessagePassingCoordinator<F: Float> {
@@ -142,7 +131,7 @@ pub mod message_passing {
         pub sync_barriers: HashMap<usize, SynchronizationBarrier>,
         pub config: MessagePassingConfig,
     }
-    
+
     /// Configuration for message passing system
     #[derive(Debug, Clone)]
     pub struct MessagePassingConfig {
@@ -155,7 +144,7 @@ pub mod message_passing {
         pub enable_message_ordering: bool,
         pub batch_size: usize,
     }
-    
+
     impl Default for MessagePassingConfig {
         fn default() -> Self {
             Self {
@@ -170,7 +159,7 @@ pub mod message_passing {
             }
         }
     }
-    
+
     /// Synchronization barrier for coordinating worker phases
     #[derive(Debug)]
     pub struct SynchronizationBarrier {
@@ -180,12 +169,12 @@ pub mod message_passing {
         pub barrier_start_time: Instant,
         pub timeout_ms: u64,
     }
-    
+
     impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
         /// Create new message passing coordinator
         pub fn new(coordinator_id: usize, config: MessagePassingConfig) -> Self {
             let (coordinator_sender, coordinator_receiver) = mpsc::channel();
-            
+
             Self {
                 coordinator_id,
                 worker_channels: HashMap::new(),
@@ -199,7 +188,7 @@ pub mod message_passing {
                 config,
             }
         }
-        
+
         /// Register a new worker with the coordinator
         pub fn register_worker(&mut self, worker_id: usize) -> Receiver<MessageEnvelope<F>> {
             let (sender, receiver) = mpsc::channel();
@@ -207,7 +196,7 @@ pub mod message_passing {
             self.worker_status.insert(worker_id, WorkerStatus::Active);
             receiver
         }
-        
+
         /// Send message to a specific worker
         pub fn send_message(
             &mut self,
@@ -216,7 +205,7 @@ pub mod message_passing {
             priority: MessagePriority,
         ) -> Result<u64> {
             let message_id = self.get_next_message_id();
-            
+
             let envelope = MessageEnvelope {
                 message_id,
                 sender_id: self.coordinator_id,
@@ -230,19 +219,19 @@ pub mod message_passing {
                 timeout_ms: self.config.message_timeout_ms,
                 message,
             };
-            
+
             self.send_envelope(envelope)
         }
-        
+
         /// Send message envelope
         fn send_envelope(&mut self, envelope: MessageEnvelope<F>) -> Result<u64> {
             let message_id = envelope.message_id;
             let receiver_id = envelope.receiver_id;
-            
+
             // Store for timeout tracking
             self.pending_messages.insert(message_id, envelope.clone());
             self.message_timeouts.insert(message_id, Instant::now());
-            
+
             // Send to worker
             if let Some(sender) = self.worker_channels.get(&receiver_id) {
                 sender.send(envelope).map_err(|e| {
@@ -250,13 +239,14 @@ pub mod message_passing {
                 })?;
             } else {
                 return Err(ClusteringError::InvalidInput(format!(
-                    "Worker {} not found", receiver_id
+                    "Worker {} not found",
+                    receiver_id
                 )));
             }
-            
+
             Ok(message_id)
         }
-        
+
         /// Broadcast message to all workers
         pub fn broadcast_message(
             &mut self,
@@ -264,21 +254,21 @@ pub mod message_passing {
             priority: MessagePriority,
         ) -> Result<Vec<u64>> {
             let mut message_ids = Vec::new();
-            
+
             for &worker_id in self.worker_channels.keys() {
                 let message_id = self.send_message(worker_id, message.clone(), priority)?;
                 message_ids.push(message_id);
             }
-            
+
             Ok(message_ids)
         }
-        
+
         /// Process incoming messages from workers
         pub fn process_messages(&mut self, timeout_ms: u64) -> Result<Vec<MessageEnvelope<F>>> {
             let mut received_messages = Vec::new();
             let timeout = Duration::from_millis(timeout_ms);
             let start_time = Instant::now();
-            
+
             while start_time.elapsed() < timeout {
                 match self.coordinator_receiver.try_recv() {
                     Ok(envelope) => {
@@ -296,13 +286,13 @@ pub mod message_passing {
                     }
                 }
             }
-            
+
             // Check for message timeouts
             self.handle_message_timeouts()?;
-            
+
             Ok(received_messages)
         }
-        
+
         /// Handle message acknowledgments
         fn handle_message_acknowledgment(&mut self, envelope: &MessageEnvelope<F>) {
             if let ClusteringMessage::Acknowledgment { message_id, .. } = &envelope.message {
@@ -310,37 +300,46 @@ pub mod message_passing {
                 self.message_timeouts.remove(message_id);
             }
         }
-        
+
         /// Handle message timeouts and retries
         fn handle_message_timeouts(&mut self) -> Result<()> {
             let now = Instant::now();
             let mut timed_out_messages = Vec::new();
-            
+
             for (&message_id, &start_time) in &self.message_timeouts {
-                if now.duration_since(start_time).as_millis() as u64 > self.config.message_timeout_ms {
+                if now.duration_since(start_time).as_millis() as u64
+                    > self.config.message_timeout_ms
+                {
                     timed_out_messages.push(message_id);
                 }
             }
-            
+
             for message_id in timed_out_messages {
                 if let Some(mut envelope) = self.pending_messages.remove(&message_id) {
                     self.message_timeouts.remove(&message_id);
-                    
+
                     if envelope.retry_count < self.config.max_retry_attempts {
                         envelope.retry_count += 1;
-                        println!("Retrying message {} (attempt {})", message_id, envelope.retry_count);
+                        println!(
+                            "Retrying message {} (attempt {})",
+                            message_id, envelope.retry_count
+                        );
                         self.send_envelope(envelope)?;
                     } else {
-                        println!("Message {} failed after {} attempts", message_id, envelope.retry_count);
+                        println!(
+                            "Message {} failed after {} attempts",
+                            message_id, envelope.retry_count
+                        );
                         // Mark worker as potentially failed
-                        self.worker_status.insert(envelope.receiver_id, WorkerStatus::Timeout);
+                        self.worker_status
+                            .insert(envelope.receiver_id, WorkerStatus::Timeout);
                     }
                 }
             }
-            
+
             Ok(())
         }
-        
+
         /// Create synchronization barrier
         pub fn create_sync_barrier(&mut self, round: usize, participant_count: usize) {
             let barrier = SynchronizationBarrier {
@@ -350,45 +349,44 @@ pub mod message_passing {
                 barrier_start_time: Instant::now(),
                 timeout_ms: self.config.sync_timeout_ms,
             };
-            
+
             self.sync_barriers.insert(round, barrier);
         }
-        
+
         /// Wait for synchronization barrier
         pub fn wait_for_sync_barrier(&mut self, round: usize) -> Result<bool> {
-            let barrier = self.sync_barriers.get_mut(&round)
-                .ok_or_else(|| ClusteringError::InvalidInput(
-                    format!("Sync barrier for round {} not found", round)
-                ))?;
-            
+            let barrier = self.sync_barriers.get_mut(&round).ok_or_else(|| {
+                ClusteringError::InvalidInput(format!("Sync barrier for round {} not found", round))
+            })?;
+
             let elapsed = barrier.barrier_start_time.elapsed().as_millis() as u64;
             if elapsed > barrier.timeout_ms {
-                return Err(ClusteringError::InvalidInput(
-                    format!("Sync barrier timeout for round {}", round)
-                ));
+                return Err(ClusteringError::InvalidInput(format!(
+                    "Sync barrier timeout for round {}",
+                    round
+                )));
             }
-            
+
             Ok(barrier.arrived_participants.len() >= barrier.expected_participants)
         }
-        
+
         /// Register worker arrival at sync barrier
         pub fn register_barrier_arrival(&mut self, round: usize, worker_id: usize) -> Result<bool> {
-            let barrier = self.sync_barriers.get_mut(&round)
-                .ok_or_else(|| ClusteringError::InvalidInput(
-                    format!("Sync barrier for round {} not found", round)
-                ))?;
-            
+            let barrier = self.sync_barriers.get_mut(&round).ok_or_else(|| {
+                ClusteringError::InvalidInput(format!("Sync barrier for round {} not found", round))
+            })?;
+
             barrier.arrived_participants.insert(worker_id);
             Ok(barrier.arrived_participants.len() >= barrier.expected_participants)
         }
-        
+
         /// Get next message ID
         fn get_next_message_id(&self) -> u64 {
             let mut counter = self.message_counter.lock().unwrap();
             *counter += 1;
             *counter
         }
-        
+
         /// Send heartbeat to workers
         pub fn send_heartbeat(&mut self) -> Result<()> {
             let heartbeat = ClusteringMessage::Heartbeat {
@@ -400,11 +398,11 @@ pub mod message_passing {
                 cpu_usage: 0.0, // Coordinator doesn't track CPU usage
                 memory_usage: 0.0,
             };
-            
+
             self.broadcast_message(heartbeat, MessagePriority::Low)?;
             Ok(())
         }
-        
+
         /// Collect local results from all workers
         pub fn collect_local_results(&mut self, round: usize) -> Result<Vec<LocalKMeansResult<F>>> {
             let mut results = Vec::new();
@@ -412,20 +410,20 @@ pub mod message_passing {
                 round,
                 max_iterations: 10, // Configurable
             };
-            
+
             // Send compute requests to all workers
             self.broadcast_message(compute_message, MessagePriority::High)?;
-            
+
             // Create sync barrier
             self.create_sync_barrier(round, self.worker_channels.len());
-            
+
             // Collect results with timeout
             let timeout_duration = Duration::from_millis(self.config.sync_timeout_ms);
             let start_time = Instant::now();
-            
+
             while start_time.elapsed() < timeout_duration {
                 let messages = self.process_messages(1000)?; // 1 second timeout per batch
-                
+
                 for envelope in messages {
                     if let ClusteringMessage::LocalResult {
                         worker_id,
@@ -434,7 +432,8 @@ pub mod message_passing {
                         local_labels,
                         local_inertia,
                         computation_time_ms,
-                    } = envelope.message {
+                    } = envelope.message
+                    {
                         if msg_round == round {
                             results.push(LocalKMeansResult {
                                 worker_id,
@@ -444,25 +443,25 @@ pub mod message_passing {
                                 n_points: local_labels.len(),
                                 computation_time_ms,
                             });
-                            
+
                             // Register barrier arrival
                             self.register_barrier_arrival(round, worker_id)?;
                         }
                     }
                 }
-                
+
                 // Check if all workers have responded
                 if self.wait_for_sync_barrier(round)? {
                     break;
                 }
             }
-            
+
             // Clean up barrier
             self.sync_barriers.remove(&round);
-            
+
             Ok(results)
         }
-        
+
         /// Coordinate global centroid updates
         pub fn coordinate_centroid_update(
             &mut self,
@@ -473,25 +472,25 @@ pub mod message_passing {
                 round,
                 centroids: new_centroids.clone(),
             };
-            
+
             self.broadcast_message(update_message, MessagePriority::High)?;
             Ok(())
         }
-        
+
         /// Shutdown message passing system
         pub fn shutdown(&mut self) -> Result<()> {
             let terminate_message = ClusteringMessage::Terminate;
             self.broadcast_message(terminate_message, MessagePriority::Critical)?;
-            
+
             // Wait for acknowledgments
             thread::sleep(Duration::from_millis(1000));
-            
+
             // Clear all channels
             self.worker_channels.clear();
             self.pending_messages.clear();
             self.message_timeouts.clear();
             self.sync_barriers.clear();
-            
+
             Ok(())
         }
     }
@@ -1508,7 +1507,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             fault_coordinator: None,
         }
     }
-    
+
     /// Create new distributed K-means with message passing
     pub fn new_with_message_passing(
         k: usize,
@@ -1516,18 +1515,17 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         message_config: message_passing::MessagePassingConfig,
     ) -> Self {
         let mut instance = Self::new(k, config.clone());
-        
+
         // Initialize message passing coordinator
         let coordinator_id = 0; // Coordinator is worker 0
-        instance.message_coordinator = Some(
-            message_passing::MessagePassingCoordinator::new(coordinator_id, message_config)
-        );
-        
+        instance.message_coordinator = Some(message_passing::MessagePassingCoordinator::new(
+            coordinator_id,
+            message_config,
+        ));
+
         // Initialize fault tolerance coordinator
-        instance.fault_coordinator = Some(
-            FaultTolerantCoordinator::new(config.fault_tolerance)
-        );
-        
+        instance.fault_coordinator = Some(FaultTolerantCoordinator::new(config.fault_tolerance));
+
         instance
     }
 
@@ -1569,7 +1567,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             self.fit_traditional(data)
         }
     }
-    
+
     /// Traditional fit method (backward compatibility)
     pub fn fit_traditional(&mut self, data: ArrayView2<F>) -> Result<()> {
         // Partition data across workers
@@ -1605,55 +1603,56 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
 
             // Check for global convergence
             if convergence.converged {
-                println!("Distributed K-means converged after {} rounds", round + 1);
+                let rounds = round + 1;
+                println!("Distributed K-means converged after {rounds} rounds");
                 break;
             }
         }
 
         Ok(())
     }
-    
+
     /// Fit with message passing coordination
     pub fn fit_with_message_passing(&mut self, data: ArrayView2<F>) -> Result<()> {
         // Partition data across workers
         self.partition_data(data)?;
-        
+
         // Initialize global centroids
         self.centroids = Some(self.initialize_global_centroids()?);
-        
+
         // Initialize workers with message passing
         self.initialize_workers_with_message_passing()?;
-        
+
         // Distributed coordination loop with message passing
         for round in 0..self.config.max_coordination_rounds {
             let start_time = std::time::Instant::now();
-            
+
             // Send heartbeats to monitor worker health
             if let Some(ref mut coordinator) = self.message_coordinator {
                 coordinator.send_heartbeat()?;
             }
-            
+
             // Coordinate local computation via message passing
             let local_results = self.coordinate_local_computation_with_messages(round)?;
-            
+
             // Global coordination phase
             let new_centroids = self.coordinate_global_centroids(&local_results)?;
             let convergence = self.check_global_convergence(&new_centroids, round)?;
-            
+
             // Update global centroids via message passing
             if let Some(ref mut coordinator) = self.message_coordinator {
                 coordinator.coordinate_centroid_update(round, &new_centroids)?;
             }
-            
+
             // Update global state
             self.centroids = Some(new_centroids);
             self.convergence_history.push(convergence.clone());
-            
+
             // Handle worker failures
             self.handle_worker_failures()?;
-            
+
             let sync_time = start_time.elapsed().as_millis() as u64;
-            
+
             // Log round completion
             if round % 10 == 0 {
                 println!(
@@ -1661,43 +1660,44 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                     round, convergence.global_inertia, convergence.converged, sync_time
                 );
             }
-            
+
             // Check for global convergence
             if convergence.converged {
-                println!("Distributed K-means converged after {} rounds", round + 1);
+                let rounds = round + 1;
+                println!("Distributed K-means converged after {rounds} rounds");
                 break;
             }
-            
+
             // Adaptive load balancing
             if round % 5 == 0 {
                 self.perform_load_balancing()?;
             }
         }
-        
+
         // Shutdown message passing system
         if let Some(ref mut coordinator) = self.message_coordinator {
             coordinator.shutdown()?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Initialize workers with message passing
     fn initialize_workers_with_message_passing(&mut self) -> Result<()> {
         if let Some(ref mut coordinator) = self.message_coordinator {
             let initial_centroids = self.centroids.as_ref().unwrap();
-            
+
             for partition in &self.partitions {
                 // Register worker
                 let _receiver = coordinator.register_worker(partition.worker_id);
-                
+
                 // Send initialization message
                 let init_message = message_passing::ClusteringMessage::InitializeWorker {
                     worker_id: partition.worker_id,
                     partition_data: partition.data.clone(),
                     initial_centroids: initial_centroids.clone(),
                 };
-                
+
                 coordinator.send_message(
                     partition.worker_id,
                     init_message,
@@ -1705,10 +1705,10 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                 )?;
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Coordinate local computation using message passing
     fn coordinate_local_computation_with_messages(
         &mut self,
@@ -1721,42 +1721,44 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             self.execute_local_kmeans_round()
         }
     }
-    
+
     /// Handle worker failures using fault tolerance
     fn handle_worker_failures(&mut self) -> Result<()> {
         if let Some(ref mut fault_coordinator) = self.fault_coordinator {
             let failed_workers = fault_coordinator.check_worker_health();
-            
+
             for failed_worker_id in failed_workers {
                 fault_coordinator.handle_worker_failure(failed_worker_id, &mut self.partitions)?;
-                
+
                 // Notify message coordinator about failure
                 if let Some(ref mut msg_coordinator) = self.message_coordinator {
-                    msg_coordinator.worker_status.insert(failed_worker_id, WorkerStatus::Failed);
+                    msg_coordinator
+                        .worker_status
+                        .insert(failed_worker_id, WorkerStatus::Failed);
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Perform adaptive load balancing
     fn perform_load_balancing(&mut self) -> Result<()> {
         if let Some(ref fault_coordinator) = self.fault_coordinator {
             if fault_coordinator.should_rebalance() {
                 let worker_efficiency = fault_coordinator.get_workers_by_efficiency();
-                
+
                 // Create load balancing message
                 let mut target_loads = HashMap::new();
                 for (worker_id, efficiency) in worker_efficiency {
                     target_loads.insert(worker_id, efficiency);
                 }
-                
+
                 if let Some(ref mut msg_coordinator) = self.message_coordinator {
                     let load_balance_msg = message_passing::ClusteringMessage::LoadBalance {
                         target_worker_loads: target_loads,
                     };
-                    
+
                     msg_coordinator.broadcast_message(
                         load_balance_msg,
                         message_passing::MessagePriority::Normal,
@@ -1764,7 +1766,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                 }
             }
         }
-        
+
         Ok(())
     }
 
@@ -3153,7 +3155,7 @@ pub mod utils {
             let mut rng = rand::rng();
 
             for (&worker_id, &current_assignment) in current_assignments {
-                if rng.gen::<f64>() < exploration_rate {
+                if rng.random::<f64>() < exploration_rate {
                     // Explore: random adjustment
                     let max_change = (current_assignment as f64 * 0.2) as usize; // Max 20% change
                     let change = rng.random_range(0..=max_change * 2) as i32 - max_change as i32;
@@ -3755,7 +3757,7 @@ pub mod observability {
     use std::collections::VecDeque;
     use std::sync::{Arc, Mutex};
     use std::time::{Duration, SystemTime};
-    
+
     /// Comprehensive metrics collector for distributed clustering
     #[derive(Debug)]
     pub struct DistributedMetricsCollector {
@@ -3765,7 +3767,7 @@ pub mod observability {
         alert_thresholds: AlertThresholds,
         anomaly_detector: AnomalyDetector,
     }
-    
+
     /// Real-time clustering performance metrics
     #[derive(Debug, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -3781,7 +3783,7 @@ pub mod observability {
         pub data_transfer_mb: f64,
         pub memory_pressure_score: f64,
     }
-    
+
     /// System resource utilization metrics
     #[derive(Debug, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -3795,7 +3797,7 @@ pub mod observability {
         pub failed_workers: usize,
         pub queue_depth: usize,
     }
-    
+
     /// Alert thresholds for monitoring
     #[derive(Debug, Clone)]
     pub struct AlertThresholds {
@@ -3805,19 +3807,19 @@ pub mod observability {
         pub max_network_latency_ms: f64,
         pub min_worker_efficiency: f64,
     }
-    
+
     impl Default for AlertThresholds {
         fn default() -> Self {
             Self {
-                max_worker_failure_rate: 0.2, // 20% failure rate
+                max_worker_failure_rate: 0.2,     // 20% failure rate
                 max_convergence_time_ms: 300_000, // 5 minutes
-                max_memory_pressure: 0.9, // 90% memory usage
-                max_network_latency_ms: 1000.0, // 1 second
-                min_worker_efficiency: 0.6, // 60% efficiency
+                max_memory_pressure: 0.9,         // 90% memory usage
+                max_network_latency_ms: 1000.0,   // 1 second
+                min_worker_efficiency: 0.6,       // 60% efficiency
             }
         }
     }
-    
+
     /// Anomaly detection for predictive monitoring
     #[derive(Debug)]
     pub struct AnomalyDetector {
@@ -3826,7 +3828,7 @@ pub mod observability {
         window_size: usize,
         sensitivity: f64,
     }
-    
+
     impl AnomalyDetector {
         pub fn new(window_size: usize, sensitivity: f64) -> Self {
             Self {
@@ -3836,31 +3838,32 @@ pub mod observability {
                 sensitivity,
             }
         }
-        
+
         /// Update metric window and detect anomalies
         pub fn detect_anomaly(&mut self, metric_name: &str, value: f64) -> bool {
-            let window = self.metric_windows.entry(metric_name.to_string())
+            let window = self
+                .metric_windows
+                .entry(metric_name.to_string())
                 .or_insert_with(VecDeque::new);
-            
+
             window.push_back(value);
             if window.len() > self.window_size {
                 window.pop_front();
             }
-            
+
             // Need at least half window for detection
             if window.len() < self.window_size / 2 {
                 return false;
             }
-            
+
             let mean: f64 = window.iter().sum::<f64>() / window.len() as f64;
-            let variance: f64 = window.iter()
-                .map(|&x| (x - mean).powi(2))
-                .sum::<f64>() / window.len() as f64;
+            let variance: f64 =
+                window.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / window.len() as f64;
             let std_dev = variance.sqrt();
-            
+
             // Update baseline
             self.baseline_metrics.insert(metric_name.to_string(), mean);
-            
+
             // Detect anomaly using z-score
             if std_dev > 0.0 {
                 let z_score = (value - mean).abs() / std_dev;
@@ -3869,13 +3872,13 @@ pub mod observability {
                 false
             }
         }
-        
+
         /// Get current baseline for a metric
         pub fn get_baseline(&self, metric_name: &str) -> Option<f64> {
             self.baseline_metrics.get(metric_name).copied()
         }
     }
-    
+
     impl DistributedMetricsCollector {
         pub fn new(alert_thresholds: AlertThresholds) -> Self {
             Self {
@@ -3886,189 +3889,244 @@ pub mod observability {
                 anomaly_detector: AnomalyDetector::new(50, 2.5), // 50-sample window, 2.5 sigma
             }
         }
-        
+
         /// Record clustering performance metrics
         pub fn record_clustering_metrics(&mut self, metrics: ClusteringMetrics) {
             let mut history = self.metrics_history.lock().unwrap();
             history.push_back(metrics.clone());
-            
+
             // Keep only recent metrics (last 1000 entries)
             if history.len() > 1000 {
                 history.pop_front();
             }
-            
+
             // Check for anomalies
             self.check_clustering_anomalies(&metrics);
         }
-        
+
         /// Record system resource metrics
         pub fn record_resource_metrics(&mut self, metrics: ResourceMetrics) {
             let mut usage = self.resource_usage.lock().unwrap();
             usage.push_back(metrics.clone());
-            
+
             if usage.len() > 1000 {
                 usage.pop_front();
             }
-            
+
             // Check for resource anomalies
             self.check_resource_anomalies(&metrics);
         }
-        
+
         /// Check for clustering performance anomalies
         fn check_clustering_anomalies(&mut self, metrics: &ClusteringMetrics) {
-            if self.anomaly_detector.detect_anomaly("global_inertia", metrics.global_inertia) {
-                println!("ALERT: Anomalous global inertia detected: {}", metrics.global_inertia);
+            if self
+                .anomaly_detector
+                .detect_anomaly("global_inertia", metrics.global_inertia)
+            {
+                println!(
+                    "ALERT: Anomalous global inertia detected: {}",
+                    metrics.global_inertia
+                );
             }
-            
-            if self.anomaly_detector.detect_anomaly("worker_efficiency", metrics.worker_efficiency) {
-                println!("ALERT: Anomalous worker efficiency detected: {}", metrics.worker_efficiency);
+
+            if self
+                .anomaly_detector
+                .detect_anomaly("worker_efficiency", metrics.worker_efficiency)
+            {
+                println!(
+                    "ALERT: Anomalous worker efficiency detected: {}",
+                    metrics.worker_efficiency
+                );
             }
-            
+
             if metrics.message_latency_ms > self.alert_thresholds.max_network_latency_ms {
-                println!("ALERT: High message latency: {}ms", metrics.message_latency_ms);
+                println!(
+                    "ALERT: High message latency: {}ms",
+                    metrics.message_latency_ms
+                );
             }
         }
-        
+
         /// Check for resource utilization anomalies
         fn check_resource_anomalies(&mut self, metrics: &ResourceMetrics) {
             if metrics.memory_utilization > self.alert_thresholds.max_memory_pressure {
-                println!("ALERT: High memory pressure: {:.1}%", metrics.memory_utilization * 100.0);
+                println!(
+                    "ALERT: High memory pressure: {:.1}%",
+                    metrics.memory_utilization * 100.0
+                );
             }
-            
+
             let failure_rate = if metrics.active_workers + metrics.failed_workers > 0 {
-                metrics.failed_workers as f64 / (metrics.active_workers + metrics.failed_workers) as f64
+                metrics.failed_workers as f64
+                    / (metrics.active_workers + metrics.failed_workers) as f64
             } else {
                 0.0
             };
-            
+
             if failure_rate > self.alert_thresholds.max_worker_failure_rate {
-                println!("ALERT: High worker failure rate: {:.1}%", failure_rate * 100.0);
+                println!(
+                    "ALERT: High worker failure rate: {:.1}%",
+                    failure_rate * 100.0
+                );
             }
         }
-        
+
         /// Generate comprehensive monitoring report
         pub fn generate_monitoring_report(&self) -> MonitoringReport {
             let metrics_history = self.metrics_history.lock().unwrap();
             let resource_usage = self.resource_usage.lock().unwrap();
-            
+
             let mut report = MonitoringReport::default();
-            
+
             // Analyze clustering performance trends
             if !metrics_history.is_empty() {
-                report.avg_convergence_rate = metrics_history.iter()
+                report.avg_convergence_rate = metrics_history
+                    .iter()
                     .map(|m| m.convergence_rate)
-                    .sum::<f64>() / metrics_history.len() as f64;
-                
-                report.avg_worker_efficiency = metrics_history.iter()
+                    .sum::<f64>()
+                    / metrics_history.len() as f64;
+
+                report.avg_worker_efficiency = metrics_history
+                    .iter()
                     .map(|m| m.worker_efficiency)
-                    .sum::<f64>() / metrics_history.len() as f64;
-                
-                report.avg_sync_overhead = metrics_history.iter()
+                    .sum::<f64>()
+                    / metrics_history.len() as f64;
+
+                report.avg_sync_overhead = metrics_history
+                    .iter()
                     .map(|m| m.sync_overhead_ms)
-                    .sum::<f64>() / metrics_history.len() as f64;
+                    .sum::<f64>()
+                    / metrics_history.len() as f64;
             }
-            
+
             // Analyze resource utilization trends
             if !resource_usage.is_empty() {
-                report.avg_cpu_utilization = resource_usage.iter()
+                report.avg_cpu_utilization = resource_usage
+                    .iter()
                     .map(|r| r.cpu_utilization)
-                    .sum::<f64>() / resource_usage.len() as f64;
-                
-                report.avg_memory_utilization = resource_usage.iter()
+                    .sum::<f64>()
+                    / resource_usage.len() as f64;
+
+                report.avg_memory_utilization = resource_usage
+                    .iter()
                     .map(|r| r.memory_utilization)
-                    .sum::<f64>() / resource_usage.len() as f64;
-                
-                report.peak_network_throughput = resource_usage.iter()
+                    .sum::<f64>()
+                    / resource_usage.len() as f64;
+
+                report.peak_network_throughput = resource_usage
+                    .iter()
                     .map(|r| r.network_throughput_mbps)
                     .fold(0.0, f64::max);
             }
-            
+
             // Calculate efficiency scores
             report.overall_efficiency_score = self.calculate_efficiency_score();
             report.recommendations = self.generate_optimization_recommendations();
-            
+
             report
         }
-        
+
         /// Calculate overall system efficiency score
         fn calculate_efficiency_score(&self) -> f64 {
             let metrics_history = self.metrics_history.lock().unwrap();
             let resource_usage = self.resource_usage.lock().unwrap();
-            
+
             if metrics_history.is_empty() || resource_usage.is_empty() {
                 return 0.0;
             }
-            
+
             // Weighted efficiency calculation
-            let convergence_score = metrics_history.iter()
+            let convergence_score = metrics_history
+                .iter()
                 .map(|m| m.convergence_rate.min(1.0))
-                .sum::<f64>() / metrics_history.len() as f64;
-            
-            let worker_score = metrics_history.iter()
+                .sum::<f64>()
+                / metrics_history.len() as f64;
+
+            let worker_score = metrics_history
+                .iter()
                 .map(|m| m.worker_efficiency)
-                .sum::<f64>() / metrics_history.len() as f64;
-            
-            let resource_score = 1.0 - (resource_usage.iter()
-                .map(|r| r.memory_utilization.max(r.cpu_utilization))
-                .sum::<f64>() / resource_usage.len() as f64);
-            
+                .sum::<f64>()
+                / metrics_history.len() as f64;
+
+            let resource_score = 1.0
+                - (resource_usage
+                    .iter()
+                    .map(|r| r.memory_utilization.max(r.cpu_utilization))
+                    .sum::<f64>()
+                    / resource_usage.len() as f64);
+
             // Weighted average: 40% convergence, 40% worker efficiency, 20% resource usage
             convergence_score * 0.4 + worker_score * 0.4 + resource_score * 0.2
         }
-        
+
         /// Generate optimization recommendations
         fn generate_optimization_recommendations(&self) -> Vec<String> {
             let mut recommendations = Vec::new();
             let metrics_history = self.metrics_history.lock().unwrap();
             let resource_usage = self.resource_usage.lock().unwrap();
-            
+
             if let Some(latest_metrics) = metrics_history.back() {
                 if latest_metrics.worker_efficiency < 0.7 {
-                    recommendations.push("Consider load rebalancing - worker efficiency is low".to_string());
+                    recommendations
+                        .push("Consider load rebalancing - worker efficiency is low".to_string());
                 }
-                
+
                 if latest_metrics.sync_overhead_ms > 1000.0 {
-                    recommendations.push("High synchronization overhead - consider reducing coordination frequency".to_string());
+                    recommendations.push(
+                        "High synchronization overhead - consider reducing coordination frequency"
+                            .to_string(),
+                    );
                 }
-                
+
                 if latest_metrics.message_latency_ms > 500.0 {
-                    recommendations.push("High message latency - check network configuration".to_string());
+                    recommendations
+                        .push("High message latency - check network configuration".to_string());
                 }
             }
-            
+
             if let Some(latest_resources) = resource_usage.back() {
                 if latest_resources.memory_utilization > 0.8 {
-                    recommendations.push("High memory usage - consider increasing workers or reducing batch size".to_string());
+                    recommendations.push(
+                        "High memory usage - consider increasing workers or reducing batch size"
+                            .to_string(),
+                    );
                 }
-                
+
                 if latest_resources.failed_workers > 0 {
-                    recommendations.push("Worker failures detected - check fault tolerance configuration".to_string());
+                    recommendations.push(
+                        "Worker failures detected - check fault tolerance configuration"
+                            .to_string(),
+                    );
                 }
-                
+
                 if latest_resources.queue_depth > 100 {
-                    recommendations.push("High message queue depth - consider increasing processing capacity".to_string());
+                    recommendations.push(
+                        "High message queue depth - consider increasing processing capacity"
+                            .to_string(),
+                    );
                 }
             }
-            
+
             if recommendations.is_empty() {
                 recommendations.push("System performance is optimal".to_string());
             }
-            
+
             recommendations
         }
-        
+
         /// Export metrics for external analysis
         pub fn export_metrics_csv(&self, filepath: &str) -> Result<()> {
             use std::fs::File;
             use std::io::Write;
-            
-            let mut file = File::create(filepath)
-                .map_err(|e| ClusteringError::InvalidInput(format!("Failed to create file: {}", e)))?;
-            
+
+            let mut file = File::create(filepath).map_err(|e| {
+                ClusteringError::InvalidInput(format!("Failed to create file: {}", e))
+            })?;
+
             // Write CSV header
             writeln!(file, "timestamp,iteration,global_inertia,convergence_rate,worker_efficiency,message_latency_ms,sync_overhead_ms,memory_pressure")
                 .map_err(|e| ClusteringError::InvalidInput(format!("Failed to write header: {}", e)))?;
-            
+
             // Write metrics data
             let metrics_history = self.metrics_history.lock().unwrap();
             for metrics in metrics_history.iter() {
@@ -4083,13 +4141,16 @@ pub mod observability {
                     metrics.message_latency_ms,
                     metrics.sync_overhead_ms,
                     metrics.memory_pressure_score
-                ).map_err(|e| ClusteringError::InvalidInput(format!("Failed to write data: {}", e)))?;
+                )
+                .map_err(|e| {
+                    ClusteringError::InvalidInput(format!("Failed to write data: {}", e))
+                })?;
             }
-            
+
             Ok(())
         }
     }
-    
+
     /// Comprehensive monitoring report
     #[derive(Debug, Default)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -4108,7 +4169,7 @@ pub mod observability {
 /// Production configuration validation and optimization utilities
 pub mod config_optimization {
     use super::*;
-    
+
     /// Intelligent configuration optimizer for distributed clustering
     #[derive(Debug)]
     pub struct ConfigurationOptimizer {
@@ -4116,7 +4177,7 @@ pub mod config_optimization {
         workload_profile: WorkloadProfile,
         optimization_history: Vec<OptimizationResult>,
     }
-    
+
     /// Hardware specification for optimization
     #[derive(Debug, Clone)]
     pub struct HardwareSpecification {
@@ -4126,7 +4187,7 @@ pub mod config_optimization {
         pub storage_type: StorageType,
         pub numa_topology: Option<NumaTopology>,
     }
-    
+
     /// Storage type specification
     #[derive(Debug, Clone)]
     pub enum StorageType {
@@ -4135,7 +4196,7 @@ pub mod config_optimization {
         NVMe { pcie_gen: u8 },
         InMemory,
     }
-    
+
     /// NUMA topology information
     #[derive(Debug, Clone)]
     pub struct NumaTopology {
@@ -4143,7 +4204,7 @@ pub mod config_optimization {
         pub cores_per_node: usize,
         pub memory_per_node_gb: f64,
     }
-    
+
     /// Workload characteristics for optimization
     #[derive(Debug, Clone)]
     pub struct WorkloadProfile {
@@ -4154,17 +4215,17 @@ pub mod config_optimization {
         pub real_time_requirements: bool,
         pub fault_tolerance_level: FaultToleranceLevel,
     }
-    
+
     /// Fault tolerance levels
     #[derive(Debug, Clone)]
     pub enum FaultToleranceLevel {
         None,
-        Basic,        // Basic failure detection
-        Standard,     // Recovery with redistribution
-        High,         // Replication + checkpointing
-        Critical,     // Full redundancy
+        Basic,    // Basic failure detection
+        Standard, // Recovery with redistribution
+        High,     // Replication + checkpointing
+        Critical, // Full redundancy
     }
-    
+
     /// Configuration optimization result
     #[derive(Debug, Clone)]
     pub struct OptimizationResult {
@@ -4173,7 +4234,7 @@ pub mod config_optimization {
         pub confidence_score: f64,
         pub optimization_rationale: Vec<String>,
     }
-    
+
     /// Performance estimate
     #[derive(Debug, Clone)]
     pub struct PerformanceEstimate {
@@ -4183,123 +4244,138 @@ pub mod config_optimization {
         pub scalability_score: f64,
         pub reliability_score: f64,
     }
-    
+
     impl ConfigurationOptimizer {
-        pub fn new(hardware_specs: HardwareSpecification, workload_profile: WorkloadProfile) -> Self {
+        pub fn new(
+            hardware_specs: HardwareSpecification,
+            workload_profile: WorkloadProfile,
+        ) -> Self {
             Self {
                 hardware_specs,
                 workload_profile,
                 optimization_history: Vec::new(),
             }
         }
-        
+
         /// Optimize configuration for the given workload and hardware
         pub fn optimize_configuration(&mut self) -> Result<OptimizationResult> {
             let mut config = DistributedConfig::default();
             let mut rationale = Vec::new();
-            
+
             // Optimize worker count based on CPU cores and memory
             config.n_workers = self.optimize_worker_count(&mut rationale);
-            
+
             // Optimize partitioning strategy based on dataset characteristics
             config.partitioning_strategy = self.optimize_partitioning_strategy(&mut rationale);
-            
+
             // Optimize memory limits based on available memory and dataset size
             config.memory_limit_mb = self.optimize_memory_limits(&mut rationale);
-            
+
             // Optimize load balancing strategy
             config.load_balancing = self.optimize_load_balancing(&mut rationale);
-            
+
             // Optimize fault tolerance based on requirements
             config.fault_tolerance = self.optimize_fault_tolerance(&mut rationale);
-            
+
             // Optimize iteration limits based on convergence requirements
             self.optimize_iteration_limits(&mut config, &mut rationale);
-            
+
             // Estimate performance
             let performance_estimate = self.estimate_performance(&config);
             let confidence_score = self.calculate_confidence_score(&config);
-            
+
             let result = OptimizationResult {
                 optimized_config: config,
                 expected_performance: performance_estimate,
                 confidence_score,
                 optimization_rationale: rationale,
             };
-            
+
             self.optimization_history.push(result.clone());
-            
+
             Ok(result)
         }
-        
+
         /// Optimize worker count based on hardware and workload
         fn optimize_worker_count(&self, rationale: &mut Vec<String>) -> usize {
             let cpu_based = self.hardware_specs.cpu_cores;
-            let memory_based = (self.hardware_specs.total_memory_gb / 
-                (self.workload_profile.dataset_size_gb / self.hardware_specs.cpu_cores as f64).max(1.0)) as usize;
-            
+            let memory_based = (self.hardware_specs.total_memory_gb
+                / (self.workload_profile.dataset_size_gb / self.hardware_specs.cpu_cores as f64)
+                    .max(1.0)) as usize;
+
             let optimal_workers = cpu_based.min(memory_based).max(2);
-            
+
             rationale.push(format!(
                 "Worker count optimized to {} based on {} CPU cores and {:.1}GB memory for {:.1}GB dataset",
                 optimal_workers, cpu_based, self.hardware_specs.total_memory_gb, self.workload_profile.dataset_size_gb
             ));
-            
+
             optimal_workers
         }
-        
+
         /// Optimize partitioning strategy
-        fn optimize_partitioning_strategy(&self, rationale: &mut Vec<String>) -> PartitioningStrategy {
+        fn optimize_partitioning_strategy(
+            &self,
+            rationale: &mut Vec<String>,
+        ) -> PartitioningStrategy {
             let strategy = if self.workload_profile.n_features > 100 {
                 rationale.push("Using spatial partitioning for high-dimensional data".to_string());
                 PartitioningStrategy::SpatialPartitioning
             } else if self.workload_profile.real_time_requirements {
-                rationale.push("Using hash-based partitioning for consistent real-time performance".to_string());
+                rationale.push(
+                    "Using hash-based partitioning for consistent real-time performance"
+                        .to_string(),
+                );
                 PartitioningStrategy::HashBased
             } else {
-                rationale.push("Using stratified sampling for balanced cluster distribution".to_string());
+                rationale.push(
+                    "Using stratified sampling for balanced cluster distribution".to_string(),
+                );
                 PartitioningStrategy::StratifiedSampling
             };
-            
+
             strategy
         }
-        
+
         /// Optimize memory limits
         fn optimize_memory_limits(&self, rationale: &mut Vec<String>) -> usize {
             let total_memory_mb = (self.hardware_specs.total_memory_gb * 1024.0) as usize;
             let per_worker_memory = total_memory_mb / self.optimize_worker_count(&mut Vec::new());
-            
+
             // Leave 20% headroom for system processes
             let worker_memory_limit = (per_worker_memory as f64 * 0.8) as usize;
-            
+
             rationale.push(format!(
                 "Memory limit set to {}MB per worker (80% of available {}MB per worker)",
                 worker_memory_limit, per_worker_memory
             ));
-            
+
             worker_memory_limit
         }
-        
+
         /// Optimize load balancing strategy
         fn optimize_load_balancing(&self, rationale: &mut Vec<String>) -> LoadBalancingStrategy {
             let strategy = if matches!(self.hardware_specs.numa_topology, Some(_)) {
-                rationale.push("Using computational balance for NUMA-aware load distribution".to_string());
+                rationale.push(
+                    "Using computational balance for NUMA-aware load distribution".to_string(),
+                );
                 LoadBalancingStrategy::ComputationalBalance
             } else if self.workload_profile.real_time_requirements {
                 rationale.push("Using dynamic load balancing for real-time adaptation".to_string());
                 LoadBalancingStrategy::Dynamic
             } else {
-                rationale.push("Using equal size distribution for predictable performance".to_string());
+                rationale
+                    .push("Using equal size distribution for predictable performance".to_string());
                 LoadBalancingStrategy::EqualSize
             };
-            
+
             strategy
         }
-        
+
         /// Optimize fault tolerance configuration
         fn optimize_fault_tolerance(&self, rationale: &mut Vec<String>) -> FaultToleranceConfig {
             let mut config = FaultToleranceConfig::default();
-            
+
             match self.workload_profile.fault_tolerance_level {
                 FaultToleranceLevel::None => {
                     config.enabled = false;
@@ -4309,19 +4385,23 @@ pub mod config_optimization {
                     config.max_failures = 1;
                     config.enable_replication = false;
                     config.enable_checkpointing = false;
-                    rationale.push("Basic fault tolerance with single failure tolerance".to_string());
+                    rationale
+                        .push("Basic fault tolerance with single failure tolerance".to_string());
                 }
                 FaultToleranceLevel::Standard => {
                     config.max_failures = 2;
                     config.recovery_strategy = RecoveryStrategy::Redistribute;
-                    rationale.push("Standard fault tolerance with redistribution recovery".to_string());
+                    rationale
+                        .push("Standard fault tolerance with redistribution recovery".to_string());
                 }
                 FaultToleranceLevel::High => {
                     config.enable_replication = true;
                     config.replication_factor = 2;
                     config.enable_checkpointing = true;
                     config.checkpoint_interval = 5;
-                    rationale.push("High fault tolerance with replication and checkpointing".to_string());
+                    rationale.push(
+                        "High fault tolerance with replication and checkpointing".to_string(),
+                    );
                 }
                 FaultToleranceLevel::Critical => {
                     config.enable_replication = true;
@@ -4332,12 +4412,16 @@ pub mod config_optimization {
                     rationale.push("Critical fault tolerance with full redundancy".to_string());
                 }
             }
-            
+
             config
         }
-        
+
         /// Optimize iteration limits and convergence settings
-        fn optimize_iteration_limits(&self, config: &mut DistributedConfig, rationale: &mut Vec<String>) {
+        fn optimize_iteration_limits(
+            &self,
+            config: &mut DistributedConfig,
+            rationale: &mut Vec<String>,
+        ) {
             if self.workload_profile.real_time_requirements {
                 config.max_coordination_rounds = 20;
                 config.max_iterations_per_round = 5;
@@ -4353,70 +4437,84 @@ pub mod config_optimization {
                 rationale.push("Standard iteration limits for balanced performance".to_string());
             }
         }
-        
+
         /// Estimate performance for the given configuration
         fn estimate_performance(&self, config: &DistributedConfig) -> PerformanceEstimate {
             // Simplified performance estimation model
             let data_per_worker = self.workload_profile.dataset_size_gb / config.n_workers as f64;
-            let base_runtime = data_per_worker * self.workload_profile.n_features as f64 * 
-                self.workload_profile.n_clusters_expected as f64 / 1000.0;
-            
+            let base_runtime = data_per_worker
+                * self.workload_profile.n_features as f64
+                * self.workload_profile.n_clusters_expected as f64
+                / 1000.0;
+
             let coordination_overhead = config.max_coordination_rounds as f64 * 0.1;
             let estimated_runtime = base_runtime + coordination_overhead;
-            
+
             let memory_per_worker = config.memory_limit_mb as f64 / 1024.0;
             let total_memory = memory_per_worker * config.n_workers as f64;
-            
+
             let network_usage = if config.fault_tolerance.enable_replication {
-                self.workload_profile.dataset_size_gb * config.fault_tolerance.replication_factor as f64
+                self.workload_profile.dataset_size_gb
+                    * config.fault_tolerance.replication_factor as f64
             } else {
                 self.workload_profile.dataset_size_gb * 0.1 // Coordination overhead
             };
-            
+
             PerformanceEstimate {
                 estimated_runtime_seconds: estimated_runtime,
                 estimated_memory_usage_gb: total_memory,
                 estimated_network_usage_gb: network_usage,
-                scalability_score: (config.n_workers as f64 / self.hardware_specs.cpu_cores as f64).min(1.0),
-                reliability_score: if config.fault_tolerance.enabled { 0.95 } else { 0.8 },
+                scalability_score: (config.n_workers as f64 / self.hardware_specs.cpu_cores as f64)
+                    .min(1.0),
+                reliability_score: if config.fault_tolerance.enabled {
+                    0.95
+                } else {
+                    0.8
+                },
             }
         }
-        
+
         /// Calculate confidence score for the optimization
         fn calculate_confidence_score(&self, _config: &DistributedConfig) -> f64 {
             // Simplified confidence calculation based on historical data and hardware match
             let hardware_match_score = 0.8; // Assume good hardware specification
-            let workload_confidence = if self.workload_profile.real_time_requirements { 0.7 } else { 0.9 };
+            let workload_confidence = if self.workload_profile.real_time_requirements {
+                0.7
+            } else {
+                0.9
+            };
             let history_bonus = (self.optimization_history.len() as f64 * 0.05).min(0.2);
-            
+
             (hardware_match_score * workload_confidence + history_bonus).min(1.0)
         }
-        
+
         /// Validate configuration against constraints
         pub fn validate_configuration(&self, config: &DistributedConfig) -> Result<Vec<String>> {
             let mut warnings = Vec::new();
-            
+
             // Check memory constraints
             let total_memory_needed = (config.memory_limit_mb * config.n_workers) as f64 / 1024.0;
             if total_memory_needed > self.hardware_specs.total_memory_gb * 0.9 {
                 warnings.push("Configuration may exceed available memory".to_string());
             }
-            
+
             // Check worker count constraints
             if config.n_workers > self.hardware_specs.cpu_cores * 2 {
                 warnings.push("Worker count significantly exceeds CPU cores".to_string());
             }
-            
+
             // Check fault tolerance consistency
-            if config.fault_tolerance.enable_replication && config.fault_tolerance.replication_factor >= config.n_workers {
+            if config.fault_tolerance.enable_replication
+                && config.fault_tolerance.replication_factor >= config.n_workers
+            {
                 warnings.push("Replication factor should be less than worker count".to_string());
             }
-            
+
             // Check iteration limits
             if config.max_coordination_rounds * config.max_iterations_per_round > 10000 {
                 warnings.push("Very high iteration limits may cause excessive runtime".to_string());
             }
-            
+
             Ok(warnings)
         }
     }
@@ -4524,9 +4622,9 @@ mod tests {
 /// Advanced stream processing for real-time distributed clustering
 pub mod streaming {
     use super::*;
-    use std::sync::Arc;
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::collections::VecDeque;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
     /// Real-time streaming clustering coordinator
@@ -4642,14 +4740,15 @@ pub mod streaming {
                 return false;
             }
 
-            if self.reference_window.len() < self.window_size || 
-               self.current_window.len() < self.window_size {
+            if self.reference_window.len() < self.window_size
+                || self.current_window.len() < self.window_size
+            {
                 return false;
             }
 
             // Perform statistical test for distribution change
             let drift_detected = self.statistical_drift_test();
-            
+
             if drift_detected {
                 // Move current window to reference window
                 self.reference_window = self.current_window.clone();
@@ -4664,12 +4763,13 @@ pub mod streaming {
         fn statistical_drift_test(&self) -> bool {
             // Simplified Kolmogorov-Smirnov test for multivariate data
             // In practice, would use more sophisticated tests
-            
+
             let ref_means = self.compute_window_means(&self.reference_window);
             let cur_means = self.compute_window_means(&self.current_window);
 
             // Compute normalized difference in means
-            let mean_difference: f64 = ref_means.iter()
+            let mean_difference: f64 = ref_means
+                .iter()
                 .zip(cur_means.iter())
                 .map(|(r, c)| (*r - *c).to_f64().unwrap_or(0.0).powi(2))
                 .sum::<f64>()
@@ -4693,7 +4793,7 @@ pub mod streaming {
 
             let n_features = window[0].len();
             let mut means = vec![F::zero(); n_features];
-            
+
             for sample in window {
                 for (i, &val) in sample.iter().enumerate() {
                     means[i] = means[i] + val;
@@ -4758,11 +4858,11 @@ pub mod streaming {
             let buffer_clone = Arc::clone(&self.data_buffer);
             let metrics_clone = self.stream_metrics.clone();
             let config_clone = self.stream_config.clone();
-            
+
             let handle = std::thread::spawn(move || {
                 Self::background_processing_loop(buffer_clone, metrics_clone, config_clone);
             });
-            
+
             self.background_handles.push(handle);
             Ok(())
         }
@@ -4771,17 +4871,19 @@ pub mod streaming {
         pub fn add_sample(&mut self, sample: Array1<F>) -> Result<()> {
             // Check for concept drift
             let drift_detected = self.drift_detector.check_drift(sample.clone());
-            
+
             if drift_detected {
                 println!("Concept drift detected! Triggering model update...");
-                self.stream_metrics.drift_events.fetch_add(1, Ordering::Relaxed);
+                self.stream_metrics
+                    .drift_events
+                    .fetch_add(1, Ordering::Relaxed);
                 self.handle_concept_drift()?;
             }
 
             // Add to buffer
             let mut buffer = self.data_buffer.lock().unwrap();
             buffer.push_back(sample);
-            
+
             // Check if buffer is full
             if buffer.len() >= self.stream_config.max_buffer_size {
                 // Force process current buffer
@@ -4799,7 +4901,7 @@ pub mod streaming {
 
             let batch_size = self.stream_config.micro_batch_size.min(buffer.len());
             let mut batch_data = Vec::new();
-            
+
             for _ in 0..batch_size {
                 if let Some(sample) = buffer.pop_front() {
                     batch_data.push(sample);
@@ -4816,12 +4918,12 @@ pub mod streaming {
         /// Process a micro-batch of data
         fn process_micro_batch(&mut self, batch: Vec<Array1<F>>) -> Result<()> {
             let start_time = std::time::Instant::now();
-            
+
             // Convert to Array2 format
             let n_samples = batch.len();
             let n_features = batch[0].len();
             let mut batch_array = Array2::zeros((n_samples, n_features));
-            
+
             for (i, sample) in batch.iter().enumerate() {
                 for (j, &val) in sample.iter().enumerate() {
                     batch_array[[i, j]] = val;
@@ -4838,8 +4940,10 @@ pub mod streaming {
 
             // Update metrics
             let processing_time = start_time.elapsed();
-            self.stream_metrics.total_samples.fetch_add(n_samples, Ordering::Relaxed);
-            
+            self.stream_metrics
+                .total_samples
+                .fetch_add(n_samples, Ordering::Relaxed);
+
             let mut avg_latency = self.stream_metrics.avg_latency_ms.lock().unwrap();
             *avg_latency = (*avg_latency + processing_time.as_millis() as f64) / 2.0;
 
@@ -4852,41 +4956,44 @@ pub mod streaming {
             if let Some(current_centroids) = &self.distributed_kmeans.centroids {
                 // Implement incremental K-means update
                 let learning_rate = F::from(0.1).unwrap(); // Adaptive learning rate
-                
+
                 // For each new data point, update nearest centroid
                 for sample in new_data.rows() {
                     let mut min_distance = F::infinity();
                     let mut nearest_centroid_idx = 0;
-                    
+
                     // Find nearest centroid
                     for (i, centroid) in current_centroids.rows().into_iter().enumerate() {
-                        let distance = sample.iter()
+                        let distance = sample
+                            .iter()
                             .zip(centroid.iter())
                             .map(|(a, b)| (*a - *b) * (*a - *b))
                             .fold(F::zero(), |acc, x| acc + x)
                             .sqrt();
-                        
+
                         if distance < min_distance {
                             min_distance = distance;
                             nearest_centroid_idx = i;
                         }
                     }
-                    
+
                     // Update nearest centroid incrementally
                     let mut updated_centroids = current_centroids.clone();
                     for (j, &sample_val) in sample.iter().enumerate() {
                         let current_val = updated_centroids[[nearest_centroid_idx, j]];
-                        updated_centroids[[nearest_centroid_idx, j]] = 
+                        updated_centroids[[nearest_centroid_idx, j]] =
                             current_val + learning_rate * (sample_val - current_val);
                     }
-                    
+
                     self.distributed_kmeans.centroids = Some(updated_centroids);
                 }
-                
+
                 self.model_version.fetch_add(1, Ordering::Relaxed);
-                self.stream_metrics.model_updates.fetch_add(1, Ordering::Relaxed);
+                self.stream_metrics
+                    .model_updates
+                    .fetch_add(1, Ordering::Relaxed);
             }
-            
+
             Ok(())
         }
 
@@ -4894,21 +5001,22 @@ pub mod streaming {
         fn handle_concept_drift(&mut self) -> Result<()> {
             // Strategy: Gradually forget old data and emphasize recent data
             // This is simplified - in practice would use more sophisticated adaptation
-            
+
             // Clear old buffer and restart with recent data
             let mut buffer = self.data_buffer.lock().unwrap();
             let recent_data_size = buffer.len().min(self.stream_config.micro_batch_size * 2);
-            
-            let recent_data: VecDeque<_> = buffer.iter()
+
+            let recent_data: VecDeque<_> = buffer
+                .iter()
                 .skip(buffer.len().saturating_sub(recent_data_size))
                 .cloned()
                 .collect();
-            
+
             buffer.clear();
             for sample in recent_data {
                 buffer.push_back(sample);
             }
-            
+
             Ok(())
         }
 
@@ -4919,25 +5027,25 @@ pub mod streaming {
             config: StreamingConfig,
         ) {
             let processing_interval = Duration::from_millis(config.processing_interval_ms);
-            
+
             loop {
                 std::thread::sleep(processing_interval);
-                
+
                 let buffer_size = {
                     let buffer_lock = buffer.lock().unwrap();
                     buffer_lock.len()
                 };
-                
+
                 // Update buffer utilization metric
                 let utilization = buffer_size as f64 / config.max_buffer_size as f64;
                 *metrics.buffer_utilization.lock().unwrap() = utilization;
-                
+
                 // Calculate processing rate
                 let current_time = SystemTime::now()
                     .duration_since(UNIX_EPOCH)
                     .unwrap()
                     .as_secs();
-                
+
                 let samples_processed = metrics.total_samples.load(Ordering::Relaxed);
                 let rate = samples_processed as f64 / current_time as f64;
                 *metrics.processing_rate.lock().unwrap() = rate;
@@ -4995,8 +5103,8 @@ pub mod streaming {
 /// Edge computing integration for distributed clustering at the edge
 pub mod edge_computing {
     use super::*;
-    use std::sync::Arc;
     use std::collections::BTreeMap;
+    use std::sync::Arc;
 
     /// Edge node configuration for distributed clustering
     #[derive(Debug, Clone)]
@@ -5132,7 +5240,7 @@ pub mod edge_computing {
         /// Add edge node to the system
         pub fn add_edge_node(&mut self, node_config: EdgeNodeConfig) -> Result<()> {
             let node_id = node_config.node_id.clone();
-            
+
             // Initialize local clustering model for this node
             let distributed_config = DistributedConfig {
                 n_workers: 1, // Single worker per edge node
@@ -5142,16 +5250,20 @@ pub mod edge_computing {
                 partitioning_strategy: PartitioningStrategy::RoundRobin,
                 fault_tolerance: FaultToleranceConfig::default(),
             };
-            
+
             let local_model = DistributedKMeans::new(
-                self.clustering_hierarchy.hierarchy_config.max_local_clusters,
+                self.clustering_hierarchy
+                    .hierarchy_config
+                    .max_local_clusters,
                 distributed_config,
             );
-            
+
             self.edge_nodes.insert(node_id.clone(), node_config);
             self.local_models.insert(node_id.clone(), local_model);
-            self.clustering_hierarchy.local_clusters.insert(node_id, Vec::new());
-            
+            self.clustering_hierarchy
+                .local_clusters
+                .insert(node_id, Vec::new());
+
             Ok(())
         }
 
@@ -5165,36 +5277,40 @@ pub mod edge_computing {
                 if let Some(node_config) = self.edge_nodes.get(node_id) {
                     // Apply edge-specific optimizations based on strategy
                     let optimized_data = self.apply_edge_optimizations(data, node_config)?;
-                    
+
                     // Perform local clustering
                     model.fit(optimized_data.view())?;
-                    
+
                     // Extract local centroids
                     if let Some(centroids) = &model.centroids {
-                        let local_clusters: Vec<Array1<F>> = centroids.rows()
+                        let local_clusters: Vec<Array1<F>> = centroids
+                            .rows()
                             .into_iter()
                             .map(|row| row.to_owned())
                             .collect();
-                        
+
                         // Store local clusters
-                        self.clustering_hierarchy.local_clusters
+                        self.clustering_hierarchy
+                            .local_clusters
                             .insert(node_id.to_string(), local_clusters.clone());
-                        
+
                         Ok(local_clusters)
                     } else {
                         Err(ClusteringError::ComputationError(
-                            "No centroids found after local clustering".to_string()
+                            "No centroids found after local clustering".to_string(),
                         ))
                     }
                 } else {
-                    Err(ClusteringError::InvalidInput(
-                        format!("Node {} not found", node_id)
-                    ))
+                    Err(ClusteringError::InvalidInput(format!(
+                        "Node {} not found",
+                        node_id
+                    )))
                 }
             } else {
-                Err(ClusteringError::InvalidInput(
-                    format!("No model found for node {}", node_id)
-                ))
+                Err(ClusteringError::InvalidInput(format!(
+                    "No model found for node {}",
+                    node_id
+                )))
             }
         }
 
@@ -5212,7 +5328,7 @@ pub mod edge_computing {
                     } else {
                         0.8
                     };
-                    
+
                     let sample_size = (data.nrows() as f64 * sample_ratio) as usize;
                     let sampled_data = self.sample_data(data, sample_size)?;
                     Ok(sampled_data)
@@ -5228,31 +5344,37 @@ pub mod edge_computing {
                     let optimized_data = self.fast_preprocessing(data)?;
                     Ok(optimized_data)
                 }
-                EdgeOptimizationStrategy::BalancedStrategy { 
-                    communication_weight, 
-                    accuracy_weight, 
-                    energy_weight 
+                EdgeOptimizationStrategy::BalancedStrategy {
+                    communication_weight,
+                    accuracy_weight,
+                    energy_weight,
                 } => {
                     // Multi-objective optimization
                     let optimization_score = self.compute_optimization_score(
-                        data, node_config, *communication_weight, *accuracy_weight, *energy_weight
+                        data,
+                        node_config,
+                        *communication_weight,
+                        *accuracy_weight,
+                        *energy_weight,
                     )?;
-                    
+
                     let reduction_factor = (1.0 - optimization_score).max(0.1);
                     let reduced_size = (data.nrows() as f64 * reduction_factor) as usize;
-                    
+
                     self.sample_data(data, reduced_size)
                 }
-                EdgeOptimizationStrategy::Adaptive { 
-                    current_bandwidth, 
-                    current_energy_level, 
-                    accuracy_requirement 
+                EdgeOptimizationStrategy::Adaptive {
+                    current_bandwidth,
+                    current_energy_level,
+                    accuracy_requirement,
                 } => {
                     // Adaptive strategy based on current conditions
                     let adaptation_factor = self.compute_adaptation_factor(
-                        *current_bandwidth, *current_energy_level, *accuracy_requirement
+                        *current_bandwidth,
+                        *current_energy_level,
+                        *accuracy_requirement,
                     );
-                    
+
                     let adapted_size = (data.nrows() as f64 * adaptation_factor) as usize;
                     self.sample_data(data, adapted_size)
                 }
@@ -5261,22 +5383,22 @@ pub mod edge_computing {
 
         /// Sample data for edge optimization
         fn sample_data(&self, data: ArrayView2<F>, target_size: usize) -> Result<Array2<F>> {
-            use rand::seq::SliceRandom;
             use rand::rng;
-            
+            use rand::seq::SliceRandom;
+
             if target_size >= data.nrows() {
                 return Ok(data.to_owned());
             }
-            
+
             let mut indices: Vec<usize> = (0..data.nrows()).collect();
             indices.shuffle(&mut rng());
             indices.truncate(target_size);
-            
+
             let mut sampled_data = Array2::zeros((target_size, data.ncols()));
             for (new_idx, &orig_idx) in indices.iter().enumerate() {
                 sampled_data.row_mut(new_idx).assign(&data.row(orig_idx));
             }
-            
+
             Ok(sampled_data)
         }
 
@@ -5286,7 +5408,7 @@ pub mod edge_computing {
             if target_size >= data.nrows() {
                 return Ok(data.to_owned());
             }
-            
+
             // Use K-means to compress data to target_size clusters
             let compressed_centroids = self.local_kmeans_compression(data, target_size)?;
             Ok(compressed_centroids)
@@ -5296,7 +5418,7 @@ pub mod edge_computing {
         fn local_kmeans_compression(&self, data: ArrayView2<F>, k: usize) -> Result<Array2<F>> {
             // Simple K-means for data compression
             let mut centroids = Array2::zeros((k, data.ncols()));
-            
+
             // Initialize centroids randomly
             use rand::prelude::*;
             let mut rng = rng();
@@ -5304,40 +5426,41 @@ pub mod edge_computing {
                 let random_idx = rng.random_range(0..data.nrows());
                 centroids.row_mut(i).assign(&data.row(random_idx));
             }
-            
+
             // Simple K-means iterations
             for _iter in 0..10 {
                 let mut cluster_assignments = Vec::new();
                 let mut cluster_counts = vec![0; k];
                 let mut cluster_sums = Array2::zeros((k, data.ncols()));
-                
+
                 // Assign points to nearest centroid
                 for point in data.rows() {
                     let mut min_distance = F::infinity();
                     let mut best_cluster = 0;
-                    
+
                     for (j, centroid) in centroids.rows().into_iter().enumerate() {
-                        let distance = point.iter()
+                        let distance = point
+                            .iter()
                             .zip(centroid.iter())
                             .map(|(a, b)| (*a - *b) * (*a - *b))
                             .fold(F::zero(), |acc, x| acc + x)
                             .sqrt();
-                        
+
                         if distance < min_distance {
                             min_distance = distance;
                             best_cluster = j;
                         }
                     }
-                    
+
                     cluster_assignments.push(best_cluster);
                     cluster_counts[best_cluster] += 1;
-                    
+
                     // Add to cluster sum
                     for (j, &val) in point.iter().enumerate() {
                         cluster_sums[[best_cluster, j]] = cluster_sums[[best_cluster, j]] + val;
                     }
                 }
-                
+
                 // Update centroids
                 for i in 0..k {
                     if cluster_counts[i] > 0 {
@@ -5348,7 +5471,7 @@ pub mod edge_computing {
                     }
                 }
             }
-            
+
             Ok(centroids)
         }
 
@@ -5356,17 +5479,17 @@ pub mod edge_computing {
         fn fast_preprocessing(&self, data: ArrayView2<F>) -> Result<Array2<F>> {
             // Simple normalization for faster processing
             let mut normalized_data = data.to_owned();
-            
+
             // Column-wise min-max normalization
             for j in 0..data.ncols() {
                 let column = data.column(j);
-                let min_val = column.iter().fold(F::infinity(), |acc, &x| {
-                    if x < acc { x } else { acc }
-                });
-                let max_val = column.iter().fold(F::neg_infinity(), |acc, &x| {
-                    if x > acc { x } else { acc }
-                });
-                
+                let min_val = column
+                    .iter()
+                    .fold(F::infinity(), |acc, &x| if x < acc { x } else { acc });
+                let max_val = column
+                    .iter()
+                    .fold(F::neg_infinity(), |acc, &x| if x > acc { x } else { acc });
+
                 let range = max_val - min_val;
                 if range > F::zero() {
                     for i in 0..data.nrows() {
@@ -5374,7 +5497,7 @@ pub mod edge_computing {
                     }
                 }
             }
-            
+
             Ok(normalized_data)
         }
 
@@ -5391,7 +5514,7 @@ pub mod edge_computing {
             let data_size = data.nrows() * data.ncols() * std::mem::size_of::<F>();
             let comm_cost = data_size as f64 / (node_config.bandwidth_mbps * 1024.0 * 1024.0);
             let comm_score = 1.0 / (1.0 + comm_cost);
-            
+
             // Energy cost (processing dependent)
             let processing_complexity = data.nrows() as f64 * data.ncols() as f64;
             let energy_score = if let Some(power_budget) = node_config.power_budget_watts {
@@ -5399,14 +5522,13 @@ pub mod edge_computing {
             } else {
                 1.0
             };
-            
+
             // Accuracy score (simplified - based on data size)
             let acc_score = (data.nrows() as f64 / 10000.0).min(1.0);
-            
-            let weighted_score = comm_weight * comm_score + 
-                                acc_weight * acc_score + 
-                                energy_weight * energy_score;
-            
+
+            let weighted_score =
+                comm_weight * comm_score + acc_weight * acc_score + energy_weight * energy_score;
+
             Ok(weighted_score / (comm_weight + acc_weight + energy_weight))
         }
 
@@ -5421,7 +5543,7 @@ pub mod edge_computing {
             let bandwidth_factor = (bandwidth / 100.0).min(1.0); // Normalize bandwidth
             let energy_factor = energy_level; // Assume normalized 0-1
             let accuracy_factor = accuracy_req; // Assume normalized 0-1
-            
+
             (bandwidth_factor * energy_factor * accuracy_factor).max(0.1)
         }
 
@@ -5429,29 +5551,34 @@ pub mod edge_computing {
         pub fn aggregate_regional_clusters(&mut self) -> Result<()> {
             // Group edge nodes by regions (simplified - geographic or network proximity)
             let regions = self.group_nodes_by_region();
-            
+
             for (region_id, node_ids) in regions {
                 let mut all_local_clusters = Vec::new();
-                
+
                 // Collect all local clusters from nodes in this region
                 for node_id in &node_ids {
-                    if let Some(local_clusters) = self.clustering_hierarchy.local_clusters.get(node_id) {
+                    if let Some(local_clusters) =
+                        self.clustering_hierarchy.local_clusters.get(node_id)
+                    {
                         all_local_clusters.extend(local_clusters.clone());
                     }
                 }
-                
+
                 // Cluster the local clusters to form regional clusters
                 if !all_local_clusters.is_empty() {
                     let regional_clusters = self.cluster_local_clusters(
                         &all_local_clusters,
-                        self.clustering_hierarchy.hierarchy_config.max_regional_clusters,
+                        self.clustering_hierarchy
+                            .hierarchy_config
+                            .max_regional_clusters,
                     )?;
-                    
-                    self.clustering_hierarchy.regional_clusters
+
+                    self.clustering_hierarchy
+                        .regional_clusters
                         .insert(region_id, regional_clusters);
                 }
             }
-            
+
             Ok(())
         }
 
@@ -5459,13 +5586,16 @@ pub mod edge_computing {
         fn group_nodes_by_region(&self) -> HashMap<String, Vec<String>> {
             // Simplified region grouping - in practice would use geographic or network topology
             let mut regions = HashMap::new();
-            
+
             for (node_id, _config) in &self.edge_nodes {
                 // Simple hash-based grouping
                 let region_id = format!("region_{}", node_id.len() % 3);
-                regions.entry(region_id).or_insert_with(Vec::new).push(node_id.clone());
+                regions
+                    .entry(region_id)
+                    .or_insert_with(Vec::new)
+                    .push(node_id.clone());
             }
-            
+
             regions
         }
 
@@ -5478,45 +5608,46 @@ pub mod edge_computing {
             if local_clusters.is_empty() {
                 return Ok(Vec::new());
             }
-            
+
             let k = k.min(local_clusters.len());
             let n_features = local_clusters[0].len();
-            
+
             // Convert to Array2 for clustering
             let mut data = Array2::zeros((local_clusters.len(), n_features));
             for (i, cluster) in local_clusters.iter().enumerate() {
                 data.row_mut(i).assign(cluster);
             }
-            
+
             // Apply local K-means compression
             let regional_centroids = self.local_kmeans_compression(data.view(), k)?;
-            
-            let regional_clusters: Vec<Array1<F>> = regional_centroids.rows()
+
+            let regional_clusters: Vec<Array1<F>> = regional_centroids
+                .rows()
                 .into_iter()
                 .map(|row| row.to_owned())
                 .collect();
-            
+
             Ok(regional_clusters)
         }
 
         /// Aggregate all regional clusters into global clusters
         pub fn aggregate_global_clusters(&mut self) -> Result<()> {
             let mut all_regional_clusters = Vec::new();
-            
+
             // Collect all regional clusters
             for regional_clusters in self.clustering_hierarchy.regional_clusters.values() {
                 all_regional_clusters.extend(regional_clusters.clone());
             }
-            
+
             if !all_regional_clusters.is_empty() {
                 let global_clusters = self.cluster_local_clusters(
                     &all_regional_clusters,
                     self.clustering_hierarchy.hierarchy_config.global_clusters,
                 )?;
-                
+
                 self.clustering_hierarchy.global_clusters = Some(global_clusters);
             }
-            
+
             Ok(())
         }
 
@@ -5531,7 +5662,9 @@ pub mod edge_computing {
                 total_edge_nodes: self.edge_nodes.len(),
                 active_local_models: self.local_models.len(),
                 regional_clusters_count: self.clustering_hierarchy.regional_clusters.len(),
-                global_clusters_count: self.clustering_hierarchy.global_clusters
+                global_clusters_count: self
+                    .clustering_hierarchy
+                    .global_clusters
                     .as_ref()
                     .map(|clusters| clusters.len())
                     .unwrap_or(0),
@@ -5544,8 +5677,9 @@ pub mod edge_computing {
         fn estimate_total_communication_cost(&self) -> f64 {
             // Simplified cost estimation
             let local_to_regional_cost = self.edge_nodes.len() as f64 * 10.0; // Base cost per node
-            let regional_to_global_cost = self.clustering_hierarchy.regional_clusters.len() as f64 * 50.0;
-            
+            let regional_to_global_cost =
+                self.clustering_hierarchy.regional_clusters.len() as f64 * 50.0;
+
             local_to_regional_cost + regional_to_global_cost
         }
 
@@ -5554,14 +5688,16 @@ pub mod edge_computing {
             if self.edge_nodes.is_empty() {
                 return 0.0;
             }
-            
-            let total_utilization = self.edge_nodes.values()
+
+            let total_utilization = self
+                .edge_nodes
+                .values()
                 .map(|config| {
                     // Simplified utilization based on max batch size
                     config.max_batch_size as f64 / 10000.0
                 })
                 .sum::<f64>();
-            
+
             total_utilization / self.edge_nodes.len() as f64
         }
     }
@@ -5577,906 +5713,961 @@ pub mod edge_computing {
         pub average_node_utilization: f64,
     }
 
-/// Advanced consensus algorithms for distributed clustering coordination
-pub mod consensus {
-    use super::*;
-    use std::time::{Duration, Instant, SystemTime};
-    use std::collections::BTreeMap;
+    /// Advanced consensus algorithms for distributed clustering coordination
+    pub mod consensus {
+        use super::*;
+        use std::collections::BTreeMap;
+        use std::time::{Duration, Instant, SystemTime};
 
-    /// Raft consensus algorithm for distributed clustering coordination
-    #[derive(Debug)]
-    pub struct RaftConsensus<F: Float> {
-        /// Current node ID
-        node_id: usize,
-        /// Current term number
-        current_term: u64,
-        /// Node voted for in current term
-        voted_for: Option<usize>,
-        /// Log entries
-        log: Vec<LogEntry<F>>,
-        /// Index of highest log entry known to be committed
-        commit_index: usize,
-        /// Index of highest log entry applied to state machine
-        last_applied: usize,
-        /// Node state (Leader, Follower, Candidate)
-        state: RaftState,
-        /// Current leader ID
-        leader_id: Option<usize>,
-        /// Other nodes in the cluster
-        peers: HashSet<usize>,
-        /// Election timeout
-        election_timeout: Duration,
-        /// Last time heartbeat was received
-        last_heartbeat: Instant,
-        /// Clustering state machine
-        clustering_state: ClusteringStateMachine<F>,
-        /// Next index to send to each peer
-        next_index: HashMap<usize, usize>,
-        /// Match index for each peer
-        match_index: HashMap<usize, usize>,
-    }
-
-    /// Raft node states
-    #[derive(Debug, Clone, PartialEq)]
-    pub enum RaftState {
-        Follower,
-        Candidate,
-        Leader,
-    }
-
-    /// Log entry for Raft consensus
-    #[derive(Debug, Clone)]
-    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub struct LogEntry<F: Float> {
-        /// Term when entry was received by leader
-        pub term: u64,
-        /// Index of this entry
-        pub index: usize,
-        /// Clustering command
-        pub command: ClusteringCommand<F>,
-        /// Timestamp
-        pub timestamp: SystemTime,
-    }
-
-    /// Clustering commands for Raft log
-    #[derive(Debug, Clone)]
-    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub enum ClusteringCommand<F: Float> {
-        /// Update cluster centroids
-        UpdateCentroids {
-            round: usize,
-            centroids: Array2<F>,
-        },
-        /// Update cluster assignments
-        UpdateAssignments {
-            worker_id: usize,
-            assignments: Array1<usize>,
-        },
-        /// Initialize new clustering round
-        InitializeRound {
-            round: usize,
-            algorithm: String,
-            parameters: HashMap<String, f64>,
-        },
-        /// Finalize clustering result
-        FinalizeResult {
-            round: usize,
-            final_centroids: Array2<F>,
-            convergence_info: ConvergenceInfo,
-        },
-        /// Add or remove worker
-        UpdateTopology {
-            action: TopologyAction,
-            worker_id: usize,
-        },
-    }
-
-    /// Topology modification actions
-    #[derive(Debug, Clone)]
-    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub enum TopologyAction {
-        AddWorker,
-        RemoveWorker,
-        PromoteWorker,
-        DemoteWorker,
-    }
-
-    /// Convergence information
-    #[derive(Debug, Clone)]
-    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub struct ConvergenceInfo {
-        pub converged: bool,
-        pub final_iteration: usize,
-        pub final_inertia: f64,
-        pub centroid_movement: f64,
-        pub computation_time_ms: u64,
-    }
-
-    /// Clustering state machine for Raft
-    #[derive(Debug)]
-    pub struct ClusteringStateMachine<F: Float> {
-        /// Current clustering round
-        current_round: usize,
-        /// Current centroids
-        current_centroids: Option<Array2<F>>,
-        /// Worker assignments
-        worker_assignments: HashMap<usize, Array1<usize>>,
-        /// Algorithm configuration
-        algorithm_config: HashMap<String, f64>,
-        /// Convergence status
-        convergence_status: Option<ConvergenceInfo>,
-        /// Active workers
-        active_workers: HashSet<usize>,
-    }
-
-    impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> RaftConsensus<F> {
-        /// Create new Raft consensus instance
-        pub fn new(node_id: usize, peers: HashSet<usize>) -> Self {
-            Self {
-                node_id,
-                current_term: 0,
-                voted_for: None,
-                log: vec![],
-                commit_index: 0,
-                last_applied: 0,
-                state: RaftState::Follower,
-                leader_id: None,
-                peers,
-                election_timeout: Duration::from_millis(150 + (node_id * 50) as u64), // Randomized timeout
-                last_heartbeat: Instant::now(),
-                clustering_state: ClusteringStateMachine::new(),
-                next_index: HashMap::new(),
-                match_index: HashMap::new(),
-            }
+        /// Raft consensus algorithm for distributed clustering coordination
+        #[derive(Debug)]
+        pub struct RaftConsensus<F: Float> {
+            /// Current node ID
+            node_id: usize,
+            /// Current term number
+            current_term: u64,
+            /// Node voted for in current term
+            voted_for: Option<usize>,
+            /// Log entries
+            log: Vec<LogEntry<F>>,
+            /// Index of highest log entry known to be committed
+            commit_index: usize,
+            /// Index of highest log entry applied to state machine
+            last_applied: usize,
+            /// Node state (Leader, Follower, Candidate)
+            state: RaftState,
+            /// Current leader ID
+            leader_id: Option<usize>,
+            /// Other nodes in the cluster
+            peers: HashSet<usize>,
+            /// Election timeout
+            election_timeout: Duration,
+            /// Last time heartbeat was received
+            last_heartbeat: Instant,
+            /// Clustering state machine
+            clustering_state: ClusteringStateMachine<F>,
+            /// Next index to send to each peer
+            next_index: HashMap<usize, usize>,
+            /// Match index for each peer
+            match_index: HashMap<usize, usize>,
         }
 
-        /// Process Raft messages and maintain consensus
-        pub fn process_consensus_round(&mut self) -> Result<Vec<ConsensusEvent<F>>> {
-            let mut events = Vec::new();
+        /// Raft node states
+        #[derive(Debug, Clone, PartialEq)]
+        pub enum RaftState {
+            Follower,
+            Candidate,
+            Leader,
+        }
 
-            match self.state {
-                RaftState::Follower => {
-                    if self.last_heartbeat.elapsed() > self.election_timeout {
-                        self.start_election();
-                        events.push(ConsensusEvent::ElectionStarted {
+        /// Log entry for Raft consensus
+        #[derive(Debug, Clone)]
+        #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+        pub struct LogEntry<F: Float> {
+            /// Term when entry was received by leader
+            pub term: u64,
+            /// Index of this entry
+            pub index: usize,
+            /// Clustering command
+            pub command: ClusteringCommand<F>,
+            /// Timestamp
+            pub timestamp: SystemTime,
+        }
+
+        /// Clustering commands for Raft log
+        #[derive(Debug, Clone)]
+        #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+        pub enum ClusteringCommand<F: Float> {
+            /// Update cluster centroids
+            UpdateCentroids { round: usize, centroids: Array2<F> },
+            /// Update cluster assignments
+            UpdateAssignments {
+                worker_id: usize,
+                assignments: Array1<usize>,
+            },
+            /// Initialize new clustering round
+            InitializeRound {
+                round: usize,
+                algorithm: String,
+                parameters: HashMap<String, f64>,
+            },
+            /// Finalize clustering result
+            FinalizeResult {
+                round: usize,
+                final_centroids: Array2<F>,
+                convergence_info: ConvergenceInfo,
+            },
+            /// Add or remove worker
+            UpdateTopology {
+                action: TopologyAction,
+                worker_id: usize,
+            },
+        }
+
+        /// Topology modification actions
+        #[derive(Debug, Clone)]
+        #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+        pub enum TopologyAction {
+            AddWorker,
+            RemoveWorker,
+            PromoteWorker,
+            DemoteWorker,
+        }
+
+        /// Convergence information
+        #[derive(Debug, Clone)]
+        #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+        pub struct ConvergenceInfo {
+            pub converged: bool,
+            pub final_iteration: usize,
+            pub final_inertia: f64,
+            pub centroid_movement: f64,
+            pub computation_time_ms: u64,
+        }
+
+        /// Clustering state machine for Raft
+        #[derive(Debug)]
+        pub struct ClusteringStateMachine<F: Float> {
+            /// Current clustering round
+            current_round: usize,
+            /// Current centroids
+            current_centroids: Option<Array2<F>>,
+            /// Worker assignments
+            worker_assignments: HashMap<usize, Array1<usize>>,
+            /// Algorithm configuration
+            algorithm_config: HashMap<String, f64>,
+            /// Convergence status
+            convergence_status: Option<ConvergenceInfo>,
+            /// Active workers
+            active_workers: HashSet<usize>,
+        }
+
+        impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> RaftConsensus<F> {
+            /// Create new Raft consensus instance
+            pub fn new(node_id: usize, peers: HashSet<usize>) -> Self {
+                Self {
+                    node_id,
+                    current_term: 0,
+                    voted_for: None,
+                    log: vec![],
+                    commit_index: 0,
+                    last_applied: 0,
+                    state: RaftState::Follower,
+                    leader_id: None,
+                    peers,
+                    election_timeout: Duration::from_millis(150 + (node_id * 50) as u64), // Randomized timeout
+                    last_heartbeat: Instant::now(),
+                    clustering_state: ClusteringStateMachine::new(),
+                    next_index: HashMap::new(),
+                    match_index: HashMap::new(),
+                }
+            }
+
+            /// Process Raft messages and maintain consensus
+            pub fn process_consensus_round(&mut self) -> Result<Vec<ConsensusEvent<F>>> {
+                let mut events = Vec::new();
+
+                match self.state {
+                    RaftState::Follower => {
+                        if self.last_heartbeat.elapsed() > self.election_timeout {
+                            self.start_election();
+                            events.push(ConsensusEvent::ElectionStarted {
+                                term: self.current_term,
+                                candidate: self.node_id,
+                            });
+                        }
+                    }
+                    RaftState::Candidate => {
+                        // Election logic would be handled via message passing
+                        if self.last_heartbeat.elapsed() > self.election_timeout * 2 {
+                            self.start_election(); // Restart election
+                        }
+                    }
+                    RaftState::Leader => {
+                        // Send periodic heartbeats
+                        events.push(ConsensusEvent::SendHeartbeat {
                             term: self.current_term,
-                            candidate: self.node_id,
+                            leader: self.node_id,
                         });
                     }
                 }
-                RaftState::Candidate => {
-                    // Election logic would be handled via message passing
-                    if self.last_heartbeat.elapsed() > self.election_timeout * 2 {
-                        self.start_election(); // Restart election
+
+                // Apply committed log entries
+                self.apply_committed_entries(&mut events)?;
+
+                Ok(events)
+            }
+
+            /// Start leader election
+            fn start_election(&mut self) {
+                self.state = RaftState::Candidate;
+                self.current_term += 1;
+                self.voted_for = Some(self.node_id);
+                self.last_heartbeat = Instant::now();
+
+                // Initialize next_index and match_index for all peers
+                for &peer in &self.peers {
+                    self.next_index.insert(peer, self.log.len());
+                    self.match_index.insert(peer, 0);
+                }
+            }
+
+            /// Append new clustering command to log
+            pub fn append_clustering_command(
+                &mut self,
+                command: ClusteringCommand<F>,
+            ) -> Result<usize> {
+                if self.state != RaftState::Leader {
+                    return Err(ClusteringError::InvalidInput(
+                        "Only leader can append commands".to_string(),
+                    ));
+                }
+
+                let entry = LogEntry {
+                    term: self.current_term,
+                    index: self.log.len(),
+                    command,
+                    timestamp: SystemTime::now(),
+                };
+
+                self.log.push(entry);
+                Ok(self.log.len() - 1)
+            }
+
+            /// Apply committed log entries to state machine
+            fn apply_committed_entries(
+                &mut self,
+                events: &mut Vec<ConsensusEvent<F>>,
+            ) -> Result<()> {
+                while self.last_applied < self.commit_index {
+                    self.last_applied += 1;
+
+                    if let Some(entry) = self.log.get(self.last_applied) {
+                        self.clustering_state.apply_command(&entry.command)?;
+                        events.push(ConsensusEvent::CommandApplied {
+                            index: entry.index,
+                            command: entry.command.clone(),
+                        });
                     }
                 }
-                RaftState::Leader => {
-                    // Send periodic heartbeats
-                    events.push(ConsensusEvent::SendHeartbeat {
-                        term: self.current_term,
-                        leader: self.node_id,
-                    });
-                }
+                Ok(())
             }
 
-            // Apply committed log entries
-            self.apply_committed_entries(&mut events)?;
+            /// Get current clustering state
+            pub fn get_clustering_state(&self) -> &ClusteringStateMachine<F> {
+                &self.clustering_state
+            }
 
-            Ok(events)
-        }
+            /// Check if this node is the leader
+            pub fn is_leader(&self) -> bool {
+                self.state == RaftState::Leader
+            }
 
-        /// Start leader election
-        fn start_election(&mut self) {
-            self.state = RaftState::Candidate;
-            self.current_term += 1;
-            self.voted_for = Some(self.node_id);
-            self.last_heartbeat = Instant::now();
-
-            // Initialize next_index and match_index for all peers
-            for &peer in &self.peers {
-                self.next_index.insert(peer, self.log.len());
-                self.match_index.insert(peer, 0);
+            /// Get current term
+            pub fn current_term(&self) -> u64 {
+                self.current_term
             }
         }
 
-        /// Append new clustering command to log
-        pub fn append_clustering_command(&mut self, command: ClusteringCommand<F>) -> Result<usize> {
-            if self.state != RaftState::Leader {
-                return Err(ClusteringError::InvalidInput(
-                    "Only leader can append commands".to_string(),
-                ));
-            }
-
-            let entry = LogEntry {
-                term: self.current_term,
-                index: self.log.len(),
-                command,
-                timestamp: SystemTime::now(),
-            };
-
-            self.log.push(entry);
-            Ok(self.log.len() - 1)
-        }
-
-        /// Apply committed log entries to state machine
-        fn apply_committed_entries(&mut self, events: &mut Vec<ConsensusEvent<F>>) -> Result<()> {
-            while self.last_applied < self.commit_index {
-                self.last_applied += 1;
-                
-                if let Some(entry) = self.log.get(self.last_applied) {
-                    self.clustering_state.apply_command(&entry.command)?;
-                    events.push(ConsensusEvent::CommandApplied {
-                        index: entry.index,
-                        command: entry.command.clone(),
-                    });
+        impl<F: Float + FromPrimitive + Debug> ClusteringStateMachine<F> {
+            /// Create new clustering state machine
+            pub fn new() -> Self {
+                Self {
+                    current_round: 0,
+                    current_centroids: None,
+                    worker_assignments: HashMap::new(),
+                    algorithm_config: HashMap::new(),
+                    convergence_status: None,
+                    active_workers: HashSet::new(),
                 }
             }
-            Ok(())
-        }
 
-        /// Get current clustering state
-        pub fn get_clustering_state(&self) -> &ClusteringStateMachine<F> {
-            &self.clustering_state
-        }
-
-        /// Check if this node is the leader
-        pub fn is_leader(&self) -> bool {
-            self.state == RaftState::Leader
-        }
-
-        /// Get current term
-        pub fn current_term(&self) -> u64 {
-            self.current_term
-        }
-    }
-
-    impl<F: Float + FromPrimitive + Debug> ClusteringStateMachine<F> {
-        /// Create new clustering state machine
-        pub fn new() -> Self {
-            Self {
-                current_round: 0,
-                current_centroids: None,
-                worker_assignments: HashMap::new(),
-                algorithm_config: HashMap::new(),
-                convergence_status: None,
-                active_workers: HashSet::new(),
-            }
-        }
-
-        /// Apply clustering command to state machine
-        pub fn apply_command(&mut self, command: &ClusteringCommand<F>) -> Result<()> {
-            match command {
-                ClusteringCommand::UpdateCentroids { round, centroids } => {
-                    self.current_round = *round;
-                    self.current_centroids = Some(centroids.clone());
-                }
-                ClusteringCommand::UpdateAssignments { worker_id, assignments } => {
-                    self.worker_assignments.insert(*worker_id, assignments.clone());
-                }
-                ClusteringCommand::InitializeRound { round, algorithm: _, parameters } => {
-                    self.current_round = *round;
-                    self.algorithm_config = parameters.clone();
-                    self.worker_assignments.clear();
-                    self.convergence_status = None;
-                }
-                ClusteringCommand::FinalizeResult { round, final_centroids, convergence_info } => {
-                    if *round == self.current_round {
-                        self.current_centroids = Some(final_centroids.clone());
-                        self.convergence_status = Some(convergence_info.clone());
+            /// Apply clustering command to state machine
+            pub fn apply_command(&mut self, command: &ClusteringCommand<F>) -> Result<()> {
+                match command {
+                    ClusteringCommand::UpdateCentroids { round, centroids } => {
+                        self.current_round = *round;
+                        self.current_centroids = Some(centroids.clone());
                     }
-                }
-                ClusteringCommand::UpdateTopology { action, worker_id } => {
-                    match action {
-                        TopologyAction::AddWorker => {
-                            self.active_workers.insert(*worker_id);
+                    ClusteringCommand::UpdateAssignments {
+                        worker_id,
+                        assignments,
+                    } => {
+                        self.worker_assignments
+                            .insert(*worker_id, assignments.clone());
+                    }
+                    ClusteringCommand::InitializeRound {
+                        round,
+                        algorithm: _,
+                        parameters,
+                    } => {
+                        self.current_round = *round;
+                        self.algorithm_config = parameters.clone();
+                        self.worker_assignments.clear();
+                        self.convergence_status = None;
+                    }
+                    ClusteringCommand::FinalizeResult {
+                        round,
+                        final_centroids,
+                        convergence_info,
+                    } => {
+                        if *round == self.current_round {
+                            self.current_centroids = Some(final_centroids.clone());
+                            self.convergence_status = Some(convergence_info.clone());
                         }
-                        TopologyAction::RemoveWorker => {
-                            self.active_workers.remove(worker_id);
-                            self.worker_assignments.remove(worker_id);
+                    }
+                    ClusteringCommand::UpdateTopology { action, worker_id } => {
+                        match action {
+                            TopologyAction::AddWorker => {
+                                self.active_workers.insert(*worker_id);
+                            }
+                            TopologyAction::RemoveWorker => {
+                                self.active_workers.remove(worker_id);
+                                self.worker_assignments.remove(worker_id);
+                            }
+                            _ => {} // Other topology actions
                         }
-                        _ => {} // Other topology actions
                     }
                 }
+                Ok(())
             }
-            Ok(())
-        }
 
-        /// Get current centroids
-        pub fn get_current_centroids(&self) -> Option<&Array2<F>> {
-            self.current_centroids.as_ref()
-        }
+            /// Get current centroids
+            pub fn get_current_centroids(&self) -> Option<&Array2<F>> {
+                self.current_centroids.as_ref()
+            }
 
-        /// Get active workers
-        pub fn get_active_workers(&self) -> &HashSet<usize> {
-            &self.active_workers
-        }
-    }
-
-    /// Consensus events emitted during processing
-    #[derive(Debug, Clone)]
-    pub enum ConsensusEvent<F: Float> {
-        ElectionStarted { term: u64, candidate: usize },
-        SendHeartbeat { term: u64, leader: usize },
-        CommandApplied { index: usize, command: ClusteringCommand<F> },
-        LeaderElected { term: u64, leader: usize },
-        TermChanged { old_term: u64, new_term: u64 },
-    }
-}
-
-/// Streaming distributed clustering for continuous data streams
-pub mod streaming {
-    use super::*;
-    use std::collections::{VecDeque, BTreeMap};
-    use std::time::{Duration, Instant, SystemTime};
-
-    /// Configuration for streaming distributed clustering
-    #[derive(Debug, Clone)]
-    pub struct StreamingConfig {
-        /// Window size for streaming data
-        pub window_size: usize,
-        /// Window overlap (0.0 to 1.0)
-        pub window_overlap: f64,
-        /// Update frequency for model synchronization
-        pub sync_interval_ms: u64,
-        /// Batch size for incremental updates
-        pub batch_size: usize,
-        /// Drift detection threshold
-        pub drift_threshold: f64,
-        /// Maximum number of concepts to track
-        pub max_concepts: usize,
-        /// Forgetting factor for exponential decay
-        pub forgetting_factor: f64,
-    }
-
-    impl Default for StreamingConfig {
-        fn default() -> Self {
-            Self {
-                window_size: 1000,
-                window_overlap: 0.1,
-                sync_interval_ms: 5000,
-                batch_size: 100,
-                drift_threshold: 0.1,
-                max_concepts: 10,
-                forgetting_factor: 0.99,
+            /// Get active workers
+            pub fn get_active_workers(&self) -> &HashSet<usize> {
+                &self.active_workers
             }
         }
+
+        /// Consensus events emitted during processing
+        #[derive(Debug, Clone)]
+        pub enum ConsensusEvent<F: Float> {
+            ElectionStarted {
+                term: u64,
+                candidate: usize,
+            },
+            SendHeartbeat {
+                term: u64,
+                leader: usize,
+            },
+            CommandApplied {
+                index: usize,
+                command: ClusteringCommand<F>,
+            },
+            LeaderElected {
+                term: u64,
+                leader: usize,
+            },
+            TermChanged {
+                old_term: u64,
+                new_term: u64,
+            },
+        }
     }
 
-    /// Streaming distributed clustering coordinator
-    #[derive(Debug)]
-    pub struct StreamingDistributedClustering<F: Float> {
-        /// Node configuration
-        node_id: usize,
-        config: StreamingConfig,
-        /// Data stream buffer
-        stream_buffer: VecDeque<Array1<F>>,
-        /// Current clustering model
-        current_model: Option<StreamingClusteringModel<F>>,
-        /// Model version tracking
-        model_version: u64,
-        /// Concept drift detector
-        drift_detector: ConceptDriftDetector<F>,
+    /// Streaming distributed clustering for continuous data streams
+    pub mod streaming {
+        use super::*;
+        use std::collections::{BTreeMap, VecDeque};
+        use std::time::{Duration, Instant, SystemTime};
+
+        /// Configuration for streaming distributed clustering
+        #[derive(Debug, Clone)]
+        pub struct StreamingConfig {
+            /// Window size for streaming data
+            pub window_size: usize,
+            /// Window overlap (0.0 to 1.0)
+            pub window_overlap: f64,
+            /// Update frequency for model synchronization
+            pub sync_interval_ms: u64,
+            /// Batch size for incremental updates
+            pub batch_size: usize,
+            /// Drift detection threshold
+            pub drift_threshold: f64,
+            /// Maximum number of concepts to track
+            pub max_concepts: usize,
+            /// Forgetting factor for exponential decay
+            pub forgetting_factor: f64,
+        }
+
+        impl Default for StreamingConfig {
+            fn default() -> Self {
+                Self {
+                    window_size: 1000,
+                    window_overlap: 0.1,
+                    sync_interval_ms: 5000,
+                    batch_size: 100,
+                    drift_threshold: 0.1,
+                    max_concepts: 10,
+                    forgetting_factor: 0.99,
+                }
+            }
+        }
+
+        /// Streaming distributed clustering coordinator
+        #[derive(Debug)]
+        pub struct StreamingDistributedClustering<F: Float> {
+            /// Node configuration
+            node_id: usize,
+            config: StreamingConfig,
+            /// Data stream buffer
+            stream_buffer: VecDeque<Array1<F>>,
+            /// Current clustering model
+            current_model: Option<StreamingClusteringModel<F>>,
+            /// Model version tracking
+            model_version: u64,
+            /// Concept drift detector
+            drift_detector: ConceptDriftDetector<F>,
+            /// Model synchronization state
+            sync_state: ModelSyncState<F>,
+            /// Performance metrics
+            metrics: StreamingMetrics,
+            /// Connected peer nodes
+            peers: HashMap<usize, PeerSyncState>,
+            /// Last synchronization time
+            last_sync: Instant,
+        }
+
+        /// Streaming clustering model
+        #[derive(Debug, Clone)]
+        pub struct StreamingClusteringModel<F: Float> {
+            /// Cluster centroids
+            pub centroids: Array2<F>,
+            /// Cluster weights (importance)
+            pub weights: Array1<F>,
+            /// Number of points assigned to each cluster
+            pub cluster_counts: Array1<usize>,
+            /// Model timestamp
+            pub timestamp: SystemTime,
+            /// Model version
+            pub version: u64,
+            /// Learning rate
+            pub learning_rate: f64,
+        }
+
+        /// Concept drift detection using ADWIN (ADaptive WINdowing)
+        #[derive(Debug)]
+        pub struct ConceptDriftDetector<F: Float> {
+            /// Sliding window of clustering quality scores
+            quality_window: VecDeque<f64>,
+            /// ADWIN parameters
+            delta: f64, // Confidence parameter
+            /// Detected drift points
+            drift_points: Vec<SystemTime>,
+            /// Current concept ID
+            current_concept: usize,
+            /// Concept boundaries
+            concept_boundaries: BTreeMap<usize, SystemTime>,
+        }
+
         /// Model synchronization state
-        sync_state: ModelSyncState<F>,
-        /// Performance metrics
-        metrics: StreamingMetrics,
-        /// Connected peer nodes
-        peers: HashMap<usize, PeerSyncState>,
-        /// Last synchronization time
-        last_sync: Instant,
-    }
-
-    /// Streaming clustering model
-    #[derive(Debug, Clone)]
-    pub struct StreamingClusteringModel<F: Float> {
-        /// Cluster centroids
-        pub centroids: Array2<F>,
-        /// Cluster weights (importance)
-        pub weights: Array1<F>,
-        /// Number of points assigned to each cluster
-        pub cluster_counts: Array1<usize>,
-        /// Model timestamp
-        pub timestamp: SystemTime,
-        /// Model version
-        pub version: u64,
-        /// Learning rate
-        pub learning_rate: f64,
-    }
-
-    /// Concept drift detection using ADWIN (ADaptive WINdowing)
-    #[derive(Debug)]
-    pub struct ConceptDriftDetector<F: Float> {
-        /// Sliding window of clustering quality scores
-        quality_window: VecDeque<f64>,
-        /// ADWIN parameters
-        delta: f64, // Confidence parameter
-        /// Detected drift points
-        drift_points: Vec<SystemTime>,
-        /// Current concept ID
-        current_concept: usize,
-        /// Concept boundaries
-        concept_boundaries: BTreeMap<usize, SystemTime>,
-    }
-
-    /// Model synchronization state
-    #[derive(Debug)]
-    pub struct ModelSyncState<F: Float> {
-        /// Pending model updates
-        pending_updates: HashMap<usize, ModelUpdate<F>>,
-        /// Conflict resolution strategy
-        resolution_strategy: ConflictResolution,
-        /// Sync version vector
-        version_vector: HashMap<usize, u64>,
-    }
-
-    /// Model update for synchronization
-    #[derive(Debug, Clone)]
-    pub struct ModelUpdate<F: Float> {
-        /// Source node ID
-        pub source_node: usize,
-        /// Updated model
-        pub model: StreamingClusteringModel<F>,
-        /// Update timestamp
-        pub timestamp: SystemTime,
-        /// Incremental update data
-        pub incremental_data: Option<IncrementalUpdate<F>>,
-    }
-
-    /// Incremental model update
-    #[derive(Debug, Clone)]
-    pub struct IncrementalUpdate<F: Float> {
-        /// Centroid updates
-        pub centroid_deltas: Array2<F>,
-        /// Weight updates
-        pub weight_deltas: Array1<F>,
-        /// Count updates
-        pub count_deltas: Array1<i64>,
-        /// Learning rate
-        pub learning_rate: f64,
-    }
-
-    /// Conflict resolution strategies for model synchronization
-    #[derive(Debug, Clone)]
-    pub enum ConflictResolution {
-        /// Use most recent update
-        LatestWins,
-        /// Weighted average based on node reliability
-        WeightedAverage,
-        /// Consensus-based resolution
-        Consensus,
-        /// Custom resolution function
-        Custom,
-    }
-
-    /// Peer synchronization state
-    #[derive(Debug)]
-    pub struct PeerSyncState {
-        /// Last known model version
-        pub last_known_version: u64,
-        /// Synchronization latency
-        pub sync_latency_ms: u64,
-        /// Reliability score
-        pub reliability_score: f64,
-        /// Last successful sync
-        pub last_sync: Instant,
-    }
-
-    /// Streaming performance metrics
-    #[derive(Debug, Default)]
-    pub struct StreamingMetrics {
-        /// Total processed data points
-        pub total_processed: usize,
-        /// Model updates performed
-        pub model_updates: usize,
-        /// Concept drifts detected
-        pub drift_detections: usize,
-        /// Synchronization events
-        pub sync_events: usize,
-        /// Average processing latency
-        pub avg_latency_ms: f64,
-        /// Current throughput (points/second)
-        pub throughput: f64,
-    }
-
-    impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> StreamingDistributedClustering<F> {
-        /// Create new streaming distributed clustering instance
-        pub fn new(node_id: usize, config: StreamingConfig) -> Self {
-            Self {
-                node_id,
-                config: config.clone(),
-                stream_buffer: VecDeque::with_capacity(config.window_size),
-                current_model: None,
-                model_version: 0,
-                drift_detector: ConceptDriftDetector::new(0.001), // delta = 0.001
-                sync_state: ModelSyncState::new(ConflictResolution::WeightedAverage),
-                metrics: StreamingMetrics::default(),
-                peers: HashMap::new(),
-                last_sync: Instant::now(),
-            }
+        #[derive(Debug)]
+        pub struct ModelSyncState<F: Float> {
+            /// Pending model updates
+            pending_updates: HashMap<usize, ModelUpdate<F>>,
+            /// Conflict resolution strategy
+            resolution_strategy: ConflictResolution,
+            /// Sync version vector
+            version_vector: HashMap<usize, u64>,
         }
 
-        /// Process new data point from stream
-        pub fn process_stream_point(&mut self, point: Array1<F>) -> Result<ClusteringResult<F>> {
-            // Add to buffer
-            self.stream_buffer.push_back(point.clone());
-            
-            // Maintain window size
-            if self.stream_buffer.len() > self.config.window_size {
-                self.stream_buffer.pop_front();
-            }
-
-            // Update model incrementally
-            let assignment = self.update_model_incremental(&point)?;
-            
-            // Check for concept drift
-            self.check_concept_drift()?;
-            
-            // Synchronize with peers if needed
-            if self.should_synchronize() {
-                self.synchronize_with_peers()?;
-            }
-
-            // Update metrics
-            self.metrics.total_processed += 1;
-            
-            Ok(ClusteringResult {
-                assignment,
-                confidence: self.calculate_assignment_confidence(&point, assignment),
-                model_version: self.model_version,
-                drift_detected: false, // Would be set by drift detection
-            })
+        /// Model update for synchronization
+        #[derive(Debug, Clone)]
+        pub struct ModelUpdate<F: Float> {
+            /// Source node ID
+            pub source_node: usize,
+            /// Updated model
+            pub model: StreamingClusteringModel<F>,
+            /// Update timestamp
+            pub timestamp: SystemTime,
+            /// Incremental update data
+            pub incremental_data: Option<IncrementalUpdate<F>>,
         }
 
-        /// Update clustering model incrementally
-        fn update_model_incremental(&mut self, point: &Array1<F>) -> Result<usize> {
-            if let Some(ref mut model) = self.current_model {
-                // Find nearest centroid
-                let assignment = self.find_nearest_centroid(point, &model.centroids)?;
-                
-                // Update centroid using online learning
-                let learning_rate = F::from(model.learning_rate).unwrap();
-                let old_centroid = model.centroids.row(assignment);
-                let update = (point - &old_centroid) * learning_rate;
-                
-                // Apply update
-                for (i, &update_val) in update.iter().enumerate() {
-                    model.centroids[[assignment, i]] = model.centroids[[assignment, i]] + update_val;
+        /// Incremental model update
+        #[derive(Debug, Clone)]
+        pub struct IncrementalUpdate<F: Float> {
+            /// Centroid updates
+            pub centroid_deltas: Array2<F>,
+            /// Weight updates
+            pub weight_deltas: Array1<F>,
+            /// Count updates
+            pub count_deltas: Array1<i64>,
+            /// Learning rate
+            pub learning_rate: f64,
+        }
+
+        /// Conflict resolution strategies for model synchronization
+        #[derive(Debug, Clone)]
+        pub enum ConflictResolution {
+            /// Use most recent update
+            LatestWins,
+            /// Weighted average based on node reliability
+            WeightedAverage,
+            /// Consensus-based resolution
+            Consensus,
+            /// Custom resolution function
+            Custom,
+        }
+
+        /// Peer synchronization state
+        #[derive(Debug)]
+        pub struct PeerSyncState {
+            /// Last known model version
+            pub last_known_version: u64,
+            /// Synchronization latency
+            pub sync_latency_ms: u64,
+            /// Reliability score
+            pub reliability_score: f64,
+            /// Last successful sync
+            pub last_sync: Instant,
+        }
+
+        /// Streaming performance metrics
+        #[derive(Debug, Default)]
+        pub struct StreamingMetrics {
+            /// Total processed data points
+            pub total_processed: usize,
+            /// Model updates performed
+            pub model_updates: usize,
+            /// Concept drifts detected
+            pub drift_detections: usize,
+            /// Synchronization events
+            pub sync_events: usize,
+            /// Average processing latency
+            pub avg_latency_ms: f64,
+            /// Current throughput (points/second)
+            pub throughput: f64,
+        }
+
+        impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> StreamingDistributedClustering<F> {
+            /// Create new streaming distributed clustering instance
+            pub fn new(node_id: usize, config: StreamingConfig) -> Self {
+                Self {
+                    node_id,
+                    config: config.clone(),
+                    stream_buffer: VecDeque::with_capacity(config.window_size),
+                    current_model: None,
+                    model_version: 0,
+                    drift_detector: ConceptDriftDetector::new(0.001), // delta = 0.001
+                    sync_state: ModelSyncState::new(ConflictResolution::WeightedAverage),
+                    metrics: StreamingMetrics::default(),
+                    peers: HashMap::new(),
+                    last_sync: Instant::now(),
                 }
-                
-                // Update cluster count and weight
-                model.cluster_counts[assignment] += 1;
-                let decay = F::from(self.config.forgetting_factor).unwrap();
-                model.weights[assignment] = model.weights[assignment] * decay + F::one();
-                
-                // Increment model version
-                self.model_version += 1;
-                model.version = self.model_version;
-                model.timestamp = SystemTime::now();
-                
-                Ok(assignment)
-            } else {
-                // Initialize model with first few points
-                self.initialize_model_from_buffer()?;
-                Ok(0) // Default assignment
-            }
-        }
-
-        /// Initialize clustering model from current buffer
-        fn initialize_model_from_buffer(&mut self) -> Result<()> {
-            if self.stream_buffer.len() < 2 {
-                return Ok(());
             }
 
-            let n_features = self.stream_buffer[0].len();
-            let k = (self.stream_buffer.len() / 10).max(2).min(10); // Adaptive k
+            /// Process new data point from stream
+            pub fn process_stream_point(
+                &mut self,
+                point: Array1<F>,
+            ) -> Result<ClusteringResult<F>> {
+                // Add to buffer
+                self.stream_buffer.push_back(point.clone());
 
-            // Simple k-means initialization
-            let data_matrix = self.buffer_to_matrix()?;
-            let centroids = self.initialize_centroids_kmeans_plus(&data_matrix, k)?;
-            
-            let weights = Array1::ones(k);
-            let cluster_counts = Array1::zeros(k);
+                // Maintain window size
+                if self.stream_buffer.len() > self.config.window_size {
+                    self.stream_buffer.pop_front();
+                }
 
-            self.current_model = Some(StreamingClusteringModel {
-                centroids,
-                weights,
-                cluster_counts,
-                timestamp: SystemTime::now(),
-                version: 0,
-                learning_rate: 0.01,
-            });
+                // Update model incrementally
+                let assignment = self.update_model_incremental(&point)?;
 
-            Ok(())
-        }
+                // Check for concept drift
+                self.check_concept_drift()?;
 
-        /// Convert buffer to matrix for processing
-        fn buffer_to_matrix(&self) -> Result<Array2<F>> {
-            if self.stream_buffer.is_empty() {
-                return Err(ClusteringError::InvalidInput("Empty buffer".to_string()));
+                // Synchronize with peers if needed
+                if self.should_synchronize() {
+                    self.synchronize_with_peers()?;
+                }
+
+                // Update metrics
+                self.metrics.total_processed += 1;
+
+                Ok(ClusteringResult {
+                    assignment,
+                    confidence: self.calculate_assignment_confidence(&point, assignment),
+                    model_version: self.model_version,
+                    drift_detected: false, // Would be set by drift detection
+                })
             }
 
-            let n_samples = self.stream_buffer.len();
-            let n_features = self.stream_buffer[0].len();
-            let mut matrix = Array2::zeros((n_samples, n_features));
+            /// Update clustering model incrementally
+            fn update_model_incremental(&mut self, point: &Array1<F>) -> Result<usize> {
+                if let Some(ref mut model) = self.current_model {
+                    // Find nearest centroid
+                    let assignment = self.find_nearest_centroid(point, &model.centroids)?;
 
-            for (i, point) in self.stream_buffer.iter().enumerate() {
-                matrix.row_mut(i).assign(point);
-            }
+                    // Update centroid using online learning
+                    let learning_rate = F::from(model.learning_rate).unwrap();
+                    let old_centroid = model.centroids.row(assignment);
+                    let update = (point - &old_centroid) * learning_rate;
 
-            Ok(matrix)
-        }
-
-        /// Initialize centroids using k-means++
-        fn initialize_centroids_kmeans_plus(&self, data: &Array2<F>, k: usize) -> Result<Array2<F>> {
-            use rand::prelude::*;
-            
-            let n_samples = data.nrows();
-            let n_features = data.ncols();
-            let mut centroids = Array2::zeros((k, n_features));
-            let mut rng = rand::rng();
-
-            // Choose first centroid randomly
-            let first_idx = rng.random_range(0..n_samples);
-            centroids.row_mut(0).assign(&data.row(first_idx));
-
-            // Choose remaining centroids using k-means++ algorithm
-            for i in 1..k {
-                let mut distances = Array1::zeros(n_samples);
-                
-                for j in 0..n_samples {
-                    let point = data.row(j);
-                    let mut min_dist = F::infinity();
-                    
-                    for l in 0..i {
-                        let centroid = centroids.row(l);
-                        let dist = euclidean_distance(point, centroid);
-                        if dist < min_dist {
-                            min_dist = dist;
-                        }
+                    // Apply update
+                    for (i, &update_val) in update.iter().enumerate() {
+                        model.centroids[[assignment, i]] =
+                            model.centroids[[assignment, i]] + update_val;
                     }
-                    distances[j] = min_dist * min_dist;
-                }
 
-                // Choose next centroid with probability proportional to squared distance
-                let total_distance = distances.sum();
-                let mut cumulative_prob = F::zero();
-                let rand_val = F::from(rng.gen::<f64>()).unwrap() * total_distance;
+                    // Update cluster count and weight
+                    model.cluster_counts[assignment] += 1;
+                    let decay = F::from(self.config.forgetting_factor).unwrap();
+                    model.weights[assignment] = model.weights[assignment] * decay + F::one();
 
-                for (j, &dist) in distances.iter().enumerate() {
-                    cumulative_prob = cumulative_prob + dist;
-                    if rand_val <= cumulative_prob {
-                        centroids.row_mut(i).assign(&data.row(j));
-                        break;
-                    }
-                }
-            }
+                    // Increment model version
+                    self.model_version += 1;
+                    model.version = self.model_version;
+                    model.timestamp = SystemTime::now();
 
-            Ok(centroids)
-        }
-
-        /// Find nearest centroid for a point
-        fn find_nearest_centroid(&self, point: &Array1<F>, centroids: &Array2<F>) -> Result<usize> {
-            let mut min_distance = F::infinity();
-            let mut nearest_cluster = 0;
-
-            for (i, centroid) in centroids.axis_iter(Axis(0)).enumerate() {
-                let distance = euclidean_distance(point.view(), centroid);
-                if distance < min_distance {
-                    min_distance = distance;
-                    nearest_cluster = i;
+                    Ok(assignment)
+                } else {
+                    // Initialize model with first few points
+                    self.initialize_model_from_buffer()?;
+                    Ok(0) // Default assignment
                 }
             }
 
-            Ok(nearest_cluster)
-        }
-
-        /// Check for concept drift using quality monitoring
-        fn check_concept_drift(&mut self) -> Result<bool> {
-            if let Some(ref model) = self.current_model {
-                // Calculate current clustering quality (simplified)
-                let quality = self.calculate_clustering_quality(model)?;
-                let drift_detected = self.drift_detector.detect_drift(quality);
-                
-                if drift_detected {
-                    self.handle_concept_drift()?;
-                    self.metrics.drift_detections += 1;
+            /// Initialize clustering model from current buffer
+            fn initialize_model_from_buffer(&mut self) -> Result<()> {
+                if self.stream_buffer.len() < 2 {
+                    return Ok(());
                 }
-                
-                Ok(drift_detected)
-            } else {
-                Ok(false)
-            }
-        }
 
-        /// Handle detected concept drift
-        fn handle_concept_drift(&mut self) -> Result<()> {
-            // Reset model or adapt to new concept
-            self.drift_detector.new_concept();
-            
-            // Re-initialize model with recent data
-            self.initialize_model_from_buffer()?;
-            
-            // Notify peers about concept drift
-            // (Implementation would send drift notification)
-            
-            Ok(())
-        }
+                let n_features = self.stream_buffer[0].len();
+                let k = (self.stream_buffer.len() / 10).max(2).min(10); // Adaptive k
 
-        /// Calculate clustering quality score
-        fn calculate_clustering_quality(&self, model: &StreamingClusteringModel<F>) -> Result<f64> {
-            if self.stream_buffer.is_empty() {
-                return Ok(0.0);
+                // Simple k-means initialization
+                let data_matrix = self.buffer_to_matrix()?;
+                let centroids = self.initialize_centroids_kmeans_plus(&data_matrix, k)?;
+
+                let weights = Array1::ones(k);
+                let cluster_counts = Array1::zeros(k);
+
+                self.current_model = Some(StreamingClusteringModel {
+                    centroids,
+                    weights,
+                    cluster_counts,
+                    timestamp: SystemTime::now(),
+                    version: 0,
+                    learning_rate: 0.01,
+                });
+
+                Ok(())
             }
 
-            let mut total_inertia = 0.0;
-            let mut point_count = 0;
-
-            // Calculate within-cluster sum of squares
-            for point in &self.stream_buffer {
-                if let Ok(assignment) = self.find_nearest_centroid(point, &model.centroids) {
-                    let centroid = model.centroids.row(assignment);
-                    let distance = euclidean_distance(point.view(), centroid);
-                    total_inertia += distance.to_f64().unwrap_or(0.0).powi(2);
-                    point_count += 1;
+            /// Convert buffer to matrix for processing
+            fn buffer_to_matrix(&self) -> Result<Array2<F>> {
+                if self.stream_buffer.is_empty() {
+                    return Err(ClusteringError::InvalidInput("Empty buffer".to_string()));
                 }
-            }
 
-            // Return negative inertia as quality (higher is better)
-            Ok(if point_count > 0 { -total_inertia / point_count as f64 } else { 0.0 })
-        }
+                let n_samples = self.stream_buffer.len();
+                let n_features = self.stream_buffer[0].len();
+                let mut matrix = Array2::zeros((n_samples, n_features));
 
-        /// Check if synchronization with peers is needed
-        fn should_synchronize(&self) -> bool {
-            self.last_sync.elapsed().as_millis() as u64 >= self.config.sync_interval_ms
-        }
-
-        /// Synchronize model with peer nodes
-        fn synchronize_with_peers(&mut self) -> Result<()> {
-            if let Some(ref model) = self.current_model {
-                // Create incremental update
-                let update = self.create_incremental_update(model)?;
-                
-                // Send to all peers (implementation would use message passing)
-                for &peer_id in self.peers.keys() {
-                    // Send update to peer
-                    // (Implementation would use the message passing system)
+                for (i, point) in self.stream_buffer.iter().enumerate() {
+                    matrix.row_mut(i).assign(point);
                 }
-                
-                self.last_sync = Instant::now();
-                self.metrics.sync_events += 1;
+
+                Ok(matrix)
             }
-            
-            Ok(())
-        }
 
-        /// Create incremental update for peer synchronization
-        fn create_incremental_update(&self, model: &StreamingClusteringModel<F>) -> Result<IncrementalUpdate<F>> {
-            // Create delta updates (simplified)
-            let centroid_deltas = model.centroids.clone(); // Would be actual deltas
-            let weight_deltas = model.weights.clone();
-            let count_deltas = model.cluster_counts.mapv(|x| x as i64);
+            /// Initialize centroids using k-means++
+            fn initialize_centroids_kmeans_plus(
+                &self,
+                data: &Array2<F>,
+                k: usize,
+            ) -> Result<Array2<F>> {
+                use rand::prelude::*;
 
-            Ok(IncrementalUpdate {
-                centroid_deltas,
-                weight_deltas,
-                count_deltas,
-                learning_rate: model.learning_rate,
-            })
-        }
+                let n_samples = data.nrows();
+                let n_features = data.ncols();
+                let mut centroids = Array2::zeros((k, n_features));
+                let mut rng = rand::rng();
 
-        /// Calculate assignment confidence
-        fn calculate_assignment_confidence(&self, point: &Array1<F>, assignment: usize) -> f64 {
-            if let Some(ref model) = self.current_model {
-                if assignment < model.centroids.nrows() {
-                    let assigned_distance = euclidean_distance(
-                        point.view(), 
-                        model.centroids.row(assignment)
-                    ).to_f64().unwrap_or(f64::INFINITY);
-                    
-                    // Find second nearest distance
-                    let mut second_nearest = f64::INFINITY;
-                    for (i, centroid) in model.centroids.axis_iter(Axis(0)).enumerate() {
-                        if i != assignment {
-                            let dist = euclidean_distance(point.view(), centroid).to_f64().unwrap_or(f64::INFINITY);
-                            if dist < second_nearest {
-                                second_nearest = dist;
+                // Choose first centroid randomly
+                let first_idx = rng.random_range(0..n_samples);
+                centroids.row_mut(0).assign(&data.row(first_idx));
+
+                // Choose remaining centroids using k-means++ algorithm
+                for i in 1..k {
+                    let mut distances = Array1::zeros(n_samples);
+
+                    for j in 0..n_samples {
+                        let point = data.row(j);
+                        let mut min_dist = F::infinity();
+
+                        for l in 0..i {
+                            let centroid = centroids.row(l);
+                            let dist = euclidean_distance(point, centroid);
+                            if dist < min_dist {
+                                min_dist = dist;
                             }
                         }
+                        distances[j] = min_dist * min_dist;
                     }
-                    
-                    // Confidence based on distance ratio
-                    if second_nearest > 0.0 && assigned_distance > 0.0 {
-                        (second_nearest - assigned_distance) / second_nearest
+
+                    // Choose next centroid with probability proportional to squared distance
+                    let total_distance = distances.sum();
+                    let mut cumulative_prob = F::zero();
+                    let rand_val = F::from(rng.random::<f64>()).unwrap() * total_distance;
+
+                    for (j, &dist) in distances.iter().enumerate() {
+                        cumulative_prob = cumulative_prob + dist;
+                        if rand_val <= cumulative_prob {
+                            centroids.row_mut(i).assign(&data.row(j));
+                            break;
+                        }
+                    }
+                }
+
+                Ok(centroids)
+            }
+
+            /// Find nearest centroid for a point
+            fn find_nearest_centroid(
+                &self,
+                point: &Array1<F>,
+                centroids: &Array2<F>,
+            ) -> Result<usize> {
+                let mut min_distance = F::infinity();
+                let mut nearest_cluster = 0;
+
+                for (i, centroid) in centroids.axis_iter(Axis(0)).enumerate() {
+                    let distance = euclidean_distance(point.view(), centroid);
+                    if distance < min_distance {
+                        min_distance = distance;
+                        nearest_cluster = i;
+                    }
+                }
+
+                Ok(nearest_cluster)
+            }
+
+            /// Check for concept drift using quality monitoring
+            fn check_concept_drift(&mut self) -> Result<bool> {
+                if let Some(ref model) = self.current_model {
+                    // Calculate current clustering quality (simplified)
+                    let quality = self.calculate_clustering_quality(model)?;
+                    let drift_detected = self.drift_detector.detect_drift(quality);
+
+                    if drift_detected {
+                        self.handle_concept_drift()?;
+                        self.metrics.drift_detections += 1;
+                    }
+
+                    Ok(drift_detected)
+                } else {
+                    Ok(false)
+                }
+            }
+
+            /// Handle detected concept drift
+            fn handle_concept_drift(&mut self) -> Result<()> {
+                // Reset model or adapt to new concept
+                self.drift_detector.new_concept();
+
+                // Re-initialize model with recent data
+                self.initialize_model_from_buffer()?;
+
+                // Notify peers about concept drift
+                // (Implementation would send drift notification)
+
+                Ok(())
+            }
+
+            /// Calculate clustering quality score
+            fn calculate_clustering_quality(
+                &self,
+                model: &StreamingClusteringModel<F>,
+            ) -> Result<f64> {
+                if self.stream_buffer.is_empty() {
+                    return Ok(0.0);
+                }
+
+                let mut total_inertia = 0.0;
+                let mut point_count = 0;
+
+                // Calculate within-cluster sum of squares
+                for point in &self.stream_buffer {
+                    if let Ok(assignment) = self.find_nearest_centroid(point, &model.centroids) {
+                        let centroid = model.centroids.row(assignment);
+                        let distance = euclidean_distance(point.view(), centroid);
+                        total_inertia += distance.to_f64().unwrap_or(0.0).powi(2);
+                        point_count += 1;
+                    }
+                }
+
+                // Return negative inertia as quality (higher is better)
+                Ok(if point_count > 0 {
+                    -total_inertia / point_count as f64
+                } else {
+                    0.0
+                })
+            }
+
+            /// Check if synchronization with peers is needed
+            fn should_synchronize(&self) -> bool {
+                self.last_sync.elapsed().as_millis() as u64 >= self.config.sync_interval_ms
+            }
+
+            /// Synchronize model with peer nodes
+            fn synchronize_with_peers(&mut self) -> Result<()> {
+                if let Some(ref model) = self.current_model {
+                    // Create incremental update
+                    let update = self.create_incremental_update(model)?;
+
+                    // Send to all peers (implementation would use message passing)
+                    for &peer_id in self.peers.keys() {
+                        // Send update to peer
+                        // (Implementation would use the message passing system)
+                    }
+
+                    self.last_sync = Instant::now();
+                    self.metrics.sync_events += 1;
+                }
+
+                Ok(())
+            }
+
+            /// Create incremental update for peer synchronization
+            fn create_incremental_update(
+                &self,
+                model: &StreamingClusteringModel<F>,
+            ) -> Result<IncrementalUpdate<F>> {
+                // Create delta updates (simplified)
+                let centroid_deltas = model.centroids.clone(); // Would be actual deltas
+                let weight_deltas = model.weights.clone();
+                let count_deltas = model.cluster_counts.mapv(|x| x as i64);
+
+                Ok(IncrementalUpdate {
+                    centroid_deltas,
+                    weight_deltas,
+                    count_deltas,
+                    learning_rate: model.learning_rate,
+                })
+            }
+
+            /// Calculate assignment confidence
+            fn calculate_assignment_confidence(&self, point: &Array1<F>, assignment: usize) -> f64 {
+                if let Some(ref model) = self.current_model {
+                    if assignment < model.centroids.nrows() {
+                        let assigned_distance =
+                            euclidean_distance(point.view(), model.centroids.row(assignment))
+                                .to_f64()
+                                .unwrap_or(f64::INFINITY);
+
+                        // Find second nearest distance
+                        let mut second_nearest = f64::INFINITY;
+                        for (i, centroid) in model.centroids.axis_iter(Axis(0)).enumerate() {
+                            if i != assignment {
+                                let dist = euclidean_distance(point.view(), centroid)
+                                    .to_f64()
+                                    .unwrap_or(f64::INFINITY);
+                                if dist < second_nearest {
+                                    second_nearest = dist;
+                                }
+                            }
+                        }
+
+                        // Confidence based on distance ratio
+                        if second_nearest > 0.0 && assigned_distance > 0.0 {
+                            (second_nearest - assigned_distance) / second_nearest
+                        } else {
+                            1.0
+                        }
                     } else {
-                        1.0
+                        0.0
                     }
                 } else {
                     0.0
                 }
-            } else {
-                0.0
+            }
+
+            /// Get current streaming metrics
+            pub fn get_metrics(&self) -> &StreamingMetrics {
+                &self.metrics
+            }
+
+            /// Get current model
+            pub fn get_current_model(&self) -> Option<&StreamingClusteringModel<F>> {
+                self.current_model.as_ref()
             }
         }
 
-        /// Get current streaming metrics
-        pub fn get_metrics(&self) -> &StreamingMetrics {
-            &self.metrics
-        }
-
-        /// Get current model
-        pub fn get_current_model(&self) -> Option<&StreamingClusteringModel<F>> {
-            self.current_model.as_ref()
-        }
-    }
-
-    impl<F: Float + Debug> ConceptDriftDetector<F> {
-        /// Create new concept drift detector
-        pub fn new(delta: f64) -> Self {
-            Self {
-                quality_window: VecDeque::new(),
-                delta,
-                drift_points: Vec::new(),
-                current_concept: 0,
-                concept_boundaries: BTreeMap::new(),
-            }
-        }
-
-        /// Detect concept drift using ADWIN algorithm
-        pub fn detect_drift(&mut self, quality_score: f64) -> bool {
-            self.quality_window.push_back(quality_score);
-            
-            // Keep window manageable
-            if self.quality_window.len() > 1000 {
-                self.quality_window.pop_front();
-            }
-            
-            // Simple drift detection based on quality change
-            if self.quality_window.len() >= 100 {
-                let recent_avg = self.quality_window.iter().rev().take(20).sum::<f64>() / 20.0;
-                let older_avg = self.quality_window.iter().take(20).sum::<f64>() / 20.0;
-                
-                let change_magnitude = (recent_avg - older_avg).abs();
-                let threshold = self.delta;
-                
-                if change_magnitude > threshold {
-                    self.drift_points.push(SystemTime::now());
-                    return true;
+        impl<F: Float + Debug> ConceptDriftDetector<F> {
+            /// Create new concept drift detector
+            pub fn new(delta: f64) -> Self {
+                Self {
+                    quality_window: VecDeque::new(),
+                    delta,
+                    drift_points: Vec::new(),
+                    current_concept: 0,
+                    concept_boundaries: BTreeMap::new(),
                 }
             }
-            
-            false
-        }
 
-        /// Handle new concept after drift detection
-        pub fn new_concept(&mut self) {
-            self.current_concept += 1;
-            self.concept_boundaries.insert(self.current_concept, SystemTime::now());
-            self.quality_window.clear();
-        }
-    }
+            /// Detect concept drift using ADWIN algorithm
+            pub fn detect_drift(&mut self, quality_score: f64) -> bool {
+                self.quality_window.push_back(quality_score);
 
-    impl<F: Float> ModelSyncState<F> {
-        /// Create new model synchronization state
-        pub fn new(resolution_strategy: ConflictResolution) -> Self {
-            Self {
-                pending_updates: HashMap::new(),
-                resolution_strategy,
-                version_vector: HashMap::new(),
+                // Keep window manageable
+                if self.quality_window.len() > 1000 {
+                    self.quality_window.pop_front();
+                }
+
+                // Simple drift detection based on quality change
+                if self.quality_window.len() >= 100 {
+                    let recent_avg = self.quality_window.iter().rev().take(20).sum::<f64>() / 20.0;
+                    let older_avg = self.quality_window.iter().take(20).sum::<f64>() / 20.0;
+
+                    let change_magnitude = (recent_avg - older_avg).abs();
+                    let threshold = self.delta;
+
+                    if change_magnitude > threshold {
+                        self.drift_points.push(SystemTime::now());
+                        return true;
+                    }
+                }
+
+                false
+            }
+
+            /// Handle new concept after drift detection
+            pub fn new_concept(&mut self) {
+                self.current_concept += 1;
+                self.concept_boundaries
+                    .insert(self.current_concept, SystemTime::now());
+                self.quality_window.clear();
             }
         }
-    }
 
-    /// Clustering result for streaming
-    #[derive(Debug, Clone)]
-    pub struct ClusteringResult<F: Float> {
-        /// Cluster assignment
-        pub assignment: usize,
-        /// Assignment confidence (0.0 to 1.0)
-        pub confidence: f64,
-        /// Model version used
-        pub model_version: u64,
-        /// Whether drift was detected
-        pub drift_detected: bool,
+        impl<F: Float> ModelSyncState<F> {
+            /// Create new model synchronization state
+            pub fn new(resolution_strategy: ConflictResolution) -> Self {
+                Self {
+                    pending_updates: HashMap::new(),
+                    resolution_strategy,
+                    version_vector: HashMap::new(),
+                }
+            }
+        }
+
+        /// Clustering result for streaming
+        #[derive(Debug, Clone)]
+        pub struct ClusteringResult<F: Float> {
+            /// Cluster assignment
+            pub assignment: usize,
+            /// Assignment confidence (0.0 to 1.0)
+            pub confidence: f64,
+            /// Model version used
+            pub model_version: u64,
+            /// Whether drift was detected
+            pub drift_detected: bool,
+        }
     }
-}
 }

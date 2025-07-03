@@ -83,7 +83,7 @@ pub fn mean_squared_error<F, S1, S2, D1, D2>(
     y_pred: &ArrayBase<S2, D2>,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
     D1: Dimension,
@@ -96,10 +96,12 @@ where
 
     // Use SIMD optimizations for vector operations when data is contiguous
     let squared_error_sum = if y_true.is_standard_layout() && y_pred.is_standard_layout() {
-        // SIMD-optimized computation
-        let diff = F::simd_sub(&y_true.view(), &y_pred.view());
-        let squared_diff = F::simd_mul(&diff, &diff);
-        F::simd_sum(&squared_diff)
+        // SIMD-optimized computation - convert to 1D views for SIMD ops
+        let y_true_1d = y_true.view().into_dimensionality::<ndarray::Ix1>().unwrap();
+        let y_pred_1d = y_pred.view().into_dimensionality::<ndarray::Ix1>().unwrap();
+        let diff = F::simd_sub(&y_true_1d, &y_pred_1d);
+        let squared_diff = F::simd_mul(&diff.view(), &diff.view());
+        F::simd_sum(&squared_diff.view())
     } else {
         // Fallback for non-contiguous arrays
         let mut sum = F::zero();
@@ -144,7 +146,7 @@ pub fn root_mean_squared_error<F, S1, S2, D1, D2>(
     y_pred: &ArrayBase<S2, D2>,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
     D1: Dimension,
@@ -186,7 +188,7 @@ pub fn mean_absolute_error<F, S1, S2, D1, D2>(
     y_pred: &ArrayBase<S2, D2>,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
     D1: Dimension,
@@ -253,7 +255,7 @@ pub fn mean_absolute_percentage_error<F, S1, S2, D1, D2>(
     y_pred: &ArrayBase<S2, D2>,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
     D1: Dimension,
@@ -313,7 +315,7 @@ pub fn symmetric_mean_absolute_percentage_error<F, S1, S2, D1, D2>(
     y_pred: &ArrayBase<S2, D2>,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
     D1: Dimension,
@@ -375,7 +377,7 @@ pub fn max_error<F, S1, S2, D1, D2>(
     y_pred: &ArrayBase<S2, D2>,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
     D1: Dimension,
@@ -427,7 +429,7 @@ pub fn median_absolute_error<F, S1, S2, D1, D2>(
     y_pred: &ArrayBase<S2, D2>,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
     D1: Dimension,
@@ -493,7 +495,7 @@ pub fn mean_squared_log_error<F, S1, S2, D1, D2>(
     y_pred: &ArrayBase<S2, D2>,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
     D1: Dimension,
@@ -568,7 +570,7 @@ pub fn huber_loss<F, S1, S2, D1, D2>(
     delta: F,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
     D1: Dimension,
@@ -635,7 +637,7 @@ pub fn normalized_root_mean_squared_error<F, S1, S2, D1, D2>(
     normalization: &str,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
     D1: Dimension,
@@ -738,7 +740,7 @@ pub fn relative_absolute_error<F, S1, S2, D1, D2>(
     y_pred: &ArrayBase<S2, D2>,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
     D1: Dimension,
@@ -799,7 +801,7 @@ pub fn relative_squared_error<F, S1, S2, D1, D2>(
     y_pred: &ArrayBase<S2, D2>,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
     D1: Dimension,

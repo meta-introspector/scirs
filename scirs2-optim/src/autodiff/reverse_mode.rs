@@ -303,12 +303,12 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Addition operation
-    pub fn add(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
+    pub fn add(&mut self, lhs: usize, rhs: usize) -> Result<usize> {
         self.binary_op(ReverseOpType::Add, lhs, rhs, BackwardFunction::AddBackward)
     }
 
     /// Subtraction operation
-    pub fn subtract(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
+    pub fn subtract(&mut self, lhs: usize, rhs: usize) -> Result<usize> {
         self.binary_op(
             ReverseOpType::Subtract,
             lhs,
@@ -318,7 +318,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Multiplication operation
-    pub fn multiply(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
+    pub fn multiply(&mut self, lhs: usize, rhs: usize) -> Result<usize> {
         // Save operand values for backward pass
         let lhs_val = self.get_value(lhs)?;
         let rhs_val = self.get_value(rhs)?;
@@ -341,7 +341,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Division operation
-    pub fn divide(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
+    pub fn divide(&mut self, lhs: usize, rhs: usize) -> Result<usize> {
         let lhs_val = self.get_value(lhs)?;
         let rhs_val = self.get_value(rhs)?;
 
@@ -363,7 +363,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Power operation
-    pub fn power(&mut self, base: usize, exponent: T) -> Result<usize, OptimError> {
+    pub fn power(&mut self, base: usize, exponent: T) -> Result<usize> {
         let base_val = self.get_value(base)?;
 
         let output_id = self.tape.len();
@@ -384,17 +384,17 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Exponential function
-    pub fn exp(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn exp(&mut self, input: usize) -> Result<usize> {
         self.unary_op(ReverseOpType::Exp, input, BackwardFunction::ExpBackward)
     }
 
     /// Natural logarithm
-    pub fn log(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn log(&mut self, input: usize) -> Result<usize> {
         self.unary_op(ReverseOpType::Log, input, BackwardFunction::LogBackward)
     }
 
     /// Sine function
-    pub fn sin(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn sin(&mut self, input: usize) -> Result<usize> {
         self.unary_op(
             ReverseOpType::Sin,
             input,
@@ -405,7 +405,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Cosine function
-    pub fn cos(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn cos(&mut self, input: usize) -> Result<usize> {
         self.unary_op(
             ReverseOpType::Cos,
             input,
@@ -416,7 +416,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Hyperbolic tangent
-    pub fn tanh(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn tanh(&mut self, input: usize) -> Result<usize> {
         self.unary_op(
             ReverseOpType::Tanh,
             input,
@@ -427,7 +427,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Sigmoid function
-    pub fn sigmoid(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn sigmoid(&mut self, input: usize) -> Result<usize> {
         self.unary_op(
             ReverseOpType::Sigmoid,
             input,
@@ -438,7 +438,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// ReLU function
-    pub fn relu(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn relu(&mut self, input: usize) -> Result<usize> {
         self.unary_op(
             ReverseOpType::ReLU,
             input,
@@ -449,7 +449,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Leaky ReLU function
-    pub fn leaky_relu(&mut self, input: usize, alpha: f64) -> Result<usize, OptimError> {
+    pub fn leaky_relu(&mut self, input: usize, alpha: f64) -> Result<usize> {
         self.unary_op(
             ReverseOpType::LeakyReLU,
             input,
@@ -460,7 +460,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Matrix multiplication
-    pub fn matmul(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
+    pub fn matmul(&mut self, lhs: usize, rhs: usize) -> Result<usize> {
         let lhs_val = self.get_value(lhs)?;
         let rhs_val = self.get_value(rhs)?;
 
@@ -485,7 +485,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Dot product
-    pub fn dot(&mut self, lhs: usize, rhs: usize) -> Result<usize, OptimError> {
+    pub fn dot(&mut self, lhs: usize, rhs: usize) -> Result<usize> {
         self.binary_op(
             ReverseOpType::Dot,
             lhs,
@@ -495,7 +495,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Sum reduction
-    pub fn sum(&mut self, input: usize, axis: Option<usize>) -> Result<usize, OptimError> {
+    pub fn sum(&mut self, input: usize, axis: Option<usize>) -> Result<usize> {
         let input_val = self.get_value(input)?;
         let input_shape = input_val.shape().to_vec();
 
@@ -521,7 +521,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Mean reduction
-    pub fn mean(&mut self, input: usize, axis: Option<usize>) -> Result<usize, OptimError> {
+    pub fn mean(&mut self, input: usize, axis: Option<usize>) -> Result<usize> {
         let input_val = self.get_value(input)?;
         let input_shape = input_val.shape().to_vec();
 
@@ -547,7 +547,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// L2 norm
-    pub fn norm(&mut self, input: usize) -> Result<usize, OptimError> {
+    pub fn norm(&mut self, input: usize) -> Result<usize> {
         let input_val = self.get_value(input)?;
         let input_shape = input_val.shape().to_vec();
 
@@ -573,7 +573,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Reshape operation
-    pub fn reshape(&mut self, input: usize, new_shape: &[usize]) -> Result<usize, OptimError> {
+    pub fn reshape(&mut self, input: usize, new_shape: &[usize]) -> Result<usize> {
         let input_val = self.get_value(input)?;
         let original_shape = input_val.shape().to_vec();
 
@@ -595,11 +595,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
     }
 
     /// Backward pass - compute gradients
-    pub fn backward(
-        &mut self,
-        output_id: usize,
-        gradient: Option<Array1<T>>,
-    ) -> Result<(), OptimError> {
+    pub fn backward(&mut self, output_id: usize, gradient: Option<Array1<T>>) -> Result<()> {
         // Initialize output gradient
         if output_id >= self.gradients.len() {
             self.gradients.resize(output_id + 1, None);
@@ -673,7 +669,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
         lhs: usize,
         rhs: usize,
         backward_fn: BackwardFunction<T>,
-    ) -> Result<usize, OptimError> {
+    ) -> Result<usize> {
         let output_id = self.tape.len();
 
         if self.recording {
@@ -696,7 +692,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
         op_type: ReverseOpType,
         input: usize,
         backward_fn: BackwardFunction<T>,
-    ) -> Result<usize, OptimError> {
+    ) -> Result<usize> {
         let input_val = self.get_value(input)?;
 
         let output_id = self.tape.len();
@@ -716,11 +712,9 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
         Ok(output_id)
     }
 
-    fn get_value(&self, var_id: usize) -> Result<Array1<T>, OptimError> {
+    fn get_value(&self, var_id: usize) -> Result<Array1<T>> {
         if var_id >= self.tape.len() {
-            return Err(OptimError::InvalidConfig(
-                "Invalid variable ID".to_string(),
-            ));
+            return Err(OptimError::InvalidConfig("Invalid variable ID".to_string()));
         }
 
         match &self.tape[var_id].saved_values {
@@ -737,7 +731,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
         &self,
         op: &ReverseOperation<T>,
         output_grad: &Array1<T>,
-    ) -> Result<Vec<Array1<T>>, OptimError> {
+    ) -> Result<Vec<Array1<T>>> {
         match &op.backward_fn {
             BackwardFunction::Identity => Ok(vec![output_grad.clone()]),
 

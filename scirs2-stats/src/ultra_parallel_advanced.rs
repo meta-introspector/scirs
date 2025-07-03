@@ -859,10 +859,6 @@ impl Default for PerformanceMetrics {
     }
 }
 
-
-
-
-
 impl<F> Default for UltraParallelProcessor<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,

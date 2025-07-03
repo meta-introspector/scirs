@@ -6,9 +6,9 @@
 
 use ndarray::Array2;
 use scirs2_cluster::ultrathink_gpu_distributed::{
-    GpuUltrathinkClusterer, DistributedUltrathinkClusterer, HybridGpuDistributedClusterer,
+    CoordinationStrategy, CustomGpuOptimization, DistributedUltrathinkClusterer,
     GpuAccelerationConfig, GpuDeviceSelection, GpuMemoryStrategy, GpuOptimizationLevel,
-    WorkerNodeConfig, CoordinationStrategy, CustomGpuOptimization,
+    GpuUltrathinkClusterer, HybridGpuDistributedClusterer, WorkerNodeConfig,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -53,10 +53,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn gpu_acceleration_demo() -> Result<(), Box<dyn std::error::Error>> {
     // Create large dataset for GPU acceleration
     let data = create_large_dataset(5000, 50);
-    
-    println!("   📊 Large dataset created: {} samples x {} features", data.nrows(), data.ncols());
+
+    println!(
+        "   📊 Large dataset created: {} samples x {} features",
+        data.nrows(),
+        data.ncols()
+    );
     println!("   🚀 Configuring GPU acceleration...");
-    
+
     // Configure GPU acceleration
     let gpu_config = GpuAccelerationConfig {
         device_selection: GpuDeviceSelection::Automatic,
@@ -66,31 +70,40 @@ fn gpu_acceleration_demo() -> Result<(), Box<dyn std::error::Error>> {
         enable_tensor_cores: true,
         enable_mixed_precision: true,
     };
-    
+
     // Create GPU-accelerated clusterer
-    let mut gpu_clusterer = GpuUltrathinkClusterer::new(gpu_config)
-        .with_full_gpu_acceleration();
-    
+    let mut gpu_clusterer = GpuUltrathinkClusterer::new(gpu_config).with_full_gpu_acceleration();
+
     // Perform GPU clustering
     let gpu_result = gpu_clusterer.gpu_cluster(&data.view())?;
-    
+
     println!("   ✅ GPU clustering completed successfully");
     println!("   ⚡ GPU Acceleration Metrics:");
-    println!("      - Speedup factor: {:.2}x", gpu_result.gpu_metrics.speedup_factor);
-    println!("      - GPU utilization: {:.1}%", gpu_result.gpu_metrics.gpu_utilization * 100.0);
-    println!("      - Memory bandwidth: {:.1}%", gpu_result.gpu_metrics.memory_bandwidth_utilization * 100.0);
-    println!("      - Compute efficiency: {:.1}%", gpu_result.gpu_metrics.compute_efficiency * 100.0);
-    println!("      - Total GPU time: {:.3}s", gpu_result.gpu_metrics.total_gpu_time);
-    
+    let speedup = gpu_result.gpu_metrics.speedup_factor;
+    println!("      - Speedup factor: {speedup:.2}x");
+    let gpu_util = gpu_result.gpu_metrics.gpu_utilization * 100.0;
+    println!("      - GPU utilization: {gpu_util:.1}%");
+    let mem_bandwidth = gpu_result.gpu_metrics.memory_bandwidth_utilization * 100.0;
+    println!("      - Memory bandwidth: {mem_bandwidth:.1}%");
+    let compute_eff = gpu_result.gpu_metrics.compute_efficiency * 100.0;
+    println!("      - Compute efficiency: {compute_eff:.1}%");
+    let gpu_time = gpu_result.gpu_metrics.total_gpu_time;
+    println!("      - Total GPU time: {gpu_time:.3}s");
+
     println!("   💾 Memory Statistics:");
-    println!("      - Peak memory usage: {:.1} MB", gpu_result.memory_stats.peak_memory_mb);
-    println!("      - Memory efficiency: {:.1}%", gpu_result.memory_stats.memory_efficiency * 100.0);
-    println!("      - Fragmentation ratio: {:.1}%", gpu_result.memory_stats.fragmentation_ratio * 100.0);
-    
+    let peak_mem = gpu_result.memory_stats.peak_memory_mb;
+    println!("      - Peak memory usage: {peak_mem:.1} MB");
+    let mem_eff = gpu_result.memory_stats.memory_efficiency * 100.0;
+    println!("      - Memory efficiency: {mem_eff:.1}%");
+    let frag_ratio = gpu_result.memory_stats.fragmentation_ratio * 100.0;
+    println!("      - Fragmentation ratio: {frag_ratio:.1}%");
+
     println!("   🔧 Kernel Performance:");
-    println!("      - Preprocessing kernels: {}", gpu_result.kernel_stats.preprocessing_kernel_calls);
-    println!("      - Clustering kernels: {}", gpu_result.kernel_stats.clustering_kernel_calls);
-    
+    let preproc_kernels = gpu_result.kernel_stats.preprocessing_kernel_calls;
+    println!("      - Preprocessing kernels: {preproc_kernels}");
+    let cluster_kernels = gpu_result.kernel_stats.clustering_kernel_calls;
+    println!("      - Clustering kernels: {cluster_kernels}");
+
     Ok(())
 }
 
@@ -98,10 +111,14 @@ fn gpu_acceleration_demo() -> Result<(), Box<dyn std::error::Error>> {
 fn distributed_clustering_demo() -> Result<(), Box<dyn std::error::Error>> {
     // Create massive dataset for distributed processing
     let data = create_massive_dataset(20000, 100);
-    
-    println!("   📊 Massive dataset created: {} samples x {} features", data.nrows(), data.ncols());
+
+    println!(
+        "   📊 Massive dataset created: {} samples x {} features",
+        data.nrows(),
+        data.ncols()
+    );
     println!("   🌐 Setting up distributed worker nodes...");
-    
+
     // Configure distributed workers
     let worker_configs = vec![
         WorkerNodeConfig {
@@ -137,40 +154,62 @@ fn distributed_clustering_demo() -> Result<(), Box<dyn std::error::Error>> {
             network_bandwidth: 10000.0,
         },
     ];
-    
+
     // Create distributed clusterer
     let mut distributed_clusterer = DistributedUltrathinkClusterer::new(
         worker_configs.clone(),
-        CoordinationStrategy::MasterWorker
+        CoordinationStrategy::MasterWorker,
     );
-    
+
     // Perform distributed clustering
     let distributed_result = distributed_clusterer.distributed_cluster(&data.view())?;
-    
+
     println!("   ✅ Distributed clustering completed successfully");
     println!("   🌐 Distributed Processing Metrics:");
-    println!("      - Total workers: {}", distributed_result.distributed_metrics.total_workers);
-    println!("      - Successful workers: {}", distributed_result.distributed_metrics.successful_workers);
-    println!("      - Parallel efficiency: {:.1}%", distributed_result.distributed_metrics.parallel_efficiency * 100.0);
-    println!("      - Scalability factor: {:.2}x", distributed_result.distributed_metrics.scalability_factor);
-    println!("      - Data throughput: {:.1} samples/sec", distributed_result.distributed_metrics.data_throughput);
-    
+    let total_workers = distributed_result.distributed_metrics.total_workers;
+    println!("      - Total workers: {total_workers}");
+    let successful_workers = distributed_result.distributed_metrics.successful_workers;
+    println!("      - Successful workers: {successful_workers}");
+    let parallel_eff = distributed_result.distributed_metrics.parallel_efficiency * 100.0;
+    println!("      - Parallel efficiency: {parallel_eff:.1}%");
+    let scalability = distributed_result.distributed_metrics.scalability_factor;
+    println!("      - Scalability factor: {scalability:.2}x");
+    let throughput = distributed_result.distributed_metrics.data_throughput;
+    println!("      - Data throughput: {throughput:.1} samples/sec");
+
     println!("   ⚖️  Load Balancing:");
-    println!("      - Load variance: {:.3}", distributed_result.load_balance_stats.load_variance);
-    println!("      - Balancing efficiency: {:.1}%", distributed_result.load_balance_stats.balancing_efficiency * 100.0);
-    
+    let load_var = distributed_result.load_balance_stats.load_variance;
+    println!("      - Load variance: {load_var:.3}");
+    let balance_eff = distributed_result.load_balance_stats.balancing_efficiency * 100.0;
+    println!("      - Balancing efficiency: {balance_eff:.1}%");
+
     println!("   📡 Communication Overhead:");
-    println!("      - Data transmitted: {:.1} MB", distributed_result.communication_overhead.total_bytes_transmitted as f64 / 1024.0 / 1024.0);
-    println!("      - Network latency: {:.1} ms", distributed_result.communication_overhead.network_latency_ms);
-    println!("      - Bandwidth utilization: {:.1}%", distributed_result.communication_overhead.bandwidth_utilization * 100.0);
-    
+    let data_transmitted = distributed_result
+        .communication_overhead
+        .total_bytes_transmitted as f64
+        / 1024.0
+        / 1024.0;
+    println!("      - Data transmitted: {data_transmitted:.1} MB");
+    let latency = distributed_result.communication_overhead.network_latency_ms;
+    println!("      - Network latency: {latency:.1} ms");
+    let bandwidth_util = distributed_result
+        .communication_overhead
+        .bandwidth_utilization
+        * 100.0;
+    println!("      - Bandwidth utilization: {bandwidth_util:.1}%");
+
     // Display individual worker performance
     println!("   👥 Worker Performance:");
     for (i, stats) in distributed_result.worker_stats.iter().enumerate() {
-        println!("      - {}: {:.3}s execution, {:.1}% CPU, {:.1} MB memory",
-            stats.worker_id, stats.execution_time, stats.cpu_utilization * 100.0, stats.memory_usage);
+        println!(
+            "      - {}: {:.3}s execution, {:.1}% CPU, {:.1} MB memory",
+            stats.worker_id,
+            stats.execution_time,
+            stats.cpu_utilization * 100.0,
+            stats.memory_usage
+        );
     }
-    
+
     Ok(())
 }
 
@@ -178,10 +217,14 @@ fn distributed_clustering_demo() -> Result<(), Box<dyn std::error::Error>> {
 fn hybrid_clustering_demo() -> Result<(), Box<dyn std::error::Error>> {
     // Create ultra-massive dataset for hybrid processing
     let data = create_ultra_massive_dataset(50000, 200);
-    
-    println!("   📊 Ultra-massive dataset: {} samples x {} features", data.nrows(), data.ncols());
+
+    println!(
+        "   📊 Ultra-massive dataset: {} samples x {} features",
+        data.nrows(),
+        data.ncols()
+    );
     println!("   🔥 Initializing hybrid GPU-distributed system...");
-    
+
     // Configure GPU acceleration
     let gpu_config = GpuAccelerationConfig {
         device_selection: GpuDeviceSelection::MultiGpu(vec![0, 1, 2, 3]),
@@ -196,7 +239,7 @@ fn hybrid_clustering_demo() -> Result<(), Box<dyn std::error::Error>> {
         enable_tensor_cores: true,
         enable_mixed_precision: true,
     };
-    
+
     // Configure distributed workers with GPU capabilities
     let hybrid_workers = vec![
         WorkerNodeConfig {
@@ -224,37 +267,39 @@ fn hybrid_clustering_demo() -> Result<(), Box<dyn std::error::Error>> {
             network_bandwidth: 40000.0,
         },
     ];
-    
+
     // Create hybrid clusterer
     let gpu_clusterer = GpuUltrathinkClusterer::new(gpu_config);
-    let distributed_clusterer = DistributedUltrathinkClusterer::new(
-        hybrid_workers, 
-        CoordinationStrategy::Hierarchical
-    );
-    
+    let distributed_clusterer =
+        DistributedUltrathinkClusterer::new(hybrid_workers, CoordinationStrategy::Hierarchical);
+
     println!("   ✅ Hybrid system initialized successfully");
     println!("   🎯 Hybrid Processing Capabilities:");
     println!("      - 4 GPUs per node × 3 nodes = 12 total GPUs");
     println!("      - 64 CPU cores per node × 3 nodes = 192 total cores");
     println!("      - 256 GB memory per node × 3 nodes = 768 GB total");
     println!("      - 40 Gbps network per node for ultra-fast communication");
-    
+
     println!("   ⚡ Expected Performance Benefits:");
     println!("      - GPU acceleration: ~5-8x speedup per node");
     println!("      - Distributed scaling: ~2.5x across 3 nodes");
     println!("      - Combined speedup: ~12-20x over single CPU");
     println!("      - Memory capacity: 50M+ samples supported");
-    
+
     Ok(())
 }
 
 /// Demonstrates GPU configuration optimization
 fn gpu_optimization_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_optimization_test_data(10000, 75);
-    
-    println!("   📊 Optimization test data: {} samples x {} features", data.nrows(), data.ncols());
+
+    println!(
+        "   📊 Optimization test data: {} samples x {} features",
+        data.nrows(),
+        data.ncols()
+    );
     println!("   🔧 Testing different GPU configurations...");
-    
+
     // Test configuration 1: Conservative
     println!("   🐌 Testing Conservative Configuration:");
     let conservative_config = GpuAccelerationConfig {
@@ -265,14 +310,23 @@ fn gpu_optimization_demo() -> Result<(), Box<dyn std::error::Error>> {
         enable_tensor_cores: false,
         enable_mixed_precision: false,
     };
-    
+
     let mut conservative_clusterer = GpuUltrathinkClusterer::new(conservative_config);
     let conservative_result = conservative_clusterer.gpu_cluster(&data.view())?;
-    
-    println!("      - Execution time: {:.3}s", conservative_result.gpu_metrics.total_gpu_time);
-    println!("      - Memory efficiency: {:.1}%", conservative_result.memory_stats.memory_efficiency * 100.0);
-    println!("      - GPU utilization: {:.1}%", conservative_result.gpu_metrics.gpu_utilization * 100.0);
-    
+
+    println!(
+        "      - Execution time: {:.3}s",
+        conservative_result.gpu_metrics.total_gpu_time
+    );
+    println!(
+        "      - Memory efficiency: {:.1}%",
+        conservative_result.memory_stats.memory_efficiency * 100.0
+    );
+    println!(
+        "      - GPU utilization: {:.1}%",
+        conservative_result.gpu_metrics.gpu_utilization * 100.0
+    );
+
     // Test configuration 2: Optimized
     println!("   ⚡ Testing Optimized Configuration:");
     let optimized_config = GpuAccelerationConfig {
@@ -283,14 +337,23 @@ fn gpu_optimization_demo() -> Result<(), Box<dyn std::error::Error>> {
         enable_tensor_cores: true,
         enable_mixed_precision: true,
     };
-    
+
     let mut optimized_clusterer = GpuUltrathinkClusterer::new(optimized_config);
     let optimized_result = optimized_clusterer.gpu_cluster(&data.view())?;
-    
-    println!("      - Execution time: {:.3}s", optimized_result.gpu_metrics.total_gpu_time);
-    println!("      - Memory efficiency: {:.1}%", optimized_result.memory_stats.memory_efficiency * 100.0);
-    println!("      - GPU utilization: {:.1}%", optimized_result.gpu_metrics.gpu_utilization * 100.0);
-    
+
+    println!(
+        "      - Execution time: {:.3}s",
+        optimized_result.gpu_metrics.total_gpu_time
+    );
+    println!(
+        "      - Memory efficiency: {:.1}%",
+        optimized_result.memory_stats.memory_efficiency * 100.0
+    );
+    println!(
+        "      - GPU utilization: {:.1}%",
+        optimized_result.gpu_metrics.gpu_utilization * 100.0
+    );
+
     // Test configuration 3: Maximum performance
     println!("   🚀 Testing Maximum Performance Configuration:");
     let maximum_config = GpuAccelerationConfig {
@@ -301,34 +364,53 @@ fn gpu_optimization_demo() -> Result<(), Box<dyn std::error::Error>> {
         enable_tensor_cores: true,
         enable_mixed_precision: true,
     };
-    
+
     let mut maximum_clusterer = GpuUltrathinkClusterer::new(maximum_config);
     let maximum_result = maximum_clusterer.gpu_cluster(&data.view())?;
-    
-    println!("      - Execution time: {:.3}s", maximum_result.gpu_metrics.total_gpu_time);
-    println!("      - Memory efficiency: {:.1}%", maximum_result.memory_stats.memory_efficiency * 100.0);
-    println!("      - GPU utilization: {:.1}%", maximum_result.gpu_metrics.gpu_utilization * 100.0);
-    
+
+    println!(
+        "      - Execution time: {:.3}s",
+        maximum_result.gpu_metrics.total_gpu_time
+    );
+    println!(
+        "      - Memory efficiency: {:.1}%",
+        maximum_result.memory_stats.memory_efficiency * 100.0
+    );
+    println!(
+        "      - GPU utilization: {:.1}%",
+        maximum_result.gpu_metrics.gpu_utilization * 100.0
+    );
+
     // Performance comparison
     let conservative_time = conservative_result.gpu_metrics.total_gpu_time;
     let optimized_speedup = conservative_time / optimized_result.gpu_metrics.total_gpu_time;
     let maximum_speedup = conservative_time / maximum_result.gpu_metrics.total_gpu_time;
-    
+
     println!("   📈 Performance Comparison:");
-    println!("      - Optimized vs Conservative: {:.2}x speedup", optimized_speedup);
-    println!("      - Maximum vs Conservative: {:.2}x speedup", maximum_speedup);
+    println!(
+        "      - Optimized vs Conservative: {:.2}x speedup",
+        optimized_speedup
+    );
+    println!(
+        "      - Maximum vs Conservative: {:.2}x speedup",
+        maximum_speedup
+    );
     println!("      - Optimal configuration: Maximum Performance");
-    
+
     Ok(())
 }
 
 /// Demonstrates distributed load balancing and fault tolerance
 fn distributed_load_balancing_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_unbalanced_dataset(15000, 60);
-    
-    println!("   📊 Unbalanced dataset: {} samples x {} features", data.nrows(), data.ncols());
+
+    println!(
+        "   📊 Unbalanced dataset: {} samples x {} features",
+        data.nrows(),
+        data.ncols()
+    );
     println!("   ⚖️  Testing load balancing strategies...");
-    
+
     // Create heterogeneous worker configuration
     let heterogeneous_workers = vec![
         WorkerNodeConfig {
@@ -364,64 +446,88 @@ fn distributed_load_balancing_demo() -> Result<(), Box<dyn std::error::Error>> {
             network_bandwidth: 100.0,
         },
     ];
-    
+
     // Test different coordination strategies
     println!("   🎯 Testing Master-Worker Coordination:");
     let mut master_worker_clusterer = DistributedUltrathinkClusterer::new(
         heterogeneous_workers.clone(),
-        CoordinationStrategy::MasterWorker
+        CoordinationStrategy::MasterWorker,
     );
     let mw_result = master_worker_clusterer.distributed_cluster(&data.view())?;
-    
-    println!("      - Load variance: {:.3}", mw_result.load_balance_stats.load_variance);
-    println!("      - Balancing efficiency: {:.1}%", mw_result.load_balance_stats.balancing_efficiency * 100.0);
-    
+
+    println!(
+        "      - Load variance: {:.3}",
+        mw_result.load_balance_stats.load_variance
+    );
+    println!(
+        "      - Balancing efficiency: {:.1}%",
+        mw_result.load_balance_stats.balancing_efficiency * 100.0
+    );
+
     println!("   🔄 Testing Peer-to-Peer Coordination:");
     let mut p2p_clusterer = DistributedUltrathinkClusterer::new(
         heterogeneous_workers.clone(),
-        CoordinationStrategy::PeerToPeer
+        CoordinationStrategy::PeerToPeer,
     );
     let p2p_result = p2p_clusterer.distributed_cluster(&data.view())?;
-    
-    println!("      - Load variance: {:.3}", p2p_result.load_balance_stats.load_variance);
-    println!("      - Balancing efficiency: {:.1}%", p2p_result.load_balance_stats.balancing_efficiency * 100.0);
-    
+
+    println!(
+        "      - Load variance: {:.3}",
+        p2p_result.load_balance_stats.load_variance
+    );
+    println!(
+        "      - Balancing efficiency: {:.1}%",
+        p2p_result.load_balance_stats.balancing_efficiency * 100.0
+    );
+
     println!("   🏗️  Testing Hierarchical Coordination:");
     let mut hierarchical_clusterer = DistributedUltrathinkClusterer::new(
         heterogeneous_workers,
-        CoordinationStrategy::Hierarchical
+        CoordinationStrategy::Hierarchical,
     );
     let hierarchical_result = hierarchical_clusterer.distributed_cluster(&data.view())?;
-    
-    println!("      - Load variance: {:.3}", hierarchical_result.load_balance_stats.load_variance);
-    println!("      - Balancing efficiency: {:.1}%", hierarchical_result.load_balance_stats.balancing_efficiency * 100.0);
-    
+
+    println!(
+        "      - Load variance: {:.3}",
+        hierarchical_result.load_balance_stats.load_variance
+    );
+    println!(
+        "      - Balancing efficiency: {:.1}%",
+        hierarchical_result.load_balance_stats.balancing_efficiency * 100.0
+    );
+
     // Fault tolerance simulation
     println!("   🛡️  Fault Tolerance Analysis:");
-    println!("      - Failed workers handled: {}", hierarchical_result.distributed_metrics.failed_workers);
-    println!("      - Success rate: {:.1}%", 
-        hierarchical_result.distributed_metrics.successful_workers as f64 / 
-        hierarchical_result.distributed_metrics.total_workers as f64 * 100.0);
+    println!(
+        "      - Failed workers handled: {}",
+        hierarchical_result.distributed_metrics.failed_workers
+    );
+    println!(
+        "      - Success rate: {:.1}%",
+        hierarchical_result.distributed_metrics.successful_workers as f64
+            / hierarchical_result.distributed_metrics.total_workers as f64
+            * 100.0
+    );
     println!("      - Automatic failover: Enabled");
     println!("      - Data redundancy: 2x replication");
-    
+
     Ok(())
 }
 
 /// Demonstrates performance scaling analysis
 fn performance_scaling_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("   📈 Performance Scaling Analysis");
-    
+
     // Test different dataset sizes
     let test_sizes = vec![1000, 5000, 10000, 25000, 50000];
     let worker_counts = vec![1, 2, 4, 8];
-    
+
     println!("   🔬 Testing scaling characteristics:");
-    
+
     for &size in &test_sizes {
-        println!("      📊 Dataset size: {} samples", size);
+        println!("      📊 Dataset size: {size} samples");
         let data = create_scaling_test_data(size, 50);
-        
+
         for &workers in &worker_counts {
             // Create worker configuration
             let worker_configs: Vec<WorkerNodeConfig> = (0..workers)
@@ -434,38 +540,46 @@ fn performance_scaling_demo() -> Result<(), Box<dyn std::error::Error>> {
                     network_bandwidth: 10000.0,
                 })
                 .collect();
-            
+
             let mut clusterer = DistributedUltrathinkClusterer::new(
                 worker_configs,
-                CoordinationStrategy::MasterWorker
+                CoordinationStrategy::MasterWorker,
             );
-            
+
             let result = clusterer.distributed_cluster(&data.view())?;
-            
+
             let efficiency = result.distributed_metrics.parallel_efficiency;
             let throughput = result.distributed_metrics.data_throughput;
-            
-            println!("         - {} workers: {:.1}% efficiency, {:.0} samples/sec", 
-                workers, efficiency * 100.0, throughput);
+
+            println!(
+                "         - {} workers: {:.1}% efficiency, {:.0} samples/sec",
+                workers,
+                efficiency * 100.0,
+                throughput
+            );
         }
     }
-    
+
     println!("   📊 Scaling Insights:");
     println!("      - Linear scaling up to 4 workers");
     println!("      - Diminishing returns beyond 8 workers due to coordination overhead");
     println!("      - Sweet spot: 4-6 workers for most workloads");
     println!("      - GPU acceleration maintains efficiency at larger scales");
-    
+
     Ok(())
 }
 
 /// Demonstrates resource utilization monitoring
 fn resource_monitoring_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_monitoring_test_data(8000, 40);
-    
-    println!("   📊 Monitoring dataset: {} samples x {} features", data.nrows(), data.ncols());
+
+    println!(
+        "   📊 Monitoring dataset: {} samples x {} features",
+        data.nrows(),
+        data.ncols()
+    );
     println!("   📡 Real-time resource monitoring...");
-    
+
     // Configure monitoring-enabled workers
     let monitored_workers = vec![
         WorkerNodeConfig {
@@ -492,47 +606,73 @@ fn resource_monitoring_demo() -> Result<(), Box<dyn std::error::Error>> {
             network_bandwidth: 10000.0,
         },
     ];
-    
-    let mut monitored_clusterer = DistributedUltrathinkClusterer::new(
-        monitored_workers,
-        CoordinationStrategy::MasterWorker
-    );
-    
+
+    let mut monitored_clusterer =
+        DistributedUltrathinkClusterer::new(monitored_workers, CoordinationStrategy::MasterWorker);
+
     let monitoring_result = monitored_clusterer.distributed_cluster(&data.view())?;
-    
+
     println!("   ✅ Monitoring completed successfully");
     println!("   💻 Resource Utilization Report:");
-    
+
     for (i, stats) in monitoring_result.worker_stats.iter().enumerate() {
         println!("      🖥️  Worker {}: {}", i + 1, stats.worker_id);
-        println!("         - CPU utilization: {:.1}%", stats.cpu_utilization * 100.0);
-        println!("         - Memory usage: {:.1} MB", stats.memory_usage);
-        println!("         - Network usage: {:.1}%", stats.network_usage * 100.0);
-        println!("         - Execution time: {:.3}s", stats.execution_time);
-        println!("         - Fault count: {}", stats.fault_count);
+        println!(
+            "         - CPU utilization: {:.1}%",
+            stats.cpu_utilization * 100.0
+        );
+        let mem_usage = stats.memory_usage;
+        println!("         - Memory usage: {mem_usage:.1} MB");
+        println!(
+            "         - Network usage: {:.1}%",
+            stats.network_usage * 100.0
+        );
+        let exec_time = stats.execution_time;
+        println!("         - Execution time: {exec_time:.3}s");
+        let fault_count = stats.fault_count;
+        println!("         - Fault count: {fault_count}");
     }
-    
+
     println!("   📈 Aggregate Statistics:");
-    println!("      - Average CPU utilization: {:.1}%", 
-        monitoring_result.distributed_metrics.average_cpu_utilization * 100.0);
-    println!("      - Total data processed: {} samples", 
-        monitoring_result.distributed_metrics.total_data_processed);
-    println!("      - Overall throughput: {:.1} samples/sec", 
-        monitoring_result.distributed_metrics.data_throughput);
-    println!("      - Parallel efficiency: {:.1}%", 
-        monitoring_result.distributed_metrics.parallel_efficiency * 100.0);
-    
+    println!(
+        "      - Average CPU utilization: {:.1}%",
+        monitoring_result
+            .distributed_metrics
+            .average_cpu_utilization
+            * 100.0
+    );
+    println!(
+        "      - Total data processed: {} samples",
+        monitoring_result.distributed_metrics.total_data_processed
+    );
+    println!(
+        "      - Overall throughput: {:.1} samples/sec",
+        monitoring_result.distributed_metrics.data_throughput
+    );
+    println!(
+        "      - Parallel efficiency: {:.1}%",
+        monitoring_result.distributed_metrics.parallel_efficiency * 100.0
+    );
+
     println!("   🎯 Performance Recommendations:");
-    if monitoring_result.distributed_metrics.average_cpu_utilization < 0.7 {
+    if monitoring_result
+        .distributed_metrics
+        .average_cpu_utilization
+        < 0.7
+    {
         println!("      - Consider increasing batch size for better CPU utilization");
     }
-    if monitoring_result.communication_overhead.bandwidth_utilization > 0.8 {
+    if monitoring_result
+        .communication_overhead
+        .bandwidth_utilization
+        > 0.8
+    {
         println!("      - Network may be bottleneck, consider data compression");
     }
     if monitoring_result.distributed_metrics.parallel_efficiency < 0.8 {
         println!("      - Coordination overhead detected, optimize load balancing");
     }
-    
+
     Ok(())
 }
 
@@ -540,11 +680,11 @@ fn resource_monitoring_demo() -> Result<(), Box<dyn std::error::Error>> {
 
 fn create_large_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
-    
+
     for i in 0..n_samples {
         let cluster_id = i % 5; // 5 clusters
         let base_value = cluster_id as f64 * 10.0;
-        
+
         for j in 0..n_features {
             let feature_pattern = (j as f64 * std::f64::consts::PI / 10.0).sin() * 2.0;
             let noise = ((i * 17 + j * 23) % 1000) as f64 / 1000.0 - 0.5;
@@ -552,18 +692,18 @@ fn create_large_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
             data_vec.push(value);
         }
     }
-    
+
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 fn create_massive_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
-    
+
     for i in 0..n_samples {
         let cluster_id = i % 8; // 8 clusters for complexity
         let base_x = (cluster_id as f64 * 2.0 * std::f64::consts::PI / 8.0).cos() * 20.0;
         let base_y = (cluster_id as f64 * 2.0 * std::f64::consts::PI / 8.0).sin() * 20.0;
-        
+
         for j in 0..n_features {
             let feature_factor = if j < n_features / 2 { base_x } else { base_y };
             let complexity = (i as f64 * j as f64 * 0.001).sin() * 3.0;
@@ -572,20 +712,20 @@ fn create_massive_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
             data_vec.push(value);
         }
     }
-    
+
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 fn create_ultra_massive_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
-    
+
     for i in 0..n_samples {
         let mega_cluster = i % 12; // 12 major clusters
         let sub_cluster = (i / (n_samples / 100)) % 10; // Sub-clustering
-        
+
         let theta = mega_cluster as f64 * 2.0 * std::f64::consts::PI / 12.0;
         let radius = 50.0 + sub_cluster as f64 * 5.0;
-        
+
         for j in 0..n_features {
             let base_coord = if j % 3 == 0 {
                 radius * theta.cos()
@@ -594,20 +734,20 @@ fn create_ultra_massive_dataset(n_samples: usize, n_features: usize) -> Array2<f
             } else {
                 sub_cluster as f64 * 3.0
             };
-            
+
             let multi_scale_pattern = (i as f64 * 0.01).sin() * (j as f64 * 0.1).cos() * 2.0;
             let ultra_noise = ((i * 37 + j * 41) % 5000) as f64 / 5000.0 - 0.5;
             let value = base_coord + multi_scale_pattern + ultra_noise;
             data_vec.push(value);
         }
     }
-    
+
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 fn create_optimization_test_data(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
-    
+
     for i in 0..n_samples {
         for j in 0..n_features {
             let pattern1 = ((i as f64 / 100.0) * std::f64::consts::PI).sin();
@@ -617,13 +757,13 @@ fn create_optimization_test_data(n_samples: usize, n_features: usize) -> Array2<
             data_vec.push(interaction + noise);
         }
     }
-    
+
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 fn create_unbalanced_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
-    
+
     // Create unbalanced clusters with different densities
     for i in 0..n_samples {
         let cluster_assignment = if i < n_samples / 2 {
@@ -633,57 +773,57 @@ fn create_unbalanced_dataset(n_samples: usize, n_features: usize) -> Array2<f64>
         } else {
             2 // Small cluster
         };
-        
+
         let cluster_centers = [(0.0, 0.0), (10.0, 10.0), (20.0, 5.0)];
         let (center_x, center_y) = cluster_centers[cluster_assignment];
-        
+
         for j in 0..n_features {
             let coord = if j % 2 == 0 { center_x } else { center_y };
             let spread = match cluster_assignment {
-                0 => 5.0,  // Large spread
-                1 => 2.0,  // Medium spread
-                2 => 0.5,  // Tight spread
+                0 => 5.0, // Large spread
+                1 => 2.0, // Medium spread
+                2 => 0.5, // Tight spread
                 _ => 1.0,
             };
             let noise = ((i * 19 + j * 21) % 200) as f64 / 200.0 - 0.5;
             data_vec.push(coord + spread * noise);
         }
     }
-    
+
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 fn create_scaling_test_data(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
-    
+
     for i in 0..n_samples {
         let cluster_id = i % 6; // 6 clusters
-        
+
         for j in 0..n_features {
             let angle = cluster_id as f64 * std::f64::consts::PI / 3.0;
             let radius = 5.0 + (i % 100) as f64 / 20.0;
-            
+
             let value = if j % 2 == 0 {
                 radius * angle.cos()
             } else {
                 radius * angle.sin()
             } + ((i * 7 + j * 11) % 100) as f64 / 500.0;
-            
+
             data_vec.push(value);
         }
     }
-    
+
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 fn create_monitoring_test_data(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
-    
+
     for i in 0..n_samples {
         for j in 0..n_features {
             let spiral_angle = i as f64 * 0.1;
             let spiral_radius = 1.0 + i as f64 * 0.01;
-            
+
             let value = if j < n_features / 3 {
                 spiral_radius * spiral_angle.cos()
             } else if j < 2 * n_features / 3 {
@@ -691,11 +831,11 @@ fn create_monitoring_test_data(n_samples: usize, n_features: usize) -> Array2<f6
             } else {
                 spiral_angle * 0.5
             };
-            
+
             let monitoring_noise = ((i * 43 + j * 47) % 300) as f64 / 1500.0;
             data_vec.push(value + monitoring_noise);
         }
     }
-    
+
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }

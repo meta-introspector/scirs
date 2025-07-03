@@ -4,7 +4,7 @@
 //! memory profiling, gradient flow analysis, computational efficiency metrics,
 //! and hardware utilization monitoring.
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use num_traits::Float;
 use std::collections::VecDeque;
 use std::fmt::Debug;

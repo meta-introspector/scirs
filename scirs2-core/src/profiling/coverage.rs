@@ -760,7 +760,7 @@ impl CoverageAnalyzer {
             std::fs::create_dir_all(&config.output_directory).map_err(|e| {
                 CoreError::from(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Failed to create output directory: {}", e),
+                    format!("Failed to create output directory: {e}"),
                 ))
             })?;
         }
@@ -1312,7 +1312,7 @@ impl CoverageAnalyzer {
         std::fs::write(output_path, html_content).map_err(|e| {
             CoreError::from(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Failed to write HTML report: {}", e),
+                format!("Failed to write HTML report: {e}"),
             ))
         })?;
 
@@ -1326,7 +1326,7 @@ impl CoverageAnalyzer {
             let json_content = serde_json::to_string_pretty(report).map_err(|e| {
                 CoreError::from(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Failed to serialize JSON report: {}", e),
+                    format!("Failed to serialize JSON report: {e}"),
                 ))
             })?;
 
@@ -1334,7 +1334,7 @@ impl CoverageAnalyzer {
             std::fs::write(output_path, json_content).map_err(|e| {
                 CoreError::from(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Failed to write JSON report: {}", e),
+                    format!("Failed to write JSON report: {e}"),
                 ))
             })?;
         }
@@ -1359,7 +1359,7 @@ impl CoverageAnalyzer {
         std::fs::write(output_path, xml_content).map_err(|e| {
             CoreError::from(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Failed to write XML report: {}", e),
+                format!("Failed to write XML report: {e}"),
             ))
         })?;
 
@@ -1374,7 +1374,7 @@ impl CoverageAnalyzer {
         std::fs::write(output_path, lcov_content).map_err(|e| {
             CoreError::from(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Failed to write LCOV report: {}", e),
+                format!("Failed to write LCOV report: {e}"),
             ))
         })?;
 
@@ -1389,7 +1389,7 @@ impl CoverageAnalyzer {
         std::fs::write(output_path, text_content).map_err(|e| {
             CoreError::from(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Failed to write text report: {}", e),
+                format!("Failed to write text report: {e}"),
             ))
         })?;
 
@@ -1404,7 +1404,7 @@ impl CoverageAnalyzer {
         std::fs::write(output_path, csv_content).map_err(|e| {
             CoreError::from(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Failed to write CSV report: {}", e),
+                format!("Failed to write CSV report: {e}"),
             ))
         })?;
 
@@ -1519,7 +1519,7 @@ impl CoverageAnalyzer {
                 .recommendations
                 .iter()
                 .take(5)
-                .map(|r| format!("<li>{}</li>", r.description))
+                .map(|r| format!("<li>{description}</li>", description = r.description))
                 .collect::<Vec<_>>()
                 .join("\n"),
             // File table rows

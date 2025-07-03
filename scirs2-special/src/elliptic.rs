@@ -833,6 +833,200 @@ fn jacobi_sn_approx(u: f64, m: f64) -> f64 {
     u.sin()
 }
 
+// Additional SciPy-compatible elliptic functions
+
+/// Jacobian elliptic functions with all three functions returned at once
+///
+/// This function computes all three Jacobian elliptic functions sn(u,m), cn(u,m), and dn(u,m)
+/// simultaneously, which is more efficient than computing them separately.
+///
+/// # Arguments
+///
+/// * `u` - Argument
+/// * `m` - Parameter (0 ≤ m ≤ 1)
+///
+/// # Returns
+///
+/// A tuple (sn, cn, dn) of the three Jacobian elliptic functions
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::ellipj;
+/// use approx::assert_relative_eq;
+///
+/// let u = 0.5;
+/// let m = 0.3;
+/// let (sn, cn, dn) = ellipj(u, m);
+/// assert_relative_eq!(sn, 0.47583, epsilon = 1e-4);
+/// assert_relative_eq!(cn, 0.87953, epsilon = 1e-4);
+/// assert_relative_eq!(dn, 0.95182, epsilon = 1e-4);
+/// ```
+pub fn ellipj<F>(u: F, m: F) -> (F, F, F)
+where
+    F: Float + FromPrimitive + Debug,
+{
+    let sn = jacobi_sn(u, m);
+    let cn = jacobi_cn(u, m);
+    let dn = jacobi_dn(u, m);
+    (sn, cn, dn)
+}
+
+/// Complete elliptic integral of the first kind K(1-m)
+///
+/// This computes K(1-m) which is more numerically stable than computing K(m)
+/// when m is close to 1.
+///
+/// # Arguments
+///
+/// * `m` - Parameter (0 ≤ m ≤ 1)
+///
+/// # Returns
+///
+/// The value of K(1-m)
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::ellipkm1;
+/// use approx::assert_relative_eq;
+///
+/// let m = 0.99; // Close to 1
+/// let result = ellipkm1(m);
+/// assert!(result.is_finite() && result > 0.0);
+/// ```
+pub fn ellipkm1<F>(m: F) -> F
+where
+    F: Float + FromPrimitive + Debug,
+{
+    if m < F::zero() || m > F::one() {
+        return F::nan();
+    }
+
+    let one_minus_m = F::one() - m;
+    elliptic_k(one_minus_m)
+}
+
+/// Complete elliptic integral of the first kind (alternative interface)
+///
+/// This provides the SciPy-compatible interface for the complete elliptic integral
+/// of the first kind.
+///
+/// # Arguments
+///
+/// * `m` - Parameter (0 ≤ m ≤ 1)
+///
+/// # Returns
+///
+/// The value of K(m)
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::ellipk;
+/// use approx::assert_relative_eq;
+///
+/// let result = ellipk(0.5);
+/// assert_relative_eq!(result, 1.8540746, epsilon = 1e-6);
+/// ```
+pub fn ellipk<F>(m: F) -> F
+where
+    F: Float + FromPrimitive + Debug,
+{
+    elliptic_k(m)
+}
+
+/// Complete elliptic integral of the second kind (alternative interface)
+///
+/// This provides the SciPy-compatible interface for the complete elliptic integral
+/// of the second kind.
+///
+/// # Arguments
+///
+/// * `m` - Parameter (0 ≤ m ≤ 1)
+///
+/// # Returns
+///
+/// The value of E(m)
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::ellipe;
+/// use approx::assert_relative_eq;
+///
+/// let result = ellipe(0.5);
+/// assert_relative_eq!(result, 1.3506438, epsilon = 1e-6);
+/// ```
+pub fn ellipe<F>(m: F) -> F
+where
+    F: Float + FromPrimitive + Debug,
+{
+    elliptic_e(m)
+}
+
+/// Incomplete elliptic integral of the first kind (alternative interface)
+///
+/// This provides the SciPy-compatible interface for the incomplete elliptic integral
+/// of the first kind.
+///
+/// # Arguments
+///
+/// * `phi` - Amplitude (upper limit of integration)
+/// * `m` - Parameter (0 ≤ m ≤ 1)
+///
+/// # Returns
+///
+/// The value of F(φ,m)
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::ellipkinc;
+/// use std::f64::consts::PI;
+/// use approx::assert_relative_eq;
+///
+/// let result = ellipkinc(PI / 4.0, 0.5);
+/// assert_relative_eq!(result, 0.8269, epsilon = 1e-3);
+/// ```
+pub fn ellipkinc<F>(phi: F, m: F) -> F
+where
+    F: Float + FromPrimitive + Debug,
+{
+    elliptic_f(phi, m)
+}
+
+/// Incomplete elliptic integral of the second kind (alternative interface)
+///
+/// This provides the SciPy-compatible interface for the incomplete elliptic integral
+/// of the second kind.
+///
+/// # Arguments
+///
+/// * `phi` - Amplitude (upper limit of integration)
+/// * `m` - Parameter (0 ≤ m ≤ 1)
+///
+/// # Returns
+///
+/// The value of E(φ,m)
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::ellipeinc;
+/// use std::f64::consts::PI;
+/// use approx::assert_relative_eq;
+///
+/// let result = ellipeinc(PI / 4.0, 0.5);
+/// assert_relative_eq!(result, 0.7501, epsilon = 1e-3);
+/// ```
+pub fn ellipeinc<F>(phi: F, m: F) -> F
+where
+    F: Float + FromPrimitive + Debug,
+{
+    elliptic_e_inc(phi, m)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -813,10 +813,14 @@ fn main() {
         10,
         src_pad_idx,
         tgt_pad_idx,
+    )?;
     // Evaluate model
     evaluate_transformer(
         &en_idx_to_word,
         &fr_idx_to_word,
         sos_idx,
         eos_idx,
+    )?;
     println!("\nTransformer NMT model implementation completed!");
+    Ok(())
+}

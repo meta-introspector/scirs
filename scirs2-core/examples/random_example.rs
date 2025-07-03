@@ -1,6 +1,6 @@
 use ndarray::IxDyn;
 use rand_distr::{Bernoulli, Normal, Uniform};
-use scirs2_core::random::{get_thread_rng, sampling, DistributionExt, Random};
+use scirs2_core::random::{get_rng, sampling, DistributionExt, Random};
 
 fn main() {
     println!("Random Number Generation Example");
@@ -130,7 +130,7 @@ fn seeded_random_example() {
 #[cfg(feature = "random")]
 fn thread_local_random_example() {
     // Access the thread-local random generator
-    let values = get_thread_rng(|rng| {
+    let values = get_rng(|rng| {
         // Generate 5 random values
         let mut values = Vec::with_capacity(5);
         for _ in 0..5 {

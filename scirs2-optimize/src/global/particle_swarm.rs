@@ -94,7 +94,7 @@ where
     /// Create new Particle Swarm Optimization solver
     pub fn new(func: F, bounds: Bounds, options: ParticleSwarmOptions) -> Self {
         let ndim = bounds.len();
-        let seed = options.seed.unwrap_or_else(rand::random);
+        let seed = options.seed.unwrap_or_else(|| rand::rng().random());
         let mut rng = StdRng::seed_from_u64(seed);
 
         // Initialize particles

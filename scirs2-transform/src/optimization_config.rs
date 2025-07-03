@@ -4,10 +4,10 @@
 //! choose optimal settings for transformations based on data characteristics
 //! and system resources.
 
+use scirs2_core::Rng;
 #[cfg(feature = "distributed")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use scirs2_core::Rng;
 
 use crate::error::{Result, TransformError};
 use crate::utils::ProcessingStrategy;
@@ -467,10 +467,15 @@ pub struct AutoTuner {
 /// Performance record for auto-tuning
 #[derive(Debug, Clone)]
 struct PerformanceRecord {
+    #[allow(dead_code)]
     config_hash: String,
+    #[allow(dead_code)]
     execution_time: std::time::Duration,
+    #[allow(dead_code)]
     memory_used_mb: f64,
+    #[allow(dead_code)]
     success: bool,
+    #[allow(dead_code)]
     data_characteristics: DataCharacteristics,
 }
 
@@ -704,6 +709,7 @@ pub struct UltraThinkConfigOptimizer {
 #[derive(Debug, Clone)]
 pub struct PerformanceMetric {
     /// Configuration hash for identification
+    #[allow(dead_code)]
     config_hash: u64,
     /// Execution time in microseconds
     execution_time_us: u64,
@@ -716,6 +722,7 @@ pub struct PerformanceMetric {
     /// Accuracy/quality score of the transformation
     quality_score: f64,
     /// Timestamp of measurement
+    #[allow(dead_code)]
     timestamp: std::time::Instant,
 }
 
@@ -736,8 +743,10 @@ pub struct SystemMonitor {
 /// ✅ ULTRATHINK MODE: ML-based configuration prediction
 pub struct ConfigurationPredictor {
     /// Feature weights for different data characteristics
+    #[allow(dead_code)]
     feature_weights: HashMap<String, f64>,
     /// Learning rate for online updates
+    #[allow(dead_code)]
     learning_rate: f64,
     /// Prediction confidence threshold
     confidence_threshold: f64,
@@ -754,6 +763,7 @@ pub struct AdaptiveParameterTuner {
     /// Learning rate for Q-learning
     learning_rate: f64,
     /// Discount factor for future rewards
+    #[allow(dead_code)]
     discount_factor: f64,
     /// Current state representation
     current_state: String,

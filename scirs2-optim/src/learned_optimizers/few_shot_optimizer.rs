@@ -47,30 +47,26 @@ pub trait FewShotOptimizer<T: Float>: Send + Sync {
         support_set: &SupportSet<T>,
         query_set: &QuerySet<T>,
         adaptation_config: &AdaptationConfig,
-    ) -> Result<AdaptationResult<T>, OptimError>;
+    ) -> Result<AdaptationResult<T>>;
 
     /// Get task representation
-    fn get_task_representation(&self, task_data: &TaskData<T>)
-        -> Result<Array1<T>, OptimError>;
+    fn get_task_representation(&self, task_data: &TaskData<T>) -> Result<Array1<T>>;
 
     /// Compute adaptation loss
     fn compute_adaptation_loss(
         &self,
         support_set: &SupportSet<T>,
         query_set: &QuerySet<T>,
-    ) -> Result<T, OptimError>;
+    ) -> Result<T>;
 
     /// Update meta-parameters
-    fn update_meta_parameters(
-        &mut self,
-        meta_gradients: &MetaGradients<T>,
-    ) -> Result<(), OptimError>;
+    fn update_meta_parameters(&mut self, meta_gradients: &MetaGradients<T>) -> Result<()>;
 
     /// Get current state for transfer
     fn get_transfer_state(&self) -> TransferState<T>;
 
     /// Load transfer state
-    fn load_transfer_state(&mut self, state: TransferState<T>) -> Result<(), OptimError>;
+    fn load_transfer_state(&mut self, state: TransferState<T>) -> Result<()>;
 }
 
 /// Support set for few-shot learning
@@ -642,7 +638,7 @@ pub trait AdaptationStrategy<T: Float>: Send + Sync {
         optimizer: &mut dyn FewShotOptimizer<T>,
         task_data: &TaskData<T>,
         config: &AdaptationConfig,
-    ) -> Result<AdaptationResult<T>, OptimError>;
+    ) -> Result<AdaptationResult<T>>;
 
     /// Get strategy name
     fn name(&self) -> &str;
@@ -651,7 +647,7 @@ pub trait AdaptationStrategy<T: Float>: Send + Sync {
     fn parameters(&self) -> HashMap<String, f64>;
 
     /// Update strategy parameters
-    fn update_parameters(&mut self, params: HashMap<String, f64>) -> Result<(), OptimError>;
+    fn update_parameters(&mut self, params: HashMap<String, f64>) -> Result<()>;
 }
 
 /// Task similarity calculator
@@ -672,11 +668,7 @@ pub struct TaskSimilarityCalculator<T: Float> {
 /// Similarity metric trait
 pub trait SimilarityMetric<T: Float>: Send + Sync {
     /// Calculate similarity between tasks
-    fn calculate_similarity(
-        &self,
-        task1: &TaskData<T>,
-        task2: &TaskData<T>,
-    ) -> Result<T, OptimError>;
+    fn calculate_similarity(&self, task1: &TaskData<T>, task2: &TaskData<T>) -> Result<T>;
 
     /// Get metric name
     fn name(&self) -> &str;
@@ -810,7 +802,7 @@ pub trait FastAdaptationAlgorithm<T: Float>: Send + Sync {
         optimizer: &mut dyn FewShotOptimizer<T>,
         task_data: &TaskData<T>,
         target_performance: Option<T>,
-    ) -> Result<AdaptationResult<T>, OptimError>;
+    ) -> Result<AdaptationResult<T>>;
 
     /// Estimate adaptation time
     fn estimate_adaptation_time(&self, task_data: &TaskData<T>) -> Duration;
@@ -876,7 +868,7 @@ pub struct PerformanceRecord<T: Float> {
 /// Performance metric trait
 pub trait PerformanceMetric<T: Float>: Send + Sync {
     /// Calculate performance metric
-    fn calculate(&self, records: &[PerformanceRecord<T>]) -> Result<T, OptimError>;
+    fn calculate(&self, records: &[PerformanceRecord<T>]) -> Result<T>;
 
     /// Get metric name
     fn name(&self) -> &str;
@@ -926,7 +918,7 @@ impl<T: Float> FewShotLearningSystem<T> {
     pub fn new(
         base_optimizer: Box<dyn FewShotOptimizer<T>>,
         config: FewShotConfig<T>,
-    ) -> Result<Self, OptimError> {
+    ) -> Result<Self> {
         Ok(Self {
             base_optimizer,
             prototype_network: PrototypicalNetwork::new(config.prototype_config)?,
@@ -944,7 +936,7 @@ impl<T: Float> FewShotLearningSystem<T> {
         &mut self,
         task_data: TaskData<T>,
         adaptation_config: AdaptationConfig,
-    ) -> Result<AdaptationResult<T>, OptimError> {
+    ) -> Result<AdaptationResult<T>> {
         // Comprehensive few-shot learning implementation
         let start_time = Instant::now();
 
@@ -987,7 +979,7 @@ impl<T: Float> FewShotLearningSystem<T> {
         &self,
         task_data: &TaskData<T>,
         similar_tasks: &[MemoryEpisode<T>],
-    ) -> Result<AdaptationStrategyType, OptimError> {
+    ) -> Result<AdaptationStrategyType> {
         // Strategy selection based on task characteristics and historical performance
         match task_data.domain_info.difficulty_level {
             DifficultyLevel::Trivial | DifficultyLevel::Easy => Ok(AdaptationStrategyType::FOMAML),
@@ -1040,13 +1032,13 @@ pub struct PrototypicalNetworkConfig<T: Float> {
 
 // Implementation stubs for major components
 impl<T: Float> PrototypicalNetwork<T> {
-    fn new(_config: PrototypicalNetworkConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: PrototypicalNetworkConfig<T>) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "PrototypicalNetwork implementation pending".to_string(),
         ))
     }
 
-    fn encode_task(&self, _task_data: &TaskData<T>) -> Result<Array1<T>, OptimError> {
+    fn encode_task(&self, _task_data: &TaskData<T>) -> Result<Array1<T>> {
         Ok(Array1::zeros(128)) // Placeholder
     }
 
@@ -1054,13 +1046,13 @@ impl<T: Float> PrototypicalNetwork<T> {
         &mut self,
         _task_data: &TaskData<T>,
         _result: &AdaptationResult<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         Ok(()) // Placeholder
     }
 }
 
 impl<T: Float> SupportSetManager<T> {
-    fn new(_config: SupportSetManagerConfig) -> Result<Self, OptimError> {
+    fn new(_config: SupportSetManagerConfig) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "SupportSetManager implementation pending".to_string(),
         ))
@@ -1068,7 +1060,7 @@ impl<T: Float> SupportSetManager<T> {
 }
 
 impl<T: Float> TaskSimilarityCalculator<T> {
-    fn new(_config: SimilarityCalculatorConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: SimilarityCalculatorConfig<T>) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "TaskSimilarityCalculator implementation pending".to_string(),
         ))
@@ -1076,7 +1068,7 @@ impl<T: Float> TaskSimilarityCalculator<T> {
 }
 
 impl<T: Float> EpisodicMemoryBank<T> {
-    fn new(_config: MemoryBankConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: MemoryBankConfig<T>) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "EpisodicMemoryBank implementation pending".to_string(),
         ))
@@ -1086,7 +1078,7 @@ impl<T: Float> EpisodicMemoryBank<T> {
         &self,
         _task_data: &TaskData<T>,
         _k: usize,
-    ) -> Result<Vec<MemoryEpisode<T>>, OptimError> {
+    ) -> Result<Vec<MemoryEpisode<T>>> {
         Ok(Vec::new()) // Placeholder
     }
 
@@ -1094,13 +1086,13 @@ impl<T: Float> EpisodicMemoryBank<T> {
         &mut self,
         _task_data: TaskData<T>,
         _result: AdaptationResult<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         Ok(()) // Placeholder
     }
 }
 
 impl<T: Float> FastAdaptationEngine<T> {
-    fn new(_config: FastAdaptationConfig) -> Result<Self, OptimError> {
+    fn new(_config: FastAdaptationConfig) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "FastAdaptationEngine implementation pending".to_string(),
         ))
@@ -1112,7 +1104,7 @@ impl<T: Float> FastAdaptationEngine<T> {
         task_data: &TaskData<T>,
         _strategy: AdaptationStrategyType,
         _config: &AdaptationConfig,
-    ) -> Result<AdaptationResult<T>, OptimError> {
+    ) -> Result<AdaptationResult<T>> {
         // Simplified adaptation result
         Ok(AdaptationResult {
             adapted_state: OptimizerState {
@@ -1148,13 +1140,13 @@ impl<T: Float> FastAdaptationEngine<T> {
 }
 
 impl<T: Float> FewShotPerformanceTracker<T> {
-    fn new(_config: TrackingConfig) -> Result<Self, OptimError> {
+    fn new(_config: TrackingConfig) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "FewShotPerformanceTracker implementation pending".to_string(),
         ))
     }
 
-    fn record_performance(&mut self, _result: &AdaptationResult<T>) -> Result<(), OptimError> {
+    fn record_performance(&mut self, _result: &AdaptationResult<T>) -> Result<()> {
         Ok(()) // Placeholder
     }
 }

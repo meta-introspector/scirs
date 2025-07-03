@@ -14,7 +14,7 @@ use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 /// This is more efficient than computing statistics separately.
 pub fn comprehensive_stats_simd<F>(data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
 
@@ -134,7 +134,7 @@ pub fn sliding_window_stats_simd<F>(
     window_size: usize,
 ) -> StatsResult<SlidingWindowStats<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
     check_positive(window_size, "window_size")?;
@@ -219,7 +219,7 @@ pub struct SlidingWindowStats<F> {
 /// Computes the full covariance matrix using SIMD operations for maximum efficiency.
 pub fn covariance_matrix_simd<F>(data: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
 
@@ -354,7 +354,7 @@ where
 /// element-wise operations.
 pub fn exponential_moving_average_simd<F>(data: &ArrayView1<F>, alpha: F) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
 
@@ -398,7 +398,7 @@ where
 /// Normalizes data to have zero mean and unit variance using SIMD operations.
 pub fn batch_normalize_simd<F>(data: &ArrayView2<F>, axis: Option<usize>) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
 {
     check_array_finite(data, "data")?;
 

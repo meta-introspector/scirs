@@ -5,14 +5,12 @@
 //! It includes parameter validation, behavior verification, and migration
 //! guidance for any incompatibilities.
 
-use crate::error::NdimageResult;
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 use crate::filters::*;
 use crate::interpolation::*;
 use crate::measurements::*;
 use crate::morphology::*;
-use ndarray::{Array1, Array2};
-use std::collections::HashMap;
+use ndarray::Array2;
 
 /// API compatibility test result
 #[derive(Debug, Clone)]

@@ -1446,7 +1446,7 @@ mod tests {
         let signal1: Vec<f64> = (0..n)
             .map(|i| (2.0 * PI * 50.0 * i as f64 / fs).sin())
             .collect();
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let signal2: Vec<f64> = signal1
             .iter()
             .map(|&x| x + 0.1 * rng.random::<f64>())

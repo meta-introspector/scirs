@@ -97,8 +97,10 @@
 //! ```
 
 // Re-export submodules
+pub mod advanced_memory_optimization;
 pub mod distributed;
 pub mod distributed_advanced;
+pub mod enhanced_gpu_kernels;
 pub mod gpu_acceleration;
 pub mod gpu_kernels;
 pub mod hardware;
@@ -109,6 +111,10 @@ pub mod quantum_acceleration;
 pub mod simd_gpu;
 
 // Re-export common functionality
+pub use advanced_memory_optimization::{
+    AdvancedMemoryPool, AllocationStrategy, BlockType, MemoryBlock, MemoryPoolConfig, MemoryStats,
+    StrategyBenchmark,
+};
 pub use distributed::{
     DistributedConfig, DistributedMetricsBuilder, DistributedMetricsCoordinator,
 };

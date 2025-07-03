@@ -328,7 +328,12 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
 
             // B-spline
             self.benchmark_method("bspline", size, || {
-                let bspline = crate::bspline::make_interp_bspline(&x.view(), &y.view(), 3, crate::bspline::ExtrapolateMode::Extrapolate)?;
+                let bspline = crate::bspline::make_interp_bspline(
+                    &x.view(),
+                    &y.view(),
+                    3,
+                    crate::bspline::ExtrapolateMode::Extrapolate,
+                )?;
                 bspline.evaluate_array(&x_new.view())
             })?;
         }
@@ -734,7 +739,14 @@ impl<T: Float + Display> BenchmarkReport<T> {
 /// Create and run a comprehensive benchmark suite
 pub fn run_comprehensive_benchmarks<T>() -> InterpolateResult<BenchmarkReport<T>>
 where
-    T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + crate::traits::InterpolationFloat,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Send
+        + Sync
+        + 'static
+        + crate::traits::InterpolationFloat,
 {
     let config = BenchmarkConfig::default();
     let mut suite = InterpolationBenchmarkSuite::new(config);
@@ -746,7 +758,14 @@ pub fn run_benchmarks_with_config<T>(
     config: BenchmarkConfig,
 ) -> InterpolateResult<BenchmarkReport<T>>
 where
-    T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + crate::traits::InterpolationFloat,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Send
+        + Sync
+        + 'static
+        + crate::traits::InterpolationFloat,
 {
     let mut suite = InterpolationBenchmarkSuite::new(config);
     suite.run_comprehensive_benchmarks()
@@ -755,7 +774,14 @@ where
 /// Run quick performance validation (subset of benchmarks)
 pub fn run_quick_validation<T>() -> InterpolateResult<BenchmarkReport<T>>
 where
-    T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + crate::traits::InterpolationFloat,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Send
+        + Sync
+        + 'static
+        + crate::traits::InterpolationFloat,
 {
     let config = BenchmarkConfig {
         data_sizes: vec![1_000, 10_000],
@@ -795,7 +821,10 @@ where
 /// Enhanced stress testing for production readiness
 pub fn run_stress_testing<T>() -> InterpolateResult<StressTestReport<T>>
 where
-    T: crate::traits::InterpolationFloat + std::fmt::LowerExp + std::panic::UnwindSafe + std::panic::RefUnwindSafe,
+    T: crate::traits::InterpolationFloat
+        + std::fmt::LowerExp
+        + std::panic::UnwindSafe
+        + std::panic::RefUnwindSafe,
 {
     let config = StressTestConfig {
         data_sizes: vec![10_000, 100_000, 1_000_000, 10_000_000],
@@ -888,7 +917,8 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
             crate::interp1d::linear_interpolate(&x.view(), &y.view(), &x_new.view())?;
         let scipy_linear = self.get_scipy_reference("linear_1d", &x, &y, &x_new)?;
 
-        let accuracy = self.calculate_accuracy_metrics(linear_result.as_slice().unwrap(), &scipy_linear);
+        let accuracy =
+            self.calculate_accuracy_metrics(linear_result.as_slice().unwrap(), &scipy_linear);
         accuracy_validations.push(AccuracyValidation {
             method: "linear_1d".to_string(),
             data_size: size,
@@ -923,7 +953,8 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
         let spline_result = spline.evaluate_array(&x_new.view())?;
         let scipy_cubic = self.get_scipy_reference("cubic_spline", &x, &y, &x_new)?;
 
-        let accuracy = self.calculate_accuracy_metrics(spline_result.as_slice().unwrap(), &scipy_cubic);
+        let accuracy =
+            self.calculate_accuracy_metrics(spline_result.as_slice().unwrap(), &scipy_cubic);
         accuracy_validations.push(AccuracyValidation {
             method: "cubic_spline".to_string(),
             data_size: size,
@@ -1238,7 +1269,13 @@ pub struct StressTestConfig {
     pub max_test_duration_minutes: usize,
 }
 
-impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp + std::panic::UnwindSafe + std::panic::RefUnwindSafe> StressTester<T> {
+impl<
+        T: crate::traits::InterpolationFloat
+            + std::fmt::LowerExp
+            + std::panic::UnwindSafe
+            + std::panic::RefUnwindSafe,
+    > StressTester<T>
+{
     pub fn new(config: StressTestConfig) -> Self {
         Self {
             config,

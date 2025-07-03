@@ -6,7 +6,7 @@
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2, ArrayView2};
 use scirs2_core::gpu::{GpuBackend, GpuContext};
-use scirs2_core::validation::{check_positive, check_not_empty, check_array_finite};
+use scirs2_core::validation::{check_array_finite, check_not_empty, check_positive};
 
 /// GPU-accelerated Principal Component Analysis
 #[cfg(feature = "gpu")]
@@ -132,7 +132,8 @@ impl GpuPCA {
         check_array_finite(x, "x")?;
 
         Err(TransformError::NotImplemented(
-            "GPU-accelerated PCA transform is not yet fully implemented. Use CPU PCA instead.".to_string(),
+            "GPU-accelerated PCA transform is not yet fully implemented. Use CPU PCA instead."
+                .to_string(),
         ))
     }
 
@@ -198,7 +199,8 @@ impl GpuMatrixOps {
     /// GPU-accelerated matrix multiplication (placeholder)
     pub fn matmul(&self, _a: &ArrayView2<f64>, _b: &ArrayView2<f64>) -> Result<Array2<f64>> {
         Err(TransformError::NotImplemented(
-            "GPU matrix multiplication is not yet implemented. Use CPU operations instead.".to_string(),
+            "GPU matrix multiplication is not yet implemented. Use CPU operations instead."
+                .to_string(),
         ))
     }
 
@@ -212,7 +214,8 @@ impl GpuMatrixOps {
     /// GPU-accelerated eigendecomposition (placeholder)
     pub fn eigh(&self, _a: &ArrayView2<f64>) -> Result<(Array1<f64>, Array2<f64>)> {
         Err(TransformError::NotImplemented(
-            "GPU eigendecomposition is not yet implemented. Use CPU operations instead.".to_string(),
+            "GPU eigendecomposition is not yet implemented. Use CPU operations instead."
+                .to_string(),
         ))
     }
 }
@@ -366,7 +369,7 @@ mod tests {
             .with_perplexity(50.0)
             .with_learning_rate(100.0)
             .with_max_iter(500);
-        
+
         assert_eq!(tsne.n_components, 3);
         assert_eq!(tsne.perplexity, 50.0);
         assert_eq!(tsne.learning_rate, 100.0);

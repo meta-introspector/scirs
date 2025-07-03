@@ -55,7 +55,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for Graph<N, E, Ix> {
     }
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> Graph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Graph<N, E, Ix> {
     /// Create a new empty undirected graph
     pub fn new() -> Self {
         Graph {

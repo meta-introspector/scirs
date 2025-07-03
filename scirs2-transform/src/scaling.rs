@@ -8,8 +8,8 @@ use num_traits::{Float, NumCast};
 
 use crate::error::{Result, TransformError};
 
-// Define a small value to use for comparison with zero
-const EPSILON: f64 = 1e-10;
+/// Small epsilon value for numerical stability and comparison with zero
+pub const EPSILON: f64 = 1e-10;
 
 /// QuantileTransformer for non-linear transformations
 ///

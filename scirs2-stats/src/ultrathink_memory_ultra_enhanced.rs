@@ -8,14 +8,17 @@
 use crate::error::{StatsError, StatsResult};
 use crate::error_standardization::ErrorMessages;
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
-use num_traits::{Float, NumCast, Zero, One};
+use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::alloc::{alloc, dealloc, Layout};
-use std::collections::{HashMap, VecDeque, BTreeMap};
-use std::sync::{Arc, RwLock, Mutex, atomic::{AtomicUsize, AtomicU64, Ordering}};
-use std::time::{Duration, Instant, SystemTime};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::ptr::NonNull;
+use std::sync::{
+    atomic::{AtomicU64, AtomicUsize, Ordering},
+    Arc, Mutex, RwLock,
+};
+use std::time::{Duration, Instant, SystemTime};
 
 /// Ultra-Think Memory Configuration with Advanced Optimization
 #[derive(Debug, Clone)]
@@ -77,32 +80,32 @@ pub enum MemoryOptimizationLevel {
 /// Cache optimization strategies
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CacheOptimizationStrategy {
-    None,           // No cache optimization
-    Basic,          // Basic cache-line alignment
-    Blocking,       // Cache blocking/tiling
-    Hierarchical,   // Multi-level cache hierarchy optimization
-    Adaptive,       // Runtime-adaptive cache optimization
+    None,         // No cache optimization
+    Basic,        // Basic cache-line alignment
+    Blocking,     // Cache blocking/tiling
+    Hierarchical, // Multi-level cache hierarchy optimization
+    Adaptive,     // Runtime-adaptive cache optimization
 }
 
 /// Memory pool management strategies
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MemoryPoolStrategy {
-    None,             // No pooling
-    SimplePool,       // Simple memory pool
-    SizeClassBased,   // Multiple pools for different sizes
-    ThreadLocal,      // Thread-local memory pools
-    NumaAware,        // NUMA-aware memory pools
-    Adaptive,         // ML-based adaptive pooling
+    None,           // No pooling
+    SimplePool,     // Simple memory pool
+    SizeClassBased, // Multiple pools for different sizes
+    ThreadLocal,    // Thread-local memory pools
+    NumaAware,      // NUMA-aware memory pools
+    Adaptive,       // ML-based adaptive pooling
 }
 
 /// NUMA memory policies
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NumaMemoryPolicy {
-    Default,      // System default
-    LocalFirst,   // Prefer local NUMA node
-    Interleaved,  // Interleave across NUMA nodes
+    Default,         // System default
+    LocalFirst,      // Prefer local NUMA node
+    Interleaved,     // Interleave across NUMA nodes
     Specific(usize), // Specific NUMA node
-    Adaptive,     // Adaptive based on usage patterns
+    Adaptive,        // Adaptive based on usage patterns
 }
 
 /// Ultra-Think Memory Manager with Advanced Intelligence
@@ -123,46 +126,38 @@ impl UltraThinkMemoryManager {
     pub fn new(config: UltraThinkMemoryConfig) -> Self {
         let numa_topology = detect_numa_topology();
         let cache_hierarchy = detect_cache_hierarchy();
-        
+
         Self {
-            memory_profiler: Arc::new(RwLock::new(
-                AdvancedMemoryProfiler::new(&config)
-            )),
-            memory_pools: Arc::new(RwLock::new(
-                IntelligentMemoryPools::new(&config, &numa_topology)
-            )),
-            cache_optimizer: Arc::new(RwLock::new(
-                CacheOptimizer::new(&config, cache_hierarchy)
-            )),
-            numa_manager: Arc::new(RwLock::new(
-                NumaMemoryManager::new(&config, numa_topology)
-            )),
-            compression_engine: Arc::new(RwLock::new(
-                CompressionEngine::new(&config)
-            )),
-            memory_mapper: Arc::new(RwLock::new(
-                MemoryMapper::new(&config)
-            )),
-            allocation_tracker: Arc::new(RwLock::new(
-                AllocationTracker::new()
-            )),
-            performance_monitor: Arc::new(RwLock::new(
-                MemoryPerformanceMonitor::new()
-            )),
+            memory_profiler: Arc::new(RwLock::new(AdvancedMemoryProfiler::new(&config))),
+            memory_pools: Arc::new(RwLock::new(IntelligentMemoryPools::new(
+                &config,
+                &numa_topology,
+            ))),
+            cache_optimizer: Arc::new(RwLock::new(CacheOptimizer::new(&config, cache_hierarchy))),
+            numa_manager: Arc::new(RwLock::new(NumaMemoryManager::new(&config, numa_topology))),
+            compression_engine: Arc::new(RwLock::new(CompressionEngine::new(&config))),
+            memory_mapper: Arc::new(RwLock::new(MemoryMapper::new(&config))),
+            allocation_tracker: Arc::new(RwLock::new(AllocationTracker::new())),
+            performance_monitor: Arc::new(RwLock::new(MemoryPerformanceMonitor::new())),
             config,
         }
     }
 
     /// Optimized memory allocation for statistical operations
-    pub fn optimized_allocate<T>(&self, size: usize, usage_hint: MemoryUsageHint) -> StatsResult<OptimizedAllocation<T>>
+    pub fn optimized_allocate<T>(
+        &self,
+        size: usize,
+        usage_hint: MemoryUsageHint,
+    ) -> StatsResult<OptimizedAllocation<T>>
     where
         T: Copy + Send + Sync,
     {
         let start_time = Instant::now();
-        
+
         // Analyze allocation requirements
-        let allocation_characteristics = self.analyze_allocation_requirements::<T>(size, &usage_hint)?;
-        
+        let allocation_characteristics =
+            self.analyze_allocation_requirements::<T>(size, &usage_hint)?;
+
         // Profile current memory state
         let memory_state = if self.config.enable_memory_profiling {
             Some(self.memory_profiler.read().unwrap().current_memory_state())
@@ -171,16 +166,12 @@ impl UltraThinkMemoryManager {
         };
 
         // Determine optimal allocation strategy
-        let allocation_strategy = self.select_allocation_strategy(
-            &allocation_characteristics,
-            &memory_state,
-        )?;
+        let allocation_strategy =
+            self.select_allocation_strategy(&allocation_characteristics, &memory_state)?;
 
         // Execute optimized allocation
         let allocation = match allocation_strategy {
-            AllocationStrategy::Pool => {
-                self.allocate_from_pool::<T>(size, &usage_hint)?
-            }
+            AllocationStrategy::Pool => self.allocate_from_pool::<T>(size, &usage_hint)?,
             AllocationStrategy::Direct => {
                 self.allocate_direct::<T>(size, &allocation_characteristics)?
             }
@@ -228,22 +219,21 @@ impl UltraThinkMemoryManager {
         R: Send + Sync,
     {
         let data_characteristics = self.analyze_array_characteristics(data);
-        
+
         // Select optimal cache strategy
-        let cache_strategy = self.cache_optimizer.read().unwrap()
+        let cache_strategy = self
+            .cache_optimizer
+            .read()
+            .unwrap()
             .select_optimal_strategy(&data_characteristics)?;
 
         // Execute with cache optimization
         match cache_strategy {
-            CacheStrategy::Sequential => {
-                self.execute_sequential_optimized(data, operation)
-            }
+            CacheStrategy::Sequential => self.execute_sequential_optimized(data, operation),
             CacheStrategy::Blocked => {
                 self.execute_blocked_optimized(data, operation, &data_characteristics)
             }
-            CacheStrategy::Prefetched => {
-                self.execute_prefetched_optimized(data, operation)
-            }
+            CacheStrategy::Prefetched => self.execute_prefetched_optimized(data, operation),
             CacheStrategy::Hierarchical => {
                 self.execute_hierarchical_optimized(data, operation, &data_characteristics)
             }
@@ -260,17 +250,16 @@ impl UltraThinkMemoryManager {
         F: Float + NumCast + Copy + Send + Sync,
     {
         let matrix_characteristics = self.analyze_matrix_memory_characteristics(matrices);
-        
+
         // Optimize NUMA placement
-        let numa_layout = self.numa_manager.read().unwrap()
+        let numa_layout = self
+            .numa_manager
+            .read()
+            .unwrap()
             .optimize_matrix_placement(&matrix_characteristics)?;
 
         // Execute with NUMA optimization
-        self.execute_numa_optimized_matrix_operation(
-            matrices,
-            operation,
-            &numa_layout,
-        )
+        self.execute_numa_optimized_matrix_operation(matrices, operation, &numa_layout)
     }
 
     /// Memory-efficient streaming operations
@@ -286,11 +275,10 @@ impl UltraThinkMemoryManager {
         R: Send + Sync,
     {
         let streaming_config = self.optimize_streaming_memory_config(window_size, &operation)?;
-        
+
         // Create optimized streaming buffer
-        let mut streaming_buffer = self.create_optimized_streaming_buffer::<F, D>(
-            &streaming_config
-        )?;
+        let mut streaming_buffer =
+            self.create_optimized_streaming_buffer::<F, D>(&streaming_config)?;
 
         // Execute streaming operation with memory optimization
         self.execute_memory_optimized_streaming(
@@ -312,41 +300,39 @@ impl UltraThinkMemoryManager {
         D: Data<Elem = F> + Sync,
     {
         let batch_characteristics = self.analyze_batch_memory_characteristics(batches);
-        
+
         // Optimize memory layout for batch processing
         let memory_layout = self.optimize_batch_memory_layout(&batch_characteristics)?;
-        
+
         // Execute batch operation with memory optimization
-        self.execute_batch_memory_optimized(
-            batches,
-            operation,
-            &memory_layout,
-        )
+        self.execute_batch_memory_optimized(batches, operation, &memory_layout)
     }
 
     /// Real-time memory profiling and optimization
     pub fn profile_and_optimize(&self) -> StatsResult<MemoryOptimizationReport> {
         let start_time = Instant::now();
-        
+
         // Collect comprehensive memory metrics
         let memory_metrics = self.collect_comprehensive_memory_metrics()?;
-        
+
         // Analyze memory usage patterns
-        let usage_patterns = self.memory_profiler.read().unwrap()
+        let usage_patterns = self
+            .memory_profiler
+            .read()
+            .unwrap()
             .analyze_usage_patterns(&memory_metrics)?;
 
         // Generate optimization recommendations
-        let recommendations = self.generate_memory_optimization_recommendations(
-            &memory_metrics,
-            &usage_patterns,
-        )?;
+        let recommendations =
+            self.generate_memory_optimization_recommendations(&memory_metrics, &usage_patterns)?;
 
         // Apply automatic optimizations if configured
-        let applied_optimizations = if self.config.optimization_level == MemoryOptimizationLevel::Expert {
-            self.apply_automatic_optimizations(&recommendations)?
-        } else {
-            Vec::new()
-        };
+        let applied_optimizations =
+            if self.config.optimization_level == MemoryOptimizationLevel::Expert {
+                self.apply_automatic_optimizations(&recommendations)?
+            } else {
+                Vec::new()
+            };
 
         let profiling_time = start_time.elapsed();
 
@@ -364,7 +350,7 @@ impl UltraThinkMemoryManager {
     pub fn get_memory_statistics(&self) -> MemoryStatistics {
         let allocation_tracker = self.allocation_tracker.read().unwrap();
         let performance_monitor = self.performance_monitor.read().unwrap();
-        
+
         MemoryStatistics {
             total_allocated: allocation_tracker.total_allocated(),
             active_allocations: allocation_tracker.active_allocations(),
@@ -388,7 +374,7 @@ impl UltraThinkMemoryManager {
         T: Copy + Send + Sync,
     {
         let bytes_required = size * std::mem::size_of::<T>();
-        
+
         Ok(AllocationCharacteristics {
             size_bytes: bytes_required,
             element_count: size,
@@ -415,14 +401,16 @@ impl UltraThinkMemoryManager {
         // Decision logic based on size and characteristics
         if characteristics.size_bytes > self.config.memory_mapping_threshold {
             Ok(AllocationStrategy::MemoryMapped)
-        } else if characteristics.size_bytes > self.config.compression_threshold 
-            && self.config.enable_memory_compression {
+        } else if characteristics.size_bytes > self.config.compression_threshold
+            && self.config.enable_memory_compression
+        {
             Ok(AllocationStrategy::Compressed)
-        } else if self.config.enable_numa_optimization 
-            && characteristics.numa_locality_preference.is_some() {
+        } else if self.config.enable_numa_optimization
+            && characteristics.numa_locality_preference.is_some()
+        {
             Ok(AllocationStrategy::NumaOptimized)
-        } else if self.config.enable_memory_pooling 
-            && characteristics.size_bytes < 1024 * 1024 { // 1MB threshold for pooling
+        } else if self.config.enable_memory_pooling && characteristics.size_bytes < 1024 * 1024 {
+            // 1MB threshold for pooling
             Ok(AllocationStrategy::Pool)
         } else {
             Ok(AllocationStrategy::Direct)
@@ -435,7 +423,7 @@ impl UltraThinkMemoryManager {
         D: Data<Elem = F> + Sync,
     {
         let size_bytes = data.len() * std::mem::size_of::<F>();
-        
+
         ArrayCharacteristics {
             element_count: data.len(),
             size_bytes,
@@ -449,13 +437,16 @@ impl UltraThinkMemoryManager {
         }
     }
 
-    fn analyze_matrix_memory_characteristics<F>(&self, matrices: &[Array2<F>]) -> MatrixMemoryCharacteristics
+    fn analyze_matrix_memory_characteristics<F>(
+        &self,
+        matrices: &[Array2<F>],
+    ) -> MatrixMemoryCharacteristics
     where
         F: Float + NumCast + Copy + Send + Sync,
     {
         let total_elements: usize = matrices.iter().map(|m| m.len()).sum();
         let total_bytes = total_elements * std::mem::size_of::<F>();
-        
+
         MatrixMemoryCharacteristics {
             total_elements,
             total_bytes,
@@ -467,14 +458,17 @@ impl UltraThinkMemoryManager {
         }
     }
 
-    fn analyze_batch_memory_characteristics<F, D>(&self, batches: &[ArrayBase<D, Ix1>]) -> BatchMemoryCharacteristics
+    fn analyze_batch_memory_characteristics<F, D>(
+        &self,
+        batches: &[ArrayBase<D, Ix1>],
+    ) -> BatchMemoryCharacteristics
     where
         F: Float + NumCast + Copy + Send + Sync,
         D: Data<Elem = F> + Sync,
     {
         let total_elements: usize = batches.iter().map(|b| b.len()).sum();
         let total_bytes = total_elements * std::mem::size_of::<F>();
-        
+
         BatchMemoryCharacteristics {
             batch_count: batches.len(),
             total_elements,
@@ -505,7 +499,7 @@ impl UltraThinkMemoryManager {
     fn estimate_numa_distribution(&self, size_bytes: usize) -> f64 {
         // Estimate how well data can be distributed across NUMA nodes
         let numa_node_capacity = 64 * 1024 * 1024 * 1024; // 64GB per node
-        
+
         if size_bytes <= numa_node_capacity {
             0.90 // Single node is sufficient
         } else {
@@ -516,7 +510,7 @@ impl UltraThinkMemoryManager {
     fn estimate_cache_blocking_potential(&self, size_bytes: usize) -> f64 {
         // Estimate benefit of cache blocking for matrix operations
         let l2_cache = 256 * 1024;
-        
+
         if size_bytes > l2_cache * 4 {
             0.85 // High potential for cache blocking
         } else {
@@ -527,7 +521,7 @@ impl UltraThinkMemoryManager {
     fn estimate_numa_partitioning_potential(&self, size_bytes: usize) -> f64 {
         // Estimate benefit of NUMA partitioning
         let numa_threshold = 1024 * 1024 * 1024; // 1GB
-        
+
         if size_bytes > numa_threshold {
             0.80
         } else {
@@ -535,7 +529,10 @@ impl UltraThinkMemoryManager {
         }
     }
 
-    fn calculate_batch_size_distribution<F, D>(&self, batches: &[ArrayBase<D, Ix1>]) -> SizeDistribution
+    fn calculate_batch_size_distribution<F, D>(
+        &self,
+        batches: &[ArrayBase<D, Ix1>],
+    ) -> SizeDistribution
     where
         F: Float + NumCast + Copy + Send + Sync,
         D: Data<Elem = F> + Sync,
@@ -546,12 +543,14 @@ impl UltraThinkMemoryManager {
 
         let sizes: Vec<usize> = batches.iter().map(|b| b.len()).collect();
         let mean = sizes.iter().sum::<usize>() as f64 / sizes.len() as f64;
-        let variance = sizes.iter()
+        let variance = sizes
+            .iter()
             .map(|&size| (size as f64 - mean).powi(2))
-            .sum::<f64>() / sizes.len() as f64;
-        
+            .sum::<f64>()
+            / sizes.len() as f64;
+
         let coefficient_of_variation = variance.sqrt() / mean;
-        
+
         if coefficient_of_variation < 0.1 {
             SizeDistribution::Uniform
         } else if coefficient_of_variation < 0.5 {
@@ -568,7 +567,7 @@ impl UltraThinkMemoryManager {
     {
         // Simplified fragmentation risk estimation
         let size_variance = self.calculate_batch_size_variance(batches);
-        
+
         if size_variance > 1.0 {
             0.70 // High fragmentation risk
         } else if size_variance > 0.5 {
@@ -587,10 +586,11 @@ impl UltraThinkMemoryManager {
         let total_size: usize = batches.iter().map(|b| b.len()).sum();
         let thread_count = num_threads();
         let avg_size_per_thread = total_size / thread_count;
-        
+
         // Consider cache efficiency per thread
-        let cache_efficiency = self.estimate_cache_efficiency(avg_size_per_thread * std::mem::size_of::<F>());
-        
+        let cache_efficiency =
+            self.estimate_cache_efficiency(avg_size_per_thread * std::mem::size_of::<F>());
+
         cache_efficiency * 0.9 // Account for parallel overhead
     }
 
@@ -605,25 +605,31 @@ impl UltraThinkMemoryManager {
 
         let sizes: Vec<f64> = batches.iter().map(|b| b.len() as f64).collect();
         let mean = sizes.iter().sum::<f64>() / sizes.len() as f64;
-        let variance = sizes.iter()
-            .map(|&size| (size - mean).powi(2))
-            .sum::<f64>() / sizes.len() as f64;
-        
+        let variance =
+            sizes.iter().map(|&size| (size - mean).powi(2)).sum::<f64>() / sizes.len() as f64;
+
         variance.sqrt() / mean // Coefficient of variation
     }
 
     // Placeholder allocation methods
-    
-    fn allocate_from_pool<T>(&self, size: usize, _usage_hint: &MemoryUsageHint) -> StatsResult<OptimizedAllocation<T>>
+
+    fn allocate_from_pool<T>(
+        &self,
+        size: usize,
+        _usage_hint: &MemoryUsageHint,
+    ) -> StatsResult<OptimizedAllocation<T>>
     where
         T: Copy + Send + Sync,
     {
         // Placeholder implementation
-        let layout = Layout::array::<T>(size).map_err(|_| StatsError::dimension_mismatch("Invalid layout".to_string()))?;
+        let layout = Layout::array::<T>(size)
+            .map_err(|_| StatsError::dimension_mismatch("Invalid layout".to_string()))?;
         let ptr = unsafe { alloc(layout) as *mut T };
-        
+
         if ptr.is_null() {
-            return Err(StatsError::dimension_mismatch("Allocation failed".to_string()));
+            return Err(StatsError::dimension_mismatch(
+                "Allocation failed".to_string(),
+            ));
         }
 
         Ok(OptimizedAllocation {
@@ -636,16 +642,23 @@ impl UltraThinkMemoryManager {
         })
     }
 
-    fn allocate_direct<T>(&self, size: usize, _characteristics: &AllocationCharacteristics) -> StatsResult<OptimizedAllocation<T>>
+    fn allocate_direct<T>(
+        &self,
+        size: usize,
+        _characteristics: &AllocationCharacteristics,
+    ) -> StatsResult<OptimizedAllocation<T>>
     where
         T: Copy + Send + Sync,
     {
         // Placeholder implementation
-        let layout = Layout::array::<T>(size).map_err(|_| StatsError::dimension_mismatch("Invalid layout".to_string()))?;
+        let layout = Layout::array::<T>(size)
+            .map_err(|_| StatsError::dimension_mismatch("Invalid layout".to_string()))?;
         let ptr = unsafe { alloc(layout) as *mut T };
-        
+
         if ptr.is_null() {
-            return Err(StatsError::dimension_mismatch("Allocation failed".to_string()));
+            return Err(StatsError::dimension_mismatch(
+                "Allocation failed".to_string(),
+            ));
         }
 
         Ok(OptimizedAllocation {
@@ -658,7 +671,11 @@ impl UltraThinkMemoryManager {
         })
     }
 
-    fn allocate_memory_mapped<T>(&self, size: usize, _characteristics: &AllocationCharacteristics) -> StatsResult<OptimizedAllocation<T>>
+    fn allocate_memory_mapped<T>(
+        &self,
+        size: usize,
+        _characteristics: &AllocationCharacteristics,
+    ) -> StatsResult<OptimizedAllocation<T>>
     where
         T: Copy + Send + Sync,
     {
@@ -666,7 +683,11 @@ impl UltraThinkMemoryManager {
         self.allocate_direct(size, _characteristics)
     }
 
-    fn allocate_compressed<T>(&self, size: usize, _characteristics: &AllocationCharacteristics) -> StatsResult<OptimizedAllocation<T>>
+    fn allocate_compressed<T>(
+        &self,
+        size: usize,
+        _characteristics: &AllocationCharacteristics,
+    ) -> StatsResult<OptimizedAllocation<T>>
     where
         T: Copy + Send + Sync,
     {
@@ -674,7 +695,11 @@ impl UltraThinkMemoryManager {
         self.allocate_direct(size, _characteristics)
     }
 
-    fn allocate_numa_optimized<T>(&self, size: usize, _characteristics: &AllocationCharacteristics) -> StatsResult<OptimizedAllocation<T>>
+    fn allocate_numa_optimized<T>(
+        &self,
+        size: usize,
+        _characteristics: &AllocationCharacteristics,
+    ) -> StatsResult<OptimizedAllocation<T>>
     where
         T: Copy + Send + Sync,
     {
@@ -685,7 +710,7 @@ impl UltraThinkMemoryManager {
     }
 
     // Placeholder operation execution methods
-    
+
     fn execute_sequential_optimized<F, D, R>(
         &self,
         _data: &ArrayBase<D, Ix1>,
@@ -696,7 +721,9 @@ impl UltraThinkMemoryManager {
         D: Data<Elem = F> + Sync,
         R: Send + Sync,
     {
-        Err(StatsError::dimension_mismatch("Not implemented".to_string()))
+        Err(StatsError::dimension_mismatch(
+            "Not implemented".to_string(),
+        ))
     }
 
     fn execute_blocked_optimized<F, D, R>(
@@ -710,7 +737,9 @@ impl UltraThinkMemoryManager {
         D: Data<Elem = F> + Sync,
         R: Send + Sync,
     {
-        Err(StatsError::dimension_mismatch("Not implemented".to_string()))
+        Err(StatsError::dimension_mismatch(
+            "Not implemented".to_string(),
+        ))
     }
 
     fn execute_prefetched_optimized<F, D, R>(
@@ -723,7 +752,9 @@ impl UltraThinkMemoryManager {
         D: Data<Elem = F> + Sync,
         R: Send + Sync,
     {
-        Err(StatsError::dimension_mismatch("Not implemented".to_string()))
+        Err(StatsError::dimension_mismatch(
+            "Not implemented".to_string(),
+        ))
     }
 
     fn execute_hierarchical_optimized<F, D, R>(
@@ -737,7 +768,9 @@ impl UltraThinkMemoryManager {
         D: Data<Elem = F> + Sync,
         R: Send + Sync,
     {
-        Err(StatsError::dimension_mismatch("Not implemented".to_string()))
+        Err(StatsError::dimension_mismatch(
+            "Not implemented".to_string(),
+        ))
     }
 
     fn execute_numa_optimized_matrix_operation<F>(
@@ -749,7 +782,9 @@ impl UltraThinkMemoryManager {
     where
         F: Float + NumCast + Copy + Send + Sync,
     {
-        Err(StatsError::dimension_mismatch("Not implemented".to_string()))
+        Err(StatsError::dimension_mismatch(
+            "Not implemented".to_string(),
+        ))
     }
 
     fn optimize_streaming_memory_config<F, D, R>(
@@ -793,7 +828,9 @@ impl UltraThinkMemoryManager {
         D: Data<Elem = F> + Sync,
         R: Send + Sync,
     {
-        Err(StatsError::dimension_mismatch("Not implemented".to_string()))
+        Err(StatsError::dimension_mismatch(
+            "Not implemented".to_string(),
+        ))
     }
 
     fn optimize_batch_memory_layout<F>(
@@ -847,14 +884,12 @@ impl UltraThinkMemoryManager {
         _metrics: &ComprehensiveMemoryMetrics,
         _patterns: &MemoryUsagePatterns,
     ) -> StatsResult<Vec<MemoryOptimizationRecommendation>> {
-        Ok(vec![
-            MemoryOptimizationRecommendation {
-                recommendation: "Enable memory pooling for small allocations".to_string(),
-                expected_improvement: 15.0,
-                implementation_complexity: ImplementationComplexity::Low,
-                memory_impact: MemoryImpact::Positive,
-            }
-        ])
+        Ok(vec![MemoryOptimizationRecommendation {
+            recommendation: "Enable memory pooling for small allocations".to_string(),
+            expected_improvement: 15.0,
+            implementation_complexity: ImplementationComplexity::Low,
+            memory_impact: MemoryImpact::Positive,
+        }])
     }
 
     fn apply_automatic_optimizations(
@@ -889,9 +924,9 @@ pub enum AccessPattern {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LifetimeHint {
-    Short,    // < 1 second
-    Medium,   // 1 second - 1 minute
-    Long,     // > 1 minute
+    Short,     // < 1 second
+    Medium,    // 1 second - 1 minute
+    Long,      // > 1 minute
     Permanent, // Until program termination
 }
 
@@ -1225,7 +1260,10 @@ impl AdvancedMemoryProfiler {
         }
     }
 
-    pub fn analyze_usage_patterns(&self, _metrics: &ComprehensiveMemoryMetrics) -> StatsResult<MemoryUsagePatterns> {
+    pub fn analyze_usage_patterns(
+        &self,
+        _metrics: &ComprehensiveMemoryMetrics,
+    ) -> StatsResult<MemoryUsagePatterns> {
         Ok(MemoryUsagePatterns {
             allocation_patterns: vec![],
             access_patterns: vec![],
@@ -1299,7 +1337,10 @@ impl CacheOptimizer {
         }
     }
 
-    pub fn select_optimal_strategy(&self, _characteristics: &ArrayCharacteristics) -> StatsResult<CacheStrategy> {
+    pub fn select_optimal_strategy(
+        &self,
+        _characteristics: &ArrayCharacteristics,
+    ) -> StatsResult<CacheStrategy> {
         Ok(CacheStrategy::Sequential) // Placeholder
     }
 }
@@ -1334,7 +1375,10 @@ impl NumaMemoryManager {
         }
     }
 
-    pub fn optimize_matrix_placement(&self, _characteristics: &MatrixMemoryCharacteristics) -> StatsResult<NumaLayout> {
+    pub fn optimize_matrix_placement(
+        &self,
+        _characteristics: &MatrixMemoryCharacteristics,
+    ) -> StatsResult<NumaLayout> {
         Ok(NumaLayout {
             node_assignments: HashMap::new(),
             memory_interleaving: false,
@@ -1435,7 +1479,7 @@ impl AllocationTracker {
         strategy: &AllocationStrategy,
     ) {
         let size_bytes = allocation.size * std::mem::size_of::<T>();
-        
+
         let allocation_info = AllocationInfo {
             size_bytes,
             allocation_time,
@@ -1443,11 +1487,15 @@ impl AllocationTracker {
             timestamp: Instant::now(),
         };
 
-        self.active_allocations.insert(allocation.ptr.as_ptr() as usize, allocation_info);
-        
-        let new_total = self.total_allocated.fetch_add(size_bytes, Ordering::Relaxed) + size_bytes;
+        self.active_allocations
+            .insert(allocation.ptr.as_ptr() as usize, allocation_info);
+
+        let new_total = self
+            .total_allocated
+            .fetch_add(size_bytes, Ordering::Relaxed)
+            + size_bytes;
         self.allocation_count.fetch_add(1, Ordering::Relaxed);
-        
+
         // Update peak usage
         let mut current_peak = self.peak_usage.load(Ordering::Relaxed);
         while new_total > current_peak {
@@ -1503,7 +1551,8 @@ impl MemoryPerformanceMonitor {
         allocation_time: Duration,
         strategy: &AllocationStrategy,
     ) {
-        self.real_time_metrics.update_allocation_metrics(size_bytes, allocation_time, strategy);
+        self.real_time_metrics
+            .update_allocation_metrics(size_bytes, allocation_time, strategy);
     }
 
     pub fn cache_hit_ratio(&self) -> f64 {
@@ -1571,7 +1620,7 @@ impl RealTimeMemoryMetrics {
     }
 }
 
-pub struct OptimizedStreamingBuffer<F, D> {
+pub struct OptimizedStreamingBuffer<F, D: ndarray::RawData> {
     data: VecDeque<ArrayBase<D, Ix1>>,
     max_size: usize,
     current_memory_usage: usize,
@@ -1581,7 +1630,7 @@ pub struct OptimizedStreamingBuffer<F, D> {
 impl<F, D> OptimizedStreamingBuffer<F, D>
 where
     F: Float + NumCast + Copy + Send + Sync,
-    D: Data<Elem = F> + Sync,
+    D: ndarray::RawData<Elem = F> + Data<Elem = F> + Sync,
 {
     pub fn new(max_size: usize) -> Self {
         Self {
@@ -1615,21 +1664,19 @@ where
 
 fn detect_numa_topology() -> NumaTopology {
     NumaTopology {
-        nodes: vec![
-            NumaNode {
-                id: 0,
-                memory_size: 64 * 1024 * 1024 * 1024, // 64GB
-                cpu_cores: (0..8).collect(),
-            }
-        ],
+        nodes: vec![NumaNode {
+            id: 0,
+            memory_size: 64 * 1024 * 1024 * 1024, // 64GB
+            cpu_cores: (0..8).collect(),
+        }],
         distance_matrix: Array2::eye(1),
     }
 }
 
 fn detect_cache_hierarchy() -> CacheHierarchy {
     CacheHierarchy {
-        l1_size: 32 * 1024,      // 32KB
-        l2_size: 256 * 1024,     // 256KB
+        l1_size: 32 * 1024,       // 32KB
+        l2_size: 256 * 1024,      // 256KB
         l3_size: 8 * 1024 * 1024, // 8MB
         cache_line_size: 64,      // 64 bytes
     }
@@ -1662,7 +1709,7 @@ pub fn create_large_dataset_memory_manager() -> UltraThinkMemoryManager {
         cache_strategy: CacheOptimizationStrategy::Adaptive,
         pool_strategy: MemoryPoolStrategy::NumaAware,
         numa_policy: NumaMemoryPolicy::Adaptive,
-        compression_threshold: 50 * 1024 * 1024, // 50MB
+        compression_threshold: 50 * 1024 * 1024,     // 50MB
         memory_mapping_threshold: 500 * 1024 * 1024, // 500MB
     };
     UltraThinkMemoryManager::new(config)
@@ -1681,7 +1728,7 @@ pub fn create_streaming_memory_manager() -> UltraThinkMemoryManager {
         cache_strategy: CacheOptimizationStrategy::Hierarchical,
         pool_strategy: MemoryPoolStrategy::ThreadLocal,
         numa_policy: NumaMemoryPolicy::LocalFirst,
-        compression_threshold: usize::MAX, // Disabled
+        compression_threshold: usize::MAX,    // Disabled
         memory_mapping_threshold: usize::MAX, // Disabled
     };
     UltraThinkMemoryManager::new(config)
@@ -1705,7 +1752,7 @@ mod tests {
             numa_preference: Some(0),
             cache_importance: CacheImportance::High,
         };
-        
+
         assert_eq!(hint.access_pattern, AccessPattern::Sequential);
         assert_eq!(hint.lifetime, LifetimeHint::Medium);
         assert_eq!(hint.numa_preference, Some(0));
@@ -1721,21 +1768,26 @@ mod tests {
             numa_preference: None,
             cache_importance: CacheImportance::Medium,
         };
-        
-        let characteristics = manager.analyze_allocation_requirements::<f64>(1000, &hint).unwrap();
+
+        let characteristics = manager
+            .analyze_allocation_requirements::<f64>(1000, &hint)
+            .unwrap();
         assert_eq!(characteristics.element_count, 1000);
         assert_eq!(characteristics.element_size, std::mem::size_of::<f64>());
-        assert_eq!(characteristics.size_bytes, 1000 * std::mem::size_of::<f64>());
+        assert_eq!(
+            characteristics.size_bytes,
+            1000 * std::mem::size_of::<f64>()
+        );
     }
 
     #[test]
     fn test_cache_efficiency_estimation() {
         let manager = create_ultra_think_memory_manager();
-        
+
         // Small data should have high cache efficiency
         let small_efficiency = manager.estimate_cache_efficiency(16 * 1024); // 16KB
         assert!(small_efficiency > 0.9);
-        
+
         // Large data should have lower cache efficiency
         let large_efficiency = manager.estimate_cache_efficiency(100 * 1024 * 1024); // 100MB
         assert!(large_efficiency < 0.7);
@@ -1744,11 +1796,11 @@ mod tests {
     #[test]
     fn test_numa_distribution_estimation() {
         let manager = create_ultra_think_memory_manager();
-        
+
         // Small data should fit in single NUMA node
         let small_numa = manager.estimate_numa_distribution(1024 * 1024); // 1MB
         assert!(small_numa > 0.8);
-        
+
         // Large data may need multiple NUMA nodes
         let large_numa = manager.estimate_numa_distribution(100 * 1024 * 1024 * 1024); // 100GB
         assert!(large_numa < 0.8);
@@ -1757,7 +1809,7 @@ mod tests {
     #[test]
     fn test_allocation_strategy_selection() {
         let manager = create_ultra_think_memory_manager();
-        
+
         let characteristics = AllocationCharacteristics {
             size_bytes: 1024, // Small allocation
             element_count: 128,
@@ -1768,8 +1820,10 @@ mod tests {
             numa_locality_preference: None,
             cache_locality_importance: CacheImportance::Medium,
         };
-        
-        let strategy = manager.select_allocation_strategy(&characteristics, &None).unwrap();
+
+        let strategy = manager
+            .select_allocation_strategy(&characteristics, &None)
+            .unwrap();
         assert_eq!(strategy, AllocationStrategy::Pool); // Should use pool for small allocations
     }
 
@@ -1779,10 +1833,10 @@ mod tests {
         let batch1 = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let batch2 = Array1::from_vec(vec![4.0, 5.0, 6.0, 7.0]);
         let batch3 = Array1::from_vec(vec![8.0, 9.0]);
-        
+
         let batches = vec![batch1.view(), batch2.view(), batch3.view()];
         let variance = manager.calculate_batch_size_variance(&batches);
-        
+
         assert!(variance > 0.0);
     }
 
@@ -1793,19 +1847,19 @@ mod tests {
         let array2 = Array1::from_vec(vec![3.0, 4.0]);
         let array3 = Array1::from_vec(vec![5.0, 6.0]);
         let array4 = Array1::from_vec(vec![7.0, 8.0]);
-        
+
         assert!(!buffer.is_ready());
-        
+
         buffer.push(array1.view().to_owned());
         buffer.push(array2.view().to_owned());
         assert!(!buffer.is_ready());
-        
+
         buffer.push(array3.view().to_owned());
         assert!(buffer.is_ready());
-        
+
         let initial_memory = buffer.memory_usage();
         buffer.push(array4.view().to_owned());
-        
+
         // Should maintain size limit and manage memory
         assert!(buffer.memory_usage() <= initial_memory + 2 * std::mem::size_of::<f64>());
     }
@@ -1818,7 +1872,7 @@ mod tests {
             MemoryOptimizationLevel::Expert
         );
         assert!(large_dataset_manager.config.enable_memory_compression);
-        
+
         let streaming_manager = create_streaming_memory_manager();
         assert_eq!(
             streaming_manager.config.pool_strategy,
@@ -1831,18 +1885,20 @@ mod tests {
     fn test_memory_statistics_collection() {
         let manager = create_ultra_think_memory_manager();
         let stats = manager.get_memory_statistics();
-        
+
         // Should have reasonable default values
         assert!(stats.cache_hit_ratio >= 0.0 && stats.cache_hit_ratio <= 1.0);
         assert!(stats.numa_efficiency >= 0.0 && stats.numa_efficiency <= 1.0);
-        assert!(stats.memory_bandwidth_utilization >= 0.0 && stats.memory_bandwidth_utilization <= 1.0);
+        assert!(
+            stats.memory_bandwidth_utilization >= 0.0 && stats.memory_bandwidth_utilization <= 1.0
+        );
     }
 
     #[test]
     fn test_system_detection_functions() {
         let numa_topology = detect_numa_topology();
         assert!(!numa_topology.nodes.is_empty());
-        
+
         let cache_hierarchy = detect_cache_hierarchy();
         assert!(cache_hierarchy.l1_size > 0);
         assert!(cache_hierarchy.l2_size > cache_hierarchy.l1_size);

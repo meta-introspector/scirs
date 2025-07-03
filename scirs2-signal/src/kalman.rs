@@ -648,7 +648,7 @@ where
 
     // Initialize ensemble
     let mut ensemble = Vec::with_capacity(n_ensemble);
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for _ in 0..n_ensemble {
         // Generate random perturbation based on initial covariance

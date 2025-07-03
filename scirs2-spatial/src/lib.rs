@@ -854,23 +854,44 @@ mod utils;
 // Quantum-inspired spatial algorithms for cutting-edge optimization
 pub mod quantum_inspired;
 pub use quantum_inspired::{
-    QuantumAmplitude, QuantumClusterer, QuantumNearestNeighbor, QuantumSpatialOptimizer,
-    QuantumState, QuantumTSPSolution, QuantumTSPSolver,
+    QuantumAmplitude,
+    QuantumClusterer,
+    QuantumFeatureMapType,
+    QuantumGateType,
     // Advanced quantum machine learning components
-    QuantumKernelMachine, QuantumKernelParams, QuantumFeatureMapType, QuantumGateType,
-    QuantumVariationalClassifier, QuantumParameterOptimizer,
+    QuantumKernelMachine,
+    QuantumKernelParams,
+    QuantumNearestNeighbor,
+    QuantumParameterOptimizer,
+    QuantumSpatialOptimizer,
+    QuantumState,
+    QuantumTSPSolution,
+    QuantumTSPSolver,
+    QuantumVariationalClassifier,
 };
 
 // Neuromorphic computing acceleration for brain-inspired spatial processing
 pub mod neuromorphic;
 pub use neuromorphic::{
-    CompetitiveNeuralClusterer, NeuromorphicProcessor, SpikeEvent, SpikingNeuralClusterer,
-    SpikingNeuron, Synapse,
+    AdaptationScale,
+    CompetitiveNeuralClusterer,
+    DendriticCompartment,
+    DendriticNeuron,
+    DendriticSpatialClusterer,
+    GlobalLearningParams,
     // Advanced neuromorphic learning algorithms
-    HomeostaticNeuralClusterer, HomeostaticNeuron, LearningRateAdaptation,
-    MetaplasticityController, MultiTimescaleAdaptation, AdaptationScale,
-    DendriticSpatialClusterer, DendriticNeuron, DendriticCompartment,
-    SomaCompartment, GlobalLearningParams, LocalLearningParams,
+    HomeostaticNeuralClusterer,
+    HomeostaticNeuron,
+    LearningRateAdaptation,
+    LocalLearningParams,
+    MetaplasticityController,
+    MultiTimescaleAdaptation,
+    NeuromorphicProcessor,
+    SomaCompartment,
+    SpikeEvent,
+    SpikingNeuralClusterer,
+    SpikingNeuron,
+    Synapse,
 };
 
 // Advanced GPU tensor core utilization for maximum performance

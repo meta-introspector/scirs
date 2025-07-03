@@ -397,7 +397,7 @@ impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
     }
 
     /// Get cached basis function value using new key structure
-    fn get_or_compute_basis_with_key(
+    pub fn get_or_compute_basis_with_key(
         &mut self,
         key: BasisCacheKey,
         computer: impl FnOnce() -> F,

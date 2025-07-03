@@ -290,7 +290,7 @@ fn bench_creation_comparison(c: &mut Criterion) {
                 });
             },
         );
-        
+
         // scirs2-graph with ultrathink optimization for larger graphs
         if *size >= 1000 {
             group.bench_with_input(
@@ -300,10 +300,15 @@ fn bench_creation_comparison(c: &mut Criterion) {
                     b.iter(|| {
                         let mut processor = create_performance_ultrathink_processor();
                         let graph = Graph::new();
-                        let result = execute_with_enhanced_ultrathink(&mut processor, &graph, "creation_test", |_| {
-                            let mut rng = StdRng::seed_from_u64(42);
-                            erdos_renyi_graph(size, 0.01, &mut rng)
-                        });
+                        let result = execute_with_enhanced_ultrathink(
+                            &mut processor,
+                            &graph,
+                            "creation_test",
+                            |_| {
+                                let mut rng = StdRng::seed_from_u64(42);
+                                erdos_renyi_graph(size, 0.01, &mut rng)
+                            },
+                        );
                         black_box(result)
                     });
                 },
@@ -608,7 +613,7 @@ where
     Ix: petgraph::graph::IndexType,
 {
     use scirs2_graph::{create_performance_ultrathink_processor, execute_with_enhanced_ultrathink};
-    
+
     let mut processor = create_performance_ultrathink_processor();
     let start = Instant::now();
 
@@ -622,23 +627,31 @@ where
         "pagerank" => execute_with_enhanced_ultrathink(&mut processor, graph, "pagerank", |g| {
             Ok(pagerank_centrality(g, None, None, None))
         }),
-        "betweenness_centrality" => execute_with_enhanced_ultrathink(&mut processor, graph, "betweenness", |g| {
-            Ok(betweenness_centrality(g))
-        }),
-        "shortest_path" => execute_with_enhanced_ultrathink(&mut processor, graph, "shortest_path", |g| {
-            let target = std::cmp::min(10, g.node_count().saturating_sub(1));
-            if target > 0 {
-                shortest_path(g, &0, &target)
-            } else {
-                Ok(Vec::new())
-            }
-        }),
-        "connected_components" => execute_with_enhanced_ultrathink(&mut processor, graph, "connected_components", |g| {
-            Ok(connected_components(g))
-        }),
-        "louvain_communities" => execute_with_enhanced_ultrathink(&mut processor, graph, "louvain", |g| {
-            louvain_communities_result(g, None, None)
-        }),
+        "betweenness_centrality" => {
+            execute_with_enhanced_ultrathink(&mut processor, graph, "betweenness", |g| {
+                Ok(betweenness_centrality(g))
+            })
+        }
+        "shortest_path" => {
+            execute_with_enhanced_ultrathink(&mut processor, graph, "shortest_path", |g| {
+                let target = std::cmp::min(10, g.node_count().saturating_sub(1));
+                if target > 0 {
+                    shortest_path(g, &0, &target)
+                } else {
+                    Ok(Vec::new())
+                }
+            })
+        }
+        "connected_components" => {
+            execute_with_enhanced_ultrathink(&mut processor, graph, "connected_components", |g| {
+                Ok(connected_components(g))
+            })
+        }
+        "louvain_communities" => {
+            execute_with_enhanced_ultrathink(&mut processor, graph, "louvain", |g| {
+                louvain_communities_result(g, None, None)
+            })
+        }
         _ => Ok(()),
     };
 
@@ -767,17 +780,29 @@ fn generate_markdown_report(results: &[(String, String, usize, ComparisonMetrics
 fn bench_ultrathink_comprehensive_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultrathink_comprehensive_comparison");
     let external_runner = ExternalBenchmarkRunner::new();
-    
+
     // Test different graph types and sizes optimized for each library's strengths
     let test_configurations = vec![
-        ("erdos_renyi", 2000, vec!["bfs", "dfs", "connected_components"]),
-        ("barabasi_albert", 1500, vec!["pagerank", "betweenness_centrality"]),
-        ("watts_strogatz", 1000, vec!["louvain_communities", "shortest_path"]),
+        (
+            "erdos_renyi",
+            2000,
+            vec!["bfs", "dfs", "connected_components"],
+        ),
+        (
+            "barabasi_albert",
+            1500,
+            vec!["pagerank", "betweenness_centrality"],
+        ),
+        (
+            "watts_strogatz",
+            1000,
+            vec!["louvain_communities", "shortest_path"],
+        ),
     ];
-    
+
     for (graph_type, size, algorithms) in test_configurations {
         println!("🔬 Testing {} graph with {} nodes", graph_type, size);
-        
+
         // Generate test graph once
         let mut rng = StdRng::seed_from_u64(42);
         let test_graph = match graph_type {
@@ -786,7 +811,7 @@ fn bench_ultrathink_comprehensive_comparison(c: &mut Criterion) {
             "watts_strogatz" => watts_strogatz_graph(size, 6, 0.3, &mut rng).unwrap(),
             _ => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
         };
-        
+
         for algorithm in algorithms {
             // Benchmark scirs2-graph with ultrathink
             group.bench_with_input(
@@ -802,7 +827,7 @@ fn bench_ultrathink_comprehensive_comparison(c: &mut Criterion) {
                     });
                 },
             );
-            
+
             // Benchmark scirs2-graph without ultrathink for comparison
             group.bench_with_input(
                 BenchmarkId::new(
@@ -817,22 +842,21 @@ fn bench_ultrathink_comprehensive_comparison(c: &mut Criterion) {
                     });
                 },
             );
-            
+
             // External library comparisons (async to avoid blocking benchmark)
             if size <= 1000 {
                 let nx_result = external_runner.run_networkx_benchmark(algorithm, size, graph_type);
-                let igraph_result = external_runner.run_igraph_benchmark(algorithm, size, graph_type);
-                
+                let igraph_result =
+                    external_runner.run_igraph_benchmark(algorithm, size, graph_type);
+
                 println!(
                     "  {} - NetworkX: {:.2}ms, igraph: {:.2}ms",
-                    algorithm,
-                    nx_result.execution_time_ms,
-                    igraph_result.execution_time_ms
+                    algorithm, nx_result.execution_time_ms, igraph_result.execution_time_ms
                 );
             }
         }
     }
-    
+
     group.finish();
 }
 
@@ -840,7 +864,7 @@ fn bench_ultrathink_comprehensive_comparison(c: &mut Criterion) {
 fn bench_memory_efficiency_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_efficiency_comparison");
     group.sample_size(10); // Fewer samples for memory-intensive tests
-    
+
     for size in &[1000, 5000, 10000] {
         // Test memory-efficient graph operations
         group.bench_with_input(
@@ -851,22 +875,25 @@ fn bench_memory_efficiency_comparison(c: &mut Criterion) {
                     let mut processor = create_memory_efficient_ultrathink_processor();
                     let mut rng = StdRng::seed_from_u64(42);
                     let graph = barabasi_albert_graph(size, 3, &mut rng).unwrap();
-                    
-                    let result = execute_with_enhanced_ultrathink(&mut processor, &graph, "memory_pagerank", |g| {
-                        Ok(pagerank_centrality(g, None, None, None))
-                    });
+
+                    let result = execute_with_enhanced_ultrathink(
+                        &mut processor,
+                        &graph,
+                        "memory_pagerank",
+                        |g| Ok(pagerank_centrality(g, None, None, None)),
+                    );
                     black_box(result)
                 });
             },
         );
-        
+
         // Compare memory usage patterns
         if *size <= 5000 {
             println!("📊 Memory efficiency test for {} nodes", size);
             // External libraries would need separate memory profiling
         }
     }
-    
+
     group.finish();
 }
 

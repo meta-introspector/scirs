@@ -8,11 +8,11 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-use ndarray::{Array, ArrayView, Dimension, Ix2, Ix3};
+use ndarray::{Array, ArrayView, Dimension};
 use num_traits::{Float, FromPrimitive};
 
-use crate::backend::{Backend, BackendConfig, DeviceCapability};
-use crate::error::{NdimageError, NdimageResult};
+use crate::backend::Backend;
+use crate::error::NdimageResult;
 
 /// GPU memory pool for efficient allocation management
 #[derive(Debug)]

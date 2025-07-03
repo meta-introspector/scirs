@@ -16,7 +16,6 @@ impl From<scirs2_core::gpu::GpuError> for ScirsError {
         }
     }
 }
-use ndarray::{Array1, Array2};
 use scirs2_core::gpu::{GpuBuffer, GpuDevice};
 
 // Real GPU types from scirs2-core

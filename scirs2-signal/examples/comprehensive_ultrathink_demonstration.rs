@@ -17,52 +17,52 @@ use std::time::Instant;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
-    
+
     // Example 1: Comprehensive ultrathink validation overview
     println!("🚀 1. Comprehensive Ultrathink Validation Overview");
     println!("================================================");
     showcase_validation_overview()?;
-    
+
     println!("\n");
-    
+
     // Example 2: Multitaper validation demonstration
     println!("📊 2. Enhanced Multitaper Spectral Estimation Validation");
     println!("======================================================");
     demonstrate_multitaper_validation()?;
-    
+
     println!("\n");
-    
+
     // Example 3: Lomb-Scargle validation demonstration
     println!("🔍 3. Comprehensive Lomb-Scargle Periodogram Testing");
     println!("==================================================");
     demonstrate_lombscargle_validation()?;
-    
+
     println!("\n");
-    
+
     // Example 4: 2D wavelet validation demonstration
     println!("🌊 4. 2D Wavelet Transform Validation and Refinement");
     println!("==================================================");
     demonstrate_wavelet2d_validation()?;
-    
+
     println!("\n");
-    
+
     // Example 5: Wavelet packet validation demonstration
     println!("📦 5. Wavelet Packet Transform Validation");
     println!("=======================================");
     demonstrate_wavelet_packet_validation()?;
-    
+
     println!("\n");
-    
+
     // Example 6: Performance and optimization demonstration
     println!("⚡ 6. Performance Optimization and SIMD Validation");
     println!("================================================");
     demonstrate_performance_optimization()?;
-    
+
     println!("\n");
-    
+
     // Summary and recommendations
     print_summary_and_recommendations();
-    
+
     Ok(())
 }
 
@@ -86,7 +86,7 @@ fn print_header() {
 fn showcase_validation_overview() -> Result<(), Box<dyn std::error::Error>> {
     println!("The ultrathink validation suite includes:");
     println!("");
-    
+
     println!("🧮 Mathematical Validation:");
     println!("  • Perfect reconstruction verification");
     println!("  • Orthogonality property validation");
@@ -94,7 +94,7 @@ fn showcase_validation_overview() -> Result<(), Box<dyn std::error::Error>> {
     println!("  • Parseval's theorem verification");
     println!("  • Analytical solution comparisons");
     println!("");
-    
+
     println!("🔢 Numerical Stability:");
     println!("  • Condition number analysis");
     println!("  • Error propagation studies");
@@ -102,7 +102,7 @@ fn showcase_validation_overview() -> Result<(), Box<dyn std::error::Error>> {
     println!("  • Floating-point precision validation");
     println!("  • Overflow/underflow handling");
     println!("");
-    
+
     println!("📈 Performance Analysis:");
     println!("  • Algorithmic complexity verification");
     println!("  • Scaling behavior analysis");
@@ -110,39 +110,42 @@ fn showcase_validation_overview() -> Result<(), Box<dyn std::error::Error>> {
     println!("  • Cache efficiency measurement");
     println!("  • Parallel processing effectiveness");
     println!("");
-    
+
     println!("🎯 Quality Assurance:");
     println!("  • Cross-platform consistency");
     println!("  • Reference implementation comparison");
     println!("  • Monte Carlo statistical validation");
     println!("  • Edge case handling verification");
     println!("  • Regression testing framework");
-    
+
     Ok(())
 }
 
 fn demonstrate_multitaper_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("Enhanced multitaper spectral estimation validation includes:");
     println!("");
-    
+
     // Simulate multitaper validation results
     let start_time = Instant::now();
-    
+
     println!("🔧 DPSS (Discrete Prolate Spheroidal Sequences) Validation:");
     simulate_dpss_validation();
-    
+
     println!("\n📊 Spectral Estimation Accuracy:");
     simulate_spectral_accuracy_validation();
-    
+
     println!("\n🧪 Numerical Stability Testing:");
     simulate_stability_testing();
-    
+
     println!("\n⚡ Performance Benchmarking:");
     simulate_performance_benchmarking();
-    
+
     let elapsed = start_time.elapsed();
-    println!("\n✅ Multitaper validation completed in {:.2}ms", elapsed.as_secs_f64() * 1000.0);
-    
+    println!(
+        "\n✅ Multitaper validation completed in {:.2}ms",
+        elapsed.as_secs_f64() * 1000.0
+    );
+
     Ok(())
 }
 
@@ -181,24 +184,27 @@ fn simulate_performance_benchmarking() {
 fn demonstrate_lombscargle_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("Comprehensive Lomb-Scargle periodogram testing includes:");
     println!("");
-    
+
     let start_time = Instant::now();
-    
+
     println!("🎯 Analytical Accuracy Testing:");
     simulate_lombscargle_accuracy();
-    
+
     println!("\n🌊 Noise Robustness Analysis:");
     simulate_noise_robustness();
-    
+
     println!("\n📏 Uneven Sampling Validation:");
     simulate_uneven_sampling();
-    
+
     println!("\n🎲 False Alarm Rate Control:");
     simulate_false_alarm_control();
-    
+
     let elapsed = start_time.elapsed();
-    println!("\n✅ Lomb-Scargle validation completed in {:.2}ms", elapsed.as_secs_f64() * 1000.0);
-    
+    println!(
+        "\n✅ Lomb-Scargle validation completed in {:.2}ms",
+        elapsed.as_secs_f64() * 1000.0
+    );
+
     Ok(())
 }
 
@@ -237,24 +243,27 @@ fn simulate_false_alarm_control() {
 fn demonstrate_wavelet2d_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("2D wavelet transform validation and refinement includes:");
     println!("");
-    
+
     let start_time = Instant::now();
-    
+
     println!("🏗️ Perfect Reconstruction Validation:");
     simulate_2d_reconstruction();
-    
+
     println!("\n🚧 Boundary Condition Analysis:");
     simulate_boundary_analysis();
-    
+
     println!("\n🎨 Denoising Performance Evaluation:");
     simulate_denoising_evaluation();
-    
+
     println!("\n📦 Compression Efficiency Testing:");
     simulate_compression_testing();
-    
+
     let elapsed = start_time.elapsed();
-    println!("\n✅ 2D wavelet validation completed in {:.2}ms", elapsed.as_secs_f64() * 1000.0);
-    
+    println!(
+        "\n✅ 2D wavelet validation completed in {:.2}ms",
+        elapsed.as_secs_f64() * 1000.0
+    );
+
     Ok(())
 }
 
@@ -293,24 +302,27 @@ fn simulate_compression_testing() {
 fn demonstrate_wavelet_packet_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("Wavelet packet transform validation includes:");
     println!("");
-    
+
     let start_time = Instant::now();
-    
+
     println!("🌳 Tree Structure Validation:");
     simulate_tree_validation();
-    
+
     println!("\n🎯 Best Basis Selection:");
     simulate_best_basis_selection();
-    
+
     println!("\n📊 Coefficient Organization:");
     simulate_coefficient_organization();
-    
+
     println!("\n🗜️ Adaptive Compression:");
     simulate_adaptive_compression();
-    
+
     let elapsed = start_time.elapsed();
-    println!("\n✅ Wavelet packet validation completed in {:.2}ms", elapsed.as_secs_f64() * 1000.0);
-    
+    println!(
+        "\n✅ Wavelet packet validation completed in {:.2}ms",
+        elapsed.as_secs_f64() * 1000.0
+    );
+
     Ok(())
 }
 
@@ -349,24 +361,27 @@ fn simulate_adaptive_compression() {
 fn demonstrate_performance_optimization() -> Result<(), Box<dyn std::error::Error>> {
     println!("Performance optimization and SIMD validation includes:");
     println!("");
-    
+
     let start_time = Instant::now();
-    
+
     println!("⚡ SIMD Optimization Validation:");
     simulate_simd_validation();
-    
+
     println!("\n🔄 Parallel Processing Analysis:");
     simulate_parallel_analysis();
-    
+
     println!("\n💾 Memory Efficiency Optimization:");
     simulate_memory_optimization();
-    
+
     println!("\n🎯 Cross-Platform Consistency:");
     simulate_platform_consistency();
-    
+
     let elapsed = start_time.elapsed();
-    println!("\n✅ Performance optimization validation completed in {:.2}ms", elapsed.as_secs_f64() * 1000.0);
-    
+    println!(
+        "\n✅ Performance optimization validation completed in {:.2}ms",
+        elapsed.as_secs_f64() * 1000.0
+    );
+
     Ok(())
 }
 
@@ -406,7 +421,7 @@ fn print_summary_and_recommendations() {
     println!("📋 VALIDATION SUMMARY AND RECOMMENDATIONS");
     println!("==========================================");
     println!("");
-    
+
     println!("🎯 Overall Implementation Quality:");
     println!("  ✅ Mathematical Correctness: 97.3%");
     println!("  ✅ Numerical Stability: 94.8%");
@@ -414,7 +429,7 @@ fn print_summary_and_recommendations() {
     println!("  ✅ Code Quality: 96.1%");
     println!("  ✅ Cross-Platform Consistency: 99.5%");
     println!("");
-    
+
     println!("🏆 Achievements:");
     println!("  • Production-ready signal processing library");
     println!("  • Comprehensive validation framework");
@@ -422,7 +437,7 @@ fn print_summary_and_recommendations() {
     println!("  • Robust numerical algorithms");
     println!("  • Extensive test coverage");
     println!("");
-    
+
     println!("💡 Recommendations for Further Development:");
     println!("  1. Consider GPU acceleration for large-scale computations");
     println!("  2. Implement additional SciPy compatibility functions");
@@ -430,7 +445,7 @@ fn print_summary_and_recommendations() {
     println!("  4. Develop domain-specific optimization profiles");
     println!("  5. Create interactive visualization tools");
     println!("");
-    
+
     println!("🚀 Future Directions:");
     println!("  • Real-time signal processing capabilities");
     println!("  • Machine learning integration");
@@ -438,14 +453,14 @@ fn print_summary_and_recommendations() {
     println!("  • Quantum-inspired signal processing algorithms");
     println!("  • Neuromorphic computing adaptations");
     println!("");
-    
+
     println!("🎊 Conclusion:");
     println!("The scirs2-signal library demonstrates exceptional quality and");
     println!("performance, with comprehensive validation ensuring production");
     println!("readiness. The ultrathink validation mode provides unprecedented");
     println!("confidence in the correctness and efficiency of all algorithms.");
     println!("");
-    
+
     println!("🌟 Ready for production use! 🌟");
 }
 
@@ -471,22 +486,22 @@ mod tests {
         simulate_spectral_accuracy_validation();
         simulate_stability_testing();
         simulate_performance_benchmarking();
-        
+
         simulate_lombscargle_accuracy();
         simulate_noise_robustness();
         simulate_uneven_sampling();
         simulate_false_alarm_control();
-        
+
         simulate_2d_reconstruction();
         simulate_boundary_analysis();
         simulate_denoising_evaluation();
         simulate_compression_testing();
-        
+
         simulate_tree_validation();
         simulate_best_basis_selection();
         simulate_coefficient_organization();
         simulate_adaptive_compression();
-        
+
         simulate_simd_validation();
         simulate_parallel_analysis();
         simulate_memory_optimization();

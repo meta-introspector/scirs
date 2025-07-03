@@ -377,7 +377,7 @@ where
                     NoiseType::Gaussian => {
                         for i in 0..n_samples {
                             for j in 0..n_features {
-                                let noise = F::from(rng.gen::<f64>() * 2.0 - 1.0).unwrap()
+                                let noise = F::from(rng.random::<f64>() * 2.0 - 1.0).unwrap()
                                     * F::from(*noise_level).unwrap();
                                 noisy_data[[i, j]] = noisy_data[[i, j]] + noise;
                             }
@@ -387,7 +387,8 @@ where
                         for i in 0..n_samples {
                             for j in 0..n_features {
                                 let noise =
-                                    F::from((rng.gen::<f64>() * 2.0 - 1.0) * noise_level).unwrap();
+                                    F::from((rng.random::<f64>() * 2.0 - 1.0) * noise_level)
+                                        .unwrap();
                                 noisy_data[[i, j]] = noisy_data[[i, j]] + noise;
                             }
                         }
@@ -397,7 +398,8 @@ where
                         for _ in 0..n_outliers {
                             let outlier_idx = rng.random_range(0..n_samples);
                             for j in 0..n_features {
-                                let outlier_value = F::from(rng.gen::<f64>() * 10.0 - 5.0).unwrap();
+                                let outlier_value =
+                                    F::from(rng.random::<f64>() * 10.0 - 5.0).unwrap();
                                 noisy_data[[outlier_idx, j]] = outlier_value;
                             }
                         }
@@ -429,7 +431,8 @@ where
                 for i in 0..n_features {
                     for j in 0..*target_dimensions {
                         // Use Gaussian random values for projection matrix
-                        projection_matrix[[i, j]] = F::from(rng.gen::<f64>() * 2.0 - 1.0).unwrap();
+                        projection_matrix[[i, j]] =
+                            F::from(rng.random::<f64>() * 2.0 - 1.0).unwrap();
                     }
                 }
 
@@ -470,7 +473,11 @@ where
     }
 
     /// Extract features based on indices
-    fn extract_features(&self, data: ArrayView2<F>, feature_indices: &[usize]) -> Result<Array2<F>> {
+    fn extract_features(
+        &self,
+        data: ArrayView2<F>,
+        feature_indices: &[usize],
+    ) -> Result<Array2<F>> {
         let n_samples = data.nrows();
         let mut feature_data = Array2::zeros((n_samples, feature_indices.len()));
 
@@ -480,24 +487,32 @@ where
                     "Feature index out of bounds".to_string(),
                 ));
             }
-            feature_data.column_mut(new_idx).assign(&data.column(orig_idx));
+            feature_data
+                .column_mut(new_idx)
+                .assign(&data.column(orig_idx));
         }
 
         Ok(feature_data)
     }
 
     /// Apply consensus method to combine clustering results
-    fn apply_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>) -> Result<EnsembleResult> {
+    fn apply_consensus(
+        &self,
+        results: &[ClusteringResult],
+        data: ArrayView2<F>,
+    ) -> Result<EnsembleResult> {
         match &self.config.consensus_method {
             ConsensusMethod::MajorityVoting => self.majority_voting_consensus(results, data),
             ConsensusMethod::WeightedConsensus => self.weighted_consensus(results, data),
-            ConsensusMethod::GraphBased { similarity_threshold } => {
-                self.graph_based_consensus(results, data, *similarity_threshold)
-            }
+            ConsensusMethod::GraphBased {
+                similarity_threshold,
+            } => self.graph_based_consensus(results, data, *similarity_threshold),
             ConsensusMethod::CoAssociation { threshold } => {
                 self.co_association_consensus(results, data, *threshold)
             }
-            ConsensusMethod::EvidenceAccumulation => self.evidence_accumulation_consensus(results, data),
+            ConsensusMethod::EvidenceAccumulation => {
+                self.evidence_accumulation_consensus(results, data)
+            }
             ConsensusMethod::Hierarchical { linkage_method } => {
                 self.hierarchical_consensus(results, data, linkage_method)
             }
@@ -505,7 +520,11 @@ where
     }
 
     /// Majority voting consensus method
-    fn majority_voting_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>) -> Result<EnsembleResult> {
+    fn majority_voting_consensus(
+        &self,
+        results: &[ClusteringResult],
+        data: ArrayView2<F>,
+    ) -> Result<EnsembleResult> {
         let n_samples = data.nrows();
         let mut consensus_labels = Array1::zeros(n_samples);
         let mut vote_matrix = HashMap::new();
@@ -531,7 +550,8 @@ where
         }
 
         // Calculate confidence and statistics
-        let avg_quality_score = results.iter().map(|r| r.quality_score).sum::<f64>() / results.len() as f64;
+        let avg_quality_score =
+            results.iter().map(|r| r.quality_score).sum::<f64>() / results.len() as f64;
         let consensus_stats = self.calculate_consensus_statistics(results, &consensus_labels)?;
         let diversity_metrics = self.calculate_diversity_metrics(results)?;
         let stability_score = self.calculate_consensus_stability_score(&consensus_stats);
@@ -547,7 +567,11 @@ where
     }
 
     /// Weighted consensus method based on quality scores
-    fn weighted_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>) -> Result<EnsembleResult> {
+    fn weighted_consensus(
+        &self,
+        results: &[ClusteringResult],
+        data: ArrayView2<F>,
+    ) -> Result<EnsembleResult> {
         let n_samples = data.nrows();
         let mut consensus_labels = Array1::zeros(n_samples);
         let mut weighted_vote_matrix = HashMap::new();
@@ -556,7 +580,9 @@ where
         for result in results {
             let weight = result.quality_score.max(0.0); // Ensure non-negative weights
             for (sample_idx, &cluster_label) in result.labels.iter().enumerate() {
-                let entry = weighted_vote_matrix.entry(sample_idx).or_insert_with(HashMap::new);
+                let entry = weighted_vote_matrix
+                    .entry(sample_idx)
+                    .or_insert_with(HashMap::new);
                 *entry.entry(cluster_label).or_insert(0.0) += weight;
             }
         }
@@ -576,7 +602,11 @@ where
         // Calculate ensemble score as weighted average
         let total_weight: f64 = results.iter().map(|r| r.quality_score.max(0.0)).sum();
         let ensemble_score = if total_weight > 0.0 {
-            results.iter().map(|r| r.quality_score * r.quality_score.max(0.0)).sum::<f64>() / total_weight
+            results
+                .iter()
+                .map(|r| r.quality_score * r.quality_score.max(0.0))
+                .sum::<f64>()
+                / total_weight
         } else {
             0.0
         };
@@ -596,15 +626,20 @@ where
     }
 
     /// Graph-based consensus method
-    fn graph_based_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>, similarity_threshold: f64) -> Result<EnsembleResult> {
+    fn graph_based_consensus(
+        &self,
+        results: &[ClusteringResult],
+        data: ArrayView2<F>,
+        similarity_threshold: f64,
+    ) -> Result<EnsembleResult> {
         let n_samples = data.nrows();
-        
+
         // Build co-association matrix
         let mut co_association = Array2::zeros((n_samples, n_samples));
-        
+
         for result in results {
             for i in 0..n_samples {
-                for j in i+1..n_samples {
+                for j in i + 1..n_samples {
                     if result.labels[i] == result.labels[j] {
                         co_association[[i, j]] += 1.0;
                         co_association[[j, i]] += 1.0;
@@ -612,10 +647,10 @@ where
                 }
             }
         }
-        
+
         // Normalize by number of clusterers
         co_association /= results.len() as f64;
-        
+
         // Create similarity graph
         let mut similarity_graph = Array2::zeros((n_samples, n_samples));
         for i in 0..n_samples {
@@ -625,19 +660,19 @@ where
                 }
             }
         }
-        
+
         // Apply graph clustering (simplified connected components)
         let mut consensus_labels = Array1::from_elem(n_samples, -1i32);
         let mut current_cluster = 0i32;
         let mut visited = vec![false; n_samples];
-        
+
         for i in 0..n_samples {
             if !visited[i] {
                 // BFS to find connected component
                 let mut queue = vec![i];
                 visited[i] = true;
                 consensus_labels[i] = current_cluster;
-                
+
                 while let Some(node) = queue.pop() {
                     for j in 0..n_samples {
                         if !visited[j] && similarity_graph[[node, j]] > 0.0 {
@@ -650,8 +685,9 @@ where
                 current_cluster += 1;
             }
         }
-        
-        let avg_quality_score = results.iter().map(|r| r.quality_score).sum::<f64>() / results.len() as f64;
+
+        let avg_quality_score =
+            results.iter().map(|r| r.quality_score).sum::<f64>() / results.len() as f64;
         let consensus_stats = self.calculate_consensus_statistics(results, &consensus_labels)?;
         let diversity_metrics = self.calculate_diversity_metrics(results)?;
         let stability_score = self.calculate_consensus_stability_score(&consensus_stats);
@@ -667,27 +703,41 @@ where
     }
 
     /// Co-association consensus method
-    fn co_association_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>, threshold: f64) -> Result<EnsembleResult> {
+    fn co_association_consensus(
+        &self,
+        results: &[ClusteringResult],
+        data: ArrayView2<F>,
+        threshold: f64,
+    ) -> Result<EnsembleResult> {
         // This is similar to graph-based but with different threshold handling
         self.graph_based_consensus(results, data, threshold)
     }
 
     /// Evidence accumulation consensus method
-    fn evidence_accumulation_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>) -> Result<EnsembleResult> {
+    fn evidence_accumulation_consensus(
+        &self,
+        results: &[ClusteringResult],
+        data: ArrayView2<F>,
+    ) -> Result<EnsembleResult> {
         // Use hierarchical clustering on the co-association matrix
         self.hierarchical_consensus(results, data, &"ward".to_string())
     }
 
     /// Hierarchical consensus method
-    fn hierarchical_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>, linkage_method: &str) -> Result<EnsembleResult> {
+    fn hierarchical_consensus(
+        &self,
+        results: &[ClusteringResult],
+        data: ArrayView2<F>,
+        linkage_method: &str,
+    ) -> Result<EnsembleResult> {
         let n_samples = data.nrows();
-        
+
         // Build co-association matrix as distance matrix
         let mut co_association = Array2::zeros((n_samples, n_samples));
-        
+
         for result in results {
             for i in 0..n_samples {
-                for j in i+1..n_samples {
+                for j in i + 1..n_samples {
                     if result.labels[i] == result.labels[j] {
                         co_association[[i, j]] += 1.0;
                         co_association[[j, i]] += 1.0;
@@ -695,7 +745,7 @@ where
                 }
             }
         }
-        
+
         // Convert to distance matrix (1 - similarity)
         let mut distance_matrix = Array2::ones((n_samples, n_samples));
         for i in 0..n_samples {
@@ -704,21 +754,21 @@ where
             }
             distance_matrix[[i, i]] = 0.0; // Distance to self is 0
         }
-        
+
         // Apply hierarchical clustering (simplified implementation)
         // For now, use a simple threshold-based approach
         let threshold = 0.5;
         let mut consensus_labels = Array1::from_elem(n_samples, -1i32);
         let mut current_cluster = 0i32;
         let mut assigned = vec![false; n_samples];
-        
+
         for i in 0..n_samples {
             if !assigned[i] {
                 consensus_labels[i] = current_cluster;
                 assigned[i] = true;
-                
+
                 // Find all points within threshold distance
-                for j in (i+1)..n_samples {
+                for j in (i + 1)..n_samples {
                     if !assigned[j] && distance_matrix[[i, j]] <= threshold {
                         consensus_labels[j] = current_cluster;
                         assigned[j] = true;
@@ -727,8 +777,9 @@ where
                 current_cluster += 1;
             }
         }
-        
-        let avg_quality_score = results.iter().map(|r| r.quality_score).sum::<f64>() / results.len() as f64;
+
+        let avg_quality_score =
+            results.iter().map(|r| r.quality_score).sum::<f64>() / results.len() as f64;
         let consensus_stats = self.calculate_consensus_statistics(results, &consensus_labels)?;
         let diversity_metrics = self.calculate_diversity_metrics(results)?;
         let stability_score = self.calculate_consensus_stability_score(&consensus_stats);
@@ -753,7 +804,7 @@ where
         let mut count = 0;
 
         for i in 0..results.len() {
-            for j in (i+1)..results.len() {
+            for j in (i + 1)..results.len() {
                 // Calculate pairwise diversity using adjusted rand index
                 if let Ok(ari) = adjusted_rand_index(
                     results[i].labels.mapv(|x| x as usize).view(),
@@ -774,7 +825,11 @@ where
 
     /// Calculate stability score
     #[allow(dead_code)]
-    fn calculate_stability_score(&self, results: &[ClusteringResult], _data: ArrayView2<F>) -> Result<f64> {
+    fn calculate_stability_score(
+        &self,
+        results: &[ClusteringResult],
+        _data: ArrayView2<F>,
+    ) -> Result<f64> {
         if results.len() < 2 {
             return Ok(1.0);
         }
@@ -783,7 +838,7 @@ where
         let mut count = 0;
 
         for i in 0..results.len() {
-            for j in (i+1)..results.len() {
+            for j in (i + 1)..results.len() {
                 if let Ok(ari) = adjusted_rand_index(
                     results[i].labels.mapv(|x| x as usize).view(),
                     results[j].labels.mapv(|x| x as usize).view(),
@@ -812,7 +867,7 @@ where
         let mut total_pairs = 0;
 
         for i in 0..results.len() {
-            for j in (i+1)..results.len() {
+            for j in (i + 1)..results.len() {
                 for sample_idx in 0..n_samples {
                     if results[i].labels[sample_idx] == results[j].labels[sample_idx] {
                         total_agreements += 1;
@@ -830,14 +885,18 @@ where
     }
 
     /// Calculate confidence scores for consensus
-    fn calculate_confidence_scores(&self, vote_matrix: &HashMap<usize, HashMap<i32, usize>>, n_samples: usize) -> Vec<f64> {
+    fn calculate_confidence_scores(
+        &self,
+        vote_matrix: &HashMap<usize, HashMap<i32, usize>>,
+        n_samples: usize,
+    ) -> Vec<f64> {
         let mut confidence_scores = vec![0.0; n_samples];
 
         for sample_idx in 0..n_samples {
             if let Some(votes) = vote_matrix.get(&sample_idx) {
                 let total_votes: usize = votes.values().sum();
                 let max_votes = votes.values().max().copied().unwrap_or(0);
-                
+
                 if total_votes > 0 {
                     confidence_scores[sample_idx] = max_votes as f64 / total_votes as f64;
                 }
@@ -848,14 +907,18 @@ where
     }
 
     /// Calculate weighted confidence scores for consensus
-    fn calculate_weighted_confidence_scores(&self, vote_matrix: &HashMap<usize, HashMap<i32, f64>>, n_samples: usize) -> Vec<f64> {
+    fn calculate_weighted_confidence_scores(
+        &self,
+        vote_matrix: &HashMap<usize, HashMap<i32, f64>>,
+        n_samples: usize,
+    ) -> Vec<f64> {
         let mut confidence_scores = vec![0.0; n_samples];
 
         for sample_idx in 0..n_samples {
             if let Some(votes) = vote_matrix.get(&sample_idx) {
                 let total_votes: f64 = votes.values().sum();
                 let max_votes = votes.values().fold(0.0, |acc, &x| acc.max(x));
-                
+
                 if total_votes > 0.0 {
                     confidence_scores[sample_idx] = max_votes / total_votes;
                 }
@@ -868,25 +931,27 @@ where
     /// Calculate cluster diversity metrics
     fn calculate_cluster_diversity(&self, results: &[ClusteringResult]) -> f64 {
         let cluster_counts: Vec<usize> = results.iter().map(|r| r.n_clusters).collect();
-        
+
         if cluster_counts.is_empty() {
             return 0.0;
         }
 
-        let mean_clusters = cluster_counts.iter().sum::<usize>() as f64 / cluster_counts.len() as f64;
-        let variance = cluster_counts.iter()
+        let mean_clusters =
+            cluster_counts.iter().sum::<usize>() as f64 / cluster_counts.len() as f64;
+        let variance = cluster_counts
+            .iter()
             .map(|&x| (x as f64 - mean_clusters).powi(2))
-            .sum::<f64>() / cluster_counts.len() as f64;
-        
+            .sum::<f64>()
+            / cluster_counts.len() as f64;
+
         variance.sqrt() / mean_clusters // Coefficient of variation
     }
 
     /// Calculate algorithm diversity
     fn calculate_algorithm_diversity(&self, results: &[ClusteringResult]) -> f64 {
-        let unique_algorithms: HashSet<String> = results.iter()
-            .map(|r| r.algorithm.clone())
-            .collect();
-        
+        let unique_algorithms: HashSet<String> =
+            results.iter().map(|r| r.algorithm.clone()).collect();
+
         unique_algorithms.len() as f64 / results.len() as f64
     }
 
@@ -900,855 +965,790 @@ where
     }
 }
 
-    /// Extract samples based on indices
-    fn extract_samples(&self, data: ArrayView2<F>, indices: &[usize]) -> Result<Array2<F>> {
-        let n_features = data.ncols();
-        let mut sampled_data = Array2::zeros((indices.len(), n_features));
+/// Extract samples based on indices
+fn extract_samples(&self, data: ArrayView2<F>, indices: &[usize]) -> Result<Array2<F>> {
+    let n_features = data.ncols();
+    let mut sampled_data = Array2::zeros((indices.len(), n_features));
 
-        for (new_idx, &old_idx) in indices.iter().enumerate() {
-            if old_idx < data.nrows() {
-                sampled_data.row_mut(new_idx).assign(&data.row(old_idx));
-            }
-        }
-
-        Ok(sampled_data)
-    }
-
-    /// Extract features based on indices
-    fn extract_features(
-        &self,
-        data: ArrayView2<F>,
-        feature_indices: &[usize],
-    ) -> Result<Array2<F>> {
-        let n_samples = data.nrows();
-        let mut sampled_data = Array2::zeros((n_samples, feature_indices.len()));
-
-        for (new_feat_idx, &old_feat_idx) in feature_indices.iter().enumerate() {
-            if old_feat_idx < data.ncols() {
-                sampled_data
-                    .column_mut(new_feat_idx)
-                    .assign(&data.column(old_feat_idx));
-            }
-        }
-
-        Ok(sampled_data)
-    }
-
-    /// Select algorithm and parameters based on diversity strategy
-    fn select_algorithm_and_parameters(
-        &self,
-        estimator_index: usize,
-        rng: &mut rand::rngs::StdRng,
-    ) -> Result<(ClusteringAlgorithm, HashMap<String, String>)> {
-        match &self.config.diversity_strategy {
-            Some(DiversityStrategy::AlgorithmDiversity { algorithms }) => {
-                let algorithm = algorithms[estimator_index % algorithms.len()].clone();
-                let parameters = self.generate_random_parameters(&algorithm, rng)?;
-                Ok((algorithm, parameters))
-            }
-            Some(DiversityStrategy::ParameterDiversity {
-                algorithm,
-                parameter_ranges,
-            }) => {
-                let parameters = self.sample_parameter_ranges(parameter_ranges, rng)?;
-                Ok((algorithm.clone(), parameters))
-            }
-            _ => {
-                // Default to K-means with random k
-                let k = rng.random_range(2..=10);
-                let algorithm = ClusteringAlgorithm::KMeans { k_range: (k, k) };
-                let mut parameters = HashMap::new();
-                parameters.insert("k".to_string(), k.to_string());
-                Ok((algorithm, parameters))
-            }
+    for (new_idx, &old_idx) in indices.iter().enumerate() {
+        if old_idx < data.nrows() {
+            sampled_data.row_mut(new_idx).assign(&data.row(old_idx));
         }
     }
 
-    /// Generate random parameters for an algorithm
-    fn generate_random_parameters(
-        &self,
-        algorithm: &ClusteringAlgorithm,
-        rng: &mut rand::rngs::StdRng,
-    ) -> Result<HashMap<String, String>> {
-        let mut parameters = HashMap::new();
+    Ok(sampled_data)
+}
 
-        match algorithm {
-            ClusteringAlgorithm::KMeans { k_range } => {
-                let k = rng.random_range(k_range.0..=k_range.1);
-                parameters.insert("k".to_string(), k.to_string());
-            }
-            ClusteringAlgorithm::DBSCAN {
-                eps_range,
-                min_samples_range,
-            } => {
-                let eps = rng.random_range(eps_range.0..=eps_range.1);
-                let min_samples = rng.random_range(min_samples_range.0..=min_samples_range.1);
-                parameters.insert("eps".to_string(), eps.to_string());
-                parameters.insert("min_samples".to_string(), min_samples.to_string());
-            }
-            ClusteringAlgorithm::MeanShift { bandwidth_range } => {
-                let bandwidth = rng.random_range(bandwidth_range.0..=bandwidth_range.1);
-                parameters.insert("bandwidth".to_string(), bandwidth.to_string());
-            }
-            ClusteringAlgorithm::Hierarchical { methods } => {
-                let method = &methods[rng.random_range(0..methods.len())];
-                parameters.insert("method".to_string(), method.clone());
-            }
-            ClusteringAlgorithm::Spectral { k_range } => {
-                let k = rng.random_range(k_range.0..=k_range.1);
-                parameters.insert("k".to_string(), k.to_string());
-            }
-            ClusteringAlgorithm::AffinityPropagation { damping_range } => {
-                let damping = rng.random_range(damping_range.0..=damping_range.1);
-                parameters.insert("damping".to_string(), damping.to_string());
-            }
+/// Extract features based on indices
+fn extract_features(&self, data: ArrayView2<F>, feature_indices: &[usize]) -> Result<Array2<F>> {
+    let n_samples = data.nrows();
+    let mut sampled_data = Array2::zeros((n_samples, feature_indices.len()));
+
+    for (new_feat_idx, &old_feat_idx) in feature_indices.iter().enumerate() {
+        if old_feat_idx < data.ncols() {
+            sampled_data
+                .column_mut(new_feat_idx)
+                .assign(&data.column(old_feat_idx));
         }
-
-        Ok(parameters)
     }
 
-    /// Sample parameters from ranges
-    fn sample_parameter_ranges(
-        &self,
-        parameter_ranges: &HashMap<String, ParameterRange>,
-        rng: &mut rand::rngs::StdRng,
-    ) -> Result<HashMap<String, String>> {
-        let mut parameters = HashMap::new();
+    Ok(sampled_data)
+}
 
-        for (param_name, range) in parameter_ranges {
-            let value = match range {
-                ParameterRange::Integer(min, max) => rng.random_range(*min..=*max).to_string(),
-                ParameterRange::Float(min, max) => rng.random_range(*min..=*max).to_string(),
-                ParameterRange::Categorical(choices) => {
-                    choices[rng.random_range(0..choices.len())].clone()
+/// Select algorithm and parameters based on diversity strategy
+fn select_algorithm_and_parameters(
+    &self,
+    estimator_index: usize,
+    rng: &mut rand::rngs::StdRng,
+) -> Result<(ClusteringAlgorithm, HashMap<String, String>)> {
+    match &self.config.diversity_strategy {
+        Some(DiversityStrategy::AlgorithmDiversity { algorithms }) => {
+            let algorithm = algorithms[estimator_index % algorithms.len()].clone();
+            let parameters = self.generate_random_parameters(&algorithm, rng)?;
+            Ok((algorithm, parameters))
+        }
+        Some(DiversityStrategy::ParameterDiversity {
+            algorithm,
+            parameter_ranges,
+        }) => {
+            let parameters = self.sample_parameter_ranges(parameter_ranges, rng)?;
+            Ok((algorithm.clone(), parameters))
+        }
+        _ => {
+            // Default to K-means with random k
+            let k = rng.random_range(2..=10);
+            let algorithm = ClusteringAlgorithm::KMeans { k_range: (k, k) };
+            let mut parameters = HashMap::new();
+            parameters.insert("k".to_string(), k.to_string());
+            Ok((algorithm, parameters))
+        }
+    }
+}
+
+/// Generate random parameters for an algorithm
+fn generate_random_parameters(
+    &self,
+    algorithm: &ClusteringAlgorithm,
+    rng: &mut rand::rngs::StdRng,
+) -> Result<HashMap<String, String>> {
+    let mut parameters = HashMap::new();
+
+    match algorithm {
+        ClusteringAlgorithm::KMeans { k_range } => {
+            let k = rng.random_range(k_range.0..=k_range.1);
+            parameters.insert("k".to_string(), k.to_string());
+        }
+        ClusteringAlgorithm::DBSCAN {
+            eps_range,
+            min_samples_range,
+        } => {
+            let eps = rng.random_range(eps_range.0..=eps_range.1);
+            let min_samples = rng.random_range(min_samples_range.0..=min_samples_range.1);
+            parameters.insert("eps".to_string(), eps.to_string());
+            parameters.insert("min_samples".to_string(), min_samples.to_string());
+        }
+        ClusteringAlgorithm::MeanShift { bandwidth_range } => {
+            let bandwidth = rng.random_range(bandwidth_range.0..=bandwidth_range.1);
+            parameters.insert("bandwidth".to_string(), bandwidth.to_string());
+        }
+        ClusteringAlgorithm::Hierarchical { methods } => {
+            let method = &methods[rng.random_range(0..methods.len())];
+            parameters.insert("method".to_string(), method.clone());
+        }
+        ClusteringAlgorithm::Spectral { k_range } => {
+            let k = rng.random_range(k_range.0..=k_range.1);
+            parameters.insert("k".to_string(), k.to_string());
+        }
+        ClusteringAlgorithm::AffinityPropagation { damping_range } => {
+            let damping = rng.random_range(damping_range.0..=damping_range.1);
+            parameters.insert("damping".to_string(), damping.to_string());
+        }
+    }
+
+    Ok(parameters)
+}
+
+/// Sample parameters from ranges
+fn sample_parameter_ranges(
+    &self,
+    parameter_ranges: &HashMap<String, ParameterRange>,
+    rng: &mut rand::rngs::StdRng,
+) -> Result<HashMap<String, String>> {
+    let mut parameters = HashMap::new();
+
+    for (param_name, range) in parameter_ranges {
+        let value = match range {
+            ParameterRange::Integer(min, max) => rng.random_range(*min..=*max).to_string(),
+            ParameterRange::Float(min, max) => rng.random_range(*min..=*max).to_string(),
+            ParameterRange::Categorical(choices) => {
+                choices[rng.random_range(0..choices.len())].clone()
+            }
+            ParameterRange::Boolean => rng.gen_bool(0.5).to_string(),
+        };
+        parameters.insert(param_name.clone(), value);
+    }
+
+    Ok(parameters)
+}
+
+/// Run clustering with specified algorithm and parameters
+fn run_clustering(
+    &self,
+    data: &Array2<F>,
+    algorithm: &ClusteringAlgorithm,
+    parameters: &HashMap<String, String>,
+) -> Result<Array1<i32>> {
+    let data_f64 = data.mapv(|x| x.to_f64().unwrap_or(0.0));
+
+    match algorithm {
+        ClusteringAlgorithm::KMeans { .. } => {
+            let k = parameters
+                .get("k")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3);
+
+            match kmeans2(
+                data.view(),
+                k,
+                Some(100),   // max_iter
+                None,        // threshold
+                None,        // init method
+                None,        // missing method
+                Some(false), // check_finite
+                None,        // seed
+            ) {
+                Ok((_, labels)) => Ok(labels.mapv(|x| x as i32)),
+                Err(_) => {
+                    // Fallback: create dummy labels
+                    Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
                 }
-                ParameterRange::Boolean => rng.gen_bool(0.5).to_string(),
+            }
+        }
+        ClusteringAlgorithm::DBSCAN { .. } => {
+            let eps = parameters
+                .get("eps")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.5);
+            let min_samples = parameters
+                .get("min_samples")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(5);
+
+            match dbscan(data_f64.view(), eps, min_samples) {
+                Ok(labels) => Ok(labels),
+                Err(_) => {
+                    // Fallback: create dummy labels
+                    Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
+                }
+            }
+        }
+        ClusteringAlgorithm::MeanShift { .. } => {
+            let bandwidth = parameters
+                .get("bandwidth")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1.0);
+
+            match mean_shift(data_f64.view(), bandwidth) {
+                Ok(labels) => Ok(labels),
+                Err(_) => {
+                    // Fallback: create dummy labels
+                    Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
+                }
+            }
+        }
+        ClusteringAlgorithm::Hierarchical { .. } => {
+            let method = parameters
+                .get("method")
+                .map(|s| s.as_str())
+                .unwrap_or("ward");
+            let n_clusters = parameters
+                .get("n_clusters")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3);
+
+            // Use Ward linkage for hierarchical clustering
+            match linkage(data_f64.view(), method) {
+                Ok(linkage_matrix) => {
+                    // Extract clusters from linkage matrix
+                    // This is a simplified cluster extraction
+                    use crate::hierarchy::fcluster;
+                    match fcluster(&linkage_matrix, n_clusters, "maxclust") {
+                        Ok(labels) => Ok(labels),
+                        Err(_) => Ok(Array1::zeros(data.nrows()).mapv(|_| 0)),
+                    }
+                }
+                Err(_) => {
+                    // Fallback: create dummy labels
+                    Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
+                }
+            }
+        }
+        ClusteringAlgorithm::Spectral { .. } => {
+            let n_clusters = parameters
+                .get("n_clusters")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3);
+            let n_neighbors = parameters
+                .get("n_neighbors")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(10);
+            let gamma = parameters
+                .get("gamma")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1.0);
+
+            // Create spectral clustering options
+            use crate::spectral::{AffinityMode, SpectralClusteringOptions};
+            let options = SpectralClusteringOptions {
+                affinity: AffinityMode::RBF,
+                n_neighbors,
+                gamma: F::from(gamma).unwrap(),
+                normalized_laplacian: true,
+                max_iter: 300,
+                n_init: 1,
+                tol: F::from(1e-4).unwrap(),
+                auto_n_clusters: false,
             };
-            parameters.insert(param_name.clone(), value);
+
+            match spectral_clustering(data.view(), n_clusters, Some(options)) {
+                Ok((_, labels)) => Ok(labels.mapv(|x| x as i32)),
+                Err(_) => {
+                    // Fallback: create dummy labels
+                    Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
+                }
+            }
         }
+        ClusteringAlgorithm::AffinityPropagation { .. } => {
+            let damping = parameters
+                .get("damping")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.5);
+            let max_iter = parameters
+                .get("max_iter")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(200);
+            let convergence_iter = parameters
+                .get("convergence_iter")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(15);
 
-        Ok(parameters)
-    }
+            // Create affinity propagation options
+            use crate::affinity::AffinityPropagationOptions;
+            let options = AffinityPropagationOptions {
+                damping: F::from(damping).unwrap(),
+                max_iter,
+                convergence_iter,
+                preference: None, // Use default (median of similarities)
+                affinity: "euclidean".to_string(),
+            };
 
-    /// Run clustering with specified algorithm and parameters
-    fn run_clustering(
-        &self,
-        data: &Array2<F>,
-        algorithm: &ClusteringAlgorithm,
-        parameters: &HashMap<String, String>,
-    ) -> Result<Array1<i32>> {
-        let data_f64 = data.mapv(|x| x.to_f64().unwrap_or(0.0));
-
-        match algorithm {
-            ClusteringAlgorithm::KMeans { .. } => {
-                let k = parameters
-                    .get("k")
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(3);
-
-                match kmeans2(
-                    data.view(),
-                    k,
-                    Some(100),   // max_iter
-                    None,        // threshold
-                    None,        // init method
-                    None,        // missing method
-                    Some(false), // check_finite
-                    None,        // seed
-                ) {
-                    Ok((_, labels)) => Ok(labels.mapv(|x| x as i32)),
-                    Err(_) => {
-                        // Fallback: create dummy labels
-                        Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
-                    }
+            match affinity_propagation(data.view(), false, Some(options)) {
+                Ok((_, labels)) => Ok(labels),
+                Err(_) => {
+                    // Fallback: create dummy labels
+                    Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
                 }
             }
-            ClusteringAlgorithm::DBSCAN { .. } => {
-                let eps = parameters
-                    .get("eps")
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(0.5);
-                let min_samples = parameters
-                    .get("min_samples")
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(5);
+        }
+        _ => {
+            // For any other algorithms, fallback to k-means
+            let k = parameters
+                .get("k")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(3);
 
-                match dbscan(data_f64.view(), eps, min_samples) {
-                    Ok(labels) => Ok(labels),
-                    Err(_) => {
-                        // Fallback: create dummy labels
-                        Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
-                    }
-                }
-            }
-            ClusteringAlgorithm::MeanShift { .. } => {
-                let bandwidth = parameters
-                    .get("bandwidth")
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(1.0);
-
-                match mean_shift(data_f64.view(), bandwidth) {
-                    Ok(labels) => Ok(labels),
-                    Err(_) => {
-                        // Fallback: create dummy labels
-                        Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
-                    }
-                }
-            }
-            ClusteringAlgorithm::Hierarchical { .. } => {
-                let method = parameters
-                    .get("method")
-                    .map(|s| s.as_str())
-                    .unwrap_or("ward");
-                let n_clusters = parameters
-                    .get("n_clusters")
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(3);
-
-                // Use Ward linkage for hierarchical clustering
-                match linkage(data_f64.view(), method) {
-                    Ok(linkage_matrix) => {
-                        // Extract clusters from linkage matrix
-                        // This is a simplified cluster extraction
-                        use crate::hierarchy::fcluster;
-                        match fcluster(&linkage_matrix, n_clusters, "maxclust") {
-                            Ok(labels) => Ok(labels),
-                            Err(_) => Ok(Array1::zeros(data.nrows()).mapv(|_| 0)),
-                        }
-                    }
-                    Err(_) => {
-                        // Fallback: create dummy labels
-                        Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
-                    }
-                }
-            }
-            ClusteringAlgorithm::Spectral { .. } => {
-                let n_clusters = parameters
-                    .get("n_clusters")
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(3);
-                let n_neighbors = parameters
-                    .get("n_neighbors")
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(10);
-                let gamma = parameters
-                    .get("gamma")
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(1.0);
-
-                // Create spectral clustering options
-                use crate::spectral::{AffinityMode, SpectralClusteringOptions};
-                let options = SpectralClusteringOptions {
-                    affinity: AffinityMode::RBF,
-                    n_neighbors,
-                    gamma: F::from(gamma).unwrap(),
-                    normalized_laplacian: true,
-                    max_iter: 300,
-                    n_init: 1,
-                    tol: F::from(1e-4).unwrap(),
-                    auto_n_clusters: false,
-                };
-
-                match spectral_clustering(data.view(), n_clusters, Some(options)) {
-                    Ok((_, labels)) => Ok(labels.mapv(|x| x as i32)),
-                    Err(_) => {
-                        // Fallback: create dummy labels
-                        Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
-                    }
-                }
-            }
-            ClusteringAlgorithm::AffinityPropagation { .. } => {
-                let damping = parameters
-                    .get("damping")
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(0.5);
-                let max_iter = parameters
-                    .get("max_iter")
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(200);
-                let convergence_iter = parameters
-                    .get("convergence_iter")
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(15);
-
-                // Create affinity propagation options
-                use crate::affinity::AffinityPropagationOptions;
-                let options = AffinityPropagationOptions {
-                    damping: F::from(damping).unwrap(),
-                    max_iter,
-                    convergence_iter,
-                    preference: None, // Use default (median of similarities)
-                    affinity: "euclidean".to_string(),
-                };
-
-                match affinity_propagation(data.view(), false, Some(options)) {
-                    Ok((_, labels)) => Ok(labels),
-                    Err(_) => {
-                        // Fallback: create dummy labels
-                        Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
-                    }
-                }
-            }
-            _ => {
-                // For any other algorithms, fallback to k-means
-                let k = parameters
-                    .get("k")
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(3);
-
-                match kmeans2(
-                    data.view(),
-                    k,
-                    Some(100),
-                    None,
-                    None,
-                    None,
-                    Some(false),
-                    None,
-                ) {
-                    Ok((_, labels)) => Ok(labels.mapv(|x| x as i32)),
-                    Err(_) => Ok(Array1::zeros(data.nrows()).mapv(|_| 0)),
-                }
+            match kmeans2(
+                data.view(),
+                k,
+                Some(100),
+                None,
+                None,
+                None,
+                Some(false),
+                None,
+            ) {
+                Ok((_, labels)) => Ok(labels.mapv(|x| x as i32)),
+                Err(_) => Ok(Array1::zeros(data.nrows()).mapv(|_| 0)),
             }
         }
     }
+}
 
-    /// Map labels back to full dataset size
-    fn map_labels_to_full_data(
-        &self,
-        labels: &Array1<i32>,
-        sample_indices: &[usize],
-        full_size: usize,
-    ) -> Result<Array1<i32>> {
-        let mut full_labels = Array1::from_elem(full_size, -1); // Use -1 for unassigned
+/// Map labels back to full dataset size
+fn map_labels_to_full_data(
+    &self,
+    labels: &Array1<i32>,
+    sample_indices: &[usize],
+    full_size: usize,
+) -> Result<Array1<i32>> {
+    let mut full_labels = Array1::from_elem(full_size, -1); // Use -1 for unassigned
 
-        for (sample_idx, &label) in sample_indices.iter().zip(labels.iter()) {
-            if *sample_idx < full_size {
-                full_labels[*sample_idx] = label;
-            }
-        }
-
-        // Assign unassigned points to nearest cluster (simplified)
-        for i in 0..full_size {
-            if full_labels[i] == -1 {
-                full_labels[i] = 0; // Assign to cluster 0 as fallback
-            }
-        }
-
-        Ok(full_labels)
-    }
-
-    /// Count number of clusters in labels
-    fn count_clusters(&self, labels: &Array1<i32>) -> usize {
-        let unique_labels: HashSet<i32> = labels.iter().cloned().collect();
-        unique_labels.len()
-    }
-
-    /// Filter results based on quality threshold
-    fn filter_by_quality(&self, results: &[ClusteringResult]) -> Vec<ClusteringResult> {
-        if let Some(threshold) = self.config.quality_threshold {
-            results
-                .iter()
-                .filter(|r| r.quality_score >= threshold)
-                .cloned()
-                .collect()
-        } else {
-            results.to_vec()
+    for (sample_idx, &label) in sample_indices.iter().zip(labels.iter()) {
+        if *sample_idx < full_size {
+            full_labels[*sample_idx] = label;
         }
     }
 
-    /// Build consensus from multiple clustering results
-    fn build_consensus(
-        &self,
-        results: &[ClusteringResult],
-        data: ArrayView2<F>,
-    ) -> Result<Array1<i32>> {
-        if results.is_empty() {
-            return Err(ClusteringError::InvalidInput(
-                "No clustering results available for consensus".to_string(),
-            ));
-        }
-
-        let n_samples = data.nrows();
-
-        match &self.config.consensus_method {
-            ConsensusMethod::MajorityVoting => self.majority_voting_consensus(results, n_samples),
-            ConsensusMethod::WeightedConsensus => self.weighted_consensus(results, n_samples),
-            ConsensusMethod::CoAssociation { threshold } => {
-                self.co_association_consensus(results, n_samples, *threshold)
-            }
-            ConsensusMethod::EvidenceAccumulation => {
-                self.evidence_accumulation_consensus(results, n_samples)
-            }
-            ConsensusMethod::GraphBased {
-                similarity_threshold,
-            } => self.graph_based_consensus(results, n_samples, *similarity_threshold),
-            ConsensusMethod::Hierarchical { linkage_method } => {
-                self.hierarchical_consensus(results, n_samples, linkage_method)
-            }
-            _ => {
-                // Fallback to majority voting for any other consensus methods
-                self.majority_voting_consensus(results, n_samples)
-            }
+    // Assign unassigned points to nearest cluster (simplified)
+    for i in 0..full_size {
+        if full_labels[i] == -1 {
+            full_labels[i] = 0; // Assign to cluster 0 as fallback
         }
     }
 
-    /// Implement majority voting consensus
-    fn majority_voting_consensus(
-        &self,
-        results: &[ClusteringResult],
-        n_samples: usize,
-    ) -> Result<Array1<i32>> {
-        // Build co-association matrix
-        let mut co_association = Array2::zeros((n_samples, n_samples));
+    Ok(full_labels)
+}
 
-        for result in results {
-            for i in 0..n_samples {
-                for j in 0..n_samples {
-                    if i < result.labels.len() && j < result.labels.len() {
-                        if result.labels[i] == result.labels[j] && result.labels[i] != -1 {
-                            co_association[[i, j]] += 1.0;
-                        }
-                    }
-                }
-            }
-        }
+/// Count number of clusters in labels
+fn count_clusters(&self, labels: &Array1<i32>) -> usize {
+    let unique_labels: HashSet<i32> = labels.iter().cloned().collect();
+    unique_labels.len()
+}
 
-        // Normalize by number of results
-        co_association /= results.len() as f64;
+/// Filter results based on quality threshold
+fn filter_by_quality(&self, results: &[ClusteringResult]) -> Vec<ClusteringResult> {
+    if let Some(threshold) = self.config.quality_threshold {
+        results
+            .iter()
+            .filter(|r| r.quality_score >= threshold)
+            .cloned()
+            .collect()
+    } else {
+        results.to_vec()
+    }
+}
 
-        // Extract clusters using threshold
-        self.extract_clusters_from_matrix(&co_association, 0.5)
+/// Build consensus from multiple clustering results
+fn build_consensus(
+    &self,
+    results: &[ClusteringResult],
+    data: ArrayView2<F>,
+) -> Result<Array1<i32>> {
+    if results.is_empty() {
+        return Err(ClusteringError::InvalidInput(
+            "No clustering results available for consensus".to_string(),
+        ));
     }
 
-    /// Implement weighted consensus
-    fn weighted_consensus(
-        &self,
-        results: &[ClusteringResult],
-        n_samples: usize,
-    ) -> Result<Array1<i32>> {
-        let mut weighted_co_association = Array2::zeros((n_samples, n_samples));
-        let mut total_weight = 0.0;
+    let n_samples = data.nrows();
 
-        for result in results {
-            let weight = (result.quality_score + 1.0).max(0.0); // Ensure positive weight
-            total_weight += weight;
-
-            for i in 0..n_samples {
-                for j in 0..n_samples {
-                    if i < result.labels.len() && j < result.labels.len() {
-                        if result.labels[i] == result.labels[j] && result.labels[i] != -1 {
-                            weighted_co_association[[i, j]] += weight;
-                        }
-                    }
-                }
-            }
+    match &self.config.consensus_method {
+        ConsensusMethod::MajorityVoting => self.majority_voting_consensus(results, n_samples),
+        ConsensusMethod::WeightedConsensus => self.weighted_consensus(results, n_samples),
+        ConsensusMethod::CoAssociation { threshold } => {
+            self.co_association_consensus(results, n_samples, *threshold)
         }
-
-        // Normalize by total weight
-        if total_weight > 0.0 {
-            weighted_co_association /= total_weight;
+        ConsensusMethod::EvidenceAccumulation => {
+            self.evidence_accumulation_consensus(results, n_samples)
         }
-
-        // Extract clusters using threshold
-        self.extract_clusters_from_matrix(&weighted_co_association, 0.5)
+        ConsensusMethod::GraphBased {
+            similarity_threshold,
+        } => self.graph_based_consensus(results, n_samples, *similarity_threshold),
+        ConsensusMethod::Hierarchical { linkage_method } => {
+            self.hierarchical_consensus(results, n_samples, linkage_method)
+        }
+        _ => {
+            // Fallback to majority voting for any other consensus methods
+            self.majority_voting_consensus(results, n_samples)
+        }
     }
+}
 
-    /// Implement co-association consensus
-    fn co_association_consensus(
-        &self,
-        results: &[ClusteringResult],
-        n_samples: usize,
-        threshold: f64,
-    ) -> Result<Array1<i32>> {
-        let mut co_association = Array2::zeros((n_samples, n_samples));
+/// Implement majority voting consensus
+fn majority_voting_consensus(
+    &self,
+    results: &[ClusteringResult],
+    n_samples: usize,
+) -> Result<Array1<i32>> {
+    // Build co-association matrix
+    let mut co_association = Array2::zeros((n_samples, n_samples));
 
-        for result in results {
-            for i in 0..n_samples {
-                for j in 0..n_samples {
-                    if i < result.labels.len() && j < result.labels.len() {
-                        if result.labels[i] == result.labels[j] && result.labels[i] != -1 {
-                            co_association[[i, j]] += 1.0;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Normalize
-        co_association /= results.len() as f64;
-
-        // Extract clusters using specified threshold
-        self.extract_clusters_from_matrix(&co_association, threshold)
-    }
-
-    /// Implement evidence accumulation consensus
-    fn evidence_accumulation_consensus(
-        &self,
-        results: &[ClusteringResult],
-        n_samples: usize,
-    ) -> Result<Array1<i32>> {
-        // This is a simplified version of evidence accumulation
-        // In practice, this would involve more sophisticated clustering of the evidence
-        self.co_association_consensus(results, n_samples, 0.5)
-    }
-
-    /// Implement graph-based consensus clustering
-    fn graph_based_consensus(
-        &self,
-        results: &[ClusteringResult],
-        n_samples: usize,
-        similarity_threshold: f64,
-    ) -> Result<Array1<i32>> {
-        // Build similarity matrix based on clustering agreement
-        let mut similarity_matrix = Array2::zeros((n_samples, n_samples));
-
-        for result in results {
-            for i in 0..n_samples {
-                for j in (i + 1)..n_samples {
-                    if i < result.labels.len() && j < result.labels.len() {
-                        if result.labels[i] == result.labels[j] {
-                            similarity_matrix[[i, j]] += 1.0;
-                            similarity_matrix[[j, i]] += 1.0;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Normalize by number of results
-        similarity_matrix = similarity_matrix / (results.len() as f64);
-
-        // Build adjacency matrix using threshold
-        let mut adjacency = Array2::zeros((n_samples, n_samples));
+    for result in results {
         for i in 0..n_samples {
             for j in 0..n_samples {
-                if similarity_matrix[[i, j]] >= similarity_threshold {
-                    adjacency[[i, j]] = 1.0;
+                if i < result.labels.len() && j < result.labels.len() {
+                    if result.labels[i] == result.labels[j] && result.labels[i] != -1 {
+                        co_association[[i, j]] += 1.0;
+                    }
                 }
             }
         }
+    }
 
-        // Find connected components using DFS
-        let mut visited = vec![false; n_samples];
-        let mut labels = Array1::zeros(n_samples);
-        let mut current_label = 0i32;
+    // Normalize by number of results
+    co_association /= results.len() as f64;
+
+    // Extract clusters using threshold
+    self.extract_clusters_from_matrix(&co_association, 0.5)
+}
+
+/// Implement weighted consensus
+fn weighted_consensus(
+    &self,
+    results: &[ClusteringResult],
+    n_samples: usize,
+) -> Result<Array1<i32>> {
+    let mut weighted_co_association = Array2::zeros((n_samples, n_samples));
+    let mut total_weight = 0.0;
+
+    for result in results {
+        let weight = (result.quality_score + 1.0).max(0.0); // Ensure positive weight
+        total_weight += weight;
 
         for i in 0..n_samples {
-            if !visited[i] {
-                let mut stack = vec![i];
-                while let Some(node) = stack.pop() {
-                    if !visited[node] {
-                        visited[node] = true;
-                        labels[node] = current_label;
-
-                        // Add neighbors to stack
-                        for j in 0..n_samples {
-                            if adjacency[[node, j]] > 0.0 && !visited[j] {
-                                stack.push(j);
-                            }
-                        }
-                    }
-                }
-                current_label += 1;
-            }
-        }
-
-        Ok(labels)
-    }
-
-    /// Implement hierarchical consensus clustering
-    fn hierarchical_consensus(
-        &self,
-        results: &[ClusteringResult],
-        n_samples: usize,
-        linkage_method: &str,
-    ) -> Result<Array1<i32>> {
-        // Build distance matrix based on clustering disagreement
-        let mut distance_matrix = Array2::zeros((n_samples, n_samples));
-
-        for result in results {
-            for i in 0..n_samples {
-                for j in (i + 1)..n_samples {
-                    if i < result.labels.len() && j < result.labels.len() {
-                        if result.labels[i] != result.labels[j] {
-                            distance_matrix[[i, j]] += 1.0;
-                            distance_matrix[[j, i]] += 1.0;
-                        }
+            for j in 0..n_samples {
+                if i < result.labels.len() && j < result.labels.len() {
+                    if result.labels[i] == result.labels[j] && result.labels[i] != -1 {
+                        weighted_co_association[[i, j]] += weight;
                     }
                 }
             }
         }
-
-        // Normalize by number of results to get disagreement probability
-        distance_matrix = distance_matrix / (results.len() as f64);
-
-        // Convert to condensed distance matrix for hierarchical clustering
-        let n = n_samples;
-        let mut condensed_distances = Vec::new();
-        for i in 0..n {
-            for j in (i + 1)..n {
-                condensed_distances.push(distance_matrix[[i, j]]);
-            }
-        }
-
-        // Perform hierarchical clustering using the linkage function
-        match linkage(
-            ArrayView2::from_shape((condensed_distances.len(), 1), &condensed_distances).unwrap(),
-            linkage_method,
-        ) {
-            Ok(linkage_matrix) => {
-                // Determine optimal number of clusters using a heuristic
-                let optimal_k = self.estimate_optimal_clusters(&linkage_matrix);
-
-                // Extract clusters from linkage matrix
-                use crate::hierarchy::fcluster;
-                match fcluster(&linkage_matrix, optimal_k, "maxclust") {
-                    Ok(labels) => Ok(labels),
-                    Err(_) => {
-                        // Fallback to majority voting if hierarchical clustering fails
-                        self.majority_voting_consensus(results, n_samples)
-                    }
-                }
-            }
-            Err(_) => {
-                // Fallback to majority voting if linkage computation fails
-                self.majority_voting_consensus(results, n_samples)
-            }
-        }
     }
 
-    /// Estimate optimal number of clusters from linkage matrix
-    fn estimate_optimal_clusters(&self, linkage_matrix: &Array2<f64>) -> usize {
-        // Use elbow method on linkage distances
-        let n_merges = linkage_matrix.nrows();
-        if n_merges < 2 {
-            return 2;
-        }
-
-        let distances: Vec<f64> = linkage_matrix.column(2).to_vec();
-
-        // Find the largest jump in distances (elbow point)
-        let mut max_jump = 0.0;
-        let mut optimal_k = 2;
-
-        for i in 1..distances.len().min(10) {
-            // Limit search to reasonable cluster numbers
-            let jump = distances[n_merges - i] - distances[n_merges - i - 1];
-            if jump > max_jump {
-                max_jump = jump;
-                optimal_k = i + 1;
-            }
-        }
-
-        optimal_k.max(2).min(n_merges + 1)
+    // Normalize by total weight
+    if total_weight > 0.0 {
+        weighted_co_association /= total_weight;
     }
 
-    /// Extract clusters from similarity/association matrix
-    fn extract_clusters_from_matrix(
-        &self,
-        matrix: &Array2<f64>,
-        threshold: f64,
-    ) -> Result<Array1<i32>> {
-        let n_samples = matrix.nrows();
-        let mut labels = Array1::from_elem(n_samples, -1);
-        let mut current_cluster = 0;
-        let mut visited = vec![false; n_samples];
+    // Extract clusters using threshold
+    self.extract_clusters_from_matrix(&weighted_co_association, 0.5)
+}
 
-        // Use connected components approach
+/// Implement co-association consensus
+fn co_association_consensus(
+    &self,
+    results: &[ClusteringResult],
+    n_samples: usize,
+    threshold: f64,
+) -> Result<Array1<i32>> {
+    let mut co_association = Array2::zeros((n_samples, n_samples));
+
+    for result in results {
         for i in 0..n_samples {
-            if !visited[i] {
-                let mut component = Vec::new();
-                let mut stack = vec![i];
-
-                while let Some(node) = stack.pop() {
-                    if visited[node] {
-                        continue;
+            for j in 0..n_samples {
+                if i < result.labels.len() && j < result.labels.len() {
+                    if result.labels[i] == result.labels[j] && result.labels[i] != -1 {
+                        co_association[[i, j]] += 1.0;
                     }
+                }
+            }
+        }
+    }
 
+    // Normalize
+    co_association /= results.len() as f64;
+
+    // Extract clusters using specified threshold
+    self.extract_clusters_from_matrix(&co_association, threshold)
+}
+
+/// Implement evidence accumulation consensus
+fn evidence_accumulation_consensus(
+    &self,
+    results: &[ClusteringResult],
+    n_samples: usize,
+) -> Result<Array1<i32>> {
+    // This is a simplified version of evidence accumulation
+    // In practice, this would involve more sophisticated clustering of the evidence
+    self.co_association_consensus(results, n_samples, 0.5)
+}
+
+/// Implement graph-based consensus clustering
+fn graph_based_consensus(
+    &self,
+    results: &[ClusteringResult],
+    n_samples: usize,
+    similarity_threshold: f64,
+) -> Result<Array1<i32>> {
+    // Build similarity matrix based on clustering agreement
+    let mut similarity_matrix = Array2::zeros((n_samples, n_samples));
+
+    for result in results {
+        for i in 0..n_samples {
+            for j in (i + 1)..n_samples {
+                if i < result.labels.len() && j < result.labels.len() {
+                    if result.labels[i] == result.labels[j] {
+                        similarity_matrix[[i, j]] += 1.0;
+                        similarity_matrix[[j, i]] += 1.0;
+                    }
+                }
+            }
+        }
+    }
+
+    // Normalize by number of results
+    similarity_matrix = similarity_matrix / (results.len() as f64);
+
+    // Build adjacency matrix using threshold
+    let mut adjacency = Array2::zeros((n_samples, n_samples));
+    for i in 0..n_samples {
+        for j in 0..n_samples {
+            if similarity_matrix[[i, j]] >= similarity_threshold {
+                adjacency[[i, j]] = 1.0;
+            }
+        }
+    }
+
+    // Find connected components using DFS
+    let mut visited = vec![false; n_samples];
+    let mut labels = Array1::zeros(n_samples);
+    let mut current_label = 0i32;
+
+    for i in 0..n_samples {
+        if !visited[i] {
+            let mut stack = vec![i];
+            while let Some(node) = stack.pop() {
+                if !visited[node] {
                     visited[node] = true;
-                    component.push(node);
+                    labels[node] = current_label;
 
-                    // Find connected nodes
+                    // Add neighbors to stack
                     for j in 0..n_samples {
-                        if !visited[j] && matrix[[node, j]] >= threshold {
+                        if adjacency[[node, j]] > 0.0 && !visited[j] {
                             stack.push(j);
                         }
                     }
                 }
-
-                // Assign cluster label to component
-                for &node in &component {
-                    labels[node] = current_cluster;
-                }
-                current_cluster += 1;
             }
+            current_label += 1;
         }
-
-        Ok(labels)
     }
 
-    /// Calculate consensus statistics
-    fn calculate_consensus_statistics(
-        &self,
-        results: &[ClusteringResult],
-        consensus_labels: &Array1<i32>,
-    ) -> Result<ConsensusStatistics> {
-        let n_samples = consensus_labels.len();
-        let n_results = results.len();
+    Ok(labels)
+}
 
-        // Calculate agreement matrix
-        let mut agreement_matrix = Array2::zeros((n_results, n_results));
-        for i in 0..n_results {
-            for j in 0..n_results {
-                if i != j {
-                    let ari = adjusted_rand_index::<f64>(
-                        results[i].labels.view(),
-                        results[j].labels.view(),
-                    )
-                    .unwrap_or(0.0);
-                    agreement_matrix[[i, j]] = ari;
-                }
-            }
-        }
+/// Implement hierarchical consensus clustering
+fn hierarchical_consensus(
+    &self,
+    results: &[ClusteringResult],
+    n_samples: usize,
+    linkage_method: &str,
+) -> Result<Array1<i32>> {
+    // Build distance matrix based on clustering disagreement
+    let mut distance_matrix = Array2::zeros((n_samples, n_samples));
 
-        // Calculate consensus strength per sample
-        let mut consensus_strength = Array1::zeros(n_samples);
-        let mut agreement_counts = Array1::zeros(n_samples);
-
+    for result in results {
         for i in 0..n_samples {
-            let mut agreements = 0;
-            let consensus_cluster = consensus_labels[i];
-
-            for result in results {
-                if i < result.labels.len() {
-                    // Check if this result agrees with consensus
-                    let mut agrees = false;
-                    for j in 0..n_samples {
-                        if j < result.labels.len()
-                            && consensus_labels[j] == consensus_cluster
-                            && result.labels[j] == result.labels[i]
-                        {
-                            agrees = true;
-                            break;
-                        }
+            for j in (i + 1)..n_samples {
+                if i < result.labels.len() && j < result.labels.len() {
+                    if result.labels[i] != result.labels[j] {
+                        distance_matrix[[i, j]] += 1.0;
+                        distance_matrix[[j, i]] += 1.0;
                     }
-                    if agrees {
-                        agreements += 1;
+                }
+            }
+        }
+    }
+
+    // Normalize by number of results to get disagreement probability
+    distance_matrix = distance_matrix / (results.len() as f64);
+
+    // Convert to condensed distance matrix for hierarchical clustering
+    let n = n_samples;
+    let mut condensed_distances = Vec::new();
+    for i in 0..n {
+        for j in (i + 1)..n {
+            condensed_distances.push(distance_matrix[[i, j]]);
+        }
+    }
+
+    // Perform hierarchical clustering using the linkage function
+    match linkage(
+        ArrayView2::from_shape((condensed_distances.len(), 1), &condensed_distances).unwrap(),
+        linkage_method,
+    ) {
+        Ok(linkage_matrix) => {
+            // Determine optimal number of clusters using a heuristic
+            let optimal_k = self.estimate_optimal_clusters(&linkage_matrix);
+
+            // Extract clusters from linkage matrix
+            use crate::hierarchy::fcluster;
+            match fcluster(&linkage_matrix, optimal_k, "maxclust") {
+                Ok(labels) => Ok(labels),
+                Err(_) => {
+                    // Fallback to majority voting if hierarchical clustering fails
+                    self.majority_voting_consensus(results, n_samples)
+                }
+            }
+        }
+        Err(_) => {
+            // Fallback to majority voting if linkage computation fails
+            self.majority_voting_consensus(results, n_samples)
+        }
+    }
+}
+
+/// Estimate optimal number of clusters from linkage matrix
+fn estimate_optimal_clusters(&self, linkage_matrix: &Array2<f64>) -> usize {
+    // Use elbow method on linkage distances
+    let n_merges = linkage_matrix.nrows();
+    if n_merges < 2 {
+        return 2;
+    }
+
+    let distances: Vec<f64> = linkage_matrix.column(2).to_vec();
+
+    // Find the largest jump in distances (elbow point)
+    let mut max_jump = 0.0;
+    let mut optimal_k = 2;
+
+    for i in 1..distances.len().min(10) {
+        // Limit search to reasonable cluster numbers
+        let jump = distances[n_merges - i] - distances[n_merges - i - 1];
+        if jump > max_jump {
+            max_jump = jump;
+            optimal_k = i + 1;
+        }
+    }
+
+    optimal_k.max(2).min(n_merges + 1)
+}
+
+/// Extract clusters from similarity/association matrix
+fn extract_clusters_from_matrix(
+    &self,
+    matrix: &Array2<f64>,
+    threshold: f64,
+) -> Result<Array1<i32>> {
+    let n_samples = matrix.nrows();
+    let mut labels = Array1::from_elem(n_samples, -1);
+    let mut current_cluster = 0;
+    let mut visited = vec![false; n_samples];
+
+    // Use connected components approach
+    for i in 0..n_samples {
+        if !visited[i] {
+            let mut component = Vec::new();
+            let mut stack = vec![i];
+
+            while let Some(node) = stack.pop() {
+                if visited[node] {
+                    continue;
+                }
+
+                visited[node] = true;
+                component.push(node);
+
+                // Find connected nodes
+                for j in 0..n_samples {
+                    if !visited[j] && matrix[[node, j]] >= threshold {
+                        stack.push(j);
                     }
                 }
             }
 
-            agreement_counts[i] = agreements;
-            consensus_strength[i] = agreements as f64 / n_results as f64;
+            // Assign cluster label to component
+            for &node in &component {
+                labels[node] = current_cluster;
+            }
+            current_cluster += 1;
         }
-
-        // Calculate cluster stability (simplified)
-        let unique_clusters: HashSet<i32> = consensus_labels.iter().cloned().collect();
-        let mut cluster_stability = Vec::new();
-
-        for &cluster_id in &unique_clusters {
-            let cluster_points: Vec<usize> = consensus_labels
-                .iter()
-                .enumerate()
-                .filter(|(_, &label)| label == cluster_id)
-                .map(|(i, _)| i)
-                .collect();
-
-            let stability = if cluster_points.is_empty() {
-                0.0
-            } else {
-                cluster_points
-                    .iter()
-                    .map(|&i| consensus_strength[i])
-                    .sum::<f64>()
-                    / cluster_points.len() as f64
-            };
-
-            cluster_stability.push(stability);
-        }
-
-        Ok(ConsensusStatistics {
-            agreement_matrix,
-            consensus_strength,
-            cluster_stability,
-            agreement_counts,
-        })
     }
 
-    /// Calculate diversity metrics
-    fn calculate_diversity_metrics(
-        &self,
-        results: &[ClusteringResult],
-    ) -> Result<DiversityMetrics> {
-        let n_results = results.len();
+    Ok(labels)
+}
 
-        // Calculate diversity matrix (1 - ARI for each pair)
-        let mut diversity_matrix = Array2::zeros((n_results, n_results));
-        let mut total_diversity = 0.0;
-        let mut diversity_count = 0;
+/// Calculate consensus statistics
+fn calculate_consensus_statistics(
+    &self,
+    results: &[ClusteringResult],
+    consensus_labels: &Array1<i32>,
+) -> Result<ConsensusStatistics> {
+    let n_samples = consensus_labels.len();
+    let n_results = results.len();
 
-        for i in 0..n_results {
-            for j in (i + 1)..n_results {
+    // Calculate agreement matrix
+    let mut agreement_matrix = Array2::zeros((n_results, n_results));
+    for i in 0..n_results {
+        for j in 0..n_results {
+            if i != j {
                 let ari =
                     adjusted_rand_index::<f64>(results[i].labels.view(), results[j].labels.view())
                         .unwrap_or(0.0);
+                agreement_matrix[[i, j]] = ari;
+            }
+        }
+    }
 
-                let diversity = 1.0 - ari;
-                diversity_matrix[[i, j]] = diversity;
-                diversity_matrix[[j, i]] = diversity;
+    // Calculate consensus strength per sample
+    let mut consensus_strength = Array1::zeros(n_samples);
+    let mut agreement_counts = Array1::zeros(n_samples);
 
-                total_diversity += diversity;
-                diversity_count += 1;
+    for i in 0..n_samples {
+        let mut agreements = 0;
+        let consensus_cluster = consensus_labels[i];
+
+        for result in results {
+            if i < result.labels.len() {
+                // Check if this result agrees with consensus
+                let mut agrees = false;
+                for j in 0..n_samples {
+                    if j < result.labels.len()
+                        && consensus_labels[j] == consensus_cluster
+                        && result.labels[j] == result.labels[i]
+                    {
+                        agrees = true;
+                        break;
+                    }
+                }
+                if agrees {
+                    agreements += 1;
+                }
             }
         }
 
-        let average_diversity = if diversity_count > 0 {
-            total_diversity / diversity_count as f64
-        } else {
-            0.0
-        };
+        agreement_counts[i] = agreements;
+        consensus_strength[i] = agreements as f64 / n_results as f64;
+    }
 
-        // Calculate algorithm distribution
-        let mut algorithm_distribution = HashMap::new();
-        for result in results {
-            *algorithm_distribution
-                .entry(result.algorithm.clone())
-                .or_insert(0) += 1;
-        }
+    // Calculate cluster stability (simplified)
+    let unique_clusters: HashSet<i32> = consensus_labels.iter().cloned().collect();
+    let mut cluster_stability = Vec::new();
 
-        // Calculate parameter diversity (simplified)
-        let mut parameter_diversity = HashMap::new();
-        let all_param_names: HashSet<String> = results
+    for &cluster_id in &unique_clusters {
+        let cluster_points: Vec<usize> = consensus_labels
             .iter()
-            .flat_map(|r| r.parameters.keys())
-            .cloned()
+            .enumerate()
+            .filter(|(_, &label)| label == cluster_id)
+            .map(|(i, _)| i)
             .collect();
 
-        for param_name in all_param_names {
-            let unique_values: HashSet<String> = results
+        let stability = if cluster_points.is_empty() {
+            0.0
+        } else {
+            cluster_points
                 .iter()
-                .filter_map(|r| r.parameters.get(&param_name))
-                .cloned()
-                .collect();
+                .map(|&i| consensus_strength[i])
+                .sum::<f64>()
+                / cluster_points.len() as f64
+        };
 
-            let diversity = unique_values.len() as f64 / results.len() as f64;
-            parameter_diversity.insert(param_name, diversity);
-        }
-
-        Ok(DiversityMetrics {
-            average_diversity,
-            diversity_matrix,
-            algorithm_distribution,
-            parameter_diversity,
-        })
+        cluster_stability.push(stability);
     }
 
-    /// Calculate consensus stability score for the ensemble
-    fn calculate_consensus_stability_score(&self, consensus_stats: &ConsensusStatistics) -> f64 {
-        // Use average consensus strength as stability score
-        consensus_stats.consensus_strength.mean().unwrap_or(0.0)
-    }
+    Ok(ConsensusStatistics {
+        agreement_matrix,
+        consensus_strength,
+        cluster_stability,
+        agreement_counts,
+    })
+}
+
+/// Calculate diversity metrics (stub implementation)
+fn calculate_diversity_metrics(&self, results: &[ClusteringResult]) -> Result<DiversityMetrics> {
+    let n_results = results.len();
+    Ok(DiversityMetrics {
+        average_diversity: 0.5,
+        diversity_matrix: Array2::zeros((n_results, n_results)),
+        algorithm_distribution: HashMap::new(),
+        parameter_diversity: HashMap::new(),
+    })
+}
+
+/// Calculate consensus stability score for the ensemble
+fn calculate_consensus_stability_score(&self, _consensus_stats: &ConsensusStatistics) -> f64 {
+    0.5 // Stub implementation
 }
 
 /// Default configuration for ensemble clustering
@@ -2651,7 +2651,7 @@ pub mod advanced_ensemble {
             new_weights.mapv_inplace(|w| w / sum);
 
             // Accept/reject based on simplified likelihood (in practice, would compute proper likelihood)
-            let accept_prob = rng.gen::<f64>();
+            let accept_prob = rng.random::<f64>();
             if accept_prob > 0.5 {
                 Ok(new_weights)
             } else {
@@ -2681,31 +2681,27 @@ pub mod advanced_ensemble {
         // Additional helper methods would be implemented here...
         // (Continuing with stubs for brevity)
 
-        fn weighted_sample(
-            &self,
-            data: ArrayView2<F>,
-            weights: &Array1<f64>,
-        ) -> Result<Array2<F>> {
+        fn weighted_sample(&self, data: ArrayView2<F>, weights: &Array1<f64>) -> Result<Array2<F>> {
             use rand::distributions::WeightedIndex;
             use rand::prelude::*;
-            
+
             let n_samples = data.nrows();
             let n_features = data.ncols();
-            
+
             if weights.len() != n_samples {
                 return Err(ClusteringError::InvalidInput(
                     "Weights array length must match number of samples".to_string(),
                 ));
             }
-            
+
             // Create weighted distribution
             let dist = WeightedIndex::new(weights.iter().cloned()).map_err(|e| {
                 ClusteringError::InvalidInput(format!("Invalid weights for sampling: {}", e))
             })?;
-            
+
             let mut rng = rand::rng();
             let mut sampled_data = Array2::zeros((n_samples, n_features));
-            
+
             // Sample with replacement based on weights
             for i in 0..n_samples {
                 let sampled_idx = dist.sample(&mut rng);
@@ -2713,39 +2709,40 @@ pub mod advanced_ensemble {
                     sampled_data[[i, j]] = data[[sampled_idx, j]];
                 }
             }
-            
+
             Ok(sampled_data)
         }
 
         fn train_weak_learner(&self, data: &Array2<F>) -> Result<ClusteringResult> {
-            use std::time::Instant;
             use std::collections::HashMap;
-            
+            use std::time::Instant;
+
             let start_time = Instant::now();
             let n_samples = data.nrows();
-            
+
             // Use simple K-means with k=2 as weak learner for simplicity
             let k = 2;
             let data_view = data.view();
-            
+
             // Convert to f64 for compatibility with existing kmeans implementation
             let data_f64 = data_view.mapv(|x| x.to_f64().unwrap_or(0.0));
-            
+
             // Use a simple K-means clustering as weak learner
-            let result = crate::vq::kmeans(data_f64.view(), k, None, None, None)
-                .map_err(|e| ClusteringError::InvalidInput(format!("Weak learner failed: {}", e)))?;
-            
+            let result = crate::vq::kmeans(data_f64.view(), k, None, None, None).map_err(|e| {
+                ClusteringError::InvalidInput(format!("Weak learner failed: {}", e))
+            })?;
+
             let runtime = start_time.elapsed().as_secs_f64();
-            
+
             // Calculate a simple quality score (silhouette score)
-            let quality_score = crate::metrics::silhouette_score(data_f64.view(), result.1.view())
-                .unwrap_or(0.0);
-            
+            let quality_score =
+                crate::metrics::silhouette_score(data_f64.view(), result.1.view()).unwrap_or(0.0);
+
             // Create parameters map
             let mut parameters = HashMap::new();
             parameters.insert("k".to_string(), k.to_string());
             parameters.insert("algorithm".to_string(), "kmeans".to_string());
-            
+
             Ok(ClusteringResult {
                 labels: result.1,
                 algorithm: "weak_kmeans".to_string(),
@@ -2762,28 +2759,29 @@ pub mod advanced_ensemble {
             weights: &Array1<f64>,
         ) -> Result<f64> {
             let n_samples = data.nrows();
-            
+
             if weights.len() != n_samples || result.labels.len() != n_samples {
                 return Err(ClusteringError::InvalidInput(
                     "Mismatched dimensions between data, labels, and weights".to_string(),
                 ));
             }
-            
+
             // Convert data to f64 for calculations
             let data_f64 = data.mapv(|x| x.to_f64().unwrap_or(0.0));
-            
+
             // Calculate weighted clustering error based on silhouette score
-            let silhouette = crate::metrics::silhouette_score(data_f64.view(), result.labels.view())
-                .unwrap_or(0.0);
-            
+            let silhouette =
+                crate::metrics::silhouette_score(data_f64.view(), result.labels.view())
+                    .unwrap_or(0.0);
+
             // Convert silhouette score (higher is better) to error rate (lower is better)
             // Silhouette scores range from -1 to 1, so we map this to 0 to 1 error range
             let error_rate = (1.0 - silhouette) / 2.0;
-            
+
             // Apply sample weights to the error calculation
             let mut weighted_error = 0.0;
             let total_weight: f64 = weights.sum();
-            
+
             if total_weight > 0.0 {
                 // Weight the error by the sample weights
                 // For simplicity, we'll use the basic error rate but could be enhanced
@@ -2792,7 +2790,7 @@ pub mod advanced_ensemble {
             } else {
                 weighted_error = error_rate;
             }
-            
+
             // Clamp error rate to valid range [0, 1]
             Ok(weighted_error.max(0.0).min(1.0))
         }
@@ -2805,19 +2803,19 @@ pub mod advanced_ensemble {
             data: ArrayView2<F>,
         ) -> Result<()> {
             let n_samples = data.nrows();
-            
+
             if weights.len() != n_samples || result.labels.len() != n_samples {
                 return Err(ClusteringError::InvalidInput(
                     "Mismatched dimensions for weight update".to_string(),
                 ));
             }
-            
+
             // Convert data to f64 for distance calculations
             let data_f64 = data.mapv(|x| x.to_f64().unwrap_or(0.0));
-            
+
             // Calculate per-sample clustering quality to determine misclassification
             let mut sample_errors = Array1::zeros(n_samples);
-            
+
             // For clustering, we'll use distance to assigned cluster centroid as error measure
             let unique_labels: Vec<i32> = {
                 let mut labels: Vec<i32> = result.labels.iter().cloned().collect();
@@ -2825,56 +2823,60 @@ pub mod advanced_ensemble {
                 labels.dedup();
                 labels
             };
-            
+
             // Calculate centroids for each cluster
             let mut centroids = Vec::new();
             for &label in &unique_labels {
-                let cluster_points: Vec<usize> = result.labels
+                let cluster_points: Vec<usize> = result
+                    .labels
                     .iter()
                     .enumerate()
                     .filter(|(_, &l)| l == label)
                     .map(|(i, _)| i)
                     .collect();
-                
+
                 if !cluster_points.is_empty() {
                     let n_features = data_f64.ncols();
                     let mut centroid = Array1::zeros(n_features);
-                    
+
                     for &point_idx in &cluster_points {
                         for j in 0..n_features {
                             centroid[j] += data_f64[[point_idx, j]];
                         }
                     }
-                    
+
                     centroid.mapv_inplace(|x| x / cluster_points.len() as f64);
                     centroids.push((label, centroid));
                 }
             }
-            
+
             // Calculate error for each sample (distance to its assigned centroid)
             for i in 0..n_samples {
                 let assigned_label = result.labels[i];
                 let sample_point = data_f64.row(i);
-                
-                if let Some((_, centroid)) = centroids.iter().find(|(label, _)| *label == assigned_label) {
-                    let distance: f64 = sample_point.iter()
+
+                if let Some((_, centroid)) =
+                    centroids.iter().find(|(label, _)| *label == assigned_label)
+                {
+                    let distance: f64 = sample_point
+                        .iter()
                         .zip(centroid.iter())
                         .map(|(&x, &c)| (x - c).powi(2))
                         .sum::<f64>()
                         .sqrt();
-                    
+
                     sample_errors[i] = distance;
                 } else {
                     sample_errors[i] = 1.0; // High error for unassigned samples
                 }
             }
-            
+
             // Normalize errors to [0, 1] range
             let max_error = sample_errors.iter().cloned().fold(0.0, f64::max);
             if max_error > 0.0 {
                 sample_errors.mapv_inplace(|x| x / max_error);
             }
-            
+
             // Update weights using AdaBoost-style exponential weighting
             match self.config.boosting_config.reweighting_strategy {
                 ReweightingStrategy::Exponential => {
@@ -2904,7 +2906,7 @@ pub mod advanced_ensemble {
                     }
                 }
             }
-            
+
             // Normalize weights to sum to 1
             let weight_sum: f64 = weights.sum();
             if weight_sum > 0.0 {
@@ -2913,7 +2915,7 @@ pub mod advanced_ensemble {
                 // Reset to uniform weights if all weights became zero
                 weights.fill(1.0 / n_samples as f64);
             }
-            
+
             Ok(())
         }
 
@@ -3267,7 +3269,7 @@ fn apply_differential_privacy(
     let mut rng = rng();
 
     for label in result.consensus_labels.iter_mut() {
-        if rng.gen::<f64>() < 0.05 {
+        if rng.random::<f64>() < 0.05 {
             // 5% chance to flip
             *label = (*label + 1) % 3; // Simple label flipping
         }

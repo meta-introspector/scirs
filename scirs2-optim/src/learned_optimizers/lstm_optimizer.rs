@@ -829,7 +829,7 @@ pub struct AttentionStats {
 
 impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
     /// Create a new LSTM optimizer
-    pub fn new(config: LearnedOptimizerConfig) -> Result<Self, OptimError> {
+    pub fn new(config: LearnedOptimizerConfig) -> Result<Self> {
         // Validate configuration
         Self::validate_config(&config)?;
 
@@ -873,7 +873,7 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
         parameters: &ArrayBase<S, D>,
         gradients: &ArrayBase<S, D>,
         loss: Option<T>,
-    ) -> Result<Array<T, D>, OptimError>
+    ) -> Result<Array<T, D>>
     where
         S: Data<Elem = T>,
         D: Dimension + Clone,
@@ -918,7 +918,7 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
     }
 
     /// Meta-learning step for optimizer adaptation
-    pub fn meta_learning_step(&mut self, tasks: &[MetaTask<T>]) -> Result<T, OptimError> {
+    pub fn meta_learning_step(&mut self, tasks: &[MetaTask<T>]) -> Result<T> {
         // Perform meta-learning update
         let meta_loss = self.meta_learner.step(tasks, &mut self.lstm_network)?;
 
@@ -932,7 +932,7 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
     pub fn transfer_to_domain(
         &mut self,
         target_tasks: &[MetaTask<T>],
-    ) -> Result<TransferResults<T>, OptimError> {
+    ) -> Result<TransferResults<T>> {
         self.meta_learner
             .transfer_learner
             .transfer_to_domain(target_tasks, &mut self.lstm_network)
@@ -955,7 +955,7 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
     }
 
     /// Prepare input features for LSTM
-    fn prepare_lstm_input(&self, gradients: &Array1<T>) -> Result<Array1<T>, OptimError> {
+    fn prepare_lstm_input(&self, gradients: &Array1<T>) -> Result<Array1<T>> {
         let mut features = Vec::new();
 
         // Current gradient features
@@ -1005,7 +1005,7 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
         lstm_output: &Array1<T>,
         gradients: &Array1<T>,
         learning_rate: T,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         // Apply output transformation
         let transformed_output = match self.lstm_network.output_projection.output_transform {
             OutputTransform::Identity => lstm_output.clone(),
@@ -1153,7 +1153,7 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
     }
 
     /// Validate configuration
-    fn validate_config(config: &LearnedOptimizerConfig) -> Result<(), OptimError> {
+    fn validate_config(config: &LearnedOptimizerConfig) -> Result<()> {
         if config.hidden_size == 0 {
             return Err(OptimError::InvalidConfig(
                 "Hidden size must be positive".to_string(),
@@ -1182,7 +1182,7 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
     }
 
     /// Utility functions for array manipulation
-    fn flatten_to_1d<S, D>(&self, array: &ArrayBase<S, D>) -> Result<Array1<T>, OptimError>
+    fn flatten_to_1d<S, D>(&self, array: &ArrayBase<S, D>) -> Result<Array1<T>>
     where
         S: Data<Elem = T>,
         D: Dimension,
@@ -1190,7 +1190,7 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
         Ok(Array1::from_iter(array.iter().cloned()))
     }
 
-    fn reshape_from_1d<D>(&self, flat: &Array1<T>, shape: D) -> Result<Array<T, D>, OptimError>
+    fn reshape_from_1d<D>(&self, flat: &Array1<T>, shape: D) -> Result<Array<T, D>>
     where
         D: Dimension + Clone,
     {
@@ -1203,7 +1203,7 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
 
 impl<T: Float + Default + Clone> LSTMNetwork<T> {
     /// Create new LSTM network
-    fn new(config: &LearnedOptimizerConfig) -> Result<Self, OptimError> {
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
         let mut layers = Vec::new();
 
         // Create LSTM layers
@@ -1246,7 +1246,7 @@ impl<T: Float + Default + Clone> LSTMNetwork<T> {
     }
 
     /// Forward pass through LSTM network
-    fn forward(&mut self, input: &Array1<T>) -> Result<Array1<T>, OptimError> {
+    fn forward(&mut self, input: &Array1<T>) -> Result<Array1<T>> {
         let mut current_input = input.clone();
 
         // Forward through LSTM layers
@@ -1274,7 +1274,7 @@ impl<T: Float + Default + Clone> LSTMNetwork<T> {
     }
 
     /// Apply dropout for regularization
-    fn apply_dropout(&self, input: &Array1<T>) -> Result<Array1<T>, OptimError> {
+    fn apply_dropout(&self, input: &Array1<T>) -> Result<Array1<T>> {
         // Simplified dropout implementation
         Ok(input.mapv(|x| {
             if rand::random::<f64>() < self.dropout_rate {
@@ -1288,7 +1288,7 @@ impl<T: Float + Default + Clone> LSTMNetwork<T> {
 
 impl<T: Float + Default + Clone> LSTMLayer<T> {
     /// Create new LSTM layer
-    fn new(input_size: usize, hidden_size: usize) -> Result<Self, OptimError> {
+    fn new(input_size: usize, hidden_size: usize) -> Result<Self> {
         // Xavier initialization
         let scale = (2.0 / (input_size + hidden_size) as f64).sqrt();
 
@@ -1304,7 +1304,7 @@ impl<T: Float + Default + Clone> LSTMLayer<T> {
     }
 
     /// Forward pass through LSTM layer
-    fn forward(&mut self, input: &Array1<T>) -> Result<Array1<T>, OptimError> {
+    fn forward(&mut self, input: &Array1<T>) -> Result<Array1<T>> {
         // LSTM computation: i, f, g, o = σ(W_ih @ x + W_hh @ h + b)
         let ih_linear = self.weight_ih.dot(input) + &self.bias_ih;
         let hh_linear = self.weight_hh.dot(&self.hidden_state) + &self.bias_hh;
@@ -1499,7 +1499,7 @@ impl Default for StateStatistics {
 // These would be fully implemented in a production system
 
 impl<T: Float + Default + Clone> MetaLearner<T> {
-    fn new(_config: &LearnedOptimizerConfig) -> Result<Self, OptimError> {
+    fn new(_config: &LearnedOptimizerConfig) -> Result<Self> {
         // Placeholder implementation
         Ok(Self {
             strategy: MetaOptimizationStrategy::MAML,
@@ -1537,11 +1537,7 @@ impl<T: Float + Default + Clone> MetaLearner<T> {
         })
     }
 
-    fn step(
-        &mut self,
-        _tasks: &[MetaTask<T>],
-        _network: &mut LSTMNetwork<T>,
-    ) -> Result<T, OptimError> {
+    fn step(&mut self, _tasks: &[MetaTask<T>], _network: &mut LSTMNetwork<T>) -> Result<T> {
         // Placeholder meta-learning step
         Ok(T::zero())
     }
@@ -1552,7 +1548,7 @@ impl<T: Float + Default + Clone> TransferLearner<T> {
         &mut self,
         _target_tasks: &[MetaTask<T>],
         _network: &mut LSTMNetwork<T>,
-    ) -> Result<TransferResults<T>, OptimError> {
+    ) -> Result<TransferResults<T>> {
         // Placeholder transfer learning
         Ok(TransferResults {
             initial_performance: T::zero(),
@@ -1564,7 +1560,7 @@ impl<T: Float + Default + Clone> TransferLearner<T> {
 }
 
 impl<T: Float + Default + Clone> AdaptiveLearningRateController<T> {
-    fn new(_config: &LearnedOptimizerConfig) -> Result<Self, OptimError> {
+    fn new(_config: &LearnedOptimizerConfig) -> Result<Self> {
         // Placeholder implementation
         Ok(Self {
             base_lr: T::from(0.001).unwrap(),
@@ -1594,7 +1590,7 @@ impl<T: Float + Default + Clone> AdaptiveLearningRateController<T> {
         _gradients: &Array1<T>,
         _loss: Option<T>,
         _history: &HistoryBuffer<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         // Placeholder adaptive LR computation
         Ok(self.current_lr)
     }

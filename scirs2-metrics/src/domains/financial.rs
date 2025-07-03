@@ -590,14 +590,14 @@ impl CreditRiskMetrics {
         }
 
         let mut cumulative_defaults = 0;
-        let mut cumulative_non_defaults = 0;
+        let mut _cumulative_non_defaults = 0;
         let mut auc = F::zero();
 
         for (_, is_default) in pairs {
             if is_default {
                 cumulative_defaults += 1;
             } else {
-                cumulative_non_defaults += 1;
+                _cumulative_non_defaults += 1;
                 auc = auc + F::from(cumulative_defaults).unwrap();
             }
         }

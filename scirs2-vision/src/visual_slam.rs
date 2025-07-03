@@ -702,19 +702,35 @@ pub struct TriangleMesh {
     pub texture_coordinates: Option<Array2<f32>>,
 }
 
+/// Object observation data for semantic SLAM
+///
+/// Represents a detected object instance with its spatial and temporal
+/// properties for building semantic maps.
 #[derive(Debug, Clone)]
 pub struct ObjectObservation {
+    /// Frame ID where this observation occurred
     pub frame_id: usize,
+    /// Confidence score for object detection
     pub detection_confidence: f32,
+    /// 2D bounding box coordinates [x, y, width, height]
     pub bounding_box_2d: Array1<f32>,
+    /// Feature point indices that match this object
     pub feature_matches: Vec<usize>,
 }
 
+/// Metrics for analyzing feature point density and distribution
+///
+/// Provides quality metrics for feature detection and tracking
+/// performance across the image space.
 #[derive(Debug, Clone)]
 pub struct FeatureDensityMetrics {
+    /// Average feature density across the image
     pub average_density: f32,
+    /// Distribution of feature density by image region
     pub density_distribution: Array1<f32>,
+    /// Uniformity measure of feature coverage (0.0 to 1.0)
     pub coverage_uniformity: f32,
+    /// Quality scores for individual features
     pub feature_quality_scores: Vec<f32>,
 }
 
@@ -982,31 +998,58 @@ impl VisualSLAMSystem {
 }
 
 /// SLAM system state for monitoring and diagnostics
+///
+/// Provides comprehensive status information about the current state
+/// of the Visual SLAM system for monitoring and debugging.
 #[derive(Debug, Clone)]
 pub struct SLAMSystemState {
+    /// Whether the SLAM system has completed initialization
     pub is_initialized: bool,
+    /// Current tracking status of the camera pose
     pub tracking_status: TrackingStatus,
+    /// Number of map points in the current map
     pub map_size: usize,
+    /// Confidence score for the current pose estimate (0.0 to 1.0)
     pub current_pose_confidence: f32,
+    /// Total number of loop closures detected
     pub loop_closure_count: usize,
+    /// Overall health assessment of the system
     pub system_health: SystemHealth,
 }
 
+/// Camera tracking status in the SLAM system
+///
+/// Indicates the current state of camera pose tracking
+/// and localization quality.
 #[derive(Debug, Clone)]
 pub enum TrackingStatus {
+    /// System is initializing, tracking not yet started
     Initializing,
+    /// Tracking is working well with good pose estimates
     Good,
+    /// Camera tracking has been lost
     Lost,
+    /// Camera was lost but has been relocalized
     Relocalized,
+    /// Tracking has failed completely
     Failed,
 }
 
+/// Overall health assessment of the SLAM system
+///
+/// Provides a high-level indication of system performance
+/// and operational status.
 #[derive(Debug, Clone)]
 pub enum SystemHealth {
+    /// System operating optimally with excellent performance
     Excellent,
+    /// System operating well with good performance
     Good,
+    /// System operating adequately but with some issues
     Fair,
+    /// System operating poorly with significant issues
     Poor,
+    /// System in critical state requiring immediate attention
     Critical,
 }
 

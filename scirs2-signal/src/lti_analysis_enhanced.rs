@@ -1548,7 +1548,7 @@ fn analyze_controllability_uncertainty(
     use rand::prelude::*;
 
     let mut measures = Vec::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for _ in 0..config.mc_samples {
         // Add random perturbations to system matrices

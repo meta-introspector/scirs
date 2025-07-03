@@ -4,7 +4,7 @@ use ndarray::{Array, Dimension, ScalarOperand, Zip};
 use num_traits::Float;
 use std::fmt::Debug;
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::regularizers::{Regularizer, L1, L2};
 
 /// ElasticNet regularization

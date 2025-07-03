@@ -4,15 +4,9 @@
 //! for all major functionality in scirs2-ndimage. It serves as both
 //! educational material and validation of the API usability.
 
-use crate::error::NdimageResult;
-use crate::features::*;
-use crate::filters::*;
-use crate::interpolation::*;
-use crate::measurements::*;
-use crate::morphology::*;
-use crate::segmentation::*;
-use ndarray::{Array1, Array2, Array3, ArrayD, Axis};
 use std::collections::HashMap;
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 /// Comprehensive tutorial and example collection
 pub struct ExampleTutorial {

@@ -139,7 +139,21 @@ impl ExternalClient {
         self.parse_downloaded_data(url, &buffer)
     }
 
-    /// Download a dataset synchronously (blocking)
+    /// Download a dataset synchronously (blocking) - when download feature is enabled
+    #[cfg(feature = "download")]
+    pub fn download_dataset_sync(
+        &self,
+        url: &str,
+        progress: Option<ProgressCallback>,
+    ) -> Result<Dataset> {
+        // Use tokio runtime to block on the async version
+        let rt = tokio::runtime::Runtime::new().map_err(|e| {
+            DatasetsError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e))
+        })?;
+        rt.block_on(self.download_dataset(url, progress))
+    }
+
+    /// Download a dataset synchronously (blocking) - fallback when download feature is disabled
     #[cfg(not(feature = "download"))]
     pub fn download_dataset_sync(
         &self,
@@ -151,6 +165,7 @@ impl ExternalClient {
     }
 
     /// Download using ureq (synchronous HTTP client)
+    #[allow(dead_code)]
     fn download_with_ureq(&self, url: &str, progress: Option<ProgressCallback>) -> Result<Dataset> {
         // Check cache first
         if self.config.use_cache {
@@ -452,6 +467,7 @@ pub mod repositories {
     }
 
     impl UCIRepository {
+        /// Create a new UCI repository client
         pub fn new() -> Result<Self> {
             Ok(Self {
                 client: ExternalClient::new()?,
@@ -481,6 +497,7 @@ pub mod repositories {
         }
 
         #[cfg(not(feature = "download"))]
+        /// Load a UCI dataset synchronously
         pub fn load_dataset_sync(&self, name: &str) -> Result<Dataset> {
             let url = match name {
                 "adult" => format!("{}/adult/adult.data", self.base_url),
@@ -501,6 +518,7 @@ pub mod repositories {
             self.client.download_dataset_sync(&url, None)
         }
 
+        /// List available UCI datasets
         pub fn list_datasets(&self) -> Vec<&'static str> {
             vec!["adult", "wine", "glass", "hepatitis", "heart-disease"]
         }
@@ -508,11 +526,14 @@ pub mod repositories {
 
     /// Kaggle dataset client (requires API key)
     pub struct KaggleRepository {
+        #[allow(dead_code)]
         client: ExternalClient,
+        #[allow(dead_code)]
         api_key: Option<String>,
     }
 
     impl KaggleRepository {
+        /// Create a new Kaggle repository client
         pub fn new(api_key: Option<String>) -> Result<Self> {
             let mut config = ExternalConfig::default();
 
@@ -550,6 +571,7 @@ pub mod repositories {
     }
 
     impl GitHubRepository {
+        /// Create a new GitHub repository client
         pub fn new() -> Result<Self> {
             Ok(Self {
                 client: ExternalClient::new()?,
@@ -566,6 +588,7 @@ pub mod repositories {
         }
 
         #[cfg(not(feature = "download"))]
+        /// Load a dataset from GitHub repository synchronously
         pub fn load_from_repo_sync(&self, user: &str, repo: &str, path: &str) -> Result<Dataset> {
             let url = format!(
                 "https://raw.githubusercontent.com/{}/{}/main/{}",

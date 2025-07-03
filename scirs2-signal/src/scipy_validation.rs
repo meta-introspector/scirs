@@ -1334,7 +1334,7 @@ fn test_single_lombscargle(
     use rand::Rng;
 
     // Create irregularly sampled test signal
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut t: Vec<f64> = Vec::new();
     let mut signal: Vec<f64> = Vec::new();
 
@@ -1342,7 +1342,7 @@ fn test_single_lombscargle(
     let duration = n as f64 / fs;
     for i in 0..n {
         let base_time = i as f64 * duration / n as f64;
-        let jitter = rng.gen_range(-0.1..0.1) * duration / n as f64;
+        let jitter = rng.random_range(-0.1..0.1) * duration / n as f64;
         let time = (base_time + jitter).max(0.0).min(duration);
         t.push(time);
 

@@ -83,7 +83,7 @@ pub struct ConvNeXtBlock<F: Float + Debug + ScalarOperand + Send + Sync> {
 impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXtBlock<F> {
     /// Create a new ConvNeXtBlock
     pub fn new(channels: usize, layer_scale_init_value: f64, drop_path_prob: f64) -> Result<Self> {
-        let mut rng = ndarray_rand::rand::thread_rng();
+        let mut rng = rand::rng();
         let depthwise_conv = Conv2D::<F>::new(
             channels,
             (7, 7),
@@ -93,10 +93,22 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXtBlock<F> {
         )?;
         let norm = LayerNorm2D::<F>::new::<SmallRng>(channels, 1e-6, Some("norm"))?;
         let pointwise_conv1 = Conv2D::<F>::new(
+            channels,
             channels * 4,
+            (1, 1),
+            (1, 1),
             PaddingMode::Custom(0),
+            &mut rng,
+        )?;
         let gelu = GELU::new();
         let pointwise_conv2 = Conv2D::<F>::new(
+            channels * 4,
+            channels,
+            (1, 1),
+            (1, 1),
+            PaddingMode::Custom(0),
+            &mut rng,
+        )?;
         // Initialize gamma as a learnable parameter
         let gamma_value = F::from(layer_scale_init_value).unwrap();
         let gamma = Array::<F, _>::from_elem([channels, 1, 1], gamma_value).into_dyn();
@@ -345,7 +357,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXt<F> {
         // Create the head if needed
         let head = if config.include_top {
             let mut head_seq = Sequential::new();
-            let mut rng = ndarray_rand::rand::thread_rng();
+            let mut rng = rand::rng();
             head_seq.add(LayerNorm2D::<F>::new::<SmallRng>(
                 *config.dims.last().unwrap(),
                 1e-6,

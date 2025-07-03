@@ -347,7 +347,10 @@ impl SnapshotDiff {
             "Memory Snapshot Diff: {} -> {}\n",
             self.first_id, self.second_id
         ));
-        output.push_str(&format!("Time elapsed: {}ms\n\n", self.elapsed_ms));
+        output.push_str(&format!(
+            "Time elapsed: {elapsed}ms\n\n",
+            elapsed = self.elapsed_ms
+        ));
 
         // Overall changes
         let current_delta_prefix = if self.current_usage_delta >= 0 {
@@ -385,7 +388,7 @@ impl SnapshotDiff {
         if !self.new_components.is_empty() {
             output.push_str("New Components:\n");
             for component in &self.new_components {
-                output.push_str(&format!("  + {}\n", component));
+                output.push_str(&format!("  + {component}\n"));
             }
             output.push('\n');
         }
@@ -394,7 +397,7 @@ impl SnapshotDiff {
         if !self.removed_components.is_empty() {
             output.push_str("Removed Components:\n");
             for component in &self.removed_components {
-                output.push_str(&format!("  - {}\n", component));
+                output.push_str(&format!("  - {component}\n"));
             }
             output.push('\n');
         }
@@ -425,7 +428,7 @@ impl SnapshotDiff {
                     ""
                 };
 
-                output.push_str(&format!("  {}", component));
+                output.push_str(&format!("  {component}"));
 
                 if diff.potential_leak {
                     output.push_str(" [POTENTIAL LEAK]");
@@ -556,7 +559,7 @@ impl SnapshotDiff {
                     peak_prefix,
                     format_bytes(diff.peak_usage_delta.unsigned_abs())
                 ),
-                format!("{}{}", alloc_prefix, diff.allocation_count_delta)
+                format!("{alloc_prefix}{delta}", delta = diff.allocation_count_delta)
             ));
         }
 
@@ -614,7 +617,7 @@ impl SnapshotManager {
         }
 
         for snapshot in &self.snapshots {
-            let filename = format!("snapshot_{}.json", snapshot.id);
+            let filename = format!("snapshot_{id}.json", id = snapshot.id);
             let path = dir.join(filename);
             snapshot.save_to_file(path)?;
         }

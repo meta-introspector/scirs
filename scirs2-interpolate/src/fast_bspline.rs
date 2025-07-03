@@ -36,32 +36,17 @@
 use crate::bspline::{BSpline, ExtrapolateMode};
 use crate::cache::BSplineCache;
 use crate::error::{InterpolateError, InterpolateResult};
+use crate::traits::InterpolationFloat;
 use ndarray::{Array1, Array2, ArrayView1};
-use num_traits::{Float, FromPrimitive, Zero};
+use num_traits::Zero;
 use std::cell::RefCell;
-use std::fmt::{Debug, Display};
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, RemAssign, Sub, SubAssign};
 use std::sync::Arc;
 
 /// Fast B-spline evaluator with optimized recursive algorithms
 #[derive(Debug)]
 pub struct FastBSplineEvaluator<T>
 where
-    T: Float
-        + FromPrimitive
-        + Debug
-        + Display
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + AddAssign
-        + SubAssign
-        + MulAssign
-        + DivAssign
-        + RemAssign
-        + Zero
-        + Copy,
+    T: InterpolationFloat + Copy,
 {
     /// The B-spline to evaluate (shared reference for memory efficiency)
     spline: Arc<BSpline<T>>,
@@ -76,21 +61,7 @@ where
 
 impl<T> FastBSplineEvaluator<T>
 where
-    T: Float
-        + FromPrimitive
-        + Debug
-        + Display
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + AddAssign
-        + SubAssign
-        + MulAssign
-        + DivAssign
-        + RemAssign
-        + Zero
-        + Copy,
+    T: InterpolationFloat + Copy,
 {
     /// Create a new fast B-spline evaluator from a reference
     ///
@@ -694,21 +665,7 @@ where
 /// A new fast evaluator
 pub fn make_fast_bspline_evaluator<T>(spline: &BSpline<T>) -> FastBSplineEvaluator<T>
 where
-    T: Float
-        + FromPrimitive
-        + Debug
-        + Display
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + AddAssign
-        + SubAssign
-        + MulAssign
-        + DivAssign
-        + RemAssign
-        + Zero
-        + Copy,
+    T: InterpolationFloat + Copy,
 {
     FastBSplineEvaluator::new(spline)
 }
@@ -726,21 +683,7 @@ where
 /// A new fast evaluator
 pub fn make_fast_bspline_evaluator_owned<T>(spline: BSpline<T>) -> FastBSplineEvaluator<T>
 where
-    T: Float
-        + FromPrimitive
-        + Debug
-        + Display
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + AddAssign
-        + SubAssign
-        + MulAssign
-        + DivAssign
-        + RemAssign
-        + Zero
-        + Copy,
+    T: InterpolationFloat + Copy,
 {
     FastBSplineEvaluator::from_owned(spline)
 }
@@ -760,21 +703,7 @@ pub fn make_cached_fast_bspline_evaluator<T>(
     cache: BSplineCache<T>,
 ) -> FastBSplineEvaluator<T>
 where
-    T: Float
-        + FromPrimitive
-        + Debug
-        + Display
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + AddAssign
-        + SubAssign
-        + MulAssign
-        + DivAssign
-        + RemAssign
-        + Zero
-        + Copy,
+    T: InterpolationFloat + Copy,
 {
     FastBSplineEvaluator::with_cache(spline, cache)
 }
@@ -786,21 +715,7 @@ where
 #[derive(Debug)]
 pub struct TensorProductFastEvaluator<T>
 where
-    T: Float
-        + FromPrimitive
-        + Debug
-        + Display
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + AddAssign
-        + SubAssign
-        + MulAssign
-        + DivAssign
-        + RemAssign
-        + Zero
-        + Copy,
+    T: InterpolationFloat + Copy,
 {
     /// Fast evaluators for each dimension
     evaluators: Vec<FastBSplineEvaluator<T>>,
@@ -812,21 +727,7 @@ where
 
 impl<T> TensorProductFastEvaluator<T>
 where
-    T: Float
-        + FromPrimitive
-        + Debug
-        + Display
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + AddAssign
-        + SubAssign
-        + MulAssign
-        + DivAssign
-        + RemAssign
-        + Zero
-        + Copy,
+    T: InterpolationFloat + Copy,
 {
     /// Create a new tensor product fast evaluator
     ///

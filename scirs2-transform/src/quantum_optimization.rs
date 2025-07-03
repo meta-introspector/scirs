@@ -7,8 +7,9 @@ use crate::auto_feature_engineering::{TransformationConfig, TransformationType};
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2, ArrayView2};
 use rand::Rng;
-use scirs2_core::validation::{check_not_empty};
 use scirs2_core::parallel_ops::*;
+use scirs2_core::simd_ops::SimdUnifiedOps;
+use scirs2_core::validation::check_not_empty;
 use std::collections::HashMap;
 
 /// Quantum-inspired particle for optimization
@@ -109,7 +110,8 @@ impl QuantumInspiredOptimizer {
         for iteration in 0..self.max_iterations {
             // Update quantum states and evaluate fitness
             // First, collect quantum positions and fitness values without borrowing conflicts
-            let quantum_data: Vec<(Array1<f64>, f64)> = self.particles
+            let quantum_data: Vec<(Array1<f64>, f64)> = self
+                .particles
                 .iter()
                 .map(|particle| {
                     let quantum_position = self.apply_quantum_superposition(particle)?;
@@ -119,7 +121,9 @@ impl QuantumInspiredOptimizer {
                 .collect::<Result<Vec<_>>>()?;
 
             // Now update particles with the collected data
-            for (particle, (quantum_position, fitness)) in self.particles.iter_mut().zip(quantum_data.iter()) {
+            for (particle, (quantum_position, fitness)) in
+                self.particles.iter_mut().zip(quantum_data.iter())
+            {
                 // Update personal best
                 if *fitness > particle.best_fitness {
                     particle.best_fitness = *fitness;
@@ -211,7 +215,11 @@ impl QuantumInspiredOptimizer {
             // Collapse superposition with probability
             for i in 0..particle.superposition.len() {
                 if rng.random_range(0.0..1.0) < 0.3 {
-                    particle.superposition[i] = if rng.random_range(0.0..1.0) < 0.5 { 1.0 } else { 0.0 };
+                    particle.superposition[i] = if rng.random_range(0.0..1.0) < 0.5 {
+                        1.0
+                    } else {
+                        0.0
+                    };
                 }
             }
 
@@ -248,8 +256,10 @@ pub struct QuantumTransformationOptimizer {
     /// Quantum optimizer for parameter tuning
     quantum_optimizer: QuantumInspiredOptimizer,
     /// Available transformation types
+    #[allow(dead_code)]
     transformation_types: Vec<TransformationType>,
     /// Parameter mappings for each transformation
+    #[allow(dead_code)]
     parameter_mappings: HashMap<TransformationType, Vec<String>>,
 }
 
@@ -306,7 +316,7 @@ impl QuantumTransformationOptimizer {
         _target_metric: f64,
     ) -> Result<Vec<TransformationConfig>> {
         check_not_empty(data, "data")?;
-        
+
         // Check finite values
         for &val in data.iter() {
             if !val.is_finite() {
@@ -393,6 +403,7 @@ impl QuantumTransformationOptimizer {
     }
 
     /// Convert parameter vector to transformation configurations
+    #[allow(dead_code)]
     fn params_to_configs(&self, params: &Array1<f64>) -> Vec<TransformationConfig> {
         Self::static_params_to_configs(params)
     }
@@ -415,6 +426,7 @@ impl QuantumTransformationOptimizer {
     }
 
     /// Evaluate pipeline performance (simplified simulation)
+    #[allow(dead_code)]
     fn evaluate_pipeline_performance(
         &self,
         data: &ArrayView2<f64>,
@@ -455,6 +467,7 @@ impl QuantumTransformationOptimizer {
     }
 
     /// Compute efficiency score for transformation pipeline
+    #[allow(dead_code)]
     fn compute_efficiency_score(&self, configs: &[TransformationConfig]) -> f64 {
         Self::static_compute_efficiency_score(configs)
     }
@@ -491,6 +504,7 @@ impl QuantumTransformationOptimizer {
     }
 
     /// Compute robustness score for transformation pipeline
+    #[allow(dead_code)]
     fn compute_robustness_score(&self, configs: &[TransformationConfig]) -> f64 {
         Self::static_compute_robustness_score(configs)
     }
@@ -503,6 +517,7 @@ pub struct QuantumHyperparameterTuner {
     /// Quantum optimizer for parameter search
     optimizer: QuantumInspiredOptimizer,
     /// Parameter bounds
+    #[allow(dead_code)]
     parameter_bounds: Vec<(f64, f64)>,
 }
 
@@ -541,7 +556,7 @@ impl QuantumHyperparameterTuner {
     ) -> Result<HashMap<String, f64>> {
         check_not_empty(data, "data")?;
         check_not_empty(validation_data, "validation_data")?;
-        
+
         // Check finite values in data
         for &val in data.iter() {
             if !val.is_finite() {
@@ -550,7 +565,7 @@ impl QuantumHyperparameterTuner {
                 ));
             }
         }
-        
+
         // Check finite values in validation_data
         for &val in validation_data.iter() {
             if !val.is_finite() {
@@ -669,6 +684,7 @@ pub struct UltraThinkQuantumOptimizer {
     /// Real-time performance metrics
     performance_metrics: UltraThinkQuantumMetrics,
     /// Memory pool for efficient allocations
+    #[allow(dead_code)]
     memory_pool: Vec<Array1<f64>>,
 }
 
@@ -684,6 +700,7 @@ pub struct UltraThinkQuantumParams {
     /// Phase evolution speed (adaptive)
     phase_speed: f64,
     /// Quantum coherence time
+    #[allow(dead_code)]
     coherence_time: f64,
     /// Tunneling probability
     tunneling_probability: f64,
@@ -833,7 +850,7 @@ impl UltraThinkQuantumOptimizer {
         // Extract needed data to avoid borrowing conflicts
         let bounds = self.bounds.clone();
         let phase_speed = self.adaptive_params.phase_speed;
-        
+
         let fitness_results: Vec<f64> = self
             .particles
             .par_chunks_mut(chunk_size)
@@ -893,6 +910,7 @@ impl UltraThinkQuantumOptimizer {
         let dimension = self.global_best_position.len();
 
         // ✅ ULTRATHINK MODE: Vectorized velocity and position updates
+        let num_particles = self.particles.len();
         for (i, particle) in self.particles.iter_mut().enumerate() {
             // Copy to buffers for SIMD operations
             for j in 0..dimension {
@@ -908,11 +926,11 @@ impl UltraThinkQuantumOptimizer {
             let mut rng = rand::rng();
             let c1 = 2.0 * particle.entanglement; // Cognitive coefficient
             let c2 = 2.0 * (1.0 - particle.entanglement); // Social coefficient
-            let w = 0.9 - 0.5 * (i as f64 / self.particles.len() as f64); // Inertia weight
+            let w = 0.9 - 0.5 * (i as f64 / num_particles as f64); // Inertia weight
 
             for j in 0..dimension {
-                let r1: f64 = rng.gen();
-                let r2: f64 = rng.gen();
+                let r1: f64 = rng.random();
+                let r2: f64 = rng.random();
 
                 // ✅ ULTRATHINK MODE: Quantum-enhanced velocity update
                 let quantum_factor = (particle.phase.cos() * particle.superposition[j]).abs();
@@ -928,7 +946,8 @@ impl UltraThinkQuantumOptimizer {
             }
 
             // ✅ ULTRATHINK OPTIMIZATION: SIMD position update
-            f64::simd_add_inplace(&mut particle.position.view_mut(), &particle.velocity.view())?;
+            let new_position = f64::simd_add(&particle.position.view(), &particle.velocity.view());
+            particle.position = new_position;
 
             // ✅ ULTRATHINK OPTIMIZATION: Vectorized boundary enforcement
             for j in 0..dimension {
@@ -966,6 +985,7 @@ impl UltraThinkQuantumOptimizer {
     }
 
     /// ✅ ULTRATHINK MODE: Ultra-fast quantum superposition
+    #[allow(dead_code)]
     fn apply_quantum_superposition_ultra(&self, particle: &QuantumParticle) -> Result<Array1<f64>> {
         let mut quantum_position = particle.position.clone();
 
@@ -1003,7 +1023,11 @@ impl UltraThinkQuantumOptimizer {
 
             for i in 0..particle.superposition.len() {
                 if rng.random_range(0.0..1.0) < collapse_strength {
-                    particle.superposition[i] = if rng.random_range(0.0..1.0) < 0.5 { 1.0 } else { 0.0 };
+                    particle.superposition[i] = if rng.random_range(0.0..1.0) < 0.5 {
+                        1.0
+                    } else {
+                        0.0
+                    };
                 }
             }
 

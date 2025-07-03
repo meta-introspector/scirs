@@ -86,14 +86,17 @@ fn main() -> Result<()> {
     println!("\nFinal validation MSE: {:.6}", val_mse);
     println!("\nAdvanced callbacks example completed successfully!");
     Ok(())
+}
+
 // Train with early stopping and validation
 fn train_with_early_stopping(
+    rng: &mut SmallRng,
     x_train: &Array2<f32>,
     y_train: &Array2<f32>,
     x_val: &Array2<f32>,
     y_val: &Array2<f32>,
 ) -> Result<Sequential<f32>> {
-    let mut model = create_regression_model(x_train.ncols(), rng)?;
+    let mut model = create_regression_model(x_train.ncols(), rng)?
     println!("Created model with {} layers", model.num_layers());
     // Setup loss function and optimizer
     let loss_fn = MeanSquaredError::new();
@@ -144,6 +147,10 @@ fn train_with_early_stopping(
             );
         if stop_training {
             break;
+        }
+    }
     let elapsed = start_time.elapsed();
     println!("Training completed in {:.2}s", elapsed.as_secs_f32());
     println!("Best validation MSE: {:.6}", best_val_loss);
+    Ok(model)
+}

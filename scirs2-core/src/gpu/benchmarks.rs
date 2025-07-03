@@ -249,7 +249,7 @@ impl ComputePlatform {
     pub fn name(&self) -> String {
         match self {
             ComputePlatform::Cpu => "CPU".to_string(),
-            ComputePlatform::Gpu(backend) => format!("GPU ({})", backend),
+            ComputePlatform::Gpu(backend) => format!("GPU ({backend})",),
         }
     }
 }
@@ -781,9 +781,15 @@ impl BenchmarkReport {
                     .count();
 
                 let recommendation = if gpu_wins > category_comps.len() / 2 {
-                    format!("GPU recommended for most {} operations", category.name())
+                    format!(
+                        "GPU recommended for most {name} operations",
+                        name = category.name()
+                    )
                 } else {
-                    format!("CPU competitive for {} operations", category.name())
+                    format!(
+                        "CPU competitive for {name} operations",
+                        name = category.name()
+                    )
                 };
 
                 recommendations.insert(category, recommendation);

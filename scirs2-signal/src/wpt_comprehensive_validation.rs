@@ -1580,7 +1580,7 @@ fn test_signal_type_consistency(config: &ComprehensiveWptValidationConfig) -> Si
         .collect();
 
     // 4. Test with noise signal (stochastic)
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let noise_signal: Vec<f64> = (0..signal_length)
         .map(|_| rng.random_range(-1.0..1.0))
         .collect();

@@ -496,7 +496,7 @@ pub fn laplacian<N, E, Ix>(
     laplacian_type: LaplacianType,
 ) -> Result<Array2<f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -599,7 +599,7 @@ pub fn laplacian_digraph<N, E, Ix>(
     laplacian_type: LaplacianType,
 ) -> Result<Array2<f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -705,7 +705,7 @@ pub fn algebraic_connectivity<N, E, Ix>(
     laplacian_type: LaplacianType,
 ) -> Result<f64>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -743,7 +743,7 @@ where
 /// * The spectral radius as a f64
 pub fn spectral_radius<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<f64>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -822,7 +822,7 @@ where
 /// * The normalized cut value as a f64
 pub fn normalized_cut<N, E, Ix>(graph: &Graph<N, E, Ix>, partition: &[bool]) -> Result<f64>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -900,7 +900,7 @@ pub fn spectral_clustering<N, E, Ix>(
     laplacian_type: LaplacianType,
 ) -> Result<Vec<usize>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -958,7 +958,7 @@ pub fn parallel_spectral_clustering<N, E, Ix>(
     laplacian_type: LaplacianType,
 ) -> Result<Vec<usize>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -1006,7 +1006,7 @@ pub fn parallel_laplacian<N, E, Ix>(
     laplacian_type: LaplacianType,
 ) -> Result<Array2<f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {

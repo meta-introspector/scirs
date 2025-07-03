@@ -537,7 +537,7 @@ impl StreamingPCA {
             )));
         }
 
-        let batch_size = x.shape()[0];
+        let _batch_size = x.shape()[0];
 
         // Update mean using exponential moving average
         for sample in x.rows() {
@@ -662,6 +662,7 @@ pub struct StreamingOutlierDetector {
     method: OutlierMethod,
 }
 
+/// Methods for outlier detection in streaming data
 #[derive(Debug, Clone)]
 pub enum OutlierMethod {
     /// Z-score based detection

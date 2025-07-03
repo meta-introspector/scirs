@@ -8,13 +8,13 @@
 use crate::error::{StatsError, StatsResult};
 use crate::error_standardization::ErrorMessages;
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
-use num_traits::{Float, NumCast, Zero, One, Signed};
+use num_traits::{Float, NumCast, One, Signed, Zero};
 use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, VecDeque, BTreeMap};
-use std::sync::{Arc, RwLock, Mutex};
-use std::time::{Duration, Instant, SystemTime};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::fmt::Debug;
+use std::sync::{Arc, Mutex, RwLock};
+use std::time::{Duration, Instant, SystemTime};
 
 /// Ultra-Think Property Testing Configuration
 #[derive(Debug, Clone)]
@@ -73,28 +73,28 @@ impl Default for UltraThinkPropertyConfig {
 /// Testing thoroughness levels
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TestingThoroughnessLevel {
-    Basic,        // Essential properties only
-    Standard,     // Common mathematical properties
+    Basic,         // Essential properties only
+    Standard,      // Common mathematical properties
     Comprehensive, // Extensive property coverage
-    Exhaustive,   // Maximum possible coverage
+    Exhaustive,    // Maximum possible coverage
 }
 
 /// Property generation strategies
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PropertyGenerationStrategy {
-    Predefined,   // Use predefined property sets
-    Heuristic,    // Generate based on heuristics
-    Intelligent,  // ML-guided property generation
-    Adaptive,     // Adapt based on test results
+    Predefined,  // Use predefined property sets
+    Heuristic,   // Generate based on heuristics
+    Intelligent, // ML-guided property generation
+    Adaptive,    // Adapt based on test results
 }
 
 /// Edge case generation strategies
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum EdgeCaseGenerationStrategy {
-    Manual,       // Manually defined edge cases
-    Systematic,   // Systematic boundary exploration
-    Adaptive,     // Adaptive based on failures
-    AIGuided,     // AI-guided edge case discovery
+    Manual,     // Manually defined edge cases
+    Systematic, // Systematic boundary exploration
+    Adaptive,   // Adaptive based on failures
+    AIGuided,   // AI-guided edge case discovery
 }
 
 /// Numerical tolerance configuration
@@ -134,30 +134,18 @@ impl UltraThinkPropertyTester {
     /// Create new ultra-think property tester
     pub fn new(config: UltraThinkPropertyConfig) -> Self {
         Self {
-            mathematical_properties: Arc::new(RwLock::new(
-                MathematicalPropertyRegistry::new(&config)
-            )),
-            statistical_properties: Arc::new(RwLock::new(
-                StatisticalPropertyRegistry::new(&config)
-            )),
-            numerical_analyzer: Arc::new(RwLock::new(
-                NumericalStabilityAnalyzer::new(&config)
-            )),
-            edge_case_generator: Arc::new(RwLock::new(
-                IntelligentEdgeCaseGenerator::new(&config)
-            )),
-            fuzzing_engine: Arc::new(RwLock::new(
-                AdvancedFuzzingEngine::new(&config)
-            )),
-            regression_detector: Arc::new(RwLock::new(
-                RegressionDetector::new(&config)
-            )),
-            test_executor: Arc::new(RwLock::new(
-                PropertyTestExecutor::new(&config)
-            )),
-            result_analyzer: Arc::new(RwLock::new(
-                PropertyTestAnalyzer::new()
-            )),
+            mathematical_properties: Arc::new(RwLock::new(MathematicalPropertyRegistry::new(
+                &config,
+            ))),
+            statistical_properties: Arc::new(RwLock::new(StatisticalPropertyRegistry::new(
+                &config,
+            ))),
+            numerical_analyzer: Arc::new(RwLock::new(NumericalStabilityAnalyzer::new(&config))),
+            edge_case_generator: Arc::new(RwLock::new(IntelligentEdgeCaseGenerator::new(&config))),
+            fuzzing_engine: Arc::new(RwLock::new(AdvancedFuzzingEngine::new(&config))),
+            regression_detector: Arc::new(RwLock::new(RegressionDetector::new(&config))),
+            test_executor: Arc::new(RwLock::new(PropertyTestExecutor::new(&config))),
+            result_analyzer: Arc::new(RwLock::new(PropertyTestAnalyzer::new())),
             config,
         }
     }
@@ -166,15 +154,18 @@ impl UltraThinkPropertyTester {
     pub fn test_mathematical_invariants<F>(
         &self,
         function_name: &str,
-        test_data_generator: TestDataGenerator<F>,
+        test_data_generator: Box<dyn TestDataGenerator<F>>,
     ) -> StatsResult<MathematicalInvariantTestResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let start_time = Instant::now();
-        
+
         // Get mathematical properties for this function
-        let properties = self.mathematical_properties.read().unwrap()
+        let properties = self
+            .mathematical_properties
+            .read()
+            .unwrap()
             .get_properties_for_function(function_name)?;
 
         let mut test_results = Vec::new();
@@ -182,10 +173,8 @@ impl UltraThinkPropertyTester {
         let mut passed_tests = 0;
 
         for property in properties {
-            let property_result = self.test_single_mathematical_property(
-                &property,
-                &test_data_generator,
-            )?;
+            let property_result =
+                self.test_single_mathematical_property(&property, &test_data_generator)?;
 
             total_tests += property_result.test_iterations;
             passed_tests += property_result.passed_iterations;
@@ -216,20 +205,21 @@ impl UltraThinkPropertyTester {
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let start_time = Instant::now();
-        
+
         // Get statistical properties for this operation
-        let properties = self.statistical_properties.read().unwrap()
+        let properties = self
+            .statistical_properties
+            .read()
+            .unwrap()
             .get_properties_for_operation(&operation_type)?;
 
+        let properties_count = properties.len();
         let mut test_results = Vec::new();
 
-        for property in properties {
+        for property in &properties {
             for distribution in &test_distributions {
-                let property_result = self.test_statistical_property(
-                    &property,
-                    distribution,
-                    &operation_type,
-                )?;
+                let property_result =
+                    self.test_statistical_property(property, distribution, &operation_type)?;
                 test_results.push(property_result);
             }
         }
@@ -239,8 +229,8 @@ impl UltraThinkPropertyTester {
         Ok(StatisticalPropertyTestResult {
             operation_type,
             distributions_tested: test_distributions.len(),
-            properties_tested: properties.len(),
-            property_results: test_results,
+            properties_tested: properties_count,
+            property_results: test_results.clone(),
             test_duration,
             convergence_analysis: self.analyze_convergence_properties(&test_results),
             distributional_robustness: self.analyze_distributional_robustness(&test_results),
@@ -257,11 +247,14 @@ impl UltraThinkPropertyTester {
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let start_time = Instant::now();
-        
+
         let mut condition_results = Vec::new();
 
         for condition in stability_conditions {
-            let condition_result = self.numerical_analyzer.read().unwrap()
+            let condition_result = self
+                .numerical_analyzer
+                .read()
+                .unwrap()
                 .test_stability_condition::<F>(function_name, &condition)?;
             condition_results.push(condition_result);
         }
@@ -270,7 +263,7 @@ impl UltraThinkPropertyTester {
 
         Ok(NumericalStabilityTestResult {
             function_name: function_name.to_string(),
-            conditions_tested: condition_results,
+            conditions_tested: condition_results.clone(),
             test_duration,
             overall_stability_score: self.calculate_overall_stability_score(&condition_results),
             stability_recommendations: self.generate_stability_recommendations(&condition_results),
@@ -287,18 +280,18 @@ impl UltraThinkPropertyTester {
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let start_time = Instant::now();
-        
+
         // Generate intelligent edge cases
-        let edge_cases = self.edge_case_generator.read().unwrap()
+        let edge_cases = self
+            .edge_case_generator
+            .read()
+            .unwrap()
             .generate_edge_cases::<F>(function_name, &input_constraints)?;
 
         let mut edge_case_results = Vec::new();
 
         for edge_case in edge_cases {
-            let edge_case_result = self.test_single_edge_case(
-                function_name,
-                &edge_case,
-            )?;
+            let edge_case_result = self.test_single_edge_case(function_name, &edge_case)?;
             edge_case_results.push(edge_case_result);
         }
 
@@ -307,7 +300,7 @@ impl UltraThinkPropertyTester {
         Ok(EdgeCaseTestResult {
             function_name: function_name.to_string(),
             edge_cases_tested: edge_case_results.len(),
-            edge_case_results,
+            edge_case_results: edge_case_results.clone(),
             test_duration,
             critical_failures: self.identify_critical_failures(&edge_case_results),
             boundary_behavior_analysis: self.analyze_boundary_behavior(&edge_case_results),
@@ -324,8 +317,11 @@ impl UltraThinkPropertyTester {
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let start_time = Instant::now();
-        
-        let fuzzing_result = self.fuzzing_engine.read().unwrap()
+
+        let fuzzing_result = self
+            .fuzzing_engine
+            .read()
+            .unwrap()
             .execute_fuzzing_campaign::<F>(function_name, &fuzzing_config)?;
 
         let test_duration = start_time.elapsed();
@@ -352,11 +348,9 @@ impl UltraThinkPropertyTester {
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let start_time = Instant::now();
-        
-        let performance_tests = self.generate_performance_property_tests(
-            function_name,
-            &performance_requirements,
-        )?;
+
+        let performance_tests =
+            self.generate_performance_property_tests(function_name, &performance_requirements)?;
 
         let mut performance_results = Vec::new();
 
@@ -381,21 +375,19 @@ impl UltraThinkPropertyTester {
     pub fn test_cross_implementation_consistency<F>(
         &self,
         function_name: &str,
-        implementations: Vec<Implementation<F>>,
+        implementations: Vec<Box<dyn Implementation<F>>>,
         test_cases: Vec<TestCase<F>>,
     ) -> StatsResult<CrossImplementationTestResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let start_time = Instant::now();
-        
+
         let mut consistency_results = Vec::new();
 
         for test_case in test_cases {
-            let consistency_result = self.test_implementation_consistency(
-                &implementations,
-                &test_case,
-            )?;
+            let consistency_result =
+                self.test_implementation_consistency(&implementations, &test_case)?;
             consistency_results.push(consistency_result);
         }
 
@@ -405,7 +397,7 @@ impl UltraThinkPropertyTester {
             function_name: function_name.to_string(),
             implementations_tested: implementations.len(),
             test_cases_executed: consistency_results.len(),
-            consistency_results,
+            consistency_results: consistency_results.clone(),
             test_duration,
             consensus_analysis: self.analyze_implementation_consensus(&consistency_results),
             outlier_detection: self.detect_implementation_outliers(&consistency_results),
@@ -422,7 +414,7 @@ impl UltraThinkPropertyTester {
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let start_time = Instant::now();
-        
+
         let mut results = ComprehensivePropertyTestResult {
             function_name: function_name.to_string(),
             mathematical_invariants: None,
@@ -440,64 +432,55 @@ impl UltraThinkPropertyTester {
 
         // Mathematical invariants
         if self.config.enable_mathematical_invariants {
-            results.mathematical_invariants = Some(
-                self.test_mathematical_invariants(function_name, comprehensive_config.data_generator)?
-            );
+            results.mathematical_invariants = Some(self.test_mathematical_invariants(
+                function_name,
+                comprehensive_config.data_generator,
+            )?);
         }
 
         // Statistical properties
         if self.config.enable_statistical_properties {
-            results.statistical_properties = Some(
-                self.test_statistical_properties(
-                    comprehensive_config.operation_type,
-                    comprehensive_config.test_distributions,
-                )?
-            );
+            results.statistical_properties = Some(self.test_statistical_properties(
+                comprehensive_config.operation_type,
+                comprehensive_config.test_distributions,
+            )?);
         }
 
         // Numerical stability
         if self.config.enable_numerical_stability {
-            results.numerical_stability = Some(
-                self.test_numerical_stability(
-                    function_name,
-                    comprehensive_config.stability_conditions,
-                )?
-            );
+            results.numerical_stability = Some(self.test_numerical_stability(
+                function_name,
+                comprehensive_config.stability_conditions,
+            )?);
         }
 
         // Edge case testing
         if self.config.enable_edge_case_generation {
-            results.edge_case_testing = Some(
-                self.test_edge_cases(function_name, comprehensive_config.input_constraints)?
-            );
+            results.edge_case_testing =
+                Some(self.test_edge_cases(function_name, comprehensive_config.input_constraints)?);
         }
 
         // Fuzzing
         if self.config.enable_fuzzing {
-            results.fuzzing_results = Some(
-                self.fuzz_test(function_name, comprehensive_config.fuzzing_config)?
-            );
+            results.fuzzing_results =
+                Some(self.fuzz_test(function_name, comprehensive_config.fuzzing_config)?);
         }
 
         // Performance properties
         if self.config.enable_performance_properties {
-            results.performance_properties = Some(
-                self.test_performance_properties(
-                    function_name,
-                    comprehensive_config.performance_requirements,
-                )?
-            );
+            results.performance_properties = Some(self.test_performance_properties(
+                function_name,
+                comprehensive_config.performance_requirements,
+            )?);
         }
 
         // Cross-implementation consistency
         if self.config.enable_cross_implementation {
-            results.cross_implementation = Some(
-                self.test_cross_implementation_consistency(
-                    function_name,
-                    comprehensive_config.implementations,
-                    comprehensive_config.test_cases,
-                )?
-            );
+            results.cross_implementation = Some(self.test_cross_implementation_consistency(
+                function_name,
+                comprehensive_config.implementations,
+                comprehensive_config.test_cases,
+            )?);
         }
 
         results.test_duration = start_time.elapsed();
@@ -518,8 +501,11 @@ impl UltraThinkPropertyTester {
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        self.regression_detector.read().unwrap()
-            .detect_regressions(function_name, baseline_results, current_results)
+        self.regression_detector.read().unwrap().detect_regressions(
+            function_name,
+            baseline_results,
+            current_results,
+        )
     }
 
     // Helper methods for test execution and analysis
@@ -527,18 +513,19 @@ impl UltraThinkPropertyTester {
     fn test_single_mathematical_property<F>(
         &self,
         property: &MathematicalProperty,
-        test_data_generator: &TestDataGenerator<F>,
+        test_data_generator: &dyn TestDataGenerator<F>,
     ) -> StatsResult<PropertyTestResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut passed_iterations = 0;
-        let test_iterations = std::cmp::min(self.config.max_iterations, property.required_iterations);
+        let test_iterations =
+            std::cmp::min(self.config.max_iterations, property.required_iterations);
 
         for _ in 0..test_iterations {
             let test_data = test_data_generator.generate()?;
             let property_holds = self.check_mathematical_property(property, &test_data)?;
-            
+
             if property_holds {
                 passed_iterations += 1;
             } else if property.is_critical {
@@ -566,33 +553,15 @@ impl UltraThinkPropertyTester {
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         match &property.property_type {
-            MathematicalPropertyType::Commutativity => {
-                self.check_commutativity(test_data)
-            }
-            MathematicalPropertyType::Associativity => {
-                self.check_associativity(test_data)
-            }
-            MathematicalPropertyType::Distributivity => {
-                self.check_distributivity(test_data)
-            }
-            MathematicalPropertyType::Identity => {
-                self.check_identity_property(test_data)
-            }
-            MathematicalPropertyType::Inverse => {
-                self.check_inverse_property(test_data)
-            }
-            MathematicalPropertyType::Monotonicity => {
-                self.check_monotonicity(test_data)
-            }
-            MathematicalPropertyType::Linearity => {
-                self.check_linearity(test_data)
-            }
-            MathematicalPropertyType::Idempotence => {
-                self.check_idempotence(test_data)
-            }
-            MathematicalPropertyType::Custom(checker) => {
-                checker(test_data)
-            }
+            MathematicalPropertyType::Commutativity => self.check_commutativity(test_data),
+            MathematicalPropertyType::Associativity => self.check_associativity(test_data),
+            MathematicalPropertyType::Distributivity => self.check_distributivity(test_data),
+            MathematicalPropertyType::Identity => self.check_identity_property(test_data),
+            MathematicalPropertyType::Inverse => self.check_inverse_property(test_data),
+            MathematicalPropertyType::Monotonicity => self.check_monotonicity(test_data),
+            MathematicalPropertyType::Linearity => self.check_linearity(test_data),
+            MathematicalPropertyType::Idempotence => self.check_idempotence(test_data),
+            MathematicalPropertyType::Custom(checker) => checker(test_data),
         }
     }
 
@@ -602,11 +571,13 @@ impl UltraThinkPropertyTester {
     {
         // Example: For operations like addition, a + b = b + a
         match test_data {
-            TestData::TwoArrays(a, b) => {
+            TestData::TwoArrays(_a, _b) => {
                 // Placeholder - would implement actual commutativity check
                 Ok(true)
             }
-            _ => Err(StatsError::dimension_mismatch("Invalid test data for commutativity".to_string())),
+            _ => Err(StatsError::dimension_mismatch(
+                "Invalid test data for commutativity".to_string(),
+            )),
         }
     }
 
@@ -616,15 +587,17 @@ impl UltraThinkPropertyTester {
     {
         // Example: For operations like addition, (a + b) + c = a + (b + c)
         match test_data {
-            TestData::ThreeArrays(a, b, c) => {
+            TestData::ThreeArrays(_a, _b, _c) => {
                 // Placeholder - would implement actual associativity check
                 Ok(true)
             }
-            _ => Err(StatsError::dimension_mismatch("Invalid test data for associativity".to_string())),
+            _ => Err(StatsError::dimension_mismatch(
+                "Invalid test data for associativity".to_string(),
+            )),
         }
     }
 
-    fn check_distributivity<F>(&self, test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_distributivity<F>(&self, _test_data: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
@@ -632,7 +605,7 @@ impl UltraThinkPropertyTester {
         Ok(true) // Placeholder
     }
 
-    fn check_identity_property<F>(&self, test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_identity_property<F>(&self, _test_data: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
@@ -640,7 +613,7 @@ impl UltraThinkPropertyTester {
         Ok(true) // Placeholder
     }
 
-    fn check_inverse_property<F>(&self, test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_inverse_property<F>(&self, _test_data: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
@@ -648,7 +621,7 @@ impl UltraThinkPropertyTester {
         Ok(true) // Placeholder
     }
 
-    fn check_monotonicity<F>(&self, test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_monotonicity<F>(&self, _test_data: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
@@ -656,7 +629,7 @@ impl UltraThinkPropertyTester {
         Ok(true) // Placeholder
     }
 
-    fn check_linearity<F>(&self, test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_linearity<F>(&self, _test_data: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
@@ -664,7 +637,7 @@ impl UltraThinkPropertyTester {
         Ok(true) // Placeholder
     }
 
-    fn check_idempotence<F>(&self, test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_idempotence<F>(&self, _test_data: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
@@ -676,7 +649,7 @@ impl UltraThinkPropertyTester {
         &self,
         property: &StatisticalProperty,
         distribution: &TestDistribution<F>,
-        operation_type: &StatisticalOperationType,
+        _operation_type: &StatisticalOperationType,
     ) -> StatsResult<StatisticalPropertyResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static,
@@ -695,7 +668,7 @@ impl UltraThinkPropertyTester {
 
     fn test_single_edge_case<F>(
         &self,
-        function_name: &str,
+        _function_name: &str,
         edge_case: &EdgeCase<F>,
     ) -> StatsResult<EdgeCaseResult>
     where
@@ -713,7 +686,7 @@ impl UltraThinkPropertyTester {
 
     fn test_implementation_consistency<F>(
         &self,
-        implementations: &[Implementation<F>],
+        _implementations: &[Box<dyn Implementation<F>>],
         test_case: &TestCase<F>,
     ) -> StatsResult<ConsistencyResult>
     where
@@ -735,7 +708,10 @@ impl UltraThinkPropertyTester {
         0.95 // Placeholder
     }
 
-    fn analyze_convergence_properties(&self, _results: &[StatisticalPropertyResult]) -> ConvergenceAnalysis {
+    fn analyze_convergence_properties(
+        &self,
+        _results: &[StatisticalPropertyResult],
+    ) -> ConvergenceAnalysis {
         ConvergenceAnalysis {
             convergence_rate: 0.95,
             asymptotic_behavior: AsymptoticBehavior::Stable,
@@ -743,7 +719,10 @@ impl UltraThinkPropertyTester {
         }
     }
 
-    fn analyze_distributional_robustness(&self, _results: &[StatisticalPropertyResult]) -> DistributionalRobustness {
+    fn analyze_distributional_robustness(
+        &self,
+        _results: &[StatisticalPropertyResult],
+    ) -> DistributionalRobustness {
         DistributionalRobustness {
             robustness_score: 0.90,
             sensitive_distributions: Vec::new(),
@@ -755,7 +734,10 @@ impl UltraThinkPropertyTester {
         0.85 // Placeholder
     }
 
-    fn generate_stability_recommendations(&self, _results: &[StabilityConditionResult]) -> Vec<StabilityRecommendation> {
+    fn generate_stability_recommendations(
+        &self,
+        _results: &[StabilityConditionResult],
+    ) -> Vec<StabilityRecommendation> {
         vec![] // Placeholder
     }
 
@@ -782,7 +764,10 @@ impl UltraThinkPropertyTester {
         Ok(vec![]) // Placeholder
     }
 
-    fn execute_performance_property_test(&self, _test: &PerformancePropertyTest) -> StatsResult<PerformanceTestResult> {
+    fn execute_performance_property_test(
+        &self,
+        _test: &PerformancePropertyTest,
+    ) -> StatsResult<PerformanceTestResult> {
         Ok(PerformanceTestResult {
             test_name: "placeholder".to_string(),
             execution_time: Duration::from_millis(10),
@@ -800,7 +785,10 @@ impl UltraThinkPropertyTester {
         }
     }
 
-    fn verify_computational_complexity(&self, _results: &[PerformanceTestResult]) -> ComplexityVerification {
+    fn verify_computational_complexity(
+        &self,
+        _results: &[PerformanceTestResult],
+    ) -> ComplexityVerification {
         ComplexityVerification {
             theoretical_complexity: ComplexityClass::Linear,
             empirical_complexity: ComplexityClass::Linear,
@@ -809,7 +797,10 @@ impl UltraThinkPropertyTester {
         }
     }
 
-    fn analyze_implementation_consensus(&self, _results: &[ConsistencyResult]) -> ConsensusAnalysis {
+    fn analyze_implementation_consensus(
+        &self,
+        _results: &[ConsistencyResult],
+    ) -> ConsensusAnalysis {
         ConsensusAnalysis {
             consensus_strength: 0.95,
             agreement_threshold: 0.99,
@@ -829,11 +820,17 @@ impl UltraThinkPropertyTester {
         0.90 // Placeholder
     }
 
-    fn identify_critical_issues(&self, _results: &ComprehensivePropertyTestResult) -> Vec<CriticalIssue> {
+    fn identify_critical_issues(
+        &self,
+        _results: &ComprehensivePropertyTestResult,
+    ) -> Vec<CriticalIssue> {
         vec![] // Placeholder
     }
 
-    fn generate_comprehensive_recommendations(&self, _results: &ComprehensivePropertyTestResult) -> Vec<TestingRecommendation> {
+    fn generate_comprehensive_recommendations(
+        &self,
+        _results: &ComprehensivePropertyTestResult,
+    ) -> Vec<TestingRecommendation> {
         vec![] // Placeholder
     }
 }
@@ -943,12 +940,12 @@ pub struct NumericalStabilityCondition {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum StabilityConditionType {
-    SmallNumbers,      // Near zero
-    LargeNumbers,      // Near infinity
-    IllConditioned,    // High condition number
-    NearSingular,      // Nearly singular matrices
-    ExtremeRatios,     // Very large or small ratios
-    MixedPrecision,    // Mixed precision scenarios
+    SmallNumbers,         // Near zero
+    LargeNumbers,         // Near infinity
+    IllConditioned,       // High condition number
+    NearSingular,         // Nearly singular matrices
+    ExtremeRatios,        // Very large or small ratios
+    MixedPrecision,       // Mixed precision scenarios
     IterativeConvergence, // Convergence properties
 }
 
@@ -1071,14 +1068,14 @@ pub struct TestCase<F> {
 
 #[derive(Debug, Clone)]
 pub struct ComprehensiveTestConfig<F> {
-    pub data_generator: TestDataGenerator<F>,
+    pub data_generator: Box<dyn TestDataGenerator<F>>,
     pub operation_type: StatisticalOperationType,
     pub test_distributions: Vec<TestDistribution<F>>,
     pub stability_conditions: Vec<NumericalStabilityCondition>,
     pub input_constraints: InputConstraints<F>,
     pub fuzzing_config: FuzzingConfig,
     pub performance_requirements: PerformanceRequirements,
-    pub implementations: Vec<Implementation<F>>,
+    pub implementations: Vec<Box<dyn Implementation<F>>>,
     pub test_cases: Vec<TestCase<F>>,
 }
 
@@ -1637,14 +1634,21 @@ impl MathematicalPropertyRegistry {
         registry
     }
 
-    pub fn get_properties_for_function(&self, function_name: &str) -> StatsResult<Vec<MathematicalProperty>> {
-        Ok(self.properties.get(function_name).cloned().unwrap_or_default())
+    pub fn get_properties_for_function(
+        &self,
+        function_name: &str,
+    ) -> StatsResult<Vec<MathematicalProperty>> {
+        Ok(self
+            .properties
+            .get(function_name)
+            .cloned()
+            .unwrap_or_default())
     }
 
     fn initialize_standard_properties(&mut self) {
         // Initialize standard mathematical properties for common functions
         // This would be a comprehensive set based on mathematical theory
-        
+
         // Example: Mean function properties
         let mean_properties = vec![
             MathematicalProperty {
@@ -1664,9 +1668,9 @@ impl MathematicalPropertyRegistry {
                 applicable_functions: vec!["mean".to_string()],
             },
         ];
-        
+
         self.properties.insert("mean".to_string(), mean_properties);
-        
+
         // Add more properties for other functions based on thoroughness level
         if matches!(
             self.thoroughness_level,
@@ -1697,13 +1701,16 @@ impl StatisticalPropertyRegistry {
         registry
     }
 
-    pub fn get_properties_for_operation(&self, operation: &StatisticalOperationType) -> StatsResult<Vec<StatisticalProperty>> {
+    pub fn get_properties_for_operation(
+        &self,
+        operation: &StatisticalOperationType,
+    ) -> StatsResult<Vec<StatisticalProperty>> {
         Ok(self.properties.get(operation).cloned().unwrap_or_default())
     }
 
     fn initialize_statistical_properties(&mut self) {
         // Initialize statistical properties for different operations
-        
+
         // Example: Mean operation properties
         let mean_properties = vec![
             StatisticalProperty {
@@ -1721,8 +1728,9 @@ impl StatisticalPropertyRegistry {
                 required_sample_size: 10000,
             },
         ];
-        
-        self.properties.insert(StatisticalOperationType::Mean, mean_properties);
+
+        self.properties
+            .insert(StatisticalOperationType::Mean, mean_properties);
     }
 }
 
@@ -1790,7 +1798,7 @@ pub struct AdvancedFuzzingEngine {
 }
 
 impl AdvancedFuzzingEngine {
-    pub fn new(config: &UltraThinkPropertyConfig) -> Self {
+    pub fn new(_config: &UltraThinkPropertyConfig) -> Self {
         Self {
             fuzzing_strategy: FuzzingStrategy::Guided,
             mutation_operators: Vec::new(),
@@ -2043,7 +2051,7 @@ mod tests {
     fn test_mathematical_property_registry() {
         let config = UltraThinkPropertyConfig::default();
         let registry = MathematicalPropertyRegistry::new(&config);
-        
+
         let mean_properties = registry.get_properties_for_function("mean").unwrap();
         assert!(!mean_properties.is_empty());
     }
@@ -2052,8 +2060,10 @@ mod tests {
     fn test_statistical_property_registry() {
         let config = UltraThinkPropertyConfig::default();
         let registry = StatisticalPropertyRegistry::new(&config);
-        
-        let mean_properties = registry.get_properties_for_operation(&StatisticalOperationType::Mean).unwrap();
+
+        let mean_properties = registry
+            .get_properties_for_operation(&StatisticalOperationType::Mean)
+            .unwrap();
         assert!(!mean_properties.is_empty());
     }
 
@@ -2067,7 +2077,7 @@ mod tests {
             anomaly_detection: true,
             coverage_tracking: true,
         };
-        
+
         assert_eq!(config.fuzzing_strategy, FuzzingStrategy::Guided);
         assert_eq!(config.input_mutation_rate, 0.1);
         assert!(config.crash_detection);
@@ -2085,7 +2095,7 @@ mod tests {
         // Test that complexity classes are properly ordered
         let linear = ComplexityClass::Linear;
         let quadratic = ComplexityClass::Quadratic;
-        
+
         assert_ne!(linear, quadratic);
         assert_eq!(linear, ComplexityClass::Linear);
     }
@@ -2106,7 +2116,7 @@ mod tests {
             TestingThoroughnessLevel::Comprehensive
         );
         assert!(comprehensive_tester.config.enable_performance_properties);
-        
+
         let fast_tester = create_fast_property_tester();
         assert_eq!(
             fast_tester.config.thoroughness_level,

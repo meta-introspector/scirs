@@ -639,7 +639,7 @@ fn cross_validate_lombscargle_methods(
 fn generate_lombscargle_test_signal(
     config: &TestSignalConfig,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Generate irregular time points
     let mut times = Vec::with_capacity(config.n);
@@ -710,7 +710,7 @@ fn generate_single_sinusoid(
     amplitudes: &[f64],
     noise_level: f64,
 ) -> Vec<f64> {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let freq = frequencies[0];
     let amp = amplitudes[0];
 
@@ -727,7 +727,7 @@ fn generate_multiple_sinusoids(
     amplitudes: &[f64],
     noise_level: f64,
 ) -> Vec<f64> {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     times
         .iter()
@@ -744,7 +744,7 @@ fn generate_multiple_sinusoids(
 
 /// Generate pure noise signal
 fn generate_pure_noise(times: &[f64], noise_level: f64) -> Vec<f64> {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     times
         .iter()
         .map(|_| noise_level * rng.random_range(-1.0..1.0))
@@ -850,7 +850,7 @@ fn estimate_lombscargle_frequency_resolution(_config: &TestSignalConfig) -> Sign
 }
 
 fn generate_highly_irregular_data(n: usize, time_span: f64) -> SignalResult<(Vec<f64>, Vec<f64>)> {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut times = Vec::new();
     let mut signal = Vec::new();
 
@@ -1281,7 +1281,7 @@ fn enhance_with_real_world_signal_validation(
 
     // Test 1: Simulated variable star light curve
     let n_obs = 200;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut star_times = Vec::new();
     let mut star_magnitudes = Vec::new();
 
@@ -1424,7 +1424,7 @@ fn enhance_with_statistical_robustness_tests(
     let n = 100;
     let times: Vec<f64> = (0..n).map(|i| i as f64 * 0.1).collect();
     let true_freq = 0.15;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     let mut bootstrap_results = Vec::new();
 

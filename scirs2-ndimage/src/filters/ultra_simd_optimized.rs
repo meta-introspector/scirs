@@ -762,7 +762,6 @@ where
     Ok(output)
 }
 
-
 // Conditional compilation for parallel iterator
 #[cfg(feature = "parallel")]
 use scirs2_core::parallel_ops::*;

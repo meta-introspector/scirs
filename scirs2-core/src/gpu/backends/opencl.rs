@@ -136,14 +136,14 @@ impl OpenCLContext {
         {
             // Real OpenCL implementation
             let platforms = get_platforms()
-                .map_err(|e| GpuError::Other(format!("Failed to get OpenCL platforms: {}", e)))?;
+                .map_err(|e| GpuError::Other(format!("Failed to get OpenCL platforms: {e}")))?;
 
             if platforms.is_empty() {
                 return Err(GpuError::Other("No OpenCL platforms found".to_string()));
             }
 
             let devices = get_all_devices(CL_DEVICE_TYPE_GPU)
-                .map_err(|e| GpuError::Other(format!("Failed to get OpenCL GPU devices: {}", e)))?;
+                .map_err(|e| GpuError::Other(format!("Failed to get OpenCL GPU devices: {e}")))?;
 
             if devices.is_empty() {
                 return Err(GpuError::Other("No OpenCL GPU devices found".to_string()));
@@ -151,11 +151,11 @@ impl OpenCLContext {
 
             let device = devices[0];
             let context = Context::from_device(&device)
-                .map_err(|e| GpuError::Other(format!("Failed to create OpenCL context: {}", e)))?;
+                .map_err(|e| GpuError::Other(format!("Failed to create OpenCL context: {e}")))?;
 
             let queue =
                 CommandQueue::create_default(&context, CL_QUEUE_PROFILING_ENABLE).map_err(|e| {
-                    GpuError::Other(format!("Failed to create OpenCL command queue: {}", e))
+                    GpuError::Other(format!("Failed to create OpenCL command queue: {e}"))
                 })?;
 
             Ok(Self {
@@ -219,7 +219,7 @@ impl OpenCLContext {
                 })?;
 
             let kernel = Kernel::create(&program, name).map_err(|e| {
-                GpuError::Other(format!("Failed to create OpenCL kernel {}: {}", name, e))
+                GpuError::Other(format!("Failed to create OpenCL kernel {name}: {e}"))
             })?;
 
             Ok(OpenCLKernel {
@@ -248,7 +248,7 @@ impl OpenCLContext {
     pub fn allocate_device_memory(&self, size: usize) -> Result<Buffer<u8>, GpuError> {
         unsafe {
             Buffer::<u8>::create(&self.context, CL_MEM_READ_WRITE, size, std::ptr::null_mut())
-                .map_err(|e| GpuError::Other(format!("OpenCL memory allocation failed: {}", e)))
+                .map_err(|e| GpuError::Other(format!("OpenCL memory allocation failed: {e}")))
         }
     }
 
@@ -536,7 +536,7 @@ impl GpuBufferImpl for OpenCLBuffer {
             // Real OpenCL implementation - write data to buffer
             self.queue
                 .enqueue_write_buffer(&self.device_buffer, CL_BLOCKING, 0, data, &[])
-                .map_err(|e| GpuError::Other(format!("OpenCL buffer write failed: {}", e)))?;
+                .map_err(|e| GpuError::Other(format!("OpenCL buffer write failed: {e}")))?;
             Ok(())
         }
         #[cfg(not(feature = "opencl"))]
@@ -561,7 +561,7 @@ impl GpuBufferImpl for OpenCLBuffer {
             unsafe {
                 self.queue
                     .enqueue_read_buffer(&self.device_buffer, CL_BLOCKING, 0, data, &[])
-                    .map_err(|e| GpuError::Other(format!("OpenCL buffer read failed: {}", e)))?;
+                    .map_err(|e| GpuError::Other(format!("OpenCL buffer read failed: {e}")))?;
             }
             Ok(())
         }

@@ -4,11 +4,10 @@
 //! for group-level variation and borrowing of strength across groups.
 
 use crate::error::{StatsError, StatsResult as Result};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use rand::Rng;
 use rand_distr::{Distribution, Gamma, Normal};
 use scirs2_core::validation::*;
-use std::collections::HashMap;
 
 /// Hierarchical linear model with random intercepts and slopes
 ///

@@ -488,7 +488,7 @@ impl<'a> InteriorPointSolver<'a> {
 
         // Step 1: Compute predictor step (affine scaling direction)
         // This is the Newton step with zero barrier parameter (affine scaling)
-        let (dx_aff, ds_aff, dlambda_eq_aff, dlambda_ineq_aff) =
+        let (dx_aff, ds_aff, _dlambda_eq_aff, dlambda_ineq_aff) =
             self.compute_affine_scaling_direction(g, c_eq, c_ineq, j_eq, j_ineq, s, lambda_ineq)?;
 
         // Step 2: Compute maximum step lengths for predictor step
@@ -630,9 +630,9 @@ impl<'a> InteriorPointSolver<'a> {
     /// Compute corrector direction combining predictor and centering
     fn compute_corrector_direction(
         &self,
-        g: &Array1<f64>,
-        c_eq: &Option<Array1<f64>>,
-        c_ineq: &Option<Array1<f64>>,
+        _g: &Array1<f64>,
+        _c_eq: &Option<Array1<f64>>,
+        _c_ineq: &Option<Array1<f64>>,
         j_eq: &Option<Array2<f64>>,
         j_ineq: &Option<Array2<f64>>,
         s: &Array1<f64>,

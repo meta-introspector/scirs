@@ -228,7 +228,7 @@ where
         }
 
         // Check if constraint violation is reduced and objective decreases
-        let mut max_viol = f64::max(max_ineq_violation, max_eq_violation);
+        let max_viol = f64::max(max_ineq_violation, max_eq_violation);
         let mut max_viol_new = 0.0;
 
         // Check new inequality violations

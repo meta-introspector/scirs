@@ -4,7 +4,7 @@
 //! functionality and performance across different operating systems, architectures,
 //! and runtime environments.
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -764,7 +764,7 @@ impl CrossPlatformTester {
         println!("Starting cross-platform test suite...");
 
         // Detect current platform
-        let current_platform = self.platform_detector.detect_current_platform()?;
+        let current_platform = self.platform_detector.detect_current_platform()?.clone();
         println!("Detected platform: {:?}", current_platform.target_triple);
 
         // Register built-in tests
@@ -793,7 +793,8 @@ impl CrossPlatformTester {
         platform_info: &PlatformInfo,
     ) -> Result<()> {
         if let Some(tests) = self.test_registry.test_suites.get(category) {
-            for test in tests {
+            let tests_to_run: Vec<_> = tests.iter().collect();
+            for test in tests_to_run {
                 if test.is_applicable(&self.current_platform_target()) {
                     println!("  Running test: {}", test.name());
 
@@ -1010,7 +1011,7 @@ impl CrossPlatformTester {
                     let severity = self.assess_severity(&issue_type, result);
 
                     issues.push(CompatibilityIssue {
-                        issue_type,
+                        issue_type: issue_type.clone(),
                         affected_platforms: vec![platform.clone()],
                         description: result
                             .error_message

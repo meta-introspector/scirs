@@ -88,7 +88,7 @@ impl FormalVerificationEngine {
         if let Some(max_memory) = contract.memory.max_memory {
             properties.push(VerificationProperty {
                 name: "memory_bound".to_string(),
-                specification: format!("memory_usage <= {}", max_memory),
+                specification: format!("memory_usage <= {max_memory}"),
                 property_type: PropertyType::Safety,
             });
         }
@@ -144,7 +144,7 @@ impl FormalVerificationEngine {
 
     /// Get verification status for an API
     pub fn get_verification_status(&self, api_name: &str, module: &str) -> VerificationStatus {
-        let task_id = format!("{}::{}", module, api_name);
+        let task_id = format!("{module}::{api_name}");
 
         if let Ok(tasks) = self.verification_tasks.lock() {
             if let Some(task) = tasks.get(&task_id) {
@@ -287,8 +287,8 @@ impl RuntimeContractValidator {
                     module,
                     ContractViolation {
                         violation_type: ViolationType::Memory,
-                        expected: format!("{}", max_memory),
-                        actual: format!("{}", call_context.memory_usage),
+                        expected: format!("{max_memory}"),
+                        actual: call_context.memory_usage.to_string(),
                         severity: ViolationSeverity::Medium,
                     },
                 )?;

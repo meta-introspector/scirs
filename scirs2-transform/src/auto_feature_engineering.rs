@@ -5,7 +5,7 @@
 
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, ArrayView1, ArrayView2};
-use scirs2_core::validation::{check_not_empty};
+use scirs2_core::validation::check_not_empty;
 use std::collections::HashMap;
 
 #[cfg(feature = "auto-feature-engineering")]
@@ -379,7 +379,7 @@ impl AutoFeatureEngineer {
     /// Extract meta-features from a dataset
     pub fn extract_meta_features(&self, x: &ArrayView2<f64>) -> Result<DatasetMetaFeatures> {
         check_not_empty(x, "x")?;
-        
+
         // Check finite values
         for &val in x.iter() {
             if !val.is_finite() {
@@ -2247,11 +2247,14 @@ impl AdvancedMetaLearningSystem {
 }
 
 // Stub implementations when auto-feature-engineering is not enabled
+/// Advanced meta-learning system for feature engineering (placeholder)
 #[cfg(not(feature = "auto-feature-engineering"))]
 pub struct AdvancedMetaLearningSystem;
 
+/// Enhanced meta-features for advanced analysis (placeholder)
 #[cfg(not(feature = "auto-feature-engineering"))]
 pub struct EnhancedMetaFeatures;
 
+/// Multi-objective recommendation system (placeholder)
 #[cfg(not(feature = "auto-feature-engineering"))]
 pub struct MultiObjectiveRecommendation;

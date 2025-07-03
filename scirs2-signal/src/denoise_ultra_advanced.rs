@@ -10,14 +10,11 @@
 //! - Memory-efficient processing for arbitrarily large signals
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
-use num_complex::Complex64;
+use ndarray::{Array1, Array2};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive};
-use std::collections::HashMap;
-use std::sync::Arc;
+use scirs2_core::validation::check_finite;
 
 /// Ultra-advanced denoising result with comprehensive analysis
 #[derive(Debug, Clone)]
@@ -326,7 +323,7 @@ impl Default for UltraAdvancedDenoisingConfig {
 /// let n = 1000;
 /// let t: Array1<f64> = Array1::linspace(0.0, 1.0, n);
 /// use rand::prelude::*;
-/// let mut rng = rand::rng();
+/// let mut rng = rand::thread_rng();
 ///
 /// let clean_signal: Array1<f64> = t.mapv(|ti| {
 ///     (2.0 * PI * 5.0 * ti).sin() + 0.3 * (2.0 * PI * 20.0 * ti).sin()
@@ -1122,7 +1119,7 @@ mod tests {
 
         // Add noise
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let noisy_signal: Array1<f64> =
             clean_signal.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
 

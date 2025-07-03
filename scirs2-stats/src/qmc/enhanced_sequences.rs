@@ -7,7 +7,7 @@
 //! - Adaptive sequence refinement
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{Array1, Array2};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
@@ -502,7 +502,7 @@ where
 
         // Generate random permutation matrix
         for i in 0..32 {
-            let j = rng.gen_range(0..32);
+            let j = rng.random_range(0..32);
             matrix[[i, j]] = 1;
         }
 

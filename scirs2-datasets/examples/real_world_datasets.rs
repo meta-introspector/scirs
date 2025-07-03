@@ -10,7 +10,7 @@ use scirs2_datasets::{
     list_real_world_datasets, load_adult, load_california_housing, load_heart_disease,
     load_red_wine_quality, load_titanic,
     utils::{k_fold_split, train_test_split},
-    BenchmarkRunner, RealWorldConfig, MLPipeline, MLScalingMethod,
+    BenchmarkRunner, MLPipeline, MLScalingMethod, RealWorldConfig,
 };
 use std::collections::HashMap;
 
@@ -104,7 +104,13 @@ fn demonstrate_classification_datasets() -> Result<(), Box<dyn std::error::Error
     let titanic = load_titanic()?;
 
     println!("Titanic Dataset:");
-    println!("  Description: {}", titanic.metadata.get("description").unwrap_or(&"Unknown".to_string()));
+    println!(
+        "  Description: {}",
+        titanic
+            .metadata
+            .get("description")
+            .unwrap_or(&"Unknown".to_string())
+    );
     println!("  Samples: {}", titanic.n_samples());
     println!("  Features: {}", titanic.n_features());
 
@@ -146,7 +152,13 @@ fn demonstrate_classification_datasets() -> Result<(), Box<dyn std::error::Error
     match load_adult() {
         Ok(adult) => {
             println!("Adult Dataset:");
-            println!("  Description: {}", adult.metadata.get("description").unwrap_or(&"Unknown".to_string()));
+            println!(
+                "  Description: {}",
+                adult
+                    .metadata
+                    .get("description")
+                    .unwrap_or(&"Unknown".to_string())
+            );
             println!("  Samples: {}", adult.n_samples());
             println!("  Features: {}", adult.n_features());
             println!("  Task: Predict income >$50K based on census data");
@@ -170,7 +182,13 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
     let housing = load_california_housing()?;
 
     println!("California Housing Dataset:");
-    println!("  Description: {}", housing.metadata.get("description").unwrap_or(&"Unknown".to_string()));
+    println!(
+        "  Description: {}",
+        housing
+            .metadata
+            .get("description")
+            .unwrap_or(&"Unknown".to_string())
+    );
     println!("  Samples: {}", housing.n_samples());
     println!("  Features: {}", housing.n_features());
 
@@ -196,7 +214,12 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
     let wine = load_red_wine_quality()?;
 
     println!("Red Wine Quality Dataset:");
-    println!("  Description: {}", wine.metadata.get("description").unwrap_or(&"Unknown".to_string()));
+    println!(
+        "  Description: {}",
+        wine.metadata
+            .get("description")
+            .unwrap_or(&"Unknown".to_string())
+    );
     println!("  Samples: {}", wine.n_samples());
     println!("  Features: {}", wine.n_features());
 
@@ -226,7 +249,13 @@ fn demonstrate_healthcare_datasets() -> Result<(), Box<dyn std::error::Error>> {
     let heart = load_heart_disease()?;
 
     println!("Heart Disease Dataset:");
-    println!("  Description: {}", heart.metadata.get("description").unwrap_or(&"Unknown".to_string()));
+    println!(
+        "  Description: {}",
+        heart
+            .metadata
+            .get("description")
+            .unwrap_or(&"Unknown".to_string())
+    );
     println!("  Samples: {}", heart.n_samples());
     println!("  Features: {}", heart.n_features());
 
@@ -280,7 +309,7 @@ fn demonstrate_advanced_operations() -> Result<(), Box<dyn std::error::Error>> {
         test.n_samples()
     );
 
-    // 2. Feature scaling  
+    // 2. Feature scaling
     let mut pipeline = MLPipeline::default();
     train = pipeline.prepare_dataset(&train)?;
     println!("  2. Standardized features");
@@ -424,7 +453,13 @@ fn show_dataset_info(name: &str, dataset: &scirs2_datasets::utils::Dataset) {
     println!("{}:", name);
     println!("  Samples: {}", format_number(dataset.n_samples()));
     println!("  Features: {}", dataset.n_features());
-    println!("  Task: {}", dataset.metadata.get("task_type").unwrap_or(&"Unknown".to_string()));
+    println!(
+        "  Task: {}",
+        dataset
+            .metadata
+            .get("task_type")
+            .unwrap_or(&"Unknown".to_string())
+    );
 
     if let Some(source) = dataset.metadata.get("source") {
         println!("  Source: {}", source);

@@ -9,7 +9,7 @@ use std::hash::Hash;
 
 use ndarray::{Array1, Array2};
 
-use crate::algorithms::{shortest_path, shortest_path_digraph};
+use crate::algorithms::{dijkstra_path, dijkstra_path_digraph};
 use crate::base::{DiGraph, EdgeWeight, Graph, Node};
 use crate::error::{GraphError, Result};
 use petgraph::graph::IndexType;
@@ -147,7 +147,7 @@ where
 /// O(V) for storing the centrality values
 fn degree_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -169,7 +169,7 @@ where
 /// Calculates degree centrality for nodes in a directed graph
 fn degree_centrality_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -236,7 +236,7 @@ where
             }
 
             // Find shortest path from s to t
-            if let Ok(Some(path)) = shortest_path(graph, s, t) {
+            if let Ok(Some(path)) = dijkstra_path(graph, s, t) {
                 // Skip source and target nodes
                 for node in &path.nodes[1..path.nodes.len() - 1] {
                     *betweenness.entry(node.clone()).or_insert(0.0) += 1.0;
@@ -293,7 +293,7 @@ where
             }
 
             // Find shortest path from s to t
-            if let Ok(Some(path)) = shortest_path_digraph(graph, s, t) {
+            if let Ok(Some(path)) = dijkstra_path_digraph(graph, s, t) {
                 // Skip source and target nodes
                 for node in &path.nodes[1..path.nodes.len() - 1] {
                     *betweenness.entry(node.clone()).or_insert(0.0) += 1.0;
@@ -350,7 +350,7 @@ where
             }
 
             // Find shortest path from node to other
-            if let Ok(Some(path)) = shortest_path(graph, node, other) {
+            if let Ok(Some(path)) = dijkstra_path(graph, node, other) {
                 sum_distances += path.total_weight.into();
                 reachable_nodes += 1;
             }
@@ -410,7 +410,7 @@ where
             }
 
             // Find shortest path from node to other
-            if let Ok(Some(path)) = shortest_path_digraph(graph, node, other) {
+            if let Ok(Some(path)) = dijkstra_path_digraph(graph, node, other) {
                 sum_distances += path.total_weight.into();
                 reachable_nodes += 1;
             }
@@ -582,7 +582,7 @@ where
 /// * `Result<HashMap<N, f64>>` - A map from nodes to their clustering coefficients
 pub fn clustering_coefficient<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -636,7 +636,7 @@ where
 /// * `Result<f64>` - The global clustering coefficient
 pub fn graph_density<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<f64>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -663,7 +663,7 @@ where
 /// * `Result<f64>` - The graph density
 pub fn graph_density_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<f64>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -850,7 +850,7 @@ pub fn pagerank_centrality<N, E, Ix>(
     tolerance: f64,
 ) -> Result<HashMap<N, f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -1188,7 +1188,7 @@ pub fn pagerank_centrality_digraph<N, E, Ix>(
     tolerance: f64,
 ) -> Result<HashMap<N, f64>>
 where
-    N: Node,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -1347,7 +1347,7 @@ where
         for target in &nodes {
             if source != target {
                 // Find shortest weighted path
-                if let Ok(Some(path)) = shortest_path(graph, source, target) {
+                if let Ok(Some(path)) = dijkstra_path(graph, source, target) {
                     // Count how many times each intermediate node appears
                     for intermediate in &path.nodes[1..path.nodes.len() - 1] {
                         *centrality.get_mut(intermediate).unwrap() += 1.0;
@@ -1394,7 +1394,7 @@ where
         for target in &nodes {
             if source != target {
                 // Find shortest weighted path in directed graph
-                if let Ok(Some(path)) = shortest_path_digraph(graph, source, target) {
+                if let Ok(Some(path)) = dijkstra_path_digraph(graph, source, target) {
                     // Count how many times each intermediate node appears
                     for intermediate in &path.nodes[1..path.nodes.len() - 1] {
                         *centrality.get_mut(intermediate).unwrap() += 1.0;
@@ -1443,7 +1443,7 @@ where
         // Calculate shortest weighted paths to all other nodes
         for other in &nodes {
             if node != other {
-                if let Ok(Some(path)) = shortest_path(graph, node, other) {
+                if let Ok(Some(path)) = dijkstra_path(graph, node, other) {
                     let distance: f64 = path.total_weight.into();
                     total_distance += distance;
                     reachable_count += 1;
@@ -1496,7 +1496,7 @@ where
         // Calculate shortest weighted paths to all other nodes
         for other in &nodes {
             if node != other {
-                if let Ok(Some(path)) = shortest_path_digraph(graph, node, other) {
+                if let Ok(Some(path)) = dijkstra_path_digraph(graph, node, other) {
                     let distance: f64 = path.total_weight.into();
                     total_distance += distance;
                     reachable_count += 1;

@@ -923,6 +923,65 @@ impl CiCdAutomation {
         }
     }
 
+    /// Detect the build configuration (debug/release/custom)
+    fn detect_build_config(&self) -> Result<String> {
+        // Check environment variables first
+        if let Ok(profile) = std::env::var("CARGO_CFG_DEBUG_ASSERTIONS") {
+            return Ok(if profile == "true" {
+                "debug".to_string()
+            } else {
+                "release".to_string()
+            });
+        }
+
+        if let Ok(profile) = std::env::var("CARGO_PROFILE") {
+            return Ok(profile);
+        }
+
+        if let Ok(profile) = std::env::var("PROFILE") {
+            return Ok(profile);
+        }
+
+        // Check for common CI environment variables that indicate build type
+        if let Ok(build_type) = std::env::var("BUILD_TYPE") {
+            return Ok(build_type.to_lowercase());
+        }
+
+        if let Ok(config) = std::env::var("CONFIGURATION") {
+            return Ok(config.to_lowercase());
+        }
+
+        // Check if running in debug mode based on optimization level
+        if std::env::var("CARGO_CFG_OPT_LEVEL").unwrap_or_default() == "0" {
+            return Ok("debug".to_string());
+        }
+
+        // Try to detect from Cargo.toml if available
+        if let Ok(cargo_content) = std::fs::read_to_string("Cargo.toml") {
+            if cargo_content.contains("[profile.release]")
+                && !cargo_content.contains("debug = true")
+            {
+                return Ok("release".to_string());
+            }
+        }
+
+        // Check common CI patterns
+        match std::env::var("GITHUB_WORKFLOW").as_deref() {
+            Ok(workflow) if workflow.to_lowercase().contains("release") => {
+                Ok("release".to_string())
+            }
+            Ok(workflow) if workflow.to_lowercase().contains("debug") => Ok("debug".to_string()),
+            _ => {}
+        }
+
+        // Default to release for production CI environments, debug otherwise
+        if std::env::var("CI").is_ok() {
+            Ok("release".to_string())
+        } else {
+            Ok("debug".to_string())
+        }
+    }
+
     /// Determine if tests should run based on configuration and context
     fn should_run_tests(&self, ci_context: &CiCdContext, git_info: &GitInfo) -> Result<bool> {
         if !self.config.enable_automation {
@@ -1000,7 +1059,7 @@ impl CiCdAutomation {
             timestamp: start_time,
             commit_hash: git_info.commit_hash,
             branch: git_info.branch,
-            build_config: "release".to_string(), // TODO: detect actual build config
+            build_config: self.detect_build_config()?,
             environment: self.environment.clone(),
             metrics,
             test_config: TestConfiguration {
@@ -1018,24 +1077,67 @@ impl CiCdAutomation {
     /// Execute Rust benchmark
     async fn execute_rust_bench(
         &self,
-        _test_case: &PerformanceTestCase,
+        test_case: &PerformanceTestCase,
     ) -> Result<HashMap<MetricType, MetricValue>> {
-        // TODO: Implement actual Rust benchmark execution
         let mut metrics = HashMap::new();
 
-        // Simulate execution time measurement
-        let execution_time = 0.1; // seconds
+        // Execute cargo bench for the specific test
+        let mut cmd = Command::new("cargo");
+        cmd.args(&["bench", "--bench", &test_case.name]);
+
+        // Add any additional arguments from test case parameters
+        if let Some(args) = test_case.parameters.get("args") {
+            if let Ok(arg_list) = serde_json::from_str::<Vec<String>>(args) {
+                cmd.args(&arg_list);
+            }
+        }
+
+        let start_time = std::time::Instant::now();
+        let output = cmd.output().map_err(|e| {
+            crate::error::OptimError::General(format!("Failed to execute cargo bench: {}", e))
+        })?;
+        let execution_time = start_time.elapsed().as_secs_f64();
+
+        // Parse benchmark output for metrics
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+
+        if !output.status.success() {
+            return Err(crate::error::OptimError::General(format!(
+                "Benchmark execution failed: {}",
+                stderr
+            )));
+        }
+
+        // Parse execution time from benchmark output
+        let parsed_time = self.parse_benchmark_time(&stdout).unwrap_or(execution_time);
+
         metrics.insert(
             MetricType::ExecutionTime,
             MetricValue {
-                value: execution_time,
-                std_dev: Some(0.01),
+                value: parsed_time,
+                std_dev: Some(parsed_time * 0.05), // Estimated 5% variation
                 sample_count: 1,
-                min_value: execution_time,
-                max_value: execution_time,
+                min_value: parsed_time,
+                max_value: parsed_time,
                 percentiles: None,
             },
         );
+
+        // Parse additional metrics if available
+        if let Some(memory_usage) = self.parse_memory_usage(&stdout) {
+            metrics.insert(
+                MetricType::MemoryUsage,
+                MetricValue {
+                    value: memory_usage,
+                    std_dev: Some(memory_usage * 0.1),
+                    sample_count: 1,
+                    min_value: memory_usage,
+                    max_value: memory_usage,
+                    percentiles: None,
+                },
+            );
+        }
 
         Ok(metrics)
     }
@@ -1043,35 +1145,254 @@ impl CiCdAutomation {
     /// Execute Criterion benchmark
     async fn execute_criterion_bench(
         &self,
-        _test_case: &PerformanceTestCase,
+        test_case: &PerformanceTestCase,
     ) -> Result<HashMap<MetricType, MetricValue>> {
-        // TODO: Implement Criterion benchmark execution
-        Ok(HashMap::new())
+        let mut metrics = HashMap::new();
+
+        // Execute criterion benchmark
+        let mut cmd = Command::new("cargo");
+        cmd.args(&[
+            "bench",
+            "--bench",
+            &test_case.name,
+            "--",
+            "--output-format",
+            "json",
+        ]);
+
+        // Add any additional arguments from test case parameters
+        if let Some(args) = test_case.parameters.get("args") {
+            if let Ok(arg_list) = serde_json::from_str::<Vec<String>>(args) {
+                cmd.args(&arg_list);
+            }
+        }
+
+        let start_time = std::time::Instant::now();
+        let output = cmd.output().map_err(|e| {
+            crate::error::OptimError::General(format!("Failed to execute criterion bench: {}", e))
+        })?;
+        let execution_time = start_time.elapsed().as_secs_f64();
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+
+        if !output.status.success() {
+            return Err(crate::error::OptimError::General(format!(
+                "Criterion benchmark execution failed: {}",
+                stderr
+            )));
+        }
+
+        // Parse Criterion JSON output for detailed metrics
+        if let Some(criterion_metrics) = self.parse_criterion_output(&stdout) {
+            metrics.extend(criterion_metrics);
+        } else {
+            // Fallback to basic timing if JSON parsing fails
+            let parsed_time = self.parse_benchmark_time(&stdout).unwrap_or(execution_time);
+            metrics.insert(
+                MetricType::ExecutionTime,
+                MetricValue {
+                    value: parsed_time,
+                    std_dev: Some(parsed_time * 0.02), // Criterion typically has lower variance
+                    sample_count: 1,
+                    min_value: parsed_time,
+                    max_value: parsed_time,
+                    percentiles: None,
+                },
+            );
+        }
+
+        Ok(metrics)
     }
 
     /// Execute custom command
     async fn execute_custom_command(
         &self,
-        _command: &str,
-        _test_case: &PerformanceTestCase,
+        command: &str,
+        test_case: &PerformanceTestCase,
     ) -> Result<HashMap<MetricType, MetricValue>> {
-        // TODO: Implement custom command execution
-        Ok(HashMap::new())
+        let mut metrics = HashMap::new();
+
+        // Parse the command and arguments
+        let parts: Vec<&str> = command.split_whitespace().collect();
+        if parts.is_empty() {
+            return Err(crate::error::OptimError::General(
+                "Empty command".to_string(),
+            ));
+        }
+
+        let mut cmd = Command::new(parts[0]);
+        if parts.len() > 1 {
+            cmd.args(&parts[1..]);
+        }
+
+        // Add test case parameters as environment variables
+        for (key, value) in &test_case.parameters {
+            cmd.env(format!("TEST_{}", key.to_uppercase()), value);
+        }
+
+        // Set working directory if specified
+        if let Some(workdir) = test_case.parameters.get("workdir") {
+            cmd.current_dir(workdir);
+        }
+
+        let start_time = std::time::Instant::now();
+        let output = cmd.output().map_err(|e| {
+            crate::error::OptimError::General(format!(
+                "Failed to execute command '{}': {}",
+                command, e
+            ))
+        })?;
+        let execution_time = start_time.elapsed().as_secs_f64();
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+
+        if !output.status.success() {
+            return Err(crate::error::OptimError::General(format!(
+                "Custom command '{}' failed with exit code {}: {}",
+                command,
+                output.status.code().unwrap_or(-1),
+                stderr
+            )));
+        }
+
+        // Parse output for metrics
+        let parsed_time = self.parse_benchmark_time(&stdout).unwrap_or(execution_time);
+        metrics.insert(
+            MetricType::ExecutionTime,
+            MetricValue {
+                value: parsed_time,
+                std_dev: Some(parsed_time * 0.1),
+                sample_count: 1,
+                min_value: parsed_time,
+                max_value: parsed_time,
+                percentiles: None,
+            },
+        );
+
+        // Parse custom metrics from output if available
+        if let Some(custom_metrics) = self.parse_custom_metrics(&stdout) {
+            metrics.extend(custom_metrics);
+        }
+
+        Ok(metrics)
     }
 
     /// Execute inline function
     async fn execute_inline_function(
         &self,
-        _function: &str,
-        _test_case: &PerformanceTestCase,
+        function: &str,
+        test_case: &PerformanceTestCase,
     ) -> Result<HashMap<MetricType, MetricValue>> {
-        // TODO: Implement inline function execution
-        Ok(HashMap::new())
+        let mut metrics = HashMap::new();
+
+        // For security reasons, we only support a limited set of predefined functions
+        // This prevents arbitrary code execution
+        let start_time = std::time::Instant::now();
+
+        let execution_time = match function {
+            "simple_loop" => {
+                let iterations = test_case
+                    .parameters
+                    .get("iterations")
+                    .and_then(|s| s.parse::<usize>().ok())
+                    .unwrap_or(1000);
+                self.execute_simple_loop_benchmark(iterations)
+            }
+            "memory_allocation" => {
+                let size = test_case
+                    .parameters
+                    .get("size")
+                    .and_then(|s| s.parse::<usize>().ok())
+                    .unwrap_or(1024);
+                self.execute_memory_allocation_benchmark(size)
+            }
+            "computation_intensive" => {
+                let complexity = test_case
+                    .parameters
+                    .get("complexity")
+                    .and_then(|s| s.parse::<usize>().ok())
+                    .unwrap_or(100);
+                self.execute_computation_benchmark(complexity)
+            }
+            "sleep_benchmark" => {
+                let duration_ms = test_case
+                    .parameters
+                    .get("duration_ms")
+                    .and_then(|s| s.parse::<u64>().ok())
+                    .unwrap_or(100);
+                self.execute_sleep_benchmark(duration_ms).await
+            }
+            _ => {
+                return Err(crate::error::OptimError::General(format!(
+                    "Unknown inline function: {}. Supported functions: simple_loop, memory_allocation, computation_intensive, sleep_benchmark", 
+                    function
+                )));
+            }
+        };
+
+        let total_time = start_time.elapsed().as_secs_f64();
+
+        metrics.insert(
+            MetricType::ExecutionTime,
+            MetricValue {
+                value: execution_time,
+                std_dev: Some(execution_time * 0.05),
+                sample_count: 1,
+                min_value: execution_time,
+                max_value: execution_time,
+                percentiles: None,
+            },
+        );
+
+        // Add total overhead time as a separate metric
+        if total_time > execution_time {
+            metrics.insert(
+                MetricType::Other("overhead_time".to_string()),
+                MetricValue {
+                    value: total_time - execution_time,
+                    std_dev: None,
+                    sample_count: 1,
+                    min_value: total_time - execution_time,
+                    max_value: total_time - execution_time,
+                    percentiles: None,
+                },
+            );
+        }
+
+        Ok(metrics)
     }
 
     /// Load baseline for specific branch
-    async fn load_baseline_for_branch(&mut self, _branch: &str) -> Result<()> {
-        // TODO: Implement baseline loading from artifact storage
+    async fn load_baseline_for_branch(&mut self, branch: &str) -> Result<()> {
+        // Try to load baseline from different sources in order of preference
+
+        // 1. Try to load from artifact storage
+        if let Ok(baseline) = self.load_baseline_from_storage(branch).await {
+            self.regression_detector.set_baseline(baseline)?;
+            return Ok(());
+        }
+
+        // 2. Try to load from local cache
+        if let Ok(baseline) = self.load_baseline_from_cache(branch).await {
+            self.regression_detector.set_baseline(baseline)?;
+            return Ok(());
+        }
+
+        // 3. Try to load from git history (run tests on previous commits)
+        if let Ok(baseline) = self.generate_baseline_from_history(branch).await {
+            self.regression_detector.set_baseline(baseline)?;
+            // Cache the generated baseline for future use
+            let _ = self.save_baseline_to_cache(branch, &baseline).await;
+            return Ok(());
+        }
+
+        // 4. Create an empty baseline (first run)
+        println!(
+            "No baseline found for branch '{}', creating empty baseline",
+            branch
+        );
         Ok(())
     }
 
@@ -1296,6 +1617,264 @@ impl CiCdAutomation {
         } else {
             TestExecutionStatus::Success
         }
+    }
+
+    // Helper methods for benchmark execution and parsing
+
+    /// Parse benchmark execution time from output
+    fn parse_benchmark_time(&self, output: &str) -> Option<f64> {
+        // Try different patterns for extracting timing information
+        for line in output.lines() {
+            // Pattern 1: "time: [123.45 ms 124.56 ms 125.67 ms]"
+            if let Some(captures) = regex::Regex::new(r"time:\s*\[\s*([0-9.]+)\s*(ns|µs|ms|s)\s*")
+                .ok()?
+                .captures(line)
+            {
+                if let (Ok(time), Some(unit)) = (captures[1].parse::<f64>(), captures.get(2)) {
+                    let multiplier = match unit.as_str() {
+                        "ns" => 1e-9,
+                        "µs" => 1e-6,
+                        "ms" => 1e-3,
+                        "s" => 1.0,
+                        _ => 1.0,
+                    };
+                    return Some(time * multiplier);
+                }
+            }
+
+            // Pattern 2: "Elapsed: 123.456 seconds"
+            if let Some(captures) = regex::Regex::new(r"(?i)elapsed:\s*([0-9.]+)\s*seconds?")
+                .ok()?
+                .captures(line)
+            {
+                if let Ok(time) = captures[1].parse::<f64>() {
+                    return Some(time);
+                }
+            }
+
+            // Pattern 3: "Duration: 123ms"
+            if let Some(captures) = regex::Regex::new(r"(?i)duration:\s*([0-9.]+)(ms|s)")
+                .ok()?
+                .captures(line)
+            {
+                if let (Ok(time), Some(unit)) = (captures[1].parse::<f64>(), captures.get(2)) {
+                    let multiplier = if unit.as_str() == "ms" { 1e-3 } else { 1.0 };
+                    return Some(time * multiplier);
+                }
+            }
+        }
+        None
+    }
+
+    /// Parse memory usage from output
+    fn parse_memory_usage(&self, output: &str) -> Option<f64> {
+        for line in output.lines() {
+            if let Some(captures) =
+                regex::Regex::new(r"(?i)memory:\s*([0-9.]+)\s*(kb|mb|gb|bytes?)")
+                    .ok()?
+                    .captures(line)
+            {
+                if let (Ok(memory), Some(unit)) = (captures[1].parse::<f64>(), captures.get(2)) {
+                    let multiplier = match unit.as_str().to_lowercase().as_str() {
+                        "bytes" | "byte" => 1.0,
+                        "kb" => 1024.0,
+                        "mb" => 1024.0 * 1024.0,
+                        "gb" => 1024.0 * 1024.0 * 1024.0,
+                        _ => 1.0,
+                    };
+                    return Some(memory * multiplier);
+                }
+            }
+        }
+        None
+    }
+
+    /// Parse Criterion benchmark output
+    fn parse_criterion_output(&self, output: &str) -> Option<HashMap<MetricType, MetricValue>> {
+        let mut metrics = HashMap::new();
+
+        for line in output.lines() {
+            // Try to parse as JSON first
+            if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(line) {
+                if let Some(timing) = json_value.get("time") {
+                    if let Some(mean) = timing.get("mean").and_then(|v| v.as_f64()) {
+                        let std_dev = timing.get("std_dev").and_then(|v| v.as_f64());
+                        let min_val = timing.get("min").and_then(|v| v.as_f64()).unwrap_or(mean);
+                        let max_val = timing.get("max").and_then(|v| v.as_f64()).unwrap_or(mean);
+
+                        metrics.insert(
+                            MetricType::ExecutionTime,
+                            MetricValue {
+                                value: mean / 1_000_000_000.0, // Convert ns to seconds
+                                std_dev: std_dev.map(|sd| sd / 1_000_000_000.0),
+                                sample_count: 1,
+                                min_value: min_val / 1_000_000_000.0,
+                                max_value: max_val / 1_000_000_000.0,
+                                percentiles: None,
+                            },
+                        );
+                        return Some(metrics);
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
+    /// Parse custom metrics from output
+    fn parse_custom_metrics(&self, output: &str) -> Option<HashMap<MetricType, MetricValue>> {
+        let mut metrics = HashMap::new();
+
+        for line in output.lines() {
+            // Pattern: METRIC:name=value[unit]
+            if let Some(captures) =
+                regex::Regex::new(r"METRIC:([^=]+)=([0-9.]+)(?:\s*\[([^\]]+)\])?")
+                    .ok()?
+                    .captures(line)
+            {
+                let name = captures[1].trim().to_string();
+                if let Ok(value) = captures[2].parse::<f64>() {
+                    let metric_type = MetricType::Other(name);
+                    metrics.insert(
+                        metric_type,
+                        MetricValue {
+                            value,
+                            std_dev: None,
+                            sample_count: 1,
+                            min_value: value,
+                            max_value: value,
+                            percentiles: None,
+                        },
+                    );
+                }
+            }
+        }
+
+        if metrics.is_empty() {
+            None
+        } else {
+            Some(metrics)
+        }
+    }
+
+    // Inline benchmark functions
+
+    /// Execute simple loop benchmark
+    fn execute_simple_loop_benchmark(&self, iterations: usize) -> f64 {
+        let start = std::time::Instant::now();
+        let mut sum = 0u64;
+        for i in 0..iterations {
+            sum = sum.wrapping_add(i as u64);
+        }
+        // Prevent optimization
+        std::hint::black_box(sum);
+        start.elapsed().as_secs_f64()
+    }
+
+    /// Execute memory allocation benchmark
+    fn execute_memory_allocation_benchmark(&self, size: usize) -> f64 {
+        let start = std::time::Instant::now();
+        let mut vectors: Vec<Vec<u8>> = Vec::new();
+        for _ in 0..100 {
+            vectors.push(vec![0u8; size]);
+        }
+        // Prevent optimization
+        std::hint::black_box(vectors);
+        start.elapsed().as_secs_f64()
+    }
+
+    /// Execute computation-intensive benchmark
+    fn execute_computation_benchmark(&self, complexity: usize) -> f64 {
+        let start = std::time::Instant::now();
+        let mut result = 0.0f64;
+        for i in 0..complexity {
+            for j in 0..complexity {
+                result += (i as f64 * j as f64).sin().cos();
+            }
+        }
+        // Prevent optimization
+        std::hint::black_box(result);
+        start.elapsed().as_secs_f64()
+    }
+
+    /// Execute sleep benchmark
+    async fn execute_sleep_benchmark(&self, duration_ms: u64) -> f64 {
+        let start = std::time::Instant::now();
+        tokio::time::sleep(tokio::time::Duration::from_millis(duration_ms)).await;
+        start.elapsed().as_secs_f64()
+    }
+
+    // Baseline management methods
+
+    /// Load baseline from artifact storage
+    async fn load_baseline_from_storage(
+        &self,
+        branch: &str,
+    ) -> Result<Vec<PerformanceMeasurement>> {
+        // Implementation would depend on the specific storage backend
+        // For now, return an error to fall back to other methods
+        Err(crate::error::OptimError::General(format!(
+            "Artifact storage not configured for branch: {}",
+            branch
+        )))
+    }
+
+    /// Load baseline from local cache
+    async fn load_baseline_from_cache(&self, branch: &str) -> Result<Vec<PerformanceMeasurement>> {
+        let cache_path = format!(".performance_cache/{}.json", branch);
+        if std::path::Path::new(&cache_path).exists() {
+            let content = std::fs::read_to_string(&cache_path).map_err(|e| {
+                crate::error::OptimError::General(format!("Failed to read cache: {}", e))
+            })?;
+            let baseline: Vec<PerformanceMeasurement> =
+                serde_json::from_str(&content).map_err(|e| {
+                    crate::error::OptimError::General(format!("Failed to parse cache: {}", e))
+                })?;
+            Ok(baseline)
+        } else {
+            Err(crate::error::OptimError::General(format!(
+                "No cached baseline found for branch: {}",
+                branch
+            )))
+        }
+    }
+
+    /// Generate baseline from git history
+    async fn generate_baseline_from_history(
+        &self,
+        branch: &str,
+    ) -> Result<Vec<PerformanceMeasurement>> {
+        // This is a simplified implementation
+        // In practice, you'd check out previous commits and run benchmarks
+        println!("Generating baseline from history for branch: {}", branch);
+
+        // For now, return an error to indicate this feature needs more implementation
+        Err(crate::error::OptimError::General(
+            "Baseline generation from history not fully implemented".to_string(),
+        ))
+    }
+
+    /// Save baseline to cache
+    async fn save_baseline_to_cache(
+        &self,
+        branch: &str,
+        baseline: &[PerformanceMeasurement],
+    ) -> Result<()> {
+        std::fs::create_dir_all(".performance_cache").map_err(|e| {
+            crate::error::OptimError::General(format!("Failed to create cache dir: {}", e))
+        })?;
+
+        let cache_path = format!(".performance_cache/{}.json", branch);
+        let content = serde_json::to_string_pretty(baseline).map_err(|e| {
+            crate::error::OptimError::General(format!("Failed to serialize baseline: {}", e))
+        })?;
+
+        std::fs::write(&cache_path, content).map_err(|e| {
+            crate::error::OptimError::General(format!("Failed to write cache: {}", e))
+        })?;
+
+        Ok(())
     }
 }
 

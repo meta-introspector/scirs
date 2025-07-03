@@ -98,7 +98,7 @@ impl Default for UltrathinkFftConfig {
             max_memory_mb: 4096, // 4GB default
             monitoring_interval: 100,
             adaptation_threshold: 0.05, // 5% improvement
-            target_accuracy: 1e-12, // High precision for FFT
+            target_accuracy: 1e-12,     // High precision for FFT
             cache_size_limit: 1000,
             enable_real_time_learning: true,
             enable_hardware_optimization: true,
@@ -1252,16 +1252,17 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
     ) -> FFTResult<FftRecommendation> {
         // Create signal profile
         let signal_profile = self.create_signal_profile(signal)?;
-        
+
         // Get algorithm recommendation
         let algorithm_recommendation = self.get_algorithm_recommendation(&signal_profile)?;
-        
+
         // Get optimization recommendations
-        let optimization_recommendations = self.get_optimization_recommendations(&signal_profile)?;
-        
+        let optimization_recommendations =
+            self.get_optimization_recommendations(&signal_profile)?;
+
         // Get memory recommendations
         let memory_recommendations = self.get_memory_recommendations(&signal_profile)?;
-        
+
         Ok(FftRecommendation {
             recommended_algorithm: algorithm_recommendation.algorithm,
             optimization_settings: optimization_recommendations,
@@ -1278,33 +1279,40 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         recommendation: &FftRecommendation,
     ) -> FFTResult<ArrayD<Complex<F>>> {
         let start_time = Instant::now();
-        
+
         // Apply preprocessing if recommended
-        let preprocessed_signal = self.apply_preprocessing(signal, &recommendation.optimization_settings)?;
-        
+        let preprocessed_signal =
+            self.apply_preprocessing(signal, &recommendation.optimization_settings)?;
+
         // Execute FFT with recommended algorithm
-        let result = self.execute_fft_with_algorithm(&preprocessed_signal, &recommendation.recommended_algorithm)?;
-        
+        let result = self.execute_fft_with_algorithm(
+            &preprocessed_signal,
+            &recommendation.recommended_algorithm,
+        )?;
+
         // Apply postprocessing if needed
-        let final_result = self.apply_postprocessing(&result, &recommendation.optimization_settings)?;
-        
+        let final_result =
+            self.apply_postprocessing(&result, &recommendation.optimization_settings)?;
+
         // Record performance metrics
         let execution_time = start_time.elapsed();
         self.record_performance_metrics(execution_time, &recommendation.recommended_algorithm)?;
-        
+
         // Update learning systems
         self.update_learning_systems(recommendation, execution_time)?;
-        
+
         Ok(final_result)
     }
 
     /// Get current performance metrics
     pub fn get_performance_metrics(&self) -> FFTResult<FftPerformanceMetrics> {
-        let tracker = self.performance_tracker.read()
-            .map_err(|_| FFTError::InternalError("Failed to read performance tracker".to_string()))?;
-        
+        let tracker = self.performance_tracker.read().map_err(|_| {
+            FFTError::InternalError("Failed to read performance tracker".to_string())
+        })?;
+
         Ok(FftPerformanceMetrics {
-            average_execution_time: tracker.execution_times.iter().sum::<f64>() / tracker.execution_times.len() as f64,
+            average_execution_time: tracker.execution_times.iter().sum::<f64>()
+                / tracker.execution_times.len() as f64,
             memory_efficiency: self.calculate_memory_efficiency()?,
             algorithm_distribution: tracker.algorithm_usage.clone(),
             performance_trends: tracker.performance_trends.clone(),
@@ -1329,14 +1337,12 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         let shape = signal.shape();
         let length = signal.len();
         let dimensions = shape.to_vec();
-        
+
         // Calculate sparsity
         let zero_threshold = F::from(1e-12).unwrap();
-        let zero_count = signal.iter()
-            .filter(|&x| x.norm() < zero_threshold)
-            .count();
+        let zero_count = signal.iter().filter(|&x| x.norm() < zero_threshold).count();
         let sparsity = F::from(zero_count as f64 / length as f64).unwrap();
-        
+
         // Determine signal type based on characteristics
         let signal_type = if sparsity > F::from(0.9).unwrap() {
             SignalType::Sparse
@@ -1345,19 +1351,19 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         } else {
             SignalType::Complex
         };
-        
+
         // Calculate entropy (simplified measure)
         let entropy = self.calculate_entropy(signal)?;
-        
+
         // Detect dominant frequencies (simplified)
         let dominant_frequencies = self.detect_dominant_frequencies(signal)?;
-        
+
         // Calculate periodicity score
         let periodicity = self.calculate_periodicity(signal)?;
-        
+
         // Calculate spectral flatness
         let spectral_flatness = self.calculate_spectral_flatness(signal)?;
-        
+
         Ok(SignalProfile {
             length,
             dimensions,
@@ -1395,13 +1401,13 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
             // General case - use mixed radix
             FftAlgorithmType::CooleyTukeyMixedRadix
         };
-        
+
         // Calculate confidence based on signal characteristics
         let confidence = self.calculate_recommendation_confidence(signal_profile, &algorithm)?;
-        
+
         // Estimate expected performance
         let expected_performance = self.estimate_performance(signal_profile, &algorithm)?;
-        
+
         Ok(AlgorithmRecommendation {
             algorithm,
             confidence,
@@ -1415,7 +1421,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
     ) -> FFTResult<OptimizationSettings> {
         let mut preprocessing_steps = Vec::new();
         let mut algorithm_parameters = HashMap::new();
-        
+
         // Add preprocessing steps based on signal characteristics
         if signal_profile.length % 2 != 0 {
             let next_power_of_two = (signal_profile.length as f64).log2().ceil() as usize;
@@ -1423,38 +1429,38 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
                 target_size: 1 << next_power_of_two,
             });
         }
-        
+
         // Add windowing for non-periodic signals
         if signal_profile.periodicity < F::from(0.5).unwrap() {
             preprocessing_steps.push(PreprocessingStep::Windowing {
                 window_type: "hamming".to_string(),
             });
         }
-        
+
         // Set algorithm parameters
         algorithm_parameters.insert("precision".to_string(), 1e-12);
         algorithm_parameters.insert("optimization_level".to_string(), 2.0);
-        
+
         // Configure parallelism
         let thread_count = if signal_profile.length > 100_000 {
             num_cpus::get()
         } else {
             1
         };
-        
+
         let parallelism_settings = ParallelismConfig {
             thread_count,
             thread_affinity: ThreadAffinity::None,
             work_stealing: true,
         };
-        
+
         // Configure SIMD
         let simd_settings = SimdConfig {
             instruction_set: SimdSupport::AVX2, // Default to AVX2
             vector_size: 256,
             unaligned_access: false,
         };
-        
+
         Ok(OptimizationSettings {
             preprocessing_steps,
             algorithm_parameters,
@@ -1468,7 +1474,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         signal_profile: &SignalProfile<F>,
     ) -> FFTResult<MemoryStrategy> {
         let estimated_memory = signal_profile.length * std::mem::size_of::<Complex<F>>();
-        
+
         let strategy = if estimated_memory < 1_000_000 {
             // Small signals - conservative allocation
             MemoryAllocationStrategy::Conservative
@@ -1479,7 +1485,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
             // Medium signals - aggressive pre-allocation
             MemoryAllocationStrategy::Aggressive
         };
-        
+
         Ok(MemoryStrategy {
             allocation_strategy: strategy,
             cache_enabled: true,
@@ -1494,27 +1500,27 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         settings: &OptimizationSettings,
     ) -> FFTResult<ArrayD<Complex<F>>> {
         let mut result = signal.to_owned().into_dyn();
-        
+
         for step in &settings.preprocessing_steps {
             match step {
                 PreprocessingStep::ZeroPadding { target_size } => {
                     result = self.apply_zero_padding(result, *target_size)?;
-                },
+                }
                 PreprocessingStep::Windowing { window_type } => {
                     result = self.apply_windowing(result, window_type)?;
-                },
+                }
                 PreprocessingStep::Denoising { method } => {
                     result = self.apply_denoising(result, method)?;
-                },
+                }
                 PreprocessingStep::Filtering { filter_spec } => {
                     result = self.apply_filtering(result, filter_spec)?;
-                },
+                }
             }
         }
-        
+
         Ok(result)
     }
-    
+
     fn apply_zero_padding(
         &self,
         signal: ArrayD<Complex<F>>,
@@ -1523,15 +1529,15 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         if signal.len() >= target_size {
             return Ok(signal);
         }
-        
+
         let padding_size = target_size - signal.len();
         let (mut padded, _offset) = signal.into_raw_vec_and_offset();
         padded.extend(vec![Complex::zero(); padding_size]);
-        
+
         ArrayD::from_shape_vec(vec![target_size], padded)
             .map_err(|e| FFTError::DimensionError(format!("Shape error: {}", e)))
     }
-    
+
     fn apply_windowing(
         &self,
         mut signal: ArrayD<Complex<F>>,
@@ -1540,13 +1546,15 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         // Apply Hamming window (simplified)
         let len = signal.len();
         for (i, val) in signal.iter_mut().enumerate() {
-            let window_val = F::from(0.54).unwrap() - F::from(0.46).unwrap() * 
-                F::from((2.0 * std::f64::consts::PI * i as f64 / (len - 1) as f64).cos()).unwrap();
+            let window_val = F::from(0.54).unwrap()
+                - F::from(0.46).unwrap()
+                    * F::from((2.0 * std::f64::consts::PI * i as f64 / (len - 1) as f64).cos())
+                        .unwrap();
             *val = *val * window_val;
         }
         Ok(signal)
     }
-    
+
     fn apply_denoising(
         &self,
         signal: ArrayD<Complex<F>>,
@@ -1555,7 +1563,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         // Simplified denoising - just return original for now
         Ok(signal)
     }
-    
+
     fn apply_filtering(
         &self,
         signal: ArrayD<Complex<F>>,
@@ -1573,22 +1581,16 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         // For now, use a basic FFT implementation placeholder
         // In a real implementation, this would dispatch to actual FFT algorithms
         match algorithm {
-            FftAlgorithmType::CooleyTukeyRadix2 => {
-                self.execute_cooley_tukey_radix2(signal)
-            },
-            FftAlgorithmType::BluesteinAlgorithm => {
-                self.execute_bluestein_algorithm(signal)
-            },
-            FftAlgorithmType::GpuAcceleratedFft => {
-                self.execute_gpu_fft(signal)
-            },
+            FftAlgorithmType::CooleyTukeyRadix2 => self.execute_cooley_tukey_radix2(signal),
+            FftAlgorithmType::BluesteinAlgorithm => self.execute_bluestein_algorithm(signal),
+            FftAlgorithmType::GpuAcceleratedFft => self.execute_gpu_fft(signal),
             _ => {
                 // Default implementation
                 self.execute_default_fft(signal)
             }
         }
     }
-    
+
     fn execute_cooley_tukey_radix2<D: Dimension>(
         &self,
         signal: &ArrayBase<impl Data<Elem = Complex<F>>, D>,
@@ -1597,7 +1599,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         let result = signal.to_owned().into_dyn();
         Ok(result)
     }
-    
+
     fn execute_bluestein_algorithm<D: Dimension>(
         &self,
         signal: &ArrayBase<impl Data<Elem = Complex<F>>, D>,
@@ -1606,7 +1608,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         let result = signal.to_owned().into_dyn();
         Ok(result)
     }
-    
+
     fn execute_gpu_fft<D: Dimension>(
         &self,
         signal: &ArrayBase<impl Data<Elem = Complex<F>>, D>,
@@ -1615,7 +1617,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         let result = signal.to_owned().into_dyn();
         Ok(result)
     }
-    
+
     fn execute_default_fft<D: Dimension>(
         &self,
         signal: &ArrayBase<impl Data<Elem = Complex<F>>, D>,
@@ -1633,11 +1635,11 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         // Basic postprocessing - normalization
         let mut processed = result.clone();
         let norm_factor = F::from(1.0 / (result.len() as f64).sqrt()).unwrap();
-        
+
         for val in processed.iter_mut() {
             *val = *val * norm_factor;
         }
-        
+
         Ok(processed)
     }
 
@@ -1646,24 +1648,30 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         execution_time: Duration,
         algorithm: &FftAlgorithmType,
     ) -> FFTResult<()> {
-        let mut tracker = self.performance_tracker.write()
-            .map_err(|_| FFTError::InternalError("Failed to write to performance tracker".to_string()))?;
-            
+        let mut tracker = self.performance_tracker.write().map_err(|_| {
+            FFTError::InternalError("Failed to write to performance tracker".to_string())
+        })?;
+
         // Record execution time
         let time_micros = execution_time.as_micros() as f64;
         tracker.execution_times.push_back(time_micros);
-        
+
         // Keep only recent measurements
         if tracker.execution_times.len() > 1000_usize {
             tracker.execution_times.pop_front();
         }
-        
+
         // Update algorithm usage statistics
-        let stats = tracker.algorithm_usage.entry(algorithm.clone()).or_default();
+        let stats = tracker
+            .algorithm_usage
+            .entry(algorithm.clone())
+            .or_default();
         stats.usage_count += 1;
-        stats.avg_execution_time = (stats.avg_execution_time * (stats.usage_count - 1_usize) as f64 + time_micros) / (stats.usage_count as f64);
+        stats.avg_execution_time =
+            (stats.avg_execution_time * (stats.usage_count - 1_usize) as f64 + time_micros)
+                / (stats.usage_count as f64);
         stats.success_rate = 1.0; // Assume success for now
-        
+
         Ok(())
     }
 
@@ -1682,15 +1690,15 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
                 accuracy: recommendation.expected_performance.accuracy,
                 timestamp: Instant::now(),
             };
-            
+
             selector.performance_history.push_back(performance_record);
-            
+
             // Keep only recent history
             if selector.performance_history.len() > 10000 {
                 selector.performance_history.pop_front();
             }
         }
-        
+
         // Update optimization engine
         if let Ok(mut engine) = self.optimization_engine.lock() {
             let optimization_result = OptimizationResult {
@@ -1700,25 +1708,27 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
                 success: true,
                 timestamp: Instant::now(),
             };
-            
+
             engine.optimization_history.push_back(optimization_result);
-            
+
             // Keep only recent history
             if engine.optimization_history.len() > 1000 {
                 engine.optimization_history.pop_front();
             }
         }
-        
+
         Ok(())
     }
 
     fn calculate_memory_efficiency(&self) -> FFTResult<f64> {
-        let manager = self.memory_manager.lock()
+        let manager = self
+            .memory_manager
+            .lock()
             .map_err(|_| FFTError::InternalError("Failed to lock memory manager".to_string()))?;
-            
+
         let current_usage = manager.memory_tracker.current_usage as f64;
         let peak_usage = manager.memory_tracker.peak_usage as f64;
-        
+
         if peak_usage > 0.0 {
             Ok(current_usage / peak_usage)
         } else {
@@ -1727,11 +1737,13 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
     }
 
     fn get_cache_hit_ratio(&self) -> FFTResult<f64> {
-        let cache = self.adaptive_cache.lock()
+        let cache = self
+            .adaptive_cache
+            .lock()
             .map_err(|_| FFTError::InternalError("Failed to lock adaptive cache".to_string()))?;
-            
+
         let total_accesses = cache.cache_stats.hit_count + cache.cache_stats.miss_count;
-        
+
         if total_accesses > 0 {
             Ok(cache.cache_stats.hit_count as f64 / total_accesses as f64)
         } else {
@@ -1745,20 +1757,21 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
             // Update learning rate and other parameters based on config
             selector.selection_model.learning_rate = 0.01;
         }
-        
-        // Update optimization engine configuration  
+
+        // Update optimization engine configuration
         if let Ok(mut engine) = self.optimization_engine.lock() {
-            engine.adaptive_params.learning_rate = F::from(self.config.adaptation_threshold).unwrap();
+            engine.adaptive_params.learning_rate =
+                F::from(self.config.adaptation_threshold).unwrap();
         }
-        
+
         // Update memory manager configuration
         if let Ok(mut manager) = self.memory_manager.lock() {
             manager.allocation_strategy = MemoryAllocationStrategy::Adaptive;
         }
-        
+
         Ok(())
     }
-    
+
     // Helper methods for signal analysis
     fn is_real_valued<D: Dimension>(
         &self,
@@ -1767,7 +1780,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         let threshold = F::from(1e-12).unwrap();
         signal.iter().all(|x| x.im.abs() < threshold)
     }
-    
+
     fn calculate_entropy<D: Dimension>(
         &self,
         signal: &ArrayBase<impl Data<Elem = Complex<F>>, D>,
@@ -1778,11 +1791,11 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         for &mag in &magnitudes {
             total += mag;
         }
-        
+
         if total <= F::zero() {
             return Ok(F::zero());
         }
-        
+
         let mut entropy = F::zero();
         for &x in &magnitudes {
             if x > F::zero() {
@@ -1790,25 +1803,25 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
                 entropy += -p * p.ln();
             }
         }
-            
+
         Ok(entropy)
     }
-    
+
     fn detect_dominant_frequencies<D: Dimension>(
         &self,
         signal: &ArrayBase<impl Data<Elem = Complex<F>>, D>,
     ) -> FFTResult<Vec<F>> {
         // Simplified frequency detection - would normally use actual FFT
         let mut frequencies = Vec::new();
-        
+
         // For now, return some default frequencies based on signal characteristics
         let signal_len = F::from(signal.len() as f64).unwrap();
         frequencies.push(F::from(0.1).unwrap() * signal_len);
         frequencies.push(F::from(0.25).unwrap() * signal_len);
-        
+
         Ok(frequencies)
     }
-    
+
     fn calculate_periodicity<D: Dimension>(
         &self,
         signal: &ArrayBase<impl Data<Elem = Complex<F>>, D>,
@@ -1817,11 +1830,11 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         // In a real implementation, this would use autocorrelation
         let mut max_correlation = F::zero();
         let len = signal.len().min(100); // Limit for performance
-        
-        for lag in 1..len/2 {
+
+        for lag in 1..len / 2 {
             let mut correlation = F::zero();
             let mut count = 0;
-            
+
             for i in 0..(len - lag) {
                 // For multi-dimensional arrays, just use flat indexing as a simplification
                 if i < signal.len() && (i + lag) < signal.len() {
@@ -1832,23 +1845,23 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
                     }
                 }
             }
-            
+
             if count > 0 {
                 correlation = correlation / F::from(count as f64).unwrap();
                 max_correlation = max_correlation.max(correlation.abs());
             }
         }
-        
+
         Ok(max_correlation)
     }
-    
+
     fn calculate_spectral_flatness<D: Dimension>(
         &self,
         signal: &ArrayBase<impl Data<Elem = Complex<F>>, D>,
     ) -> FFTResult<F> {
         // Simplified spectral flatness measure
         let magnitudes: Vec<F> = signal.iter().map(|x| x.norm()).collect();
-        
+
         let geometric_mean = {
             let mut product = F::one();
             for &mag in &magnitudes {
@@ -1858,32 +1871,34 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
             }
             product.powf(F::one() / F::from(magnitudes.len() as f64).unwrap())
         };
-        
+
         let mut sum = F::zero();
         for &mag in &magnitudes {
             sum += mag;
         }
         let arithmetic_mean: F = sum / F::from(magnitudes.len() as f64).unwrap();
-        
+
         if arithmetic_mean > F::zero() {
             Ok(geometric_mean / arithmetic_mean)
         } else {
             Ok(F::zero())
         }
     }
-    
+
     fn has_gpu_available(&self) -> FFTResult<bool> {
         // Check hardware capabilities for GPU availability
-        let hardware = self.hardware_adapter.read()
+        let hardware = self
+            .hardware_adapter
+            .read()
             .map_err(|_| FFTError::InternalError("Failed to read hardware adapter".to_string()))?;
-            
+
         Ok(hardware.hardware_capabilities.gpu_info.is_some())
     }
-    
+
     fn is_power_of_two(&self, n: usize) -> bool {
         n > 0 && (n & (n - 1)) == 0
     }
-    
+
     fn calculate_recommendation_confidence(
         &self,
         signal_profile: &SignalProfile<F>,
@@ -1891,31 +1906,31 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
     ) -> FFTResult<f64> {
         // Calculate confidence based on signal characteristics and algorithm suitability
         let mut confidence = 0.5; // Base confidence
-        
+
         match algorithm {
             FftAlgorithmType::CooleyTukeyRadix2 => {
                 if self.is_power_of_two(signal_profile.length) {
                     confidence += 0.3;
                 }
-            },
+            }
             FftAlgorithmType::BluesteinAlgorithm => {
                 if signal_profile.sparsity > F::from(0.7).unwrap() {
                     confidence += 0.4;
                 }
-            },
+            }
             FftAlgorithmType::GpuAcceleratedFft => {
                 if signal_profile.length > 100_000 && self.has_gpu_available()? {
                     confidence += 0.4;
                 }
-            },
+            }
             _ => {
                 confidence += 0.2;
             }
         }
-        
+
         Ok(confidence.min(1.0))
     }
-    
+
     fn estimate_performance(
         &self,
         signal_profile: &SignalProfile<F>,
@@ -1923,7 +1938,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
     ) -> FFTResult<ExpectedPerformance> {
         let n = signal_profile.length as f64;
         let log_n = n.log2();
-        
+
         // Rough performance estimates based on algorithmic complexity
         let execution_time = match algorithm {
             FftAlgorithmType::CooleyTukeyRadix2 => n * log_n * 0.1, // O(n log n)
@@ -1931,9 +1946,9 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
             FftAlgorithmType::GpuAcceleratedFft => n * log_n * 0.05, // Faster on GPU
             _ => n * log_n * 0.15,
         };
-        
+
         let memory_usage = signal_profile.length * std::mem::size_of::<Complex<F>>() * 2;
-        
+
         Ok(ExpectedPerformance {
             execution_time,
             memory_usage,
@@ -1986,7 +2001,6 @@ impl<F: Float> Default for AdaptiveParameters<F> {
         }
     }
 }
-
 
 impl IntelligentMemoryManager {
     fn new() -> FFTResult<Self> {
@@ -2068,7 +2082,7 @@ impl CpuInfo {
         Ok(Self {
             core_count: num_cpus::get(),
             cache_sizes: vec![32768, 262144, 8388608], // Default L1, L2, L3
-            frequency_mhz: 2400, // Default frequency
+            frequency_mhz: 2400,                       // Default frequency
             architecture: "x86_64".to_string(),
         })
     }
@@ -2085,8 +2099,8 @@ impl MemoryInfo {
     fn detect() -> FFTResult<Self> {
         // Implement memory detection logic
         Ok(Self {
-            total_mb: 8192, // Default 8GB
-            available_mb: 4096, // Default 4GB available
+            total_mb: 8192,      // Default 8GB
+            available_mb: 4096,  // Default 4GB available
             bandwidth_gbs: 25.6, // Default bandwidth
         })
     }
@@ -2350,7 +2364,8 @@ pub struct FftPerformanceMetrics {
 }
 
 /// Create a new ultrathink FFT coordinator with default configuration
-pub fn create_ultrathink_fft_coordinator<F: Float + Debug + std::ops::AddAssign>() -> FFTResult<UltrathinkFftCoordinator<F>> {
+pub fn create_ultrathink_fft_coordinator<F: Float + Debug + std::ops::AddAssign>(
+) -> FFTResult<UltrathinkFftCoordinator<F>> {
     UltrathinkFftCoordinator::new(UltrathinkFftConfig::default())
 }
 
@@ -2364,26 +2379,26 @@ pub fn create_ultrathink_fft_coordinator_with_config<F: Float + Debug + std::ops
 #[allow(dead_code)]
 fn example_usage() -> FFTResult<()> {
     use num_complex::Complex64;
-    
+
     // Create coordinator
     let coordinator = create_ultrathink_fft_coordinator::<f64>()?;
-    
+
     // Create example signal
     let signal = Array1::from_vec(
         (0..1024)
             .map(|i| Complex64::new((i as f64 * 0.1).sin(), 0.0))
-            .collect()
+            .collect(),
     );
-    
+
     // Get recommendation
     let recommendation = coordinator.analyze_and_recommend(&signal)?;
-    
+
     // Execute optimized FFT
     let _result = coordinator.execute_optimized_fft(&signal, &recommendation)?;
-    
+
     // Get performance metrics
     let _metrics = coordinator.get_performance_metrics()?;
-    
+
     Ok(())
 }
 

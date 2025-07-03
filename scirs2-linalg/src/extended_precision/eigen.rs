@@ -40,7 +40,6 @@
 
 use ndarray::{Array1, Array2, ArrayView2};
 use num_traits::{Float, One, Zero};
-use num_complex::Complex;
 
 use super::{DemotableTo, PromotableTo};
 use crate::error::LinalgResult;
@@ -210,26 +209,26 @@ where
     // For each eigenvalue, compute the corresponding eigenvector using inverse iteration
     for (k, lambda) in eigenvalues.iter().enumerate() {
         // Create (A - λI) matrix in extended precision as complex numbers
-        let mut shifted_matrix = Array2::zeros((n, n));
+        let mut shifted_matrix: Array2<num_complex::Complex<I>> = Array2::zeros((n, n));
         let lambda_high = num_complex::Complex::new(lambda.re.promote(), lambda.im.promote());
-        
+
         // Convert real matrix to complex and subtract eigenvalue from diagonal
         for i in 0..n {
             for j in 0..n {
                 shifted_matrix[[i, j]] = num_complex::Complex::new(a_high[[i, j]], I::zero());
             }
         }
-        
+
         for i in 0..n {
             shifted_matrix[[i, i]] = shifted_matrix[[i, i]] - lambda_high;
         }
 
         // Compute eigenvector using inverse iteration with extended precision
         let eigenvector_high = compute_eigenvector_inverse_iteration(
-            &shifted_matrix, 
-            lambda_high, 
+            &shifted_matrix,
+            lambda_high,
             max_iter.unwrap_or(100),
-            I::from(tol.unwrap_or(A::epsilon().sqrt()).promote()).unwrap()
+            I::from(tol.unwrap_or(A::epsilon().sqrt()).promote()).unwrap(),
         );
 
         // Convert eigenvector back to original precision
@@ -1780,18 +1779,25 @@ fn compute_eigenvector_inverse_iteration<I>(
     tol: I,
 ) -> Array1<num_complex::Complex<I>>
 where
-    I: Float + Zero + One + Copy + std::fmt::Debug + std::ops::AddAssign + std::ops::SubAssign + std::ops::DivAssign,
+    I: Float
+        + Zero
+        + One
+        + Copy
+        + std::fmt::Debug
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::ops::DivAssign,
 {
     let n = shifted_matrix.nrows();
-    
+
     // Start with a random vector
     let mut v = Array1::zeros(n);
     v[0] = num_complex::Complex::new(I::one(), I::zero());
-    
+
     for _ in 0..max_iter {
         // Solve (A - λI)u = v for u using LU decomposition
         let mut u = solve_linear_system_complex(shifted_matrix, &v);
-        
+
         // Normalize u
         let norm = compute_complex_norm(&u);
         if norm > I::epsilon() {
@@ -1800,21 +1806,21 @@ where
                 u[i] = u[i] / norm_complex;
             }
         }
-        
+
         // Check convergence
         let mut diff = I::zero();
         for i in 0..n {
             let delta = (u[i] - v[i]).norm();
-            diff = diff + delta;
+            diff += delta;
         }
-        
+
         if diff < tol {
             return u;
         }
-        
+
         v = u;
     }
-    
+
     v
 }
 
@@ -1828,7 +1834,7 @@ where
 {
     let n = a.nrows();
     let mut aug = Array2::zeros((n, n + 1));
-    
+
     // Create augmented matrix
     for i in 0..n {
         for j in 0..n {
@@ -1836,7 +1842,7 @@ where
         }
         aug[[i, n]] = b[i];
     }
-    
+
     // Forward elimination
     for k in 0..n {
         // Find pivot
@@ -1846,7 +1852,7 @@ where
                 max_row = i;
             }
         }
-        
+
         // Swap rows
         if max_row != k {
             for j in 0..n + 1 {
@@ -1855,7 +1861,7 @@ where
                 aug[[max_row, j]] = temp;
             }
         }
-        
+
         // Make diagonal elements 1
         let pivot = aug[[k, k]];
         if pivot.norm() > I::epsilon() {
@@ -1863,7 +1869,7 @@ where
                 aug[[k, j]] = aug[[k, j]] / pivot;
             }
         }
-        
+
         // Eliminate column
         for i in k + 1..n {
             let factor = aug[[i, k]];
@@ -1872,7 +1878,7 @@ where
             }
         }
     }
-    
+
     // Back substitution
     let mut x = Array1::zeros(n);
     for i in (0..n).rev() {
@@ -1881,7 +1887,7 @@ where
             x[i] = x[i] - aug[[i, j]] * x[j];
         }
     }
-    
+
     x
 }
 

@@ -13,14 +13,33 @@
 
 use crate::error::{SpecialError, SpecialResult};
 use ndarray::{ArrayView1, ArrayViewMut1};
-use scirs2_core::gpu::kernels::{DataType, KernelMetadata, KernelParams, OperationType};
-use scirs2_core::gpu::{GpuBackend, GpuContext, GpuError};
+use scirs2_core::gpu::{GpuContext, GpuError};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
-#[cfg(feature = "gpu")]
-use scirs2_core::simd_ops::AutoOptimizer;
+/// Safe slice casting replacement for bytemuck::cast_slice
+#[allow(dead_code)]
+fn cast_slice_to_bytes<T>(slice: &[T]) -> &[u8] {
+    unsafe {
+        std::slice::from_raw_parts(
+            slice.as_ptr() as *const u8,
+            slice.len() * std::mem::size_of::<T>(),
+        )
+    }
+}
+
+/// Safe slice casting replacement for bytemuck::cast_slice (reverse)
+#[allow(dead_code)]
+fn cast_bytes_to_slice<T>(bytes: &[u8]) -> &[T] {
+    assert_eq!(bytes.len() % std::mem::size_of::<T>(), 0);
+    unsafe {
+        std::slice::from_raw_parts(
+            bytes.as_ptr() as *const T,
+            bytes.len() / std::mem::size_of::<T>(),
+        )
+    }
+}
 
 // Additional logging for GPU operations
 #[cfg(feature = "gpu")]
@@ -39,7 +58,7 @@ where
         + 'static,
 {
     use crate::gpu_context_manager::{get_gpu_pool, record_gpu_performance};
-    use scirs2_core::gpu::GpuBackendType;
+    use scirs2_core::gpu::GpuBackend;
 
     // Validate input dimensions
     if input.len() != output.len() {
@@ -103,7 +122,7 @@ where
                 if attempts == MAX_ATTEMPTS {
                     // Record the failure
                     record_gpu_performance(
-                        GpuBackendType::Auto,
+                        GpuBackend::Cpu,
                         start_time.elapsed(),
                         false,
                         input.len() * element_size,
@@ -456,24 +475,18 @@ mod tests {
 fn try_gamma_gpu_execution_enhanced<F>(
     input: &ArrayView1<F>,
     output: &mut ArrayViewMut1<F>,
-) -> SpecialResult<scirs2_core::gpu::GpuBackendType>
+) -> SpecialResult<scirs2_core::gpu::GpuBackend>
 where
-    F: num_traits::Float
-        + num_traits::FromPrimitive
-        + std::fmt::Debug
-        + Send
-        + Sync
-        + 'static
-        + bytemuck::Pod,
+    F: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + Send + Sync + 'static,
 {
     use crate::gpu_context_manager::get_best_gpu_context;
-    use scirs2_core::gpu::GpuBackendType;
+    use scirs2_core::gpu::GpuBackend;
 
     // Get the best available GPU context with intelligent selection
     let (gpu_context, backend_type) = match get_best_gpu_context() {
         Ok(ctx) => {
             // Determine the backend type from context (simplified)
-            let backend = GpuBackendType::WebGpu; // Default assumption
+            let backend = GpuBackend::Wgpu; // Default assumption
             #[cfg(feature = "gpu")]
             log::debug!("GPU context obtained successfully: {:?}", backend);
             (ctx, backend)
@@ -720,8 +733,8 @@ fn create_gpu_context() -> Result<Arc<GpuContext>, GpuError> {
             );
 
             // Fallback to direct context creation
-            use scirs2_core::gpu::{self, GpuBackendType};
-            gpu::get_or_create_context(GpuBackendType::Auto)
+            use scirs2_core::gpu::{self, GpuBackend};
+            gpu::get_or_create_context(GpuBackend::Cpu)
         }
     }
 }
@@ -733,9 +746,9 @@ fn create_gpu_buffer<T>(
     data: &[T],
 ) -> SpecialResult<Arc<dyn scirs2_core::gpu::GpuBuffer>>
 where
-    T: bytemuck::Pod,
+    T: Copy,
 {
-    ctx.create_buffer_with_data(bytemuck::cast_slice(data))
+    ctx.create_buffer_with_data(cast_slice_to_bytes(data))
         .map_err(|e| SpecialError::ComputationError(format!("Failed to create GPU buffer: {}", e)))
 }
 
@@ -746,7 +759,7 @@ fn create_gpu_buffer_typed<T>(
     data: &[T],
 ) -> SpecialResult<Arc<dyn scirs2_core::gpu::GpuBuffer>>
 where
-    T: num_traits::Float + bytemuck::Pod + 'static,
+    T: num_traits::Float + 'static,
 {
     // Validate input data for NaN/infinity before GPU transfer
     for (i, &val) in data.iter().enumerate() {
@@ -758,7 +771,7 @@ where
         }
     }
 
-    let byte_data = bytemuck::cast_slice(data);
+    let byte_data = cast_slice_to_bytes(data);
     #[cfg(feature = "gpu")]
     log::debug!(
         "Creating GPU buffer with {} bytes for {} elements",
@@ -885,13 +898,13 @@ fn read_gpu_buffer_to_array<T>(
     output: &mut [T],
 ) -> SpecialResult<()>
 where
-    T: bytemuck::Pod,
+    T: Copy,
 {
     let data = ctx
         .read_buffer(buffer)
         .map_err(|e| SpecialError::ComputationError(format!("Failed to read GPU buffer: {}", e)))?;
 
-    let typed_data = bytemuck::cast_slice::<u8, T>(&data);
+    let typed_data = cast_bytes_to_slice::<T>(&data);
     if typed_data.len() != output.len() {
         return Err(SpecialError::ComputationError(
             "GPU buffer size mismatch".to_string(),
@@ -910,13 +923,13 @@ fn read_gpu_buffer_to_array_typed<T>(
     output: &mut [T],
 ) -> SpecialResult<()>
 where
-    T: bytemuck::Pod + num_traits::Float + std::fmt::Debug,
+    T: num_traits::Float + std::fmt::Debug,
 {
     let data = ctx.read_buffer(buffer).map_err(|e| {
         SpecialError::ComputationError(format!("Failed to read typed GPU buffer: {}", e))
     })?;
 
-    let typed_data = bytemuck::cast_slice::<u8, T>(&data);
+    let typed_data = cast_bytes_to_slice::<T>(&data);
     if typed_data.len() != output.len() {
         return Err(SpecialError::ComputationError(format!(
             "GPU buffer size mismatch: expected {}, got {}",
@@ -959,7 +972,7 @@ fn create_gpu_buffer_with_caching<T>(
     data: &[T],
 ) -> SpecialResult<Arc<dyn scirs2_core::gpu::GpuBuffer>>
 where
-    T: bytemuck::Pod + 'static,
+    T: 'static,
 {
     let type_id = std::any::TypeId::of::<T>().into();
     let cache_key = (data.len(), type_id);
@@ -970,7 +983,7 @@ where
         let input_buffers = cache.input_buffers.lock().unwrap();
         if let Some(buffer) = input_buffers.get(&cache_key) {
             // Update buffer data
-            if let Ok(_) = ctx.update_buffer(buffer.as_ref(), bytemuck::cast_slice(data)) {
+            if let Ok(_) = ctx.update_buffer(buffer.as_ref(), cast_slice_to_bytes(data)) {
                 #[cfg(feature = "gpu")]
                 log::debug!("Reused cached input buffer for {} elements", data.len());
                 return Ok(Arc::clone(buffer));
@@ -980,7 +993,7 @@ where
 
     // Create new buffer and cache it
     let buffer = ctx
-        .create_buffer_with_data(bytemuck::cast_slice(data))
+        .create_buffer_with_data(cast_slice_to_bytes(data))
         .map_err(|e| {
             SpecialError::ComputationError(format!("Failed to create cached GPU buffer: {}", e))
         })?;
@@ -1186,7 +1199,7 @@ fn read_gpu_buffer_with_validation<T>(
     output: &mut [T],
 ) -> SpecialResult<()>
 where
-    T: bytemuck::Pod + num_traits::Float + std::fmt::Debug,
+    T: num_traits::Float + std::fmt::Debug,
 {
     let read_start = Instant::now();
 
@@ -1194,7 +1207,7 @@ where
         .read_buffer(buffer)
         .map_err(|e| SpecialError::ComputationError(format!("Failed to read GPU buffer: {}", e)))?;
 
-    let typed_data = bytemuck::cast_slice::<u8, T>(&data);
+    let typed_data = cast_bytes_to_slice::<T>(&data);
     if typed_data.len() != output.len() {
         return Err(SpecialError::ComputationError(format!(
             "GPU buffer size mismatch: expected {}, got {}",
@@ -1263,11 +1276,11 @@ where
         }
 
         // Check for specific known values
-        if (x - one).abs() < F::from(1e-10).unwrap_or(F::epsilon()) {
-            if (y - one).abs() > F::from(1e-6).unwrap_or(F::epsilon()) {
-                #[cfg(feature = "gpu")]
-                log::warn!("Gamma(1) validation failed: expected ~1.0, got {:?}", y);
-            }
+        if (x - one).abs() < F::from(1e-10).unwrap_or(F::epsilon())
+            && (y - one).abs() > F::from(1e-6).unwrap_or(F::epsilon())
+        {
+            #[cfg(feature = "gpu")]
+            log::warn!("Gamma(1) validation failed: expected ~1.0, got {:?}", y);
         }
     }
 

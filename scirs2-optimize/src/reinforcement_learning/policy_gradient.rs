@@ -64,9 +64,9 @@ impl MetaPolicyNetwork {
             for i in 0..fan_out {
                 for j in 0..fan_in {
                     policy_weights[[layer, i, j]] =
-                        (rand::random::<f64>() - 0.5) * 2.0 * xavier_std;
+                        (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_std;
                     meta_weights[[layer, i, j]] =
-                        (rand::random::<f64>() - 0.5) * 2.0 * xavier_std * 0.1;
+                        (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_std * 0.1;
                 }
             }
         }
@@ -186,7 +186,7 @@ impl MetaPolicyNetwork {
             embedding.clone()
         } else {
             let embedding =
-                Array1::from_shape_fn(input_size, |_| (rand::random::<f64>() - 0.5) * 0.1);
+                Array1::from_shape_fn(input_size, |_| (rand::rng().random::<f64>() - 0.5) * 0.1);
             self.problem_embeddings
                 .insert(problem_class.to_string(), embedding.clone());
             embedding
@@ -423,7 +423,7 @@ impl MetaExperienceBuffer {
 
         for _ in 0..batch_size.min(self.trajectories.len()) {
             // Weighted sampling based on problem class performance
-            let idx = rand::random::<usize>() % self.trajectories.len();
+            let idx = rand::rng().random::<usize>() % self.trajectories.len();
             if let Some(trajectory) = self.trajectories.get(idx) {
                 batch.push(trajectory.clone());
             }

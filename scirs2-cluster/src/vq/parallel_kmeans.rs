@@ -386,7 +386,7 @@ mod tests {
         let (centroids, labels) = parallel_kmeans(data.view(), 3, Some(options)).unwrap();
         let duration = start_time.elapsed();
 
-        println!("Parallel K-means took: {:?}", duration);
+        println!("Parallel K-means took: {duration:?}");
 
         // Check results
         assert_eq!(centroids.shape(), &[3, n_features]);

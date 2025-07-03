@@ -112,9 +112,8 @@ pub use auto_tuning::{AutoTuneConfig, AutoTuner, FftVariant, SizeRange, SizeStep
 // Ultrathink mode coordinator for advanced AI-driven optimization
 pub mod ultrathink_coordinator;
 pub use ultrathink_coordinator::{
-    UltrathinkFftCoordinator, UltrathinkFftConfig, FftRecommendation, 
-    FftPerformanceMetrics, create_ultrathink_fft_coordinator, 
-    create_ultrathink_fft_coordinator_with_config
+    create_ultrathink_fft_coordinator, create_ultrathink_fft_coordinator_with_config,
+    FftPerformanceMetrics, FftRecommendation, UltrathinkFftConfig, UltrathinkFftCoordinator,
 };
 
 // Core modules are used conditionally in feature-specific implementations

@@ -1161,129 +1161,160 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     pub fn analyze<D: Data<Elem = T> + Sync, Dim: Dimension>(
         &mut self,
         data: &ArrayBase<D, Dim>,
-        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimError>
-            + Sync,
-    ) -> Result<PrivacyUtilityResults<T>, OptimError> {
+        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T> + Sync,
+    ) -> Result<PrivacyUtilityResults<T>> {
         let start_time = std::time::Instant::now();
-        
+
         // 1. Generate Pareto frontier
         let pareto_frontier = self.generate_pareto_frontier(data, &model_fn)?;
-        
+
         // 2. Find optimal configurations for different objectives
         let mut optimal_configurations = Vec::new();
-        
+
         // Find configuration that maximizes utility
-        if let Some(max_utility_point) = pareto_frontier.iter().max_by(|a, b| 
-            a.utility_value.partial_cmp(&b.utility_value).unwrap_or(std::cmp::Ordering::Equal)
-        ) {
+        if let Some(max_utility_point) = pareto_frontier.iter().max_by(|a, b| {
+            a.utility_value
+                .partial_cmp(&b.utility_value)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        }) {
             optimal_configurations.push(OptimalConfiguration {
                 privacy_config: DifferentialPrivacyConfig {
-                    epsilon: max_utility_point.configuration.epsilon.to_f64().unwrap_or(1.0),
-                    delta: max_utility_point.configuration.delta.to_f64().unwrap_or(1e-5),
+                    epsilon: max_utility_point
+                        .configuration
+                        .epsilon
+                        .to_f64()
+                        .unwrap_or(1.0),
+                    delta: max_utility_point
+                        .configuration
+                        .delta
+                        .to_f64()
+                        .unwrap_or(1e-5),
                     noise_mechanism: max_utility_point.configuration.noise_mechanism.clone(),
-                    clipping_threshold: max_utility_point.configuration.clipping_threshold.to_f64().unwrap_or(1.0),
+                    clipping_threshold: max_utility_point
+                        .configuration
+                        .clipping_threshold
+                        .to_f64()
+                        .unwrap_or(1.0),
                     batch_size: max_utility_point.configuration.batch_size,
                 },
                 expected_utility: max_utility_point.utility_value,
                 privacy_guarantee: max_utility_point.privacy_guarantee,
                 objective: OptimizationObjective::MaximizeUtility,
                 confidence_score: T::from(0.95).unwrap(),
-                tradeoff_ratio: max_utility_point.utility_value / max_utility_point.privacy_guarantee,
+                tradeoff_ratio: max_utility_point.utility_value
+                    / max_utility_point.privacy_guarantee,
             });
         }
-        
+
         // Find configuration that minimizes privacy loss (maximizes privacy)
-        if let Some(max_privacy_point) = pareto_frontier.iter().min_by(|a, b| 
-            a.privacy_guarantee.partial_cmp(&b.privacy_guarantee).unwrap_or(std::cmp::Ordering::Equal)
-        ) {
+        if let Some(max_privacy_point) = pareto_frontier.iter().min_by(|a, b| {
+            a.privacy_guarantee
+                .partial_cmp(&b.privacy_guarantee)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        }) {
             optimal_configurations.push(OptimalConfiguration {
                 privacy_config: DifferentialPrivacyConfig {
-                    epsilon: max_privacy_point.configuration.epsilon.to_f64().unwrap_or(0.1),
-                    delta: max_privacy_point.configuration.delta.to_f64().unwrap_or(1e-6),
+                    epsilon: max_privacy_point
+                        .configuration
+                        .epsilon
+                        .to_f64()
+                        .unwrap_or(0.1),
+                    delta: max_privacy_point
+                        .configuration
+                        .delta
+                        .to_f64()
+                        .unwrap_or(1e-6),
                     noise_mechanism: max_privacy_point.configuration.noise_mechanism.clone(),
-                    clipping_threshold: max_privacy_point.configuration.clipping_threshold.to_f64().unwrap_or(1.0),
+                    clipping_threshold: max_privacy_point
+                        .configuration
+                        .clipping_threshold
+                        .to_f64()
+                        .unwrap_or(1.0),
                     batch_size: max_privacy_point.configuration.batch_size,
                 },
                 expected_utility: max_privacy_point.utility_value,
                 privacy_guarantee: max_privacy_point.privacy_guarantee,
                 objective: OptimizationObjective::MinimizePrivacyLoss,
                 confidence_score: T::from(0.90).unwrap(),
-                tradeoff_ratio: max_privacy_point.utility_value / max_privacy_point.privacy_guarantee,
+                tradeoff_ratio: max_privacy_point.utility_value
+                    / max_privacy_point.privacy_guarantee,
             });
         }
-        
+
         // 3. Perform sensitivity analysis if enabled
-        let sensitivity_results = if self.config.enable_sensitivity_analysis && !pareto_frontier.is_empty() {
-            let base_config = &pareto_frontier[pareto_frontier.len() / 2].configuration; // Use middle point
-            self.perform_sensitivity_analysis(data, &model_fn, base_config)?
-        } else {
-            SensitivityResults {
-                base_utility: T::zero(),
-                parameter_sensitivities: HashMap::new(),
-                gradient_magnitudes: HashMap::new(),
-                interaction_effects: HashMap::new(),
-                local_sensitivities: Vec::new(),
-                global_sensitivity_bounds: (T::zero(), T::one()),
-                sensitivity_rankings: Vec::new(),
-                robustness_score: T::zero(),
-                most_sensitive_parameter: "unknown".to_string(),
-                least_sensitive_parameter: "unknown".to_string(),
-                confidence_intervals: HashMap::new(),
-            }
-        };
-        
+        let sensitivity_results =
+            if self.config.enable_sensitivity_analysis && !pareto_frontier.is_empty() {
+                let base_config = &pareto_frontier[pareto_frontier.len() / 2].configuration; // Use middle point
+                self.perform_sensitivity_analysis(data, &model_fn, base_config)?
+            } else {
+                SensitivityResults {
+                    base_utility: T::zero(),
+                    parameter_sensitivities: HashMap::new(),
+                    gradient_magnitudes: HashMap::new(),
+                    interaction_effects: HashMap::new(),
+                    local_sensitivities: Vec::new(),
+                    global_sensitivity_bounds: (T::zero(), T::one()),
+                    sensitivity_rankings: Vec::new(),
+                    robustness_score: T::zero(),
+                    most_sensitive_parameter: "unknown".to_string(),
+                    least_sensitive_parameter: "unknown".to_string(),
+                    confidence_intervals: HashMap::new(),
+                }
+            };
+
         // 4. Evaluate robustness if enabled
-        let robustness_results = if self.config.enable_robustness_evaluation && !pareto_frontier.is_empty() {
-            let config = &pareto_frontier[0].configuration;
-            RobustnessResults {
-                robustness_score: T::from(0.8).unwrap(), // Placeholder
-                worst_case_degradation: T::from(0.1).unwrap(),
-                adversarial_robustness: T::from(0.75).unwrap(),
-                distributional_robustness: T::from(0.85).unwrap(),
-                stability_analysis: StabilityAnalysis {
-                    lyapunov_exponent: T::from(-0.1).unwrap(),
-                    stability_margin: T::from(0.2).unwrap(),
-                    convergence_properties: ConvergenceProperties {
-                        convergence_rate: T::from(0.95).unwrap(),
-                        convergence_radius: T::from(1.0).unwrap(),
-                        asymptotic_behavior: AsymptoticBehavior::Linear,
-                        stability_guarantees: true,
+        let robustness_results =
+            if self.config.enable_robustness_evaluation && !pareto_frontier.is_empty() {
+                let config = &pareto_frontier[0].configuration;
+                RobustnessResults {
+                    robustness_score: T::from(0.8).unwrap(), // Placeholder
+                    worst_case_degradation: T::from(0.1).unwrap(),
+                    adversarial_robustness: T::from(0.75).unwrap(),
+                    distributional_robustness: T::from(0.85).unwrap(),
+                    stability_analysis: StabilityAnalysis {
+                        lyapunov_exponent: T::from(-0.1).unwrap(),
+                        stability_margin: T::from(0.2).unwrap(),
+                        convergence_properties: ConvergenceProperties {
+                            convergence_rate: T::from(0.95).unwrap(),
+                            convergence_radius: T::from(1.0).unwrap(),
+                            asymptotic_behavior: AsymptoticBehavior::Linear,
+                            stability_guarantees: true,
+                        },
+                        perturbation_analysis: PerturbationAnalysis {
+                            perturbation_sensitivity: T::from(0.1).unwrap(),
+                            critical_threshold: T::from(0.5).unwrap(),
+                            recovery_time: T::from(10.0).unwrap(),
+                            perturbation_effects: Vec::new(),
+                        },
                     },
-                    perturbation_analysis: PerturbationAnalysis {
-                        perturbation_sensitivity: T::from(0.1).unwrap(),
-                        critical_threshold: T::from(0.5).unwrap(),
-                        recovery_time: T::from(10.0).unwrap(),
-                        perturbation_effects: Vec::new(),
+                    failure_modes: Vec::new(),
+                }
+            } else {
+                RobustnessResults {
+                    robustness_score: T::zero(),
+                    worst_case_degradation: T::zero(),
+                    adversarial_robustness: T::zero(),
+                    distributional_robustness: T::zero(),
+                    stability_analysis: StabilityAnalysis {
+                        lyapunov_exponent: T::zero(),
+                        stability_margin: T::zero(),
+                        convergence_properties: ConvergenceProperties {
+                            convergence_rate: T::zero(),
+                            convergence_radius: T::zero(),
+                            asymptotic_behavior: AsymptoticBehavior::Linear,
+                            stability_guarantees: false,
+                        },
+                        perturbation_analysis: PerturbationAnalysis {
+                            perturbation_sensitivity: T::zero(),
+                            critical_threshold: T::zero(),
+                            recovery_time: T::zero(),
+                            perturbation_effects: Vec::new(),
+                        },
                     },
-                },
-                failure_modes: Vec::new(),
-            }
-        } else {
-            RobustnessResults {
-                robustness_score: T::zero(),
-                worst_case_degradation: T::zero(),
-                adversarial_robustness: T::zero(),
-                distributional_robustness: T::zero(),
-                stability_analysis: StabilityAnalysis {
-                    lyapunov_exponent: T::zero(),
-                    stability_margin: T::zero(),
-                    convergence_properties: ConvergenceProperties {
-                        convergence_rate: T::zero(),
-                        convergence_radius: T::zero(),
-                        asymptotic_behavior: AsymptoticBehavior::Linear,
-                        stability_guarantees: false,
-                    },
-                    perturbation_analysis: PerturbationAnalysis {
-                        perturbation_sensitivity: T::zero(),
-                        critical_threshold: T::zero(),
-                        recovery_time: T::zero(),
-                        perturbation_effects: Vec::new(),
-                    },
-                },
-                failure_modes: Vec::new(),
-            }
-        };
-        
+                    failure_modes: Vec::new(),
+                }
+            };
+
         // 5. Generate budget recommendations
         let budget_recommendations = BudgetRecommendations {
             optimal_allocation: BudgetAllocation {
@@ -1306,7 +1337,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
             },
             adaptive_strategies: Vec::new(),
         };
-        
+
         // 6. Generate degradation predictions
         let degradation_predictions = vec![
             DegradationPrediction {
@@ -1324,13 +1355,13 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
                 model_accuracy: T::from(0.88).unwrap(),
             },
         ];
-        
+
         // 7. Assess privacy risks
         let mut risk_categories = HashMap::new();
         risk_categories.insert(RiskCategory::MembershipInference, T::from(0.3).unwrap());
         risk_categories.insert(RiskCategory::AttributeInference, T::from(0.2).unwrap());
         risk_categories.insert(RiskCategory::ModelInversion, T::from(0.1).unwrap());
-        
+
         let privacy_risk_assessment = PrivacyRiskAssessment {
             overall_risk_score: T::from(0.25).unwrap(),
             risk_categories,
@@ -1342,19 +1373,17 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
             compliance_status: ComplianceStatus::Compliant,
             risk_evolution: Vec::new(),
         };
-        
+
         // 8. Perform statistical tests
         let statistical_tests = StatisticalTestResults {
-            hypothesis_tests: vec![
-                HypothesisTestResult {
-                    test_name: "Privacy-Utility Correlation Test".to_string(),
-                    test_statistic: T::from(-0.75).unwrap(),
-                    p_value: T::from(0.01).unwrap(),
-                    significance_level: T::from(0.05).unwrap(),
-                    reject_null: true,
-                    effect_size: T::from(0.6).unwrap(),
-                }
-            ],
+            hypothesis_tests: vec![HypothesisTestResult {
+                test_name: "Privacy-Utility Correlation Test".to_string(),
+                test_statistic: T::from(-0.75).unwrap(),
+                p_value: T::from(0.01).unwrap(),
+                significance_level: T::from(0.05).unwrap(),
+                reject_null: true,
+                effect_size: T::from(0.6).unwrap(),
+            }],
             significance_levels: vec![T::from(0.05).unwrap(), T::from(0.01).unwrap()],
             effect_sizes: vec![T::from(0.6).unwrap()],
             power_analysis: PowerAnalysis {
@@ -1365,7 +1394,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
             },
             multiple_comparison_corrections: Vec::new(),
         };
-        
+
         // 9. Create analysis metadata
         let metadata = AnalysisMetadata {
             timestamp: format!("{:?}", std::time::SystemTime::now()),
@@ -1389,7 +1418,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
                 environment_variables: HashMap::new(),
             },
         };
-        
+
         Ok(PrivacyUtilityResults {
             pareto_frontier,
             optimal_configurations,
@@ -1408,9 +1437,8 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     pub fn generate_pareto_frontier<D: Data<Elem = T> + Sync, Dim: Dimension>(
         &self,
         data: &ArrayBase<D, Dim>,
-        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimError>
-            + Sync,
-    ) -> Result<Vec<ParetoPoint<T>>, OptimError> {
+        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T> + Sync,
+    ) -> Result<Vec<ParetoPoint<T>>> {
         let mut pareto_points = Vec::new();
 
         // Generate parameter combinations using configured ranges
@@ -1426,7 +1454,10 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
                 privacy_guarantee: config.epsilon, // Use epsilon as privacy guarantee
                 utility_value: utility,
                 configuration: config,
-                confidence_interval: (utility - T::from(0.1).unwrap(), utility + T::from(0.1).unwrap()), // Default CI
+                confidence_interval: (
+                    utility - T::from(0.1).unwrap(),
+                    utility + T::from(0.1).unwrap(),
+                ), // Default CI
                 statistical_significance: T::from(0.95).unwrap(), // Default significance
                 privacy_cost,
                 dominated: false,
@@ -1498,7 +1529,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
         _total_budget: &PrivacyBudget,
         _iterations: usize,
         _utility_threshold: T,
-    ) -> Result<BudgetAllocation<T>, OptimError> {
+    ) -> Result<BudgetAllocation<T>> {
         // Implementation would go here
         todo!("Implementation of budget allocation optimization")
     }
@@ -1508,10 +1539,9 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     pub fn perform_sensitivity_analysis<D: Data<Elem = T> + Sync, Dim: Dimension>(
         &self,
         data: &ArrayBase<D, Dim>,
-        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimError>
-            + Sync,
+        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T> + Sync,
         base_config: &PrivacyConfiguration<T>,
-    ) -> Result<SensitivityResults<T>, OptimError> {
+    ) -> Result<SensitivityResults<T>> {
         let mut sensitivity_results = SensitivityResults {
             base_utility: T::zero(),
             parameter_sensitivities: HashMap::new(),
@@ -1656,10 +1686,9 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     pub fn evaluate_robustness<D: Data<Elem = T> + Sync, Dim: Dimension>(
         &self,
         _data: &ArrayBase<D, Dim>,
-        _model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimError>
-            + Sync,
+        _model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T> + Sync,
         _config: &PrivacyConfiguration<T>,
-    ) -> Result<RobustnessResults<T>, OptimError> {
+    ) -> Result<RobustnessResults<T>> {
         // Implementation would go here
         todo!("Implementation of robustness evaluation")
     }
@@ -1670,7 +1699,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
         &self,
         _privacy_parameters: &[T],
         _historical_data: &[(T, T)],
-    ) -> Result<Vec<DegradationPrediction<T>>, OptimError> {
+    ) -> Result<Vec<DegradationPrediction<T>>> {
         // Implementation would go here
         todo!("Implementation of utility degradation prediction")
     }
@@ -1681,7 +1710,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
         &self,
         _data: &ArrayBase<D, Dim>,
         _config: &PrivacyConfiguration<T>,
-    ) -> Result<PrivacyRiskAssessment<T>, OptimError> {
+    ) -> Result<PrivacyRiskAssessment<T>> {
         // Implementation would go here
         todo!("Implementation of privacy risk assessment")
     }
@@ -1692,7 +1721,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
         &self,
         _results: &[(T, T)],
         _baseline: &[(T, T)],
-    ) -> Result<StatisticalTestResults<T>, OptimError> {
+    ) -> Result<StatisticalTestResults<T>> {
         // Implementation would go here
         todo!("Implementation of statistical significance testing")
     }
@@ -1773,9 +1802,7 @@ impl Default for PrivacyParameterSpace {
 
 impl<T: Float> PrivacyUtilityAnalyzer<T> {
     /// Generate privacy configurations for parameter space exploration
-    fn generate_privacy_configurations(
-        &self,
-    ) -> Result<Vec<PrivacyConfiguration<T>>, OptimError> {
+    fn generate_privacy_configurations(&self) -> Result<Vec<PrivacyConfiguration<T>>> {
         let mut configurations = Vec::new();
         let params = &self.config.privacy_parameters;
 
@@ -1831,7 +1858,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
                                 batch_size: batch_size.to_usize().unwrap_or(256),
                                 sampling_probability: T::from(0.1).unwrap(), // Default
                                 iterations: 1000,                            // Default
-                                learning_rate: T::from(0.01).unwrap(),       // Default learning rate
+                                learning_rate: T::from(0.01).unwrap(), // Default learning rate
                                 noise_mechanism: NoiseMechanism::Gaussian,
                             });
 
@@ -1848,7 +1875,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     }
 
     /// Sample values from a parameter range
-    fn sample_parameter_range(&self, range: &ParameterRange) -> Result<Vec<T>, OptimError> {
+    fn sample_parameter_range(&self, range: &ParameterRange) -> Result<Vec<T>> {
         let mut values = Vec::new();
 
         match range.sampling_strategy {
@@ -1872,7 +1899,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
                 use rand::Rng;
                 let mut rng = rand::rng();
                 for _ in 0..range.num_samples {
-                    let value = rng.gen_range(range.min..=range.max);
+                    let value = rng.random_range(range.min..=range.max);
                     values.push(T::from(value).unwrap());
                 }
             }
@@ -1890,7 +1917,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     }
 
     /// Compute privacy cost for a configuration (lower epsilon = higher cost)
-    fn compute_privacy_cost(&self, config: &PrivacyConfiguration<T>) -> Result<T, OptimError> {
+    fn compute_privacy_cost(&self, config: &PrivacyConfiguration<T>) -> Result<T> {
         // Privacy cost is inversely related to epsilon (lower epsilon = higher privacy = higher cost)
         // Normalize by a reasonable maximum epsilon value
         let max_epsilon = T::from(10.0).unwrap();

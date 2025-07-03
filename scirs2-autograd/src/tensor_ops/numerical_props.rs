@@ -316,12 +316,12 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for CondOp {
         // The exact gradient requires SVD, so we use a finite difference approximation
         let x = ctx.input(0);
         let g = ctx.graph();
-        
+
         // For now, use a scaled identity matrix as a rough approximation
         // This is not mathematically accurate but provides a reasonable gradient direction
         let x_val = x.eval(g).unwrap();
         let shape = x_val.shape();
-        
+
         if shape.len() == 2 && shape[0] == shape[1] {
             // Square matrix - use scaled identity
             let n = shape[0];
@@ -337,7 +337,10 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for CondOp {
 }
 
 /// Compute the condition number of a matrix
-pub fn cond<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>, p: Option<ConditionType>) -> Tensor<'g, F> {
+pub fn cond<'g, F: Float + ndarray::ScalarOperand>(
+    matrix: &Tensor<'g, F>,
+    p: Option<ConditionType>,
+) -> Tensor<'g, F> {
     let g = matrix.graph();
     let p = p.unwrap_or(ConditionType::Two);
 

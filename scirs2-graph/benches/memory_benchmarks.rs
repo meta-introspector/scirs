@@ -164,9 +164,9 @@ fn bench_edge_queries(c: &mut Criterion) {
 
     // Generate random query pairs
     use rand::prelude::*;
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let query_pairs: Vec<(usize, usize)> = (0..1000)
-        .map(|_| (rng.gen_range(0..n), rng.gen_range(0..n)))
+        .map(|_| (rng.random_range(0..n), rng.random_range(0..n)))
         .collect();
 
     // Benchmark standard graph

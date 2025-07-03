@@ -7,10 +7,8 @@ use super::{
     LearnedOptimizationConfig, LearnedOptimizer, MetaOptimizerState, OptimizationProblem,
     TrainingTask,
 };
-use crate::error::OptimizeError;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::CoreResult;
 use std::collections::HashMap;
 
 /// Meta-Learning Optimizer with cross-problem adaptation
@@ -97,7 +95,7 @@ impl MetaLearningOptimizer {
         let param_size = self.estimate_parameter_size(problem);
 
         Ok(TaskSpecificOptimizer {
-            parameters: Array1::from_shape_fn(param_size, |_| rand::random::<f64>() * 0.1),
+            parameters: Array1::from_shape_fn(param_size, |_| rand::rng().random::<f64>() * 0.1),
             performance_history: Vec::new(),
             task_id: problem.name.clone(),
         })
@@ -127,12 +125,12 @@ impl MetaLearningOptimizer {
         let initial_params = match &task.initial_distribution {
             super::ParameterDistribution::Uniform { low, high } => {
                 Array1::from_shape_fn(task.problem.dimension, |_| {
-                    low + rand::random::<f64>() * (high - low)
+                    low + rand::rng().random::<f64>() * (high - low)
                 })
             }
             super::ParameterDistribution::Normal { mean, std } => {
                 Array1::from_shape_fn(task.problem.dimension, |_| {
-                    mean + std * (rand::random::<f64>() - 0.5) * 2.0
+                    mean + std * (rand::rng().random::<f64>() - 0.5) * 2.0
                 })
             }
             super::ParameterDistribution::Custom { samples } => {
@@ -196,7 +194,7 @@ impl MetaLearningOptimizer {
         for i in 0..gradient.len() {
             let meta_idx = i % self.meta_state.meta_params.len();
             let meta_factor = self.meta_state.meta_params[meta_idx];
-            gradient[i] *= (1.0 + meta_factor * 0.1);
+            gradient[i] *= 1.0 + meta_factor * 0.1;
         }
 
         Ok(())
@@ -236,7 +234,8 @@ impl MetaLearningOptimizer {
         // Update meta-parameters
         for i in 0..self.meta_state.meta_params.len() {
             // Simple update rule (in practice would use proper meta-gradients)
-            let update = learning_rate * performance_gradient * (rand::random::<f64>() - 0.5) * 0.1;
+            let update =
+                learning_rate * performance_gradient * (rand::rng().random::<f64>() - 0.5) * 0.1;
             self.meta_state.meta_params[i] += update;
 
             // Clip to reasonable range

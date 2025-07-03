@@ -6,12 +6,8 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use num_complex::Complex64;
 use rand::prelude::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive};
-use std::collections::HashMap;
-use std::f64::consts::PI;
+use scirs2_core::validation::check_finite;
 use std::time::Instant;
 
 /// Ultra-comprehensive wavelet packet validation configuration
@@ -394,7 +390,7 @@ pub fn run_wpt_ultrathink_validation(
     let mut score_count = 0;
 
     println!("📦 Starting ultra-comprehensive wavelet packet validation...");
-    
+
     // Set random seed for reproducibility
     let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(config.random_seed);
 
@@ -431,7 +427,8 @@ pub fn run_wpt_ultrathink_validation(
 
     if reconstruction_score < 99.0 {
         issues.push("Reconstruction fidelity below perfect threshold".to_string());
-        recommendations.push("Investigate numerical precision in reconstruction algorithms".to_string());
+        recommendations
+            .push("Investigate numerical precision in reconstruction algorithms".to_string());
     }
 
     // 4. Best Basis Selection Validation
@@ -444,7 +441,9 @@ pub fn run_wpt_ultrathink_validation(
 
         if best_basis_score < 85.0 {
             issues.push("Best basis selection accuracy could be improved".to_string());
-            recommendations.push("Consider additional entropy measures and optimization strategies".to_string());
+            recommendations.push(
+                "Consider additional entropy measures and optimization strategies".to_string(),
+            );
         }
     } else {
         let best_basis_validation = BestBasisValidationResult {
@@ -467,7 +466,8 @@ pub fn run_wpt_ultrathink_validation(
 
         if compression_score < 80.0 {
             issues.push("Compression performance below target threshold".to_string());
-            recommendations.push("Optimize threshold selection and rate-distortion algorithms".to_string());
+            recommendations
+                .push("Optimize threshold selection and rate-distortion algorithms".to_string());
         }
     } else {
         let compression_validation = CompressionValidationResult {
@@ -543,19 +543,30 @@ pub fn run_wpt_ultrathink_validation(
     score_count += 1;
 
     // Calculate overall score
-    let overall_score = if score_count > 0 { total_score / score_count as f64 } else { 0.0 };
+    let overall_score = if score_count > 0 {
+        total_score / score_count as f64
+    } else {
+        0.0
+    };
 
     // Generate final recommendations
     if overall_score > 95.0 {
-        recommendations.push("Excellent wavelet packet implementation! Consider contributing to open source.".to_string());
+        recommendations.push(
+            "Excellent wavelet packet implementation! Consider contributing to open source."
+                .to_string(),
+        );
     } else if overall_score > 85.0 {
         recommendations.push("Good implementation with room for optimization".to_string());
     } else {
-        recommendations.push("Implementation needs significant improvements for production use".to_string());
+        recommendations
+            .push("Implementation needs significant improvements for production use".to_string());
     }
 
     let execution_time = start_time.elapsed().as_secs_f64() * 1000.0;
-    println!("✅ Wavelet packet validation completed in {:.2}ms", execution_time);
+    println!(
+        "✅ Wavelet packet validation completed in {:.2}ms",
+        execution_time
+    );
     println!("📊 Overall score: {:.1}%", overall_score);
 
     // Create placeholder results for components we couldn't fully implement
@@ -611,8 +622,8 @@ pub fn run_wpt_ultrathink_validation(
 // Helper validation functions (implementation placeholders)
 
 fn validate_tree_structure(
-    config: &WptUltrathinkConfig,
-    rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptUltrathinkConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<TreeValidationResult> {
     // Placeholder implementation for tree structure validation
     Ok(TreeValidationResult {
@@ -631,8 +642,8 @@ fn validate_tree_structure(
 }
 
 fn validate_coefficient_organization(
-    config: &WptUltrathinkConfig,
-    rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptUltrathinkConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<CoefficientValidationResult> {
     // Placeholder implementation
     Ok(CoefficientValidationResult {
@@ -657,8 +668,8 @@ fn validate_coefficient_organization(
 }
 
 fn validate_reconstruction_fidelity(
-    config: &WptUltrathinkConfig,
-    rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptUltrathinkConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ReconstructionValidationResult> {
     // Placeholder implementation
     Ok(ReconstructionValidationResult {
@@ -671,8 +682,8 @@ fn validate_reconstruction_fidelity(
 }
 
 fn validate_best_basis_selection(
-    config: &WptUltrathinkConfig,
-    rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptUltrathinkConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<BestBasisValidationResult> {
     // Placeholder implementation
     Ok(BestBasisValidationResult {
@@ -686,8 +697,8 @@ fn validate_best_basis_selection(
 }
 
 fn validate_compression_performance(
-    config: &WptUltrathinkConfig,
-    rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptUltrathinkConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<CompressionValidationResult> {
     // Placeholder implementation
     Ok(CompressionValidationResult {
@@ -705,8 +716,8 @@ fn validate_compression_performance(
 }
 
 fn validate_denoising_performance(
-    config: &WptUltrathinkConfig,
-    rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptUltrathinkConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<DenoisingValidationResult> {
     // Placeholder implementation
     Ok(DenoisingValidationResult {
@@ -720,8 +731,8 @@ fn validate_denoising_performance(
 }
 
 fn validate_2d_wavelet_packets(
-    config: &WptUltrathinkConfig,
-    rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptUltrathinkConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<TwoDValidationResult> {
     // Placeholder implementation
     Ok(TwoDValidationResult {
@@ -734,8 +745,8 @@ fn validate_2d_wavelet_packets(
 }
 
 fn validate_numerical_stability(
-    config: &WptUltrathinkConfig,
-    rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptUltrathinkConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<StabilityValidationResult> {
     // Placeholder implementation
     Ok(StabilityValidationResult {
@@ -753,8 +764,8 @@ fn validate_numerical_stability(
 }
 
 fn analyze_performance(
-    config: &WptUltrathinkConfig,
-    rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptUltrathinkConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<PerformanceAnalysisResult> {
     // Placeholder implementation
     Ok(PerformanceAnalysisResult {
@@ -773,8 +784,8 @@ fn analyze_performance(
 }
 
 fn analyze_memory_usage(
-    config: &WptUltrathinkConfig,
-    rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptUltrathinkConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<MemoryAnalysisResult> {
     // Placeholder implementation
     Ok(MemoryAnalysisResult {
@@ -787,8 +798,8 @@ fn analyze_memory_usage(
 }
 
 fn validate_consistency(
-    config: &WptUltrathinkConfig,
-    rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptUltrathinkConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ConsistencyAnalysisResult> {
     // Placeholder implementation
     Ok(ConsistencyAnalysisResult {
@@ -803,24 +814,35 @@ fn validate_consistency(
 // Scoring functions
 
 fn calculate_tree_score(result: &TreeValidationResult) -> f64 {
-    (result.construction_accuracy + result.indexing_consistency + 
-     result.relationship_validation + result.traversal_efficiency + 
-     result.memory_organization) / 5.0
+    (result.construction_accuracy
+        + result.indexing_consistency
+        + result.relationship_validation
+        + result.traversal_efficiency
+        + result.memory_organization)
+        / 5.0
 }
 
 fn calculate_coefficient_score(result: &CoefficientValidationResult) -> f64 {
-    (result.ordering_accuracy + result.frequency_localization + 
-     result.spatial_localization + result.sparsity_measures.sparsity_ratio * 100.0) / 4.0
+    (result.ordering_accuracy
+        + result.frequency_localization
+        + result.spatial_localization
+        + result.sparsity_measures.sparsity_ratio * 100.0)
+        / 4.0
 }
 
 fn calculate_reconstruction_score(result: &ReconstructionValidationResult) -> f64 {
-    let error_score = (-20.0 * (result.reconstruction_error + 1e-15).log10()).min(100.0).max(0.0);
+    let error_score = (-20.0 * (result.reconstruction_error + 1e-15).log10())
+        .min(100.0)
+        .max(0.0);
     (error_score + result.partial_reconstruction_accuracy + result.energy_conservation) / 3.0
 }
 
 fn calculate_best_basis_score(result: &BestBasisValidationResult) -> f64 {
-    (result.selection_accuracy + result.selection_consistency + 
-     result.selection_efficiency + result.optimal_basis_detection_rate) / 4.0
+    (result.selection_accuracy
+        + result.selection_consistency
+        + result.selection_efficiency
+        + result.optimal_basis_detection_rate)
+        / 4.0
 }
 
 fn calculate_compression_score(result: &CompressionValidationResult) -> f64 {
@@ -832,78 +854,168 @@ fn calculate_denoising_score(result: &DenoisingValidationResult) -> f64 {
 }
 
 fn calculate_2d_score(result: &TwoDValidationResult) -> f64 {
-    (result.construction_accuracy_2d + result.reconstruction_fidelity_2d + 
-     result.frequency_localization_2d + result.best_basis_selection_2d + 
-     result.compression_performance_2d) / 5.0
+    (result.construction_accuracy_2d
+        + result.reconstruction_fidelity_2d
+        + result.frequency_localization_2d
+        + result.best_basis_selection_2d
+        + result.compression_performance_2d)
+        / 5.0
 }
 
 fn calculate_stability_score(result: &StabilityValidationResult) -> f64 {
-    (result.precision_maintenance + result.condition_number_analysis.stability_score + 
-     result.error_propagation + result.extreme_input_robustness + result.overflow_handling) / 5.0
+    (result.precision_maintenance
+        + result.condition_number_analysis.stability_score
+        + result.error_propagation
+        + result.extreme_input_robustness
+        + result.overflow_handling)
+        / 5.0
 }
 
 fn calculate_performance_score(result: &PerformanceAnalysisResult) -> f64 {
-    (result.decomposition_efficiency + result.reconstruction_efficiency + 
-     result.best_basis_efficiency) / 3.0
+    (result.decomposition_efficiency
+        + result.reconstruction_efficiency
+        + result.best_basis_efficiency)
+        / 3.0
 }
 
 fn calculate_memory_score(result: &MemoryAnalysisResult) -> f64 {
-    (result.efficiency_score + result.access_pattern_efficiency + 
-     result.cache_utilization + result.fragmentation_analysis) / 4.0
+    (result.efficiency_score
+        + result.access_pattern_efficiency
+        + result.cache_utilization
+        + result.fragmentation_analysis)
+        / 4.0
 }
 
 fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
-    (result.wavelet_consistency + result.tree_structure_consistency + 
-     result.entropy_measure_consistency + result.platform_consistency + 
-     result.implementation_consistency) / 5.0
+    (result.wavelet_consistency
+        + result.tree_structure_consistency
+        + result.entropy_measure_consistency
+        + result.platform_consistency
+        + result.implementation_consistency)
+        / 5.0
 }
 
 /// Generate a comprehensive report of wavelet packet validation results
 pub fn generate_wpt_ultrathink_report(result: &WptUltrathinkResult) -> String {
     let mut report = String::new();
-    
+
     report.push_str("# Ultra-comprehensive Wavelet Packet Transform Validation Report\n\n");
-    
-    report.push_str(&format!("## Overall Score: {:.1}%\n\n", result.overall_score));
-    
+
+    report.push_str(&format!(
+        "## Overall Score: {:.1}%\n\n",
+        result.overall_score
+    ));
+
     report.push_str("## Validation Results Summary\n\n");
-    
+
     report.push_str(&format!("### Tree Structure Validation\n"));
-    report.push_str(&format!("- Construction Accuracy: {:.1}%\n", result.tree_validation.construction_accuracy));
-    report.push_str(&format!("- Indexing Consistency: {:.1}%\n", result.tree_validation.indexing_consistency));
-    report.push_str(&format!("- Relationship Validation: {:.1}%\n", result.tree_validation.relationship_validation));
-    report.push_str(&format!("- Memory Organization: {:.1}%\n\n", result.tree_validation.memory_organization));
-    
+    report.push_str(&format!(
+        "- Construction Accuracy: {:.1}%\n",
+        result.tree_validation.construction_accuracy
+    ));
+    report.push_str(&format!(
+        "- Indexing Consistency: {:.1}%\n",
+        result.tree_validation.indexing_consistency
+    ));
+    report.push_str(&format!(
+        "- Relationship Validation: {:.1}%\n",
+        result.tree_validation.relationship_validation
+    ));
+    report.push_str(&format!(
+        "- Memory Organization: {:.1}%\n\n",
+        result.tree_validation.memory_organization
+    ));
+
     report.push_str(&format!("### Coefficient Organization\n"));
-    report.push_str(&format!("- Ordering Accuracy: {:.1}%\n", result.coefficient_validation.ordering_accuracy));
-    report.push_str(&format!("- Frequency Localization: {:.1}%\n", result.coefficient_validation.frequency_localization));
-    report.push_str(&format!("- Spatial Localization: {:.1}%\n", result.coefficient_validation.spatial_localization));
-    report.push_str(&format!("- Sparsity Ratio: {:.1}%\n\n", result.coefficient_validation.sparsity_measures.sparsity_ratio * 100.0));
-    
+    report.push_str(&format!(
+        "- Ordering Accuracy: {:.1}%\n",
+        result.coefficient_validation.ordering_accuracy
+    ));
+    report.push_str(&format!(
+        "- Frequency Localization: {:.1}%\n",
+        result.coefficient_validation.frequency_localization
+    ));
+    report.push_str(&format!(
+        "- Spatial Localization: {:.1}%\n",
+        result.coefficient_validation.spatial_localization
+    ));
+    report.push_str(&format!(
+        "- Sparsity Ratio: {:.1}%\n\n",
+        result
+            .coefficient_validation
+            .sparsity_measures
+            .sparsity_ratio
+            * 100.0
+    ));
+
     report.push_str(&format!("### Reconstruction Fidelity\n"));
-    report.push_str(&format!("- Reconstruction Error: {:.2e}\n", result.reconstruction_validation.reconstruction_error));
-    report.push_str(&format!("- Energy Conservation: {:.2}%\n", result.reconstruction_validation.energy_conservation));
-    report.push_str(&format!("- Partial Reconstruction: {:.1}%\n\n", result.reconstruction_validation.partial_reconstruction_accuracy));
-    
+    report.push_str(&format!(
+        "- Reconstruction Error: {:.2e}\n",
+        result.reconstruction_validation.reconstruction_error
+    ));
+    report.push_str(&format!(
+        "- Energy Conservation: {:.2}%\n",
+        result.reconstruction_validation.energy_conservation
+    ));
+    report.push_str(&format!(
+        "- Partial Reconstruction: {:.1}%\n\n",
+        result
+            .reconstruction_validation
+            .partial_reconstruction_accuracy
+    ));
+
     report.push_str(&format!("### Best Basis Selection\n"));
-    report.push_str(&format!("- Selection Accuracy: {:.1}%\n", result.best_basis_validation.selection_accuracy));
-    report.push_str(&format!("- Entropy Reduction: {:.1}%\n", result.best_basis_validation.entropy_reduction));
-    report.push_str(&format!("- Selection Consistency: {:.1}%\n", result.best_basis_validation.selection_consistency));
-    report.push_str(&format!("- Optimal Basis Detection: {:.1}%\n\n", result.best_basis_validation.optimal_basis_detection_rate));
-    
+    report.push_str(&format!(
+        "- Selection Accuracy: {:.1}%\n",
+        result.best_basis_validation.selection_accuracy
+    ));
+    report.push_str(&format!(
+        "- Entropy Reduction: {:.1}%\n",
+        result.best_basis_validation.entropy_reduction
+    ));
+    report.push_str(&format!(
+        "- Selection Consistency: {:.1}%\n",
+        result.best_basis_validation.selection_consistency
+    ));
+    report.push_str(&format!(
+        "- Optimal Basis Detection: {:.1}%\n\n",
+        result.best_basis_validation.optimal_basis_detection_rate
+    ));
+
     if let Some(ref twod) = result.twod_validation {
         report.push_str(&format!("### 2D Wavelet Packets\n"));
-        report.push_str(&format!("- 2D Construction Accuracy: {:.1}%\n", twod.construction_accuracy_2d));
-        report.push_str(&format!("- 2D Reconstruction Fidelity: {:.1}%\n", twod.reconstruction_fidelity_2d));
-        report.push_str(&format!("- 2D Best Basis Selection: {:.1}%\n\n", twod.best_basis_selection_2d));
+        report.push_str(&format!(
+            "- 2D Construction Accuracy: {:.1}%\n",
+            twod.construction_accuracy_2d
+        ));
+        report.push_str(&format!(
+            "- 2D Reconstruction Fidelity: {:.1}%\n",
+            twod.reconstruction_fidelity_2d
+        ));
+        report.push_str(&format!(
+            "- 2D Best Basis Selection: {:.1}%\n\n",
+            twod.best_basis_selection_2d
+        ));
     }
-    
+
     report.push_str(&format!("### Performance Analysis\n"));
-    report.push_str(&format!("- Time Complexity: O(N^{:.1})\n", result.performance_analysis.time_complexity));
-    report.push_str(&format!("- Memory Complexity: O(N^{:.1})\n", result.performance_analysis.memory_complexity));
-    report.push_str(&format!("- Decomposition Efficiency: {:.1}%\n", result.performance_analysis.decomposition_efficiency));
-    report.push_str(&format!("- Reconstruction Efficiency: {:.1}%\n\n", result.performance_analysis.reconstruction_efficiency));
-    
+    report.push_str(&format!(
+        "- Time Complexity: O(N^{:.1})\n",
+        result.performance_analysis.time_complexity
+    ));
+    report.push_str(&format!(
+        "- Memory Complexity: O(N^{:.1})\n",
+        result.performance_analysis.memory_complexity
+    ));
+    report.push_str(&format!(
+        "- Decomposition Efficiency: {:.1}%\n",
+        result.performance_analysis.decomposition_efficiency
+    ));
+    report.push_str(&format!(
+        "- Reconstruction Efficiency: {:.1}%\n\n",
+        result.performance_analysis.reconstruction_efficiency
+    ));
+
     if !result.issues.is_empty() {
         report.push_str("## Issues Found\n\n");
         for issue in &result.issues {
@@ -911,14 +1023,14 @@ pub fn generate_wpt_ultrathink_report(result: &WptUltrathinkResult) -> String {
         }
         report.push_str("\n");
     }
-    
+
     if !result.recommendations.is_empty() {
         report.push_str("## Recommendations\n\n");
         for rec in &result.recommendations {
             report.push_str(&format!("- 💡 {}\n", rec));
         }
     }
-    
+
     report
 }
 
@@ -935,6 +1047,6 @@ pub fn run_quick_wpt_validation() -> SignalResult<WptUltrathinkResult> {
         test_denoising: false,
         ..Default::default()
     };
-    
+
     run_wpt_ultrathink_validation(&config)
 }

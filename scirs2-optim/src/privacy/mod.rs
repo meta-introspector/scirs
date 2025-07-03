@@ -212,10 +212,7 @@ where
     O: Optimizer<A>,
 {
     /// Create a new differentially private optimizer
-    pub fn new(
-        base_optimizer: O,
-        config: DifferentialPrivacyConfig,
-    ) -> Result<Self, OptimError> {
+    pub fn new(base_optimizer: O, config: DifferentialPrivacyConfig) -> Result<Self> {
         let accountant = MomentsAccountant::new(
             config.noise_multiplier,
             config.target_delta,
@@ -253,7 +250,7 @@ where
         &mut self,
         params: &ArrayBase<S, D>,
         gradients: &mut ArrayBase<S, D>,
-    ) -> Result<Array<A, D>, OptimError>
+    ) -> Result<Array<A, D>>
     where
         S: Data<Elem = A> + DataMut<Elem = A>,
         D: Dimension,
@@ -324,7 +321,7 @@ where
     }
 
     /// Check if privacy budget is available
-    pub fn has_privacy_budget(&self) -> Result<bool, OptimError> {
+    pub fn has_privacy_budget(&self) -> Result<bool> {
         let budget = self.get_privacy_budget();
         Ok(budget.epsilon_remaining > 0.0 && budget.delta_remaining > 0.0)
     }
@@ -390,7 +387,7 @@ where
         &mut self,
         gradients: &mut ArrayBase<S, D>,
         clip_threshold: f64,
-    ) -> Result<(), OptimError>
+    ) -> Result<()>
     where
         S: DataMut<Elem = A>,
         D: Dimension,
@@ -401,9 +398,8 @@ where
 
         match self.config.noise_mechanism {
             NoiseMechanism::Gaussian => {
-                let normal = Normal::new(0.0, noise_scale).map_err(|_| {
-                    OptimError::InvalidConfig("Invalid noise scale".to_string())
-                })?;
+                let normal = Normal::new(0.0, noise_scale)
+                    .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
 
                 gradients.mapv_inplace(|g| {
                     let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
@@ -412,9 +408,8 @@ where
             }
             NoiseMechanism::Laplace => {
                 // Simplified Laplace noise using Normal distribution approximation
-                let normal = Normal::new(0.0, noise_scale * 1.414).map_err(|_| {
-                    OptimError::InvalidConfig("Invalid noise scale".to_string())
-                })?;
+                let normal = Normal::new(0.0, noise_scale * 1.414)
+                    .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
 
                 gradients.mapv_inplace(|g| {
                     let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
@@ -423,9 +418,8 @@ where
             }
             _ => {
                 // Use Gaussian as fallback
-                let normal = Normal::new(0.0, noise_scale).map_err(|_| {
-                    OptimError::InvalidConfig("Invalid noise scale".to_string())
-                })?;
+                let normal = Normal::new(0.0, noise_scale)
+                    .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
 
                 gradients.mapv_inplace(|g| {
                     let noise = A::from(normal.sample(&mut *self.rng)).unwrap();

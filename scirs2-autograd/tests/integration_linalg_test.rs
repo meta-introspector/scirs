@@ -90,8 +90,11 @@ fn test_complete_linear_algebra_pipeline() {
             let matrix_val = matrix.eval(g).unwrap();
             matrix_val.diag().iter().all(|&x| x > 0.0)
         };
-        
-        println!("Matrix appears to be positive definite: {}", is_positive_definite);
+
+        println!(
+            "Matrix appears to be positive definite: {}",
+            is_positive_definite
+        );
 
         // Skip the matrix inverse verification for now
         println!("Skipping matrix inverse verification - implementation incomplete");

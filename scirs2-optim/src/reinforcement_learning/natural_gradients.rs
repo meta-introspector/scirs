@@ -204,7 +204,7 @@ impl<T: Float, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
         &mut self,
         trajectory: TrajectoryBatch<T>,
         gradients: Array1<T>,
-    ) -> Result<RLOptimizationMetrics<T>, OptimError> {
+    ) -> Result<RLOptimizationMetrics<T>> {
         // Update Fisher information matrix
         if self.update_count % self.config.fisher_update_freq == 0 {
             self.update_fisher_information(&trajectory)?;
@@ -228,10 +228,7 @@ impl<T: Float, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
     }
 
     /// Update Fisher Information Matrix
-    fn update_fisher_information(
-        &mut self,
-        trajectory: &TrajectoryBatch<T>,
-    ) -> Result<(), OptimError> {
+    fn update_fisher_information(&mut self, trajectory: &TrajectoryBatch<T>) -> Result<()> {
         match self.config.fisher_method {
             FisherEstimationMethod::Empirical => self.update_empirical_fisher(trajectory)?,
             FisherEstimationMethod::True => self.update_true_fisher(trajectory)?,
@@ -252,10 +249,7 @@ impl<T: Float, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
     }
 
     /// Update empirical Fisher Information Matrix
-    fn update_empirical_fisher(
-        &mut self,
-        trajectory: &TrajectoryBatch<T>,
-    ) -> Result<(), OptimError> {
+    fn update_empirical_fisher(&mut self, trajectory: &TrajectoryBatch<T>) -> Result<()> {
         let batch_size = trajectory.observations.nrows();
 
         // Collect gradients for each sample
@@ -277,20 +271,14 @@ impl<T: Float, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
     }
 
     /// Update true Fisher Information Matrix
-    fn update_true_fisher(
-        &mut self,
-        trajectory: &TrajectoryBatch<T>,
-    ) -> Result<(), OptimError> {
+    fn update_true_fisher(&mut self, trajectory: &TrajectoryBatch<T>) -> Result<()> {
         // True Fisher requires computing the Hessian of the log-likelihood
         // This is computationally expensive and often approximated
         self.update_empirical_fisher(trajectory) // Fallback for now
     }
 
     /// Update diagonal Fisher approximation
-    fn update_diagonal_fisher(
-        &mut self,
-        trajectory: &TrajectoryBatch<T>,
-    ) -> Result<(), OptimError> {
+    fn update_diagonal_fisher(&mut self, trajectory: &TrajectoryBatch<T>) -> Result<()> {
         let mut diagonal = Array1::zeros(self.param_dim);
         let batch_size = trajectory.observations.nrows();
 
@@ -311,30 +299,21 @@ impl<T: Float, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
     }
 
     /// Update block diagonal Fisher approximation
-    fn update_block_diagonal_fisher(
-        &mut self,
-        _trajectory: &TrajectoryBatch<T>,
-    ) -> Result<(), OptimError> {
+    fn update_block_diagonal_fisher(&mut self, _trajectory: &TrajectoryBatch<T>) -> Result<()> {
         // Block diagonal approximation groups parameters into blocks
         // and assumes independence between blocks
         Ok(())
     }
 
     /// Update Kronecker factorization
-    fn update_kronecker_factors(
-        &mut self,
-        _trajectory: &TrajectoryBatch<T>,
-    ) -> Result<(), OptimError> {
+    fn update_kronecker_factors(&mut self, _trajectory: &TrajectoryBatch<T>) -> Result<()> {
         // Kronecker factorization approximates the Fisher matrix as
         // a Kronecker product of smaller matrices (K-FAC style)
         Ok(())
     }
 
     /// Compute natural gradients
-    fn compute_natural_gradients(
-        &self,
-        gradients: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn compute_natural_gradients(&self, gradients: &Array1<T>) -> Result<Array1<T>> {
         if !self.config.enable_preconditioning {
             return Ok(gradients.clone());
         }
@@ -364,11 +343,7 @@ impl<T: Float, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
     }
 
     /// Solve Fisher information system using conjugate gradient
-    fn solve_fisher_system(
-        &self,
-        fisher: &Array2<T>,
-        rhs: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn solve_fisher_system(&self, fisher: &Array2<T>, rhs: &Array1<T>) -> Result<Array1<T>> {
         let n = rhs.len();
         let mut x = Array1::zeros(n);
         let mut r = rhs.clone();
@@ -397,10 +372,7 @@ impl<T: Float, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
     }
 
     /// Apply natural gradient update
-    fn apply_natural_gradient_update(
-        &mut self,
-        natural_gradients: &Array1<T>,
-    ) -> Result<(), OptimError> {
+    fn apply_natural_gradient_update(&mut self, natural_gradients: &Array1<T>) -> Result<()> {
         // In practice, this would update the policy network parameters
         // using the natural gradients
 
@@ -421,10 +393,7 @@ impl<T: Float, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
     }
 
     /// Apply trust region constraint to natural gradient update
-    fn apply_trust_region_constraint(
-        &self,
-        update: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn apply_trust_region_constraint(&self, update: &Array1<T>) -> Result<Array1<T>> {
         let update_norm = self.vector_norm(update);
         let trust_radius = self.natural_grad_state.trust_radius;
 
@@ -436,7 +405,7 @@ impl<T: Float, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
     }
 
     /// Update policy network parameters
-    fn update_policy_parameters(&mut self, _update: &Array1<T>) -> Result<(), OptimError> {
+    fn update_policy_parameters(&mut self, _update: &Array1<T>) -> Result<()> {
         // Placeholder for actual parameter update
         // In practice, this would modify the policy network weights
         Ok(())
@@ -447,14 +416,14 @@ impl<T: Float, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
         &self,
         _obs: &Array1<T>,
         _action: &Array1<T>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         // Placeholder for computing gradients of log probability
         // This would typically involve backpropagation through the policy network
         Ok(Array1::zeros(self.param_dim))
     }
 
     /// Add gradient to empirical Fisher accumulator
-    fn add_to_empirical_fisher(&mut self, gradient: &Array1<T>) -> Result<(), OptimError> {
+    fn add_to_empirical_fisher(&mut self, gradient: &Array1<T>) -> Result<()> {
         // Add outer product of gradient to Fisher sum
         for i in 0..self.param_dim {
             for j in 0..self.param_dim {
@@ -478,7 +447,7 @@ impl<T: Float, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
     }
 
     /// Finalize empirical Fisher matrix computation
-    fn finalize_empirical_fisher(&mut self) -> Result<(), OptimError> {
+    fn finalize_empirical_fisher(&mut self) -> Result<()> {
         if self.empirical_fisher_accumulator.sample_count == 0 {
             return Ok(());
         }

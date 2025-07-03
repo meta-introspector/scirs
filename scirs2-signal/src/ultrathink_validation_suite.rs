@@ -2,7 +2,7 @@
 //!
 //! This module provides the most comprehensive validation system for the scirs2-signal
 //! library, incorporating all TODO requirements and validation best practices.
-//! 
+//!
 //! The validation suite includes:
 //! - Enhanced multitaper spectral estimation validation
 //! - Comprehensive Lomb-Scargle periodogram testing
@@ -623,8 +623,9 @@ pub fn run_ultrathink_validation(
     println!("\n📈 Running parametric spectral estimation validation...");
     let parametric_results = run_enhanced_parametric_validation(config, &mut rng)?;
     total_tests += 60;
-    if parametric_results.ar_validation.coefficient_accuracy > 90.0 &&
-       parametric_results.arma_validation.ar_coefficient_accuracy > 90.0 {
+    if parametric_results.ar_validation.coefficient_accuracy > 90.0
+        && parametric_results.arma_validation.ar_coefficient_accuracy > 90.0
+    {
         passed_tests += 60;
     } else if parametric_results.ar_validation.coefficient_accuracy > 80.0 {
         passed_tests += 50;
@@ -733,7 +734,8 @@ pub fn run_ultrathink_validation(
     // Calculate execution time and other metrics
     let total_execution_time_ms = start_time.elapsed().as_secs_f64() * 1000.0;
     let pass_rate = passed_tests as f64 / total_tests as f64 * 100.0;
-    let quality_score = (pass_rate + (100.0 - (failed_tests as f64 / total_tests as f64 * 100.0))) / 2.0;
+    let quality_score =
+        (pass_rate + (100.0 - (failed_tests as f64 / total_tests as f64 * 100.0))) / 2.0;
 
     // Create placeholder results for components that couldn't be fully validated
     let default_multitaper = MultitaperUltraResults {
@@ -842,7 +844,8 @@ pub fn run_ultrathink_validation(
     // Generate final recommendations
     recommendations.push("Implementation shows strong overall performance".to_string());
     if quality_score < 90.0 {
-        recommendations.push("Consider additional optimization for critical algorithms".to_string());
+        recommendations
+            .push("Consider additional optimization for critical algorithms".to_string());
     }
     if config.exhaustive {
         recommendations.push("Exhaustive testing completed successfully".to_string());
@@ -860,13 +863,20 @@ pub fn run_ultrathink_validation(
         critical_issues,
         warnings,
         performance_recommendations: vec!["Consider SIMD optimization for hot paths".to_string()],
-        accuracy_recommendations: vec!["Validate against more reference implementations".to_string()],
+        accuracy_recommendations: vec![
+            "Validate against more reference implementations".to_string()
+        ],
     };
 
     println!("\n✅ Ultrathink validation completed!");
-    println!("Total tests: {}, Passed: {}, Failed: {}, Warnings: {}", 
-             total_tests, passed_tests, failed_tests, warning_tests);
-    println!("Pass rate: {:.1}%, Quality score: {:.1}%", pass_rate, quality_score);
+    println!(
+        "Total tests: {}, Passed: {}, Failed: {}, Warnings: {}",
+        total_tests, passed_tests, failed_tests, warning_tests
+    );
+    println!(
+        "Pass rate: {:.1}%, Quality score: {:.1}%",
+        pass_rate, quality_score
+    );
     println!("Execution time: {:.2} ms", total_execution_time_ms);
 
     Ok(UltrathinkValidationResult {
@@ -1216,25 +1226,47 @@ fn run_enhanced_parallel_validation(
 }
 
 /// Generate a comprehensive validation report in human-readable format
-pub fn generate_ultrathink_report(
-    results: &UltrathinkValidationResult,
-) -> String {
+pub fn generate_ultrathink_report(results: &UltrathinkValidationResult) -> String {
     let mut report = String::new();
-    
+
     report.push_str("# Ultrathink Validation Report\n\n");
-    report.push_str(&format!("**Execution Time**: {:.2} ms\n", results.total_execution_time_ms));
-    report.push_str(&format!("**Peak Memory Usage**: {:.2} MB\n\n", results.peak_memory_usage_mb));
-    
+    report.push_str(&format!(
+        "**Execution Time**: {:.2} ms\n",
+        results.total_execution_time_ms
+    ));
+    report.push_str(&format!(
+        "**Peak Memory Usage**: {:.2} MB\n\n",
+        results.peak_memory_usage_mb
+    ));
+
     report.push_str("## Summary\n\n");
-    report.push_str(&format!("- **Total Tests**: {}\n", results.summary.total_tests));
+    report.push_str(&format!(
+        "- **Total Tests**: {}\n",
+        results.summary.total_tests
+    ));
     report.push_str(&format!("- **Passed**: {}\n", results.summary.passed_tests));
     report.push_str(&format!("- **Failed**: {}\n", results.summary.failed_tests));
-    report.push_str(&format!("- **Warnings**: {}\n", results.summary.warning_tests));
-    report.push_str(&format!("- **Pass Rate**: {:.1}%\n", results.summary.pass_rate));
-    report.push_str(&format!("- **Quality Score**: {:.1}%\n", results.summary.quality_score));
-    report.push_str(&format!("- **Performance Score**: {:.1}%\n", results.summary.performance_score));
-    report.push_str(&format!("- **Reliability Score**: {:.1}%\n\n", results.summary.reliability_score));
-    
+    report.push_str(&format!(
+        "- **Warnings**: {}\n",
+        results.summary.warning_tests
+    ));
+    report.push_str(&format!(
+        "- **Pass Rate**: {:.1}%\n",
+        results.summary.pass_rate
+    ));
+    report.push_str(&format!(
+        "- **Quality Score**: {:.1}%\n",
+        results.summary.quality_score
+    ));
+    report.push_str(&format!(
+        "- **Performance Score**: {:.1}%\n",
+        results.summary.performance_score
+    ));
+    report.push_str(&format!(
+        "- **Reliability Score**: {:.1}%\n\n",
+        results.summary.reliability_score
+    ));
+
     if !results.summary.critical_issues.is_empty() {
         report.push_str("## Critical Issues\n\n");
         for issue in &results.summary.critical_issues {
@@ -1242,7 +1274,7 @@ pub fn generate_ultrathink_report(
         }
         report.push_str("\n");
     }
-    
+
     if !results.summary.warnings.is_empty() {
         report.push_str("## Warnings\n\n");
         for warning in &results.summary.warnings {
@@ -1250,41 +1282,95 @@ pub fn generate_ultrathink_report(
         }
         report.push_str("\n");
     }
-    
+
     report.push_str("## Component Analysis\n\n");
-    
+
     report.push_str(&format!("### Multitaper Spectral Estimation\n"));
-    report.push_str(&format!("- DPSS Accuracy: {:.1}%\n", results.multitaper_results.dpss_accuracy_score));
-    report.push_str(&format!("- Stability Score: {:.1}%\n", results.multitaper_results.stability_score));
-    report.push_str(&format!("- Performance Scaling: {:.1}%\n\n", results.multitaper_results.performance_scaling.scaling_efficiency));
-    
+    report.push_str(&format!(
+        "- DPSS Accuracy: {:.1}%\n",
+        results.multitaper_results.dpss_accuracy_score
+    ));
+    report.push_str(&format!(
+        "- Stability Score: {:.1}%\n",
+        results.multitaper_results.stability_score
+    ));
+    report.push_str(&format!(
+        "- Performance Scaling: {:.1}%\n\n",
+        results
+            .multitaper_results
+            .performance_scaling
+            .scaling_efficiency
+    ));
+
     report.push_str(&format!("### Lomb-Scargle Periodogram\n"));
-    report.push_str(&format!("- Analytical Accuracy: {:.1}%\n", results.lombscargle_results.analytical_accuracy));
-    report.push_str(&format!("- Peak Detection: {:.1}%\n", results.lombscargle_results.peak_detection_accuracy));
-    report.push_str(&format!("- Memory Efficiency: {:.1}%\n\n", results.lombscargle_results.memory_efficiency));
-    
+    report.push_str(&format!(
+        "- Analytical Accuracy: {:.1}%\n",
+        results.lombscargle_results.analytical_accuracy
+    ));
+    report.push_str(&format!(
+        "- Peak Detection: {:.1}%\n",
+        results.lombscargle_results.peak_detection_accuracy
+    ));
+    report.push_str(&format!(
+        "- Memory Efficiency: {:.1}%\n\n",
+        results.lombscargle_results.memory_efficiency
+    ));
+
     report.push_str(&format!("### Parametric Spectral Estimation\n"));
-    report.push_str(&format!("- AR Coefficient Accuracy: {:.1}%\n", results.parametric_results.ar_validation.coefficient_accuracy));
-    report.push_str(&format!("- ARMA Coefficient Accuracy: {:.1}%\n", results.parametric_results.arma_validation.ar_coefficient_accuracy));
-    report.push_str(&format!("- Order Selection: {:.1}%\n\n", results.parametric_results.order_selection_accuracy));
-    
+    report.push_str(&format!(
+        "- AR Coefficient Accuracy: {:.1}%\n",
+        results
+            .parametric_results
+            .ar_validation
+            .coefficient_accuracy
+    ));
+    report.push_str(&format!(
+        "- ARMA Coefficient Accuracy: {:.1}%\n",
+        results
+            .parametric_results
+            .arma_validation
+            .ar_coefficient_accuracy
+    ));
+    report.push_str(&format!(
+        "- Order Selection: {:.1}%\n\n",
+        results.parametric_results.order_selection_accuracy
+    ));
+
     report.push_str(&format!("### 2D Wavelet Transforms\n"));
-    report.push_str(&format!("- Reconstruction Accuracy: {:.1}%\n", results.wavelet2d_results.reconstruction_accuracy));
-    report.push_str(&format!("- Boundary Handling: {:.1}%\n", results.wavelet2d_results.boundary_handling_score));
-    report.push_str(&format!("- Computational Efficiency: {:.1}%\n\n", results.wavelet2d_results.computational_efficiency));
-    
+    report.push_str(&format!(
+        "- Reconstruction Accuracy: {:.1}%\n",
+        results.wavelet2d_results.reconstruction_accuracy
+    ));
+    report.push_str(&format!(
+        "- Boundary Handling: {:.1}%\n",
+        results.wavelet2d_results.boundary_handling_score
+    ));
+    report.push_str(&format!(
+        "- Computational Efficiency: {:.1}%\n\n",
+        results.wavelet2d_results.computational_efficiency
+    ));
+
     report.push_str(&format!("### SIMD Operations\n"));
-    report.push_str(&format!("- Operation Accuracy: {:.3}%\n", results.simd_results.operation_accuracy));
-    report.push_str(&format!("- Speedup Factor: {:.1}x\n", results.simd_results.speedup_factor));
-    report.push_str(&format!("- Platform Consistency: {:.1}%\n\n", results.simd_results.platform_consistency));
-    
+    report.push_str(&format!(
+        "- Operation Accuracy: {:.3}%\n",
+        results.simd_results.operation_accuracy
+    ));
+    report.push_str(&format!(
+        "- Speedup Factor: {:.1}x\n",
+        results.simd_results.speedup_factor
+    ));
+    report.push_str(&format!(
+        "- Platform Consistency: {:.1}%\n\n",
+        results.simd_results.platform_consistency
+    ));
+
     if !results.recommendations.is_empty() {
         report.push_str("## Recommendations\n\n");
         for rec in &results.recommendations {
             report.push_str(&format!("- {}\n", rec));
         }
     }
-    
+
     report
 }
 
@@ -1298,7 +1384,7 @@ pub fn run_quick_ultrathink_validation() -> SignalResult<UltrathinkValidationRes
         max_test_duration: 60.0,
         ..Default::default()
     };
-    
+
     run_ultrathink_validation(&config)
 }
 

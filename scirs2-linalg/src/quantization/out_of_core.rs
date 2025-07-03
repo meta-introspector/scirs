@@ -181,10 +181,7 @@ where
             // Write the quantized chunk - convert i8 to u8 for writing
             // We need to use a bit representation conversion (reinterpret the bytes)
             // rather than a numeric cast to preserve the bit pattern
-            let u8_data: Vec<u8> = quantized_data
-                .iter()
-                .map(|&x| unsafe { std::mem::transmute::<i8, u8>(x) })
-                .collect();
+            let u8_data: Vec<u8> = quantized_data.iter().map(|&x| x.cast_unsigned()).collect();
             writer.write_all(&u8_data).map_err(|e| {
                 LinalgError::ComputationError(format!("Failed to write chunk: {}", e))
             })?;
@@ -295,10 +292,7 @@ where
 
             // Convert back to i8 for processing using a bit pattern conversion
             // rather than a numeric cast to preserve the sign bit
-            let quantized_data: Vec<i8> = u8_data
-                .iter()
-                .map(|&x| unsafe { std::mem::transmute::<u8, i8>(x) })
-                .collect();
+            let quantized_data: Vec<i8> = u8_data.iter().map(|&x| x.cast_signed()).collect();
 
             // Apply the chunk to the input vector
             for i in 0..chunk_rows {
@@ -383,10 +377,7 @@ where
 
                 // Convert back to i8 for processing using a bit pattern conversion
                 // rather than a numeric cast to preserve the sign bit
-                let quantized_data: Vec<i8> = u8_data
-                    .iter()
-                    .map(|&x| unsafe { std::mem::transmute::<u8, i8>(x) })
-                    .collect();
+                let quantized_data: Vec<i8> = u8_data.iter().map(|&x| x.cast_signed()).collect();
 
                 // Apply the chunk to the input vector
                 for i in 0..chunk_rows {

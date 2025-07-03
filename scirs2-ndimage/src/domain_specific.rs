@@ -3,7 +3,7 @@
 //! This module provides specialized image processing functions for different domains:
 //! medical imaging, satellite/remote sensing, and microscopy.
 
-use ndarray::{Array2, ArrayView2};
+use ndarray::{Array2, Array3, ArrayView2, ArrayView3};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 

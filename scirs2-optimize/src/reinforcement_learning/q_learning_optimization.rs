@@ -92,10 +92,10 @@ impl RLOptimizer for QLearningOptimizer {
 
     fn select_action(&mut self, state: &OptimizationState) -> OptimizationAction {
         // Epsilon-greedy action selection
-        if rand::random::<f64>() < self.exploration_rate {
+        if rand::rng().random::<f64>() < self.exploration_rate {
             // Random action
             let actions = self.get_possible_actions();
-            let idx = rand::random::<usize>() % actions.len();
+            let idx = rand::rng().random::<usize>() % actions.len();
             actions[idx].clone()
         } else {
             // Greedy action

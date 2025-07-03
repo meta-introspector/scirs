@@ -42,7 +42,7 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
     {
         // Validate input using scirs2-core validation
         check_not_empty(x, "x")?;
-        
+
         // Check finite values
         for &val in x.iter() {
             if !val.is_finite() {
@@ -259,10 +259,10 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
     /// Calculate optimal batch size based on memory characteristics
     fn calculate_optimal_batch_size(&self, n_samples: usize, n_output_features: usize) -> usize {
         const L1_CACHE_SIZE: usize = 32_768;
-        const ELEMENT_SIZE: usize = std::mem::size_of::<F>();
+        let element_size = std::mem::size_of::<F>();
 
         // Target: keep one batch worth of data in L1 cache
-        let elements_per_batch = L1_CACHE_SIZE / ELEMENT_SIZE / 2; // Conservative estimate
+        let elements_per_batch = L1_CACHE_SIZE / element_size / 2; // Conservative estimate
         let max_batch_size = elements_per_batch / n_output_features.max(1);
 
         // Adaptive batch size based on data characteristics
@@ -512,7 +512,7 @@ where
     F: Float + NumCast + SimdUnifiedOps,
 {
     check_not_empty(data, "data")?;
-    
+
     // Check finite values
     for &val in data.iter() {
         if !val.is_finite() {
@@ -598,7 +598,7 @@ where
     F: Float + NumCast + SimdUnifiedOps,
 {
     check_not_empty(data, "data")?;
-    
+
     // Check finite values
     for &val in data.iter() {
         if !val.is_finite() {
@@ -607,7 +607,7 @@ where
             ));
         }
     }
-    
+
     check_positive(degree, "degree")?;
 
     let poly_features = SimdPolynomialFeatures::new(degree, include_bias, interaction_only)?;

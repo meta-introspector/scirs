@@ -786,6 +786,66 @@ fn wright_bessel_asymptotic_enhanced(rho: f64, beta: f64, z: f64) -> SpecialResu
     Ok(result)
 }
 
+/// Logarithm of Wright's generalized Bessel function
+///
+/// Computes log(J_{ρ,β}(z)) accurately for all parameter ranges
+/// Useful when the Wright Bessel function is very large or very small
+#[allow(unused_imports)]
+pub fn log_wright_bessel(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
+    if rho <= 0.0 || rho > 1.0 {
+        return Err(SpecialError::DomainError(
+            "log_wright_bessel: rho must be in (0, 1]".to_string(),
+        ));
+    }
+
+    if z == 0.0 {
+        // log(J_{ρ,β}(0)) = log(Γ(β)^(-1)) = -log_gamma(β)
+        return Ok(-gamma::loggamma(beta));
+    }
+
+    if z < 0.0 && rho >= 0.5 {
+        // For negative z with rho >= 0.5, use the function value directly
+        let wb = wright_bessel(rho, beta, z)?;
+        if wb > 0.0 {
+            return Ok(wb.ln());
+        } else {
+            return Ok(f64::NEG_INFINITY);
+        }
+    }
+
+    // For positive z or small rho, use series expansion in log space
+    let log_gamma_beta = gamma::loggamma(beta);
+
+    // Start with first term: log(z^0 / (0! * Γ(β))) = -log_gamma(β)
+    let mut max_log_term = -log_gamma_beta;
+    let mut terms = vec![-log_gamma_beta];
+
+    // Compute subsequent terms
+    for k in 1..=50 {
+        let k_f = k as f64;
+
+        // log(z^k / (k! * Γ(ρ*k + β)))
+        let log_term =
+            k_f * z.ln() - gamma::loggamma(k_f + 1.0) - gamma::loggamma(rho * k_f + beta);
+
+        terms.push(log_term);
+        max_log_term = max_log_term.max(log_term);
+
+        // Check convergence
+        if log_term - max_log_term < -50.0 {
+            break;
+        }
+    }
+
+    // Use log-sum-exp trick for numerical stability
+    let mut sum = 0.0;
+    for &log_term in &terms {
+        sum += (log_term - max_log_term).exp();
+    }
+
+    Ok(max_log_term + sum.ln())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -17,23 +17,23 @@ fn test_core_graph_types_stable() {
     let digraph = DiGraph::<usize, f64>::new();
     let multigraph = MultiGraph::<usize, f64>::new();
     let multi_digraph = MultiDiGraph::<usize, f64>::new();
-    
+
     // Bipartite graph construction
     let bipartite = BipartiteGraph::<usize, f64>::new();
-    
+
     // Basic operations should remain stable
     assert_eq!(graph.node_count(), 0);
     assert_eq!(graph.edge_count(), 0);
 }
 
 /// Test core algorithm signatures remain stable
-#[test] 
+#[test]
 fn test_traversal_algorithms_stable() {
     let mut graph = Graph::new();
     graph.add_node(0).unwrap();
     graph.add_node(1).unwrap();
     graph.add_edge(0, 1, 1.0).unwrap();
-    
+
     // These function signatures must not change
     let _bfs_result = breadth_first_search(&graph, &0);
     let _dfs_result = depth_first_search(&graph, &0);
@@ -47,7 +47,7 @@ fn test_shortest_path_algorithms_stable() {
     graph.add_node(0).unwrap();
     graph.add_node(1).unwrap();
     graph.add_edge(0, 1, 2.0).unwrap();
-    
+
     // Stable API - should not change
     let _dijkstra_result = dijkstra_path(&graph, &0, &1);
     let _floyd_result = floyd_warshall(&graph);
@@ -64,7 +64,7 @@ fn test_connectivity_algorithms_stable() {
     graph.add_edge(0, 1, 1.0).unwrap();
     graph.add_edge(1, 2, 1.0).unwrap();
     graph.add_edge(3, 4, 1.0).unwrap();
-    
+
     // These functions should maintain their signatures
     let _components = connected_components(&graph);
     let _articulation = articulation_points(&graph);
@@ -81,12 +81,12 @@ fn test_centrality_algorithms_stable() {
             graph.add_edge(0, i, 1.0).unwrap(); // Star graph
         }
     }
-    
+
     // Centrality measure signatures should be stable
     let _betweenness = betweenness_centrality(&graph);
     let _closeness = closeness_centrality(&graph);
     let _eigenvector = eigenvector_centrality(&graph, None, None);
-    
+
     // PageRank variations should be stable
     let _pagerank = pagerank(&graph, None, None, None);
     let _personalized = personalized_pagerank(&graph, &HashMap::new(), None, None, None);
@@ -105,12 +105,12 @@ fn test_community_detection_stable() {
     graph.add_edge(3, 4, 1.0).unwrap();
     graph.add_edge(4, 5, 1.0).unwrap();
     graph.add_edge(2, 3, 0.1).unwrap(); // Weak connection
-    
+
     // Result-based API should be stable
     let _louvain_result: CommunityResult = louvain_communities_result(&graph, None, None);
     let _label_prop_result: CommunityResult = label_propagation_result(&graph, None, None);
     let _fluid_result: CommunityResult = fluid_communities_result(&graph, 2, None, None);
-    
+
     // Modularity function should be stable
     let communities = vec![vec![0, 1, 2], vec![3, 4, 5]];
     let _modularity_score = modularity(&graph, &communities);
@@ -121,9 +121,9 @@ fn test_community_detection_stable() {
 fn test_graph_generators_stable() {
     use rand::rngs::StdRng;
     use rand::SeedableRng;
-    
+
     let mut rng = StdRng::seed_from_u64(42);
-    
+
     // Generator function signatures should not change
     let _erdos = erdos_renyi_graph(100, 0.05, &mut rng).unwrap();
     let _barabasi = barabasi_albert_graph(100, 3, &mut rng).unwrap();
@@ -141,28 +141,28 @@ fn test_graph_measures_stable() {
     for i in 0..5 {
         graph.add_node(i).unwrap();
         if i > 0 {
-            graph.add_edge(i-1, i, 1.0).unwrap();
+            graph.add_edge(i - 1, i, 1.0).unwrap();
         }
     }
-    
+
     // Measure function signatures should be stable
     let _density = graph_density(&graph);
     let _clustering = clustering_coefficient(&graph);
-    
+
     // HITS algorithm should be stable
     let _hits_scores: HitsScores = hits_algorithm(&graph, None, None);
-    
+
     // Katz centrality should be stable
     let _katz = katz_centrality(&graph, None, None, None);
 }
 
 /// Test error types remain stable
-#[test] 
+#[test]
 fn test_error_types_stable() {
     // Error type should maintain its structure
     let error = GraphError::node_not_found(42);
     let _result: Result<()> = Err(error);
-    
+
     // Error context should be stable
     let _context = ErrorContext::new("test operation");
 }
@@ -171,13 +171,13 @@ fn test_error_types_stable() {
 #[test]
 fn test_io_stability() {
     use std::io::Cursor;
-    
+
     let graph = complete_graph(5);
-    
+
     // I/O function signatures should not change
     let mut buffer = Vec::new();
     let cursor = Cursor::new(&mut buffer);
-    
+
     // These functions should maintain compatibility
     // Note: Actual file I/O tested separately to avoid file system dependencies
     let _json_str = serde_json::to_string(&graph);
@@ -187,10 +187,12 @@ fn test_io_stability() {
 #[test]
 fn test_attribute_system_stable() {
     let mut graph = AttributedGraph::<usize, f64>::new();
-    
+
     // Basic attributed graph operations should be stable
-    graph.add_node_with_attributes(0, Attributes::new()).unwrap();
-    
+    graph
+        .add_node_with_attributes(0, Attributes::new())
+        .unwrap();
+
     // Attribute operations should maintain their API
     let attributes = Attributes::new();
     let _summary = attributes.summarize();
@@ -203,7 +205,7 @@ fn test_weighted_operations_stable() {
     graph.add_node(0).unwrap();
     graph.add_node(1).unwrap();
     graph.add_edge(0, 1, 2.5).unwrap();
-    
+
     // Weighted operations API should be stable
     let weighted_ops = WeightedOps::new(&graph);
     let _stats = weighted_ops.weight_statistics();
@@ -218,13 +220,13 @@ fn test_result_types_stable() {
         modularity: 0.0,
         metadata: HashMap::new(),
     };
-    
+
     let _astar_result = AStarResult {
         path: vec![],
         cost: 0.0,
         nodes_explored: 0,
     };
-    
+
     let _bipartite_result = BipartiteResult {
         is_bipartite: true,
         partition: (vec![], vec![]),
@@ -236,7 +238,7 @@ fn test_result_types_stable() {
 #[allow(deprecated)]
 fn test_deprecated_functions_compatibility() {
     let graph = complete_graph(5);
-    
+
     // These should work but generate deprecation warnings
     let _shortest = shortest_path(&graph, &0, &1);
     let _louvain = louvain_communities(&graph, None, None);
@@ -248,7 +250,7 @@ fn test_deprecated_functions_compatibility() {
 #[test]
 fn test_parallel_api_stable() {
     let graph = complete_graph(100);
-    
+
     // Parallel APIs should maintain compatibility
     let _parallel_pagerank = parallel_pagerank_centrality(&graph, None, None, None);
     let _parallel_louvain = parallel_louvain_communities_result(&graph, None, None);
@@ -260,7 +262,7 @@ fn test_parallel_api_stable() {
 fn test_experimental_features_gated() {
     let graph1 = complete_graph(5);
     let graph2 = cycle_graph(5);
-    
+
     // Experimental features should be available only with feature flag
     let _isomorphic = are_graphs_isomorphic(&graph1, &graph2);
     let _edit_distance = graph_edit_distance(&graph1, &graph2);
@@ -270,10 +272,10 @@ fn test_experimental_features_gated() {
 #[test]
 fn test_ultrathink_api_stable() {
     let graph = complete_graph(10);
-    
+
     // Ultrathink processor creation should be stable
     let _processor = create_ultrathink_processor();
-    
+
     // Basic ultrathink configuration should be stable
     let _config = UltrathinkConfig::default();
 }
@@ -286,15 +288,16 @@ fn test_compile_time_signatures() {
     fn verify_bfs_signature() -> fn(&Graph<usize, f64>, &usize) -> Result<Vec<usize>> {
         breadth_first_search
     }
-    
+
     fn verify_dijkstra_signature() -> fn(&Graph<usize, f64>, &usize, &usize) -> Result<Vec<usize>> {
         dijkstra_path
     }
-    
-    fn verify_louvain_signature() -> fn(&Graph<usize, f64>, Option<f64>, Option<usize>) -> CommunityResult {
+
+    fn verify_louvain_signature(
+    ) -> fn(&Graph<usize, f64>, Option<f64>, Option<usize>) -> CommunityResult {
         louvain_communities_result
     }
-    
+
     // These functions should compile, proving signatures are correct
     let _bfs_fn = verify_bfs_signature();
     let _dijkstra_fn = verify_dijkstra_signature();

@@ -9,7 +9,7 @@ use ndarray::Array1;
 use scirs2_special::*;
 use serde_json::json;
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 #[derive(Debug, Clone)]
 struct BenchmarkResult {
@@ -38,7 +38,7 @@ impl PerformanceMonitor {
         }
     }
 
-    fn benchmark_function<F>(&mut self, name: &str, input_size: usize, mut f: F)
+    fn benchmark_function<F>(&mut self, name: &str, _input_size: usize, mut f: F)
     where
         F: FnMut() -> f64,
     {
@@ -166,7 +166,7 @@ impl PerformanceMonitor {
     fn get_memory_usage(&self) -> usize {
         // Simplified memory usage estimation
         // In a real implementation, this would use more sophisticated memory tracking
-        use std::alloc::{GlobalAlloc, Layout, System};
+        use std::alloc::System;
 
         // For demonstration, we'll return a basic estimate
         // Real implementation would use tools like jemalloc or tcmalloc statistics
@@ -296,8 +296,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     monitor.benchmark_function("error_function_comp", 1, || erfc(2.1));
     monitor.benchmark_function("error_function_inv", 1, || erfinv(0.7));
 
-    monitor.benchmark_function("airy_ai", 1, || airy_ai(1.5));
-    monitor.benchmark_function("airy_bi", 1, || airy_bi(1.5));
+    monitor.benchmark_function("airy_ai", 1, || ai(1.5));
+    monitor.benchmark_function("airy_bi", 1, || bi(1.5));
 
     // Benchmark array operations
     println!("\n📈 Benchmarking array operations...");
@@ -327,7 +327,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     use num_complex::Complex64;
     let z = Complex64::new(1.5, 0.5);
 
-    #[cfg(feature = "complex")]
+    // Complex spherical harmonic benchmark (commented out - needs proper complex support)
     {
         monitor.benchmark_function("gamma_complex", 1, || {
             use scirs2_special::gamma::complex::gamma_complex;
@@ -346,7 +346,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     monitor.benchmark_function("elliptic_k", 1, || elliptic_k(0.7));
     monitor.benchmark_function("elliptic_e", 1, || elliptic_e(0.7));
 
-    monitor.benchmark_function("spherical_harmonic", 1, || sph_harm(2, 1, 1.0, 0.5).norm());
+    // monitor.benchmark_function("spherical_harmonic", 1, || sph_harm(2, 1, 1.0, 0.5).norm());
 
     monitor.benchmark_function("wright_bessel", 1, || {
         wright_bessel(1.0, 1.0, 1.5).unwrap_or(0.0)

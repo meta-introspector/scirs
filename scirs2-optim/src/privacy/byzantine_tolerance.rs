@@ -287,7 +287,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     pub fn byzantine_robust_aggregate(
         &mut self,
         participant_gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<ByzantineAggregationResult<T>, OptimError> {
+    ) -> Result<ByzantineAggregationResult<T>> {
         // Step 1: Pre-filtering based on reputation
         let filtered_participants = self.filter_by_reputation(participant_gradients)?;
 
@@ -409,7 +409,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
         anomaly_results: &HashMap<String, AnomalyScore>,
         outlier_results: &HashMap<String, OutlierScore>,
         verification_results: &HashMap<String, VerificationScore>,
-    ) -> Result<Vec<String>, OptimError> {
+    ) -> Result<Vec<String>> {
         let mut byzantine_participants = Vec::new();
 
         for participant_id in anomaly_results.keys() {
@@ -457,7 +457,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     fn perform_robust_aggregation(
         &self,
         honest_gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         match self.config.aggregation_method {
             ByzantineAggregationMethod::TrimmedMean => {
                 self.trimmed_mean_aggregation(honest_gradients)
@@ -481,7 +481,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     fn trimmed_mean_aggregation(
         &self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         if gradients.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No gradients to aggregate".to_string(),
@@ -518,7 +518,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     fn coordinate_median_aggregation(
         &self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         if gradients.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No gradients to aggregate".to_string(),
@@ -549,10 +549,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     }
 
     /// Krum aggregation (select single most representative gradient)
-    fn krum_aggregation(
-        &self,
-        gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn krum_aggregation(&self, gradients: &HashMap<String, Array1<T>>) -> Result<Array1<T>> {
         if gradients.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No gradients to aggregate".to_string(),
@@ -598,10 +595,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     }
 
     /// Multi-Krum aggregation (select multiple representative gradients)
-    fn multi_krum_aggregation(
-        &self,
-        gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn multi_krum_aggregation(&self, gradients: &HashMap<String, Array1<T>>) -> Result<Array1<T>> {
         if gradients.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No gradients to aggregate".to_string(),
@@ -625,10 +619,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     }
 
     /// Bulyan aggregation
-    fn bulyan_aggregation(
-        &self,
-        gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn bulyan_aggregation(&self, gradients: &HashMap<String, Array1<T>>) -> Result<Array1<T>> {
         // Bulyan combines Multi-Krum with trimmed mean
         let selected_gradients =
             self.select_top_k_krum(gradients, gradients.len() - self.config.max_byzantine)?;
@@ -636,10 +627,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     }
 
     /// FoolsGold aggregation (defend against Sybil attacks)
-    fn fools_gold_aggregation(
-        &self,
-        gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn fools_gold_aggregation(&self, gradients: &HashMap<String, Array1<T>>) -> Result<Array1<T>> {
         if gradients.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No gradients to aggregate".to_string(),
@@ -671,10 +659,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     }
 
     /// FLAME aggregation
-    fn flame_aggregation(
-        &self,
-        gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn flame_aggregation(&self, gradients: &HashMap<String, Array1<T>>) -> Result<Array1<T>> {
         // FLAME uses clustering to identify and filter out Byzantine gradients
         let clusters = self.cluster_gradients(gradients)?;
         let largest_cluster = self.find_largest_cluster(&clusters)?;
@@ -684,10 +669,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     }
 
     /// Simple median aggregation
-    fn median_aggregation(
-        &self,
-        gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn median_aggregation(&self, gradients: &HashMap<String, Array1<T>>) -> Result<Array1<T>> {
         self.coordinate_median_aggregation(gradients)
     }
 
@@ -695,7 +677,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     fn geometric_median_aggregation(
         &self,
         gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    ) -> Result<Array1<T>> {
         if gradients.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No gradients to aggregate".to_string(),
@@ -743,10 +725,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     }
 
     /// Simple average aggregation
-    fn average_aggregation(
-        &self,
-        gradients: &HashMap<String, Array1<T>>,
-    ) -> Result<Array1<T>, OptimError> {
+    fn average_aggregation(&self, gradients: &HashMap<String, Array1<T>>) -> Result<Array1<T>> {
         if gradients.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No gradients to aggregate".to_string(),
@@ -769,7 +748,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
         &mut self,
         honest_participants: &HashMap<String, Array1<T>>,
         byzantine_participants: &[String],
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Update honest participants (increase reputation)
         for participant_id in honest_participants.keys() {
             let reputation = self
@@ -843,11 +822,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     }
 
     /// Compute Euclidean distance between two gradients
-    fn compute_euclidean_distance(
-        &self,
-        a: &Array1<T>,
-        b: &Array1<T>,
-    ) -> Result<T, OptimError> {
+    fn compute_euclidean_distance(&self, a: &Array1<T>, b: &Array1<T>) -> Result<T> {
         if a.len() != b.len() {
             return Err(OptimError::InvalidConfig(
                 "Gradient dimensions don't match".to_string(),
@@ -984,7 +959,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
     }
 
     /// Compute cosine similarity between two gradients
-    fn compute_cosine_similarity(&self, a: &Array1<T>, b: &Array1<T>) -> Result<T, OptimError> {
+    fn compute_cosine_similarity(&self, a: &Array1<T>, b: &Array1<T>) -> Result<T> {
         if a.len() != b.len() {
             return Err(OptimError::InvalidConfig(
                 "Gradient dimensions don't match".to_string(),
@@ -1016,7 +991,7 @@ impl<T: Float> ByzantineTolerantAggregator<T> {
         &self,
         gradient: &Array1<T>,
         stats: &StatisticalMeasures<T>,
-    ) -> Result<OutlierScore, OptimError> {
+    ) -> Result<OutlierScore> {
         match self.config.outlier_detection {
             OutlierDetectionMethod::ZScore => {
                 let mut max_z_score = T::zero();
@@ -1164,7 +1139,7 @@ impl<T: Float> AnomalyDetector<T> {
     }
 
     /// Detect anomaly in gradient
-    pub fn detect_anomaly(&mut self, gradient: &Array1<T>) -> Result<AnomalyScore, OptimError> {
+    pub fn detect_anomaly(&mut self, gradient: &Array1<T>) -> Result<AnomalyScore> {
         // Update gradient statistics
         self.gradient_stats.update(gradient)?;
 
@@ -1185,7 +1160,7 @@ impl<T: Float> AnomalyDetector<T> {
     }
 
     /// Compute norm deviation score
-    fn compute_norm_deviation(&self, gradient: &Array1<T>) -> Result<f64, OptimError> {
+    fn compute_norm_deviation(&self, gradient: &Array1<T>) -> Result<f64> {
         let gradient_norm = self.compute_l2_norm(gradient);
 
         if self.gradient_stats.norm_history.is_empty() {
@@ -1243,7 +1218,7 @@ impl<T: Float> GradientStatistics<T> {
     }
 
     /// Update statistics with new gradient
-    pub fn update(&mut self, gradient: &Array1<T>) -> Result<(), OptimError> {
+    pub fn update(&mut self, gradient: &Array1<T>) -> Result<()> {
         // Update norm history
         let norm = gradient
             .iter()
@@ -1282,7 +1257,7 @@ impl<T: Float> PatternModel<T> {
     }
 
     /// Compute pattern deviation score
-    pub fn compute_pattern_deviation(&self, gradient: &Array1<T>) -> Result<f64, OptimError> {
+    pub fn compute_pattern_deviation(&self, gradient: &Array1<T>) -> Result<f64> {
         // If no patterns learned yet, return neutral score
         if self.normal_patterns.is_empty() {
             return Ok(0.5);
@@ -1307,15 +1282,9 @@ impl<T: Float> PatternModel<T> {
     }
 
     /// Compute distance between gradient and pattern
-    fn compute_pattern_distance(
-        &self,
-        gradient: &Array1<T>,
-        pattern: &Array1<T>,
-    ) -> Result<T, OptimError> {
+    fn compute_pattern_distance(&self, gradient: &Array1<T>, pattern: &Array1<T>) -> Result<T> {
         if gradient.len() != pattern.len() {
-            return Err(OptimError::InvalidConfig(
-                "Dimension mismatch".to_string(),
-            ));
+            return Err(OptimError::InvalidConfig("Dimension mismatch".to_string()));
         }
 
         let mut sum = T::zero();
@@ -1341,7 +1310,7 @@ impl<T: Float> StatisticalAnalysis<T> {
     pub fn compute_statistics(
         &mut self,
         gradients: &[&Array1<T>],
-    ) -> Result<StatisticalMeasures<T>, OptimError> {
+    ) -> Result<StatisticalMeasures<T>> {
         if gradients.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No gradients provided".to_string(),
@@ -1444,10 +1413,7 @@ impl<T: Float> GradientVerifier<T> {
     }
 
     /// Verify gradient using all rules
-    pub fn verify_gradient(
-        &self,
-        gradient: &Array1<T>,
-    ) -> Result<VerificationScore, OptimError> {
+    pub fn verify_gradient(&self, gradient: &Array1<T>) -> Result<VerificationScore> {
         let mut rule_scores = HashMap::new();
         let mut total_weight = 0.0;
         let mut weighted_score = 0.0;

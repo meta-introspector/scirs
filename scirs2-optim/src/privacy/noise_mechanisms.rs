@@ -21,7 +21,7 @@ pub trait NoiseMechanism<T: Float> {
         sensitivity: T,
         epsilon: T,
         delta: Option<T>,
-    ) -> Result<(), OptimError>
+    ) -> Result<()>
     where
         S: DataMut<Elem = T>,
         D: Dimension;
@@ -151,7 +151,7 @@ where
     }
 
     /// Compute noise scale for Gaussian mechanism
-    pub fn compute_noise_scale(sensitivity: T, epsilon: T, delta: T) -> Result<T, OptimError> {
+    pub fn compute_noise_scale(sensitivity: T, epsilon: T, delta: T) -> Result<T> {
         if epsilon <= T::zero() || delta <= T::zero() || delta >= T::one() {
             return Err(OptimError::InvalidConfig(
                 "Invalid privacy parameters for Gaussian mechanism".to_string(),
@@ -176,7 +176,7 @@ where
         sensitivity: T,
         epsilon: T,
         delta: Option<T>,
-    ) -> Result<(), OptimError>
+    ) -> Result<()>
     where
         S: DataMut<Elem = T>,
         D: Dimension,
@@ -233,7 +233,7 @@ where
     }
 
     /// Compute noise scale for Laplace mechanism
-    pub fn compute_noise_scale(sensitivity: T, epsilon: T) -> Result<T, OptimError> {
+    pub fn compute_noise_scale(sensitivity: T, epsilon: T) -> Result<T> {
         if epsilon <= T::zero() {
             return Err(OptimError::InvalidConfig(
                 "Epsilon must be positive for Laplace mechanism".to_string(),
@@ -255,7 +255,7 @@ where
         sensitivity: T,
         epsilon: T,
         _delta: Option<T>,
-    ) -> Result<(), OptimError>
+    ) -> Result<()>
     where
         S: DataMut<Elem = T>,
         D: Dimension,
@@ -316,12 +316,7 @@ where
     }
 
     /// Select output using exponential mechanism
-    pub fn select_output(
-        &mut self,
-        candidates: &[T],
-        sensitivity: T,
-        epsilon: T,
-    ) -> Result<T, OptimError> {
+    pub fn select_output(&mut self, candidates: &[T], sensitivity: T, epsilon: T) -> Result<T> {
         if candidates.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No candidates provided".to_string(),
@@ -348,7 +343,7 @@ where
         // Sample according to weights
         let total_weight: f64 = weights.iter().sum();
         let mut cumulative = 0.0;
-        let random_val: f64 = self.rng.gen_range(0.0..total_weight);
+        let random_val: f64 = self.rng.random_range(0.0..total_weight);
 
         for (i, &weight) in weights.iter().enumerate() {
             cumulative += weight;
@@ -386,7 +381,7 @@ where
         sensitivity: T,
         epsilon: T,
         delta: Option<T>,
-    ) -> Result<(), OptimError>
+    ) -> Result<()>
     where
         S: DataMut<Elem = T>,
         D: Dimension,
@@ -436,7 +431,7 @@ where
         sensitivity: T,
         epsilon: T,
         delta: Option<T>,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         if values.is_empty() {
             return Ok(T::zero());
         }
@@ -495,7 +490,7 @@ where
         sensitivity: T,
         epsilon: T,
         delta: Option<T>,
-    ) -> Result<Option<T>, OptimError> {
+    ) -> Result<Option<T>> {
         if self.queries_answered >= self.max_queries {
             return Ok(None);
         }
@@ -587,7 +582,7 @@ where
         &mut self,
         data: &mut ArrayBase<S, D>,
         actual_sensitivity: Option<T>,
-    ) -> Result<NoiseCalibrationResult<T>, OptimError>
+    ) -> Result<NoiseCalibrationResult<T>>
     where
         S: DataMut<Elem = T>,
         D: Dimension,
@@ -663,7 +658,7 @@ pub fn generate_correlated_gaussian_noise<T>(
     correlation_matrix: &Array2<T>,
     scale: T,
     rng: &mut dyn rand::RngCore,
-) -> Result<Array2<T>, OptimError>
+) -> Result<Array2<T>>
 where
     T: Float + Default + Clone + rand_distr::uniform::SampleUniform,
 {
@@ -700,10 +695,7 @@ where
 }
 
 /// Validate differential privacy parameters
-pub fn validate_privacy_parameters<T: Float>(
-    epsilon: T,
-    delta: Option<T>,
-) -> Result<(), OptimError> {
+pub fn validate_privacy_parameters<T: Float>(epsilon: T, delta: Option<T>) -> Result<()> {
     if epsilon <= T::zero() {
         return Err(OptimError::InvalidConfig(
             "Epsilon must be positive".to_string(),

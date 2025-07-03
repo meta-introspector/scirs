@@ -26,10 +26,14 @@ fn create_xor_dataset() -> (Array2<f32>, Array2<f32>) {
     // XOR truth table outputs
     let y = Array2::from_shape_vec(
         (4, 1),
+        vec![
             0.0, // 0 XOR 0 = 0
             1.0, // 0 XOR 1 = 1
             1.0, // 1 XOR 0 = 1
             0.0, // 1 XOR 1 = 0
+        ],
+    )
+    .unwrap();
     (x, y)
 }
 // Create a simple neural network model for the XOR problem
@@ -95,6 +99,8 @@ fn main() -> Result<()> {
     // train_with_reduce_on_plateau(&mut rng, &x, &y)?;
     println!("\nTraining example completed successfully!");
     Ok(())
+}
+
 // Train a model with early stopping
 fn train_with_early_stopping(rng: &mut SmallRng, x: &Array2<f32>, y: &Array2<f32>) -> Result<()> {
     println!("\n1. Training with Early Stopping");
@@ -136,11 +142,19 @@ fn train_with_early_stopping(rng: &mut SmallRng, x: &Array2<f32>, y: &Array2<f32
             println!("Epoch {}/{}: loss = {:.6}", epoch + 1, max_epochs, loss);
         if stop_training {
             break;
+        }
+    }
     let elapsed = start_time.elapsed();
+    println!(
         "Training completed in {:.2}s{}",
         elapsed.as_secs_f32(),
+        if stop_training {
             " (early stopped)"
         } else {
             ""
+        }
+    );
     // Evaluate the model
     evaluate_model(&model, x, y)?;
+    Ok(())
+}

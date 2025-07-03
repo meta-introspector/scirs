@@ -75,7 +75,7 @@ where
     /// Create new Dual Annealing solver
     pub fn new(func: F, x0: Array1<f64>, options: DualAnnealingOptions) -> Self {
         let ndim = x0.len();
-        let seed = options.seed.unwrap_or_else(rand::random);
+        let seed = options.seed.unwrap_or_else(rand::rng().gen);
         let rng = StdRng::seed_from_u64(seed);
 
         let initial_energy = func(&x0.view());

@@ -2699,7 +2699,7 @@ mod tests {
 
     #[test]
     fn test_error_types() {
-        let error_types = vec![
+        let error_types = [
             NumericalErrorType::Overflow,
             NumericalErrorType::Underflow,
             NumericalErrorType::PrecisionLoss,
@@ -2714,7 +2714,7 @@ mod tests {
 
     #[test]
     fn test_scaling_strategies() {
-        let strategies = vec![
+        let strategies = [
             ScalingStrategy::Conservative,
             ScalingStrategy::Balanced,
             ScalingStrategy::Aggressive,
@@ -2727,7 +2727,7 @@ mod tests {
 
     #[test]
     fn test_recovery_actions() {
-        let actions = vec![
+        let actions = [
             RecoveryAction::IncreasePrecision,
             RecoveryAction::ReduceTileSize,
             RecoveryAction::FallbackAlgorithm,
@@ -2742,7 +2742,7 @@ mod tests {
 
     #[test]
     fn test_optimization_objectives() {
-        let objectives = vec![
+        let objectives = [
             OptimizationObjective::MaxPerformance,
             OptimizationObjective::MaxAccuracy,
             OptimizationObjective::Balanced,

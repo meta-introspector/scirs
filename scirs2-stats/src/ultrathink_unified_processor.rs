@@ -13,12 +13,13 @@ use crate::ultrathink_numerical_stability::{
     UltrathinkNumericalStabilityAnalyzer,
 };
 use crate::ultrathink_parallel_enhancements::{
-    create_ultra_parallel_processor, MatrixOperationType, TimeSeriesOperation, UltraParallelProcessor,
-    UltrathinkParallelConfig,
+    create_ultra_parallel_processor, MatrixOperationType, TimeSeriesOperation,
+    UltraParallelProcessor, UltrathinkParallelConfig,
 };
 use crate::ultrathink_simd_optimizations::{
-    ultra_batch_statistics, ultra_matrix_operations, ultra_moving_window_stats, ultra_quantiles_simd,
-    MatrixOperation, MovingWindowResult, UltraBatchStats, UltrathinkSimdConfig,
+    ultra_batch_statistics, ultra_matrix_operations, ultra_moving_window_stats,
+    ultra_quantiles_simd, MatrixOperation, MovingWindowResult, UltraBatchStats,
+    UltrathinkSimdConfig,
 };
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
@@ -122,26 +123,23 @@ impl UltrathinkUnifiedProcessor {
 
         // Run stability analysis if enabled
         let stability_report = if self.config.enable_stability_testing {
-            Some(self.stability_analyzer.analyze_statistical_stability(&data.view()))
+            Some(
+                self.stability_analyzer
+                    .analyze_statistical_stability(&data.view()),
+            )
         } else {
             None
         };
 
         // Compute statistics using the selected strategy
         let stats = match strategy {
-            ProcessingStrategy::SimdOnly => {
-                ultra_batch_statistics(data, &self.config.simd_config)?
-            }
+            ProcessingStrategy::SimdOnly => ultra_batch_statistics(data, &self.config.simd_config)?,
             ProcessingStrategy::ParallelOnly => {
                 let parallel_result = self.parallel_processor.process_batch_statistics(data)?;
                 self.convert_parallel_to_batch_stats(parallel_result)
             }
-            ProcessingStrategy::SimdParallel => {
-                self.process_simd_parallel_hybrid(data)?
-            }
-            ProcessingStrategy::Standard => {
-                self.process_standard_fallback(data)?
-            }
+            ProcessingStrategy::SimdParallel => self.process_simd_parallel_hybrid(data)?,
+            ProcessingStrategy::Standard => self.process_standard_fallback(data)?,
         };
 
         let duration = start_time.elapsed();
@@ -209,23 +207,29 @@ impl UltrathinkUnifiedProcessor {
 
         let result = match (strategy, operation) {
             (ProcessingStrategy::SimdOnly, UltrathinkMatrixOperation::Covariance) => {
-                ultra_matrix_operations(data, MatrixOperation::Covariance, &self.config.simd_config)?
+                ultra_matrix_operations(
+                    data,
+                    MatrixOperation::Covariance,
+                    &self.config.simd_config,
+                )?
             }
             (ProcessingStrategy::SimdOnly, UltrathinkMatrixOperation::Correlation) => {
-                ultra_matrix_operations(data, MatrixOperation::Correlation, &self.config.simd_config)?
+                ultra_matrix_operations(
+                    data,
+                    MatrixOperation::Correlation,
+                    &self.config.simd_config,
+                )?
             }
             (ProcessingStrategy::ParallelOnly, UltrathinkMatrixOperation::Covariance) => {
-                let parallel_result = self.parallel_processor.process_matrix_operations(
-                    data,
-                    MatrixOperationType::CovarianceMatrix,
-                )?;
+                let parallel_result = self
+                    .parallel_processor
+                    .process_matrix_operations(data, MatrixOperationType::CovarianceMatrix)?;
                 parallel_result.result
             }
             (ProcessingStrategy::ParallelOnly, UltrathinkMatrixOperation::Correlation) => {
-                let parallel_result = self.parallel_processor.process_matrix_operations(
-                    data,
-                    MatrixOperationType::CorrelationMatrix,
-                )?;
+                let parallel_result = self
+                    .parallel_processor
+                    .process_matrix_operations(data, MatrixOperationType::CorrelationMatrix)?;
                 parallel_result.result
             }
             _ => {
@@ -341,25 +345,33 @@ impl UltrathinkUnifiedProcessor {
         }
 
         let total_operations = self.performance_history.len();
-        let avg_processing_time = self.performance_history
+        let avg_processing_time = self
+            .performance_history
             .iter()
             .map(|m| m.processing_time.as_millis() as f64)
-            .sum::<f64>() / total_operations as f64;
+            .sum::<f64>()
+            / total_operations as f64;
 
-        let simd_usage_rate = self.performance_history
+        let simd_usage_rate = self
+            .performance_history
             .iter()
             .filter(|m| m.simd_enabled)
-            .count() as f64 / total_operations as f64;
+            .count() as f64
+            / total_operations as f64;
 
-        let parallel_usage_rate = self.performance_history
+        let parallel_usage_rate = self
+            .performance_history
             .iter()
             .filter(|m| m.parallel_enabled)
-            .count() as f64 / total_operations as f64;
+            .count() as f64
+            / total_operations as f64;
 
-        let avg_data_size = self.performance_history
+        let avg_data_size = self
+            .performance_history
             .iter()
             .map(|m| m.data_size)
-            .sum::<usize>() as f64 / total_operations as f64;
+            .sum::<usize>() as f64
+            / total_operations as f64;
 
         UltrathinkPerformanceAnalytics {
             total_operations,
@@ -417,7 +429,8 @@ impl UltrathinkUnifiedProcessor {
 
     fn determine_adaptive_strategy(&self, data_size: usize) -> StatsResult<ProcessingStrategy> {
         // Analyze performance history for similar data sizes
-        let similar_operations: Vec<_> = self.performance_history
+        let similar_operations: Vec<_> = self
+            .performance_history
             .iter()
             .filter(|m| {
                 let size_ratio = (m.data_size as f64) / (data_size as f64);
@@ -427,7 +440,10 @@ impl UltrathinkUnifiedProcessor {
 
         if similar_operations.is_empty() {
             // No history, use default heuristics
-            return self.determine_processing_strategy(data_size, &UltrathinkContextBuilder::new(data_size).build());
+            return self.determine_processing_strategy(
+                data_size,
+                &UltrathinkContextBuilder::new(data_size).build(),
+            );
         }
 
         // Find the strategy with the best average performance
@@ -445,7 +461,9 @@ impl UltrathinkUnifiedProcessor {
             .max_by(|(_, a), (_, b)| {
                 let avg_a = a.iter().sum::<f64>() / a.len() as f64;
                 let avg_b = b.iter().sum::<f64>() / b.len() as f64;
-                avg_a.partial_cmp(&avg_b).unwrap_or(std::cmp::Ordering::Equal)
+                avg_a
+                    .partial_cmp(&avg_b)
+                    .unwrap_or(std::cmp::Ordering::Equal)
             })
             .map(|(&strategy, _)| strategy)
             .unwrap_or(ProcessingStrategy::Standard);
@@ -518,13 +536,15 @@ impl UltrathinkUnifiedProcessor {
         }
 
         // Compare optimized vs standard performance
-        let optimized_throughput: Vec<f64> = self.performance_history
+        let optimized_throughput: Vec<f64> = self
+            .performance_history
             .iter()
             .filter(|m| m.simd_enabled || m.parallel_enabled)
             .map(|m| m.data_size as f64 / m.processing_time.as_secs_f64())
             .collect();
 
-        let standard_throughput: Vec<f64> = self.performance_history
+        let standard_throughput: Vec<f64> = self
+            .performance_history
             .iter()
             .filter(|m| !m.simd_enabled && !m.parallel_enabled)
             .map(|m| m.data_size as f64 / m.processing_time.as_secs_f64())
@@ -534,8 +554,10 @@ impl UltrathinkUnifiedProcessor {
             return 0.5;
         }
 
-        let avg_optimized = optimized_throughput.iter().sum::<f64>() / optimized_throughput.len() as f64;
-        let avg_standard = standard_throughput.iter().sum::<f64>() / standard_throughput.len() as f64;
+        let avg_optimized =
+            optimized_throughput.iter().sum::<f64>() / optimized_throughput.len() as f64;
+        let avg_standard =
+            standard_throughput.iter().sum::<f64>() / standard_throughput.len() as f64;
 
         if avg_standard == 0.0 {
             return 1.0;
@@ -545,8 +567,11 @@ impl UltrathinkUnifiedProcessor {
     }
 
     // Placeholder implementations for missing methods
-    
-    fn convert_parallel_to_batch_stats<F>(&self, parallel_result: crate::ultrathink_parallel_enhancements::UltraParallelBatchResult<F>) -> UltraBatchStats<F>
+
+    fn convert_parallel_to_batch_stats<F>(
+        &self,
+        parallel_result: crate::ultrathink_parallel_enhancements::UltraParallelBatchResult<F>,
+    ) -> UltraBatchStats<F>
     where
         F: Float + NumCast + Copy,
     {
@@ -564,7 +589,10 @@ impl UltrathinkUnifiedProcessor {
         }
     }
 
-    fn process_simd_parallel_hybrid<F, D>(&self, data: &ArrayBase<D, Ix1>) -> StatsResult<UltraBatchStats<F>>
+    fn process_simd_parallel_hybrid<F, D>(
+        &self,
+        data: &ArrayBase<D, Ix1>,
+    ) -> StatsResult<UltraBatchStats<F>>
     where
         F: Float + NumCast + SimdUnifiedOps + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync,
@@ -573,7 +601,10 @@ impl UltrathinkUnifiedProcessor {
         ultra_batch_statistics(data, &self.config.simd_config)
     }
 
-    fn process_standard_fallback<F, D>(&self, data: &ArrayBase<D, Ix1>) -> StatsResult<UltraBatchStats<F>>
+    fn process_standard_fallback<F, D>(
+        &self,
+        data: &ArrayBase<D, Ix1>,
+    ) -> StatsResult<UltraBatchStats<F>>
     where
         F: Float + NumCast + Copy + PartialOrd,
         D: Data<Elem = F>,
@@ -628,7 +659,11 @@ impl UltrathinkUnifiedProcessor {
         })
     }
 
-    fn process_matrix_standard<F, D>(&self, data: &ArrayBase<D, Ix2>, operation: UltrathinkMatrixOperation) -> StatsResult<Array2<F>>
+    fn process_matrix_standard<F, D>(
+        &self,
+        data: &ArrayBase<D, Ix2>,
+        operation: UltrathinkMatrixOperation,
+    ) -> StatsResult<Array2<F>>
     where
         F: Float + NumCast + Copy,
         D: Data<Elem = F>,
@@ -636,27 +671,38 @@ impl UltrathinkUnifiedProcessor {
         match operation {
             UltrathinkMatrixOperation::Covariance => {
                 // Simple covariance matrix implementation
-                let (n_rows, n_cols) = data.dim();
+                let (_n_rows, n_cols) = data.dim();
                 let mut result = Array2::<F>::zeros((n_cols, n_cols));
-                
+
                 // This is a placeholder - would need proper implementation
                 for i in 0..n_cols {
                     result[[i, i]] = F::one();
                 }
-                
+
                 Ok(result)
             }
-            _ => Err(StatsError::NotImplemented("Matrix operation not implemented".to_string())),
+            _ => Err(StatsError::NotImplemented(
+                "Matrix operation not implemented".to_string(),
+            )),
         }
     }
 
-    fn convert_to_parallel_ts_operations(&self, operations: &[UltrathinkTimeSeriesOperation]) -> Vec<TimeSeriesOperation> {
-        operations.iter().map(|op| match op {
-            UltrathinkTimeSeriesOperation::MovingWindow => TimeSeriesOperation::MovingAverage,
-        }).collect()
+    fn convert_to_parallel_ts_operations(
+        &self,
+        operations: &[UltrathinkTimeSeriesOperation],
+    ) -> Vec<TimeSeriesOperation> {
+        operations
+            .iter()
+            .map(|op| match op {
+                UltrathinkTimeSeriesOperation::MovingWindow => TimeSeriesOperation::MovingAverage,
+            })
+            .collect()
     }
 
-    fn convert_parallel_ts_result<F>(&self, _result: crate::ultrathink_parallel_enhancements::UltraParallelTimeSeriesResult<F>) -> StatsResult<MovingWindowResult<F>>
+    fn convert_parallel_ts_result<F>(
+        &self,
+        _result: crate::ultrathink_parallel_enhancements::UltraParallelTimeSeriesResult<F>,
+    ) -> StatsResult<MovingWindowResult<F>>
     where
         F: Float + NumCast + Copy,
     {
@@ -670,7 +716,12 @@ impl UltrathinkUnifiedProcessor {
         })
     }
 
-    fn process_time_series_standard<F, D>(&self, _data: &ArrayBase<D, Ix1>, _window_size: usize, _operation: UltrathinkTimeSeriesOperation) -> StatsResult<MovingWindowResult<F>>
+    fn process_time_series_standard<F, D>(
+        &self,
+        _data: &ArrayBase<D, Ix1>,
+        _window_size: usize,
+        _operation: UltrathinkTimeSeriesOperation,
+    ) -> StatsResult<MovingWindowResult<F>>
     where
         F: Float + NumCast + Copy,
         D: Data<Elem = F>,
@@ -685,32 +736,40 @@ impl UltrathinkUnifiedProcessor {
         })
     }
 
-    fn generate_recommendations(&self, _metrics: &ProcessingMetrics, _stability_report: &Option<StabilityAnalysisReport>) -> Vec<String> {
+    fn generate_recommendations(
+        &self,
+        _metrics: &ProcessingMetrics,
+        _stability_report: &Option<StabilityAnalysisReport>,
+    ) -> Vec<String> {
         let mut recommendations = Vec::new();
-        
+
         if _metrics.data_size > 10000 && !_metrics.parallel_enabled {
-            recommendations.push("Consider enabling parallel processing for large datasets".to_string());
+            recommendations
+                .push("Consider enabling parallel processing for large datasets".to_string());
         }
-        
+
         if _metrics.data_size > 1000 && !_metrics.simd_enabled && self.capabilities.has_avx2() {
             recommendations.push("SIMD optimizations could improve performance".to_string());
         }
-        
+
         recommendations
     }
 
     fn generate_performance_recommendations(&self) -> Vec<String> {
         let mut recommendations = Vec::new();
-        
+
         if self.performance_history.len() < 10 {
-            recommendations.push("More operations needed for comprehensive performance analysis".to_string());
+            recommendations
+                .push("More operations needed for comprehensive performance analysis".to_string());
         } else {
             let effectiveness = self.calculate_optimization_effectiveness();
             if effectiveness < 0.3 {
-                recommendations.push("Consider adjusting optimization settings for better performance".to_string());
+                recommendations.push(
+                    "Consider adjusting optimization settings for better performance".to_string(),
+                );
             }
         }
-        
+
         recommendations
     }
 }
@@ -728,11 +787,17 @@ pub enum ProcessingStrategy {
 
 impl ProcessingStrategy {
     pub fn uses_simd(self) -> bool {
-        matches!(self, ProcessingStrategy::SimdOnly | ProcessingStrategy::SimdParallel)
+        matches!(
+            self,
+            ProcessingStrategy::SimdOnly | ProcessingStrategy::SimdParallel
+        )
     }
 
     pub fn uses_parallel(self) -> bool {
-        matches!(self, ProcessingStrategy::ParallelOnly | ProcessingStrategy::SimdParallel)
+        matches!(
+            self,
+            ProcessingStrategy::ParallelOnly | ProcessingStrategy::SimdParallel
+        )
     }
 }
 
@@ -830,7 +895,9 @@ mod tests {
         let mut processor = create_ultrathink_processor();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let result = processor.process_comprehensive_statistics(&data.view()).unwrap();
+        let result = processor
+            .process_comprehensive_statistics(&data.view())
+            .unwrap();
 
         assert!((result.statistics.mean - 3.0).abs() < 1e-10);
         assert_eq!(result.statistics.count, 5);
@@ -854,8 +921,12 @@ mod tests {
         let context = UltrathinkContextBuilder::new(1000).build();
 
         // Test different data sizes
-        let small_strategy = processor.determine_processing_strategy(100, &context).unwrap();
-        let large_strategy = processor.determine_processing_strategy(100000, &context).unwrap();
+        let small_strategy = processor
+            .determine_processing_strategy(100, &context)
+            .unwrap();
+        let large_strategy = processor
+            .determine_processing_strategy(100000, &context)
+            .unwrap();
 
         // Large datasets should use more aggressive optimization
         assert!(large_strategy.uses_parallel() || large_strategy.uses_simd());

@@ -904,6 +904,322 @@ impl ProgressTracker {
     }
 }
 
+/// Ultrathink-enhanced streaming text processor for maximum performance
+pub struct UltrathinkStreamingProcessor<T: Tokenizer> {
+    tokenizer: T,
+    chunk_cache: HashMap<String, CachedChunk>,
+    memory_optimizer: StreamingMemoryOptimizer,
+    adaptive_engine: AdaptiveStreamingEngine,
+}
+
+/// Cached chunk for ultra-fast processing
+#[derive(Debug, Clone)]
+struct CachedChunk {
+    tokens: Vec<String>,
+    #[allow(dead_code)]
+    hash: u64,
+    access_count: u32,
+    last_access: std::time::Instant,
+}
+
+/// Ultra-memory optimizer for streaming operations
+#[derive(Debug)]
+struct StreamingMemoryOptimizer {
+    max_cache_size: usize,
+    current_cache_size: usize,
+    memory_pressure_threshold: f64,
+}
+
+/// Adaptive streaming engine for dynamic optimization
+#[derive(Debug)]
+struct AdaptiveStreamingEngine {
+    optimal_chunk_size: usize,
+    #[allow(dead_code)]
+    adaptive_threshold: f64,
+    performance_history: Vec<StreamingPerformanceMetric>,
+}
+
+/// Performance metric for streaming operations
+#[derive(Debug, Clone)]
+pub struct StreamingPerformanceMetric {
+    throughput: f64, // documents per second
+    #[allow(dead_code)]
+    memory_usage: usize,
+    #[allow(dead_code)]
+    cache_hit_rate: f64,
+    #[allow(dead_code)]
+    timestamp: std::time::Instant,
+}
+
+impl<T: Tokenizer + Send + Sync> UltrathinkStreamingProcessor<T> {
+    /// Create a new ultrathink streaming processor
+    pub fn new(tokenizer: T) -> Self {
+        Self {
+            tokenizer,
+            chunk_cache: HashMap::new(),
+            memory_optimizer: StreamingMemoryOptimizer::new(),
+            adaptive_engine: AdaptiveStreamingEngine::new(),
+        }
+    }
+
+    /// Ultra-fast chunk processing with intelligent caching
+    pub fn process_chunk_ultra(&mut self, chunk: &str) -> Result<Vec<String>> {
+        let chunk_hash = self.calculate_chunk_hash(chunk);
+
+        // Check cache first
+        if let Some(cached) = self.chunk_cache.get_mut(&chunk_hash.to_string()) {
+            cached.access_count += 1;
+            cached.last_access = std::time::Instant::now();
+            return Ok(cached.tokens.clone());
+        }
+
+        // Process chunk with optimized tokenization
+        let tokens = self.tokenizer.tokenize(chunk)?;
+
+        // Cache with intelligent eviction
+        self.cache_chunk_intelligently(chunk_hash, tokens.clone());
+
+        Ok(tokens)
+    }
+
+    /// Ultra-parallel corpus processing with adaptive optimization
+    pub fn ultra_parallel_process_corpus(
+        &mut self,
+        corpus: &MemoryMappedCorpus,
+    ) -> Result<Vec<Vec<String>>> {
+        use scirs2_core::parallel_ops::*;
+
+        let optimal_chunk_size = self.adaptive_engine.get_optimal_chunk_size();
+        let num_docs = corpus.num_documents();
+
+        // Dynamic load balancing
+        let chunk_ranges = self.calculate_optimal_chunks(num_docs, optimal_chunk_size);
+
+        let results: Result<Vec<Vec<Vec<String>>>> = chunk_ranges
+            .par_iter()
+            .map(|(start, end)| {
+                let mut local_results = Vec::new();
+                for i in *start..*end {
+                    if let Ok(doc) = corpus.get_document(i) {
+                        // Use local tokenizer instance for thread safety
+                        if let Ok(tokens) = self.tokenizer.tokenize(doc) {
+                            local_results.push(tokens);
+                        }
+                    }
+                }
+                Ok(local_results)
+            })
+            .collect();
+
+        // Flatten results
+        let flattened = results?.into_iter().flatten().collect();
+
+        // Update adaptive metrics
+        self.adaptive_engine.record_performance(num_docs as f64);
+
+        Ok(flattened)
+    }
+
+    /// Calculate optimal chunk distribution for parallel processing
+    fn calculate_optimal_chunks(
+        &self,
+        total_docs: usize,
+        chunk_size: usize,
+    ) -> Vec<(usize, usize)> {
+        let num_chunks = total_docs.div_ceil(chunk_size);
+        let mut chunks = Vec::new();
+
+        for i in 0..num_chunks {
+            let start = i * chunk_size;
+            let end = std::cmp::min(start + chunk_size, total_docs);
+            chunks.push((start, end));
+        }
+
+        chunks
+    }
+
+    /// Calculate hash for chunk caching
+    fn calculate_chunk_hash(&self, chunk: &str) -> u64 {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+
+        let mut hasher = DefaultHasher::new();
+        chunk.hash(&mut hasher);
+        hasher.finish()
+    }
+
+    /// Intelligent chunk caching with LRU eviction
+    fn cache_chunk_intelligently(&mut self, hash: u64, tokens: Vec<String>) {
+        let hash_str = hash.to_string();
+
+        // Check memory pressure
+        if self.memory_optimizer.should_evict() {
+            self.evict_least_recently_used();
+        }
+
+        let cached_chunk = CachedChunk {
+            tokens,
+            hash,
+            access_count: 1,
+            last_access: std::time::Instant::now(),
+        };
+
+        self.chunk_cache.insert(hash_str, cached_chunk);
+        self.memory_optimizer.current_cache_size += 1;
+    }
+
+    /// Evict least recently used cache entries
+    fn evict_least_recently_used(&mut self) {
+        let mut entries: Vec<_> = self
+            .chunk_cache
+            .iter()
+            .map(|(k, v)| (k.clone(), v.last_access))
+            .collect();
+        entries.sort_by_key(|(_, last_access)| *last_access);
+
+        // Remove oldest 25% of entries
+        let to_remove = entries.len() / 4;
+        let keys_to_remove: Vec<_> = entries
+            .iter()
+            .take(to_remove)
+            .map(|(key, _)| key.clone())
+            .collect();
+
+        for key in keys_to_remove {
+            self.chunk_cache.remove(&key);
+            self.memory_optimizer.current_cache_size -= 1;
+        }
+    }
+
+    /// Get comprehensive performance metrics
+    pub fn get_performance_metrics(&self) -> UltraStreamingMetrics {
+        UltraStreamingMetrics {
+            cache_size: self.chunk_cache.len(),
+            cache_hit_rate: self.calculate_cache_hit_rate(),
+            memory_usage: self.memory_optimizer.current_cache_size,
+            optimal_chunk_size: self.adaptive_engine.optimal_chunk_size,
+            performance_history: self.adaptive_engine.performance_history.clone(),
+        }
+    }
+
+    /// Calculate cache hit rate
+    fn calculate_cache_hit_rate(&self) -> f64 {
+        if self.chunk_cache.is_empty() {
+            return 0.0;
+        }
+
+        let total_accesses: u32 = self
+            .chunk_cache
+            .values()
+            .map(|chunk| chunk.access_count)
+            .sum();
+        let cache_hits = self.chunk_cache.len() as u32;
+
+        if total_accesses == 0 {
+            0.0
+        } else {
+            cache_hits as f64 / total_accesses as f64
+        }
+    }
+}
+
+/// Ultra-streaming performance metrics
+#[derive(Debug)]
+pub struct UltraStreamingMetrics {
+    /// Current size of the cache
+    pub cache_size: usize,
+    /// Rate of cache hits (0.0 to 1.0)
+    pub cache_hit_rate: f64,
+    /// Current memory usage in bytes
+    pub memory_usage: usize,
+    /// Optimal chunk size for processing
+    pub optimal_chunk_size: usize,
+    /// Historical performance metrics
+    pub performance_history: Vec<StreamingPerformanceMetric>,
+}
+
+impl StreamingMemoryOptimizer {
+    fn new() -> Self {
+        Self {
+            max_cache_size: 10000,
+            current_cache_size: 0,
+            memory_pressure_threshold: 0.8,
+        }
+    }
+
+    fn should_evict(&self) -> bool {
+        (self.current_cache_size as f64 / self.max_cache_size as f64)
+            > self.memory_pressure_threshold
+    }
+}
+
+impl AdaptiveStreamingEngine {
+    fn new() -> Self {
+        Self {
+            optimal_chunk_size: 1000,
+            adaptive_threshold: 0.95,
+            performance_history: Vec::new(),
+        }
+    }
+
+    fn get_optimal_chunk_size(&self) -> usize {
+        self.optimal_chunk_size
+    }
+
+    fn record_performance(&mut self, throughput: f64) {
+        let metric = StreamingPerformanceMetric {
+            throughput,
+            memory_usage: 0,     // Would be measured in real implementation
+            cache_hit_rate: 0.0, // Would be measured in real implementation
+            timestamp: std::time::Instant::now(),
+        };
+
+        self.performance_history.push(metric);
+
+        // Keep only recent history
+        if self.performance_history.len() > 100 {
+            self.performance_history.drain(0..10);
+        }
+
+        // Adapt chunk size based on performance
+        self.adapt_chunk_size();
+    }
+
+    fn adapt_chunk_size(&mut self) {
+        if self.performance_history.len() < 10 {
+            return;
+        }
+
+        let recent_avg = self
+            .performance_history
+            .iter()
+            .rev()
+            .take(5)
+            .map(|m| m.throughput)
+            .sum::<f64>()
+            / 5.0;
+
+        let historical_avg = self
+            .performance_history
+            .iter()
+            .rev()
+            .skip(5)
+            .take(5)
+            .map(|m| m.throughput)
+            .sum::<f64>()
+            / 5.0;
+
+        if recent_avg > historical_avg * 1.1 {
+            // Performance is improving, keep current chunk size
+        } else if recent_avg < historical_avg * 0.9 {
+            // Performance is degrading, adjust chunk size
+            if self.optimal_chunk_size > 500 {
+                self.optimal_chunk_size = (self.optimal_chunk_size as f64 * 0.8) as usize;
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

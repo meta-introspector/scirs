@@ -5,8 +5,8 @@
 //! abstractions to provide high-performance computing capabilities.
 
 use crate::error::{ScirsError, ScirsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuDevice};
+use ndarray::{Array1, Array2, ArrayView1};
+use scirs2_core::gpu::{GpuBuffer, GpuDevice};
 use std::sync::Arc;
 
 // Implement error conversion for GPU errors

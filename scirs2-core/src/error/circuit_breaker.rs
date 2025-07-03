@@ -282,7 +282,10 @@ impl CircuitBreaker {
             *last_change = Instant::now();
         }
 
-        eprintln!("Circuit breaker '{}' opened due to failures", self.name);
+        eprintln!(
+            "Circuit breaker '{name}' opened due to failures",
+            name = self.name
+        );
         Ok(())
     }
 
@@ -299,7 +302,10 @@ impl CircuitBreaker {
             *last_change = Instant::now();
         }
 
-        println!("Circuit breaker '{}' moved to half-open state", self.name);
+        println!(
+            "Circuit breaker '{name}' moved to half-open state",
+            name = self.name
+        );
         Ok(())
     }
 
@@ -322,7 +328,10 @@ impl CircuitBreaker {
             history.clear();
         }
 
-        println!("Circuit breaker '{}' closed - service recovered", self.name);
+        println!(
+            "Circuit breaker '{name}' closed - service recovered",
+            name = self.name
+        );
         Ok(())
     }
 
@@ -389,7 +398,7 @@ impl CircuitBreaker {
             history.clear();
         }
 
-        println!("Circuit breaker '{}' manually reset", self.name);
+        println!("Circuit breaker '{name}' manually reset", name = self.name);
         Ok(())
     }
 }

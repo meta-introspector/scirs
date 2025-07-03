@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let test_datasets = create_test_datasets();
 
     for (dataset_name, data) in test_datasets {
-        println!("📊 Benchmarking dataset: {}", dataset_name);
+        println!("📊 Benchmarking dataset: {dataset_name}");
         println!(
             "   Shape: {} samples × {} features",
             data.nrows(),
@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         match benchmark.comprehensive_analysis(&standardized.view()) {
             Ok(results) => {
                 let analysis_duration = start_time.elapsed();
-                println!("   ✅ Analysis completed in {:.2?}", analysis_duration);
+                println!("   ✅ Analysis completed in {analysis_duration:.2?}");
 
                 // Display key results
                 display_benchmark_summary(&results);
@@ -61,8 +61,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
 
                 match create_comprehensive_report(&results, &report_filename) {
-                    Ok(_) => println!("   📄 Detailed report saved: {}", report_filename),
-                    Err(e) => println!("   ⚠️  Failed to create report: {}", e),
+                    Ok(_) => println!("   📄 Detailed report saved: {report_filename}"),
+                    Err(e) => println!("   ⚠️  Failed to create report: {e}"),
                 }
 
                 // Demonstrate advanced analytics
@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!();
             }
             Err(e) => {
-                println!("   ❌ Benchmark failed: {}", e);
+                println!("   ❌ Benchmark failed: {e}");
                 println!();
                 continue;
             }
@@ -157,11 +157,11 @@ fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::Be
     algorithm_times.sort_by(|a, b| a.1.cmp(&b.1));
 
     if let Some((fastest, fastest_time)) = algorithm_times.first() {
-        println!("      🚀 Fastest: {} ({:.2?})", fastest, fastest_time);
+        println!("      🚀 Fastest: {fastest} ({fastest_time:.2?})");
     }
 
     if let Some((slowest, slowest_time)) = algorithm_times.last() {
-        println!("      🐌 Slowest: {} ({:.2?})", slowest, slowest_time);
+        println!("      🐌 Slowest: {slowest} ({slowest_time:.2?})");
     }
 
     // Show memory usage summary
@@ -174,7 +174,7 @@ fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::Be
     if !memory_users.is_empty() {
         let avg_memory: f64 =
             memory_users.iter().map(|(_, mem)| mem).sum::<f64>() / memory_users.len() as f64;
-        println!("      💾 Average peak memory: {:.1} MB", avg_memory);
+        println!("      💾 Average peak memory: {avg_memory:.1} MB");
     }
 
     // Show quality metrics summary
@@ -194,17 +194,15 @@ fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::Be
             .iter()
             .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
             .unwrap();
-        println!(
-            "      🎯 Best quality: {} (silhouette: {:.3})",
-            best_quality.0, best_quality.1
-        );
+        let (best_name, best_score) = best_quality;
+        println!("      🎯 Best quality: {best_name} (silhouette: {best_score:.3})");
     }
 
     // Show regression alerts
     match results.regression_alerts.len() {
         0 => println!("      ✅ No performance regressions detected"),
         1 => println!("      ⚠️  1 performance regression detected"),
-        n => println!("      🚨 {} performance regressions detected", n),
+        n => println!("      🚨 {n} performance regressions detected"),
     }
 
     // Show critical optimization suggestions
@@ -216,10 +214,7 @@ fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::Be
         .count();
 
     if critical_suggestions > 0 {
-        println!(
-            "      🔧 {} critical optimization suggestions available",
-            critical_suggestions
-        );
+        println!("      🔧 {critical_suggestions} critical optimization suggestions available");
     }
 }
 
@@ -228,7 +223,7 @@ fn demonstrate_advanced_analytics(
     results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults,
     dataset_name: &str,
 ) {
-    println!("   🧠 Advanced Analytics for {}:", dataset_name);
+    println!("   🧠 Advanced Analytics for {dataset_name}:");
 
     // Analyze performance patterns
     analyze_performance_patterns(results);
@@ -265,16 +260,10 @@ fn analyze_performance_patterns(results: &scirs2_cluster::advanced_benchmarking:
         let cv = std_dev / mean_perf;
 
         if cv > 0.5 {
-            println!(
-                "         • High performance variance detected (CV: {:.2})",
-                cv
-            );
+            println!("         • High performance variance detected (CV: {cv:.2})");
             println!("         • Consider dataset-specific algorithm selection");
         } else {
-            println!(
-                "         • Consistent performance across algorithms (CV: {:.2})",
-                cv
-            );
+            println!("         • Consistent performance across algorithms (CV: {cv:.2})");
         }
     }
 
@@ -287,7 +276,7 @@ fn analyze_performance_patterns(results: &scirs2_cluster::advanced_benchmarking:
         .collect();
 
     if !unstable_algos.is_empty() {
-        println!("         • Unstable performance: {:?}", unstable_algos);
+        println!("         • Unstable performance: {unstable_algos:?}");
         println!("         • Recommendation: Increase measurement iterations");
     }
 }
@@ -313,24 +302,15 @@ fn analyze_optimization_opportunities(
 
     if suggestion_count > 0 {
         let avg_improvement = total_expected_improvement / suggestion_count as f64;
-        println!(
-            "         • {} optimization suggestions found",
-            suggestion_count
-        );
-        println!(
-            "         • Average expected improvement: {:.1}%",
-            avg_improvement
-        );
+        println!("         • {suggestion_count} optimization suggestions found");
+        println!("         • Average expected improvement: {avg_improvement:.1}%");
 
         // Show most common optimization categories
         let mut sorted_categories: Vec<_> = category_counts.into_iter().collect();
         sorted_categories.sort_by(|a, b| b.1.cmp(&a.1));
 
         if let Some((top_category, count)) = sorted_categories.first() {
-            println!(
-                "         • Most common opportunity: {:?} ({} suggestions)",
-                top_category, count
-            );
+            println!("         • Most common opportunity: {top_category:?} ({count} suggestions)");
         }
     } else {
         println!("         • No significant optimization opportunities identified");
@@ -359,7 +339,7 @@ fn analyze_scalability_insights(results: &scirs2_cluster::advanced_benchmarking:
 
         println!("         • Complexity distribution:");
         for (complexity, count) in complexity_distribution {
-            println!("           - {:?}: {} algorithms", complexity, count);
+            println!("           - {complexity:?}: {count} algorithms");
         }
 
         // Find best scaling algorithms
@@ -373,7 +353,7 @@ fn analyze_scalability_insights(results: &scirs2_cluster::advanced_benchmarking:
             .collect();
 
         if !linear_algos.is_empty() {
-            println!("         • Linear scaling algorithms: {:?}", linear_algos);
+            println!("         • Linear scaling algorithms: {linear_algos:?}");
             println!("         • Recommended for large datasets");
         }
     } else {
@@ -405,7 +385,7 @@ fn analyze_regression_patterns(results: &scirs2_cluster::advanced_benchmarking::
             RegressionSeverity::Moderate => "🟡",
             RegressionSeverity::Minor => "🟢",
         };
-        println!("         {} {:?}: {} alerts", icon, severity, count);
+        println!("         {icon} {severity:?}: {count} alerts");
     }
 
     // Show most problematic algorithm
@@ -469,7 +449,7 @@ fn create_sparse_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
     for _ in 0..n_samples {
         for _ in 0..n_features {
             // 20% chance of non-zero value
-            if rng.gen::<f64>() < 0.2 {
+            if rng.random::<f64>() < 0.2 {
                 data.push(rng.random_range(-5.0..5.0));
             } else {
                 data.push(0.0);
@@ -532,7 +512,7 @@ fn create_noisy_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
                 _ => 0.0 + j as f64 * 0.1,
             };
 
-            let value = if rng.gen::<f64>() < outlier_probability {
+            let value = if rng.random::<f64>() < outlier_probability {
                 // Generate outlier
                 rng.random_range(-10.0..10.0)
             } else {

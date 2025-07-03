@@ -1183,7 +1183,8 @@ impl<N: Node> EmbeddingModel<N> {
             }
 
             let node = parts[0].to_string();
-            let vector: std::result::Result<Vec<f64>, std::num::ParseFloatError> = parts[1..].iter().map(|s| s.parse::<f64>()).collect();
+            let vector: std::result::Result<Vec<f64>, std::num::ParseFloatError> =
+                parts[1..].iter().map(|s| s.parse::<f64>()).collect();
 
             match vector {
                 Ok(v) => {
@@ -1869,7 +1870,9 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FastGraphEmbedding<N> {
         let projection_size = dimensions * quality_factor;
         let mut projection_matrix = Vec::new();
         for _ in 0..projection_size {
-            let row: Vec<f32> = (0..dimensions).map(|_| rng.random_range(-1.0..1.0)).collect();
+            let row: Vec<f32> = (0..dimensions)
+                .map(|_| rng.random_range(-1.0..1.0))
+                .collect();
             projection_matrix.push(row);
         }
 

@@ -276,7 +276,7 @@ impl NeuralRLAgent {
     }
 
     /// Enhanced algorithm selection with advanced exploration
-    pub fn select_algorithm_enhanced<N: Node, E: EdgeWeight, Ix>(
+    pub fn select_algorithm_enhanced<N: Node + std::fmt::Debug, E: EdgeWeight, Ix>(
         &mut self,
         graph: &Graph<N, E, Ix>,
     ) -> usize
@@ -431,7 +431,10 @@ impl NeuralRLAgent {
     }
 
     /// Extract features from graph and problem characteristics
-    fn extract_features<N: Node, E: EdgeWeight, Ix>(&self, graph: &Graph<N, E, Ix>) -> Vec<f64>
+    fn extract_features<N: Node + std::fmt::Debug, E: EdgeWeight, Ix>(
+        &self,
+        graph: &Graph<N, E, Ix>,
+    ) -> Vec<f64>
     where
         Ix: petgraph::graph::IndexType,
     {
@@ -671,7 +674,7 @@ impl NeuromorphicProcessor {
     }
 
     /// Process graph structure using neuromorphic computing
-    pub fn process_graph_structure<N: Node, E: EdgeWeight, Ix>(
+    pub fn process_graph_structure<N: Node + std::fmt::Debug, E: EdgeWeight, Ix>(
         &mut self,
         graph: &Graph<N, E, Ix>,
     ) -> Vec<f64>
@@ -888,7 +891,7 @@ impl UltrathinkProcessor {
         algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
     ) -> Result<T>
     where
-        N: Node + Clone + std::hash::Hash + Eq,
+        N: Node + Clone + std::hash::Hash + Eq + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -994,7 +997,7 @@ impl UltrathinkProcessor {
         algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
     ) -> Result<T>
     where
-        N: Node + Clone + std::hash::Hash + Eq,
+        N: Node + Clone + std::hash::Hash + Eq + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -1030,7 +1033,7 @@ impl UltrathinkProcessor {
         algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
     ) -> Result<T>
     where
-        N: Node + Clone + std::hash::Hash + Eq,
+        N: Node + Clone + std::hash::Hash + Eq + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -1052,7 +1055,7 @@ impl UltrathinkProcessor {
         algorithm_name: &str,
     ) -> usize
     where
-        N: Node,
+        N: Node + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -1199,7 +1202,7 @@ impl UltrathinkProcessor {
         algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
     ) -> Result<T>
     where
-        N: Node + Clone + std::hash::Hash + Eq,
+        N: Node + Clone + std::hash::Hash + Eq + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {

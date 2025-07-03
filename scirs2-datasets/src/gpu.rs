@@ -12,9 +12,17 @@ use std::sync::{Arc, Mutex};
 #[derive(Debug, Clone, PartialEq)]
 pub enum GpuBackend {
     /// CUDA backend for NVIDIA GPUs
-    Cuda { device_id: u32 },
+    Cuda {
+        /// CUDA device ID
+        device_id: u32,
+    },
     /// OpenCL backend for various GPU vendors
-    OpenCl { platform_id: u32, device_id: u32 },
+    OpenCl {
+        /// OpenCL platform ID
+        platform_id: u32,
+        /// OpenCL device ID
+        device_id: u32,
+    },
     /// CPU fallback (for testing or when GPU is unavailable)
     Cpu,
 }

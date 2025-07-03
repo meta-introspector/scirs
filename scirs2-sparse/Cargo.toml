@@ -10,10 +10,11 @@ keywords = ["sparse-matrix", "csr", "scientific", "scipy", "numerical"]
 categories = ["science", "mathematics", "algorithms"]
 
 [features]
-default = ["parallel"]
+default = ["parallel", "random"]
 parallel = ["scirs2-core/parallel"]
 simd = ["scirs2-core/simd"] 
 gpu = ["scirs2-core/gpu"]
+random = ["scirs2-core/random"]
 
 [dependencies]
 # Core dependencies

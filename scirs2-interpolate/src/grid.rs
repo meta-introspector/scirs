@@ -120,7 +120,19 @@ pub fn resample_to_grid<F>(
     fill_value: F,
 ) -> InterpolateResult<(Vec<Array1<F>>, ArrayD<F>)>
 where
-    F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero + 'static,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + PartialOrd
+        + Zero
+        + 'static
+        + std::fmt::Display
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::fmt::LowerExp
+        + Send
+        + Sync,
 {
     if points.nrows() != values.len() {
         return Err(InterpolateError::invalid_input(
@@ -226,12 +238,24 @@ fn resample_rbf<F>(
     fill_value: F,
 ) -> InterpolateResult<()>
 where
-    F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero + 'static,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + PartialOrd
+        + Zero
+        + 'static
+        + std::fmt::Display
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::fmt::LowerExp
+        + Send
+        + Sync,
 {
     // Create RBF interpolator
     let rbf = RBFInterpolator::new(
-        points.to_owned(),
-        values.to_owned(),
+        points,
+        values,
         RBFKernel::Gaussian,
         F::from_f64(1.0).unwrap_or_else(|| F::one()),
     )?;
@@ -248,7 +272,7 @@ where
         }
 
         // Evaluate RBF at this grid point
-        let interp_value = match rbf.evaluate(&grid_point.view().insert_axis(Axis(0))) {
+        let interp_value = match rbf.interpolate(&grid_point.view().insert_axis(Axis(0))) {
             Ok(val) => val[0],
             Err(_) => fill_value,
         };
@@ -383,6 +407,7 @@ fn grid_to_grid_nearest<F, D>(
 where
     F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero,
     D: ndarray::Dimension,
+    [usize]: ndarray::NdIndex<D>,
 {
     let n_dims = src_coords.len();
     let dst_shape: Vec<usize> = dst_coords.iter().map(|coord| coord.len()).collect();
@@ -420,10 +445,12 @@ where
 
         // Get the source value and assign to destination
         if valid {
-            let src_value = src_values[&src_indices[..]];
-            dst_values[&indices[..]] = src_value;
+            // Convert Vec<usize> to slice and use get method
+            if let Some(src_value) = src_values.get(src_indices.as_slice()) {
+                *dst_values.get_mut(indices.as_slice()).unwrap() = *src_value;
+            }
         } else {
-            dst_values[&indices[..]] = fill_value;
+            *dst_values.get_mut(indices.as_slice()).unwrap() = fill_value;
         }
 
         // Increment indices
@@ -540,7 +567,7 @@ where
         }
 
         // Get value at this corner
-        let corner_value = values[&corner_indices[..]];
+        let corner_value = *values.get(corner_indices.as_slice()).unwrap();
         result = result + corner_weight * corner_value;
     }
 
@@ -647,7 +674,7 @@ where
         nearest_indices[dim] = best_idx;
     }
 
-    Ok(grid_values[&nearest_indices[..]])
+    Ok(*grid_values.get(nearest_indices.as_slice()).unwrap())
 }
 
 /// Efficient grid coordinate range checking

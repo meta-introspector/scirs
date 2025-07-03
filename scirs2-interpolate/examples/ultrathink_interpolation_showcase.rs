@@ -356,7 +356,7 @@ fn create_noisy_data(n_points: usize, noise_level: f64) -> (Array1<f64>, Array1<
         x.iter()
             .map(|&xi| {
                 let clean_signal = xi.exp() * (-xi / 2.0).exp() * (2.0 * xi).sin();
-                let noise = noise_level * rng.gen_range(-1.0..1.0);
+                let noise = noise_level * rng.random_range(-1.0..1.0);
                 clean_signal + noise
             })
             .collect(),
@@ -371,7 +371,7 @@ fn create_sparse_scattered_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
 
     let mut rng = StdRng::seed_from_u64(123); // Fixed seed for reproducibility
 
-    let x = Array1::from_vec((0..n_points).map(|_| rng.gen_range(-1.0..7.0)).collect());
+    let x = Array1::from_vec((0..n_points).map(|_| rng.random_range(-1.0..7.0)).collect());
     let y = Array1::from_vec(
         x.iter()
             .map(|&xi| {
@@ -707,7 +707,11 @@ fn create_complex_optimization_data(n_points: usize) -> (Array1<f64>, Array1<f64
 
     let mut rng = StdRng::seed_from_u64(456);
 
-    let x = Array1::from_vec((0..n_points).map(|_| rng.gen_range(-1.5..11.5)).collect());
+    let x = Array1::from_vec(
+        (0..n_points)
+            .map(|_| rng.random_range(-1.5..11.5))
+            .collect(),
+    );
     let y = Array1::from_vec(
         x.iter()
             .map(|&xi| {
@@ -715,7 +719,7 @@ fn create_complex_optimization_data(n_points: usize) -> (Array1<f64>, Array1<f64
                 let component1 = (xi * 0.5).sin() * xi.exp() * (-xi / 3.0).exp();
                 let component2 = 0.3 * (xi * 2.0 + PI / 3.0).cos() * (xi + 2.0).sqrt();
                 let component3 = 0.1 * (xi * 10.0).sin() / (1.0 + xi.abs());
-                let noise = 0.05 * rng.gen_range(-1.0..1.0);
+                let noise = 0.05 * rng.random_range(-1.0..1.0);
 
                 component1 + component2 + component3 + noise
             })

@@ -257,7 +257,7 @@ fn gamma_function_deep_dive(
 
     // Property 1: Recurrence relation
     println!("\n1. Recurrence relation verification:");
-    for z in [1.5, 2.3, 3.7] {
+    for z in [1.5_f64, 2.3_f64, 3.7_f64] {
         let gamma_z = gamma(z);
         let gamma_z_plus_1 = gamma(z + 1.0);
         let computed_from_recurrence = z * gamma_z;
@@ -266,7 +266,7 @@ fn gamma_function_deep_dive(
             z,
             gamma_z_plus_1,
             computed_from_recurrence,
-            (gamma_z_plus_1 - computed_from_recurrence).abs() as f64
+            (gamma_z_plus_1 - computed_from_recurrence).abs()
         );
     }
 

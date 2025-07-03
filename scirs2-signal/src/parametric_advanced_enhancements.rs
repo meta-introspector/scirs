@@ -748,7 +748,7 @@ mod tests {
     #[test]
     fn test_adaptive_model_selection() {
         // Generate AR(2) signal
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let n = 200;
         let mut signal = Array1::zeros(n);
         

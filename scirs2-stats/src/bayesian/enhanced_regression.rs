@@ -4,7 +4,7 @@
 //! variational inference, hierarchical models, and robust Bayesian regression.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView2};
 use num_traits::{Float, One, Zero};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
@@ -356,7 +356,7 @@ where
     fn fit_mcmc(&self) -> StatsResult<BayesianRegressionResult<F>> {
         use rand::rngs::StdRng;
         use rand::SeedableRng;
-        use rand_distr::{Distribution, Gamma, StandardNormal};
+        use rand_distr::{Distribution, Gamma};
 
         let x = &self.design_matrix;
         let y = &self.response;

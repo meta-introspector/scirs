@@ -258,7 +258,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Compute gradients using reverse-mode AD
-    pub fn backward(&mut self, output_id: usize) -> Result<Vec<T>, OptimError> {
+    pub fn backward(&mut self, output_id: usize) -> Result<Vec<T>> {
         if output_id >= self.graph.len() {
             return Err(OptimError::InvalidConfig(
                 "Invalid output node ID".to_string(),
@@ -285,7 +285,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Compute Hessian matrix
-    pub fn compute_hessian(&mut self, output_id: usize) -> Result<Array2<T>, OptimError> {
+    pub fn compute_hessian(&mut self, output_id: usize) -> Result<Array2<T>> {
         match self.config.hessian_approximation {
             HessianApproximation::Exact => self.compute_exact_hessian(output_id),
             HessianApproximation::BFGS => self.compute_bfgs_hessian(),
@@ -297,7 +297,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         }
     }
 
-    fn compute_exact_hessian(&mut self, output_id: usize) -> Result<Array2<T>, OptimError> {
+    fn compute_exact_hessian(&mut self, output_id: usize) -> Result<Array2<T>> {
         let n_vars = self.variables.len();
         let mut hessian = Array2::zeros((n_vars, n_vars));
 
@@ -318,7 +318,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         output_id: usize,
         var1: usize,
         var2: usize,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         // Enhanced second derivative computation with checkpointing
         if self.config.gradient_checkpointing {
             return self.compute_second_derivative_checkpointed(output_id, var1, var2);
@@ -364,7 +364,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         output_id: usize,
         var1: usize,
         var2: usize,
-    ) -> Result<T, OptimError> {
+    ) -> Result<T> {
         let chunk_size = self.config.checkpoint_chunk_size;
         let eps = T::from(1e-8).unwrap();
 
@@ -412,7 +412,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         }
     }
 
-    fn evaluate_node(&self, node_id: usize) -> Result<T, OptimError> {
+    fn evaluate_node(&self, node_id: usize) -> Result<T> {
         if node_id >= self.graph.len() {
             return Err(OptimError::InvalidConfig("Invalid node ID".to_string()));
         }
@@ -420,7 +420,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         Ok(self.graph[node_id].value)
     }
 
-    fn compute_bfgs_hessian(&self) -> Result<Array2<T>, OptimError> {
+    fn compute_bfgs_hessian(&self) -> Result<Array2<T>> {
         if let Some(ref state) = self.hessian_state {
             if let Some(ref inv_hessian) = state.inverse_hessian {
                 return Ok(inv_hessian.clone());
@@ -432,7 +432,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         ))
     }
 
-    fn compute_lbfgs_hessian(&self) -> Result<Array2<T>, OptimError> {
+    fn compute_lbfgs_hessian(&self) -> Result<Array2<T>> {
         if let Some(ref state) = self.hessian_state {
             if let Some(ref lbfgs) = state.lbfgs_memory {
                 return self.lbfgs_two_loop_recursion(lbfgs);
@@ -444,10 +444,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         ))
     }
 
-    fn lbfgs_two_loop_recursion(
-        &self,
-        lbfgs: &LBFGSMemory<T>,
-    ) -> Result<Array2<T>, OptimError> {
+    fn lbfgs_two_loop_recursion(&self, lbfgs: &LBFGSMemory<T>) -> Result<Array2<T>> {
         let n = lbfgs
             .s_history
             .get(0)
@@ -462,7 +459,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         Ok(result)
     }
 
-    fn compute_diagonal_hessian(&mut self, output_id: usize) -> Result<Array2<T>, OptimError> {
+    fn compute_diagonal_hessian(&mut self, output_id: usize) -> Result<Array2<T>> {
         let n_vars = self.variables.len();
         let mut hessian = Array2::zeros((n_vars, n_vars));
 
@@ -481,7 +478,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         gradient_new: &Array1<T>,
         gradient_old: &Array1<T>,
         step: &Array1<T>,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         if self.hessian_state.is_none() {
             let n = gradient_new.len();
             self.hessian_state = Some(HessianApproximationState {
@@ -546,7 +543,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         &mut self,
         inner_steps: usize,
         outer_objective_id: usize,
-    ) -> Result<Vec<T>, OptimError> {
+    ) -> Result<Vec<T>> {
         if !self.config.enable_meta_gradients {
             return Err(OptimError::InvalidConfig(
                 "Meta-gradients not enabled".to_string(),
@@ -602,10 +599,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Restore computation state from checkpoint
-    fn restore_checkpoint(
-        &mut self,
-        checkpoint: &ComputationCheckpoint<T>,
-    ) -> Result<(), OptimError> {
+    fn restore_checkpoint(&mut self, checkpoint: &ComputationCheckpoint<T>) -> Result<()> {
         if checkpoint.values.len() != self.graph.len() {
             return Err(OptimError::InvalidConfig(
                 "Checkpoint size mismatch".to_string(),
@@ -628,7 +622,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// External framework integration hooks
-    pub fn integrate_with_candle(&mut self, enable: bool) -> Result<(), OptimError> {
+    pub fn integrate_with_candle(&mut self, enable: bool) -> Result<()> {
         if enable {
             // Enhanced integration with candle-core for production use
             self.context.higher_order = true;
@@ -643,7 +637,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Set up candle-core compatibility layer
-    fn setup_candle_compatibility(&mut self) -> Result<(), OptimError> {
+    fn setup_candle_compatibility(&mut self) -> Result<()> {
         // Configure automatic differentiation for candle tensors
         self.config.max_derivative_order = 3; // Support higher-order derivatives
         self.config.enable_hessian = true;
@@ -663,7 +657,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     pub fn from_candle_gradients<D: Dimension>(
         &mut self,
         gradients: &Array<T, D>,
-    ) -> Result<Vec<T>, OptimError> {
+    ) -> Result<Vec<T>> {
         if let Some(grad_slice) = gradients.as_slice() {
             Ok(grad_slice.to_vec())
         } else {
@@ -678,7 +672,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         &self,
         gradients: &[T],
         shape: &[usize],
-    ) -> Result<Array<T, D>, OptimError> {
+    ) -> Result<Array<T, D>> {
         if gradients.len() != shape.iter().product() {
             return Err(OptimError::InvalidConfig(
                 "Gradient size mismatch with shape".to_string(),
@@ -690,11 +684,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Compute candle-compatible Jacobian-vector product
-    pub fn compute_jvp(
-        &mut self,
-        output_id: usize,
-        tangent: &[T],
-    ) -> Result<Vec<T>, OptimError> {
+    pub fn compute_jvp(&mut self, output_id: usize, tangent: &[T]) -> Result<Vec<T>> {
         if tangent.len() != self.variables.len() {
             return Err(OptimError::InvalidConfig(
                 "Tangent vector size mismatch".to_string(),
@@ -729,11 +719,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Compute candle-compatible vector-Jacobian product
-    pub fn compute_vjp(
-        &mut self,
-        output_id: usize,
-        cotangent: T,
-    ) -> Result<Vec<T>, OptimError> {
+    pub fn compute_vjp(&mut self, output_id: usize, cotangent: T) -> Result<Vec<T>> {
         // Reverse-mode AD for computing VJP
         let mut vjp_values = vec![T::zero(); self.graph.len()];
         vjp_values[output_id] = cotangent;
@@ -795,7 +781,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Optimize computation graph for candle operations
-    pub fn optimize_for_candle(&mut self) -> Result<(), OptimError> {
+    pub fn optimize_for_candle(&mut self) -> Result<()> {
         // Graph optimization passes for candle integration
         self.fuse_operations()?;
         self.eliminate_dead_code()?;
@@ -805,7 +791,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Fuse compatible operations for better performance
-    fn fuse_operations(&mut self) -> Result<(), OptimError> {
+    fn fuse_operations(&mut self) -> Result<()> {
         // Identify fusion opportunities (e.g., add + multiply, exp + log)
         let mut fused_operations = Vec::new();
 
@@ -842,7 +828,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Eliminate dead code in computation graph
-    fn eliminate_dead_code(&mut self) -> Result<(), OptimError> {
+    fn eliminate_dead_code(&mut self) -> Result<()> {
         // Mark reachable nodes from outputs
         let mut reachable = vec![false; self.graph.len()];
         let mut stack = Vec::new();
@@ -870,7 +856,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// Optimize memory layout for better cache performance
-    fn optimize_memory_layout(&mut self) -> Result<(), OptimError> {
+    fn optimize_memory_layout(&mut self) -> Result<()> {
         // Sort tape entries to improve memory locality
         self.tape.sort_by_key(|entry| entry.output);
 
@@ -908,7 +894,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     }
 
     /// JAX-style transformation compatibility  
-    pub fn enable_jax_transforms(&mut self, enable: bool) -> Result<(), OptimError> {
+    pub fn enable_jax_transforms(&mut self, enable: bool) -> Result<()> {
         if enable {
             // Enable JAX-compatible transformations
             self.config.enable_forward_mode = true;
@@ -938,7 +924,7 @@ impl AutodiffUtils {
         gradient_fn: impl Fn(&[T]) -> Vec<T>,
         point: &[T],
         epsilon: T,
-    ) -> Result<GradientCheckResult<T>, OptimError> {
+    ) -> Result<GradientCheckResult<T>> {
         let analytical_grad = gradient_fn(point);
         let mut numerical_grad = vec![T::zero(); point.len()];
 

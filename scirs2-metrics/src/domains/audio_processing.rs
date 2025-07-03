@@ -1525,7 +1525,7 @@ impl MusicInformationMetrics {
         }
     }
 
-    fn calculate_beat_f_measure(&self, reference: &[f64], estimated: &[f64]) -> Result<f64> {
+    fn calculate_beat_f_measure(&self, _reference: &[f64], _estimated: &[f64]) -> Result<f64> {
         Ok(0.7) // Placeholder
     }
 
@@ -1632,36 +1632,36 @@ impl SoundEventDetectionMetrics {
 
     fn calculate_event_based_f1(
         &self,
-        reference: &[(f64, f64, String)],
-        predicted: &[(f64, f64, String, f64)],
-        tolerance: f64,
+        _reference: &[(f64, f64, String)],
+        _predicted: &[(f64, f64, String, f64)],
+        _tolerance: f64,
     ) -> Result<f64> {
         Ok(0.6) // Placeholder
     }
 
     fn calculate_segment_based_f1(
         &self,
-        reference: &[(f64, f64, String)],
-        predicted: &[(f64, f64, String, f64)],
-        segment_length: f64,
+        _reference: &[(f64, f64, String)],
+        _predicted: &[(f64, f64, String, f64)],
+        _segment_length: f64,
     ) -> Result<f64> {
         Ok(0.65) // Placeholder
     }
 
     fn calculate_error_rate(
         &self,
-        reference: &[(f64, f64, String)],
-        predicted: &[(f64, f64, String, f64)],
-        tolerance: f64,
+        _reference: &[(f64, f64, String)],
+        _predicted: &[(f64, f64, String, f64)],
+        _tolerance: f64,
     ) -> Result<f64> {
         Ok(0.3) // Placeholder
     }
 
     fn calculate_class_wise_f1(
         &self,
-        reference: &[(f64, f64, String)],
-        predicted: &[(f64, f64, String, f64)],
-        tolerance: f64,
+        _reference: &[(f64, f64, String)],
+        _predicted: &[(f64, f64, String, f64)],
+        _tolerance: f64,
     ) -> Result<f64> {
         Ok(0.58) // Placeholder
     }
@@ -1755,7 +1755,7 @@ mod tests {
 
     #[test]
     fn test_audio_processing_metrics_creation() {
-        let metrics = AudioProcessingMetrics::new();
+        let _metrics = AudioProcessingMetrics::new();
         // Basic test to ensure creation works
     }
 

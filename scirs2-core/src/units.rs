@@ -914,7 +914,7 @@ mod tests {
         assert_eq!(value.value(), 5.0);
         assert_eq!(value.unit(), "m");
 
-        let formatted = format!("{}", value);
+        let formatted = format!("{value}");
         assert!(formatted.contains("5"));
         assert!(formatted.contains("m"));
     }

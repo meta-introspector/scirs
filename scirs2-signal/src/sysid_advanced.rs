@@ -822,7 +822,7 @@ fn simulate_bj_model(
     let mut filtered_noise = Array1::zeros(n);
 
     // Generate innovations (would be estimated in practice)
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     for i in 0..n {
         noise[i] = rng.random_range(-0.1..0.1);
     }
@@ -1193,7 +1193,7 @@ mod tests {
         let mut output = Array1::zeros(n);
 
         // Generate test data
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         for i in 2..n {
             input[i] = rng.random_range(-1.0..1.0);
             output[i] = 0.7 * output[i - 1] - 0.2 * output[i - 2]

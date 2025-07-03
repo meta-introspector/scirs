@@ -633,7 +633,7 @@ where
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            // In rand 0.9.0, use rng() instead of thread_rng()
+            // In rand 0.9.0, use rng() instead of rng()
             let mut r = rand::rng();
             StdRng::from_rng(&mut r)
         }

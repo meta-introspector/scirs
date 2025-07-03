@@ -513,7 +513,7 @@ impl FileStorageBackend {
         if let Some(handle) = handles.get(array_id) {
             Ok(handle.clone())
         } else {
-            let file_path = self.base_path.join(format!("{}.dat", array_id));
+            let file_path = self.base_path.join(format!("{array_id}.dat"));
             let file = OpenOptions::new()
                 .create(true)
                 .truncate(true)
@@ -1103,7 +1103,7 @@ impl OutOfCoreManager {
         let storage = if let Some(name) = storage_name {
             storage_backends
                 .get(&name)
-                .ok_or_else(|| OutOfCoreError::ChunkNotFound(format!("Storage backend: {}", name)))?
+                .ok_or_else(|| OutOfCoreError::ChunkNotFound(format!("Storage backend: {name}")))?
                 .clone()
         } else {
             // Use default file storage
@@ -1407,7 +1407,7 @@ mod tests {
         let chunk_id = ChunkId::new("test_array".to_string(), vec![0, 1, 2]);
         assert_eq!(chunk_id.array_id, "test_array");
         assert_eq!(chunk_id.coordinates, vec![0, 1, 2]);
-        assert_eq!(format!("{}", chunk_id), "test_array:0,1,2");
+        assert_eq!(format!("{chunk_id}"), "test_array:0,1,2");
     }
 
     #[test]

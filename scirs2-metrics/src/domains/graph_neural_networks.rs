@@ -1167,7 +1167,7 @@ impl GraphNeuralNetworkMetrics {
         &mut self,
         y_true: &ArrayView1<i32>,
         y_pred: &ArrayView1<i32>,
-        y_proba: Option<&ArrayView2<F>>,
+        _y_proba: Option<&ArrayView2<F>>,
         adjacency_matrix: &ArrayView2<i32>,
         node_features: Option<&ArrayView2<F>>,
         sensitive_attributes: Option<&ArrayView1<i32>>,
@@ -1178,7 +1178,7 @@ impl GraphNeuralNetworkMetrics {
         // Calculate basic classification metrics
         let accuracy = crate::classification::accuracy_score(y_true, y_pred)?;
         // Calculate precision, recall, and F1 score manually since precision_recall_fscore_support doesn't exist
-        let (precision, recall, f1_score) = self.calculate_precision_recall_f1(y_true, y_pred)?;
+        let (_precision, _recall, f1_score) = self.calculate_precision_recall_f1(y_true, y_pred)?;
 
         let macro_f1 = f1_score.iter().sum::<f64>() / f1_score.len() as f64;
         let micro_f1 = self.node_metrics.calculate_micro_f1(y_true, y_pred)?;
@@ -1268,7 +1268,7 @@ impl GraphNeuralNetworkMetrics {
         &mut self,
         y_true: &ArrayView1<i32>,
         y_pred: &ArrayView1<i32>,
-        y_proba: Option<&ArrayView2<F>>,
+        _y_proba: Option<&ArrayView2<F>>,
         graph_features: Option<&ArrayView2<F>>,
     ) -> Result<GraphLevelResults>
     where
@@ -1301,10 +1301,10 @@ impl GraphNeuralNetworkMetrics {
         &mut self,
         y_true: &ArrayView1<F>,
         y_pred: &ArrayView1<F>,
-        graph_features: Option<&ArrayView2<F>>,
+        _graph_features: Option<&ArrayView2<F>>,
     ) -> Result<GraphLevelResults>
     where
-        F: Float + num_traits::NumCast + std::fmt::Debug,
+        F: Float + num_traits::NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     {
         // Calculate regression RMSE
         let mse = crate::regression::mean_squared_error(y_true, y_pred)?;
@@ -1362,7 +1362,7 @@ impl GraphNeuralNetworkMetrics {
         admet_predictions: Option<(&ArrayView1<i32>, &ArrayView1<i32>)>,
     ) -> Result<MolecularGraphResults>
     where
-        F: Float + num_traits::NumCast + std::fmt::Debug,
+        F: Float + num_traits::NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     {
         // Calculate property prediction RMSE
         let mse = crate::regression::mean_squared_error(y_true, y_pred)?;
@@ -1823,7 +1823,7 @@ impl NodeLevelMetrics {
 
     fn calculate_fairness_score(
         &self,
-        y_true: &ArrayView1<i32>,
+        _y_true: &ArrayView1<i32>,
         y_pred: &ArrayView1<i32>,
         sensitive_attrs: &ArrayView1<i32>,
     ) -> Result<f64> {
@@ -1932,7 +1932,7 @@ impl EdgeLevelMetrics {
         scored_edges.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
         // Convert true edges to set for fast lookup
-        let true_edges_set: HashSet<(usize, usize)> = edge_index_true.iter().cloned().collect();
+        let _true_edges_set: HashSet<(usize, usize)> = edge_index_true.iter().cloned().collect();
 
         let mut reciprocal_ranks = Vec::new();
 

@@ -28,7 +28,7 @@
 //! let clean_signal = Array1::from_vec(clean_signal_vec);
 //!
 //! // Add noise
-//! let mut rng = rand::rng();
+//! let mut rng = rand::thread_rng();
 //! let mut noisy_signal = clean_signal.clone();
 //! for i in 0..noisy_signal.len() {
 //!     noisy_signal[i] += 0.5 * rng.random_range(-1.0..1.0);

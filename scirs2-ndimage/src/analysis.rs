@@ -4,7 +4,7 @@
 //! quality metrics, texture analysis, multi-scale analysis, and
 //! advanced statistical measurements for scientific image processing.
 
-use ndarray::{Array1, Array2, ArrayView2, Zip};
+use ndarray::{Array2, ArrayView2, Zip};
 use num_traits::{Float, FromPrimitive, Zero};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
@@ -12,7 +12,6 @@ use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{gaussian_filter, sobel, BorderMode};
-use crate::measurements::{center_of_mass, moments};
 
 /// Helper function for safe conversion of hardcoded constants
 fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {

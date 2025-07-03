@@ -45,7 +45,7 @@ pub type MultitaperResult = (Vec<f64>, Vec<f64>, Option<Array2<f64>>, Option<Arr
 /// let fs = 100.0;
 /// let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
 /// use rand::Rng;
-/// let mut rng = rand::rng();
+/// let mut rng = rand::thread_rng();
 /// let signal: Vec<f64> = t.iter()
 ///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(0.0..1.0))
 ///     .collect();
@@ -249,7 +249,7 @@ where
 /// let fs = 1000.0;
 /// let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
 /// use rand::Rng;
-/// let mut rng = rand::rng();
+/// let mut rng = rand::thread_rng();
 /// let signal: Vec<f64> = t.iter()
 ///     .map(|&ti| {
 ///         let freq = 50.0 + 200.0 * ti; // Linear chirp from 50Hz to 250Hz

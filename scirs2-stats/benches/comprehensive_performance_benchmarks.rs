@@ -17,13 +17,13 @@ use std::time::Duration;
 /// Generate test data of various sizes for benchmarking
 fn generate_test_data(size: usize, seed: u64) -> Array1<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
-    Array1::from_iter((0..size).map(|_| rng.gen::<f64>() * 100.0 - 50.0))
+    Array1::from_iter((0..size).map(|_| rng.random::<f64>() * 100.0 - 50.0))
 }
 
 /// Generate matrix test data for multivariate benchmarks
 fn generate_matrix_data(rows: usize, cols: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
-    Array2::from_shape_fn((rows, cols), |_| rng.gen::<f64>() * 100.0 - 50.0)
+    Array2::from_shape_fn((rows, cols), |_| rng.random::<f64>() * 100.0 - 50.0)
 }
 
 /// Generate correlated data for correlation benchmarks
@@ -33,10 +33,10 @@ fn generate_correlated_data(
     seed: u64,
 ) -> (Array1<f64>, Array1<f64>) {
     let mut rng = StdRng::seed_from_u64(seed);
-    let x = Array1::from_iter((0..size).map(|_| rng.gen::<f64>() * 100.0 - 50.0));
+    let x = Array1::from_iter((0..size).map(|_| rng.random::<f64>() * 100.0 - 50.0));
 
     // Generate correlated y
-    let noise = Array1::from_iter((0..size).map(|_| rng.gen::<f64>() * 10.0 - 5.0));
+    let noise = Array1::from_iter((0..size).map(|_| rng.random::<f64>() * 10.0 - 5.0));
     let y = &x * correlation + noise * (1.0 - correlation.abs()).sqrt();
 
     (x, y)
@@ -196,8 +196,9 @@ fn bench_regression_operations(c: &mut Criterion) {
     for (n_samples, n_features) in [(1000, 10), (10000, 50), (50000, 100)].iter() {
         let x = generate_matrix_data(*n_samples, *n_features, 42);
         let mut rng = StdRng::seed_from_u64(42);
-        let true_coef = Array1::from_iter((0..*n_features).map(|_| rng.gen::<f64>() * 2.0 - 1.0));
-        let noise = Array1::from_iter((0..*n_samples).map(|_| rng.gen::<f64>() * 0.1));
+        let true_coef =
+            Array1::from_iter((0..*n_features).map(|_| rng.random::<f64>() * 2.0 - 1.0));
+        let noise = Array1::from_iter((0..*n_samples).map(|_| rng.random::<f64>() * 0.1));
         let y = x.dot(&true_coef) + noise;
 
         group.throughput(Throughput::Elements((n_samples * n_features) as u64));

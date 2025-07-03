@@ -4,7 +4,7 @@
 //! the parallel vector operations and SIMD acceleration from scirs2-core.
 
 use crate::error::{SparseError, SparseResult};
-use crate::linalg::interface::LinearOperator;
+use crate::linalg::interface::{AdjointOperator, LinearOperator};
 use crate::parallel_vector_ops::*;
 use num_traits::{Float, NumAssign};
 use std::fmt::Debug;
@@ -1228,46 +1228,6 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
     }
 }
 
-/// Wrapper for adjoint operations
-pub struct AdjointOperator<F> {
-    operator: Box<dyn LinearOperator<F>>,
-}
-
-impl<F> AdjointOperator<F> {
-    #[allow(dead_code)]
-    pub fn new(operator: Box<dyn LinearOperator<F>>) -> Self {
-        Self { operator }
-    }
-}
-
-impl<F> Clone for AdjointOperator<F> {
-    fn clone(&self) -> Self {
-        // Note: This is a simplified clone that doesn't actually clone the inner operator
-        // In a real implementation, you'd need a different approach
-        panic!("Cloning AdjointOperator is not supported")
-    }
-}
-
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOperator<F>
-    for AdjointOperator<F>
-{
-    fn shape(&self) -> (usize, usize) {
-        let (rows, cols) = self.operator.shape();
-        (cols, rows) // Transpose dimensions
-    }
-
-    fn matvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
-        self.operator.rmatvec(x)
-    }
-
-    fn rmatvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
-        self.operator.matvec(x)
-    }
-
-    fn has_adjoint(&self) -> bool {
-        true
-    }
-}
 
 /// Create an enhanced composition operator (left * right)
 #[allow(dead_code)]
@@ -1309,8 +1269,8 @@ pub fn adjoint_operator<
     F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
     operator: Box<dyn LinearOperator<F>>,
-) -> Box<dyn LinearOperator<F>> {
-    Box::new(AdjointOperator::new(operator))
+) -> SparseResult<Box<dyn LinearOperator<F>>> {
+    Ok(Box::new(AdjointOperator::new(operator)?))
 }
 
 #[cfg(test)]

@@ -1023,8 +1023,8 @@ pub mod stability {
     where
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
-        use rand::seq::SliceRandom;
         use rand::rng;
+        use rand::seq::SliceRandom;
 
         if subsample_ratio <= 0.0 || subsample_ratio > 1.0 {
             return Err(ClusteringError::InvalidInput(
@@ -1771,8 +1771,8 @@ pub mod ensemble {
     where
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
-        use rand::seq::SliceRandom;
         use rand::rng;
+        use rand::seq::SliceRandom;
 
         if confidence_level <= 0.0 || confidence_level >= 1.0 {
             return Err(ClusteringError::InvalidInput(

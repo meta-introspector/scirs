@@ -11,13 +11,13 @@
 //! - Performance benchmarking and scaling analysis
 
 use scirs2_signal::error::SignalResult;
-use scirs2_signal::multitaper::{
-    validate_numerical_precision_enhanced, validate_parameter_consistency, TestSignalConfig,
-};
+use scirs2_signal::lombscargle::{lombscargle, AutoFreqMethod};
 use scirs2_signal::lombscargle_enhanced_validation::{
     validate_edge_cases_comprehensive, validate_numerical_robustness_extreme,
 };
-use scirs2_signal::lombscargle::{lombscargle, AutoFreqMethod};
+use scirs2_signal::multitaper::{
+    validate_numerical_precision_enhanced, validate_parameter_consistency, TestSignalConfig,
+};
 use std::f64::consts::PI;
 
 /// Demonstrate enhanced multitaper validation features
@@ -49,7 +49,7 @@ fn showcase_multitaper_enhancements() -> SignalResult<()> {
     match validate_numerical_precision_enhanced(&test_config) {
         Ok(score) => {
             println!("✓ Numerical Precision Score: {:.2}%", score);
-            
+
             if score > 95.0 {
                 println!("  🌟 Exceptional numerical stability across all edge cases");
                 println!("  → Handles extreme amplitudes and frequencies robustly");
@@ -72,7 +72,7 @@ fn showcase_multitaper_enhancements() -> SignalResult<()> {
     match validate_parameter_consistency(&test_config) {
         Ok(score) => {
             println!("✓ Parameter Consistency Score: {:.2}%", score);
-            
+
             if score > 90.0 {
                 println!("  🎯 Highly consistent results across parameter variations");
                 println!("  → Robust spectral estimation independent of NW selection");
@@ -92,26 +92,27 @@ fn showcase_multitaper_enhancements() -> SignalResult<()> {
 
     // Test 3: Demonstrate multitaper with synthetic multi-component signal
     println!("\n--- Multitaper Analysis of Multi-Component Signal ---");
-    
+
     let signal: Vec<f64> = (0..test_config.n)
         .map(|i| {
             let t = i as f64 / test_config.fs;
             // Create a complex signal with multiple frequency components
-            let f1 = 5.0;   // Low frequency
-            let f2 = 25.0;  // Mid frequency
-            let f3 = 45.0;  // High frequency
-            let f4 = 80.0;  // Near Nyquist
-            
+            let f1 = 5.0; // Low frequency
+            let f2 = 25.0; // Mid frequency
+            let f3 = 45.0; // High frequency
+            let f4 = 80.0; // Near Nyquist
+
             1.0 * (2.0 * PI * f1 * t).sin()      // Strong low frequency
                 + 0.6 * (2.0 * PI * f2 * t).sin()    // Moderate mid frequency
                 + 0.4 * (2.0 * PI * f3 * t).sin()    // Weak high frequency
-                + 0.2 * (2.0 * PI * f4 * t).sin()    // Very weak near Nyquist
+                + 0.2 * (2.0 * PI * f4 * t).sin() // Very weak near Nyquist
         })
         .collect();
 
     // Add realistic noise
     let mut rng = rand::rng();
-    let noisy_signal: Vec<f64> = signal.iter()
+    let noisy_signal: Vec<f64> = signal
+        .iter()
         .map(|&s| s + 0.1 * rng.random_range(-1.0..1.0))
         .collect();
 
@@ -124,7 +125,10 @@ fn showcase_multitaper_enhancements() -> SignalResult<()> {
     // Note: This is a simplified example since we need the actual multitaper functions
     println!("✓ Multitaper analysis would detect frequency components");
     println!("  Expected peaks at: 5, 25, 45, 80 Hz");
-    println!("  Resolution bandwidth: {:.1} Hz", test_config.nw / (test_config.n as f64 / test_config.fs));
+    println!(
+        "  Resolution bandwidth: {:.1} Hz",
+        test_config.nw / (test_config.n as f64 / test_config.fs)
+    );
 
     Ok(())
 }
@@ -138,27 +142,79 @@ fn showcase_lombscargle_enhancements() -> SignalResult<()> {
     match validate_edge_cases_comprehensive() {
         Ok(result) => {
             println!("✓ Edge Case Validation Results:");
-            println!("  Tests passed: {}/{} ({:.1}%)", 
-                result.tests_passed, result.total_tests, result.success_rate * 100.0);
-            
+            println!(
+                "  Tests passed: {}/{} ({:.1}%)",
+                result.tests_passed,
+                result.total_tests,
+                result.success_rate * 100.0
+            );
+
             println!("\n  Detailed Results:");
-            println!("    • Empty signal handling: {}", 
-                if result.empty_signal_handled { "✓ PASS" } else { "✗ FAIL" });
-            println!("    • Single point handling: {}", 
-                if result.single_point_handled { "✓ PASS" } else { "✗ FAIL" });
-            println!("    • Duplicate times handling: {}", 
-                if result.duplicate_times_handled { "✓ PASS" } else { "✗ FAIL" });
-            println!("    • Large values stability: {}", 
-                if result.large_values_stable { "✓ PASS" } else { "✗ FAIL" });
-            println!("    • Small values stability: {}", 
-                if result.small_values_stable { "✓ PASS" } else { "✗ FAIL" });
-            println!("    • NaN input handling: {}", 
-                if result.nan_input_handled { "✓ PASS" } else { "✗ FAIL" });
-            println!("    • Constant signal correctness: {}", 
-                if result.constant_signal_correct { "✓ PASS" } else { "✗ FAIL" });
-            println!("    • Irregular sampling stability: {}", 
-                if result.irregular_sampling_stable { "✓ PASS" } else { "✗ FAIL" });
-            
+            println!(
+                "    • Empty signal handling: {}",
+                if result.empty_signal_handled {
+                    "✓ PASS"
+                } else {
+                    "✗ FAIL"
+                }
+            );
+            println!(
+                "    • Single point handling: {}",
+                if result.single_point_handled {
+                    "✓ PASS"
+                } else {
+                    "✗ FAIL"
+                }
+            );
+            println!(
+                "    • Duplicate times handling: {}",
+                if result.duplicate_times_handled {
+                    "✓ PASS"
+                } else {
+                    "✗ FAIL"
+                }
+            );
+            println!(
+                "    • Large values stability: {}",
+                if result.large_values_stable {
+                    "✓ PASS"
+                } else {
+                    "✗ FAIL"
+                }
+            );
+            println!(
+                "    • Small values stability: {}",
+                if result.small_values_stable {
+                    "✓ PASS"
+                } else {
+                    "✗ FAIL"
+                }
+            );
+            println!(
+                "    • NaN input handling: {}",
+                if result.nan_input_handled {
+                    "✓ PASS"
+                } else {
+                    "✗ FAIL"
+                }
+            );
+            println!(
+                "    • Constant signal correctness: {}",
+                if result.constant_signal_correct {
+                    "✓ PASS"
+                } else {
+                    "✗ FAIL"
+                }
+            );
+            println!(
+                "    • Irregular sampling stability: {}",
+                if result.irregular_sampling_stable {
+                    "✓ PASS"
+                } else {
+                    "✗ FAIL"
+                }
+            );
+
             if result.success_rate > 0.9 {
                 println!("\n  🌟 Exceptional edge case handling - production ready");
             } else if result.success_rate > 0.7 {
@@ -174,18 +230,45 @@ fn showcase_lombscargle_enhancements() -> SignalResult<()> {
     println!("\n--- Numerical Robustness Validation ---");
     match validate_numerical_robustness_extreme() {
         Ok(result) => {
-            println!("✓ Numerical Robustness Score: {:.2}%", result.overall_robustness_score);
-            
+            println!(
+                "✓ Numerical Robustness Score: {:.2}%",
+                result.overall_robustness_score
+            );
+
             println!("\n  Robustness Test Results:");
-            println!("    • Close frequency resolution: {}", 
-                if result.close_frequency_resolved { "✓ RESOLVED" } else { "✗ UNRESOLVED" });
-            println!("    • High dynamic range stability: {}", 
-                if result.high_dynamic_range_stable { "✓ STABLE" } else { "✗ UNSTABLE" });
-            println!("    • Noisy signal processing: {}", 
-                if result.noisy_signal_stable { "✓ STABLE" } else { "✗ UNSTABLE" });
-            println!("    • Extreme frequency handling: {}", 
-                if result.extreme_frequencies_stable { "✓ STABLE" } else { "✗ UNSTABLE" });
-            
+            println!(
+                "    • Close frequency resolution: {}",
+                if result.close_frequency_resolved {
+                    "✓ RESOLVED"
+                } else {
+                    "✗ UNRESOLVED"
+                }
+            );
+            println!(
+                "    • High dynamic range stability: {}",
+                if result.high_dynamic_range_stable {
+                    "✓ STABLE"
+                } else {
+                    "✗ UNSTABLE"
+                }
+            );
+            println!(
+                "    • Noisy signal processing: {}",
+                if result.noisy_signal_stable {
+                    "✓ STABLE"
+                } else {
+                    "✗ UNSTABLE"
+                }
+            );
+            println!(
+                "    • Extreme frequency handling: {}",
+                if result.extreme_frequencies_stable {
+                    "✓ STABLE"
+                } else {
+                    "✗ UNSTABLE"
+                }
+            );
+
             if result.overall_robustness_score > 85.0 {
                 println!("\n  🚀 Outstanding numerical robustness");
                 println!("  → Handles challenging conditions exceptionally well");
@@ -202,19 +285,20 @@ fn showcase_lombscargle_enhancements() -> SignalResult<()> {
 
     // Test 3: Demonstrate Lomb-Scargle with irregularly sampled data
     println!("\n--- Lomb-Scargle with Irregular Sampling ---");
-    
+
     // Create irregularly sampled time series
     let mut time_points = Vec::new();
     let mut data_points = Vec::new();
-    
+
     // Generate irregular sampling (missing some data points)
     let mut rng = rand::rng();
     for i in 0..500 {
         // Randomly skip some points to create irregular sampling
-        if rng.random_range(0.0..1.0) > 0.3 {  // Keep 70% of points
+        if rng.random_range(0.0..1.0) > 0.3 {
+            // Keep 70% of points
             let t = i as f64 * 0.01; // 100 Hz nominal sampling
             time_points.push(t);
-            
+
             // Signal with two close frequencies
             let f1 = 10.0;
             let f2 = 10.5;
@@ -223,47 +307,48 @@ fn showcase_lombscargle_enhancements() -> SignalResult<()> {
             data_points.push(signal + noise);
         }
     }
-    
+
     println!("📊 Irregular sampling characteristics:");
     println!("  Original points: 500");
     println!("  Retained points: {}", time_points.len());
-    println!("  Sampling completeness: {:.1}%", 
-        time_points.len() as f64 / 500.0 * 100.0);
+    println!(
+        "  Sampling completeness: {:.1}%",
+        time_points.len() as f64 / 500.0 * 100.0
+    );
     println!("  Signal components: 10.0 Hz and 10.5 Hz (challenging resolution)");
-    
+
     // Perform Lomb-Scargle analysis
     match lombscargle(
-        &time_points, 
-        &data_points, 
-        None, 
-        Some("standard"), 
-        Some(true), 
-        Some(true), 
-        None, 
-        None
+        &time_points,
+        &data_points,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        None,
+        None,
     ) {
         Ok((frequencies, power)) => {
             println!("✓ Lomb-Scargle analysis completed successfully");
             println!("  Frequency bins: {}", frequencies.len());
             println!("  Power spectrum computed: {} points", power.len());
-            
+
             // Find peaks in the expected frequency range
             let peak_range = 8.0..12.0;
-            let peaks_in_range = frequencies.iter()
+            let peaks_in_range = frequencies
+                .iter()
                 .zip(power.iter())
                 .filter(|(&f, _)| peak_range.contains(&f))
                 .count();
-            
+
             println!("  Spectral peaks in 8-12 Hz range: {}", peaks_in_range);
-            
+
             // Check if we can resolve the close frequencies
             let max_power = power.iter().fold(0.0f64, |a, &b| a.max(b));
-            let significant_peaks = power.iter()
-                .filter(|&&p| p > max_power * 0.1)
-                .count();
-            
+            let significant_peaks = power.iter().filter(|&&p| p > max_power * 0.1).count();
+
             println!("  Significant peaks detected: {}", significant_peaks);
-            
+
             if significant_peaks >= 2 {
                 println!("  🎯 Successfully resolved close frequency components");
             } else {
@@ -279,7 +364,7 @@ fn showcase_lombscargle_enhancements() -> SignalResult<()> {
 /// Display summary of validation enhancements
 fn display_validation_summary() {
     println!("\n=== Ultrathink Mode Validation Enhancement Summary ===\n");
-    
+
     println!("🚀 Multitaper Spectral Estimation Enhancements:");
     println!("  • Enhanced numerical precision validation");
     println!("    - Tests extreme amplitudes (1e-12 to 1e12)");

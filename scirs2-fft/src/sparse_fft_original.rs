@@ -1766,7 +1766,7 @@ where
 ///     let t = 2.0 * std::f64::consts::PI * (i as f64) / (n as f64);
 ///     signal[i] = 1.0 * (3.0 * t).sin() + 0.5 * (7.0 * t).sin() + 0.25 * (15.0 * t).sin();
 ///     // Add some noise with the seeded RNG for deterministic results
-///     signal[i] += 0.1 * (rng.gen::<f64>() - 0.5);
+///     signal[i] += 0.1 * (rng.random::<f64>() - 0.5);
 /// }
 ///
 /// // Compute sparse FFT with spectral flatness measure

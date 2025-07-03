@@ -300,7 +300,7 @@ impl AsyncProgressTracker {
         }
 
         if error_count > 0 {
-            report.push_str(&format!(" | Errors: {}", error_count));
+            report.push_str(&format!(" | Errors: {error_count}"));
         }
 
         report

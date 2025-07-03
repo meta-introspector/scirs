@@ -51,7 +51,12 @@ impl KernelId {
                 "{}_{}_{}__{}",
                 self.module, self.operation, self.dtype, variant
             ),
-            None => format!("{}_{}__{}", self.module, self.operation, self.dtype),
+            None => format!(
+                "{module}_{operation}__{dtype}",
+                module = self.module,
+                operation = self.operation,
+                dtype = self.dtype
+            ),
         }
     }
 }

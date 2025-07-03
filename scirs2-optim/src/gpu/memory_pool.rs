@@ -732,9 +732,7 @@ impl CudaMemoryPool {
                 let buffer = context.allocate_memory(size)?;
                 Ok(buffer.as_ptr() as *mut u8)
             } else {
-                Err(GpuOptimError::InvalidState(
-                    "No GPU context".to_string(),
-                ))
+                Err(GpuOptimError::InvalidState("No GPU context".to_string()))
             }
         }
 

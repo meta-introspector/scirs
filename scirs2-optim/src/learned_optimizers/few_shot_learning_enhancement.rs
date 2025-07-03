@@ -1314,7 +1314,7 @@ impl<T: Float> Default for FewShotConfig<T> {
 
 impl<T: Float> FewShotLearningEnhancement<T> {
     /// Create new few-shot learning enhancement
-    pub fn new(config: FewShotConfig<T>) -> Result<Self, OptimError> {
+    pub fn new(config: FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             support_set_manager: SupportSetManager::new(&config)?,
             meta_learner: FewShotMetaLearner::new(&config)?,
@@ -1332,7 +1332,7 @@ impl<T: Float> FewShotLearningEnhancement<T> {
         &mut self,
         support_set: SupportSet<T>,
         task_id: String,
-    ) -> Result<AdaptationResult<T>, OptimError> {
+    ) -> Result<AdaptationResult<T>> {
         let start_time = Instant::now();
 
         // Analyze task distribution
@@ -1371,7 +1371,7 @@ impl<T: Float> FewShotLearningEnhancement<T> {
     }
 
     /// Update meta-parameters based on episode
-    pub fn meta_update(&mut self, episode: Episode<T>) -> Result<(), OptimError> {
+    pub fn meta_update(&mut self, episode: Episode<T>) -> Result<()> {
         self.meta_learner.update_from_episode(episode)?;
         Ok(())
     }
@@ -1379,7 +1379,7 @@ impl<T: Float> FewShotLearningEnhancement<T> {
     fn initialize_from_similar_tasks(
         &self,
         _similar_tasks: &[String],
-    ) -> Result<HashMap<String, Array1<T>>, OptimError> {
+    ) -> Result<HashMap<String, Array1<T>>> {
         // Simplified implementation
         Ok(HashMap::new())
     }
@@ -1387,7 +1387,7 @@ impl<T: Float> FewShotLearningEnhancement<T> {
 
 // Implementation stubs for complex components
 impl<T: Float> SupportSetManager<T> {
-    fn new(_config: &FewShotConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             support_sets: HashMap::new(),
             statistics: SupportSetStatistics::default(),
@@ -1397,18 +1397,14 @@ impl<T: Float> SupportSetManager<T> {
         })
     }
 
-    fn add_support_set(
-        &mut self,
-        task_id: String,
-        support_set: SupportSet<T>,
-    ) -> Result<(), OptimError> {
+    fn add_support_set(&mut self, task_id: String, support_set: SupportSet<T>) -> Result<()> {
         self.support_sets.insert(task_id, support_set);
         Ok(())
     }
 }
 
 impl<T: Float> FewShotMetaLearner<T> {
-    fn new(_config: &FewShotConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             meta_parameters: MetaParameters::default(),
             episode_memory: EpisodeMemory::new(1000),
@@ -1418,7 +1414,7 @@ impl<T: Float> FewShotMetaLearner<T> {
         })
     }
 
-    fn update_from_episode(&mut self, episode: Episode<T>) -> Result<(), OptimError> {
+    fn update_from_episode(&mut self, episode: Episode<T>) -> Result<()> {
         self.episode_memory.add_episode(episode)?;
         // Update meta-parameters based on episode
         Ok(())
@@ -1426,7 +1422,7 @@ impl<T: Float> FewShotMetaLearner<T> {
 }
 
 impl<T: Float> PrototypeNetwork<T> {
-    fn new(_config: &FewShotConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             prototypes: Array2::zeros((5, 64)), // n_way x feature_dim
             prototype_weights: Array1::ones(5),
@@ -1438,7 +1434,7 @@ impl<T: Float> PrototypeNetwork<T> {
 }
 
 impl<T: Float> SimilarityMatcher<T> {
-    fn new(_config: &FewShotConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             similarity_computer: SimilarityComputer::new(),
             task_embeddings: HashMap::new(),
@@ -1452,7 +1448,7 @@ impl<T: Float> SimilarityMatcher<T> {
         &self,
         _task_id: &str,
         _support_set: &SupportSet<T>,
-    ) -> Result<Vec<String>, OptimError> {
+    ) -> Result<Vec<String>> {
         // Simplified implementation
         Ok(vec![
             "similar_task_1".to_string(),
@@ -1462,7 +1458,7 @@ impl<T: Float> SimilarityMatcher<T> {
 }
 
 impl<T: Float> TaskDistributionAnalyzer<T> {
-    fn new(_config: &FewShotConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             distribution_estimator: TaskDistributionEstimator::new(),
             novelty_detector: TaskNoveltyDetector::new(),
@@ -1471,10 +1467,7 @@ impl<T: Float> TaskDistributionAnalyzer<T> {
         })
     }
 
-    fn analyze_task(
-        &mut self,
-        _support_set: &SupportSet<T>,
-    ) -> Result<TaskDistribution<T>, OptimError> {
+    fn analyze_task(&mut self, _support_set: &SupportSet<T>) -> Result<TaskDistribution<T>> {
         // Simplified implementation
         Ok(TaskDistribution {
             parameters: HashMap::new(),
@@ -1486,7 +1479,7 @@ impl<T: Float> TaskDistributionAnalyzer<T> {
 }
 
 impl<T: Float> AdaptationController<T> {
-    fn new(_config: &FewShotConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             strategy: AdaptationStrategy::new(AdaptationStrategyType::Balanced),
             rate_controller: AdaptationRateController::new(T::from(0.01).unwrap()),
@@ -1501,7 +1494,7 @@ impl<T: Float> AdaptationController<T> {
         _support_set: &SupportSet<T>,
         _initial_params: HashMap<String, Array1<T>>,
         _config: &FewShotConfig<T>,
-    ) -> Result<AdaptationResult<T>, OptimError> {
+    ) -> Result<AdaptationResult<T>> {
         // Simplified implementation
         Ok(AdaptationResult {
             success: true,
@@ -1513,7 +1506,7 @@ impl<T: Float> AdaptationController<T> {
 }
 
 impl<T: Float> FewShotPerformanceTracker<T> {
-    fn new(_config: &FewShotConfig<T>) -> Result<Self, OptimError> {
+    fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             episode_performance: VecDeque::new(),
             task_performance: HashMap::new(),
@@ -1527,7 +1520,7 @@ impl<T: Float> FewShotPerformanceTracker<T> {
         task_id: &str,
         result: &AdaptationResult<T>,
         _duration: std::time::Duration,
-    ) -> Result<(), OptimError> {
+    ) -> Result<()> {
         // Update task-specific performance
         let task_perf = self
             .task_performance
@@ -1601,7 +1594,7 @@ impl<T: Float> EpisodeMemory<T> {
         }
     }
 
-    fn add_episode(&mut self, episode: Episode<T>) -> Result<(), OptimError> {
+    fn add_episode(&mut self, episode: Episode<T>) -> Result<()> {
         if self.episodes.len() >= self.capacity {
             self.episodes.pop_front();
         }

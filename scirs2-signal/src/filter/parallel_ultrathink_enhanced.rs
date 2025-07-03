@@ -334,11 +334,7 @@ pub struct LockFreeStreamingFilter {
 
 impl LockFreeStreamingFilter {
     /// Create a new lock-free streaming filter
-    pub fn new(
-        b: Vec<f64>,
-        a: Vec<f64>,
-        config: UltrathinkParallelConfig,
-    ) -> SignalResult<Self> {
+    pub fn new(b: Vec<f64>, a: Vec<f64>, config: UltrathinkParallelConfig) -> SignalResult<Self> {
         let state = Arc::new(RwLock::new(StreamingFilterState {
             b: b.clone(),
             a: a.clone(),
@@ -615,9 +611,7 @@ fn parallel_convolve_decimated(
     let mut output = Vec::with_capacity(output_len);
 
     // Process only samples that will be kept after decimation
-    let sample_indices: Vec<usize> = (0..output_len)
-        .map(|i| i * decimation_factor)
-        .collect();
+    let sample_indices: Vec<usize> = (0..output_len).map(|i| i * decimation_factor).collect();
 
     let results: Result<Vec<_>, _> = sample_indices
         .into_par_iter()
@@ -717,7 +711,10 @@ pub fn benchmark_parallel_filtering_operations(
                 .collect();
 
             let filter: Vec<f64> = (0..filter_len)
-                .map(|i| (-((i as f64 - filter_len as f64 / 2.0).powi(2)) / (filter_len as f64 / 4.0)).exp())
+                .map(|i| {
+                    (-((i as f64 - filter_len as f64 / 2.0).powi(2)) / (filter_len as f64 / 4.0))
+                        .exp()
+                })
                 .collect();
 
             let mut test_metrics = Vec::new();
@@ -805,12 +802,12 @@ mod tests {
     fn test_parallel_multirate_filter_bank() {
         // Create simple 2-band filter bank
         let analysis_filters = vec![
-            vec![0.5, 0.5],    // Lowpass
-            vec![0.5, -0.5],   // Highpass
+            vec![0.5, 0.5],  // Lowpass
+            vec![0.5, -0.5], // Highpass
         ];
         let synthesis_filters = vec![
-            vec![1.0, 1.0],    // Lowpass reconstruction
-            vec![1.0, -1.0],   // Highpass reconstruction
+            vec![1.0, 1.0],  // Lowpass reconstruction
+            vec![1.0, -1.0], // Highpass reconstruction
         ];
         let decimation_factors = vec![2, 2];
 
@@ -818,7 +815,8 @@ mod tests {
             analysis_filters,
             synthesis_filters,
             decimation_factors,
-        ).unwrap();
+        )
+        .unwrap();
 
         let test_signal: Vec<f64> = (0..100)
             .map(|i| (2.0 * PI * i as f64 / 10.0).sin())
@@ -830,7 +828,9 @@ mod tests {
         assert_eq!(result.len(), test_signal.len());
 
         // Test perfect reconstruction
-        let pr_error = filter_bank.validate_perfect_reconstruction(&test_signal).unwrap();
+        let pr_error = filter_bank
+            .validate_perfect_reconstruction(&test_signal)
+            .unwrap();
         assert!(pr_error < 0.1); // Should have reasonably low reconstruction error
     }
 
@@ -884,7 +884,7 @@ mod tests {
         use num_complex::Complex64;
 
         let fft_size = 128;
-        let frequency_response: Vec<Complex64> = (0..fft_size/2+1)
+        let frequency_response: Vec<Complex64> = (0..fft_size / 2 + 1)
             .map(|i| {
                 // Simple lowpass filter
                 if i < fft_size / 8 {
@@ -895,18 +895,17 @@ mod tests {
             })
             .collect();
 
-        let spectral_filter = ParallelSpectralFilter::new(
-            frequency_response,
-            fft_size,
-            0.5,
-        ).unwrap();
+        let spectral_filter =
+            ParallelSpectralFilter::new(frequency_response, fft_size, 0.5).unwrap();
 
         let test_signal: Vec<f64> = (0..256)
             .map(|i| (2.0 * PI * i as f64 / 8.0).sin() + (2.0 * PI * i as f64 / 4.0).sin())
             .collect();
 
         let config = UltrathinkParallelConfig::default();
-        let filtered = spectral_filter.apply_parallel(&test_signal, &config).unwrap();
+        let filtered = spectral_filter
+            .apply_parallel(&test_signal, &config)
+            .unwrap();
 
         assert_eq!(filtered.len(), test_signal.len());
         assert!(filtered.iter().all(|&x| x.is_finite()));
@@ -922,16 +921,19 @@ mod tests {
             &signal_lengths,
             &filter_lengths,
             num_iterations,
-        ).unwrap();
+        )
+        .unwrap();
 
         assert!(!results.is_empty());
 
         for (test_name, metrics) in results {
             assert_eq!(metrics.len(), num_iterations);
             assert!(metrics.iter().all(|m| m.throughput_sps > 0.0));
-            println!("Test {}: avg throughput = {:.0} samples/sec", 
-                     test_name, 
-                     metrics.iter().map(|m| m.throughput_sps).sum::<f64>() / metrics.len() as f64);
+            println!(
+                "Test {}: avg throughput = {:.0} samples/sec",
+                test_name,
+                metrics.iter().map(|m| m.throughput_sps).sum::<f64>() / metrics.len() as f64
+            );
         }
     }
 }

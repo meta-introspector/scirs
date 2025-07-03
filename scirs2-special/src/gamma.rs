@@ -2955,11 +2955,8 @@ pub fn polygamma<
     // For large x, use asymptotic expansion
     if x > F::from(20.0).unwrap() {
         // Asymptotic series: ψ^(n)(x) ~ (-1)^(n+1) n!/x^(n+1) * [1 + (n+1)/(2x) + ...]
-        let sign = if (n + 1) % 2 == 0 {
-            F::one()
-        } else {
-            -F::one()
-        };
+        // Corrected sign: (-1)^n for proper mathematical convention
+        let sign = if n % 2 == 0 { F::one() } else { -F::one() };
         let n_factorial = factorial_f(n);
         let x_power = x.powi(n as i32 + 1);
 
@@ -2972,12 +2969,8 @@ pub fn polygamma<
     }
 
     // For moderate x, use the series representation
-    // ψ^(n)(x) = (-1)^(n+1) n! Σ[k=0..∞] 1/(x+k)^(n+1)
-    let sign = if (n + 1) % 2 == 0 {
-        F::one()
-    } else {
-        -F::one()
-    };
+    // ψ^(n)(x) = (-1)^n n! Σ[k=0..∞] 1/(x+k)^(n+1) (corrected sign convention)
+    let sign = if n % 2 == 0 { F::one() } else { -F::one() };
     let n_factorial = factorial_f(n);
 
     let mut sum = F::zero();

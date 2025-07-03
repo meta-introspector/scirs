@@ -241,7 +241,7 @@ where
 
     for chunk in x.chunks(CHUNK_SIZE) {
         let chunk_sum = if optimizer.should_use_simd(chunk.len()) {
-            F::simd_sum(&chunk)
+            F::simd_sum(&chunk.view())
         } else {
             chunk.iter().fold(F::zero(), |acc, &val| acc + val)
         };
@@ -305,7 +305,7 @@ where
 {
     let mean_array = Array1::from_elem(x.len(), mean);
     let deviations = F::simd_sub(&x.view(), &mean_array.view());
-    F::simd_mul(&deviations, &deviations).sum()
+    F::simd_mul(&deviations.view(), &deviations.view()).sum()
 }
 
 /// Full SIMD correlation calculation
@@ -334,9 +334,9 @@ where
     let dev_y = F::simd_sub(&y.view(), &mean_y_array.view());
 
     // Compute correlation components
-    let sum_xy = F::simd_mul(&dev_x, &dev_y).sum();
-    let sum_x2 = F::simd_mul(&dev_x, &dev_x).sum();
-    let sum_y2 = F::simd_mul(&dev_y, &dev_y).sum();
+    let sum_xy = F::simd_mul(&dev_x.view(), &dev_y.view()).sum();
+    let sum_x2 = F::simd_mul(&dev_x.view(), &dev_x.view()).sum();
+    let sum_y2 = F::simd_mul(&dev_y.view(), &dev_y.view()).sum();
 
     // Check for zero variances
     if sum_x2 <= F::epsilon() || sum_y2 <= F::epsilon() {
@@ -414,9 +414,9 @@ where
     let deviations = F::simd_sub(&x.view(), &mean_array.view());
 
     // Compute powers of deviations using SIMD
-    let dev_squared = F::simd_mul(&deviations, &deviations);
-    let dev_cubed = F::simd_mul(&dev_squared, &deviations);
-    let dev_fourth = F::simd_mul(&dev_squared, &dev_squared);
+    let dev_squared = F::simd_mul(&deviations.view(), &deviations.view());
+    let dev_cubed = F::simd_mul(&dev_squared.view(), &deviations.view());
+    let dev_fourth = F::simd_mul(&dev_squared.view(), &dev_squared.view());
 
     // Sum the moments
     let m2 = dev_squared.sum();

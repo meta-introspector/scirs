@@ -1710,13 +1710,13 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
                                 peak_usage: 0,
                                 average_usage: 0,
                                 efficiency: 1.0,
-                        allocations: AllocationStats {
-                            total_allocations: 0,
-                            total_deallocations: 0,
-                            peak_concurrent: 0,
-                            average_size: 0,
-                            fragmentation_index: 0.0,
-                        },
+                                allocations: AllocationStats {
+                                    total_allocations: 0,
+                                    total_deallocations: 0,
+                                    peak_concurrent: 0,
+                                    average_size: 0,
+                                    fragmentation_index: 0.0,
+                                },
                                 leak_analysis: LeakAnalysis {
                                     leaks_detected: false,
                                     growth_rate: 0.0,
@@ -2442,15 +2442,26 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
 
         // Test various function types with different interpolation methods
         let test_functions = vec![
-            ("smooth_gaussian", Box::new(|slf: &Self, x| slf.evaluate_smooth_function(x)) as Box<dyn Fn(&Self, &ArrayView1<T>) -> Array1<T>>),
-            ("noisy_sine", Box::new(|slf: &Self, x| slf.evaluate_noisy_function(x))),
-            ("oscillatory", Box::new(|slf: &Self, x| slf.evaluate_oscillatory_function(x))),
-            ("discontinuous", Box::new(|slf: &Self, x| slf.evaluate_discontinuous_function(x))),
+            (
+                "smooth_gaussian",
+                Box::new(|slf: &Self, x| slf.evaluate_smooth_function(x))
+                    as Box<dyn Fn(&Self, &ArrayView1<T>) -> Array1<T>>,
+            ),
+            (
+                "noisy_sine",
+                Box::new(|slf: &Self, x| slf.evaluate_noisy_function(x)),
+            ),
+            (
+                "oscillatory",
+                Box::new(|slf: &Self, x| slf.evaluate_oscillatory_function(x)),
+            ),
+            (
+                "discontinuous",
+                Box::new(|slf: &Self, x| slf.evaluate_discontinuous_function(x)),
+            ),
         ];
 
-        let interpolation_methods = vec![
-            "linear", "cubic", "nearest", "pchip", "akima",
-        ];
+        let interpolation_methods = vec!["linear", "cubic", "nearest", "pchip", "akima"];
 
         let test_sizes = vec![50, 100, 500, 1000, 5000];
 
@@ -2480,19 +2491,36 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
         let x_data = Array1::linspace(T::zero(), T::from_f64(1.0).unwrap(), size);
         let y_data = test_function(self, &x_data.view());
         let x_query = Array1::linspace(
-            T::from_f64(0.1).unwrap(), 
-            T::from_f64(0.9).unwrap(), 
-            size / 5
+            T::from_f64(0.1).unwrap(),
+            T::from_f64(0.9).unwrap(),
+            size / 5,
         );
 
         // Measure performance
         let start = Instant::now();
         let result = match method {
-            "linear" => crate::interp1d::linear_interpolate(&x_data.view(), &y_data.view(), &x_query.view()),
-            "cubic" => crate::interp1d::cubic_interpolate(&x_data.view(), &y_data.view(), &x_query.view()),
-            "nearest" => crate::interp1d::nearest_interpolate(&x_data.view(), &y_data.view(), &x_query.view()),
-            "pchip" => crate::interp1d::pchip_interpolate(&x_data.view(), &y_data.view(), &x_query.view(), false),
-            "akima" => crate::advanced::akima::akima_interpolate(&x_data.view(), &y_data.view(), &x_query.view()),
+            "linear" => {
+                crate::interp1d::linear_interpolate(&x_data.view(), &y_data.view(), &x_query.view())
+            }
+            "cubic" => {
+                crate::interp1d::cubic_interpolate(&x_data.view(), &y_data.view(), &x_query.view())
+            }
+            "nearest" => crate::interp1d::nearest_interpolate(
+                &x_data.view(),
+                &y_data.view(),
+                &x_query.view(),
+            ),
+            "pchip" => crate::interp1d::pchip_interpolate(
+                &x_data.view(),
+                &y_data.view(),
+                &x_query.view(),
+                false,
+            ),
+            "akima" => crate::advanced::akima::akima_interpolate(
+                &x_data.view(),
+                &y_data.view(),
+                &x_query.view(),
+            ),
             _ => return Ok(()), // Skip unsupported methods
         };
         let duration = start.elapsed();
@@ -2519,7 +2547,8 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
                     throughput: ThroughputMetrics {
                         ops_per_second: 1.0 / duration.as_secs_f64(),
                         points_per_second: size as f64 / duration.as_secs_f64(),
-                        bytes_per_second: (size * std::mem::size_of::<T>()) as f64 / duration.as_secs_f64(),
+                        bytes_per_second: (size * std::mem::size_of::<T>()) as f64
+                            / duration.as_secs_f64(),
                     },
                     latency: LatencyDistribution {
                         buckets: vec![(duration.as_nanos() as u64, 1)],
@@ -2565,7 +2594,9 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
                         severity: IssueSeverity::Warning,
                         category: IssueCategory::AccuracyIssue,
                         description: format!("High interpolation error: {:?}", mae),
-                        suggested_fix: Some("Consider using higher-order interpolation methods".to_string()),
+                        suggested_fix: Some(
+                            "Consider using higher-order interpolation methods".to_string(),
+                        ),
                         impact: ImpactAssessment {
                             user_impact: UserImpact::None,
                             performance_impact: 0.1,
@@ -2576,9 +2607,10 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
                 } else {
                     Vec::new()
                 },
-                recommendations: vec![
-                    format!("SciPy 1.13+ compatibility validated for {} using {}", function_name, method),
-                ],
+                recommendations: vec![format!(
+                    "SciPy 1.13+ compatibility validated for {} using {}",
+                    function_name, method
+                )],
             };
 
             self.results.push(validation_result);
@@ -2624,7 +2656,9 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
         let min_time = times[0];
         let max_time = times[times.len() - 1];
         let mean_time = Duration::from_nanos(
-            (times.iter().map(|d| d.as_nanos()).sum::<u128>() / times.len() as u128).try_into().unwrap_or(u64::MAX),
+            (times.iter().map(|d| d.as_nanos()).sum::<u128>() / times.len() as u128)
+                .try_into()
+                .unwrap_or(u64::MAX),
         );
         let median_time = times[times.len() / 2];
 
@@ -2700,11 +2734,13 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
         if actual.len() != expected.len() {
             return T::from_f64(f64::INFINITY).unwrap_or(T::zero());
         }
-        
-        let sum = actual.iter().zip(expected.iter())
+
+        let sum = actual
+            .iter()
+            .zip(expected.iter())
             .map(|(a, e)| (*a - *e).abs())
             .fold(T::zero(), |acc, x| acc + x);
-        
+
         sum / T::from_usize(actual.len()).unwrap_or(T::one())
     }
 
@@ -2713,14 +2749,16 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
         if actual.len() != expected.len() {
             return T::from_f64(f64::INFINITY).unwrap_or(T::zero());
         }
-        
-        let sum_squared = actual.iter().zip(expected.iter())
+
+        let sum_squared = actual
+            .iter()
+            .zip(expected.iter())
             .map(|(a, e)| {
                 let diff = *a - *e;
                 diff * diff
             })
             .fold(T::zero(), |acc, x| acc + x);
-        
+
         let mse = sum_squared / T::from_usize(actual.len()).unwrap_or(T::one());
         T::from_f64(mse.to_f64().unwrap_or(0.0).sqrt()).unwrap_or(T::zero())
     }

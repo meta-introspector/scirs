@@ -81,6 +81,7 @@ pub mod astronomy {
     }
 
     impl StellarDatasets {
+        /// Create a new stellar datasets client
         pub fn new() -> Result<Self> {
             let cache_dir = dirs::cache_dir()
                 .ok_or_else(|| {
@@ -406,6 +407,7 @@ pub mod genomics {
     }
 
     impl GenomicsDatasets {
+        /// Create a new genomics datasets client
         pub fn new() -> Result<Self> {
             let cache_dir = dirs::cache_dir()
                 .ok_or_else(|| {
@@ -661,6 +663,7 @@ pub mod climate {
     }
 
     impl ClimateDatasets {
+        /// Create a new climate datasets client
         pub fn new() -> Result<Self> {
             let cache_dir = dirs::cache_dir()
                 .ok_or_else(|| {
@@ -915,6 +918,7 @@ pub mod climate {
             })
         }
 
+        #[allow(clippy::too_many_arguments)]
         fn calculate_aqi(pm25: f64, pm10: f64, no2: f64, so2: f64, o3: f64, co: f64) -> f64 {
             // Simplified AQI calculation
             let pm25_aqi = (pm25 / 35.0 * 100.0).min(300.0);

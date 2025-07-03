@@ -4,7 +4,7 @@
 //! including 3D animations, convergence animations, real-time streaming visualizations,
 //! and export capabilities for creating videos and interactive presentations.
 
-use ndarray::{Array1, Array2, Array3, ArrayView2, s};
+use ndarray::{s, Array1, Array2, Array3, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
@@ -13,8 +13,8 @@ use std::time::{Duration, Instant};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use super::{EasingFunction, ScatterPlot2D, ScatterPlot3D, VisualizationConfig};
 use crate::error::{ClusteringError, Result};
-use super::{ScatterPlot2D, ScatterPlot3D, VisualizationConfig, EasingFunction};
 
 /// Configuration for iterative algorithm animations (like K-means convergence)
 #[derive(Debug, Clone)]
@@ -186,37 +186,38 @@ impl IterativeAnimationRecorder {
         }
 
         let timestamp = self.start_time.elapsed().as_secs_f64();
-        
+
         // Convert data to f64
         let points = data.mapv(|x| x.to_f64().unwrap_or(0.0));
-        
+
         // Convert centroids to f64
         let centroids_f64 = centroids.map(|c| c.mapv(|x| x.to_f64().unwrap_or(0.0)));
-        
+
         // Calculate convergence info
-        let convergence_info = if let (Some(current_centroids), Some(current_inertia)) = (&centroids_f64, inertia) {
-            let centroid_movement = if let Some(prev_centroids) = &self.previous_centroids {
-                calculate_max_centroid_movement(prev_centroids, current_centroids)
-            } else {
-                0.0
-            };
+        let convergence_info =
+            if let (Some(current_centroids), Some(current_inertia)) = (&centroids_f64, inertia) {
+                let centroid_movement = if let Some(prev_centroids) = &self.previous_centroids {
+                    calculate_max_centroid_movement(prev_centroids, current_centroids)
+                } else {
+                    0.0
+                };
 
-            let inertia_change = if let Some(prev_inertia) = self.previous_inertia {
-                prev_inertia - current_inertia
-            } else {
-                0.0
-            };
+                let inertia_change = if let Some(prev_inertia) = self.previous_inertia {
+                    prev_inertia - current_inertia
+                } else {
+                    0.0
+                };
 
-            Some(ConvergenceInfo {
-                inertia: current_inertia,
-                inertia_change,
-                max_centroid_movement: centroid_movement,
-                label_changes: 0, // Would need previous labels to calculate
-                converged: centroid_movement < 1e-4, // Simple convergence check
-            })
-        } else {
-            None
-        };
+                Some(ConvergenceInfo {
+                    inertia: current_inertia,
+                    inertia_change,
+                    max_centroid_movement: centroid_movement,
+                    label_changes: 0, // Would need previous labels to calculate
+                    converged: centroid_movement < 1e-4, // Simple convergence check
+                })
+            } else {
+                None
+            };
 
         let frame = AnimationFrame {
             frame_number: self.frames.len(),
@@ -254,27 +255,28 @@ impl IterativeAnimationRecorder {
         }
 
         let mut interpolated_frames = Vec::new();
-        
+
         for i in 0..self.frames.len() - 1 {
             let current_frame = &self.frames[i];
             let next_frame = &self.frames[i + 1];
-            
+
             // Add current frame
             interpolated_frames.push(current_frame.clone());
-            
+
             // Add interpolated frames
             for j in 1..=self.config.interpolation_frames {
                 let t = j as f64 / (self.config.interpolation_frames + 1) as f64;
-                let interpolated_frame = interpolate_frames(current_frame, next_frame, t, &self.config)?;
+                let interpolated_frame =
+                    interpolate_frames(current_frame, next_frame, t, &self.config)?;
                 interpolated_frames.push(interpolated_frame);
             }
         }
-        
+
         // Add last frame
         if let Some(last_frame) = self.frames.last() {
             interpolated_frames.push(last_frame.clone());
         }
-        
+
         interpolated_frames
     }
 
@@ -292,15 +294,16 @@ impl IterativeAnimationRecorder {
             } else {
                 self.frames.clone()
             };
-            
-            serde_json::to_string_pretty(&frames)
-                .map_err(|e| ClusteringError::ComputationError(format!("JSON export failed: {}", e)))
+
+            serde_json::to_string_pretty(&frames).map_err(|e| {
+                ClusteringError::ComputationError(format!("JSON export failed: {}", e))
+            })
         }
-        
+
         #[cfg(not(feature = "serde"))]
         {
             Err(ClusteringError::ComputationError(
-                "JSON export requires 'serde' feature".to_string()
+                "JSON export requires 'serde' feature".to_string(),
             ))
         }
     }
@@ -347,10 +350,10 @@ impl StreamingVisualizer {
     /// Add new data point to the stream
     pub fn add_data_point(&mut self, point: Array1<f64>, label: i32) {
         let now = Instant::now();
-        
+
         // Add to buffer
         self.data_buffer.push_back((point, label, now));
-        
+
         // Maintain buffer size
         while self.data_buffer.len() > self.config.buffer_size {
             self.data_buffer.pop_front();
@@ -358,7 +361,11 @@ impl StreamingVisualizer {
 
         // Update statistics
         self.streaming_stats.total_points_processed += 1;
-        *self.streaming_stats.cluster_counts.entry(label).or_insert(0) += 1;
+        *self
+            .streaming_stats
+            .cluster_counts
+            .entry(label)
+            .or_insert(0) += 1;
 
         // Update bounds if adaptive
         if self.config.adaptive_bounds {
@@ -393,22 +400,28 @@ impl StreamingVisualizer {
     /// Generate current visualization frame
     pub fn generate_frame(&mut self) -> Result<StreamingFrame> {
         let now = Instant::now();
-        
+
         // Calculate statistics
         let time_since_last_update = now.duration_since(self.last_update).as_secs_f64();
         if time_since_last_update > 0.0 {
-            let recent_points = self.data_buffer.iter()
+            let recent_points = self
+                .data_buffer
+                .iter()
                 .filter(|(_, _, timestamp)| now.duration_since(*timestamp).as_secs_f64() < 1.0)
                 .count();
-            self.streaming_stats.points_per_second = recent_points as f64 / time_since_last_update.min(1.0);
+            self.streaming_stats.points_per_second =
+                recent_points as f64 / time_since_last_update.min(1.0);
         }
 
         // Extract current data
         let current_data: Vec<_> = self.data_buffer.iter().collect();
-        
+
         if current_data.is_empty() {
             return Ok(StreamingFrame {
-                timestamp: now.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs_f64(),
+                timestamp: now
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs_f64(),
                 points: Array2::zeros((0, 0)),
                 labels: Array1::zeros(0),
                 point_ages: Vec::new(),
@@ -421,22 +434,22 @@ impl StreamingVisualizer {
         // Determine dimensionality
         let n_dims = current_data[0].0.len();
         let n_points = current_data.len();
-        
+
         // Convert to arrays
         let mut points = Array2::zeros((n_points, n_dims));
         let mut labels = Array1::zeros(n_points);
         let mut point_ages = Vec::with_capacity(n_points);
         let mut new_points_mask = Vec::with_capacity(n_points);
-        
+
         for (i, (point, label, timestamp)) in current_data.iter().enumerate() {
             for j in 0..n_dims {
                 points[[i, j]] = point[j];
             }
             labels[i] = *label;
-            
+
             let age = now.duration_since(**timestamp).as_millis() as f64;
             point_ages.push(age);
-            
+
             // Mark as new if arrived recently
             new_points_mask.push(age < 500.0); // 500ms threshold for "new"
         }
@@ -444,7 +457,10 @@ impl StreamingVisualizer {
         self.last_update = now;
 
         Ok(StreamingFrame {
-            timestamp: now.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs_f64(),
+            timestamp: now
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs_f64(),
             points,
             labels,
             point_ages,
@@ -457,7 +473,7 @@ impl StreamingVisualizer {
     /// Update adaptive bounds
     fn update_bounds(&mut self, point: &Array1<f64>) {
         let n_dims = point.len();
-        
+
         if let Some(bounds) = &mut self.bounds {
             // Update existing bounds
             if n_dims >= 1 {
@@ -487,7 +503,7 @@ impl StreamingVisualizer {
     /// Clean up old points based on lifetime
     fn cleanup_old_points(&mut self, now: Instant) {
         let lifetime = Duration::from_millis(self.config.point_lifetime_ms);
-        
+
         while let Some((_, _, timestamp)) = self.data_buffer.front() {
             if now.duration_since(*timestamp) > lifetime {
                 self.data_buffer.pop_front();
@@ -517,13 +533,16 @@ pub struct StreamingFrame {
 }
 
 /// Calculate maximum centroid movement between iterations
-fn calculate_max_centroid_movement(prev_centroids: &Array2<f64>, current_centroids: &Array2<f64>) -> f64 {
+fn calculate_max_centroid_movement(
+    prev_centroids: &Array2<f64>,
+    current_centroids: &Array2<f64>,
+) -> f64 {
     if prev_centroids.shape() != current_centroids.shape() {
         return f64::INFINITY;
     }
 
     let mut max_movement = 0.0;
-    
+
     for i in 0..prev_centroids.nrows() {
         let mut movement = 0.0;
         for j in 0..prev_centroids.ncols() {
@@ -558,17 +577,23 @@ fn interpolate_frames(
     };
 
     // Interpolate convergence info
-    let convergence_info = if let (Some(conv1), Some(conv2)) = (&frame1.convergence_info, &frame2.convergence_info) {
-        Some(ConvergenceInfo {
-            inertia: conv1.inertia * (1.0 - t) + conv2.inertia * t,
-            inertia_change: conv1.inertia_change * (1.0 - t) + conv2.inertia_change * t,
-            max_centroid_movement: conv1.max_centroid_movement * (1.0 - t) + conv2.max_centroid_movement * t,
-            label_changes: if t < 0.5 { conv1.label_changes } else { conv2.label_changes },
-            converged: conv2.converged,
-        })
-    } else {
-        frame2.convergence_info.clone()
-    };
+    let convergence_info =
+        if let (Some(conv1), Some(conv2)) = (&frame1.convergence_info, &frame2.convergence_info) {
+            Some(ConvergenceInfo {
+                inertia: conv1.inertia * (1.0 - t) + conv2.inertia * t,
+                inertia_change: conv1.inertia_change * (1.0 - t) + conv2.inertia_change * t,
+                max_centroid_movement: conv1.max_centroid_movement * (1.0 - t)
+                    + conv2.max_centroid_movement * t,
+                label_changes: if t < 0.5 {
+                    conv1.label_changes
+                } else {
+                    conv2.label_changes
+                },
+                converged: conv2.converged,
+            })
+        } else {
+            frame2.convergence_info.clone()
+        };
 
     Ok(AnimationFrame {
         frame_number: frame1.frame_number,
@@ -586,7 +611,7 @@ fn interpolate_frames(
 /// Apply easing function to interpolation parameter
 fn apply_easing(t: f64, easing: EasingFunction) -> f64 {
     let t = t.clamp(0.0, 1.0);
-    
+
     match easing {
         EasingFunction::Linear => t,
         EasingFunction::EaseIn => t * t,
@@ -618,7 +643,8 @@ fn apply_easing(t: f64, easing: EasingFunction) -> f64 {
             } else {
                 let p = 0.3;
                 let s = p / 4.0;
-                -(2.0_f64.powf(10.0 * (t - 1.0)) * ((t - 1.0 - s) * (2.0 * std::f64::consts::PI) / p).sin())
+                -(2.0_f64.powf(10.0 * (t - 1.0))
+                    * ((t - 1.0 - s) * (2.0 * std::f64::consts::PI) / p).sin())
             }
         }
     }
@@ -634,12 +660,15 @@ mod tests {
         let config = IterativeAnimationConfig::default();
         let mut recorder = IterativeAnimationRecorder::new(config);
 
-        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        let data =
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
         let centroids = Array2::from_shape_vec((2, 2), vec![2.0, 3.0, 6.0, 7.0]).unwrap();
 
-        recorder.record_frame(data.view(), &labels, Some(&centroids), Some(10.0)).unwrap();
-        
+        recorder
+            .record_frame(data.view(), &labels, Some(&centroids), Some(10.0))
+            .unwrap();
+
         assert_eq!(recorder.get_frames().len(), 1);
         assert_eq!(recorder.get_frames()[0].iteration, 0);
     }

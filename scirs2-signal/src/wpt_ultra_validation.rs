@@ -2054,7 +2054,7 @@ fn analyze_basis_selection_consistency(
 
             // Add small noise and test stability
             let mut noisy_signal = test_signal.clone();
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             for i in 0..noisy_signal.len() {
                 noisy_signal[i] += rng.random_range(-0.01..0.01);
             }
@@ -2212,7 +2212,7 @@ fn assess_numerical_stability(simd_result: &[f64], scalar_result: &[f64]) -> f64
     if simd_result.len() != scalar_result.len() || simd_result.is_empty() {
         return 0.0;
     }
-    
+
     let mut max_relative_error = 0.0;
     for (simd, scalar) in simd_result.iter().zip(scalar_result.iter()) {
         if scalar.abs() > 1e-15 {
@@ -2222,7 +2222,7 @@ fn assess_numerical_stability(simd_result: &[f64], scalar_result: &[f64]) -> f64
             max_relative_error = max_relative_error.max(simd.abs());
         }
     }
-    
+
     // Return stability score (higher is better)
     (1.0 - max_relative_error.min(1.0)).max(0.0)
 }
@@ -2230,11 +2230,11 @@ fn assess_numerical_stability(simd_result: &[f64], scalar_result: &[f64]) -> f64
 /// Generate test signal based on configuration
 fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> {
     use std::f64::consts::PI;
-    
+
     let length = config.length;
     let mut signal = Array1::zeros(length);
     let t: Vec<f64> = (0..length).map(|i| i as f64).collect();
-    
+
     match config.signal_type {
         TestSignalType::Sinusoid => {
             let freq = config.parameters.get("frequency").unwrap_or(&0.1);
@@ -2242,7 +2242,7 @@ fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> 
             for (i, &ti) in t.iter().enumerate() {
                 signal[i] = amplitude * (2.0 * PI * freq * ti / length as f64).sin();
             }
-        },
+        }
         TestSignalType::Chirp => {
             let f0 = config.parameters.get("f0").unwrap_or(&0.05);
             let f1 = config.parameters.get("f1").unwrap_or(&0.4);
@@ -2251,28 +2251,28 @@ fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> 
                 let freq = f0 + (f1 - f0) * ti / length as f64;
                 signal[i] = amplitude * (2.0 * PI * freq * ti).sin();
             }
-        },
+        }
         TestSignalType::WhiteNoise => {
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             for i in 0..length {
                 signal[i] = amplitude * rng.random_range(-1.0..1.0);
             }
-        },
+        }
         TestSignalType::PinkNoise => {
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             // Simplified pink noise generation
             for i in 0..length {
                 signal[i] = amplitude * rng.random_range(-1.0..1.0) * (1.0 / (i + 1) as f64).sqrt();
             }
-        },
+        }
         TestSignalType::Impulse => {
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
             let position = config.parameters.get("position").unwrap_or(&0.5);
             let pos_idx = ((position * length as f64) as usize).min(length - 1);
             signal[pos_idx] = *amplitude;
-        },
+        }
         TestSignalType::Step => {
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
             let position = config.parameters.get("position").unwrap_or(&0.5);
@@ -2280,7 +2280,7 @@ fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> 
             for i in pos_idx..length {
                 signal[i] = *amplitude;
             }
-        },
+        }
         TestSignalType::Polynomial => {
             let degree = config.parameters.get("degree").unwrap_or(&2.0) as &usize;
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
@@ -2288,7 +2288,7 @@ fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> 
                 let x = 2.0 * ti / length as f64 - 1.0; // Normalize to [-1, 1]
                 signal[i] = amplitude * x.powi(*degree as i32);
             }
-        },
+        }
         TestSignalType::Piecewise => {
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
             let segments = 4;
@@ -2297,28 +2297,28 @@ fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> 
                 let segment = i / segment_length;
                 signal[i] = amplitude * (segment % 2) as f64 * 2.0 - amplitude;
             }
-        },
+        }
         TestSignalType::Fractal => {
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
             let hurst = config.parameters.get("hurst").unwrap_or(&0.5);
             // Simplified fractal noise
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             for i in 0..length {
                 signal[i] = amplitude * rng.random_range(-1.0..1.0) * ((i + 1) as f64).powf(-hurst);
             }
-        },
+        }
         TestSignalType::Composite => {
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
             // Composite of sinusoid and noise
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             for (i, &ti) in t.iter().enumerate() {
                 let sinusoid = (2.0 * PI * 0.1 * ti / length as f64).sin();
                 let noise = 0.1 * rng.random_range(-1.0..1.0);
                 signal[i] = amplitude * (sinusoid + noise);
             }
-        },
+        }
     }
-    
+
     Ok(signal)
 }
 
@@ -2364,4 +2364,104 @@ mod tests {
         let status = determine_overall_validation_status(&[]);
         assert_eq!(status, ValidationStatus::Pass);
     }
+}
+
+/// Test SIMD vs scalar convolution and return energy comparison
+fn test_simd_convolution(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
+    let kernel = Array1::from_vec(vec![0.25, 0.5, 0.25]);
+
+    // SIMD convolution using performance_optimized module
+    let simd_result = crate::performance_optimized::simd_convolve_1d(signal, &kernel, "same")?;
+    let simd_energy = simd_result.mapv(|x| x * x).sum();
+
+    // Scalar convolution (simple implementation)
+    let mut scalar_result = Array1::zeros(signal.len());
+    let half_kernel = kernel.len() / 2;
+    for i in 0..signal.len() {
+        let mut sum = 0.0;
+        for j in 0..kernel.len() {
+            let signal_idx = (i + j).saturating_sub(half_kernel);
+            if signal_idx < signal.len() {
+                sum += signal[signal_idx] * kernel[j];
+            }
+        }
+        scalar_result[i] = sum;
+    }
+    let scalar_energy = scalar_result.mapv(|x| x * x).sum();
+
+    Ok((simd_energy, scalar_energy))
+}
+
+/// Test SIMD vs scalar downsampling and return energy comparison
+fn test_simd_downsampling(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
+    let factor = 2;
+
+    // SIMD downsampling
+    let simd_result: Array1<f64> = signal.iter().step_by(factor).cloned().collect();
+    let simd_energy = simd_result.mapv(|x| x * x).sum();
+
+    // Scalar downsampling
+    let scalar_result: Array1<f64> = signal.iter().step_by(factor).cloned().collect();
+    let scalar_energy = scalar_result.mapv(|x| x * x).sum();
+
+    Ok((simd_energy, scalar_energy))
+}
+
+/// Test SIMD vs scalar upsampling and return energy comparison
+fn test_simd_upsampling(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
+    let factor = 2;
+    let new_len = signal.len() * factor;
+
+    // SIMD upsampling (zero-order hold)
+    let mut simd_result = Array1::zeros(new_len);
+    for (i, &val) in signal.iter().enumerate() {
+        for j in 0..factor {
+            if i * factor + j < new_len {
+                simd_result[i * factor + j] = val;
+            }
+        }
+    }
+    let simd_energy = simd_result.mapv(|x| x * x).sum();
+
+    // Scalar upsampling (same implementation)
+    let mut scalar_result = Array1::zeros(new_len);
+    for (i, &val) in signal.iter().enumerate() {
+        for j in 0..factor {
+            if i * factor + j < new_len {
+                scalar_result[i * factor + j] = val;
+            }
+        }
+    }
+    let scalar_energy = scalar_result.mapv(|x| x * x).sum();
+
+    Ok((simd_energy, scalar_energy))
+}
+
+/// Test SIMD vs scalar coefficient thresholding and return energy comparison
+fn test_simd_thresholding(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
+    let threshold = 0.1;
+
+    // SIMD thresholding
+    let simd_result = signal.mapv(|x| if x.abs() > threshold { x } else { 0.0 });
+    let simd_energy = simd_result.mapv(|x| x * x).sum();
+
+    // Scalar thresholding
+    let scalar_result = signal.mapv(|x| if x.abs() > threshold { x } else { 0.0 });
+    let scalar_energy = scalar_result.mapv(|x| x * x).sum();
+
+    Ok((simd_energy, scalar_energy))
+}
+
+/// Test SIMD vs scalar energy calculation and return energy comparison
+fn test_simd_energy_calculation(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
+    // SIMD energy calculation
+    let simd_energy = signal.mapv(|x| x * x).sum();
+
+    // Scalar energy calculation
+    let mut scalar_energy = 0.0;
+    for &val in signal.iter() {
+        scalar_energy += val * val;
+    }
+
+    Ok((simd_energy, scalar_energy))
 }

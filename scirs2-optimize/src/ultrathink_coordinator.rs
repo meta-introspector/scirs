@@ -14,6 +14,7 @@
 //! and adaptive systems theory.
 
 use crate::error::OptimizeError;
+use crate::error::OptimizeResult as Result;
 use crate::learned_optimizers::{
     LearnedOptimizationConfig, LearnedOptimizer, MetaLearningOptimizer, OptimizationProblem,
     TrainingTask,
@@ -27,7 +28,6 @@ use crate::quantum_inspired::{
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::Rng;
-use scirs2_core::error::CoreResult as Result;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -330,7 +330,15 @@ impl UltrathinkCoordinator {
             x: self.state.global_best_solution.clone(),
             fun: self.state.global_best_objective,
             success: self.state.global_best_objective < f64::INFINITY,
-            iterations: self.state.current_iteration,
+            nit: self.state.current_iteration,
+            nfev: self.state.total_evaluations,
+            njev: 0,
+            nhev: 0,
+            maxcv: 0,
+            status: 0,
+            jac: None,
+            hess: None,
+            constr: None,
             message: "Ultrathink optimization completed".to_string(),
         });
 
@@ -360,8 +368,8 @@ impl UltrathinkCoordinator {
 
             // Fusion of results
             let fused_solution = self.fusion_engine.fuse_solutions(
-                &quantum_candidate,
-                &neural_result.x,
+                &quantum_candidate.view(),
+                &neural_result.x.view(),
                 self.config.fusion_strength,
             )?;
 
@@ -372,7 +380,15 @@ impl UltrathinkCoordinator {
                 x: fused_solution,
                 fun: fused_objective,
                 success: fused_objective < f64::INFINITY,
-                iterations: 1,
+                nit: 1,
+                nfev: 1,
+                njev: 0,
+                nhev: 0,
+                maxcv: 0,
+                status: 0,
+                jac: None,
+                hess: None,
+                constr: None,
                 message: "Quantum-Neural fusion completed".to_string(),
             })
         } else {
@@ -420,7 +436,15 @@ impl UltrathinkCoordinator {
                 x: best_solution,
                 fun: best_obj,
                 success: best_obj < f64::INFINITY,
-                iterations: 1,
+                nit: 1,
+                nfev: 1,
+                njev: 0,
+                nhev: 0,
+                maxcv: 0,
+                status: 0,
+                jac: None,
+                hess: None,
+                constr: None,
                 message: "Neuromorphic-Quantum hybrid completed".to_string(),
             })
         } else {
@@ -533,7 +557,15 @@ impl UltrathinkCoordinator {
                 x: quantum_candidate,
                 fun: quantum_obj,
                 success: quantum_obj < f64::INFINITY,
-                iterations: 1,
+                nit: 1,
+                nfev: 1,
+                njev: 0,
+                nhev: 0,
+                maxcv: 0,
+                status: 0,
+                jac: None,
+                hess: None,
+                constr: None,
                 message: "Quantum component".to_string(),
             });
         }
@@ -547,7 +579,15 @@ impl UltrathinkCoordinator {
                 x: neural_candidate,
                 fun: neural_obj,
                 success: neural_obj < f64::INFINITY,
-                iterations: 1,
+                nit: 1,
+                nfev: 1,
+                njev: 0,
+                nhev: 0,
+                maxcv: 0,
+                status: 0,
+                jac: None,
+                hess: None,
+                constr: None,
                 message: "Neuromorphic component".to_string(),
             });
         }
@@ -562,7 +602,15 @@ impl UltrathinkCoordinator {
                 x: meta_candidate,
                 fun: meta_obj,
                 success: meta_obj < f64::INFINITY,
-                iterations: 1,
+                nit: 1,
+                nfev: 1,
+                njev: 0,
+                nhev: 0,
+                maxcv: 0,
+                status: 0,
+                jac: None,
+                hess: None,
+                constr: None,
                 message: "Meta-learning component".to_string(),
             });
         }
@@ -577,7 +625,15 @@ impl UltrathinkCoordinator {
                 x: fused_result,
                 fun: fused_obj,
                 success: fused_obj < f64::INFINITY,
-                iterations: 1,
+                nit: 1,
+                nfev: 1,
+                njev: 0,
+                nhev: 0,
+                maxcv: 0,
+                status: 0,
+                jac: None,
+                hess: None,
+                constr: None,
                 message: "Full Ultrathink coordination completed".to_string(),
             })
         } else {
@@ -963,14 +1019,30 @@ mod tests {
                 x: Array1::from(vec![1.0, 2.0]),
                 fun: 1.0,
                 success: true,
-                iterations: 10,
+                nit: 10,
+                nfev: 10,
+                njev: 0,
+                nhev: 0,
+                maxcv: 0,
+                status: 0,
+                jac: None,
+                hess: None,
+                constr: None,
                 message: "test1".to_string(),
             },
             OptimizeResults {
                 x: Array1::from(vec![3.0, 4.0]),
                 fun: 2.0,
                 success: true,
-                iterations: 15,
+                nit: 15,
+                nfev: 15,
+                njev: 0,
+                nhev: 0,
+                maxcv: 0,
+                status: 0,
+                jac: None,
+                hess: None,
+                constr: None,
                 message: "test2".to_string(),
             },
         ];

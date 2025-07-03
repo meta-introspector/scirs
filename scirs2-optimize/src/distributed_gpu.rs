@@ -455,8 +455,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     /// Direct GPU-to-GPU migration using GPUDirect
     fn gpu_direct_migration(
         &mut self,
-        population: &mut Array2<f64>,
-        fitness: &mut Array1<f64>,
+        _population: &mut Array2<f64>,
+        _fitness: &mut Array1<f64>,
     ) -> ScirsResult<()> {
         // Placeholder for GPUDirect implementation
         // This would use CUDA-aware MPI or similar technology
@@ -466,8 +466,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     /// Staged migration through CPU memory
     fn staged_migration(
         &mut self,
-        population: &mut Array2<f64>,
-        fitness: &mut Array1<f64>,
+        _population: &mut Array2<f64>,
+        _fitness: &mut Array1<f64>,
     ) -> ScirsResult<()> {
         // Download from GPU, perform MPI communication, upload back to GPU
         // This is less efficient but more compatible
@@ -477,8 +477,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     /// Asynchronous migration with computation overlap
     fn async_migration(
         &mut self,
-        population: &mut Array2<f64>,
-        fitness: &mut Array1<f64>,
+        _population: &mut Array2<f64>,
+        _fitness: &mut Array1<f64>,
     ) -> ScirsResult<()> {
         // Use asynchronous MPI operations to overlap communication with computation
         Ok(())
@@ -487,8 +487,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     /// Hierarchical migration (intra-node GPU, inter-node MPI)
     fn hierarchical_migration(
         &mut self,
-        population: &mut Array2<f64>,
-        fitness: &mut Array1<f64>,
+        _population: &mut Array2<f64>,
+        _fitness: &mut Array1<f64>,
     ) -> ScirsResult<()> {
         // First migrate within node between GPUs, then between nodes via MPI
         Ok(())

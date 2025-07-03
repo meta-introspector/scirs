@@ -6,8 +6,8 @@
 
 use ndarray::Array1;
 use scirs2_optim::learned_optimizers::ultrathink_coordinator::{
-    OptimizationContext, OptimizationState, ProblemCharacteristics, ResourceConstraints,
-    TimeConstraints, UltraThinkConfig, UltraThinkCoordinator, OptimizationObjective,
+    OptimizationContext, OptimizationObjective, OptimizationState, ProblemCharacteristics,
+    ResourceConstraints, TimeConstraints, UltraThinkConfig, UltraThinkCoordinator,
 };
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create enhanced UltraThink configuration
     let mut config = UltraThinkConfig::<f64>::default();
-    
+
     // Configure advanced features
     config.enable_nas = true;
     config.enable_transformer_enhancement = true;
@@ -27,13 +27,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     config.max_parallel_optimizers = 6;
     config.enable_advanced_analytics = true;
     config.enable_dynamic_reconfiguration = true;
-    
+
     // Set sophisticated objective weights
-    config.objective_weights.insert(OptimizationObjective::FinalPerformance, 0.35);
-    config.objective_weights.insert(OptimizationObjective::ConvergenceSpeed, 0.30);
-    config.objective_weights.insert(OptimizationObjective::ResourceEfficiency, 0.20);
-    config.objective_weights.insert(OptimizationObjective::Robustness, 0.10);
-    config.objective_weights.insert(OptimizationObjective::Adaptability, 0.05);
+    config
+        .objective_weights
+        .insert(OptimizationObjective::FinalPerformance, 0.35);
+    config
+        .objective_weights
+        .insert(OptimizationObjective::ConvergenceSpeed, 0.30);
+    config
+        .objective_weights
+        .insert(OptimizationObjective::ResourceEfficiency, 0.20);
+    config
+        .objective_weights
+        .insert(OptimizationObjective::Robustness, 0.10);
+    config
+        .objective_weights
+        .insert(OptimizationObjective::Adaptability, 0.05);
 
     println!("📋 Configuration:");
     println!("  - NAS enabled: {}", config.enable_nas);

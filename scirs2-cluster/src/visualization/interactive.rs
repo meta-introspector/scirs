@@ -12,8 +12,8 @@ use std::fmt::Debug;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use super::{ColorScheme, ScatterPlot3D, VisualizationConfig};
 use crate::error::{ClusteringError, Result};
-use super::{ScatterPlot3D, VisualizationConfig, ColorScheme};
 
 /// Configuration for interactive 3D visualizations
 #[derive(Debug, Clone)]
@@ -291,13 +291,13 @@ impl InteractiveVisualizer {
     ) -> Result<()> {
         // Calculate cluster statistics
         self.calculate_cluster_stats(data, labels, centroids)?;
-        
+
         // Update view bounds if needed
         self.update_view_bounds(data);
-        
+
         // Reset selection if data changed significantly
         self.validate_selections(data.nrows());
-        
+
         Ok(())
     }
 
@@ -311,7 +311,10 @@ impl InteractiveVisualizer {
                 self.state.input_state.mouse_buttons.push(button);
             }
         } else {
-            self.state.input_state.mouse_buttons.retain(|&b| b != button);
+            self.state
+                .input_state
+                .mouse_buttons
+                .retain(|&b| b != button);
         }
 
         // Handle camera controls
@@ -342,7 +345,7 @@ impl InteractiveVisualizer {
 
         // Gesture recognition
         self.update_gesture_state(prev_touch_count, current_touch_count);
-        
+
         // Handle multi-touch gestures
         if self.config.enable_camera_controls {
             self.handle_touch_gestures();
@@ -390,7 +393,7 @@ impl InteractiveVisualizer {
     /// Set view mode
     pub fn set_view_mode(&mut self, mode: ViewMode) {
         self.state.view_mode = mode;
-        
+
         // Adjust camera for specific view modes
         match mode {
             ViewMode::BirdsEye => {
@@ -440,15 +443,15 @@ impl InteractiveVisualizer {
                 view_bounds: self.state.view_bounds,
                 current_time: self.state.current_time,
             };
-            
+
             serde_json::to_string_pretty(&export_data)
                 .map_err(|e| ClusteringError::ComputationError(format!("Export failed: {}", e)))
         }
-        
+
         #[cfg(not(feature = "serde"))]
         {
             Err(ClusteringError::ComputationError(
-                "Export requires 'serde' feature".to_string()
+                "Export requires 'serde' feature".to_string(),
             ))
         }
     }
@@ -461,28 +464,31 @@ impl InteractiveVisualizer {
         centroids: Option<&Array2<F>>,
     ) -> Result<()> {
         self.cluster_stats.clear();
-        
+
         // Get unique cluster labels
         let mut unique_labels: Vec<i32> = labels.iter().cloned().collect();
         unique_labels.sort_unstable();
         unique_labels.dedup();
-        
+
         for &cluster_id in &unique_labels {
             // Find points in this cluster
-            let cluster_points: Vec<usize> = labels.iter()
+            let cluster_points: Vec<usize> = labels
+                .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == cluster_id)
                 .map(|(idx, _)| idx)
                 .collect();
-            
+
             if cluster_points.is_empty() {
                 continue;
             }
-            
+
             // Calculate centroid
             let centroid = if let Some(cents) = centroids {
                 if cluster_id >= 0 && (cluster_id as usize) < cents.nrows() {
-                    cents.row(cluster_id as usize).mapv(|x| x.to_f64().unwrap_or(0.0))
+                    cents
+                        .row(cluster_id as usize)
+                        .mapv(|x| x.to_f64().unwrap_or(0.0))
                 } else {
                     // Calculate centroid from points
                     self.calculate_centroid_from_points(data, &cluster_points)?
@@ -490,11 +496,11 @@ impl InteractiveVisualizer {
             } else {
                 self.calculate_centroid_from_points(data, &cluster_points)?
             };
-            
+
             // Calculate statistics
-            let (diameter, avg_distance, density, bounding_box) = 
+            let (diameter, avg_distance, density, bounding_box) =
                 self.calculate_cluster_metrics(data, &cluster_points, &centroid)?;
-            
+
             let stats = ClusterStats {
                 cluster_id,
                 point_count: cluster_points.len(),
@@ -505,10 +511,10 @@ impl InteractiveVisualizer {
                 bounding_box,
                 color: format!("#{:06x}", (cluster_id.abs() as u32 * 123456) % 0xFFFFFF),
             };
-            
+
             self.cluster_stats.insert(cluster_id, stats);
         }
-        
+
         Ok(())
     }
 
@@ -520,18 +526,18 @@ impl InteractiveVisualizer {
     ) -> Result<Array1<f64>> {
         let n_features = data.ncols();
         let mut centroid = Array1::zeros(n_features);
-        
+
         for &idx in point_indices {
             for j in 0..n_features {
                 centroid[j] += data[[idx, j]].to_f64().unwrap_or(0.0);
             }
         }
-        
+
         let count = point_indices.len() as f64;
         if count > 0.0 {
             centroid.mapv_inplace(|x| x / count);
         }
-        
+
         Ok(centroid)
     }
 
@@ -543,58 +549,66 @@ impl InteractiveVisualizer {
         centroid: &Array1<f64>,
     ) -> Result<(f64, f64, f64, (f64, f64, f64, f64, f64, f64))> {
         let n_features = data.ncols();
-        
+
         let mut max_distance = 0.0;
         let mut total_distance = 0.0;
         let mut min_coords = vec![f64::INFINITY; n_features];
         let mut max_coords = vec![f64::NEG_INFINITY; n_features];
-        
+
         // Calculate distances and bounding box
         for &idx in point_indices {
             let mut distance_to_centroid = 0.0;
-            
+
             for j in 0..n_features {
                 let coord = data[[idx, j]].to_f64().unwrap_or(0.0);
                 let diff = coord - centroid[j];
                 distance_to_centroid += diff * diff;
-                
+
                 min_coords[j] = min_coords[j].min(coord);
                 max_coords[j] = max_coords[j].max(coord);
             }
-            
+
             distance_to_centroid = distance_to_centroid.sqrt();
             total_distance += distance_to_centroid;
         }
-        
+
         // Calculate diameter (maximum pairwise distance)
         for i in 0..point_indices.len() {
             for j in (i + 1)..point_indices.len() {
                 let mut distance = 0.0;
                 for k in 0..n_features {
-                    let diff = data[[point_indices[i], k]].to_f64().unwrap_or(0.0) - 
-                              data[[point_indices[j], k]].to_f64().unwrap_or(0.0);
+                    let diff = data[[point_indices[i], k]].to_f64().unwrap_or(0.0)
+                        - data[[point_indices[j], k]].to_f64().unwrap_or(0.0);
                     distance += diff * diff;
                 }
                 distance = distance.sqrt();
                 max_distance = max_distance.max(distance);
             }
         }
-        
-        let avg_distance = if point_indices.is_empty() { 0.0 } else { total_distance / point_indices.len() as f64 };
-        
+
+        let avg_distance = if point_indices.is_empty() {
+            0.0
+        } else {
+            total_distance / point_indices.len() as f64
+        };
+
         // Calculate density (points per unit volume)
         let volume = if n_features >= 3 {
-            (max_coords[0] - min_coords[0]) * 
-            (max_coords[1] - min_coords[1]) * 
-            (max_coords[2] - min_coords[2])
+            (max_coords[0] - min_coords[0])
+                * (max_coords[1] - min_coords[1])
+                * (max_coords[2] - min_coords[2])
         } else if n_features >= 2 {
             (max_coords[0] - min_coords[0]) * (max_coords[1] - min_coords[1])
         } else {
             max_coords[0] - min_coords[0]
         };
-        
-        let density = if volume > 0.0 { point_indices.len() as f64 / volume } else { 0.0 };
-        
+
+        let density = if volume > 0.0 {
+            point_indices.len() as f64 / volume
+        } else {
+            0.0
+        };
+
         let bounding_box = (
             min_coords.get(0).copied().unwrap_or(0.0),
             max_coords.get(0).copied().unwrap_or(0.0),
@@ -603,21 +617,21 @@ impl InteractiveVisualizer {
             min_coords.get(2).copied().unwrap_or(0.0),
             max_coords.get(2).copied().unwrap_or(0.0),
         );
-        
+
         Ok((max_distance, avg_distance, density, bounding_box))
     }
 
     /// Update view bounds based on data
     fn update_view_bounds<F: Float + FromPrimitive + Debug>(&mut self, data: ArrayView2<F>) {
         let n_features = data.ncols();
-        
+
         if n_features == 0 || data.nrows() == 0 {
             return;
         }
-        
+
         let mut min_vals = vec![f64::INFINITY; n_features];
         let mut max_vals = vec![f64::NEG_INFINITY; n_features];
-        
+
         for i in 0..data.nrows() {
             for j in 0..n_features {
                 let val = data[[i, j]].to_f64().unwrap_or(0.0);
@@ -625,7 +639,7 @@ impl InteractiveVisualizer {
                 max_vals[j] = max_vals[j].max(val);
             }
         }
-        
+
         // Add some padding
         let padding = 0.1;
         for j in 0..n_features {
@@ -633,7 +647,7 @@ impl InteractiveVisualizer {
             min_vals[j] -= range * padding;
             max_vals[j] += range * padding;
         }
-        
+
         self.state.view_bounds = (
             min_vals.get(0).copied().unwrap_or(-10.0),
             max_vals.get(0).copied().unwrap_or(10.0),
@@ -656,23 +670,38 @@ impl InteractiveVisualizer {
             self.state.input_state.mouse_position.0 - self.state.input_state.prev_mouse_position.0,
             self.state.input_state.mouse_position.1 - self.state.input_state.prev_mouse_position.1,
         );
-        
+
         let sensitivity = self.config.camera_sensitivity;
-        
+
         // Rotation with left mouse button
-        if self.state.input_state.mouse_buttons.contains(&MouseButton::Left) {
+        if self
+            .state
+            .input_state
+            .mouse_buttons
+            .contains(&MouseButton::Left)
+        {
             self.state.camera.rotation.0 += mouse_delta.1 * sensitivity * 0.01;
             self.state.camera.rotation.1 += mouse_delta.0 * sensitivity * 0.01;
         }
-        
+
         // Zoom with right mouse button or scroll
-        if self.state.input_state.mouse_buttons.contains(&MouseButton::Right) {
+        if self
+            .state
+            .input_state
+            .mouse_buttons
+            .contains(&MouseButton::Right)
+        {
             self.state.camera.zoom *= 1.0 + mouse_delta.1 * sensitivity * 0.01;
             self.state.camera.zoom = self.state.camera.zoom.clamp(0.1, 10.0);
         }
-        
+
         // Pan with middle mouse button
-        if self.state.input_state.mouse_buttons.contains(&MouseButton::Middle) {
+        if self
+            .state
+            .input_state
+            .mouse_buttons
+            .contains(&MouseButton::Middle)
+        {
             // This would update camera position based on pan delta
         }
     }
@@ -682,7 +711,7 @@ impl InteractiveVisualizer {
         if !pressed {
             return;
         }
-        
+
         match key {
             KeyCode::Space => {
                 self.state.animation_playing = !self.state.animation_playing;
@@ -707,10 +736,11 @@ impl InteractiveVisualizer {
         if current_touch_count == 2 {
             let touch1 = &self.state.input_state.touch_points[0];
             let touch2 = &self.state.input_state.touch_points[1];
-            
-            let distance = ((touch1.position.0 - touch2.position.0).powi(2) + 
-                           (touch1.position.1 - touch2.position.1).powi(2)).sqrt();
-            
+
+            let distance = ((touch1.position.0 - touch2.position.0).powi(2)
+                + (touch1.position.1 - touch2.position.1).powi(2))
+            .sqrt();
+
             if !self.state.input_state.gesture_state.is_pinching {
                 self.state.input_state.gesture_state.is_pinching = true;
                 self.state.input_state.gesture_state.pinch_scale = distance;
@@ -757,7 +787,7 @@ mod tests {
     fn test_interactive_visualizer_creation() {
         let config = InteractiveConfig::default();
         let visualizer = InteractiveVisualizer::new(config);
-        
+
         assert_eq!(visualizer.state.view_mode, ViewMode::Perspective);
         assert!(visualizer.cluster_stats.is_empty());
     }
@@ -766,10 +796,10 @@ mod tests {
     fn test_camera_controls() {
         let config = InteractiveConfig::default();
         let mut visualizer = InteractiveVisualizer::new(config);
-        
+
         visualizer.set_camera_position((5.0, 5.0, 5.0));
         assert_eq!(visualizer.state.camera.position, (5.0, 5.0, 5.0));
-        
+
         visualizer.set_camera_target((1.0, 1.0, 1.0));
         assert_eq!(visualizer.state.camera.target, (1.0, 1.0, 1.0));
     }
@@ -778,7 +808,7 @@ mod tests {
     fn test_view_mode_switching() {
         let config = InteractiveConfig::default();
         let mut visualizer = InteractiveVisualizer::new(config);
-        
+
         visualizer.set_view_mode(ViewMode::BirdsEye);
         assert_eq!(visualizer.state.view_mode, ViewMode::BirdsEye);
         assert_eq!(visualizer.state.camera.position, (0.0, 20.0, 0.0));
@@ -788,23 +818,22 @@ mod tests {
     fn test_cluster_stats_calculation() {
         let config = InteractiveConfig::default();
         let mut visualizer = InteractiveVisualizer::new(config);
-        
-        let data = Array2::from_shape_vec((4, 3), vec![
-            1.0, 2.0, 3.0,
-            1.1, 2.1, 3.1,
-            5.0, 6.0, 7.0,
-            5.1, 6.1, 7.1,
-        ]).unwrap();
-        
+
+        let data = Array2::from_shape_vec(
+            (4, 3),
+            vec![1.0, 2.0, 3.0, 1.1, 2.1, 3.1, 5.0, 6.0, 7.0, 5.1, 6.1, 7.1],
+        )
+        .unwrap();
+
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
-        
+
         visualizer.update_data(data.view(), &labels, None).unwrap();
-        
+
         let stats = visualizer.get_cluster_stats();
         assert_eq!(stats.len(), 2);
         assert!(stats.contains_key(&0));
         assert!(stats.contains_key(&1));
-        
+
         let cluster_0_stats = &stats[&0];
         assert_eq!(cluster_0_stats.point_count, 2);
     }

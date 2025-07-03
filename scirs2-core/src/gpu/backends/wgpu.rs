@@ -10,12 +10,12 @@ use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKe
 #[cfg(feature = "wgpu_backend")]
 #[allow(unused_imports)]
 use wgpu::{
-    util::DeviceExt, Backends, Buffer, BufferDescriptor, BufferUsages, ComputePipeline, Device,
-    DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits, PowerPreference, Queue,
-    RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource, BindGroupLayout, BindGroupLayoutDescriptor,
-    BindGroupLayoutEntry, BindingType, StorageTextureAccess, TextureFormat, TextureSampleType,
-    TextureViewDimension, ShaderStages, BufferBindingType, BindGroupDescriptor, BindGroupEntry,
-    BindingResource,
+    util::DeviceExt, Backends, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
+    BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingResource, BindingType, Buffer,
+    BufferBindingType, BufferDescriptor, BufferUsages, ComputePipeline, Device, DeviceDescriptor,
+    Features, Instance, InstanceDescriptor, Limits, PowerPreference, Queue, RequestAdapterOptions,
+    ShaderModuleDescriptor, ShaderSource, ShaderStages, StorageTextureAccess, TextureFormat,
+    TextureSampleType, TextureViewDimension,
 };
 
 // Fallback types for when WebGPU is not available
@@ -227,11 +227,13 @@ impl WebGPUContext {
             let bind_group_layout = self.create_bind_group_layout_from_source(source, name)?;
 
             // Create pipeline layout with our bind group layout
-            let pipeline_layout = self.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some(&format!("{}_layout", name)),
-                bind_group_layouts: &[&bind_group_layout],
-                push_constant_ranges: &[],
-            });
+            let pipeline_layout =
+                self.device
+                    .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                        label: Some(&format!("{}_layout", name)),
+                        bind_group_layouts: &[&bind_group_layout],
+                        push_constant_ranges: &[],
+                    });
 
             let compute_pipeline =
                 self.device
@@ -265,7 +267,11 @@ impl WebGPUContext {
 
     /// Create bind group layout from WGSL source analysis
     #[cfg(feature = "wgpu_backend")]
-    fn create_bind_group_layout_from_source(&self, source: &str, name: &str) -> Result<BindGroupLayout, GpuError> {
+    fn create_bind_group_layout_from_source(
+        &self,
+        source: &str,
+        name: &str,
+    ) -> Result<BindGroupLayout, GpuError> {
         // Parse WGSL source to extract binding information
         let mut entries = Vec::new();
         let mut binding_index = 0;
@@ -273,10 +279,11 @@ impl WebGPUContext {
         // Analyze shader source to determine bindings
         for line in source.lines() {
             let trimmed = line.trim();
-            
+
             if trimmed.contains("@group(0) @binding(") {
                 // Extract binding type from the line
-                if trimmed.contains("var<storage, read_write>") || trimmed.contains("var<storage>") {
+                if trimmed.contains("var<storage, read_write>") || trimmed.contains("var<storage>")
+                {
                     // Storage buffer (read-write)
                     entries.push(BindGroupLayoutEntry {
                         binding: binding_index,
@@ -331,10 +338,12 @@ impl WebGPUContext {
             });
         }
 
-        let bind_group_layout = self.device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-            label: Some(&format!("{}_bind_group_layout", name)),
-            entries: &entries,
-        });
+        let bind_group_layout = self
+            .device
+            .create_bind_group_layout(&BindGroupLayoutDescriptor {
+                label: Some(&format!("{}_bind_group_layout", name)),
+                entries: &entries,
+            });
 
         Ok(bind_group_layout)
     }
@@ -623,11 +632,16 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                     compute_pass.set_pipeline(&shader.pipeline);
 
                     // Create and set bind groups with buffers and uniforms
-                    if let Ok(bind_group) = self.create_bind_group_from_params(&shader.bind_group_layout, &params) {
+                    if let Ok(bind_group) =
+                        self.create_bind_group_from_params(&shader.bind_group_layout, &params)
+                    {
                         compute_pass.set_bind_group(0, &bind_group, &[]);
                     } else {
                         // Handle error by logging and continuing without bind group for now
-                        eprintln!("Warning: Failed to create bind group for shader {}", self.shader_name);
+                        eprintln!(
+                            "Warning: Failed to create bind group for shader {}",
+                            self.shader_name
+                        );
                     }
 
                     // Dispatch the compute shader
@@ -676,7 +690,7 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                     // For buffer parameters, we need to extract the underlying WebGPU buffer
                     // This is a simplified approach - in practice, we'd need a way to get the wgpu::Buffer
                     // from the GpuBufferImpl trait object
-                    
+
                     // Create a placeholder buffer for now - in real implementation,
                     // this would extract the actual buffer from the buffer_impl
                     let placeholder_buffer = self.device.create_buffer(&BufferDescriptor {
@@ -698,11 +712,13 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                 KernelParam::U32(value) | KernelParam::I32(value) => {
                     // For uniform data, create a uniform buffer
                     let uniform_data = [*value as u32; 1];
-                    let uniform_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                        label: Some(&format!("uniform_{}", param_name)),
-                        contents: bytemuck::cast_slice(&uniform_data),
-                        usage: BufferUsages::UNIFORM,
-                    });
+                    let uniform_buffer =
+                        self.device
+                            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                                label: Some(&format!("uniform_{}", param_name)),
+                                contents: bytemuck::cast_slice(&uniform_data),
+                                usage: BufferUsages::UNIFORM,
+                            });
 
                     entries.push(BindGroupEntry {
                         binding: binding_index,
@@ -716,11 +732,13 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                 KernelParam::F32(value) => {
                     // For float uniform data
                     let uniform_data = [*value; 1];
-                    let uniform_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                        label: Some(&format!("uniform_{}", param_name)),
-                        contents: bytemuck::cast_slice(&uniform_data),
-                        usage: BufferUsages::UNIFORM,
-                    });
+                    let uniform_buffer =
+                        self.device
+                            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                                label: Some(&format!("uniform_{}", param_name)),
+                                contents: bytemuck::cast_slice(&uniform_data),
+                                usage: BufferUsages::UNIFORM,
+                            });
 
                     entries.push(BindGroupEntry {
                         binding: binding_index,
@@ -734,11 +752,13 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                 KernelParam::F64(value) => {
                     // Convert f64 to f32 for WebGPU compatibility
                     let uniform_data = [*value as f32; 1];
-                    let uniform_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                        label: Some(&format!("uniform_{}", param_name)),
-                        contents: bytemuck::cast_slice(&uniform_data),
-                        usage: BufferUsages::UNIFORM,
-                    });
+                    let uniform_buffer =
+                        self.device
+                            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                                label: Some(&format!("uniform_{}", param_name)),
+                                contents: bytemuck::cast_slice(&uniform_data),
+                                usage: BufferUsages::UNIFORM,
+                            });
 
                     entries.push(BindGroupEntry {
                         binding: binding_index,

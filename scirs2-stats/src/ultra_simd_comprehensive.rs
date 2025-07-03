@@ -1034,7 +1034,6 @@ mod tests {
     }
 }
 
-
 /// Batch processing result
 #[derive(Debug, Clone)]
 pub struct BatchStatsResult<F> {

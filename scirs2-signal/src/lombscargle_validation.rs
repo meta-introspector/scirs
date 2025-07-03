@@ -9,9 +9,9 @@ use crate::lombscargle::{lombscargle, AutoFreqMethod};
 use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
+use rand::prelude::*;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::f64::consts::PI;
-use rand::prelude::*;
 
 /// Validation result structure
 #[derive(Debug, Clone)]
@@ -372,7 +372,7 @@ fn validate_uneven_sampling(
     let f_signal = 10.0;
 
     // Create heavily uneven sampling (random gaps and clustering)
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut t = Vec::new();
     let mut current_time = 0.0;
 
@@ -1057,7 +1057,7 @@ fn validate_sparse_sampling(
     let f_signal = 10.0;
 
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut indices: Vec<usize> = (0..n_total).collect();
     indices.shuffle(&mut rng);
     indices.truncate(n_samples);
@@ -1323,7 +1323,7 @@ fn validate_correlated_noise(
 
     // Generate AR(1) correlated noise
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut corr_noise = vec![0.0; n];
     let alpha = 0.7; // AR(1) coefficient
     corr_noise[0] = rng.random_range(-1.0..1.0);
@@ -1702,7 +1702,7 @@ fn validate_statistical_properties(tolerance: f64) -> SignalResult<StatisticalVa
 /// Test white noise statistical properties
 fn test_white_noise_statistics() -> SignalResult<f64> {
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     let n_trials = 100;
     let n_samples = 500;
@@ -1758,7 +1758,7 @@ fn test_white_noise_statistics() -> SignalResult<f64> {
 /// Test false alarm rates
 fn test_false_alarm_rates() -> SignalResult<f64> {
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     let n_trials = 1000;
     let n_samples = 200;
@@ -2461,7 +2461,7 @@ fn test_astronomical_scenarios(tolerance: f64) -> SignalResult<f64> {
 
     // Simulate variable star with irregular sampling
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     let n_obs = 500;
     let period = 5.2; // days
@@ -2528,7 +2528,7 @@ fn test_physiological_scenarios(tolerance: f64) -> SignalResult<f64> {
 
     // Simulate heart rate variability data
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     let n = 1000;
     let fs = 4.0; // 4 Hz sampling rate
@@ -2602,7 +2602,7 @@ fn test_environmental_scenarios(tolerance: f64) -> SignalResult<f64> {
 
     // Simulate temperature measurements with seasonal variation and gaps
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     let days_per_year = 365.25;
     let n_years = 3;
@@ -2718,7 +2718,7 @@ fn test_nonparametric_properties(tolerance: f64) -> SignalResult<f64> {
 
     // Test Kolmogorov-Smirnov test for power distribution
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     let n_trials = 100;
     let n_samples = 200;
@@ -2789,7 +2789,7 @@ fn test_bayesian_validation(tolerance: f64) -> SignalResult<f64> {
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
 
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Signal with known frequency plus noise
     let signal: Vec<f64> = t
@@ -2847,7 +2847,7 @@ fn test_information_theory_metrics(tolerance: f64) -> SignalResult<f64> {
 
     // Test entropy and mutual information properties
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     let n = 500;
     let fs = 100.0;
@@ -3154,7 +3154,7 @@ fn validate_cross_reference_implementation(
     // Make sampling uneven
     let mut t_uneven = Vec::new();
     let mut signal_uneven = Vec::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     for i in 0..n {
         if rng.random_range(0.0..1.0) > 0.3 {
             // Keep 70% of samples
@@ -3424,19 +3424,30 @@ pub fn validate_lombscargle_enhanced(
 
     // Generate recommendations
     if scipy_comparison.max_relative_error > config.tolerance * 100.0 {
-        recommendations.push("Large discrepancy with SciPy reference detected. Review algorithm implementation.".to_string());
+        recommendations.push(
+            "Large discrepancy with SciPy reference detected. Review algorithm implementation."
+                .to_string(),
+        );
     }
 
     if noise_robustness < 80.0 {
-        recommendations.push("Poor noise robustness. Consider implementing better preprocessing or regularization.".to_string());
+        recommendations.push(
+            "Poor noise robustness. Consider implementing better preprocessing or regularization."
+                .to_string(),
+        );
     }
 
     if memory_efficiency < 75.0 {
-        recommendations.push("Memory usage is suboptimal. Consider chunked processing for large datasets.".to_string());
+        recommendations.push(
+            "Memory usage is suboptimal. Consider chunked processing for large datasets."
+                .to_string(),
+        );
     }
 
     if simd_consistency < 90.0 {
-        recommendations.push("SIMD implementation inconsistency detected. Review SIMD code paths.".to_string());
+        recommendations.push(
+            "SIMD implementation inconsistency detected. Review SIMD code paths.".to_string(),
+        );
     }
 
     Ok(EnhancedValidationResult {
@@ -3461,14 +3472,14 @@ fn validate_against_scipy_reference(
     for _ in 0..config.n_iterations {
         // Generate test signal
         let n = 1000;
-        let t: Vec<f64> = (0..n).map(|i| i as f64 * 0.01 + rand::rng().random_range(0.0..0.001)).collect();
+        let t: Vec<f64> = (0..n)
+            .map(|i| i as f64 * 0.01 + rand::thread_rng().random_range(0.0..0.001))
+            .collect();
         let freq1 = 0.5;
         let freq2 = 1.5;
         let signal: Vec<f64> = t
             .iter()
-            .map(|&ti| {
-                (2.0 * PI * freq1 * ti).sin() + 0.5 * (2.0 * PI * freq2 * ti).sin()
-            })
+            .map(|&ti| (2.0 * PI * freq1 * ti).sin() + 0.5 * (2.0 * PI * freq2 * ti).sin())
             .collect();
 
         // Test frequencies
@@ -3495,13 +3506,14 @@ fn validate_against_scipy_reference(
 
         if !errors.is_empty() {
             relative_errors.extend(errors);
-            
+
             // Calculate correlation
             let correlation = calculate_correlation(&test_power, &ref_power);
             correlations.push(correlation);
 
             // Calculate peak detection accuracy
-            let peak_accuracy = calculate_peak_detection_accuracy(&test_power, &ref_power, &freqs, &[freq1, freq2]);
+            let peak_accuracy =
+                calculate_peak_detection_accuracy(&test_power, &ref_power, &freqs, &[freq1, freq2]);
             peak_accuracies.push(peak_accuracy);
         }
     }
@@ -3520,11 +3532,7 @@ fn validate_against_scipy_reference(
 }
 
 /// Simplified SciPy-like reference implementation for comparison
-fn scipy_reference_lombscargle(
-    t: &[f64],
-    y: &[f64],
-    freqs: &[f64],
-) -> SignalResult<Vec<f64>> {
+fn scipy_reference_lombscargle(t: &[f64], y: &[f64], freqs: &[f64]) -> SignalResult<Vec<f64>> {
     let n = t.len();
     let mut power = vec![0.0; freqs.len()];
 
@@ -3592,8 +3600,8 @@ fn validate_noise_robustness(config: &EnhancedValidationConfig) -> SignalResult<
         let signal_power = clean_signal.iter().map(|&x| x * x).sum::<f64>() / n as f64;
         let noise_power = signal_power / snr_linear;
         let noise_std = noise_power.sqrt();
-        
-        let mut rng = rand::rng();
+
+        let mut rng = rand::thread_rng();
         let noisy_signal: Vec<f64> = clean_signal
             .iter()
             .map(|&s| s + noise_std * rng.random_range(-1.0..1.0))
@@ -3650,7 +3658,7 @@ fn validate_memory_efficiency(_config: &EnhancedValidationConfig) -> SignalResul
 
     // Test if large signal processing works
     match lombscargle(&t, &signal, Some(&freqs)) {
-        Ok(_) => Ok(90.0), // Good efficiency if it completes
+        Ok(_) => Ok(90.0),  // Good efficiency if it completes
         Err(_) => Ok(50.0), // Poor efficiency if it fails
     }
 }
@@ -3679,7 +3687,8 @@ fn validate_simd_consistency(config: &EnhancedValidationConfig) -> SignalResult<
         let result2 = lombscargle_enhanced(&t, &signal, Some(&freqs), &ls_config)?;
 
         // Compare results
-        let errors: Vec<f64> = result1.1
+        let errors: Vec<f64> = result1
+            .1
             .iter()
             .zip(result2.1.iter())
             .filter_map(|(&p1, &p2)| {
@@ -3800,17 +3809,17 @@ fn calculate_enhanced_overall_score(
 ) -> f64 {
     // Convert base validation stability score to 0-100 scale
     let base_score = base_validation.stability_score * 100.0;
-    
+
     // Convert scipy comparison correlation to score
     let scipy_score = scipy_comparison.correlation * 100.0;
-    
+
     // Weighted average of all components
-    let overall_score = (base_score * 0.3) +
-                       (scipy_score * 0.25) +
-                       (noise_robustness * 0.2) +
-                       (memory_efficiency * 0.15) +
-                       (simd_consistency * 0.1);
-    
+    let overall_score = (base_score * 0.3)
+        + (scipy_score * 0.25)
+        + (noise_robustness * 0.2)
+        + (memory_efficiency * 0.15)
+        + (simd_consistency * 0.1);
+
     overall_score.min(100.0).max(0.0)
 }
 

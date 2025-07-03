@@ -162,13 +162,13 @@ async fn test_quantum_inspired(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Test quantum clustering
     let mut quantum_clusterer = QuantumClusterer::new(2);
-    let cluster_result = quantum_clusterer.cluster(&points.view()).await?;
+    let (centers, labels) = quantum_clusterer.fit(&points.view())?;
 
-    if cluster_result.labels.len() != points.nrows() {
+    if labels.len() != points.nrows() {
         return Err("Quantum clustering returned wrong number of labels".into());
     }
 
-    if cluster_result.centers.nrows() != 2 {
+    if centers.nrows() != 2 {
         return Err("Quantum clustering returned wrong number of centers".into());
     }
 
@@ -205,7 +205,7 @@ async fn test_hybrid_algorithms(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Test hybrid spatial optimizer
     let mut hybrid_optimizer = HybridSpatialOptimizer::new()
-        .with_quantum_depth(2)
+        .with_quantum_classical_coupling(0.7)
         .with_classical_refinement(true)
         .with_adaptive_switching(0.5);
 
@@ -223,12 +223,12 @@ async fn test_hybrid_algorithms(
 
     // Test hybrid clustering
     let mut hybrid_clusterer = HybridClusterer::new(2)
-        .with_quantum_depth(2)
+        .with_quantum_exploration_ratio(0.7)
         .with_classical_refinement(true);
 
-    let cluster_result = hybrid_clusterer.cluster(&points.view()).await?;
+    let (centers, labels, _metrics) = hybrid_clusterer.fit(&points.view())?;
 
-    if cluster_result.labels.len() != points.nrows() {
+    if labels.len() != points.nrows() {
         return Err("Hybrid clustering returned wrong number of labels".into());
     }
 
@@ -276,7 +276,7 @@ async fn test_advanced_optimization() -> Result<(), Box<dyn std::error::Error>> 
     // Test extreme optimizer creation
     let _extreme_optimizer = ExtremeOptimizer::new()
         .with_numa_optimization(true)
-        .with_cache_optimization(true)
+        .with_cache_oblivious_algorithms(true)
         .with_parallel_optimization(true);
 
     // Test AI algorithm selector creation

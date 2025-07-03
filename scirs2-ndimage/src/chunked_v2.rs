@@ -5,13 +5,12 @@
 //! performance and lower memory usage.
 
 use ndarray::{Array, ArrayView, Dimension, IxDyn};
-use num_traits::{Float, FromPrimitive, NumCast, Zero};
+use num_traits::{Float, FromPrimitive, NumCast};
 use std::fmt::Debug;
 
 use scirs2_core::error::CoreResult;
 use scirs2_core::memory_efficient::{
     chunk_wise_binary_op, chunk_wise_op, create_mmap, AccessMode, ChunkingStrategy,
-    MemoryMappedArray,
 };
 
 use crate::error::{NdimageError, NdimageResult};

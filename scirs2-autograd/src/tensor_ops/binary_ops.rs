@@ -363,7 +363,7 @@ macro_rules! impl_bin_op_forward {
                         use crate::{tensor_ops::blas_ffi::*, same_type};
                         bin_op_same_shape!($vms_op, $vmd_op, $bin_op, x0, x1)
                     }
-                    #[cfg(not(feature = "mkl"))] {
+                    #[cfg(not(feature = "blas"))] {
                         x0 $bin_op x1
                     }
                 }

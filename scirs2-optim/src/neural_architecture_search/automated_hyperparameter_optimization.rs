@@ -49,19 +49,13 @@ pub struct HyperparameterOptimizer<T: Float> {
 /// Hyperparameter optimization strategies
 pub trait HyperOptStrategy<T: Float>: Send + Sync {
     /// Initialize the strategy
-    fn initialize(
-        &mut self,
-        search_space: &HyperparameterSearchSpace<T>,
-    ) -> Result<(), OptimError>;
+    fn initialize(&mut self, search_space: &HyperparameterSearchSpace<T>) -> Result<()>;
 
     /// Suggest next configuration to evaluate
-    fn suggest_next(
-        &mut self,
-        history: &[HyperOptResult<T>],
-    ) -> Result<HyperparameterConfig<T>, OptimError>;
+    fn suggest_next(&mut self, history: &[HyperOptResult<T>]) -> Result<HyperparameterConfig<T>>;
 
     /// Update strategy with new results
-    fn update(&mut self, result: &HyperOptResult<T>) -> Result<(), OptimError>;
+    fn update(&mut self, result: &HyperOptResult<T>) -> Result<()>;
 
     /// Get strategy name
     fn name(&self) -> &str;
@@ -659,20 +653,16 @@ pub trait PerformanceModel<T: Float>: Send + Sync {
         &self,
         config: &HyperparameterConfig<T>,
         target_fidelity: &FidelityLevel,
-    ) -> Result<T, OptimError>;
+    ) -> Result<T>;
 
     /// Update model with new observations
     fn update(
         &mut self,
         observations: &[(HyperparameterConfig<T>, FidelityLevel, T)],
-    ) -> Result<(), OptimError>;
+    ) -> Result<()>;
 
     /// Get prediction uncertainty
-    fn uncertainty(
-        &self,
-        config: &HyperparameterConfig<T>,
-        fidelity: &FidelityLevel,
-    ) -> Result<T, OptimError>;
+    fn uncertainty(&self, config: &HyperparameterConfig<T>, fidelity: &FidelityLevel) -> Result<T>;
 }
 
 /// Budget allocation for multi-fidelity
@@ -1183,7 +1173,7 @@ impl<T: Float> HyperparameterOptimizer<T> {
     }
 
     /// Run hyperparameter optimization
-    pub fn optimize(&mut self) -> Result<OptimizationResults<T>, OptimError> {
+    pub fn optimize(&mut self) -> Result<OptimizationResults<T>> {
         let start_time = Instant::now();
 
         // Initialize strategy
@@ -1255,10 +1245,7 @@ impl<T: Float> HyperparameterOptimizer<T> {
         )
     }
 
-    fn evaluate_configuration(
-        &self,
-        config: HyperparameterConfig<T>,
-    ) -> Result<HyperOptResult<T>, OptimError> {
+    fn evaluate_configuration(&self, config: HyperparameterConfig<T>) -> Result<HyperOptResult<T>> {
         // Simplified evaluation - in practice would run actual optimization
         let performance = T::from(0.8).unwrap(); // Placeholder
 

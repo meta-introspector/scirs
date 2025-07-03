@@ -66,13 +66,13 @@ pub use animation::{
     StreamingConfig, StreamingFrame, StreamingStats, StreamingVisualizer,
 };
 pub use export::{
-    save_visualization_to_file, export_scatter_2d_to_file, export_scatter_3d_to_file,
-    export_animation_to_file, export_scatter_2d_to_json, export_scatter_3d_to_json,
-    export_scatter_2d_to_html, export_scatter_3d_to_html, ExportConfig, ExportFormat,
+    export_animation_to_file, export_scatter_2d_to_file, export_scatter_2d_to_html,
+    export_scatter_2d_to_json, export_scatter_3d_to_file, export_scatter_3d_to_html,
+    export_scatter_3d_to_json, save_visualization_to_file, ExportConfig, ExportFormat,
 };
 pub use interactive::{
-    InteractiveVisualizer, InteractiveConfig, InteractiveState, CameraState, ViewMode,
-    ClusterStats, MouseButton, KeyCode, BoundingBox3D,
+    BoundingBox3D, CameraState, ClusterStats, InteractiveConfig, InteractiveState,
+    InteractiveVisualizer, KeyCode, MouseButton, ViewMode,
 };
 
 /// Configuration for clustering visualizations
@@ -289,18 +289,22 @@ pub fn create_scatter_plot_2d<F: Float + FromPrimitive + Debug>(
     }
 
     // Reduce dimensionality if needed
-    let plot_data = if n_features == 2 && config.dimensionality_reduction == DimensionalityReduction::None {
-        data.mapv(|x| x.to_f64().unwrap_or(0.0))
-    } else {
-        apply_dimensionality_reduction_2d(data, config.dimensionality_reduction)?
-    };
+    let plot_data =
+        if n_features == 2 && config.dimensionality_reduction == DimensionalityReduction::None {
+            data.mapv(|x| x.to_f64().unwrap_or(0.0))
+        } else {
+            apply_dimensionality_reduction_2d(data, config.dimensionality_reduction)?
+        };
 
     // Convert centroids if provided
     let plot_centroids = if let Some(cents) = centroids {
         if cents.ncols() == 2 && config.dimensionality_reduction == DimensionalityReduction::None {
             Some(cents.mapv(|x| x.to_f64().unwrap_or(0.0)))
         } else {
-            Some(apply_dimensionality_reduction_2d(cents.view(), config.dimensionality_reduction)?)
+            Some(apply_dimensionality_reduction_2d(
+                cents.view(),
+                config.dimensionality_reduction,
+            )?)
         }
     } else {
         None
@@ -313,11 +317,17 @@ pub fn create_scatter_plot_2d<F: Float + FromPrimitive + Debug>(
         labels_vec.dedup();
         labels_vec
     };
-    
+
     let cluster_colors = generate_cluster_colors(&unique_labels, config.color_scheme);
-    let point_colors = labels.iter().map(|&label| {
-        cluster_colors.get(&label).cloned().unwrap_or_else(|| "#000000".to_string())
-    }).collect();
+    let point_colors = labels
+        .iter()
+        .map(|&label| {
+            cluster_colors
+                .get(&label)
+                .cloned()
+                .unwrap_or_else(|| "#000000".to_string())
+        })
+        .collect();
 
     // Generate point sizes
     let sizes = vec![config.point_size; n_samples];
@@ -368,18 +378,22 @@ pub fn create_scatter_plot_3d<F: Float + FromPrimitive + Debug>(
     }
 
     // Reduce dimensionality if needed
-    let plot_data = if n_features == 3 && config.dimensionality_reduction == DimensionalityReduction::None {
-        data.mapv(|x| x.to_f64().unwrap_or(0.0))
-    } else {
-        apply_dimensionality_reduction_3d(data, config.dimensionality_reduction)?
-    };
+    let plot_data =
+        if n_features == 3 && config.dimensionality_reduction == DimensionalityReduction::None {
+            data.mapv(|x| x.to_f64().unwrap_or(0.0))
+        } else {
+            apply_dimensionality_reduction_3d(data, config.dimensionality_reduction)?
+        };
 
     // Convert centroids if provided
     let plot_centroids = if let Some(cents) = centroids {
         if cents.ncols() == 3 && config.dimensionality_reduction == DimensionalityReduction::None {
             Some(cents.mapv(|x| x.to_f64().unwrap_or(0.0)))
         } else {
-            Some(apply_dimensionality_reduction_3d(cents.view(), config.dimensionality_reduction)?)
+            Some(apply_dimensionality_reduction_3d(
+                cents.view(),
+                config.dimensionality_reduction,
+            )?)
         }
     } else {
         None
@@ -392,11 +406,17 @@ pub fn create_scatter_plot_3d<F: Float + FromPrimitive + Debug>(
         labels_vec.dedup();
         labels_vec
     };
-    
+
     let cluster_colors = generate_cluster_colors(&unique_labels, config.color_scheme);
-    let point_colors = labels.iter().map(|&label| {
-        cluster_colors.get(&label).cloned().unwrap_or_else(|| "#000000".to_string())
-    }).collect();
+    let point_colors = labels
+        .iter()
+        .map(|&label| {
+            cluster_colors
+                .get(&label)
+                .cloned()
+                .unwrap_or_else(|| "#000000".to_string())
+        })
+        .collect();
 
     // Generate point sizes
     let sizes = vec![config.point_size; n_samples];
@@ -425,7 +445,7 @@ fn apply_dimensionality_reduction_2d<F: Float + FromPrimitive + Debug>(
     method: DimensionalityReduction,
 ) -> Result<Array2<f64>> {
     let data_f64 = data.mapv(|x| x.to_f64().unwrap_or(0.0));
-    
+
     match method {
         DimensionalityReduction::PCA => apply_pca_2d(&data_f64),
         DimensionalityReduction::First2D => {
@@ -459,7 +479,7 @@ fn apply_dimensionality_reduction_3d<F: Float + FromPrimitive + Debug>(
     method: DimensionalityReduction,
 ) -> Result<Array2<f64>> {
     let data_f64 = data.mapv(|x| x.to_f64().unwrap_or(0.0));
-    
+
     match method {
         DimensionalityReduction::PCA => apply_pca_3d(&data_f64),
         DimensionalityReduction::First3D => {
@@ -488,7 +508,7 @@ fn apply_dimensionality_reduction_3d<F: Float + FromPrimitive + Debug>(
 fn apply_pca_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     let n_samples = data.nrows();
     let n_features = data.ncols();
-    
+
     if n_features < 2 {
         return Err(ClusteringError::InvalidInput(
             "Need at least 2 features for PCA".to_string(),
@@ -507,7 +527,7 @@ fn apply_pca_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
 
     // Project data onto first 2 principal components
     let projected = centered.dot(&eigenvectors);
-    
+
     Ok(projected)
 }
 
@@ -515,7 +535,7 @@ fn apply_pca_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
 fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
     let n_samples = data.nrows();
     let n_features = data.ncols();
-    
+
     if n_features < 3 {
         return Err(ClusteringError::InvalidInput(
             "Need at least 3 features for 3D PCA".to_string(),
@@ -534,7 +554,7 @@ fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
 
     // Project data onto first 3 principal components
     let projected = centered.dot(&eigenvectors);
-    
+
     Ok(projected)
 }
 
@@ -556,24 +576,27 @@ fn apply_mds_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
 }
 
 /// Compute top eigenvectors using power iteration
-fn compute_top_eigenvectors(matrix: &Array2<f64>, num_components: usize) -> Result<(Array2<f64>, Array1<f64>)> {
+fn compute_top_eigenvectors(
+    matrix: &Array2<f64>,
+    num_components: usize,
+) -> Result<(Array2<f64>, Array1<f64>)> {
     let n = matrix.nrows();
     let k = num_components.min(n);
-    
+
     let mut eigenvectors = Array2::zeros((n, k));
     let mut eigenvalues = Array1::zeros(k);
-    
+
     // Simple power iteration for dominant eigenvector
     for i in 0..k {
         let mut v = Array1::from_elem(n, 1.0 / (n as f64).sqrt());
-        
+
         // Orthogonalize against previous eigenvectors
         for j in 0..i {
             let prev_eigenvector = eigenvectors.column(j);
             let dot_product = v.dot(&prev_eigenvector);
             v = &v - &(&prev_eigenvector * dot_product);
         }
-        
+
         // Power iteration
         for _ in 0..100 {
             let new_v = matrix.dot(&v);
@@ -582,55 +605,52 @@ fn compute_top_eigenvectors(matrix: &Array2<f64>, num_components: usize) -> Resu
                 v = new_v / norm;
             }
         }
-        
+
         eigenvalues[i] = v.dot(&matrix.dot(&v));
         for j in 0..n {
             eigenvectors[[j, i]] = v[j];
         }
     }
-    
+
     Ok((eigenvectors, eigenvalues))
 }
 
 /// Generate cluster colors based on color scheme
 fn generate_cluster_colors(labels: &[i32], scheme: ColorScheme) -> HashMap<i32, String> {
     let mut colors = HashMap::new();
-    
+
     let color_palette = match scheme {
         ColorScheme::Default => vec![
-            "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-            "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+            "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f",
+            "#bcbd22", "#17becf",
         ],
         ColorScheme::ColorblindFriendly => vec![
-            "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33",
-            "#a65628", "#f781bf", "#999999",
+            "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf", "#999999",
         ],
         ColorScheme::HighContrast => vec![
-            "#000000", "#ffffff", "#ff0000", "#00ff00", "#0000ff",
-            "#ffff00", "#ff00ff", "#00ffff",
+            "#000000", "#ffffff", "#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff",
         ],
         ColorScheme::Pastel => vec![
-            "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5",
-            "#c49c94", "#f7b6d3", "#c7c7c7", "#dbdb8d", "#9edae5",
+            "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#c49c94", "#f7b6d3", "#c7c7c7",
+            "#dbdb8d", "#9edae5",
         ],
         ColorScheme::Viridis => vec![
-            "#440154", "#482777", "#3f4a8a", "#31678e", "#26838f",
-            "#1f9d8a", "#6cce5a", "#b6de2b", "#fee825",
+            "#440154", "#482777", "#3f4a8a", "#31678e", "#26838f", "#1f9d8a", "#6cce5a", "#b6de2b",
+            "#fee825",
         ],
         ColorScheme::Plasma => vec![
-            "#0c0887", "#5302a3", "#8b0aa5", "#b83289", "#db5c68",
-            "#f48849", "#febd2a", "#f0f921",
+            "#0c0887", "#5302a3", "#8b0aa5", "#b83289", "#db5c68", "#f48849", "#febd2a", "#f0f921",
         ],
         ColorScheme::Custom => vec!["#333333"], // Placeholder
     };
-    
+
     for (i, &label) in labels.iter().enumerate() {
         if !colors.contains_key(&label) {
             let color_index = i % color_palette.len();
             colors.insert(label, color_palette[color_index].to_string());
         }
     }
-    
+
     colors
 }
 
@@ -639,17 +659,23 @@ fn calculate_2d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64) {
     if data.is_empty() {
         return (0.0, 1.0, 0.0, 1.0);
     }
-    
+
     let x_min = data.column(0).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let x_max = data.column(0).iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let x_max = data
+        .column(0)
+        .iter()
+        .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
     let y_min = data.column(1).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let y_max = data.column(1).iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    
+    let y_max = data
+        .column(1)
+        .iter()
+        .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+
     // Add padding
     let x_range = x_max - x_min;
     let y_range = y_max - y_min;
     let padding = 0.05;
-    
+
     (
         x_min - x_range * padding,
         x_max + x_range * padding,
@@ -663,20 +689,29 @@ fn calculate_3d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64, f64, f64) {
     if data.is_empty() {
         return (0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
     }
-    
+
     let x_min = data.column(0).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let x_max = data.column(0).iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let x_max = data
+        .column(0)
+        .iter()
+        .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
     let y_min = data.column(1).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let y_max = data.column(1).iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let y_max = data
+        .column(1)
+        .iter()
+        .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
     let z_min = data.column(2).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let z_max = data.column(2).iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    
+    let z_max = data
+        .column(2)
+        .iter()
+        .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+
     // Add padding
     let x_range = x_max - x_min;
     let y_range = y_max - y_min;
     let z_range = z_max - z_min;
     let padding = 0.05;
-    
+
     (
         x_min - x_range * padding,
         x_max + x_range * padding,
@@ -688,13 +723,20 @@ fn calculate_3d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64, f64, f64) {
 }
 
 /// Create legend entries
-fn create_legend(labels: &[i32], colors: &HashMap<i32, String>, data_labels: &Array1<i32>) -> Vec<LegendEntry> {
+fn create_legend(
+    labels: &[i32],
+    colors: &HashMap<i32, String>,
+    data_labels: &Array1<i32>,
+) -> Vec<LegendEntry> {
     let mut legend = Vec::new();
-    
+
     for &label in labels {
         let count = data_labels.iter().filter(|&&l| l == label).count();
-        let color = colors.get(&label).cloned().unwrap_or_else(|| "#000000".to_string());
-        
+        let color = colors
+            .get(&label)
+            .cloned()
+            .unwrap_or_else(|| "#000000".to_string());
+
         legend.push(LegendEntry {
             cluster_id: label,
             color,
@@ -702,10 +744,10 @@ fn create_legend(labels: &[i32], colors: &HashMap<i32, String>, data_labels: &Ar
             count,
         });
     }
-    
+
     // Sort by cluster ID
     legend.sort_by_key(|entry| entry.cluster_id);
-    
+
     legend
 }
 
@@ -716,12 +758,13 @@ mod tests {
 
     #[test]
     fn test_create_scatter_plot_2d() {
-        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        let data =
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
         let config = VisualizationConfig::default();
-        
+
         let plot = create_scatter_plot_2d(data.view(), &labels, None, &config).unwrap();
-        
+
         assert_eq!(plot.points.nrows(), 4);
         assert_eq!(plot.points.ncols(), 2);
         assert_eq!(plot.labels.len(), 4);
@@ -731,14 +774,18 @@ mod tests {
 
     #[test]
     fn test_create_scatter_plot_3d() {
-        let data = Array2::from_shape_vec((4, 3), vec![
-            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0
-        ]).unwrap();
+        let data = Array2::from_shape_vec(
+            (4, 3),
+            vec![
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
+            ],
+        )
+        .unwrap();
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
         let config = VisualizationConfig::default();
-        
+
         let plot = create_scatter_plot_3d(data.view(), &labels, None, &config).unwrap();
-        
+
         assert_eq!(plot.points.nrows(), 4);
         assert_eq!(plot.points.ncols(), 3);
         assert_eq!(plot.labels.len(), 4);
@@ -747,11 +794,13 @@ mod tests {
     #[test]
     fn test_dimensionality_reduction() {
         let data = Array2::from_shape_vec((10, 5), (0..50).map(|x| x as f64).collect()).unwrap();
-        
-        let result_2d = apply_dimensionality_reduction_2d(data.view(), DimensionalityReduction::PCA).unwrap();
+
+        let result_2d =
+            apply_dimensionality_reduction_2d(data.view(), DimensionalityReduction::PCA).unwrap();
         assert_eq!(result_2d.ncols(), 2);
-        
-        let result_3d = apply_dimensionality_reduction_3d(data.view(), DimensionalityReduction::PCA).unwrap();
+
+        let result_3d =
+            apply_dimensionality_reduction_3d(data.view(), DimensionalityReduction::PCA).unwrap();
         assert_eq!(result_3d.ncols(), 3);
     }
 
@@ -759,7 +808,7 @@ mod tests {
     fn test_color_generation() {
         let labels = vec![0, 1, 2];
         let colors = generate_cluster_colors(&labels, ColorScheme::Default);
-        
+
         assert_eq!(colors.len(), 3);
         assert!(colors.contains_key(&0));
         assert!(colors.contains_key(&1));

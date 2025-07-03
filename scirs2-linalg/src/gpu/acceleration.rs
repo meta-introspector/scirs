@@ -1228,14 +1228,14 @@ mod tests {
 
     #[test]
     fn test_quick_operations() {
-        let a = Array2::ones((4, 4));
-        let b = Array2::ones((4, 4));
+        let a = Array2::<f64>::ones((4, 4));
+        let b = Array2::<f64>::ones((4, 4));
 
         // These should not panic even without GPU
         let result = GpuAccelerationFramework::quick_matmul(&a.view(), &b.view());
         // Result depends on GPU availability
 
-        let x = Array1::ones(4);
+        let x = Array1::<f64>::ones(4);
         let result = GpuAccelerationFramework::quick_matvec(&a.view(), &x.view());
         // Result depends on GPU availability
     }

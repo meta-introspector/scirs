@@ -44,8 +44,10 @@ pub mod validation;
 // Examples are in the examples/ directory
 
 pub use core::{OptimizerPlugin, PluginCapabilities, PluginMetadata as CorePluginMetadata};
-pub use loader::{PluginLoader, LoaderConfig, PluginLoadResult, ValidationRule as LoaderValidationRule, PluginMetadata as LoaderPluginMetadata};
+pub use loader::{
+    LoaderConfig, PluginLoadResult, PluginLoader, PluginMetadata as LoaderPluginMetadata,
+    ValidationRule as LoaderValidationRule,
+};
 pub use registry::{PluginRegistry, RegistryConfig};
 pub use sdk::{PluginSDK, ValidationRule as SDKValidationRule};
 pub use validation::{PluginValidationFramework, ValidationConfig};
-

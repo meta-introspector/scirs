@@ -277,7 +277,7 @@ where
     O: Optimizer<A> + Send + Sync + 'static,
 {
     /// Create a new low-latency optimizer
-    pub fn new(base_optimizer: O, config: LowLatencyConfig) -> Result<Self, OptimError> {
+    pub fn new(base_optimizer: O, config: LowLatencyConfig) -> Result<Self> {
         let base_optimizer = Arc::new(Mutex::new(base_optimizer));
 
         let precomputation_engine = if config.enable_precomputation {
@@ -315,7 +315,7 @@ where
     }
 
     /// Perform a low-latency update
-    pub fn low_latency_step(&mut self, gradient: &Array1<A>) -> Result<Array1<A>, OptimError> {
+    pub fn low_latency_step(&mut self, gradient: &Array1<A>) -> Result<Array1<A>> {
         let start_time = Instant::now();
 
         // Try to use pre-computed update first
@@ -365,7 +365,7 @@ where
     }
 
     /// Perform exact update using base optimizer
-    fn exact_update(&mut self, gradient: &Array1<A>) -> Result<Array1<A>, OptimError> {
+    fn exact_update(&mut self, gradient: &Array1<A>) -> Result<Array1<A>> {
         // This is a simplified version - in practice would get current parameters
         let current_params = Array1::zeros(gradient.len());
 
@@ -378,7 +378,7 @@ where
         &mut self,
         gradient: &Array1<A>,
         approximation_level: A,
-    ) -> Result<Array1<A>, OptimError> {
+    ) -> Result<Array1<A>> {
         // Simplified approximation: reduce precision or use fewer operations
         let simplified_gradient = if approximation_level > A::from(0.5).unwrap() {
             self.simplify_gradient(gradient, approximation_level)?
@@ -395,11 +395,7 @@ where
     }
 
     /// Simplify gradient for approximation
-    fn simplify_gradient(
-        &self,
-        gradient: &Array1<A>,
-        level: A,
-    ) -> Result<Array1<A>, OptimError> {
+    fn simplify_gradient(&self, gradient: &Array1<A>, level: A) -> Result<Array1<A>> {
         let mut simplified = gradient.clone();
 
         // Sparsify gradient based on approximation level
@@ -448,7 +444,7 @@ where
     }
 
     /// Handle latency violations
-    fn handle_latency_violation(&mut self, latency: Duration) -> Result<(), OptimError> {
+    fn handle_latency_violation(&mut self, latency: Duration) -> Result<()> {
         // Increase approximation level to reduce future latency
         self.approximation_controller.increase_approximation();
 
@@ -539,7 +535,7 @@ impl<A: Float> LockFreeBuffer<A> {
 }
 
 impl FastMemoryPool {
-    fn new(total_size: usize, block_size: usize) -> Result<Self, OptimError> {
+    fn new(total_size: usize, block_size: usize) -> Result<Self> {
         let total_blocks = total_size / block_size;
         let mut blocks = Vec::with_capacity(total_blocks);
 
@@ -582,7 +578,7 @@ impl<A: Float> SIMDProcessor<A> {
         }
     }
 
-    fn process(&mut self, gradient: &Array1<A>) -> Result<Array1<A>, OptimError> {
+    fn process(&mut self, gradient: &Array1<A>) -> Result<Array1<A>> {
         // Simplified SIMD processing - in practice would use actual SIMD instructions
         Ok(gradient.clone())
     }
@@ -598,7 +594,7 @@ impl<A: Float> GradientQuantizer<A> {
         }
     }
 
-    fn quantize(&mut self, gradient: &Array1<A>) -> Result<Array1<A>, OptimError> {
+    fn quantize(&mut self, gradient: &Array1<A>) -> Result<Array1<A>> {
         // Simplified quantization
         let max_val = gradient
             .iter()

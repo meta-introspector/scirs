@@ -151,7 +151,7 @@ impl Default for UltraEnhancedConfig {
 /// let fs = 100.0;
 /// let t: Array1<f64> = Array1::linspace(0.0, (n-1) as f64 / fs, n);
 /// use rand::prelude::*;
-/// let mut rng = rand::rng();
+/// let mut rng = rand::thread_rng();
 ///
 /// let signal: Array1<f64> = t.mapv(|ti| {
 ///     (2.0 * PI * 5.0 * ti).sin() +

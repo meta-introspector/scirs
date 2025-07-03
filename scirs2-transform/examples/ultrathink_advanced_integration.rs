@@ -419,8 +419,8 @@ fn create_sparse_dataset(
 
     for i in 0..n_samples {
         for j in 0..n_features {
-            if rng.gen::<f64>() > sparsity {
-                data[[i, j]] = rng.gen_range(-5.0..5.0);
+            if rng.random::<f64>() > sparsity {
+                data[[i, j]] = rng.random_range(-5.0..5.0);
             }
         }
     }
@@ -439,8 +439,8 @@ fn create_drifting_dataset(
 
     for i in 0..n_samples {
         for j in 0..n_features {
-            let base_value = rng.gen_range(-1.0..1.0);
-            let drift_effect = drift_factor * rng.gen_range(-2.0..2.0);
+            let base_value = rng.random_range(-1.0..1.0);
+            let drift_effect = drift_factor * rng.random_range(-2.0..2.0);
             data[[i, j]] = base_value + drift_effect;
         }
     }
@@ -458,7 +458,7 @@ fn create_numerical_features(
 
     for i in 0..n_samples {
         for j in 0..n_features {
-            data[[i, j]] = rng.gen_range(-10.0..10.0);
+            data[[i, j]] = rng.random_range(-10.0..10.0);
         }
     }
 
@@ -475,7 +475,7 @@ fn create_categorical_features(
 
     for i in 0..n_samples {
         for j in 0..n_features {
-            data[[i, j]] = rng.gen_range(0..10) as f64; // Categorical as integers
+            data[[i, j]] = rng.random_range(0..10) as f64; // Categorical as integers
         }
     }
 
@@ -494,7 +494,7 @@ fn create_temporal_features(
         for j in 0..n_features {
             let time_component = (i as f64 / n_samples as f64) * 2.0 * std::f64::consts::PI;
             let seasonal = (time_component + j as f64).sin();
-            let noise = rng.gen_range(-0.1..0.1);
+            let noise = rng.random_range(-0.1..0.1);
             data[[i, j]] = seasonal + noise;
         }
     }
@@ -520,7 +520,7 @@ fn create_benchmark_dataset(
 
     for i in 0..n_samples {
         for j in 0..n_features {
-            data[[i, j]] = rng.gen_range(-1.0..1.0);
+            data[[i, j]] = rng.random_range(-1.0..1.0);
         }
     }
 

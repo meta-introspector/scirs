@@ -119,18 +119,18 @@ pub fn test_polygamma_properties() -> Result<(), String> {
         "  polygamma(1, 1.0) = {:.16}, expected π²/6 ≈ {:.16}",
         psi1_1, pi_squared_over_6
     );
-    // There seems to be a sign issue in our implementation, so let's check the absolute value
-    assert_relative_eq!(psi1_1.abs(), pi_squared_over_6, epsilon = 1e-3);
+    // Fixed sign issue - polygamma(1, 1) should be positive
+    assert_relative_eq!(psi1_1, pi_squared_over_6, epsilon = 1e-3);
 
     // Test monotonicity for polygamma(1, x) = trigamma(x)
-    // trigamma(x) should be decreasing in absolute value for x > 0 (considering our sign issue)
+    // trigamma(x) should be decreasing for x > 0 (positive values)
     let x_vals = [1.0f64, 2.0, 3.0, 4.0, 5.0];
     for i in 1..x_vals.len() {
-        let psi1_prev = polygamma(1, x_vals[i - 1]).abs();
-        let psi1_curr = polygamma(1, x_vals[i]).abs();
+        let psi1_prev = polygamma(1, x_vals[i - 1]);
+        let psi1_curr = polygamma(1, x_vals[i]);
         assert!(
             psi1_curr < psi1_prev,
-            "polygamma(1,x) should be decreasing in absolute value"
+            "polygamma(1,x) should be decreasing for positive x"
         );
     }
 

@@ -7,7 +7,7 @@
 //! - GPU-accelerated HMC (when available)
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{Array1, Array2};
 use num_traits::{Float, One, Zero};
 use rand::Rng;
 use rand_distr::{Distribution, Normal};

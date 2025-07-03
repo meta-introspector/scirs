@@ -7,7 +7,7 @@ use num_traits::Float;
 use std::collections::VecDeque;
 use std::fmt::Debug;
 
-use crate::error::Result;
+use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// L-BFGS optimizer

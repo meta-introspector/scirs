@@ -195,9 +195,10 @@ impl CudaContext {
         #[cfg(feature = "cuda")]
         {
             // Real CUDA implementation
-            let device = Arc::new(CudaDevice::new(0).map_err(|e| {
-                GpuError::Other(format!("Failed to initialize CUDA device: {}", e))
-            })?);
+            let device =
+                Arc::new(CudaDevice::new(0).map_err(|e| {
+                    GpuError::Other(format!("Failed to initialize CUDA device: {e}"))
+                })?);
 
             Ok(Self {
                 device,
@@ -304,9 +305,8 @@ impl CudaContext {
             // Real NVRTC implementation
             use cudarc::nvrtc::compile_ptx;
 
-            compile_ptx(source).map_err(|e| {
-                GpuError::Other(format!("NVRTC compilation failed for {}: {}", name, e))
-            })
+            compile_ptx(source)
+                .map_err(|e| GpuError::Other(format!("NVRTC compilation failed for {name}: {e}")))
         }
         #[cfg(not(feature = "cuda"))]
         {
@@ -329,7 +329,7 @@ impl CudaContext {
     ) -> Result<Arc<impl std::any::Any>, GpuError> {
         device
             .load_ptx(Ptx::from_src(ptx), "module", &[])
-            .map_err(|e| GpuError::Other(format!("Failed to load PTX module: {}", e)))
+            .map_err(|e| GpuError::Other(format!("Failed to load PTX module: {e}")))
             .map(Arc::new)
     }
 
@@ -352,7 +352,7 @@ impl CudaContext {
     pub fn allocate_device_memory(&self, size: usize) -> Result<CudaSlice<u8>, GpuError> {
         self.device
             .alloc_zeros::<u8>(size)
-            .map_err(|e| GpuError::Other(format!("CUDA memory allocation failed: {}", e)))
+            .map_err(|e| GpuError::Other(format!("CUDA memory allocation failed: {e}")))
     }
 
     /// Allocate device memory (fallback)

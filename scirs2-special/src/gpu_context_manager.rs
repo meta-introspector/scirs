@@ -4,10 +4,10 @@
 //! fallback, resource pooling, and performance monitoring.
 
 use crate::error::{SpecialError, SpecialResult};
-use scirs2_core::gpu::{GpuBackend, GpuBackendType, GpuContext, GpuError};
+use scirs2_core::gpu::{GpuBackend, GpuContext};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 /// GPU device information and capabilities
 #[derive(Debug, Clone)]
@@ -17,7 +17,7 @@ pub struct GpuDeviceInfo {
     pub memory_size: u64,
     pub compute_units: u32,
     pub max_workgroup_size: u32,
-    pub backend_type: GpuBackendType,
+    pub backend_type: GpuBackend,
     pub is_available: bool,
 }
 
@@ -53,7 +53,7 @@ pub struct GpuProductionConfig {
     /// Enable performance profiling and logging (default: false)
     pub enable_profiling: bool,
     /// Preferred GPU backend type (default: Auto)
-    pub preferred_backend: GpuBackendType,
+    pub preferred_backend: GpuBackend,
 }
 
 impl Default for GpuProductionConfig {
@@ -65,7 +65,7 @@ impl Default for GpuProductionConfig {
             warmup_iterations: 3,
             max_retry_attempts: 3,
             enable_profiling: false,
-            preferred_backend: GpuBackendType::Auto,
+            preferred_backend: GpuBackend::Cpu,
         }
     }
 }
@@ -73,13 +73,13 @@ impl Default for GpuProductionConfig {
 /// GPU context pool for managing multiple contexts
 #[derive(Debug)]
 pub struct GpuContextPool {
-    contexts: RwLock<HashMap<GpuBackendType, Arc<GpuContext>>>,
-    device_info: RwLock<HashMap<GpuBackendType, GpuDeviceInfo>>,
-    performance_stats: RwLock<HashMap<GpuBackendType, GpuPerformanceStats>>,
+    contexts: RwLock<HashMap<GpuBackend, Arc<GpuContext>>>,
+    device_info: RwLock<HashMap<GpuBackend, GpuDeviceInfo>>,
+    performance_stats: RwLock<HashMap<GpuBackend, GpuPerformanceStats>>,
     fallback_threshold: Mutex<usize>,
     auto_fallback_enabled: Mutex<bool>,
     production_config: RwLock<GpuProductionConfig>,
-    memory_usage_tracker: RwLock<HashMap<GpuBackendType, u64>>,
+    memory_usage_tracker: RwLock<HashMap<GpuBackend, u64>>,
 }
 
 impl Default for GpuContextPool {
@@ -138,17 +138,17 @@ impl GpuContextPool {
 
         // Try to discover WebGPU devices
         if let Ok(info) = self.probe_webgpu_device() {
-            device_info.insert(GpuBackendType::WebGpu, info);
+            device_info.insert(GpuBackend::Wgpu, info);
         }
 
         // Try to discover OpenCL devices
         if let Ok(info) = self.probe_opencl_device() {
-            device_info.insert(GpuBackendType::OpenCl, info);
+            device_info.insert(GpuBackend::OpenCL, info);
         }
 
         // Try to discover CUDA devices
         if let Ok(info) = self.probe_cuda_device() {
-            device_info.insert(GpuBackendType::Cuda, info);
+            device_info.insert(GpuBackend::Cuda, info);
         }
 
         if device_info.is_empty() {
@@ -166,7 +166,7 @@ impl GpuContextPool {
     fn probe_webgpu_device(&self) -> SpecialResult<GpuDeviceInfo> {
         use scirs2_core::gpu;
 
-        match gpu::get_or_create_context(GpuBackendType::WebGpu) {
+        match gpu::get_or_create_context(GpuBackend::Wgpu) {
             Ok(context) => {
                 let info = GpuDeviceInfo {
                     device_id: 0,
@@ -174,7 +174,7 @@ impl GpuContextPool {
                     memory_size: 1024 * 1024 * 1024, // Assume 1GB
                     compute_units: 32,               // Conservative estimate
                     max_workgroup_size: 256,
-                    backend_type: GpuBackendType::WebGpu,
+                    backend_type: GpuBackend::Wgpu,
                     is_available: true,
                 };
 
@@ -201,7 +201,7 @@ impl GpuContextPool {
         log::debug!("Probing OpenCL devices...");
 
         // Try to create OpenCL context to test availability
-        match gpu::get_or_create_context(GpuBackendType::OpenCl) {
+        match gpu::get_or_create_context(GpuBackend::OpenCL) {
             Ok(context) => {
                 // Query OpenCL device properties if possible
                 let info = self.query_opencl_device_info(&context).unwrap_or_else(|_| {
@@ -212,7 +212,7 @@ impl GpuContextPool {
                         memory_size: 2 * 1024 * 1024 * 1024, // 2GB assumption
                         compute_units: 16,                   // Conservative estimate
                         max_workgroup_size: 256,
-                        backend_type: GpuBackendType::OpenCl,
+                        backend_type: GpuBackend::OpenCL,
                         is_available: true,
                     }
                 });
@@ -245,7 +245,7 @@ impl GpuContextPool {
         log::debug!("Probing CUDA devices...");
 
         // Try to create CUDA context to test availability
-        match gpu::get_or_create_context(GpuBackendType::Cuda) {
+        match gpu::get_or_create_context(GpuBackend::Cuda) {
             Ok(context) => {
                 // Query CUDA device properties if possible
                 let info = self.query_cuda_device_info(&context).unwrap_or_else(|_| {
@@ -256,7 +256,7 @@ impl GpuContextPool {
                         memory_size: 4 * 1024 * 1024 * 1024, // 4GB assumption for CUDA
                         compute_units: 64,                   // Higher for CUDA devices
                         max_workgroup_size: 1024,            // CUDA supports larger workgroups
-                        backend_type: GpuBackendType::Cuda,
+                        backend_type: GpuBackend::Cuda,
                         is_available: true,
                     }
                 });
@@ -314,11 +314,7 @@ impl GpuContextPool {
         let stats = self.performance_stats.read().unwrap();
 
         // Prioritize based on performance stats and backend type
-        let preferred_order = [
-            GpuBackendType::Cuda,
-            GpuBackendType::WebGpu,
-            GpuBackendType::OpenCl,
-        ];
+        let preferred_order = [GpuBackend::Cuda, GpuBackend::Wgpu, GpuBackend::OpenCL];
 
         for &backend_type in &preferred_order {
             if let Some(context) = contexts.get(&backend_type) {
@@ -351,7 +347,7 @@ impl GpuContextPool {
     /// Record operation performance
     pub fn record_operation(
         &self,
-        backend_type: GpuBackendType,
+        backend_type: GpuBackend,
         execution_time: Duration,
         success: bool,
         data_size: usize,
@@ -375,16 +371,13 @@ impl GpuContextPool {
     }
 
     /// Get performance statistics for a backend
-    pub fn get_performance_stats(
-        &self,
-        backend_type: GpuBackendType,
-    ) -> Option<GpuPerformanceStats> {
+    pub fn get_performance_stats(&self, backend_type: GpuBackend) -> Option<GpuPerformanceStats> {
         let stats = self.performance_stats.read().unwrap();
         stats.get(&backend_type).cloned()
     }
 
     /// Get all available device information
-    pub fn get_device_info(&self) -> HashMap<GpuBackendType, GpuDeviceInfo> {
+    pub fn get_device_info(&self) -> HashMap<GpuBackend, GpuDeviceInfo> {
         self.device_info.read().unwrap().clone()
     }
 
@@ -422,7 +415,7 @@ impl GpuContextPool {
         *self.fallback_threshold.lock().unwrap() = threshold;
     }
 
-    /// Query OpenCL device information with detailed properties\n    fn query_opencl_device_info(&self, _context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {\n        #[cfg(feature = \"gpu\")]\n        log::debug!(\"Querying OpenCL device properties...\");\n        \n        let estimated_memory = self.estimate_gpu_memory_opencl();\n        let estimated_compute_units = self.estimate_compute_units_opencl();\n        \n        Ok(GpuDeviceInfo {\n            device_id: 0,\n            device_name: format!(\"OpenCL GPU Device ({})\", self.detect_gpu_vendor()),\n            memory_size: estimated_memory,\n            compute_units: estimated_compute_units,\n            max_workgroup_size: 256,\n            backend_type: GpuBackendType::OpenCl,\n            is_available: true,\n        })\n    }\n    \n    /// Query CUDA device information with detailed properties\n    fn query_cuda_device_info(&self, _context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {\n        #[cfg(feature = \"gpu\")]\n        log::debug!(\"Querying CUDA device properties...\");\n        \n        let estimated_memory = self.estimate_gpu_memory_cuda();\n        let estimated_compute_units = self.estimate_compute_units_cuda();\n        \n        Ok(GpuDeviceInfo {\n            device_id: 0,\n            device_name: format!(\"NVIDIA CUDA Device ({})\", self.detect_nvidia_architecture()),\n            memory_size: estimated_memory,\n            compute_units: estimated_compute_units,\n            max_workgroup_size: 1024,\n            backend_type: GpuBackendType::Cuda,\n            is_available: true,\n        })\n    }\n    \n    /// Helper functions for device estimation\n    fn estimate_gpu_memory_opencl(&self) -> u64 { 2 * 1024 * 1024 * 1024 }\n    fn estimate_gpu_memory_cuda(&self) -> u64 { 4 * 1024 * 1024 * 1024 }\n    fn estimate_compute_units_opencl(&self) -> u32 { 32 }\n    fn estimate_compute_units_cuda(&self) -> u32 { 64 }\n    fn detect_gpu_vendor(&self) -> String { \"Unknown Vendor\".to_string() }\n    fn detect_nvidia_architecture(&self) -> String { \"Unknown Architecture\".to_string() }\n    fn get_system_memory_size(&self) -> u64 { 8 * 1024 * 1024 * 1024 }\n    fn is_likely_integrated_gpu(&self) -> bool { false }\n    \n    /// Advanced performance monitoring with trend analysis\n    pub fn get_performance_trends(&self) -> HashMap<GpuBackendType, String> {\n        let stats = self.performance_stats.read().unwrap();\n        let mut trends = HashMap::new();\n        \n        for (&backend_type, stat) in stats.iter() {\n            let trend_analysis = if stat.total_operations > 10 {\n                let success_rate = stat.successful_operations as f64 / stat.total_operations as f64;\n                let avg_throughput = if stat.average_execution_time.as_millis() > 0 {\n                    1000.0 / stat.average_execution_time.as_millis() as f64\n                } else { 0.0 };\n                \n                format!(\"Success: {:.1}%, Throughput: {:.1} ops/sec, Data: {} MB\",\n                       success_rate * 100.0, avg_throughput, stat.total_data_transferred / 1024 / 1024)\n            } else {\n                \"Insufficient data for trend analysis\".to_string()\n            };\n            trends.insert(backend_type, trend_analysis);\n        }\n        trends\n    }\n    \n    /// Clear performance statistics\n    pub fn reset_performance_stats(&self) {\n        let mut stats = self.performance_stats.write().unwrap();\n        for stat in stats.values_mut() {\n            *stat = GpuPerformanceStats::default();\n        }\n        #[cfg(feature = \"gpu\")]\n        log::info!(\"GPU performance statistics reset\");\n    }\n\n    /// Get comprehensive system report"
+    /// Query OpenCL device information with detailed properties\n    fn query_opencl_device_info(&self, _context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {\n        #[cfg(feature = \"gpu\")]\n        log::debug!(\"Querying OpenCL device properties...\");\n        \n        let estimated_memory = self.estimate_gpu_memory_opencl();\n        let estimated_compute_units = self.estimate_compute_units_opencl();\n        \n        Ok(GpuDeviceInfo {\n            device_id: 0,\n            device_name: format!(\"OpenCL GPU Device ({})\", self.detect_gpu_vendor()),\n            memory_size: estimated_memory,\n            compute_units: estimated_compute_units,\n            max_workgroup_size: 256,\n            backend_type: GpuBackend::OpenCL,\n            is_available: true,\n        })\n    }\n    \n    /// Query CUDA device information with detailed properties\n    fn query_cuda_device_info(&self, _context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {\n        #[cfg(feature = \"gpu\")]\n        log::debug!(\"Querying CUDA device properties...\");\n        \n        let estimated_memory = self.estimate_gpu_memory_cuda();\n        let estimated_compute_units = self.estimate_compute_units_cuda();\n        \n        Ok(GpuDeviceInfo {\n            device_id: 0,\n            device_name: format!(\"NVIDIA CUDA Device ({})\", self.detect_nvidia_architecture()),\n            memory_size: estimated_memory,\n            compute_units: estimated_compute_units,\n            max_workgroup_size: 1024,\n            backend_type: GpuBackend::Cuda,\n            is_available: true,\n        })\n    }\n    \n    /// Helper functions for device estimation\n    fn estimate_gpu_memory_opencl(&self) -> u64 { 2 * 1024 * 1024 * 1024 }\n    fn estimate_gpu_memory_cuda(&self) -> u64 { 4 * 1024 * 1024 * 1024 }\n    fn estimate_compute_units_opencl(&self) -> u32 { 32 }\n    fn estimate_compute_units_cuda(&self) -> u32 { 64 }\n    fn detect_gpu_vendor(&self) -> String { \"Unknown Vendor\".to_string() }\n    fn detect_nvidia_architecture(&self) -> String { \"Unknown Architecture\".to_string() }\n    fn get_system_memory_size(&self) -> u64 { 8 * 1024 * 1024 * 1024 }\n    fn is_likely_integrated_gpu(&self) -> bool { false }\n    \n    /// Advanced performance monitoring with trend analysis\n    pub fn get_performance_trends(&self) -> HashMap<GpuBackend, String> {\n        let stats = self.performance_stats.read().unwrap();\n        let mut trends = HashMap::new();\n        \n        for (&backend_type, stat) in stats.iter() {\n            let trend_analysis = if stat.total_operations > 10 {\n                let success_rate = stat.successful_operations as f64 / stat.total_operations as f64;\n                let avg_throughput = if stat.average_execution_time.as_millis() > 0 {\n                    1000.0 / stat.average_execution_time.as_millis() as f64\n                } else { 0.0 };\n                \n                format!(\"Success: {:.1}%, Throughput: {:.1} ops/sec, Data: {} MB\",\n                       success_rate * 100.0, avg_throughput, stat.total_data_transferred / 1024 / 1024)\n            } else {\n                \"Insufficient data for trend analysis\".to_string()\n            };\n            trends.insert(backend_type, trend_analysis);\n        }\n        trends\n    }\n    \n    /// Clear performance statistics\n    pub fn reset_performance_stats(&self) {\n        let mut stats = self.performance_stats.write().unwrap();\n        for stat in stats.values_mut() {\n            *stat = GpuPerformanceStats::default();\n        }\n        #[cfg(feature = \"gpu\")]\n        log::info!(\"GPU performance statistics reset\");\n    }\n\n    /// Get comprehensive system report"
     pub fn get_system_report(&self) -> String {
         let device_info = self.device_info.read().unwrap();
         let stats = self.performance_stats.read().unwrap();
@@ -507,7 +500,7 @@ pub fn should_use_gpu_computation(array_size: usize, element_size: usize) -> boo
 
 /// Record GPU operation performance
 pub fn record_gpu_performance(
-    backend_type: GpuBackendType,
+    backend_type: GpuBackend,
     execution_time: Duration,
     success: bool,
     data_size: usize,
@@ -679,7 +672,7 @@ mod tests {
     #[test]
     fn test_performance_stats() {
         let pool = GpuContextPool::new();
-        let backend = GpuBackendType::WebGpu;
+        let backend = GpuBackend::Wgpu;
 
         // Initial stats should be None (no context created)
         assert!(pool.get_performance_stats(backend).is_none());

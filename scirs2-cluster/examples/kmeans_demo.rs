@@ -55,7 +55,7 @@ fn main() {
 
     println!("\nCluster sizes:");
     for (i, &count) in counts.iter().enumerate() {
-        println!("  Cluster {}: {} points", i, count);
+        println!("  Cluster {i}: {count} points");
     }
 
     // Run K-means++

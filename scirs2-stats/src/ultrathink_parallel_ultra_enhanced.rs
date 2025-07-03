@@ -7,14 +7,14 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::error_standardization::ErrorMessages;
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2, s};
-use num_traits::{Float, NumCast, Zero, One};
+use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
+use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
-use std::sync::{Arc, RwLock, Mutex};
-use std::time::{Duration, Instant, SystemTime};
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
+use std::time::{Duration, Instant, SystemTime};
 
 /// Ultra-Think Parallel Configuration with ML-based Optimization
 #[derive(Debug, Clone)]
@@ -58,10 +58,10 @@ impl Default for UltraThinkParallelConfig {
 /// Memory awareness levels for parallel operations
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MemoryAwarenessLevel {
-    Basic,      // Basic memory size checks
-    Standard,   // Memory bandwidth awareness
-    Advanced,   // Cache hierarchy awareness
-    Expert,     // Full memory subsystem optimization
+    Basic,    // Basic memory size checks
+    Standard, // Memory bandwidth awareness
+    Advanced, // Cache hierarchy awareness
+    Expert,   // Full memory subsystem optimization
 }
 
 /// Thread pool management strategies
@@ -87,19 +87,19 @@ pub enum PredictionModelType {
 /// Load balancing intelligence levels
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LoadBalancingIntelligence {
-    Static,           // Fixed chunk sizes
-    Heuristic,        // Rule-based adaptation
-    MachineLearning,  // ML-based optimization
+    Static,                // Fixed chunk sizes
+    Heuristic,             // Rule-based adaptation
+    MachineLearning,       // ML-based optimization
     ReinforcementLearning, // RL-based continuous improvement
 }
 
 /// NUMA topology awareness levels
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NumaTopologyAwareness {
-    None,      // No NUMA awareness
-    Basic,     // Basic NUMA node detection
-    Advanced,  // NUMA distance matrix awareness
-    Full,      // Complete memory locality optimization
+    None,     // No NUMA awareness
+    Basic,    // Basic NUMA node detection
+    Advanced, // NUMA distance matrix awareness
+    Full,     // Complete memory locality optimization
 }
 
 /// Ultra-Think Parallel Processor with Advanced Intelligence
@@ -118,26 +118,20 @@ impl UltraThinkParallelProcessor {
     pub fn new(config: UltraThinkParallelConfig) -> Self {
         let numa_topology = detect_numa_topology();
         let memory_hierarchy = detect_memory_hierarchy();
-        
+
         Self {
-            performance_predictor: Arc::new(RwLock::new(
-                PerformancePredictor::new(&config)
-            )),
-            load_balancer: Arc::new(RwLock::new(
-                IntelligentLoadBalancer::new(&config, &numa_topology)
-            )),
-            numa_optimizer: Arc::new(RwLock::new(
-                NumaOptimizer::new(numa_topology)
-            )),
-            memory_manager: Arc::new(RwLock::new(
-                AdvancedMemoryManager::new(&config, memory_hierarchy)
-            )),
-            performance_monitor: Arc::new(RwLock::new(
-                RealTimePerformanceMonitor::new()
-            )),
-            thread_pool_manager: Arc::new(RwLock::new(
-                ThreadPoolManager::new(&config)
-            )),
+            performance_predictor: Arc::new(RwLock::new(PerformancePredictor::new(&config))),
+            load_balancer: Arc::new(RwLock::new(IntelligentLoadBalancer::new(
+                &config,
+                &numa_topology,
+            ))),
+            numa_optimizer: Arc::new(RwLock::new(NumaOptimizer::new(numa_topology))),
+            memory_manager: Arc::new(RwLock::new(AdvancedMemoryManager::new(
+                &config,
+                memory_hierarchy,
+            ))),
+            performance_monitor: Arc::new(RwLock::new(RealTimePerformanceMonitor::new())),
+            thread_pool_manager: Arc::new(RwLock::new(ThreadPoolManager::new(&config))),
             config,
         }
     }
@@ -154,10 +148,12 @@ impl UltraThinkParallelProcessor {
     {
         let start_time = Instant::now();
         let data_characteristics = self.analyze_data_characteristics(data);
-        
+
         // Predict optimal execution strategy
         let execution_strategy = if self.config.enable_ml_optimization {
-            self.performance_predictor.read().unwrap()
+            self.performance_predictor
+                .read()
+                .unwrap()
                 .predict_optimal_strategy(&data_characteristics, operations)?
         } else {
             ExecutionStrategy::default()
@@ -165,14 +161,19 @@ impl UltraThinkParallelProcessor {
 
         // Optimize memory layout and NUMA placement
         let memory_layout = if self.config.enable_cross_numa_optimization {
-            self.numa_optimizer.read().unwrap()
+            self.numa_optimizer
+                .read()
+                .unwrap()
                 .optimize_data_placement(&data_characteristics)?
         } else {
             MemoryLayout::default()
         };
 
         // Configure intelligent load balancing
-        let load_balancing_config = self.load_balancer.read().unwrap()
+        let load_balancing_config = self
+            .load_balancer
+            .read()
+            .unwrap()
             .generate_load_balancing_config(&execution_strategy, &data_characteristics)?;
 
         // Execute parallel operations with real-time monitoring
@@ -188,8 +189,12 @@ impl UltraThinkParallelProcessor {
 
         // Update performance models with execution results
         if self.config.enable_ml_optimization {
-            self.update_performance_models(&data_characteristics, &execution_strategy, 
-                                         execution_time, &result.performance_metrics)?;
+            self.update_performance_models(
+                &data_characteristics,
+                &execution_strategy,
+                execution_time,
+                &result.performance_metrics,
+            )?;
         }
 
         Ok(result)
@@ -205,13 +210,15 @@ impl UltraThinkParallelProcessor {
         F: Float + NumCast + Send + Sync + Copy + 'static,
     {
         let start_time = Instant::now();
-        
+
         // Analyze matrix characteristics
         let matrix_characteristics = self.analyze_matrix_characteristics(matrices);
-        
+
         // Predict optimal execution strategy for matrices
         let execution_strategy = if self.config.enable_ml_optimization {
-            self.performance_predictor.read().unwrap()
+            self.performance_predictor
+                .read()
+                .unwrap()
                 .predict_matrix_strategy(&matrix_characteristics, &operation)?
         } else {
             MatrixExecutionStrategy::default()
@@ -219,7 +226,9 @@ impl UltraThinkParallelProcessor {
 
         // Optimize matrix memory layout across NUMA nodes
         let numa_layout = if self.config.enable_cross_numa_optimization {
-            self.numa_optimizer.read().unwrap()
+            self.numa_optimizer
+                .read()
+                .unwrap()
                 .optimize_matrix_placement(&matrix_characteristics)?
         } else {
             NumaMatrixLayout::default()
@@ -237,8 +246,12 @@ impl UltraThinkParallelProcessor {
 
         // Update matrix operation performance models
         if self.config.enable_ml_optimization {
-            self.update_matrix_performance_models(&matrix_characteristics, &execution_strategy, 
-                                                execution_time, &result.performance_metrics)?;
+            self.update_matrix_performance_models(
+                &matrix_characteristics,
+                &execution_strategy,
+                execution_time,
+                &result.performance_metrics,
+            )?;
         }
 
         Ok(result)
@@ -264,7 +277,7 @@ impl UltraThinkParallelProcessor {
 
         for (chunk_index, chunk) in data_stream.enumerate() {
             streaming_buffer.push(chunk);
-            
+
             if streaming_buffer.is_ready() {
                 // Predict optimal processing strategy for current chunk
                 let chunk_characteristics = self.analyze_chunk_characteristics(&streaming_buffer);
@@ -309,10 +322,12 @@ impl UltraThinkParallelProcessor {
 
         // Analyze batch characteristics
         let batch_characteristics = self.analyze_batch_characteristics(batches);
-        
+
         // Predict optimal batch processing strategy
         let batch_strategy = if self.config.enable_predictive_scheduling {
-            self.performance_predictor.read().unwrap()
+            self.performance_predictor
+                .read()
+                .unwrap()
                 .predict_batch_strategy(&batch_characteristics, operations)?
         } else {
             BatchProcessingStrategy::default()
@@ -320,26 +335,28 @@ impl UltraThinkParallelProcessor {
 
         // Schedule batches across NUMA nodes
         let numa_schedule = if self.config.enable_cross_numa_optimization {
-            self.numa_optimizer.read().unwrap()
+            self.numa_optimizer
+                .read()
+                .unwrap()
                 .schedule_batches(&batch_characteristics, &batch_strategy)?
         } else {
             NumaBatchSchedule::default()
         };
 
         // Execute batch processing with real-time monitoring
-        let results = self.execute_batch_processing(
-            batches,
-            operations,
-            &batch_strategy,
-            &numa_schedule,
-        )?;
+        let results =
+            self.execute_batch_processing(batches, operations, &batch_strategy, &numa_schedule)?;
 
         let execution_time = start_time.elapsed();
 
         // Update batch processing performance models
         if self.config.enable_ml_optimization {
-            self.update_batch_performance_models(&batch_characteristics, &batch_strategy, 
-                                               execution_time, &results)?;
+            self.update_batch_performance_models(
+                &batch_characteristics,
+                &batch_strategy,
+                execution_time,
+                &results,
+            )?;
         }
 
         Ok(UltraParallelBatchResult {
@@ -380,12 +397,14 @@ impl UltraThinkParallelProcessor {
 
         // Calculate basic statistics to infer distribution
         let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
-        let variance = data.iter()
+        let variance = data
+            .iter()
             .map(|&x| {
                 let diff = x - mean;
                 diff * diff
             })
-            .fold(F::zero(), |acc, x| acc + x) / F::from(data.len() - 1).unwrap();
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(data.len() - 1).unwrap();
 
         if variance < F::from(0.1).unwrap() {
             DataDistribution::LowVariance
@@ -416,7 +435,7 @@ impl UltraThinkParallelProcessor {
     fn estimate_numa_locality(&self, data_size: usize) -> f64 {
         // Estimate NUMA locality potential based on data size
         let numa_node_memory = 64 * 1024 * 1024 * 1024; // 64GB per NUMA node typical
-        
+
         if data_size * 8 <= numa_node_memory {
             0.90 // Excellent NUMA locality potential
         } else {
@@ -425,19 +444,20 @@ impl UltraThinkParallelProcessor {
     }
 
     // Placeholder implementations for complex analysis methods
-    
+
     fn analyze_matrix_characteristics<F>(&self, matrices: &[Array2<F>]) -> MatrixCharacteristics
     where
         F: Float + NumCast + Send + Sync + Copy,
     {
         MatrixCharacteristics {
             total_elements: matrices.iter().map(|m| m.len()).sum(),
-            max_dimensions: matrices.iter()
+            max_dimensions: matrices
+                .iter()
                 .map(|m| (m.nrows(), m.ncols()))
                 .max_by_key(|(r, c)| r * c)
                 .unwrap_or((0, 0)),
             memory_pattern: MemoryPattern::RowMajor, // Default for ndarray
-            sparsity_estimate: 0.0, // Assume dense matrices
+            sparsity_estimate: 0.0,                  // Assume dense matrices
             numerical_stability: NumericalStability::Good,
         }
     }
@@ -454,7 +474,10 @@ impl UltraThinkParallelProcessor {
         }
     }
 
-    fn analyze_batch_characteristics<F, D>(&self, batches: &[ArrayBase<D, Ix1>]) -> BatchCharacteristics
+    fn analyze_batch_characteristics<F, D>(
+        &self,
+        batches: &[ArrayBase<D, Ix1>],
+    ) -> BatchCharacteristics
     where
         F: Float + NumCast + Send + Sync + Copy,
         D: Data<Elem = F> + Sync,
@@ -479,15 +502,14 @@ impl UltraThinkParallelProcessor {
 
         let sizes: Vec<f64> = batches.iter().map(|b| b.len() as f64).collect();
         let mean = sizes.iter().sum::<f64>() / sizes.len() as f64;
-        let variance = sizes.iter()
-            .map(|&size| (size - mean).powi(2))
-            .sum::<f64>() / sizes.len() as f64;
-        
+        let variance =
+            sizes.iter().map(|&size| (size - mean).powi(2)).sum::<f64>() / sizes.len() as f64;
+
         variance.sqrt() / mean // Coefficient of variation
     }
 
     // Placeholder execution methods
-    
+
     fn execute_parallel_operations<F, D>(
         &self,
         _data: &ArrayBase<D, Ix1>,
@@ -567,7 +589,7 @@ impl UltraThinkParallelProcessor {
     }
 
     // Performance update methods
-    
+
     fn update_performance_models(
         &self,
         _characteristics: &DataCharacteristics,
@@ -602,7 +624,7 @@ impl UltraThinkParallelProcessor {
     }
 
     // Efficiency calculation methods
-    
+
     fn calculate_batch_efficiency(
         &self,
         _results: &[BatchProcessingResult<f64>],
@@ -1514,14 +1536,12 @@ impl<D> StreamingBuffer<D> {
 fn detect_numa_topology() -> NumaTopology {
     // Placeholder implementation - in reality would query system NUMA topology
     NumaTopology {
-        nodes: vec![
-            NumaNode {
-                id: 0,
-                cpu_cores: (0..8).collect(),
-                memory_size_gb: 64.0,
-                local_bandwidth_gbps: 100.0,
-            }
-        ],
+        nodes: vec![NumaNode {
+            id: 0,
+            cpu_cores: (0..8).collect(),
+            memory_size_gb: 64.0,
+            local_bandwidth_gbps: 100.0,
+        }],
         distance_matrix: Array2::eye(1),
         memory_bandwidth: [(0, 100.0)].iter().cloned().collect(),
     }
@@ -1599,7 +1619,7 @@ mod tests {
         let processor = create_ultra_think_parallel_processor();
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let characteristics = processor.analyze_data_characteristics(&data.view());
-        
+
         assert_eq!(characteristics.size, 5);
         assert!(characteristics.cache_efficiency_estimate > 0.8);
     }
@@ -1610,10 +1630,10 @@ mod tests {
         let batch1 = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let batch2 = Array1::from_vec(vec![4.0, 5.0, 6.0, 7.0]);
         let batch3 = Array1::from_vec(vec![8.0, 9.0]);
-        
+
         let batches = vec![batch1.view(), batch2.view(), batch3.view()];
         let variance = processor.calculate_batch_size_variance(&batches);
-        
+
         assert!(variance > 0.0);
     }
 
@@ -1635,12 +1655,12 @@ mod tests {
     #[test]
     fn test_data_distribution_detection() {
         let processor = create_ultra_think_parallel_processor();
-        
+
         // Test low variance data
         let low_var_data = Array1::from_vec(vec![1.0; 100]);
         let distribution = processor.detect_data_distribution(&low_var_data.view());
         assert_eq!(distribution, DataDistribution::LowVariance);
-        
+
         // Test normal variance data
         let normal_data = Array1::from_vec((0..100).map(|i| i as f64).collect());
         let distribution = processor.detect_data_distribution(&normal_data.view());
@@ -1650,11 +1670,11 @@ mod tests {
     #[test]
     fn test_cache_efficiency_estimation() {
         let processor = create_ultra_think_parallel_processor();
-        
+
         // Small data should have high cache efficiency
         let small_efficiency = processor.estimate_cache_efficiency(100);
         assert!(small_efficiency > 0.9);
-        
+
         // Large data should have lower cache efficiency
         let large_efficiency = processor.estimate_cache_efficiency(10_000_000);
         assert!(large_efficiency < 0.7);
@@ -1664,15 +1684,15 @@ mod tests {
     fn test_streaming_buffer() {
         let mut buffer = StreamingBuffer::new(3);
         assert!(!buffer.is_ready());
-        
+
         buffer.push(1);
         buffer.push(2);
         assert!(!buffer.is_ready());
-        
+
         buffer.push(3);
         assert!(buffer.is_ready());
         assert_eq!(buffer.current_size(), 3);
-        
+
         buffer.push(4);
         assert_eq!(buffer.current_size(), 3); // Should maintain max size
     }
@@ -1684,7 +1704,7 @@ mod tests {
             large_dataset_processor.config.memory_awareness_level,
             MemoryAwarenessLevel::Expert
         );
-        
+
         let streaming_processor = create_streaming_parallel_processor();
         assert_eq!(
             streaming_processor.config.thread_pool_strategy,

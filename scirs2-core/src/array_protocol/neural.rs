@@ -1153,7 +1153,7 @@ impl Sequential {
             crate::array_protocol::operations::multiply_by_scalar_f64(gradient, learning_rate)
                 .map_err(|e| {
                     crate::error::CoreError::ComputationError(crate::error::ErrorContext::new(
-                        format!("Failed to scale gradient: {}", e),
+                        format!("Failed to scale gradient: {e}"),
                     ))
                 })?;
 
@@ -1188,7 +1188,7 @@ impl Sequential {
         for (layer_idx, layer) in self.layers.iter().enumerate() {
             let layer_param_names = layer.parameter_names();
             for param_name in layer_param_names {
-                all_names.push(format!("{}.{}", layer_idx, param_name));
+                all_names.push(format!("{layer_idx}.{param_name}"));
             }
         }
         all_names

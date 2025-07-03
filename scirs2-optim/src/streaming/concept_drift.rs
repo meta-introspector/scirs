@@ -397,11 +397,7 @@ impl<A: Float + std::fmt::Debug> ConceptDriftDetector<A> {
     }
 
     /// Update detector with new loss and prediction error
-    pub fn update(
-        &mut self,
-        loss: A,
-        is_prediction_error: bool,
-    ) -> Result<DriftStatus, OptimError> {
+    pub fn update(&mut self, loss: A, is_prediction_error: bool) -> Result<DriftStatus> {
         let ph_status = self.ph_detector.update(loss);
         let adwin_status = self.adwin_detector.update(loss);
         let ddm_status = self.ddm_detector.update(is_prediction_error);
@@ -1013,7 +1009,7 @@ pub mod advanced_drift_analysis {
             &mut self,
             value: A,
             context_features: &[ContextFeature<A>],
-        ) -> Result<AdvancedDriftResult<A>, OptimError> {
+        ) -> Result<AdvancedDriftResult<A>> {
             // Update context
             self.context_detector.update_context(context_features);
 
@@ -1167,7 +1163,7 @@ pub mod advanced_drift_analysis {
             }
         }
 
-        fn extract_features(&mut self, data: &[A]) -> Result<PatternFeatures<A>, OptimError> {
+        fn extract_features(&mut self, data: &[A]) -> Result<PatternFeatures<A>> {
             // Simplified feature extraction
             let mean = data.iter().cloned().sum::<A>() / A::from(data.len()).unwrap();
             let variance = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<A>()
@@ -1286,7 +1282,7 @@ pub mod advanced_drift_analysis {
             &mut self,
             features: &PatternFeatures<A>,
             _pattern: &Option<DriftPattern<A>>,
-        ) -> Result<DriftImpact<A>, OptimError> {
+        ) -> Result<DriftImpact<A>> {
             let performance_degradation = features.variance; // Simplified
             let urgency_level = if performance_degradation > A::from(1.0).unwrap() {
                 UrgencyLevel::High
@@ -1320,7 +1316,7 @@ pub mod advanced_drift_analysis {
             _features: &PatternFeatures<A>,
             _impact: &DriftImpact<A>,
             _pattern: &Option<DriftPattern<A>>,
-        ) -> Result<Option<AdaptationStrategy<A>>, OptimError> {
+        ) -> Result<Option<AdaptationStrategy<A>>> {
             // Simplified strategy selection
             let strategy = AdaptationStrategy {
                 id: "increase_lr".to_string(),
