@@ -49,7 +49,7 @@ pub fn icc<F, D>(
     conf_level: Option<F>,
 ) -> StatsResult<(F, [F; 2])>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
+    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F> + std::fmt::Display,
     D: Data<Elem = F>,
     Ix2: Dimension,
 {

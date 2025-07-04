@@ -1,11 +1,11 @@
-//! # Complete Ultrathink Mode Showcase - Next Generation Image Processing
+//! # Complete Advanced Mode Showcase - Next Generation Image Processing
 //!
-//! This example demonstrates the complete suite of ultrathink mode capabilities
+//! This example demonstrates the complete suite of Advanced mode capabilities
 //! including all the newly enhanced features: adaptive learning, quantum coherence
 //! optimization, neuromorphic plasticity, and ultra processing intensity control.
 //!
 //! ## Features Demonstrated
-//! - **Complete Configuration Control**: All ultrathink parameters fully configurable
+//! - **Complete Configuration Control**: All Advanced parameters fully configurable
 //! - **Adaptive Learning**: Dynamic parameter optimization during processing
 //! - **Quantum Coherence Tuning**: Precise control over quantum processing quality
 //! - **Neuromorphic Plasticity**: Bio-inspired adaptive processing networks
@@ -23,16 +23,16 @@ use scirs2_ndimage::{
     quantum_inspired::QuantumConfig,
     quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
     // Enhanced validation system
-    ultrathink_enhanced_validation::{
-        validated_ultrathink_processing, UltrathinkValidator, ValidationConfig,
+    enhanced_validation::{
+        validated_ultrathink_processing, ComprehensiveValidator, ValidationConfig,
     },
-    ultrathink_fusion_core::{ultrathink_fusion_processing, UltrathinkConfig, UltrathinkState},
+    fusion_core::{fusion_processing, AdvancedConfig, UltrathinkState},
 };
 
-/// Complete showcase of enhanced ultrathink capabilities
+/// Complete showcase of enhanced Advanced capabilities
 #[allow(dead_code)]
 pub fn complete_ultrathink_showcase() -> NdimageResult<()> {
-    println!("🚀 Complete Ultrathink Mode Showcase");
+    println!("🚀 Complete Advanced Mode Showcase");
     println!("====================================");
     println!("Demonstrating next-generation image processing capabilities\n");
 
@@ -46,7 +46,7 @@ pub fn complete_ultrathink_showcase() -> NdimageResult<()> {
         validate_consciousness_state: true,
     };
 
-    let mut validator = UltrathinkValidator::with_config(validator_config);
+    let mut validator = ComprehensiveValidator::with_config(validator_config);
     println!("✓ Enhanced validation system initialized");
 
     // Demonstration 1: Adaptive Learning Showcase
@@ -74,7 +74,7 @@ pub fn complete_ultrathink_showcase() -> NdimageResult<()> {
     let summary = validator.get_performance_summary();
     print_comprehensive_analysis(&summary);
 
-    println!("\n🎉 Complete Ultrathink Showcase Finished!");
+    println!("\n🎉 Complete Advanced Showcase Finished!");
     println!("All enhanced features validated and operational.");
 
     Ok(())
@@ -82,7 +82,7 @@ pub fn complete_ultrathink_showcase() -> NdimageResult<()> {
 
 /// Demonstrate adaptive learning capabilities
 #[allow(dead_code)]
-fn adaptive_learning_showcase(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
+fn adaptive_learning_showcase(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Testing adaptive learning with different configurations...");
 
     let test_image = create_adaptive_test_image(96, 96);
@@ -118,7 +118,7 @@ fn adaptive_learning_showcase(validator: &mut UltrathinkValidator) -> NdimageRes
 
 /// Demonstrate quantum coherence optimization
 #[allow(dead_code)]
-fn quantum_coherence_showcase(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
+fn quantum_coherence_showcase(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Testing quantum coherence optimization at different thresholds...");
 
     let test_image = create_quantum_test_image(80, 80);
@@ -156,7 +156,7 @@ fn quantum_coherence_showcase(validator: &mut UltrathinkValidator) -> NdimageRes
 
 /// Demonstrate neuromorphic plasticity features
 #[allow(dead_code)]
-fn neuromorphic_plasticity_showcase(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
+fn neuromorphic_plasticity_showcase(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Testing neuromorphic plasticity at different levels...");
 
     let test_image = create_neuromorphic_test_image(112, 112);
@@ -191,7 +191,7 @@ fn neuromorphic_plasticity_showcase(validator: &mut UltrathinkValidator) -> Ndim
 
 /// Demonstrate ultra processing intensity control
 #[allow(dead_code)]
-fn processing_intensity_showcase(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
+fn processing_intensity_showcase(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Testing ultra processing intensity at different levels...");
 
     let test_image = create_intensity_test_image(128, 128);
@@ -230,7 +230,7 @@ fn processing_intensity_showcase(validator: &mut UltrathinkValidator) -> Ndimage
 
 /// Comprehensive integration test of all features
 #[allow(dead_code)]
-fn comprehensive_integration_test(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
+fn comprehensive_integration_test(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Running comprehensive integration test with all features enabled...");
 
     let test_image = create_comprehensive_test_image(160, 160);
@@ -294,8 +294,8 @@ fn comprehensive_integration_test(validator: &mut UltrathinkValidator) -> Ndimag
 // Configuration creation functions
 
 #[allow(dead_code)]
-fn create_base_config() -> UltrathinkConfig {
-    UltrathinkConfig {
+fn create_base_config() -> AdvancedConfig {
+    AdvancedConfig {
         quantum: QuantumConfig::default(),
         neuromorphic: NeuromorphicConfig::default(),
         quantum_neuromorphic: QuantumNeuromorphicConfig::default(),
@@ -317,7 +317,7 @@ fn create_base_config() -> UltrathinkConfig {
 }
 
 #[allow(dead_code)]
-fn create_conservative_adaptive_config() -> UltrathinkConfig {
+fn create_conservative_adaptive_config() -> AdvancedConfig {
     let mut config = create_base_config();
     config.adaptive_learning = true;
     config.meta_learning_rate = 0.005;
@@ -326,7 +326,7 @@ fn create_conservative_adaptive_config() -> UltrathinkConfig {
 }
 
 #[allow(dead_code)]
-fn create_moderate_adaptive_config() -> UltrathinkConfig {
+fn create_moderate_adaptive_config() -> AdvancedConfig {
     let mut config = create_base_config();
     config.adaptive_learning = true;
     config.meta_learning_rate = 0.015;
@@ -335,7 +335,7 @@ fn create_moderate_adaptive_config() -> UltrathinkConfig {
 }
 
 #[allow(dead_code)]
-fn create_aggressive_adaptive_config() -> UltrathinkConfig {
+fn create_aggressive_adaptive_config() -> AdvancedConfig {
     let mut config = create_base_config();
     config.adaptive_learning = true;
     config.meta_learning_rate = 0.03;
@@ -344,8 +344,8 @@ fn create_aggressive_adaptive_config() -> UltrathinkConfig {
 }
 
 #[allow(dead_code)]
-fn create_optimal_integration_config() -> UltrathinkConfig {
-    UltrathinkConfig {
+fn create_optimal_integration_config() -> AdvancedConfig {
+    AdvancedConfig {
         quantum: QuantumConfig::default(),
         neuromorphic: NeuromorphicConfig::default(),
         quantum_neuromorphic: QuantumNeuromorphicConfig::default(),
@@ -745,14 +745,14 @@ fn print_comprehensive_analysis(summary: &scirs2_ndimage::PerformanceSummary) {
 /// Main demonstration function
 #[allow(dead_code)]
 fn main() -> NdimageResult<()> {
-    println!("🌟 Complete Ultrathink Mode Showcase");
+    println!("🌟 Complete Advanced Mode Showcase");
     println!("====================================");
     println!("Next-generation image processing with all enhanced features\n");
 
     complete_ultrathink_showcase()?;
 
     println!("\n🎊 Showcase completed successfully!");
-    println!("All enhanced ultrathink features are fully operational and validated.");
+    println!("All enhanced Advanced features are fully operational and validated.");
 
     Ok(())
 }

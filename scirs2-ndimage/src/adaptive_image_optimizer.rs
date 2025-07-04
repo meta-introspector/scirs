@@ -1,7 +1,7 @@
-//! # Adaptive Ultrathink Optimizer - Dynamic Performance Tuning
+//! # Adaptive Advanced Optimizer - Dynamic Performance Tuning
 //!
 //! This module provides an adaptive optimization system that continuously monitors
-//! and improves ultrathink mode performance based on runtime characteristics.
+//! and improves Advanced mode performance based on runtime characteristics.
 //! It combines machine learning, hardware profiling, and adaptive algorithms
 //! to achieve optimal performance for any workload.
 
@@ -11,10 +11,10 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-use crate::advanced_fusion_algorithms::UltrathinkConfig;
+use crate::advanced_fusion_algorithms::AdvancedConfig;
 use crate::error::{NdimageError, NdimageResult};
 
-/// Adaptive optimization system for ultrathink mode operations
+/// Adaptive optimization system for Advanced mode operations
 #[derive(Debug)]
 pub struct AdaptiveUltrathinkOptimizer {
     /// Performance history database
@@ -72,7 +72,7 @@ pub struct PerformanceSnapshot {
     /// Performance metrics
     pub metrics: PerformanceMetrics,
     /// Configuration used
-    pub config_used: UltrathinkConfig,
+    pub config_used: AdvancedConfig,
 }
 
 #[derive(Debug, Clone)]
@@ -408,8 +408,8 @@ impl AdaptiveUltrathinkOptimizer {
         &self,
         operation_type: &str,
         data_characteristics: &DataCharacteristics,
-        base_config: &UltrathinkConfig,
-    ) -> NdimageResult<UltrathinkConfig> {
+        base_config: &AdvancedConfig,
+    ) -> NdimageResult<AdvancedConfig> {
         // Get hardware-optimized parameters
         let hardware_profiler = self.hardware_profiler.lock().map_err(|_| {
             NdimageError::ComputationError("Failed to acquire hardware profiler lock".into())
@@ -454,7 +454,7 @@ impl AdaptiveUltrathinkOptimizer {
         &self,
         operation_type: String,
         data_characteristics: DataCharacteristics,
-        config_used: UltrathinkConfig,
+        config_used: AdvancedConfig,
         metrics: PerformanceMetrics,
     ) -> NdimageResult<()> {
         let snapshot = PerformanceSnapshot {

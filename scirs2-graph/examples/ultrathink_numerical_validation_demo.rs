@@ -1,7 +1,7 @@
-//! Ultrathink Numerical Validation Demo
+//! Advanced Numerical Validation Demo
 //!
 //! This example demonstrates how to use the numerical validation framework
-//! to ensure that ultrathink optimizations maintain algorithmic accuracy.
+//! to ensure that Advanced optimizations maintain algorithmic accuracy.
 
 #![allow(dead_code)]
 
@@ -9,7 +9,7 @@ use scirs2_graph::base::Graph;
 use scirs2_graph::generators::{barabasi_albert_graph, erdos_renyi_graph, random_graph};
 use scirs2_graph::numerical_accuracy_validation::{
     create_comprehensive_validation_suite, run_quick_validation, GraphGenerator,
-    UltrathinkNumericalValidator, ValidationAlgorithm, ValidationConfig, ValidationTestCase,
+    advancedNumericalValidator, ValidationAlgorithm, ValidationConfig, ValidationTestCase,
     ValidationTolerances,
 };
 use std::time::Instant;
@@ -17,11 +17,11 @@ use std::time::Instant;
 /// Basic numerical validation example
 #[allow(dead_code)]
 fn basic_validation_example() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🔬 Basic Ultrathink Numerical Validation Example");
+    println!("🔬 Basic Advanced Numerical Validation Example");
     println!("==============================================");
 
     // Create a simple validator with default configuration
-    let mut validator = UltrathinkNumericalValidator::new(ValidationConfig::default());
+    let mut validator = advancedNumericalValidator::new(ValidationConfig::default());
 
     // Add a basic test case
     validator.add_test_case(ValidationTestCase {
@@ -184,7 +184,7 @@ fn custom_validation_example() -> Result<(), Box<dyn std::error::Error>> {
         random_seed: Some(12345),
     };
 
-    let mut validator = UltrathinkNumericalValidator::new(config);
+    let mut validator = advancedNumericalValidator::new(config);
 
     // Custom tolerances for stricter validation
     let strict_tolerances = ValidationTolerances {
@@ -319,7 +319,7 @@ fn quick_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("✅ Quick validation completed in {:?}", duration);
 
     if report.summary.pass_rate >= 0.95 {
-        println!("🎉 Validation PASSED: Ultrathink maintains high accuracy");
+        println!("🎉 Validation PASSED: Advanced maintains high accuracy");
         println!("   ✅ All critical algorithms validated");
         println!(
             "   ✅ Performance gains: {:.2}x average speedup",
@@ -407,7 +407,7 @@ fn validation_metrics_example() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("   ⚡ Performance Metrics:");
         println!("     - Standard time: {:?}", result.standard_time);
-        println!("     - Ultrathink time: {:?}", result.advanced_time);
+        println!("     - Advanced time: {:?}", result.advanced_time);
         println!("     - Speedup factor: {:.2}x", result.speedup_factor);
 
         if !result.metrics.custom_metrics.is_empty() {
@@ -427,7 +427,7 @@ fn validation_metrics_example() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultrathink Numerical Validation Demo");
+    println!("🚀 Advanced Numerical Validation Demo");
     println!("======================================");
     println!("This demo showcases the numerical validation framework for advanced mode.");
     println!();
@@ -443,7 +443,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("===============================================");
     println!();
     println!("💡 Key Takeaways:");
-    println!("• Ultrathink optimizations maintain numerical accuracy");
+    println!("• Advanced optimizations maintain numerical accuracy");
     println!("• Performance gains are achieved without compromising correctness");
     println!("• Comprehensive validation ensures reliability across different algorithms");
     println!("• Quick validation enables integration into development workflows");
@@ -512,7 +512,7 @@ mod tests {
         // Just verify it was created without panicking
         assert_eq!(
             std::mem::size_of_val(&validator),
-            std::mem::size_of::<UltrathinkNumericalValidator>()
+            std::mem::size_of::<advancedNumericalValidator>()
         );
     }
 }

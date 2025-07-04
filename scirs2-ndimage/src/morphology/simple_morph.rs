@@ -47,7 +47,6 @@ use std::fmt::Debug;
 use crate::error::NdimageResult;
 use crate::utils::safe_f64_to_float;
 
-
 /// Erode a 2D grayscale array using a structuring element
 ///
 /// Grayscale erosion replaces each pixel with the minimum value within the neighborhood

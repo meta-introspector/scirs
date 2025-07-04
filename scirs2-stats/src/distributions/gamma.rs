@@ -22,7 +22,7 @@ pub struct Gamma<F: Float + Send + Sync> {
     rand_distr: RandGamma<f64>,
 }
 
-impl<F: Float + NumCast + Debug + Send + Sync + 'static> Gamma<F> {
+impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gamma<F> {
     /// Create a new gamma distribution with given shape, scale, and location parameters
     ///
     /// # Arguments
@@ -518,7 +518,7 @@ fn one_minus_p<F: Float>(p: F) -> F {
 }
 
 /// Implementation of the Distribution trait for Gamma
-impl<F: Float + NumCast + Debug + Send + Sync + 'static> ScirsDist<F> for Gamma<F> {
+impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> ScirsDist<F> for Gamma<F> {
     fn mean(&self) -> F {
         // For Gamma distribution, mean = shape * scale
         self.shape * self.scale
@@ -563,7 +563,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static> ScirsDist<F> for Gamma<
 }
 
 /// Implementation of the ContinuousDistribution trait for Gamma
-impl<F: Float + NumCast + Debug + Send + Sync + 'static> ContinuousDistribution<F> for Gamma<F> {
+impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> ContinuousDistribution<F> for Gamma<F> {
     fn pdf(&self, x: F) -> F {
         // Call the implementation from the struct
         Gamma::pdf(self, x)
@@ -581,7 +581,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static> ContinuousDistribution<
 }
 
 /// Implementation of SampleableDistribution for Gamma
-impl<F: Float + NumCast + Debug + Send + Sync + 'static> SampleableDistribution<F> for Gamma<F> {
+impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> SampleableDistribution<F> for Gamma<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs_vec(size)
     }

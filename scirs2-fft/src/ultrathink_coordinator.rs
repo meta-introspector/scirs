@@ -1,4 +1,4 @@
-//! Ultrathink Mode Coordinator for FFT Operations
+//! Advanced Mode Coordinator for FFT Operations
 //!
 //! This module provides an advanced AI-driven coordination system for FFT operations,
 //! featuring intelligent algorithm selection, adaptive optimization, real-time performance
@@ -6,10 +6,10 @@
 //!
 //! # API Consistency
 //!
-//! This coordinator follows the standardized ultrathink API patterns:
+//! This coordinator follows the standardized Advanced API patterns:
 //! - Consistent naming: `enable_method_selection`, `enable_adaptive_optimization`
-//! - Unified configuration fields across all ultrathink coordinators
-//! - Standard factory functions: `create_ultrathink_fft_coordinator()`
+//! - Unified configuration fields across all Advanced coordinators
+//! - Standard factory functions: `create_advanced_fft_coordinator()`
 //!
 //! # Features
 //!
@@ -37,7 +37,7 @@ use serde::{Deserialize, Serialize};
 /// Central coordinator for advanced FFT operations
 #[derive(Debug)]
 #[allow(dead_code)]
-pub struct UltrathinkFftCoordinator<F: Float + Debug> {
+pub struct advancedFftCoordinator<F: Float + Debug> {
     /// Intelligent algorithm selector
     algorithm_selector: Arc<RwLock<IntelligentAlgorithmSelector<F>>>,
     /// Performance optimization engine
@@ -55,7 +55,7 @@ pub struct UltrathinkFftCoordinator<F: Float + Debug> {
     /// Performance tracker
     performance_tracker: Arc<RwLock<FftPerformanceTracker>>,
     /// Configuration
-    config: UltrathinkFftConfig,
+    config: advancedFftConfig,
     /// Adaptive cache system
     adaptive_cache: Arc<Mutex<AdaptiveFftCache<F>>>,
 }
@@ -63,7 +63,7 @@ pub struct UltrathinkFftCoordinator<F: Float + Debug> {
 /// Configuration for advanced FFT operations
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct UltrathinkFftConfig {
+pub struct advancedFftConfig {
     /// Enable intelligent method selection
     pub enable_method_selection: bool,
     /// Enable adaptive optimization
@@ -88,7 +88,7 @@ pub struct UltrathinkFftConfig {
     pub enable_hardware_optimization: bool,
 }
 
-impl Default for UltrathinkFftConfig {
+impl Default for advancedFftConfig {
     fn default() -> Self {
         Self {
             enable_method_selection: true,
@@ -1228,9 +1228,9 @@ pub struct PrefetchStatistics {
     pub memory_overhead: usize,
 }
 
-impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
+impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
     /// Create a new advanced FFT coordinator
-    pub fn new(config: UltrathinkFftConfig) -> FFTResult<Self> {
+    pub fn new(config: advancedFftConfig) -> FFTResult<Self> {
         Ok(Self {
             algorithm_selector: Arc::new(RwLock::new(IntelligentAlgorithmSelector::new()?)),
             optimization_engine: Arc::new(Mutex::new(PerformanceOptimizationEngine::new()?)),
@@ -1321,7 +1321,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
     }
 
     /// Update advanced configuration
-    pub fn update_config(&mut self, new_config: UltrathinkFftConfig) -> FFTResult<()> {
+    pub fn update_config(&mut self, new_config: advancedFftConfig) -> FFTResult<()> {
         self.config = new_config;
         // Update subsystem configurations
         self.update_subsystem_configs()?;
@@ -2363,19 +2363,19 @@ pub struct FftPerformanceMetrics {
     pub cache_hit_ratio: f64,
 }
 
-/// Create a new ultrathink FFT coordinator with default configuration
+/// Create a new Advanced FFT coordinator with default configuration
 #[allow(dead_code)]
-pub fn create_ultrathink_fft_coordinator<F: Float + Debug + std::ops::AddAssign>(
-) -> FFTResult<UltrathinkFftCoordinator<F>> {
-    UltrathinkFftCoordinator::new(UltrathinkFftConfig::default())
+pub fn create_advanced_fft_coordinator<F: Float + Debug + std::ops::AddAssign>(
+) -> FFTResult<advancedFftCoordinator<F>> {
+    advancedFftCoordinator::new(advancedFftConfig::default())
 }
 
-/// Create a new ultrathink FFT coordinator with custom configuration
+/// Create a new Advanced FFT coordinator with custom configuration
 #[allow(dead_code)]
-pub fn create_ultrathink_fft_coordinator_with_config<F: Float + Debug + std::ops::AddAssign>(
-    config: UltrathinkFftConfig,
-) -> FFTResult<UltrathinkFftCoordinator<F>> {
-    UltrathinkFftCoordinator::new(config)
+pub fn create_advanced_fft_coordinator_with_config<F: Float + Debug + std::ops::AddAssign>(
+    config: advancedFftConfig,
+) -> FFTResult<advancedFftCoordinator<F>> {
+    advancedFftCoordinator::new(config)
 }
 
 #[allow(dead_code)]
@@ -2383,7 +2383,7 @@ fn example_usage() -> FFTResult<()> {
     use num_complex::Complex64;
 
     // Create coordinator
-    let coordinator = create_ultrathink_fft_coordinator::<f64>()?;
+    let coordinator = create_advanced_fft_coordinator::<f64>()?;
 
     // Create example signal
     let signal = Array1::from_vec(
@@ -2409,14 +2409,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ultrathink_coordinator_creation() {
-        let coordinator = create_ultrathink_fft_coordinator::<f64>();
+    fn test_advanced_coordinator_creation() {
+        let coordinator = create_advanced_fft_coordinator::<f64>();
         assert!(coordinator.is_ok());
     }
 
     #[test]
-    fn test_ultrathink_config_default() {
-        let config = UltrathinkFftConfig::default();
+    fn test_advanced_config_default() {
+        let config = advancedFftConfig::default();
         assert!(config.enable_method_selection);
         assert!(config.enable_adaptive_optimization);
         assert!(config.enable_quantum_optimization);

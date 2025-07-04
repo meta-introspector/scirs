@@ -23,7 +23,7 @@ use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 /// SIMD-accelerated 2D convolution
 ///
 /// Performs convolution of an image with a kernel using SIMD operations.
-/// Ultrathink optimized version with memory pooling and cache-friendly access.
+/// Advanced optimized version with memory pooling and cache-friendly access.
 ///
 /// # Arguments
 ///
@@ -435,7 +435,7 @@ impl SimdPerformanceStats {
     }
 }
 
-/// Ultrathink advanced SIMD convolution with blocked algorithm for large kernels
+/// Advanced advanced SIMD convolution with blocked algorithm for large kernels
 ///
 /// Uses cache-blocking and loop tiling for optimal memory access patterns.
 /// Provides 2-3x additional speedup for kernels larger than 7x7.
@@ -513,7 +513,7 @@ pub fn simd_convolve_2d_blocked(
     Ok(output)
 }
 
-/// Ultrathink parallel SIMD convolution using scirs2-core parallel operations
+/// Advanced parallel SIMD convolution using scirs2-core parallel operations
 ///
 /// Combines parallel processing with SIMD for maximum throughput.
 /// Provides near-linear scaling with CPU cores.
@@ -648,7 +648,7 @@ thread_local! {
     static SIMD_MEMORY_POOL: std::cell::RefCell<SimdMemoryPool> = std::cell::RefCell::new(SimdMemoryPool::new());
 }
 
-/// Ultrathink SIMD memory pool for reducing allocations
+/// Advanced SIMD memory pool for reducing allocations
 ///
 /// Thread-local memory pool that reuses buffers across multiple operations.
 struct SimdMemoryPool {

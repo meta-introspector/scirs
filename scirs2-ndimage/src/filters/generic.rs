@@ -21,7 +21,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// Helper function for safe conversion from numeric values to float
 #[allow(dead_code)]
 fn safe_to_float<T: Float + FromPrimitive>(value: f64) -> T {
-    T::from(value).unwrap_or_else(|| T::zero())
+    T::from_f64(value).unwrap_or_else(|| T::zero())
 }
 
 /// Apply a generic filter to an n-dimensional array
@@ -410,7 +410,7 @@ pub mod filter_functions {
             return T::zero();
         }
         let sum = values.iter().fold(T::zero(), |acc, &x| acc + x);
-        sum / T::from(values.len()).unwrap_or(T::one())
+        sum / T::from_usize(values.len()).unwrap_or(T::one())
     }
 
     /// Calculate the standard deviation of values
@@ -424,7 +424,7 @@ pub mod filter_functions {
             .iter()
             .map(|&x| (x - mean_val).powi(2))
             .fold(T::zero(), |acc, x| acc + x)
-            / T::from(values.len() - 1).unwrap_or(T::one());
+            / T::from_usize(values.len() - 1).unwrap_or(T::one());
 
         variance.sqrt()
     }
@@ -451,7 +451,7 @@ pub mod filter_functions {
             .iter()
             .map(|&x| (x - mean_val).powi(2))
             .fold(T::zero(), |acc, x| acc + x)
-            / T::from(values.len()).unwrap_or(T::one())
+            / T::from_usize(values.len()).unwrap_or(T::one())
     }
 
     /// Calculate the maximum value
@@ -482,7 +482,7 @@ pub mod filter_functions {
         if len % 2 == 0 {
             let mid1 = sorted_values[len / 2 - 1];
             let mid2 = sorted_values[len / 2];
-            (mid1 + mid2) / T::from(2.0).unwrap_or(T::one())
+            (mid1 + mid2) / T::from_f64(2.0).unwrap_or(T::one())
         } else {
             sorted_values[len / 2]
         }

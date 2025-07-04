@@ -2,7 +2,7 @@
 //!
 //! This module provides rigorous validation of multitaper spectral estimation
 //! by comparing against SciPy's reference implementation and additional
-//! numerical stability tests in ultrathink mode.
+//! numerical stability tests in Advanced mode.
 
 use crate::error::{SignalError, SignalResult};
 use crate::multitaper::{enhanced_pmtm, EnhancedMultitaperResult, MultitaperConfig};

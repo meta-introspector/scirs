@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 use super::{
     ConstraintHandlingMethod, DiversityStrategy, EvaluationMetric, MultiObjectiveAlgorithm,
-    MultiObjectiveConfig, ObjectiveConfig, ObjectiveType, OptimizationDirection,
+    MultiObjectiveConfig, ObjectiveConfig, ObjectivePriority, ObjectiveType, OptimizationDirection,
     OptimizerArchitecture, SearchResult, UserPreferences,
 };
 use crate::error::{OptimError, Result};
@@ -1224,7 +1224,7 @@ impl<T: Float + Default> Default for MultiObjectiveConfig<T> {
                     objective_type: ObjectiveType::Performance,
                     direction: OptimizationDirection::Maximize,
                     weight: T::from(0.6).unwrap(),
-                    priority: super::ObjectivePriority::High,
+                    priority: ObjectivePriority::High,
                     tolerance: None,
                 },
                 ObjectiveConfig {
@@ -1232,7 +1232,7 @@ impl<T: Float + Default> Default for MultiObjectiveConfig<T> {
                     objective_type: ObjectiveType::Efficiency,
                     direction: OptimizationDirection::Maximize,
                     weight: T::from(0.4).unwrap(),
-                    priority: super::ObjectivePriority::Medium,
+                    priority: ObjectivePriority::Medium,
                     tolerance: None,
                 },
             ],
@@ -1298,7 +1298,7 @@ mod tests {
                 objective_type: ObjectiveType::Performance,
                 direction: OptimizationDirection::Minimize,
                 weight: 0.5,
-                priority: super::ObjectivePriority::High,
+                priority: ObjectivePriority::High,
                 tolerance: None,
             },
             ObjectiveConfig {
@@ -1306,7 +1306,7 @@ mod tests {
                 objective_type: ObjectiveType::Efficiency,
                 direction: OptimizationDirection::Minimize,
                 weight: 0.5,
-                priority: super::ObjectivePriority::High,
+                priority: ObjectivePriority::High,
                 tolerance: None,
             },
         ];

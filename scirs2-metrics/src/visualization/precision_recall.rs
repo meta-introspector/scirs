@@ -2,6 +2,8 @@
 //!
 //! This module provides tools for visualizing Precision-Recall curves.
 
+#![allow(clippy::uninlined_format_args)]
+
 use ndarray::{ArrayBase, Data, Ix1};
 use std::error::Error;
 

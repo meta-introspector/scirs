@@ -1,7 +1,7 @@
-//! Comprehensive Ultrathink Mode Showcase
+//! Comprehensive Advanced Mode Showcase
 //!
 //! This example demonstrates the advanced neural-adaptive and quantum-inspired
-//! I/O processing capabilities implemented in scirs2-io's ultrathink mode.
+//! I/O processing capabilities implemented in scirs2-io's Advanced mode.
 //!
 //! Features showcased:
 //! - Neural adaptive I/O optimization with real-time learning
@@ -18,7 +18,7 @@ use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🚀 SciRS2-IO Ultrathink Mode Comprehensive Showcase");
+    println!("🚀 SciRS2-IO Advanced Mode Comprehensive Showcase");
     println!("====================================================\n");
 
     // Demo 1: Neural Adaptive I/O Controller
@@ -27,7 +27,7 @@ fn main() -> Result<()> {
     // Demo 2: Quantum-Inspired Parallel Processing
     demonstrate_quantum_parallel_processing()?;
 
-    // Demo 3: Ultra-Think Integrated Processor
+    // Demo 3: advanced Integrated Processor
     demonstrate_ultra_think_processor()?;
 
     // Demo 4: Performance Comparison
@@ -36,7 +36,7 @@ fn main() -> Result<()> {
     // Demo 5: Adaptive Learning Showcase
     demonstrate_adaptive_learning()?;
 
-    println!("\n🎉 Ultrathink Mode Showcase Complete!");
+    println!("\n🎉 Advanced Mode Showcase Complete!");
     println!("The advanced I/O processing capabilities demonstrate:");
     println!("  ✅ Neural adaptation with real-time learning");
     println!("  ✅ Quantum-inspired optimization algorithms");
@@ -257,10 +257,10 @@ fn demonstrate_quantum_parallel_processing() -> Result<()> {
     Ok(())
 }
 
-/// Demonstrate ultra-think integrated processor
+/// Demonstrate advanced integrated processor
 #[allow(dead_code)]
 fn demonstrate_ultra_think_processor() -> Result<()> {
-    println!("\n\n🚀 Ultra-Think Integrated Processor Demo");
+    println!("\n\n🚀 advanced Integrated Processor Demo");
     println!("=======================================");
 
     let mut processor = UltraThinkIoProcessor::new();
@@ -289,7 +289,7 @@ fn demonstrate_ultra_think_processor() -> Result<()> {
     }
 
     let performance_stats = processor.get_performance_stats();
-    println!("\n📈 Ultra-Think Performance Summary:");
+    println!("\n📈 advanced Performance Summary:");
     println!(
         "  Total Adaptations: {}",
         performance_stats.total_adaptations

@@ -1,13 +1,13 @@
-//! Ultrathink Mode Implementation Validation Binary
+//! Advanced Mode Implementation Validation Binary
 //!
 //! This binary validates the syntax and basic functionality of our
-//! ultrathink mode implementations.
+//! Advanced mode implementations.
 
 use std::path::Path;
 
 #[allow(dead_code)]
 fn main() {
-    println!("🔍 Ultrathink Mode Implementation Validation");
+    println!("🔍 Advanced Mode Implementation Validation");
     println!("============================================\n");
 
     let validations = vec![

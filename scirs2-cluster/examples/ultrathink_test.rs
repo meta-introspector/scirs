@@ -1,11 +1,11 @@
-//! Simple test for ultrathink clustering functionality
+//! Simple test for Advanced clustering functionality
 
 use ndarray::Array2;
-use scirs2_cluster::ultrathink_clustering::UltrathinkClusterer;
+use scirs2_cluster::advanced_clustering::AdvancedClusterer;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Testing Ultrathink Clustering...");
+    println!("Testing Advanced Clustering...");
 
     // Create simple test data with two clear clusters
     let data = Array2::from_shape_vec(
@@ -19,10 +19,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Data shape: {:?}", data.shape());
 
-    // Create ultrathink clusterer with basic configuration
-    let mut clusterer = UltrathinkClusterer::new();
+    // Create Advanced clusterer with basic configuration
+    let mut clusterer = AdvancedClusterer::new();
 
-    println!("Running ultrathink clustering...");
+    println!("Running Advanced clustering...");
     let result = clusterer.cluster(&data.view())?;
 
     println!("Clustering completed successfully!");
@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Test with AI features enabled
     println!("\nTesting with AI features enabled...");
-    let mut ai_clusterer = UltrathinkClusterer::new()
+    let mut ai_clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true)
         .with_meta_learning(true);

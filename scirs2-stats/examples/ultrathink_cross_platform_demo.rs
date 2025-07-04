@@ -1,14 +1,14 @@
-//! Cross-Platform Ultrathink Validation Demo
+//! Cross-Platform Advanced Validation Demo
 //!
 //! This example demonstrates the comprehensive cross-platform validation
-//! capabilities that ensure ultrathink optimizations work consistently
+//! capabilities that ensure Advanced optimizations work consistently
 //! across different platforms, architectures, and system configurations.
 
 use scirs2_stats::{create_cross_platform_validator, CompatibilityRating, CrossPlatformValidator};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🌐 Ultrathink Cross-Platform Validation");
+    println!("🌐 Advanced Cross-Platform Validation");
     println!("=======================================\n");
 
     // Create the cross-platform validator
@@ -161,7 +161,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match report.compatibility_rating {
         CompatibilityRating::Excellent => {
             println!(
-                "✅ Excellent compatibility! All ultrathink optimizations should work perfectly."
+                "✅ Excellent compatibility! All Advanced optimizations should work perfectly."
             );
             println!(
                 "• Use OptimizationMode::{:?} for best results",
@@ -190,9 +190,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         CompatibilityRating::Incompatible => {
             println!(
-                "❌ Platform incompatibility detected. Ultrathink optimizations may not work."
+                "❌ Platform incompatibility detected. Advanced optimizations may not work."
             );
-            println!("• Use standard (non-ultrathink) statistical functions");
+            println!("• Use standard (non-Advanced) statistical functions");
             println!("• Contact support with platform details");
         }
     }
@@ -240,7 +240,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("----------");
     match report.compatibility_rating {
         CompatibilityRating::Excellent | CompatibilityRating::Good => {
-            println!("✅ Your platform is well-suited for ultrathink optimizations!");
+            println!("✅ Your platform is well-suited for Advanced optimizations!");
             println!("✅ All major statistical operations should perform excellently.");
             println!("✅ You can confidently use performance-focused configurations.");
         }
@@ -266,7 +266,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("4. Review failed tests and consider filing an issue if problems persist");
     }
 
-    println!("\n🚀 Ultrathink cross-platform validation complete!");
+    println!("\n🚀 Advanced cross-platform validation complete!");
 
     Ok(())
 }

@@ -1146,7 +1146,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MemristiveNetwork<F> {
     }
 }
 
-/// **ULTRATHINK MODE: NEXT-GENERATION NEUROMORPHIC COMPUTING**
+/// **Advanced MODE: NEXT-GENERATION NEUROMORPHIC COMPUTING**
 /// Bio-Realistic Dendritic Computation Model
 #[derive(Debug)]
 pub struct DendriticComputationUnit<F: Float + Debug> {

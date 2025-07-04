@@ -136,7 +136,7 @@ where
     let output: Array1<T> = Array1::from_vec(
         result
             .iter()
-            .map(|c| T::from(c.re).unwrap_or(T::zero()))
+            .map(|c| T::from_f64(c.re).unwrap_or(T::zero()))
             .collect(),
     );
 
@@ -187,7 +187,7 @@ where
     let mut output = Array2::zeros((ny, nx));
     for i in 0..ny {
         for j in 0..nx {
-            output[[i, j]] = T::from(result[[i, j]].re).unwrap_or(T::zero());
+            output[[i, j]] = T::from_f64(result[[i, j]].re).unwrap_or(T::zero());
         }
     }
 
@@ -227,7 +227,7 @@ where
             .map(|&s| NumCast::from(s).unwrap_or(1.0))
             .fold(1.0, |acc, x| acc * x);
         let geometric_mean = product.powf(1.0 / sigma.len() as f64);
-        T::from(geometric_mean).unwrap_or(T::one())
+        T::from_f64(geometric_mean).unwrap_or(T::one())
     };
 
     // Apply 1D filter
@@ -333,7 +333,7 @@ where
     for i in 0..nz {
         for j in 0..ny {
             for k in 0..nx {
-                output_3d[[i, j, k]] = T::from(input_f64[[i, j, k]]).unwrap_or(T::zero());
+                output_3d[[i, j, k]] = T::from_f64(input_f64[[i, j, k]]).unwrap_or(T::zero());
             }
         }
     }
@@ -450,7 +450,7 @@ where
     let output: Array1<T> = Array1::from_vec(
         result
             .iter()
-            .map(|c| T::from(c.re).unwrap_or(T::zero()))
+            .map(|c| T::from_f64(c.re).unwrap_or(T::zero()))
             .collect(),
     );
 
@@ -513,7 +513,7 @@ where
     let mut output = Array2::zeros((ny, nx));
     for i in 0..ny {
         for j in 0..nx {
-            output[[i, j]] = T::from(result[[i, j]].re).unwrap_or(T::zero());
+            output[[i, j]] = T::from_f64(result[[i, j]].re).unwrap_or(T::zero());
         }
     }
 
@@ -650,7 +650,7 @@ where
     for i in 0..nz {
         for j in 0..ny {
             for k in 0..nx {
-                output_3d[[i, j, k]] = T::from(input_f64[[i, j, k]]).unwrap_or(T::zero());
+                output_3d[[i, j, k]] = T::from_f64(input_f64[[i, j, k]]).unwrap_or(T::zero());
             }
         }
     }
@@ -798,7 +798,7 @@ where
     let mut output = Array2::zeros((ny, nx));
     for i in 0..ny {
         for j in 0..nx {
-            output[[i, j]] = T::from(result[[i, j]].re).unwrap_or(T::zero());
+            output[[i, j]] = T::from_f64(result[[i, j]].re).unwrap_or(T::zero());
         }
     }
 
@@ -838,7 +838,7 @@ where
             .map(|&s| NumCast::from(s).unwrap_or(1.0))
             .fold(1.0, |acc, x| acc * x);
         let geometric_mean = product.powf(1.0 / size.len() as f64);
-        T::from(geometric_mean).unwrap_or(T::one())
+        T::from_f64(geometric_mean).unwrap_or(T::one())
     };
 
     // Apply 2D ellipsoid filter as approximation
@@ -981,7 +981,7 @@ where
     for i in 0..nz {
         for j in 0..ny {
             for k in 0..nx {
-                output_3d[[i, j, k]] = T::from(input_f64[[i, j, k]]).unwrap_or(T::zero());
+                output_3d[[i, j, k]] = T::from_f64(input_f64[[i, j, k]]).unwrap_or(T::zero());
             }
         }
     }
@@ -1096,7 +1096,7 @@ where
     let output: Array1<T> = Array1::from_vec(
         result
             .iter()
-            .map(|c| T::from(c.re).unwrap_or(T::zero()))
+            .map(|c| T::from_f64(c.re).unwrap_or(T::zero()))
             .collect(),
     );
 
@@ -1148,7 +1148,7 @@ where
     let mut output = Array2::zeros((ny, nx));
     for i in 0..ny {
         for j in 0..nx {
-            output[[i, j]] = T::from(result[[i, j]].re).unwrap_or(T::zero());
+            output[[i, j]] = T::from_f64(result[[i, j]].re).unwrap_or(T::zero());
         }
     }
 
@@ -1181,7 +1181,7 @@ where
     let shift_1d = {
         let sum: f64 = shift.iter().map(|&s| NumCast::from(s).unwrap_or(0.0)).sum();
         let mean = sum / shift.len() as f64;
-        T::from(mean).unwrap_or(T::zero())
+        T::from_f64(mean).unwrap_or(T::zero())
     };
 
     // Apply 1D shift
@@ -1292,7 +1292,7 @@ where
     for i in 0..nz {
         for j in 0..ny {
             for k in 0..nx {
-                output_3d[[i, j, k]] = T::from(input_f64[[i, j, k]]).unwrap_or(T::zero());
+                output_3d[[i, j, k]] = T::from_f64(input_f64[[i, j, k]]).unwrap_or(T::zero());
             }
         }
     }

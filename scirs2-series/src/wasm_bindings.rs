@@ -7,7 +7,6 @@
 use wasm_bindgen::prelude::*;
 
 #[cfg(feature = "wasm")]
-#[cfg(feature = "wasm")]
 use web_sys::console;
 
 #[cfg(feature = "wasm")]
@@ -27,7 +26,6 @@ use ndarray::Array1;
 
 #[cfg(feature = "wasm")]
 // Utility macro for error handling in WASM
-#[cfg(feature = "wasm")]
 macro_rules! js_error {
     ($msg:expr) => {
         JsValue::from_str(&format!("Error: {}", $msg))
@@ -227,8 +225,19 @@ impl WasmAnomalyDetector {
         multiplier: f64,
     ) -> std::result::Result<Vec<usize>, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
-        let anomalies = js_result!(self.detector.detect_iqr(&arr, multiplier))?;
-        Ok(anomalies)
+        let options = AnomalyOptions {
+            method: AnomalyMethod::InterquartileRange,
+            threshold: Some(multiplier),
+            ..Default::default()
+        };
+        let anomalies = js_result!(crate::anomaly::detect_anomalies(&arr, &options))?;
+        let anomaly_indices: Vec<usize> = anomalies
+            .is_anomaly
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &is_anom)| if is_anom { Some(i) } else { None })
+            .collect();
+        Ok(anomaly_indices)
     }
 
     /// Detect anomalies using Z-score method
@@ -239,8 +248,19 @@ impl WasmAnomalyDetector {
         threshold: f64,
     ) -> std::result::Result<Vec<usize>, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
-        let anomalies = js_result!(self.detector.detect_zscore(&arr, threshold))?;
-        Ok(anomalies)
+        let options = AnomalyOptions {
+            method: AnomalyMethod::ZScore,
+            threshold: Some(threshold),
+            ..Default::default()
+        };
+        let anomalies = js_result!(crate::anomaly::detect_anomalies(&arr, &options))?;
+        let anomaly_indices: Vec<usize> = anomalies
+            .is_anomaly
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &is_anom)| if is_anom { Some(i) } else { None })
+            .collect();
+        Ok(anomaly_indices)
     }
 
     /// Detect anomalies using isolation forest
@@ -251,8 +271,19 @@ impl WasmAnomalyDetector {
         contamination: f64,
     ) -> std::result::Result<Vec<usize>, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
-        let anomalies = js_result!(self.detector.detect_isolation_forest(&arr, contamination))?;
-        Ok(anomalies)
+        let options = AnomalyOptions {
+            method: AnomalyMethod::IsolationForest,
+            threshold: Some(contamination),
+            ..Default::default()
+        };
+        let anomalies = js_result!(crate::anomaly::detect_anomalies(&arr, &options))?;
+        let anomaly_indices: Vec<usize> = anomalies
+            .is_anomaly
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &is_anom)| if is_anom { Some(i) } else { None })
+            .collect();
+        Ok(anomaly_indices)
     }
 }
 
@@ -260,6 +291,7 @@ impl WasmAnomalyDetector {
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub struct WasmSTLDecomposition {
+    period: usize,
     options: STLOptions,
 }
 
@@ -278,7 +310,8 @@ impl WasmSTLDecomposition {
     #[wasm_bindgen(constructor)]
     pub fn new(period: usize) -> WasmSTLDecomposition {
         WasmSTLDecomposition {
-            decomposition: STLDecomposition::new(period),
+            period,
+            options: STLOptions::default(),
         }
     }
 
@@ -286,7 +319,11 @@ impl WasmSTLDecomposition {
     #[wasm_bindgen]
     pub fn decompose(&self, data: &TimeSeriesData) -> std::result::Result<JsValue, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
-        let result = js_result!(self.decomposition.decompose(&arr))?;
+        let result = js_result!(crate::decomposition::stl::stl_decomposition(
+            &arr,
+            self.period,
+            &self.options
+        ))?;
 
         let decomp_result = DecompositionResult {
             trend: result.trend.to_vec(),
@@ -310,9 +347,15 @@ pub struct WasmNeuralForecaster {
 impl WasmNeuralForecaster {
     /// Create a new neural forecaster
     #[wasm_bindgen(constructor)]
-    pub fn new(input_size: usize, hidden_size: usize, output_size: usize) -> WasmNeuralForecaster {
+    pub fn new(
+        _input_size: usize,
+        _hidden_size: usize,
+        _output_size: usize,
+    ) -> WasmNeuralForecaster {
         WasmNeuralForecaster {
-            forecaster: Some(NeuralForecaster::new(input_size, hidden_size, output_size)),
+            forecaster: Some(Box::new(crate::forecasting::neural::LSTMForecaster::new(
+                crate::forecasting::neural::LSTMConfig::default(),
+            )) as Box<dyn NeuralForecaster<f64>>),
         }
     }
 
@@ -321,12 +364,12 @@ impl WasmNeuralForecaster {
     pub fn train(
         &mut self,
         data: &TimeSeriesData,
-        epochs: usize,
-        learning_rate: f64,
+        _epochs: usize,
+        _learning_rate: f64,
     ) -> std::result::Result<(), JsValue> {
         if let Some(forecaster) = &mut self.forecaster {
             let arr = Array1::from_vec(data.values.clone());
-            js_result!(forecaster.train(&arr, epochs, learning_rate))?;
+            js_result!(forecaster.fit(&arr))?;
             Ok(())
         } else {
             Err(js_error!("Neural forecaster not initialized"))
@@ -337,9 +380,9 @@ impl WasmNeuralForecaster {
     #[wasm_bindgen]
     pub fn forecast(&self, input: &[f64], steps: usize) -> std::result::Result<Vec<f64>, JsValue> {
         if let Some(forecaster) = &self.forecaster {
-            let input_arr = Array1::from_vec(input.to_vec());
-            let forecasts = js_result!(forecaster.forecast(&input_arr, steps))?;
-            Ok(forecasts.to_vec())
+            let _input_arr = Array1::from_vec(input.to_vec());
+            let forecast_result = js_result!(forecaster.predict(steps))?;
+            Ok(forecast_result.forecast.to_vec())
         } else {
             Err(js_error!("Neural forecaster not initialized"))
         }
@@ -366,8 +409,9 @@ impl WasmUtils {
     #[wasm_bindgen]
     pub fn is_stationary(data: &TimeSeriesData) -> std::result::Result<bool, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
-        let stationary = js_result!(is_stationary(&arr))?;
-        Ok(stationary)
+        let (_test_stat, p_value) = js_result!(is_stationary(&arr, None))?;
+        // Consider stationary if p-value < 0.05 (5% significance level)
+        Ok(p_value < 0.05)
     }
 
     /// Apply differencing to make time series stationary
@@ -442,7 +486,7 @@ impl WasmAutoARIMA {
         let max_sp = max_seasonal_p.unwrap_or(0);
         let max_sd = max_seasonal_d.unwrap_or(0);
         let max_sq = max_seasonal_q.unwrap_or(0);
-        let s_period = seasonal_period.unwrap_or(0);
+        let _s_period = seasonal_period.unwrap_or(0);
 
         let options = crate::arima_models::ArimaSelectionOptions {
             max_p,
@@ -458,9 +502,20 @@ impl WasmAutoARIMA {
 
         let (model, params) = js_result!(crate::arima_models::auto_arima(&arr, &options))?;
 
+        let config = ArimaConfig {
+            p: params.pdq.0,
+            d: params.pdq.1,
+            q: params.pdq.2,
+            seasonal_p: params.seasonal_pdq.0,
+            seasonal_d: params.seasonal_pdq.1,
+            seasonal_q: params.seasonal_pdq.2,
+            seasonal_period: params.seasonal_period,
+        };
+
         Ok(WasmARIMA {
             model: Some(model),
-            config: params,
+            config,
+            data: Some(arr),
         })
     }
 }

@@ -1,4 +1,4 @@
-//! Simple validation script for ultrathink mode implementations
+//! Simple validation script for Advanced mode implementations
 //! This script performs basic functionality checks without heavy dependencies
 
 use ndarray::Array1;
@@ -6,7 +6,7 @@ use ndarray::Array1;
 // Since we can't run full tests due to build locks, let's validate the API structure
 #[allow(dead_code)]
 fn main() {
-    println!("🔍 Ultrathink Mode Validation");
+    println!("🔍 Advanced Mode Validation");
     println!("============================\n");
 
     // Basic data for testing
@@ -50,11 +50,11 @@ fn main() {
     // 3. Validate parallel enhancements module
     println!("3. ⚡ Parallel Processing Module");
 
-    use scirs2_stats::ultrathink_parallel_enhancements::{
-        LoadBalancingStrategy, UltrathinkParallelConfig,
+    use scirs2_stats::parallel_enhancements::{
+        LoadBalancingStrategy, AdvancedParallelConfig,
     };
 
-    let parallel_config = UltrathinkParallelConfig::default();
+    let parallel_config = AdvancedParallelConfig::default();
 
     println!(
         "   ✅ Parallel config created: max_threads={}, chunk_size={}",
@@ -65,10 +65,10 @@ fn main() {
     println!("4. 🏎️  SIMD Optimizations Module");
 
     use scirs2_stats::ultrathink_simd_optimizations::{
-        ultra_batch_statistics, UltrathinkSimdConfig,
+        ultra_batch_statistics, AdvancedSimdConfig,
     };
 
-    let simd_config = UltrathinkSimdConfig::default();
+    let simd_config = AdvancedSimdConfig::default();
 
     // Try to run batch statistics - this tests the full pipeline
     match ultra_batch_statistics(&test_data.view(), &simd_config) {
@@ -116,11 +116,11 @@ fn main() {
         Err(e) => println!("   ❌ Standard Deviation failed: {}", e),
     }
 
-    println!("\n🎉 Ultrathink Mode Validation Complete!");
+    println!("\n🎉 Advanced Mode Validation Complete!");
     println!("All modules loaded successfully and basic functionality verified.");
 
-    // Summary of ultrathink capabilities
-    println!("\n📋 Ultrathink Mode Summary:");
+    // Summary of Advanced capabilities
+    println!("\n📋 Advanced Mode Summary:");
     println!("   • Enhanced error handling with context-aware messages");
     println!("   • Numerical stability testing and precision analysis");
     println!("   • Advanced parallel processing with adaptive scaling");

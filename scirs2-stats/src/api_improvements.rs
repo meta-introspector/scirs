@@ -18,7 +18,7 @@ pub struct CorrelationResult<F> {
     pub p_value: Option<F>,
 }
 
-impl<F: Float> CorrelationResult<F> {
+impl<F: Float + std::fmt::Display> CorrelationResult<F> {
     /// Create a new correlation result with just the coefficient
     pub fn new(coefficient: F) -> Self {
         Self {
@@ -119,8 +119,9 @@ impl StatsConfig {
 /// Improved correlation API that unifies pearson_r and pearsonr
 pub trait CorrelationExt<F, D>
 where
-    F: Float,
-    D: Data<Elem = F>,
+    F: Float + std::fmt::Display + std::iter::Sum + Send + Sync,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     /// Compute correlation with optional p-value based on configuration
     fn correlation(
@@ -155,7 +156,7 @@ pub struct StatsBuilder<F> {
     config: StatsConfig,
 }
 
-impl<F: Float> StatsBuilder<F> {
+impl<F: Float + std::fmt::Display + std::iter::Sum + Send + Sync> StatsBuilder<F> {
     /// Create a new builder
     pub fn new() -> Self {
         Self {
@@ -246,7 +247,7 @@ pub struct TestResult<F> {
     pub confidence_interval: Option<(F, F)>,
 }
 
-impl<F: Float> TestResult<F> {
+impl<F: Float + std::fmt::Display> TestResult<F> {
     /// Create a basic test result
     pub fn new(statistic: F, p_value: F) -> Self {
         Self {

@@ -1,7 +1,7 @@
-//! Ultrathink Mode Comprehensive Validation Suite
+//! Advanced Mode Comprehensive Validation Suite
 //!
 //! This module combines all enhanced validation capabilities for comprehensive
-//! testing of scirs2-signal implementations in ultrathink mode.
+//! testing of scirs2-signal implementations in Advanced mode.
 
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle_edge_case_validation::{run_edge_case_validation, EdgeCaseValidationResult};
@@ -15,9 +15,9 @@ use crate::scipy_validation_comprehensive::{
 use crate::wpt_ultra_validation::{run_ultra_wpt_validation, UltraWptValidationResult};
 use std::time::Instant;
 
-/// Comprehensive validation result for ultrathink mode
+/// Comprehensive validation result for Advanced mode
 #[derive(Debug, Clone)]
-pub struct UltrathinkValidationResult {
+pub struct ComprehensiveValidationResult {
     /// Edge case validation for Lomb-Scargle
     pub edge_case_validation: EdgeCaseValidationResult,
     /// Comprehensive SciPy validation
@@ -28,15 +28,15 @@ pub struct UltrathinkValidationResult {
     pub wpt_validation: UltraWptValidationResult,
     /// Parametric estimation validation result (simplified)
     pub parametric_validation_passed: bool,
-    /// Overall ultrathink mode score
-    pub overall_ultrathink_score: f64,
+    /// Overall Advanced mode score
+    pub overall_advanced_score: f64,
     /// Total validation time
     pub total_validation_time_ms: f64,
     /// Performance improvements over baseline
     pub performance_improvements: PerformanceImprovements,
 }
 
-/// Performance improvements achieved in ultrathink mode
+/// Performance improvements achieved in Advanced mode
 #[derive(Debug, Clone)]
 pub struct PerformanceImprovements {
     /// SIMD acceleration factor
@@ -51,10 +51,10 @@ pub struct PerformanceImprovements {
     pub overall_efficiency_gain: f64,
 }
 
-/// Run comprehensive validation in ultrathink mode
+/// Run comprehensive validation in Advanced mode
 #[allow(dead_code)]
-pub fn run_ultrathink_comprehensive_validation() -> SignalResult<UltrathinkValidationResult> {
-    println!("🚀 Starting ULTRATHINK MODE comprehensive validation...");
+pub fn run_comprehensive_validation() -> SignalResult<ComprehensiveValidationResult> {
+    println!("🚀 Starting Advanced MODE comprehensive validation...");
     let start_time = Instant::now();
 
     // Run edge case validation
@@ -83,8 +83,8 @@ pub fn run_ultrathink_comprehensive_validation() -> SignalResult<UltrathinkValid
     let total_time = start_time.elapsed();
     let total_validation_time_ms = total_time.as_secs_f64() * 1000.0;
 
-    // Compute overall ultrathink score
-    let overall_ultrathink_score = compute_ultrathink_score(
+    // Compute overall Advanced score
+    let overall_advanced_score = compute_advanced_score(
         &edge_case_validation,
         &scipy_validation,
         &multitaper_validation,
@@ -96,12 +96,12 @@ pub fn run_ultrathink_comprehensive_validation() -> SignalResult<UltrathinkValid
     let performance_improvements = estimate_performance_improvements();
 
     println!(
-        "✅ ULTRATHINK MODE validation completed in {:.2}ms",
+        "✅ Advanced MODE validation completed in {:.2}ms",
         total_validation_time_ms
     );
     println!(
-        "🎯 Overall Ultrathink Score: {:.2}%",
-        overall_ultrathink_score
+        "🎯 Overall Advanced Score: {:.2}%",
+        overall_advanced_score
     );
     println!(
         "⚡ SIMD Acceleration: {:.2}x",
@@ -120,21 +120,21 @@ pub fn run_ultrathink_comprehensive_validation() -> SignalResult<UltrathinkValid
         performance_improvements.overall_efficiency_gain
     );
 
-    Ok(UltrathinkValidationResult {
+    Ok(ComprehensiveValidationResult {
         edge_case_validation,
         scipy_validation,
         multitaper_validation,
         wpt_validation,
         parametric_validation_passed,
-        overall_ultrathink_score,
+        overall_advanced_score,
         total_validation_time_ms,
         performance_improvements,
     })
 }
 
-/// Compute overall ultrathink score from all validation results
+/// Compute overall Advanced score from all validation results
 #[allow(dead_code)]
-fn compute_ultrathink_score(
+fn compute_advanced_score(
     edge_case: &EdgeCaseValidationResult,
     scipy: &ComprehensiveSciPyValidationResult,
     multitaper: &EnhancedMultitaperValidationResult,
@@ -168,7 +168,7 @@ fn compute_ultrathink_score(
     total_score / weight_sum
 }
 
-/// Estimate performance improvements in ultrathink mode
+/// Estimate performance improvements in Advanced mode
 #[allow(dead_code)]
 fn estimate_performance_improvements() -> PerformanceImprovements {
     // These would typically be measured from actual benchmarks
@@ -182,21 +182,21 @@ fn estimate_performance_improvements() -> PerformanceImprovements {
     }
 }
 
-/// Generate comprehensive ultrathink validation report
+/// Generate comprehensive Advanced validation report
 #[allow(dead_code)]
-pub fn generate_ultrathink_report(result: &UltrathinkValidationResult) -> String {
+pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> String {
     let mut report = String::new();
 
-    report.push_str("# ULTRATHINK MODE Comprehensive Validation Report\n\n");
+    report.push_str("# Advanced MODE Comprehensive Validation Report\n\n");
     report.push_str("This report presents comprehensive validation results for scirs2-signal \n");
-    report.push_str("in ULTRATHINK MODE with enhanced SIMD, parallel processing, and \n");
+    report.push_str("in Advanced MODE with enhanced SIMD, parallel processing, and \n");
     report.push_str("advanced numerical algorithms.\n\n");
 
     // Executive Summary
     report.push_str("## Executive Summary\n\n");
     report.push_str(&format!(
-        "- **Overall Ultrathink Score:** {:.2}%\n",
-        result.overall_ultrathink_score
+        "- **Overall Advanced Score:** {:.2}%\n",
+        result.overall_advanced_score
     ));
     report.push_str(&format!(
         "- **Total Validation Time:** {:.2}ms\n",
@@ -334,8 +334,8 @@ pub fn generate_ultrathink_report(result: &UltrathinkValidationResult) -> String
         }
     ));
 
-    // ULTRATHINK Mode Features
-    report.push_str("## ULTRATHINK MODE Features Validated\n\n");
+    // Advanced Mode Features
+    report.push_str("## Advanced MODE Features Validated\n\n");
     report.push_str("### ✅ Enhanced Numerical Stability\n");
     report.push_str("- Advanced boundary handling for 2D wavelets\n");
     report.push_str("- Robust parametric estimation with SIMD acceleration\n");
@@ -352,9 +352,9 @@ pub fn generate_ultrathink_report(result: &UltrathinkValidationResult) -> String
     report.push_str("- Numerical precision validation\n\n");
 
     // Recommendations
-    if result.overall_ultrathink_score < 95.0 {
+    if result.overall_advanced_score < 95.0 {
         report.push_str("## Recommendations for Further Improvement\n\n");
-        if result.overall_ultrathink_score < 85.0 {
+        if result.overall_advanced_score < 85.0 {
             report.push_str("- Focus on numerical stability improvements\n");
         }
         if result.edge_case_validation.overall_edge_score < 90.0 {
@@ -370,27 +370,27 @@ pub fn generate_ultrathink_report(result: &UltrathinkValidationResult) -> String
         "**Report generated:** {:?}\n",
         std::time::SystemTime::now()
     ));
-    report.push_str("**Mode:** ULTRATHINK MODE - Maximum Performance and Accuracy\n");
+    report.push_str("**Mode:** Advanced MODE - Maximum Performance and Accuracy\n");
 
     report
 }
 
-/// Example usage of ultrathink comprehensive validation
+/// Example usage of Advanced comprehensive validation
 #[allow(dead_code)]
-pub fn example_ultrathink_validation() -> SignalResult<()> {
+pub fn example_advanced_validation() -> SignalResult<()> {
     // Run comprehensive validation
-    let validation_result = run_ultrathink_comprehensive_validation()?;
+    let validation_result = run_comprehensive_validation()?;
 
     // Generate report
-    let report = generate_ultrathink_report(&validation_result);
+    let report = generate_comprehensive_report(&validation_result);
     println!("{}", report);
 
     // Save report to file
-    std::fs::write("ultrathink_validation_report.md", report)
+    std::fs::write("advanced_validation_report.md", report)
         .map_err(|e| SignalError::ValueError(format!("Failed to write report: {}", e)))?;
 
-    println!("🎯 ULTRATHINK MODE validation completed successfully!");
-    println!("📄 Report saved to ultrathink_validation_report.md");
+    println!("🎯 Advanced MODE validation completed successfully!");
+    println!("📄 Report saved to advanced_validation_report.md");
 
     Ok(())
 }

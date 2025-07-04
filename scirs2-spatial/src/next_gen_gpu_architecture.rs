@@ -1,4 +1,4 @@
-//! Next-Generation GPU Architecture Support (Ultrathink Mode)
+//! Next-Generation GPU Architecture Support (Advanced Mode)
 //!
 //! This module provides cutting-edge support for future GPU architectures and
 //! revolutionary computing paradigms, including quantum-GPU hybrid processing,

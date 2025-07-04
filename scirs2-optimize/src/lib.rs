@@ -222,7 +222,7 @@ pub mod simd_ops;
 pub mod sparse_numdiff; // Refactored into a module with submodules
 pub mod stochastic;
 pub mod streaming;
-pub mod ultrathink_coordinator;
+// pub mod advanced_coordinator; // Missing file
 pub mod unconstrained;
 pub mod unified_pipeline;
 pub mod visualization;
@@ -327,10 +327,10 @@ pub use streaming::{
     StreamingConfig, StreamingDataPoint, StreamingObjective, StreamingOptimizer, StreamingStats,
     StreamingTrustRegion,
 };
-pub use ultrathink_coordinator::{
-    ultrathink_optimize, StrategyPerformance, UltrathinkConfig, UltrathinkCoordinator,
-    UltrathinkStats, UltrathinkStrategy,
-};
+// pub use advanced_coordinator::{
+//     advanced_optimize, StrategyPerformance, AdvancedConfig, AdvancedCoordinator,
+//     AdvancedStats, advancedStrategy,
+// }; // Missing module
 pub use unconstrained::{minimize, Bounds};
 pub use unified_pipeline::{
     presets as unified_presets, UnifiedOptimizationConfig, UnifiedOptimizationResults,
@@ -451,10 +451,10 @@ pub mod prelude {
         StreamingConfig, StreamingDataPoint, StreamingObjective, StreamingOptimizer,
         StreamingStats, StreamingTrustRegion,
     };
-    pub use crate::ultrathink_coordinator::{
-        ultrathink_optimize, StrategyPerformance, UltrathinkConfig, UltrathinkCoordinator,
-        UltrathinkStats, UltrathinkStrategy,
-    };
+    // pub use crate::advanced_coordinator::{
+    //     advanced_optimize, StrategyPerformance, AdvancedConfig, AdvancedCoordinator,
+    //     AdvancedStats, advancedStrategy,
+    // }; // Missing module
     pub use crate::unconstrained::{minimize, Bounds, Method as UnconstrainedMethod, Options};
     pub use crate::unified_pipeline::{
         presets as unified_presets, UnifiedOptimizationConfig, UnifiedOptimizationResults,

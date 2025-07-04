@@ -1,7 +1,7 @@
-//! Ultrathink Mode Showcase for scirs2-vision
+//! Advanced Mode Showcase for scirs2-vision
 //!
 //! This example demonstrates the cutting-edge capabilities of the scirs2-vision
-//! ultrathink mode, including quantum-inspired optimization, neuromorphic processing,
+//! Advanced mode, including quantum-inspired optimization, neuromorphic processing,
 //! and AI-driven adaptive streaming.
 //!
 //! # Features Demonstrated
@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🔬 SciRS2-Vision Ultrathink Mode Showcase");
+    println!("🔬 SciRS2-Vision Advanced Mode Showcase");
     println!("=========================================");
 
     // Create test data
@@ -37,15 +37,15 @@ fn main() -> Result<()> {
     println!("\n🤖 AI-Driven Optimization Demo");
     ai_optimization_demo(&test_frames)?;
 
-    // Demonstrate integrated ultrathink pipeline
-    println!("\n⚡ Integrated Ultrathink Pipeline");
+    // Demonstrate integrated Advanced pipeline
+    println!("\n⚡ Integrated Advanced Pipeline");
     integrated_ultrathink_demo(&test_frames)?;
 
     // Demonstrate ultra-advanced neural-quantum hybrid processing
     println!("\n🔮 Ultra-Advanced Neural-Quantum Hybrid Processing");
     neural_quantum_hybrid_demo(&test_frames)?;
 
-    println!("\n✨ Ultrathink mode demonstration completed!");
+    println!("\n✨ Advanced mode demonstration completed!");
     Ok(())
 }
 
@@ -408,12 +408,12 @@ fn ai_optimization_demo(_frames: &[Frame]) -> Result<()> {
     Ok(())
 }
 
-/// Demonstrate integrated ultrathink pipeline
+/// Demonstrate integrated Advanced pipeline
 #[allow(dead_code)]
 fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
-    println!("  Creating integrated ultrathink pipeline...");
+    println!("  Creating integrated Advanced pipeline...");
 
-    // Create hybrid pipeline combining all ultrathink technologies
+    // Create hybrid pipeline combining all Advanced technologies
     let mut quantum_processor =
         QuantumStreamProcessor::new(vec!["neuromorphic".to_string(), "ai_optimized".to_string()]);
 
@@ -421,7 +421,7 @@ fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
     let mut event_processor = EventDrivenProcessor::new(0.05);
     let mut rl_optimizer = RLParameterOptimizer::new();
 
-    println!("  Processing with integrated ultrathink mode...");
+    println!("  Processing with integrated Advanced mode...");
     let start_time = Instant::now();
 
     let mut total_quantum_decisions = 0;
@@ -478,7 +478,7 @@ fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
     let avg_reward = optimization_rewards.iter().sum::<f64>() / optimization_rewards.len() as f64;
     let efficiency_stats = event_processor.get_efficiency_metrics();
 
-    println!("  ✅ Integrated ultrathink processing complete:");
+    println!("  ✅ Integrated Advanced processing complete:");
     println!("     🌌 Quantum Processing:");
     println!("        - {total_quantum_decisions} quantum decisions optimized pipeline flow");
     println!("        - Interference patterns reduced noise artifacts");
@@ -516,7 +516,7 @@ fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
         (avg_reward - 0.5) * 100.0
     );
 
-    println!("\n🎯 Ultrathink Mode Benefits Demonstrated:");
+    println!("\n🎯 Advanced Mode Benefits Demonstrated:");
     println!("   ✓ Quantum-inspired algorithms provided novel optimization approaches");
     println!("   ✓ Neuromorphic computing achieved brain-like efficiency");
     println!("   ✓ AI-driven optimization automated parameter tuning");
@@ -553,7 +553,7 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
         } // Process first 8 frames for demo
 
         // Process with ultra-advanced capabilities
-        let result = hybrid_processor.process_ultrathink(frame.clone())?;
+        let result = hybrid_processor.process_advanced(frame.clone())?;
 
         // Accumulate metrics
         total_emergent_behaviors += result.emergent_behaviors.len();

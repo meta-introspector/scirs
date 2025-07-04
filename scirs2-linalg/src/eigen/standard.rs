@@ -304,7 +304,7 @@ where
     solve_symmetric_with_power_iteration(a)
 }
 
-/// ULTRATHINK MODE ENHANCEMENT: Ultra-precision eigenvalue computation targeting 1e-10+ accuracy
+/// Advanced MODE ENHANCEMENT: Ultra-precision eigenvalue computation targeting 1e-10+ accuracy
 ///
 /// This function implements advanced numerical techniques for maximum precision:
 /// - Kahan summation for enhanced numerical stability

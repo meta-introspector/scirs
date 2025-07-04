@@ -1,4 +1,4 @@
-//! Ultra-comprehensive wavelet packet transform validation in ultrathink mode
+//! Ultra-comprehensive wavelet packet transform validation in Advanced mode
 //!
 //! This module provides the most thorough validation possible for wavelet packet
 //! transforms, covering tree structure validation, coefficient organization,
@@ -13,7 +13,7 @@ use std::time::Instant;
 
 /// Ultra-comprehensive wavelet packet validation configuration
 #[derive(Debug, Clone)]
-pub struct WptUltrathinkConfig {
+pub struct WptadvancedConfig {
     /// Signal lengths to test for scaling analysis
     pub test_lengths: Vec<usize>,
     /// Wavelet types to test
@@ -72,7 +72,7 @@ pub enum EntropyMeasure {
     CostFunction,
 }
 
-impl Default for WptUltrathinkConfig {
+impl Default for WptadvancedConfig {
     fn default() -> Self {
         Self {
             test_lengths: vec![64, 128, 256, 512, 1024, 2048],
@@ -111,7 +111,7 @@ impl Default for WptUltrathinkConfig {
 
 /// Ultra-comprehensive wavelet packet validation results
 #[derive(Debug, Clone)]
-pub struct WptUltrathinkResult {
+pub struct WptadvancedResult {
     /// Tree structure validation results
     pub tree_validation: TreeValidationResult,
     /// Coefficient organization validation
@@ -382,9 +382,9 @@ pub struct ScalabilityAnalysisResult {
 ///
 /// * Comprehensive validation results with detailed analysis
 #[allow(dead_code)]
-pub fn run_wpt_ultrathink_validation(
-    config: &WptUltrathinkConfig,
-) -> SignalResult<WptUltrathinkResult> {
+pub fn run_wpt_advanced_validation(
+    config: &WptadvancedConfig,
+) -> SignalResult<WptadvancedResult> {
     let start_time = Instant::now();
     let mut issues = Vec::new();
     let mut recommendations = Vec::new();
@@ -603,7 +603,7 @@ pub fn run_wpt_ultrathink_validation(
         optimal_denoising_basis: 82.0,
     };
 
-    Ok(WptUltrathinkResult {
+    Ok(WptadvancedResult {
         tree_validation,
         coefficient_validation,
         reconstruction_validation,
@@ -625,7 +625,7 @@ pub fn run_wpt_ultrathink_validation(
 
 #[allow(dead_code)]
 fn validate_tree_structure(
-    _config: &WptUltrathinkConfig,
+    _config: &WptadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<TreeValidationResult> {
     // Placeholder implementation for tree structure validation
@@ -646,7 +646,7 @@ fn validate_tree_structure(
 
 #[allow(dead_code)]
 fn validate_coefficient_organization(
-    _config: &WptUltrathinkConfig,
+    _config: &WptadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<CoefficientValidationResult> {
     // Placeholder implementation
@@ -673,7 +673,7 @@ fn validate_coefficient_organization(
 
 #[allow(dead_code)]
 fn validate_reconstruction_fidelity(
-    _config: &WptUltrathinkConfig,
+    _config: &WptadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ReconstructionValidationResult> {
     // Placeholder implementation
@@ -688,7 +688,7 @@ fn validate_reconstruction_fidelity(
 
 #[allow(dead_code)]
 fn validate_best_basis_selection(
-    _config: &WptUltrathinkConfig,
+    _config: &WptadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<BestBasisValidationResult> {
     // Placeholder implementation
@@ -704,7 +704,7 @@ fn validate_best_basis_selection(
 
 #[allow(dead_code)]
 fn validate_compression_performance(
-    _config: &WptUltrathinkConfig,
+    _config: &WptadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<CompressionValidationResult> {
     // Placeholder implementation
@@ -724,7 +724,7 @@ fn validate_compression_performance(
 
 #[allow(dead_code)]
 fn validate_denoising_performance(
-    _config: &WptUltrathinkConfig,
+    _config: &WptadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<DenoisingValidationResult> {
     // Placeholder implementation
@@ -740,7 +740,7 @@ fn validate_denoising_performance(
 
 #[allow(dead_code)]
 fn validate_2d_wavelet_packets(
-    _config: &WptUltrathinkConfig,
+    _config: &WptadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<TwoDValidationResult> {
     // Placeholder implementation
@@ -755,7 +755,7 @@ fn validate_2d_wavelet_packets(
 
 #[allow(dead_code)]
 fn validate_numerical_stability(
-    _config: &WptUltrathinkConfig,
+    _config: &WptadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<StabilityValidationResult> {
     // Placeholder implementation
@@ -775,7 +775,7 @@ fn validate_numerical_stability(
 
 #[allow(dead_code)]
 fn analyze_performance(
-    _config: &WptUltrathinkConfig,
+    _config: &WptadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<PerformanceAnalysisResult> {
     // Placeholder implementation
@@ -796,7 +796,7 @@ fn analyze_performance(
 
 #[allow(dead_code)]
 fn analyze_memory_usage(
-    _config: &WptUltrathinkConfig,
+    _config: &WptadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<MemoryAnalysisResult> {
     // Placeholder implementation
@@ -811,7 +811,7 @@ fn analyze_memory_usage(
 
 #[allow(dead_code)]
 fn validate_consistency(
-    _config: &WptUltrathinkConfig,
+    _config: &WptadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ConsistencyAnalysisResult> {
     // Placeholder implementation
@@ -921,7 +921,7 @@ fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
 
 /// Generate a comprehensive report of wavelet packet validation results
 #[allow(dead_code)]
-pub fn generate_wpt_ultrathink_report(result: &WptUltrathinkResult) -> String {
+pub fn generate_wpt_advanced_report(result: &WptadvancedResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Ultra-comprehensive Wavelet Packet Transform Validation Report\n\n");
@@ -1062,8 +1062,8 @@ pub fn generate_wpt_ultrathink_report(result: &WptUltrathinkResult) -> String {
 #[allow(dead_code)]
 /// Quick wavelet packet validation for development
 #[allow(dead_code)]
-pub fn run_quick_wpt_validation() -> SignalResult<WptUltrathinkResult> {
-    let config = WptUltrathinkConfig {
+pub fn run_quick_wpt_validation() -> SignalResult<WptadvancedResult> {
+    let config = WptadvancedConfig {
         test_lengths: vec![64, 128],
         max_depths: vec![2, 3],
         monte_carlo_trials: 10,
@@ -1074,5 +1074,5 @@ pub fn run_quick_wpt_validation() -> SignalResult<WptUltrathinkResult> {
         ..Default::default()
     };
 
-    run_wpt_ultrathink_validation(&config)
+    run_wpt_advanced_validation(&config)
 }

@@ -1955,7 +1955,7 @@ impl AdaptivePerformanceMonitor {
     }
 }
 
-/// Ultrathink high-performance streaming pipeline with zero-copy optimizations
+/// Advanced high-performance streaming pipeline with zero-copy optimizations
 ///
 /// Advanced streaming pipeline that minimizes memory allocations and copies
 /// for maximum throughput in real-time video processing.

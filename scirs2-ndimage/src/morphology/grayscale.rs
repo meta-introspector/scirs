@@ -43,7 +43,6 @@ use super::MorphBorderMode;
 use crate::error::{NdimageError, NdimageResult};
 use crate::utils::safe_f64_to_float;
 
-
 /// Internal enum for specifying morphological operation type
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum MorphOperation {

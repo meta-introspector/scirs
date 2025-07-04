@@ -1,4 +1,4 @@
-//! ULTRATHINK MODE: Advanced Hardware-Specific SIMD Optimizations
+//! Advanced MODE: Advanced Hardware-Specific SIMD Optimizations
 //!
 //! This module provides cutting-edge SIMD optimizations for modern processors:
 //! - Intel/AMD AVX-512 with mask operations, embedded broadcast, and advanced features
@@ -118,7 +118,7 @@ pub enum BlockingStrategy {
     AMXTiling { tile_m: usize, tile_n: usize, tile_k: usize },
 }
 
-/// ULTRATHINK ENHANCEMENT 1: AVX-512 Optimized Matrix Multiplication
+/// Advanced ENHANCEMENT 1: AVX-512 Optimized Matrix Multiplication
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx512f", enable = "avx512vl", enable = "avx512bw", enable = "avx512dq")]
 pub unsafe fn avx512_gemm_f32(
@@ -209,7 +209,7 @@ pub unsafe fn avx512_gemm_f32(
     Ok(())
 }
 
-/// ULTRATHINK ENHANCEMENT 2: AVX-512 Mixed Precision Operations
+/// Advanced ENHANCEMENT 2: AVX-512 Mixed Precision Operations
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx512f", enable = "avx512bw", enable = "avx512_fp16")]
 pub unsafe fn avx512_mixed_precision_gemm(
@@ -270,7 +270,7 @@ pub unsafe fn avx512_mixed_precision_gemm(
     Ok(())
 }
 
-/// ULTRATHINK ENHANCEMENT 3: ARM SVE (Scalable Vector Extension) Optimizations
+/// Advanced ENHANCEMENT 3: ARM SVE (Scalable Vector Extension) Optimizations
 #[cfg(all(target_arch = "aarch64", target_feature = "sve"))]
 #[target_feature(enable = "sve")]
 pub unsafe fn sve_gemm_f32(
@@ -322,7 +322,7 @@ pub unsafe fn sve_gemm_f32(
     Ok(())
 }
 
-/// ULTRATHINK ENHANCEMENT 4: Advanced ARM Neon with Dot Product Instructions
+/// Advanced ENHANCEMENT 4: Advanced ARM Neon with Dot Product Instructions
 #[cfg(target_arch = "aarch64")]
 #[target_feature(enable = "neon", enable = "dotprod")]
 pub unsafe fn neon_advanced_gemm_i8(
@@ -407,7 +407,7 @@ pub unsafe fn neon_advanced_gemm_i8(
     Ok(())
 }
 
-/// ULTRATHINK ENHANCEMENT 5: Intel AMX (Advanced Matrix Extensions) Integration
+/// Advanced ENHANCEMENT 5: Intel AMX (Advanced Matrix Extensions) Integration
 #[cfg(all(target_arch = "x86_64", target_feature = "amx-tile"))]
 #[target_feature(enable = "amx-tile", enable = "amx-int8")]
 pub unsafe fn amx_gemm_i8(
@@ -463,7 +463,7 @@ pub unsafe fn amx_gemm_i8(
     Ok(())
 }
 
-/// ULTRATHINK ENHANCEMENT 6: Adaptive SIMD Dispatcher
+/// Advanced ENHANCEMENT 6: Adaptive SIMD Dispatcher
 pub struct AdaptiveSIMDDispatcher {
     capabilities: AdvancedHardwareCapabilities,
     blocking_strategy: BlockingStrategy,
@@ -731,7 +731,7 @@ impl Default for AdaptiveSIMDDispatcher {
     }
 }
 
-/// ULTRATHINK ENHANCEMENT 7: Memory Prefetching and Cache Optimization
+/// Advanced ENHANCEMENT 7: Memory Prefetching and Cache Optimization
 pub struct CacheOptimizedOperations {
     l1_block_size: usize,
     l2_block_size: usize,

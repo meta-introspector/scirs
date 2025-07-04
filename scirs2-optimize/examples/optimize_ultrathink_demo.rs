@@ -1,13 +1,13 @@
-//! Ultrathink Mode Demonstration
+//! Advanced Mode Demonstration
 //!
-//! This example showcases the advanced capabilities of the Ultrathink Coordinator,
+//! This example showcases the advanced capabilities of the Advanced Coordinator,
 //! demonstrating how it intelligently combines quantum-inspired optimization,
 //! neuromorphic computing, and meta-learning approaches for superior optimization performance.
 
 use ndarray::{Array1, ArrayView1};
 use scirs2_optimize::prelude::*;
 
-/// Complex multi-modal test function for demonstrating Ultrathink capabilities
+/// Complex multi-modal test function for demonstrating Advanced capabilities
 #[allow(dead_code)]
 fn complex_optimization_problem(x: &ArrayView1<f64>) -> f64 {
     let n = x.len();
@@ -33,10 +33,10 @@ fn complex_optimization_problem(x: &ArrayView1<f64>) -> f64 {
     result
 }
 
-/// Demonstration of different Ultrathink strategies
+/// Demonstration of different Advanced strategies
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🧠 Ultrathink Mode Optimization Demonstration 🧠");
+    println!("🧠 Advanced Mode Optimization Demonstration 🧠");
     println!("=================================================");
 
     // Problem setup
@@ -53,8 +53,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌌 Strategy 1: Quantum-Neural Fusion");
     println!("   Combining quantum superposition with neural adaptation...");
 
-    let config1 = UltrathinkConfig {
-        strategy: UltrathinkStrategy::QuantumNeuralFusion,
+    let config1 = AdvancedConfig {
+        strategy: advancedStrategy::QuantumNeuralFusion,
         max_iterations: 500,
         max_evaluations: 5000,
         tolerance: 1e-8,
@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    let result1 = ultrathink_optimize(
+    let result1 = advanced_optimize(
         complex_optimization_problem,
         &initial_params.view(),
         Some(config1),
@@ -82,8 +82,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧠 Strategy 2: Neuromorphic-Quantum Hybrid");
     println!("   Leveraging spiking networks with quantum tunneling...");
 
-    let config2 = UltrathinkConfig {
-        strategy: UltrathinkStrategy::NeuromorphicQuantumHybrid,
+    let config2 = AdvancedConfig {
+        strategy: advancedStrategy::NeuromorphicQuantumHybrid,
         max_iterations: 500,
         max_evaluations: 5000,
         tolerance: 1e-8,
@@ -91,7 +91,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    let result2 = ultrathink_optimize(
+    let result2 = advanced_optimize(
         complex_optimization_problem,
         &initial_params.view(),
         Some(config2),
@@ -111,8 +111,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎯 Strategy 3: Meta-Learning Quantum");
     println!("   Applying meta-learning with quantum enhancement...");
 
-    let config3 = UltrathinkConfig {
-        strategy: UltrathinkStrategy::MetaLearningQuantum,
+    let config3 = AdvancedConfig {
+        strategy: advancedStrategy::MetaLearningQuantum,
         max_iterations: 500,
         max_evaluations: 5000,
         tolerance: 1e-8,
@@ -120,7 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    let result3 = ultrathink_optimize(
+    let result3 = advanced_optimize(
         complex_optimization_problem,
         &initial_params.view(),
         Some(config3),
@@ -140,8 +140,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔄 Strategy 4: Adaptive Selection");
     println!("   Dynamic strategy switching based on performance...");
 
-    let config4 = UltrathinkConfig {
-        strategy: UltrathinkStrategy::AdaptiveSelection,
+    let config4 = AdvancedConfig {
+        strategy: advancedStrategy::AdaptiveSelection,
         max_iterations: 500,
         max_evaluations: 5000,
         tolerance: 1e-8,
@@ -149,7 +149,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    let result4 = ultrathink_optimize(
+    let result4 = advanced_optimize(
         complex_optimization_problem,
         &initial_params.view(),
         Some(config4),
@@ -165,12 +165,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         result4.iterations, result4.success
     );
 
-    // Strategy 5: Full Ultrathink
-    println!("\n🚀 Strategy 5: Full Ultrathink");
+    // Strategy 5: Full Advanced
+    println!("\n🚀 Strategy 5: Full Advanced");
     println!("   All strategies working in parallel with intelligent coordination...");
 
-    let config5 = UltrathinkConfig {
-        strategy: UltrathinkStrategy::FullUltrathink,
+    let config5 = AdvancedConfig {
+        strategy: advancedStrategy::Fulladvanced,
         max_iterations: 1000,
         max_evaluations: 10000,
         tolerance: 1e-10,
@@ -180,7 +180,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    let result5 = ultrathink_optimize(
+    let result5 = advanced_optimize(
         complex_optimization_problem,
         &initial_params.view(),
         Some(config5),
@@ -204,7 +204,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("Neuromorphic-Quantum Hybrid", result2.fun),
         ("Meta-Learning Quantum", result3.fun),
         ("Adaptive Selection", result4.fun),
-        ("Full Ultrathink", result5.fun),
+        ("Full Advanced", result5.fun),
     ];
 
     let mut sorted_results = results.clone();
@@ -221,20 +221,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
-    println!("\n🎉 Ultrathink Demonstration Complete!");
-    println!("The Full Ultrathink strategy typically achieves the best performance");
+    println!("\n🎉 Advanced Demonstration Complete!");
+    println!("The Full Advanced strategy typically achieves the best performance");
     println!("by intelligently coordinating all available optimization approaches.");
 
     // Advanced Statistics Demonstration
-    println!("\n📊 Advanced Ultrathink Statistics:");
+    println!("\n📊 Advanced Advanced Statistics:");
     println!("==================================");
 
     // Create a coordinator to demonstrate statistics
-    let mut coordinator = UltrathinkCoordinator::new(config5, &initial_params.view());
+    let mut coordinator = AdvancedCoordinator::new(config5, &initial_params.view());
 
     // Run a few optimization steps to generate statistics
     let _ = coordinator.optimize(complex_optimization_problem);
-    let stats = coordinator.get_ultrathink_stats();
+    let stats = coordinator.get_advanced_stats();
 
     println!("Total Function Evaluations: {}", stats.total_evaluations);
     println!("Current Iteration: {}", stats.current_iteration);
@@ -268,9 +268,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
-    println!("\n💡 Pro Tips for Ultrathink Optimization:");
+    println!("\n💡 Pro Tips for Advanced Optimization:");
     println!("========================================");
-    println!("1. Use FullUltrathink for the most challenging problems");
+    println!("1. Use Fulladvanced for the most challenging problems");
     println!("2. AdaptiveSelection automatically chooses the best strategy");
     println!("3. Increase fusion_strength for better cross-modal coordination");
     println!("4. Set appropriate time_budget for real-time applications");
@@ -281,8 +281,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Additional helper function for benchmarking
 #[allow(dead_code)]
-fn benchmark_ultrathink_strategies() -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n⚡ Ultrathink Strategy Benchmarking");
+fn benchmark_advanced_strategies() -> Result<(), Box<dyn std::error::Error>> {
+    println!("\n⚡ Advanced Strategy Benchmarking");
     println!("==================================");
 
     let test_functions = vec![
@@ -317,14 +317,14 @@ fn benchmark_ultrathink_strategies() -> Result<(), Box<dyn std::error::Error>> {
         println!("\n🎯 Testing on {} function:", func_name);
 
         let initial_params = Array1::from_vec(vec![2.5; 3]);
-        let config = UltrathinkConfig {
-            strategy: UltrathinkStrategy::FullUltrathink,
+        let config = AdvancedConfig {
+            strategy: advancedStrategy::Fulladvanced,
             max_iterations: 200,
             max_evaluations: 2000,
             ..Default::default()
         };
 
-        let result = ultrathink_optimize(objective, &initial_params.view(), Some(config))?;
+        let result = advanced_optimize(objective, &initial_params.view(), Some(config))?;
         println!("   Result: {:.6} in {} iterations", result.fun, result.nit);
     }
 

@@ -488,12 +488,12 @@ impl EnhancedPCA {
             None
         };
 
-        // ✅ ULTRATHINK MODE: Proper streaming incremental PCA implementation
+        // ✅ Advanced MODE: Proper streaming incremental PCA implementation
         // This implements true incremental SVD without loading all data into memory
         self.fit_streaming_incremental_pca(x, &running_mean, chunk_size)
     }
 
-    /// ✅ ULTRATHINK MODE: True streaming incremental PCA implementation
+    /// ✅ Advanced MODE: True streaming incremental PCA implementation
     /// This method implements proper incremental SVD that processes data chunk by chunk
     /// without ever loading the full dataset into memory.
     fn fit_streaming_incremental_pca(
@@ -566,7 +566,7 @@ impl EnhancedPCA {
         Ok(())
     }
 
-    /// ✅ ULTRATHINK MODE: Incremental SVD update algorithm
+    /// ✅ Advanced MODE: Incremental SVD update algorithm
     /// This implements the proper mathematical algorithm for updating SVD incrementally
     /// Based on "Incremental Singular Value Decomposition of Uncertain Data with Missing Values"
     fn incremental_svd_update(
@@ -585,7 +585,7 @@ impl EnhancedPCA {
             return self.initialize_svd_from_chunk(new_chunk, u, sigma, vt);
         }
 
-        // ✅ ULTRATHINK OPTIMIZATION: Efficient incremental update
+        // ✅ Advanced OPTIMIZATION: Efficient incremental update
         // Project new data onto existing subspace
         let projected = new_chunk.dot(&vt.t());
 
@@ -669,7 +669,7 @@ impl EnhancedPCA {
         Ok(())
     }
 
-    /// ✅ ULTRATHINK MODE: Initialize SVD from first chunk
+    /// ✅ Advanced MODE: Initialize SVD from first chunk
     fn initialize_svd_from_chunk(
         &self,
         chunk: &Array2<f64>,
@@ -688,7 +688,7 @@ impl EnhancedPCA {
         Ok(())
     }
 
-    /// ✅ ULTRATHINK MODE: Efficient QR decomposition for chunked processing
+    /// ✅ Advanced MODE: Efficient QR decomposition for chunked processing
     fn qr_decomposition_chunked(&self, matrix: &Array2<f64>) -> Result<(Array2<f64>, Array2<f64>)> {
         let (m, n) = matrix.dim();
 
@@ -727,7 +727,7 @@ impl EnhancedPCA {
         Ok((q, r))
     }
 
-    /// ✅ ULTRATHINK MODE: Efficient SVD for small matrices
+    /// ✅ Advanced MODE: Efficient SVD for small matrices
     fn svd_small_matrix(
         &self,
         matrix: &Array2<f64>,
@@ -768,7 +768,7 @@ impl EnhancedPCA {
         Ok((u, singular_values, vt))
     }
 
-    /// ✅ ULTRATHINK MODE: Symmetric eigendecomposition for small matrices
+    /// ✅ Advanced MODE: Symmetric eigendecomposition for small matrices
     fn symmetric_eigendecomposition(
         &self,
         matrix: &Array2<f64>,
@@ -821,7 +821,7 @@ impl EnhancedPCA {
         Ok((eigenvals, eigenvecs))
     }
 
-    /// ✅ ULTRATHINK MODE: Enhanced randomized PCA with proper random projections
+    /// ✅ Advanced MODE: Enhanced randomized PCA with proper random projections
     /// This implements the randomized SVD algorithm for efficient PCA on large datasets
     /// Based on "Finding structure with randomness" by Halko, Martinsson & Tropp (2011)
     fn fit_randomized_pca(&mut self, x: &ArrayView2<f64>) -> Result<()> {
@@ -842,12 +842,12 @@ impl EnhancedPCA {
 
         self.mean = mean;
 
-        // ✅ ULTRATHINK OPTIMIZATION: Proper randomized SVD implementation
+        // ✅ Advanced OPTIMIZATION: Proper randomized SVD implementation
         // This is significantly faster than full SVD for large matrices
         self.fit_randomized_svd(&x_centered.view())
     }
 
-    /// ✅ ULTRATHINK MODE: Core randomized SVD algorithm
+    /// ✅ Advanced MODE: Core randomized SVD algorithm
     /// Implements the randomized SVD algorithm with proper random projections
     fn fit_randomized_svd(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         let (n_samples, n_features) = x.dim();
@@ -912,7 +912,7 @@ impl EnhancedPCA {
         Ok(())
     }
 
-    /// ✅ ULTRATHINK MODE: Generate random Gaussian matrix for projections
+    /// ✅ Advanced MODE: Generate random Gaussian matrix for projections
     fn generate_random_gaussian_matrix(&self, rows: usize, cols: usize) -> Result<Array2<f64>> {
         let mut rng = rand::rng();
         let mut random_matrix = Array2::zeros((rows, cols));
@@ -2844,7 +2844,7 @@ impl CacheOptimizedAlgorithms {
 }
 */
 
-/// ✅ ULTRATHINK MODE: Advanced memory pool for ultra-fast processing
+/// ✅ Advanced MODE: Advanced memory pool for ultra-fast processing
 /// This provides cache-efficient memory management for repeated transformations
 pub struct UltraFastMemoryPool {
     /// Pre-allocated matrices pool for different sizes
@@ -2911,7 +2911,7 @@ impl UltraFastMemoryPool {
         pool
     }
 
-    /// ✅ ULTRATHINK OPTIMIZATION: Pre-warm pool with common matrix sizes
+    /// ✅ Advanced OPTIMIZATION: Pre-warm pool with common matrix sizes
     fn prewarm_common_sizes(&mut self) {
         // Common PCA matrix sizes
         let common_matrix_sizes = vec![
@@ -2944,7 +2944,7 @@ impl UltraFastMemoryPool {
         self.update_memory_stats();
     }
 
-    /// ✅ ULTRATHINK OPTIMIZATION: Get matrix from pool or allocate new one
+    /// ✅ Advanced OPTIMIZATION: Get matrix from pool or allocate new one
     pub fn get_matrix(&mut self, rows: usize, cols: usize) -> Array2<f64> {
         self.stats.total_allocations += 1;
 
@@ -2963,7 +2963,7 @@ impl UltraFastMemoryPool {
         Array2::zeros((rows, cols))
     }
 
-    /// ✅ ULTRATHINK OPTIMIZATION: Get vector from pool or allocate new one
+    /// ✅ Advanced OPTIMIZATION: Get vector from pool or allocate new one
     pub fn get_vector(&mut self, size: usize) -> Array1<f64> {
         self.stats.total_allocations += 1;
 
@@ -2982,7 +2982,7 @@ impl UltraFastMemoryPool {
         Array1::zeros(size)
     }
 
-    /// ✅ ULTRATHINK OPTIMIZATION: Return matrix to pool for reuse
+    /// ✅ Advanced OPTIMIZATION: Return matrix to pool for reuse
     pub fn return_matrix(&mut self, matrix: Array2<f64>) {
         let shape = (matrix.nrows(), matrix.ncols());
         let pool = self.matrix_pools.entry(shape).or_default();
@@ -2994,7 +2994,7 @@ impl UltraFastMemoryPool {
         }
     }
 
-    /// ✅ ULTRATHINK OPTIMIZATION: Return vector to pool for reuse
+    /// ✅ Advanced OPTIMIZATION: Return vector to pool for reuse
     pub fn return_vector(&mut self, vector: Array1<f64>) {
         let size = vector.len();
         let pool = self.vector_pools.entry(size).or_default();
@@ -3031,7 +3031,7 @@ impl UltraFastMemoryPool {
         &self.stats
     }
 
-    /// ✅ ULTRATHINK OPTIMIZATION: Get pool efficiency (hit rate)
+    /// ✅ Advanced OPTIMIZATION: Get pool efficiency (hit rate)
     pub fn efficiency(&self) -> f64 {
         if self.stats.total_allocations == 0 {
             0.0
@@ -3067,7 +3067,7 @@ impl UltraFastMemoryPool {
         self.update_memory_stats();
     }
 
-    /// ✅ ULTRATHINK OPTIMIZATION: Adaptive pool resizing based on usage patterns
+    /// ✅ Advanced OPTIMIZATION: Adaptive pool resizing based on usage patterns
     pub fn adaptive_resize(&mut self) {
         let efficiency = self.efficiency();
 
@@ -3093,7 +3093,7 @@ impl UltraFastMemoryPool {
     }
 }
 
-/// ✅ ULTRATHINK MODE: Ultra-fast PCA with memory pooling
+/// ✅ Advanced MODE: Ultra-fast PCA with memory pooling
 pub struct UltraFastPCA {
     enhanced_pca: EnhancedPCA,
     memory_pool: UltraFastMemoryPool,
@@ -3142,7 +3142,7 @@ impl UltraFastPCA {
         })
     }
 
-    /// ✅ ULTRATHINK OPTIMIZATION: Fast transform with memory pooling
+    /// ✅ Advanced OPTIMIZATION: Fast transform with memory pooling
     pub fn fast_transform(&mut self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
         let (n_samples, n_features) = x.dim();
 

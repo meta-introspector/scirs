@@ -32,11 +32,17 @@ pub mod meta_learning;
 pub mod policy_gradient;
 pub mod q_learning_optimization;
 
+#[allow(ambiguous_glob_reexports)]
 pub use actor_critic::*;
+#[allow(ambiguous_glob_reexports)]
 pub use bandit_optimization::*;
+#[allow(ambiguous_glob_reexports)]
 pub use evolutionary_strategies::*;
+#[allow(ambiguous_glob_reexports)]
 pub use meta_learning::*;
+#[allow(ambiguous_glob_reexports)]
 pub use policy_gradient::*;
+#[allow(ambiguous_glob_reexports)]
 pub use q_learning_optimization::*;
 
 /// Configuration for reinforcement learning optimization

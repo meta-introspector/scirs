@@ -12,6 +12,7 @@ use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
 use std::collections::VecDeque;
 use std::f64::consts::PI;
+use rand::Rng;
 
 /// Complex number representation for quantum states
 #[derive(Debug, Clone, Copy)]
@@ -91,8 +92,8 @@ impl QuantumState {
         // Initialize random amplitudes (normalized)
         let mut amplitudes = Array1::from_shape_fn(actual_states, |_| {
             Complex::new(
-                (rand::rng().random::<f64>() - 0.5) * 2.0,
-                (rand::rng().random::<f64>() - 0.5) * 2.0,
+                rand::rng().random_range(-1.0..1.0),
+                rand::rng().random_range(-1.0..1.0),
             )
         });
 
@@ -108,7 +109,7 @@ impl QuantumState {
 
         // Initialize random basis states
         let basis_states = Array2::from_shape_fn((actual_states, num_params), |_| {
-            (rand::rng().random::<f64>() - 0.5) * 10.0
+            rand::rng().random_range(-5.0..5.0)
         });
 
         // Initialize entanglement matrix
@@ -116,7 +117,7 @@ impl QuantumState {
             if i == j {
                 Complex::new(1.0, 0.0)
             } else {
-                let correlation = (rand::rng().random::<f64>() - 0.5) * 0.2;
+                let correlation = rand::rng().random_range(-0.1..0.1);
                 Complex::new(correlation, correlation * 0.1)
             }
         });
@@ -142,7 +143,7 @@ impl QuantumState {
 
         // Quantum measurement (random collapse based on probabilities)
         let mut cumulative = 0.0;
-        let random_value = rand::rng().random::<f64>();
+        let random_value = rand::rng().random_range(0.0..1.0);
 
         for (i, &prob) in probabilities.iter().enumerate() {
             cumulative += prob;
@@ -264,8 +265,8 @@ impl QuantumState {
         // Add small random noise to simulate environmental interaction
         let noise_strength = 1.0 - decoherence_factor;
         for amp in self.amplitudes.iter_mut() {
-            let noise_real = (rand::rng().random::<f64>() - 0.5) * noise_strength * 0.01;
-            let noise_imag = (rand::rng().random::<f64>() - 0.5) * noise_strength * 0.01;
+            let noise_real = rand::rng().random_range(-0.5..0.5) * noise_strength * 0.01;
+            let noise_imag = rand::rng().random_range(-0.5..0.5) * noise_strength * 0.01;
             *amp = *amp + Complex::new(noise_real, noise_imag);
         }
 
@@ -315,7 +316,7 @@ impl QuantumState {
         // Create new basis states around current ones
         for i in 0..n_states {
             for j in 0..n_params {
-                let perturbation = (rand::rng().random::<f64>() - 0.5) * 2.0 * exploration_radius;
+                let perturbation = rand::rng().random_range(-exploration_radius..exploration_radius);
                 self.basis_states[[i, j]] += perturbation;
             }
         }
@@ -331,17 +332,17 @@ impl QuantumState {
 
     /// Apply quantum tunneling to escape local minima
     pub fn quantum_tunnel(&mut self, barrier_height: f64, tunnel_probability: f64) -> Result<()> {
-        if rand::rng().random::<f64>() < tunnel_probability {
+        if rand::rng().random_range(0.0..1.0) < tunnel_probability {
             // Quantum tunneling: create new basis states beyond energy barriers
             let n_states = self.basis_states.nrows();
             let n_params = self.basis_states.ncols();
 
             // Select a random state to tunnel from
-            let source_state = rand::rng().random::<usize>() % n_states;
+            let source_state = rand::rng().random_range(0..n_states);
 
             // Create tunneled state
             for j in 0..n_params {
-                let tunnel_distance = barrier_height * (rand::rng().random::<f64>() - 0.5);
+                let tunnel_distance = barrier_height * rand::rng().random_range(-0.5..0.5);
                 self.basis_states[[source_state, j]] += tunnel_distance;
             }
 
@@ -436,7 +437,7 @@ impl QuantumAnnealingSchedule {
             let classical_prob = (-energy_delta / self.current_temperature).exp();
             let quantum_prob = classical_prob * (1.0 + self.quantum_fluctuation * 0.1);
 
-            rand::rng().random::<f64>() < quantum_prob.min(1.0)
+            rand::rng().random_range(0.0..1.0) < quantum_prob.min(1.0)
         }
     }
 }
@@ -539,7 +540,7 @@ impl QuantumInspiredOptimizer {
                 self.quantum_state
                     .quantum_tunnel(barrier_height, tunnel_prob)?;
 
-                if rand::rng().random::<f64>() < tunnel_prob {
+                if rand::rng().random_range(0.0..1.0) < tunnel_prob {
                     self.tunneling_events += 1;
                     stagnation_counter = 0;
                 }
@@ -737,7 +738,7 @@ where
                 particle.quantum_state.evolve(&gradients, 0.01)?;
 
                 // Entangle particles with global best
-                if rand::rng().random::<f64>() < 0.1 {
+                if rand::rng().random_range(0.0..1.0) < 0.1 {
                     let n_params = initial_params.len();
                     for i in 0..n_params.min(particle.quantum_state.basis_states.ncols()) {
                         let entanglement_strength = 0.1;

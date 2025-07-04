@@ -16,10 +16,9 @@ use crate::generators::{barabasi_albert_graph, erdos_renyi_graph};
 use crate::measures::pagerank_centrality;
 // Unused imports are commented to avoid warnings
 // use crate::advanced::{
-//     create_ultrathink_processor, execute_with_ultrathink, UltrathinkProcessor,
+//     create_advanced_processor, execute_with_advanced, AdvancedProcessor,
 // };
 use crate::advanced::{create_enhanced_advanced_processor, execute_with_enhanced_advanced};
-use rand::rng;
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant, SystemTime};
 

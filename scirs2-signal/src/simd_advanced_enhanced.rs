@@ -1,4 +1,4 @@
-//! Ultrathink Enhanced SIMD Operations for Signal Processing
+//! Advanced Enhanced SIMD Operations for Signal Processing
 //!
 //! This module provides the most impactful SIMD optimizations that were missing
 //! from the existing implementation, focusing on FFT, STFT, wavelets, and
@@ -15,9 +15,9 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::f64::consts::PI;
 
-/// Ultrathink SIMD configuration with enhanced features
+/// Advanced SIMD configuration with enhanced features
 #[derive(Debug, Clone)]
-pub struct UltrathinkSimdConfig {
+pub struct AdvancedSimdConfig {
     /// Base SIMD configuration
     pub base_config: SimdConfig,
     /// FFT-specific optimizations
@@ -88,7 +88,7 @@ pub struct ResamplingOptimizations {
     pub fractional_delay: bool,
 }
 
-impl Default for UltrathinkSimdConfig {
+impl Default for AdvancedSimdConfig {
     fn default() -> Self {
         Self {
             base_config: SimdConfig::default(),
@@ -216,9 +216,9 @@ pub struct WaveletPerformanceMetrics {
 
 /// Ultra-high performance SIMD FFT implementation
 #[allow(dead_code)]
-pub fn ultrathink_simd_fft(
+pub fn advanced_simd_fft(
     input: &Array1<Complex64>,
-    config: &UltrathinkSimdConfig,
+    config: &AdvancedSimdConfig,
 ) -> SignalResult<SimdFftResult> {
     let start_time = std::time::Instant::now();
     let n = input.len();
@@ -270,9 +270,9 @@ pub fn ultrathink_simd_fft(
 
 /// SIMD-optimized real FFT for real-valued signals
 #[allow(dead_code)]
-pub fn ultrathink_simd_rfft(
+pub fn advanced_simd_rfft(
     input: &Array1<f64>,
-    config: &UltrathinkSimdConfig,
+    config: &AdvancedSimdConfig,
 ) -> SignalResult<SimdFftResult> {
     let start_time = std::time::Instant::now();
     let n = input.len();
@@ -313,12 +313,12 @@ pub fn ultrathink_simd_rfft(
 
 /// Ultra-high performance SIMD STFT implementation
 #[allow(dead_code)]
-pub fn ultrathink_simd_stft(
+pub fn advanced_simd_stft(
     signal: &Array1<f64>,
     window_size: usize,
     hop_size: usize,
     window: Option<&Array1<f64>>,
-    config: &UltrathinkSimdConfig,
+    config: &AdvancedSimdConfig,
 ) -> SignalResult<SimdStftResult> {
     let start_time = std::time::Instant::now();
     let signal_len = signal.len();
@@ -393,11 +393,11 @@ pub fn ultrathink_simd_stft(
 
 /// SIMD-optimized Discrete Wavelet Transform
 #[allow(dead_code)]
-pub fn ultrathink_simd_dwt(
+pub fn advanced_simd_dwt(
     signal: &Array1<f64>,
     wavelet: &str,
     levels: usize,
-    config: &UltrathinkSimdConfig,
+    config: &AdvancedSimdConfig,
 ) -> SignalResult<SimdWaveletResult> {
     let start_time = std::time::Instant::now();
 
@@ -448,11 +448,11 @@ pub fn ultrathink_simd_dwt(
 
 /// SIMD-optimized resampling with fractional rates
 #[allow(dead_code)]
-pub fn ultrathink_simd_resample(
+pub fn advanced_simd_resample(
     signal: &Array1<f64>,
     original_rate: f64,
     target_rate: f64,
-    config: &UltrathinkSimdConfig,
+    config: &AdvancedSimdConfig,
 ) -> SignalResult<Array1<f64>> {
     let ratio = target_rate / original_rate;
     let output_len = (signal.len() as f64 * ratio).round() as usize;
@@ -1140,7 +1140,7 @@ pub fn generate_simd_performance_report(
 ) -> String {
     let mut report = String::new();
 
-    report.push_str("# Ultrathink SIMD Performance Report\n\n");
+    report.push_str("# Advanced SIMD Performance Report\n\n");
 
     if let Some(fft) = fft_result {
         report.push_str("## 🚀 FFT Performance Analysis\n\n");
@@ -1199,7 +1199,7 @@ pub fn generate_simd_performance_report(
     }
 
     report.push_str("\n---\n");
-    report.push_str("🎯 **Ultrathink SIMD Optimization Suite**\n");
+    report.push_str("🎯 **Advanced SIMD Optimization Suite**\n");
     report.push_str(&format!(
         "Generated at: {:?}\n",
         std::time::SystemTime::now()

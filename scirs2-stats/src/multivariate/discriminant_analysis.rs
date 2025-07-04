@@ -362,7 +362,7 @@ impl LinearDiscriminantAnalysis {
         use ndarray_linalg::SVD;
 
         // Cholesky decomposition of Sw = L * L^T
-        let l = scirs2_linalg::cholesky(&sw.view(), true).map_err(|e| {
+        let l = scirs2_linalg::cholesky(&sw.view(), None).map_err(|e| {
             StatsError::ComputationError(format!(
                 "Cholesky decomposition failed: {}. Try using shrinkage.",
                 e
@@ -738,7 +738,7 @@ impl QuadraticDiscriminantAnalysis {
             // Apply regularization
             if self.reg_param > 0.0 {
                 let trace = (0..n_features).map(|i| cov[[i, i]]).sum::<f64>();
-                let identity_term =
+                let identity_term: Array2<f64> =
                     Array2::eye(n_features) * (self.reg_param * trace / n_features as f64);
                 cov = cov + identity_term;
             }

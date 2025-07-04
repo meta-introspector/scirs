@@ -1,26 +1,26 @@
-//! Ultrathink FFT Mode Showcase
+//! Advanced FFT Mode Showcase
 //!
 //! This example demonstrates the advanced AI-driven FFT optimization capabilities
-//! of the ultrathink mode, including intelligent algorithm selection, adaptive
+//! of the Advanced mode, including intelligent algorithm selection, adaptive
 //! performance tuning, and cross-domain knowledge transfer.
 
 use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_fft::{
-    create_ultrathink_fft_coordinator,
-    ultrathink_coordinator::{FftAlgorithmType, MemoryAllocationStrategy},
-    UltrathinkFftConfig,
+    create_advanced_fft_coordinator,
+    advanced_coordinator::{FftAlgorithmType, MemoryAllocationStrategy},
+    advancedFftConfig,
 };
 use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultrathink FFT Mode Showcase");
+    println!("🚀 Advanced FFT Mode Showcase");
     println!("=====================================");
 
     // Create advanced coordinator with custom configuration
-    let mut config = UltrathinkFftConfig::default();
+    let mut config = advancedFftConfig::default();
     config.enable_method_selection = true;
     config.enable_adaptive_optimization = true;
     config.enable_quantum_optimization = true;
@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let coordinator = create_advanced_fft_coordinator::<f64>()?;
-    println!("✅ Ultrathink FFT Coordinator created successfully");
+    println!("✅ Advanced FFT Coordinator created successfully");
     println!();
 
     // Test Case 1: Simple sine wave (should prefer standard algorithms)
@@ -223,7 +223,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("==================================");
     demonstrate_quantum_optimization(&coordinator)?;
 
-    println!("\n🎯 Ultrathink FFT Mode Showcase Complete!");
+    println!("\n🎯 Advanced FFT Mode Showcase Complete!");
     println!("==========================================");
     println!("The advanced mode has demonstrated:");
     println!("✅ Intelligent algorithm selection based on signal characteristics");
@@ -319,7 +319,7 @@ fn estimate_memory_efficiency(recommendation: &scirs2_fft::FftRecommendation) ->
 /// Demonstrate adaptive learning capabilities
 #[allow(dead_code)]
 fn demonstrate_adaptive_learning(
-    coordinator: &scirs2_fft::UltrathinkFftCoordinator<f64>,
+    coordinator: &scirs2_fft::advancedFftCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("Running multiple similar signals to demonstrate learning...");
 
@@ -369,7 +369,7 @@ fn demonstrate_adaptive_learning(
 /// Demonstrate cross-domain knowledge transfer
 #[allow(dead_code)]
 fn demonstrate_knowledge_transfer(
-    coordinator: &scirs2_fft::UltrathinkFftCoordinator<f64>,
+    coordinator: &scirs2_fft::advancedFftCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing knowledge transfer between signal domains...");
 
@@ -409,7 +409,7 @@ fn demonstrate_knowledge_transfer(
 /// Demonstrate quantum-inspired optimization
 #[allow(dead_code)]
 fn demonstrate_quantum_optimization(
-    coordinator: &scirs2_fft::UltrathinkFftCoordinator<f64>,
+    coordinator: &scirs2_fft::advancedFftCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("Evaluating quantum-inspired optimization benefits...");
 
@@ -533,8 +533,8 @@ mod tests {
     }
 
     #[test]
-    fn test_ultrathink_coordinator_creation() {
-        let coordinator = create_ultrathink_fft_coordinator::<f64>();
+    fn test_advanced_coordinator_creation() {
+        let coordinator = create_advanced_fft_coordinator::<f64>();
         assert!(coordinator.is_ok());
     }
 }

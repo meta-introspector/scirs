@@ -52,8 +52,8 @@ pub mod jit;
 pub mod tpu;
 // Unified performance integration
 pub mod performance_integration;
-// Ultrathink Mode Coordinator
-pub mod ultrathink_coordinator;
+// Advanced Mode Coordinator
+pub mod advanced_coordinator;
 // Re-export the error type
 pub use error::{Error, NeuralError, Result};
 // Optional prelude for convenience
@@ -94,9 +94,9 @@ pub mod prelude {
     pub use crate::performance_integration::{
         AutoOptimizationStrategy, OptimizationChoice, UnifiedPerformanceManager,
     };
-    // Ultrathink Mode Coordinator
-    pub use crate::ultrathink_coordinator::{
+    // Advanced Mode Coordinator
+    pub use crate::advanced_coordinator::{
         AdaptiveConfig, DeviceType, MemoryStrategy, OptimizationConfig, PerformanceReport,
-        UltrathinkCoordinator,
+        AdvancedCoordinator,
     };
 }

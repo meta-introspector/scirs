@@ -69,6 +69,8 @@ impl Default for MixedPrecisionConfig {
             scale_factor: 2.0,
         }
     }
+}
+
 /// GPU context for managing multiple devices
 #[derive(Debug)]
 pub struct GpuContext {
@@ -164,6 +166,11 @@ impl GpuContext {
         if let Some(device_stats) = stats.get_mut(&handle.device_id) {
             device_stats.allocated = device_stats.allocated.saturating_sub(handle.size);
             device_stats.active = device_stats.active.saturating_sub(handle.size);
+        }
+        Ok(())
+    }
+}
+
 /// GPU memory handle
 pub struct GpuMemoryHandle {
     ptr: *mut u8,
@@ -203,6 +210,9 @@ where
         let new_tensor = Self::new(self.shape.clone(), target_device, context)?;
         // In real implementation, would perform device-to-device copy
         Ok(new_tensor)
+    }
+}
+
 /// Multi-GPU training coordinator
 pub struct MultiGpuTrainer {
     contexts: Vec<Arc<GpuContext>>,
@@ -250,26 +260,46 @@ impl MultiGpuTrainer {
             ReductionStrategy::AllReduce => self.all_reduce_impl(tensors),
             ReductionStrategy::ParameterServer => self.parameter_server_reduce(tensors),
             ReductionStrategy::Hierarchical => self.hierarchical_reduce(tensors),
+        }
+    }
+
     fn all_reduce_impl<T>(&self, _tensors: &mut [CudaTensor<T>]) -> Result<()>
+    where
         T: Copy + Default + Send + Sync,
+    {
         // Simulate all-reduce operation
         // In real implementation, would use NCCL or similar
         thread::sleep(Duration::from_millis(1)); // Simulate communication latency
-    fn parameter_server_reduce<T>(&self, _tensors: &mut [CudaTensor<T>]) -> Result<()>
+        Ok(())
+    }
+
+    fn parameter_server_reduce<T>(&self, _tensors: &mut [CudaTensor<T>]) -> Result<()> {
         // Simulate parameter server reduction
         thread::sleep(Duration::from_millis(2));
-    fn hierarchical_reduce<T>(&self, _tensors: &mut [CudaTensor<T>]) -> Result<()>
+        Ok(())
+    }
+
+    fn hierarchical_reduce<T>(&self, _tensors: &mut [CudaTensor<T>]) -> Result<()> {
         // Simulate hierarchical reduction
         thread::sleep(Duration::from_millis(1));
+        Ok(())
+    }
+
     /// Get number of devices
     pub fn device_count(&self) -> usize {
         self.contexts.len()
+    }
+
     /// Get memory statistics for all devices
     pub fn memory_stats_all(&self) -> Result<Vec<MemoryStats>> {
         let mut stats = Vec::new();
         for (i, context) in self.contexts.iter().enumerate() {
             stats.push(context.memory_stats(i as u32)?);
+        }
         Ok(stats)
+    }
+}
+
 /// Enhanced neural operations accelerator with full GPU support
 pub struct NeuralOps {
     /// GPU context for device management
@@ -544,10 +574,19 @@ impl NeuralOps {
                 device_info.compute_capability.1,
                 device_info.multiprocessor_count
             ))
+        } else {
             Err(Error::ComputationError(
                 "No GPU context available".to_string(),
+            ))
+        }
+    }
+}
+
 impl Default for NeuralOps {
+    fn default() -> Self {
         Self::new().expect("Failed to create default NeuralOps")
+    }
+}
 /// Helper function to create neural operations with automatic backend detection
 #[allow(dead_code)]
 pub fn create_neural_ops() -> Result<NeuralOps> {
@@ -569,19 +608,32 @@ mod tests {
         let result = ops.matrix_multiply(&a, &b).unwrap();
         let expected = array![[19.0, 22.0], [43.0, 50.0]];
         assert_eq!(result, expected);
+    }
+
+    #[test]
     fn test_relu_forward() {
+        let ops = create_neural_ops().unwrap();
         let input = array![[-1.0, 0.0, 1.0, 2.0]].into_dyn();
         let result = ops.relu_forward(&input).unwrap();
         let expected = array![[0.0, 0.0, 1.0, 2.0]].into_dyn();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
     fn test_sigmoid_forward() {
+        let ops = create_neural_ops().unwrap();
         let input = array![[0.0, 1.0, -1.0]].into_dyn();
         let result = ops.sigmoid_forward(&input).unwrap();
         // Check that outputs are in valid sigmoid range (0, 1)
         for &val in result.iter() {
             assert!(val > 0.0 && val < 1.0);
+        }
         // Check that sigmoid(0) ≈ 0.5
         assert!((result[[0, 0]] - 0.5).abs() < 1e-6);
+    }
+    #[test]
     fn test_batch_normalize() {
+        let ops = create_neural_ops().unwrap();
         let input = array![[1.0, 2.0], [3.0, 4.0]].into_dyn();
         let mean = array![2.0, 3.0];
         let var = array![1.0, 1.0];
@@ -592,23 +644,40 @@ mod tests {
             .unwrap();
         // Result should be normalized
         assert!(result.shape() == input.shape());
+    }
+
+    #[test]
     fn test_softmax_forward() {
+        let ops = create_neural_ops().unwrap();
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]].into_dyn();
         let result = ops.softmax_forward(&input).unwrap();
         // Check that each row sums to 1
         for row in result.axis_iter(ndarray::Axis(0)) {
+            let sum: f64 = row.iter().map(|&x| x as f64).sum();
             assert!((sum - 1.0).abs() < 1e-6);
+        }
         // Check that all values are positive
+        for &val in result.iter() {
             assert!(val > 0.0);
+        }
+    }
+
+    #[test]
     fn test_gpu_context_creation() {
         // Test both success and failure cases
         match GpuContext::new() {
             Ok(context) => {
                 assert!(!context.all_devices().is_empty());
                 assert!(context.current_device_info().is_available);
+            }
             Err(_) => {
                 // GPU not available, which is expected in CI environments
                 println!("GPU not available, skipping GPU context test");
+            }
+        }
+    }
+
+    #[test]
     fn test_neural_ops_with_gpu() {
         match NeuralOps::with_gpu() {
             Ok(ops) => {
@@ -617,44 +686,71 @@ mod tests {
                     assert!(ops.gpu_context().is_some());
                 } else {
                     assert_eq!(ops.backend_type, "CPU");
+                }
+            }
+            Err(_) => {
                 // Expected when GPU is not available
-                println!("GPU not available for neural ops test ");
+                println!("GPU not available for neural ops test");
+            }
+        }
+    }
+
+    #[test]
     fn test_mixed_precision_config() {
         let config = MixedPrecisionConfig {
             enabled: true,
             loss_scale: 1024.0,
             ..Default::default()
+        };
         assert!(config.enabled);
         assert_eq!(config.loss_scale, 1024.0);
         assert_eq!(config.loss_scale_window, 2000);
+    }
+
+    #[test]
     fn test_device_info_serialization() {
         let device_info = DeviceInfo {
             id: 0,
-            name: "Test GPU ".to_string(),
+            name: "Test GPU".to_string(),
             memory_total: 8 * 1024 * 1024 * 1024,
             memory_free: 7 * 1024 * 1024 * 1024,
             compute_capability: (7, 5),
             multiprocessor_count: 68,
             warp_size: 32,
             is_available: true,
+        };
         // Test serialization/deserialization
         let serialized = serde_json::to_string(&device_info).unwrap();
         let deserialized: DeviceInfo = serde_json::from_str(&serialized).unwrap();
         assert_eq!(device_info.id, deserialized.id);
         assert_eq!(device_info.name, deserialized.name);
+    }
+
+    #[test]
     fn test_memory_stats() {
         let stats = MemoryStats {
             allocated: 1024,
             active: 512,
+        };
         assert_eq!(stats.allocated, 1024);
         assert_eq!(stats.active, 512);
+    }
+
+    #[test]
     fn test_multi_gpu_trainer_creation() {
         let device_ids = vec![0];
         match MultiGpuTrainer::new(device_ids) {
             Ok(trainer) => {
                 assert_eq!(trainer.device_count(), 1);
                 assert_eq!(trainer.reduction_strategy, ReductionStrategy::AllReduce);
-                println!("GPU not available for multi-GPU trainer test ");
+            }
+            Err(_) => {
+                println!("GPU not available for multi-GPU trainer test");
+            }
+        }
+    }
+
+    #[test]
     fn test_cuda_tensor_creation() {
         if let Ok(context) = GpuContext::new() {
             let shape = vec![2, 3, 4];
@@ -662,8 +758,15 @@ mod tests {
                 Ok(tensor) => {
                     assert_eq!(tensor.shape(), &shape);
                     assert_eq!(tensor.device_id(), 0);
+                }
                 Err(_) => {
                     println!("CUDA tensor creation failed (expected without real GPU)");
+                }
+            }
+        }
+    }
+
+    #[test]
     fn test_reduction_strategies() {
         let strategies = [
             ReductionStrategy::AllReduce,
@@ -673,6 +776,10 @@ mod tests {
         for strategy in &strategies {
             let serialized = serde_json::to_string(strategy).unwrap();
             let _deserialized: ReductionStrategy = serde_json::from_str(&serialized).unwrap();
+        }
+    }
+
+    #[test]
     fn test_backend_info() {
         let cpu_ops = NeuralOps::new().unwrap();
         assert!(cpu_ops.backend_info().contains("CPU"));
@@ -687,7 +794,16 @@ mod tests {
                 // Mixed precision should be mentioned in backend info
                 let info_with_mp = gpu_ops.backend_info();
                 assert!(info_with_mp.len() >= info.len());
+            }
+        }
+    }
+
+    #[test]
     fn test_synchronize() {
+        let ops = create_neural_ops().unwrap();
         assert!(ops.synchronize().is_ok());
         if let Ok(gpu_ops) = NeuralOps::with_gpu() {
             assert!(gpu_ops.synchronize().is_ok());
+        }
+    }
+}

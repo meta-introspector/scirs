@@ -1,7 +1,7 @@
-//! Ultrathink JIT Compilation Framework
+//! Advanced JIT Compilation Framework
 //!
 //! This module provides a comprehensive Just-In-Time (JIT) compilation framework
-//! with LLVM integration for runtime optimization in ultrathink mode. It enables
+//! with LLVM integration for runtime optimization in Advanced mode. It enables
 //! dynamic code generation, runtime optimization, and adaptive compilation strategies
 //! to maximize performance for scientific computing workloads.
 //!
@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 
 /// Central JIT compilation coordinator for advanced mode
 #[derive(Debug)]
-pub struct UltrathinkJitCompiler {
+pub struct advancedJitCompiler {
     /// LLVM compilation engine
     llvm_engine: Arc<Mutex<LlvmCompilationEngine>>,
     /// Kernel cache for compiled functions
@@ -852,7 +852,7 @@ pub struct MemoryUsageStats {
     pub total_deallocations: u64,
 }
 
-impl UltrathinkJitCompiler {
+impl advancedJitCompiler {
     /// Create a new JIT compiler with default configuration
     #[allow(dead_code)]
     pub fn new() -> CoreResult<Self> {
@@ -1647,7 +1647,7 @@ impl Default for KernelPerformance {
     }
 }
 
-impl Default for UltrathinkJitCompiler {
+impl Default for advancedJitCompiler {
     fn default() -> Self {
         Self::new().expect("Failed to create default JIT compiler")
     }
@@ -2579,7 +2579,7 @@ mod tests {
 
     #[test]
     fn test_jit_compiler_creation() {
-        let compiler = UltrathinkJitCompiler::new();
+        let compiler = advancedJitCompiler::new();
         assert!(compiler.is_ok());
     }
 

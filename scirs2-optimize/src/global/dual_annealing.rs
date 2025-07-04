@@ -9,6 +9,7 @@ use crate::unconstrained::{minimize, Bounds, Method, OptimizeResult, Options};
 use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
 use rand::rngs::StdRng;
+use rand::Rng;
 #[allow(unused_imports)]
 use rand_distr::{Cauchy, Distribution as RandDistribution};
 
@@ -75,7 +76,7 @@ where
     /// Create new Dual Annealing solver
     pub fn new(func: F, x0: Array1<f64>, options: DualAnnealingOptions) -> Self {
         let ndim = x0.len();
-        let seed = options.seed.unwrap_or_else(rand::rng().gen);
+        let seed = options.seed.unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
         let rng = StdRng::seed_from_u64(seed);
 
         let initial_energy = func(&x0.view());
@@ -113,8 +114,8 @@ where
 
             // Generate from Power distribution
             loop {
-                let u = self.rng.random::<f64>();
-                let u1 = self.rng.random::<f64>();
+                let u = self.rng.random_range(0.0..1.0);
+                let u1 = self.rng.random_range(0.0..1.0);
                 let sign = if u1 < 0.5 { -1.0 } else { 1.0 };
 
                 v = sign * self.temperature * ((1.0 + 1.0 / q).powf(u.abs()) - 1.0);
@@ -200,7 +201,7 @@ where
 
             // Acceptance test
             let accept_prob = self.accept_probability(energy_new);
-            if self.rng.random::<f64>() < accept_prob {
+            if self.rng.random_range(0.0..1.0) < accept_prob {
                 self.current_x = x_new;
                 self.current_energy = energy_new;
 

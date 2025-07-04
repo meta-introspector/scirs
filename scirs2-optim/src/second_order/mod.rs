@@ -14,7 +14,7 @@ use std::fmt::Debug;
 pub use self::kfac::{KFACConfig, KFACLayerState, KFACStats, LayerInfo, LayerType, KFAC};
 
 /// Trait for second-order optimization methods
-pub trait SecondOrderOptimizer<A: Float + ScalarOperand + Debug, D: Dimension> {
+pub trait SecondOrderOptimizer<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> {
     /// Update parameters using second-order information
     fn step_second_order(
         &mut self,
@@ -224,7 +224,7 @@ pub struct Newton<A: Float> {
     regularization: A, // For numerical stability
 }
 
-impl<A: Float + ScalarOperand + Debug> Newton<A> {
+impl<A: Float + ScalarOperand + Debug + Send + Sync> Newton<A> {
     /// Create a new Newton optimizer
     pub fn new(learning_rate: A) -> Self {
         Self {
@@ -240,7 +240,9 @@ impl<A: Float + ScalarOperand + Debug> Newton<A> {
     }
 }
 
-impl<A: Float + ScalarOperand + Debug> SecondOrderOptimizer<A, ndarray::Ix1> for Newton<A> {
+impl<A: Float + ScalarOperand + Debug + Send + Sync> SecondOrderOptimizer<A, ndarray::Ix1>
+    for Newton<A>
+{
     fn step_second_order(
         &mut self,
         params: &Array1<A>,
@@ -304,7 +306,7 @@ pub struct LBFGS<A: Float, D: Dimension> {
     previous_grad: Option<Array<A, D>>,
 }
 
-impl<A: Float + ScalarOperand + Debug, D: Dimension> LBFGS<A, D> {
+impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> LBFGS<A, D> {
     /// Create a new L-BFGS optimizer
     pub fn new(learning_rate: A) -> Self {
         Self {
@@ -363,7 +365,9 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> LBFGS<A, D> {
     }
 }
 
-impl<A: Float + ScalarOperand + Debug, D: Dimension> SecondOrderOptimizer<A, D> for LBFGS<A, D> {
+impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> SecondOrderOptimizer<A, D>
+    for LBFGS<A, D>
+{
     fn step_second_order(
         &mut self,
         params: &Array<A, D>,

@@ -1,4 +1,4 @@
-//! Ultrathink JIT Compilation Showcase
+//! Advanced JIT Compilation Showcase
 //!
 //! This example demonstrates the enhanced JIT compilation system with:
 //! - Real-time kernel compilation and optimization
@@ -16,7 +16,7 @@ use scirs2_neural::jit::{
 use std::time::Instant;
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🚀 Ultrathink JIT Compilation Showcase");
+    println!("🚀 Advanced JIT Compilation Showcase");
     println!("=====================================");
 
     // 1. Detect optimal target architecture
@@ -41,7 +41,7 @@ fn main() -> Result<()> {
     demonstrate_operation_fusion(&compiler)?;
     // 6. Show performance statistics
     show_performance_statistics(&compiler);
-    println!("\\n🎉 Ultrathink JIT showcase completed successfully!");
+    println!("\\n🎉 Advanced JIT showcase completed successfully!");
     Ok(())
 }
 #[allow(dead_code)]

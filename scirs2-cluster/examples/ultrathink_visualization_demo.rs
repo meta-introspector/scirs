@@ -1,19 +1,19 @@
-//! Ultrathink Clustering Visualization Demo
+//! Advanced Clustering Visualization Demo
 //!
-//! This example demonstrates the advanced visualization capabilities for ultrathink clustering,
+//! This example demonstrates the advanced visualization capabilities for Advanced clustering,
 //! including quantum state visualization, neuromorphic adaptation plots, and AI algorithm
 //! selection insights.
 
 use ndarray::Array2;
-use scirs2_cluster::ultrathink_clustering::UltrathinkClusterer;
-use scirs2_cluster::ultrathink_visualization::{
+use scirs2_cluster::advanced_clustering::AdvancedClusterer;
+use scirs2_cluster::advanced_visualization::{
     create_ultrathink_visualization_report, visualize_ultrathink_results, QuantumColorScheme,
     UltrathinkVisualizationConfig, UltrathinkVisualizer, VisualizationExportFormat,
 };
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultrathink Clustering Visualization Demo");
+    println!("🚀 Advanced Clustering Visualization Demo");
     println!("==========================================");
 
     // Create sample data with multiple clusters
@@ -24,9 +24,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         data.ncols()
     );
 
-    // Perform ultrathink clustering with all features enabled
-    println!("\n🧠 Running ultrathink clustering with full AI capabilities...");
-    let mut clusterer = UltrathinkClusterer::new()
+    // Perform Advanced clustering with all features enabled
+    println!("\n🧠 Running Advanced clustering with full AI capabilities...");
+    let mut clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true)
         .with_meta_learning(true)
@@ -50,7 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Confidence: {:.1}%", result.confidence * 100.0);
 
     // Create comprehensive visualization
-    println!("\n🎨 Creating comprehensive ultrathink visualization...");
+    println!("\n🎨 Creating comprehensive Advanced visualization...");
 
     // Configuration for visualization
     let vis_config = UltrathinkVisualizationConfig {
@@ -134,7 +134,7 @@ fn create_sample_data() -> Array2<f64> {
 
 #[allow(dead_code)]
 fn display_visualization_insights(
-    output: &scirs2_cluster::ultrathink_visualization::UltrathinkVisualizationOutput,
+    output: &scirs2_cluster::advanced_visualization::UltrathinkVisualizationOutput,
 ) {
     println!("\n📈 Visualization Insights:");
     println!("  📊 Cluster Plot:");
@@ -192,7 +192,7 @@ fn display_visualization_insights(
 
     println!("  📊 Performance Dashboard:");
     println!(
-        "     - Ultrathink metrics: {}",
+        "     - Advanced metrics: {}",
         output.performance_dashboard.ultrathink_metrics.len()
     );
     println!(
@@ -220,7 +220,7 @@ fn display_visualization_insights(
 #[allow(dead_code)]
 fn demonstrate_visualization_configurations(
     data: &Array2<f64>,
-    result: &scirs2_cluster::ultrathink_clustering::UltrathinkClusteringResult,
+    result: &scirs2_cluster::advanced_clustering::UltrathinkClusteringResult,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎨 Demonstrating different visualization configurations...");
 

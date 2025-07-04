@@ -1,21 +1,21 @@
-//! Comprehensive Ultrathink Clustering Demonstration
+//! Comprehensive Advanced Clustering Demonstration
 //!
-//! This example demonstrates the advanced capabilities of the Ultrathink Clustering system,
+//! This example demonstrates the advanced capabilities of the Advanced Clustering system,
 //! showcasing AI-driven algorithm selection, quantum-neuromorphic fusion, meta-learning,
 //! and continual adaptation features for optimal clustering performance.
 
 use ndarray::Array2;
 use scirs2_cluster::metrics::silhouette_score;
 use scirs2_cluster::preprocess::standardize;
-use scirs2_cluster::ultrathink_clustering::{UltrathinkClusterer, UltrathinkConfig};
+use scirs2_cluster::advanced_clustering::{AdvancedClusterer, AdvancedConfig};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultrathink Clustering - AI-Driven Quantum-Neuromorphic Demo");
+    println!("🚀 Advanced Clustering - AI-Driven Quantum-Neuromorphic Demo");
     println!("================================================================");
 
-    // Example 1: Basic Ultrathink Clustering
-    println!("\n1️⃣  Basic Ultrathink Clustering");
+    // Example 1: Basic Advanced Clustering
+    println!("\n1️⃣  Basic Advanced Clustering");
     basic_ultrathink_clustering()?;
 
     // Example 2: AI-Driven Algorithm Selection
@@ -34,21 +34,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n5️⃣  Continual Adaptation for Streaming Data");
     continual_adaptation_clustering()?;
 
-    // Example 6: Full Ultrathink Mode
-    println!("\n6️⃣  Full Ultrathink Mode - All Features Enabled");
+    // Example 6: Full Advanced Mode
+    println!("\n6️⃣  Full Advanced Mode - All Features Enabled");
     full_ultrathink_mode()?;
 
     // Example 7: Multi-Objective Optimization
     println!("\n7️⃣  Multi-Objective Optimization Demo");
     multi_objective_clustering()?;
 
-    println!("\n✅ All Ultrathink Clustering examples completed successfully!");
-    println!("The Ultrathink system demonstrates revolutionary advances in clustering technology.");
+    println!("\n✅ All Advanced Clustering examples completed successfully!");
+    println!("The Advanced system demonstrates revolutionary advances in clustering technology.");
 
     Ok(())
 }
 
-/// Demonstrates basic ultrathink clustering capabilities
+/// Demonstrates basic Advanced clustering capabilities
 #[allow(dead_code)]
 fn basic_ultrathink_clustering() -> Result<(), Box<dyn std::error::Error>> {
     // Create sample data with clear cluster structure
@@ -62,7 +62,7 @@ fn basic_ultrathink_clustering() -> Result<(), Box<dyn std::error::Error>> {
         ],
     )?;
 
-    let mut clusterer = UltrathinkClusterer::new();
+    let mut clusterer = AdvancedClusterer::new();
     let result = clusterer.cluster(&data.view())?;
 
     println!("   📊 Data shape: {:?}", data.shape());
@@ -102,7 +102,7 @@ fn ai_driven_clustering() -> Result<(), Box<dyn std::error::Error>> {
 
     let data = Array2::from_shape_vec((20, 3), data_vec)?;
 
-    let mut clusterer = UltrathinkClusterer::new().with_ai_algorithm_selection(true);
+    let mut clusterer = AdvancedClusterer::new().with_ai_algorithm_selection(true);
 
     let result = clusterer.cluster(&data.view())?;
 
@@ -146,7 +146,7 @@ fn quantum_neuromorphic_clustering() -> Result<(), Box<dyn std::error::Error>> {
 
     let data = Array2::from_shape_vec((16, 2), data_vec)?;
 
-    let mut clusterer = UltrathinkClusterer::new().with_quantum_neuromorphic_fusion(true);
+    let mut clusterer = AdvancedClusterer::new().with_quantum_neuromorphic_fusion(true);
 
     let result = clusterer.cluster(&data.view())?;
 
@@ -195,7 +195,7 @@ fn meta_learning_clustering() -> Result<(), Box<dyn std::error::Error>> {
 
     let data = Array2::from_shape_vec((12, 2), data_vec)?;
 
-    let mut clusterer = UltrathinkClusterer::new().with_meta_learning(true);
+    let mut clusterer = AdvancedClusterer::new().with_meta_learning(true);
 
     let result = clusterer.cluster(&data.view())?;
 
@@ -235,7 +235,7 @@ fn continual_adaptation_clustering() -> Result<(), Box<dyn std::error::Error>> {
 
     let data = Array2::from_shape_vec((16, 2), data_vec)?;
 
-    let mut clusterer = UltrathinkClusterer::new().with_continual_adaptation(true);
+    let mut clusterer = AdvancedClusterer::new().with_continual_adaptation(true);
 
     let result = clusterer.cluster(&data.view())?;
 
@@ -258,7 +258,7 @@ fn continual_adaptation_clustering() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Demonstrates full ultrathink mode with all features enabled
+/// Demonstrates full Advanced mode with all features enabled
 #[allow(dead_code)]
 fn full_ultrathink_mode() -> Result<(), Box<dyn std::error::Error>> {
     // Create complex multi-scale dataset
@@ -289,7 +289,7 @@ fn full_ultrathink_mode() -> Result<(), Box<dyn std::error::Error>> {
     // Standardize the data for better clustering
     let standardized_data = standardize(data.view(), true)?;
 
-    let mut clusterer = UltrathinkClusterer::new()
+    let mut clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true)
         .with_meta_learning(true)
@@ -298,7 +298,7 @@ fn full_ultrathink_mode() -> Result<(), Box<dyn std::error::Error>> {
 
     let result = clusterer.cluster(&standardized_data.view())?;
 
-    println!("   🚀 FULL ULTRATHINK MODE ACTIVATED");
+    println!("   🚀 FULL Advanced MODE ACTIVATED");
     println!("   ================================");
     println!("   📊 Data shape: {:?}", data.shape());
     println!("   🤖 AI selected algorithm: {}", result.selected_algorithm);
@@ -363,7 +363,7 @@ fn multi_objective_clustering() -> Result<(), Box<dyn std::error::Error>> {
     let data = Array2::from_shape_vec((18, 2), data_vec)?;
 
     // Custom configuration for multi-objective optimization
-    let config = UltrathinkConfig {
+    let config = AdvancedConfig {
         max_clusters: 5,
         ai_confidence_threshold: 0.9,
         quantum_coherence_time: 150.0,
@@ -374,7 +374,7 @@ fn multi_objective_clustering() -> Result<(), Box<dyn std::error::Error>> {
         tolerance: 1e-8,
     };
 
-    let mut clusterer = UltrathinkClusterer::new().with_multi_objective_optimization(true);
+    let mut clusterer = AdvancedClusterer::new().with_multi_objective_optimization(true);
 
     let result = clusterer.cluster(&data.view())?;
 

@@ -17,6 +17,7 @@ use ndarray::{Array1, Array2, Array3, ArrayView1};
 // use scirs2_core::error::CoreResult; // Unused import
 // use scirs2_core::simd_ops::SimdUnifiedOps; // Unused import
 use std::collections::{HashMap, VecDeque};
+use rand::Rng;
 
 /// Ultra-Advanced Neural Network with Meta-Learning Capabilities
 #[derive(Debug, Clone)]
@@ -64,9 +65,9 @@ impl MetaPolicyNetwork {
             for i in 0..fan_out {
                 for j in 0..fan_in {
                     policy_weights[[layer, i, j]] =
-                        (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_std;
+                        rand::rng().random_range(-0.5..0.5) * 2.0 * xavier_std;
                     meta_weights[[layer, i, j]] =
-                        (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_std * 0.1;
+                        rand::rng().random_range(-0.5..0.5) * 2.0 * xavier_std * 0.1;
                 }
             }
         }
@@ -122,7 +123,7 @@ impl MetaPolicyNetwork {
             let layer_input_size = self.layer_sizes[layer];
             let layer_output_size = self.layer_sizes[layer + 1];
 
-            let mut layer_output = Array1::zeros(layer_output_size);
+            let mut layer_output = Array1::<f64>::zeros(layer_output_size);
 
             for i in 0..layer_output_size {
                 for j in 0..layer_input_size.min(current_input.len()) {
@@ -159,7 +160,7 @@ impl MetaPolicyNetwork {
             let layer_input_size = self.layer_sizes[layer];
             let layer_output_size = self.layer_sizes[layer + 1];
 
-            let mut layer_output = Array1::zeros(layer_output_size);
+            let mut layer_output = Array1::<f64>::zeros(layer_output_size);
 
             for i in 0..layer_output_size {
                 for j in 0..layer_input_size.min(current_input.len()) {
@@ -186,7 +187,7 @@ impl MetaPolicyNetwork {
             embedding.clone()
         } else {
             let embedding =
-                Array1::from_shape_fn(input_size, |_| (rand::rng().random::<f64>() - 0.5) * 0.1);
+                Array1::from_shape_fn(input_size, |_| rand::rng().random_range(-0.05..0.05));
             self.problem_embeddings
                 .insert(problem_class.to_string(), embedding.clone());
             embedding
@@ -423,7 +424,7 @@ impl MetaExperienceBuffer {
 
         for _ in 0..batch_size.min(self.trajectories.len()) {
             // Weighted sampling based on problem class performance
-            let idx = rand::rng().random::<usize>() % self.trajectories.len();
+            let idx = rand::rng().random_range(0..self.trajectories.len());
             if let Some(trajectory) = self.trajectories.get(idx) {
                 batch.push(trajectory.clone());
             }
@@ -628,7 +629,7 @@ impl UltraAdvancedPolicyGradientOptimizer {
                                 // Meta-gradient for learning rate adaptation
                                 let meta_lr_grad = advantage
                                     * state_features[j]
-                                    * trajectory.learning_metrics.adaptation_speed;
+                                    * trajectory.learning_metrics.convergence_speed;
                                 meta_gradients.meta_lr_gradients[[layer, i, j]] +=
                                     meta_lr_grad * 0.001;
 
@@ -901,11 +902,19 @@ impl RLOptimizer for UltraAdvancedPolicyGradientOptimizer {
             x: current_params,
             fun: current_state.objective_value,
             success: current_state.convergence_metrics.relative_objective_change < 1e-6,
-            iterations: current_state.step,
+            nit: current_state.step,
+            nfev: current_state.step, // Approximate function evaluations
+            njev: 0,
+            nhev: 0,
+            maxcv: 0,
+            status: 0,
             message: format!(
                 "Meta-policy gradient episode completed for problem class: {}",
                 problem_class
             ),
+            jac: None,
+            hess: None,
+            constr: None,
         })
     }
 
@@ -921,8 +930,16 @@ impl RLOptimizer for UltraAdvancedPolicyGradientOptimizer {
             x: initial_params.to_owned(),
             fun: f64::INFINITY,
             success: false,
-            iterations: 0,
+            nit: 0,
+            nfev: 0,
+            njev: 0,
+            nhev: 0,
+            maxcv: 0,
+            status: 0,
             message: "Meta-learning training not completed".to_string(),
+            jac: None,
+            hess: None,
+            constr: None,
         };
 
         // Meta-learning training loop

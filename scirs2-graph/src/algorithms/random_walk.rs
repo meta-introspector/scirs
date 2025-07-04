@@ -5,7 +5,6 @@
 use crate::base::{EdgeWeight, Graph, IndexType, Node};
 use crate::error::{GraphError, Result};
 use ndarray::{Array1, Array2};
-use rand::rng;
 use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 use std::hash::Hash;

@@ -3,7 +3,6 @@
 //! This module provides the core TPU backend implementation for executing
 //! optimized computations on Google Cloud TPUs and compatible hardware.
 
-use ndarray::Array2;
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, RwLock};
@@ -292,22 +291,6 @@ pub enum LinkStatus {
     Degraded,
 }
 
-/// Device topology
-#[derive(Debug, Clone)]
-pub struct DeviceTopology {
-    /// Topology type
-    pub topology_type: TopologyType,
-
-    /// Device layout
-    pub device_layout: Vec<Vec<DeviceId>>,
-
-    /// Communication matrix
-    pub communication_matrix: Array2<f64>,
-
-    /// Routing table
-    pub routing_table: HashMap<(DeviceId, DeviceId), Vec<DeviceId>>,
-}
-
 /// Topology types
 #[derive(Debug, Clone, Copy)]
 pub enum TopologyType {
@@ -322,21 +305,11 @@ pub enum TopologyType {
 }
 
 /// Load balancer for device assignment
-#[derive(Debug)]
-pub struct LoadBalancer {
-    /// Balancing strategy
-    strategy: LoadBalancingStrategy,
-
-    /// Device load history
-    load_history: HashMap<DeviceId, VecDeque<LoadSample>>,
-
-    /// Assignment statistics
-    assignment_stats: AssignmentStatistics,
-}
 
 /// Load balancing strategies
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub enum LoadBalancingStrategy {
+    #[default]
     RoundRobin,
     LeastLoaded,
     PowerAware,
@@ -815,15 +788,6 @@ pub struct LoadBalancer {
     pub strategy: LoadBalancingStrategy,
 }
 
-/// Load balancing strategies
-#[derive(Debug, Clone, Default)]
-pub enum LoadBalancingStrategy {
-    #[default]
-    RoundRobin,
-    LeastLoaded,
-    WeightedRoundRobin,
-}
-
 /// Task executor
 #[derive(Debug, Clone, Default)]
 pub struct TaskExecutor {
@@ -894,23 +858,18 @@ impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
             .memory_manager
             .allocate_for_computation(&program, &devices)?;
 
-        // Create execution task
-        let task = ExecutionTask {
-            id: TaskId(self.execution_engine.scheduler.next_task_id()),
-            computation: computation_id,
-            inputs,
+        // Create computation task
+        let task = ComputationTask {
+            task_id: TaskId(self.execution_engine.scheduler.next_task_id()),
+            computation_id,
+            input_data: Vec::new(), // Simplified for now
             expected_outputs: program.metadata.output_specs.clone(),
-            priority: TaskPriority::Normal,
-            dependencies: Vec::new(),
-            constraints: ExecutionConstraints::default(),
-            timeout: Duration::from_secs(self.config.execution_timeout_ms / 1000),
         };
 
         // Execute the task
         let results = self
             .execution_engine
-            .execute_task(task, &devices, &memory_allocation)
-            .await?;
+            .execute_task(task, &devices, &memory_allocation)?;
 
         // Update performance metrics
         let execution_time = start_time.elapsed();
@@ -1291,13 +1250,19 @@ impl<T: Float> ExecutionEngine<T> {
     pub fn new(_config: &TPUBackendConfig) -> Result<Self> {
         Ok(Self {
             scheduler: ExecutionScheduler {
-                task_queue: Vec::new(),
-                dependency_graph: HashMap::new(),
-                resource_requirements: HashMap::new(),
-                execution_constraints: ExecutionConstraints::default(),
-                _phantom: std::marker::PhantomData,
+                execution_queue: VecDeque::new(),
+                scheduling_policy: SchedulingPolicy::FIFO,
+                priority_manager: PriorityManager { level: 0 },
+                dependency_resolver: DependencyResolver {
+                    dependencies: Vec::new(),
+                },
             },
-            executor: TaskExecutor::default(),
+            executor: RuntimeExecutor { state: T::zero() },
+            result_collector: ResultCollector {
+                results: Vec::new(),
+            },
+            context: ExecutionContext { id: 0 },
+            performance_optimizer: PerformanceOptimizer { level: T::zero() },
         })
     }
 

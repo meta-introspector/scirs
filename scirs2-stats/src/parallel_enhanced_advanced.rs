@@ -62,7 +62,7 @@ pub enum ChunkStrategy {
 }
 
 /// Advanced parallel statistics processor
-pub struct AdvancedParallelProcessor<F: Float> {
+pub struct AdvancedParallelProcessor<F: Float + std::fmt::Display> {
     config: AdvancedParallelConfig,
     capabilities: PlatformCapabilities,
     thread_pool: Option<ThreadPool>,
@@ -71,7 +71,7 @@ pub struct AdvancedParallelProcessor<F: Float> {
 }
 
 /// Task for parallel execution
-enum ParallelTask<F: Float> {
+enum ParallelTask<F: Float + std::fmt::Display> {
     Mean(Vec<F>),
     Variance(Vec<F>, F, usize), // data, mean, ddof
     Correlation(Vec<F>, Vec<F>),
@@ -79,7 +79,7 @@ enum ParallelTask<F: Float> {
 }
 
 /// Result of parallel computation
-pub enum ParallelResult<F: Float> {
+pub enum ParallelResult<F: Float + std::fmt::Display> {
     Mean(F),
     Variance(F),
     Correlation(F),
@@ -97,7 +97,8 @@ where
         + 'static
         + Zero
         + One
-        + std::fmt::Debug,
+        + std::fmt::Debug
+        + std::fmt::Display,
 {
     /// Create a new advanced parallel processor
     pub fn new(config: AdvancedParallelConfig) -> Self {
@@ -126,7 +127,7 @@ where
     /// Compute mean using advanced parallel processing
     pub fn mean_parallel_advanced<D>(&self, x: &ArrayBase<D, Ix1>) -> StatsResult<F>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         if x.is_empty() {
             return Err(ErrorMessages::empty_array("x"));
@@ -155,7 +156,7 @@ where
         ddof: usize,
     ) -> StatsResult<F>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         let n = x.len();
         if n == 0 {
@@ -180,7 +181,7 @@ where
     /// Compute correlation matrix in parallel for multivariate data
     pub fn correlation_matrix_parallel<D>(&self, data: &ArrayBase<D, Ix2>) -> StatsResult<Array2<F>>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         let (n_samples, n_features) = data.dim();
 
@@ -221,7 +222,7 @@ where
         ddof: usize,
     ) -> StatsResult<ComprehensiveStats<F>>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         let n = x.len();
         if n == 0 {
@@ -253,7 +254,7 @@ where
         seed: Option<u64>,
     ) -> StatsResult<Array1<F>>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         if x.is_empty() {
             return Err(ErrorMessages::empty_array("x"));
@@ -295,7 +296,7 @@ where
 
     fn mean_work_stealing<D>(&self, x: &ArrayBase<D, Ix1>) -> StatsResult<F>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         let n = x.len();
         let num_threads = self
@@ -360,7 +361,7 @@ where
 
     fn mean_adaptive_chunking<D>(&self, x: &ArrayBase<D, Ix1>) -> StatsResult<F>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         let n = x.len();
         let element_size = std::mem::size_of::<F>();
@@ -411,7 +412,7 @@ where
 
     fn mean_cache_optimal<D>(&self, x: &ArrayBase<D, Ix1>) -> StatsResult<F>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         // Use cache-oblivious algorithm for optimal performance
         Self::mean_cache_oblivious_static(x, 0, x.len())
@@ -424,7 +425,7 @@ where
         len: usize,
     ) -> StatsResult<F>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         Self::mean_cache_oblivious_static(x, start, len)
     }
@@ -437,7 +438,8 @@ where
     ) -> StatsResult<F>
     where
         D: Data<Elem = F> + Sync + Send,
-        F: Float + Send + Sync + 'static,
+        F: Float + Send + Sync + 'static
+        + std::fmt::Display,
     {
         const CACHE_THRESHOLD: usize = 1024; // Empirically determined threshold
 
@@ -463,7 +465,7 @@ where
 
     fn mean_fixed_chunks<D>(&self, x: &ArrayBase<D, Ix1>, chunk_size: usize) -> StatsResult<F>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         let n = x.len();
         let chunks: Vec<_> = x
@@ -489,7 +491,7 @@ where
 
     fn variance_welford_parallel<D>(&self, x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         // Parallel Welford's algorithm implementation
         let n = x.len();
@@ -560,7 +562,7 @@ where
         correlation_matrix: &mut Array2<F>,
     ) -> StatsResult<()>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         let (_, n_features) = data.dim();
 
@@ -594,7 +596,7 @@ where
         correlation_matrix: &mut Array2<F>,
     ) -> StatsResult<()>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         let (_, n_features) = data.dim();
 
@@ -616,7 +618,7 @@ where
         ddof: usize,
     ) -> StatsResult<ComprehensiveStats<F>>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         let n = x.len();
         let num_threads = self
@@ -722,7 +724,7 @@ where
         seed: Option<u64>,
     ) -> StatsResult<Array1<F>>
     where
-        D: Data<Elem = F> + Sync + Send,
+        D: Data<Elem = F> + Sync + Send + std::fmt::Display,
     {
         use rand::{Rng, SeedableRng};
         use rand_chacha::ChaCha8Rng;
@@ -861,7 +863,8 @@ where
         + 'static
         + Zero
         + One
-        + std::fmt::Debug,
+        + std::fmt::Debug
+        + std::fmt::Display,
 {
     AdvancedParallelProcessor::new(AdvancedParallelConfig::default())
 }
@@ -881,7 +884,8 @@ where
         + 'static
         + Zero
         + One
-        + std::fmt::Debug,
+        + std::fmt::Debug
+        + std::fmt::Display,
 {
     AdvancedParallelProcessor::new(config)
 }

@@ -1,9 +1,9 @@
-//! Benchmarks for ultrathink mode optimizations in scirs2-transform
+//! Benchmarks for Advanced mode optimizations in scirs2-transform
 //!
 //! This benchmark suite tests the performance improvements from the advanced
 //! optimizations including adaptive SIMD, memory pools, and cache-optimal processing.
 //!
-//! Run with: cargo bench --bench ultrathink_optimizations_bench
+//! Run with: cargo bench --bench advanced_optimizations_bench
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array2;

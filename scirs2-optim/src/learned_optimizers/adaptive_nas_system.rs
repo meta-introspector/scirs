@@ -3219,7 +3219,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
         &self,
         context: &OptimizationTask,
     ) -> Result<ArchitectureCandidate<T>> {
-        let num_layers = rand::rng().random_range(1..=8);
+        let num_layers = rand::rng().gen_range(1..=8);
         let mut layers = Vec::with_capacity(num_layers);
 
         for i in 0..num_layers {
@@ -3309,43 +3309,43 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
             LayerType::LSTM | LayerType::GRU => {
                 parameters.insert(
                     "hidden_size".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(64..=512)),
+                    LayerParameter::Integer(rand::rng().gen_range(64..=512)),
                 );
                 parameters.insert(
                     "num_layers".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(1..=3)),
+                    LayerParameter::Integer(rand::rng().gen_range(1..=3)),
                 );
                 parameters.insert(
                     "dropout".to_string(),
-                    LayerParameter::Float(rand::rng().random_range(0.0..=0.5)),
+                    LayerParameter::Float(rand::rng().gen_range(0.0..=0.5)),
                 );
             }
             LayerType::Transformer => {
                 parameters.insert(
                     "num_heads".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(4..=16)),
+                    LayerParameter::Integer(rand::rng().gen_range(4..=16)),
                 );
                 parameters.insert(
                     "ff_dim".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(512..=2048)),
+                    LayerParameter::Integer(rand::rng().gen_range(512..=2048)),
                 );
                 parameters.insert(
                     "dropout".to_string(),
-                    LayerParameter::Float(rand::rng().random_range(0.0..=0.3)),
+                    LayerParameter::Float(rand::rng().gen_range(0.0..=0.3)),
                 );
             }
             LayerType::Convolution1D => {
                 parameters.insert(
                     "kernel_size".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(3..=15)),
+                    LayerParameter::Integer(rand::rng().gen_range(3..=15)),
                 );
                 parameters.insert(
                     "stride".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(1..=3)),
+                    LayerParameter::Integer(rand::rng().gen_range(1..=3)),
                 );
                 parameters.insert(
                     "padding".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(0..=5)),
+                    LayerParameter::Integer(rand::rng().gen_range(0..=5)),
                 );
             }
             _ => {} // Other layer types get default parameters
@@ -3482,10 +3482,10 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
             for (_, param) in &mut layer.parameters {
                 match param {
                     LayerParameter::Float(ref mut value) => {
-                        *value *= rand::rng().random_range(0.8..=1.2);
+                        *value *= rand::rng().gen_range(0.8..=1.2);
                     }
                     LayerParameter::Integer(ref mut value) => {
-                        *value = (*value as f64 * rand::rng().random_range(0.9..=1.1)) as i64;
+                        *value = (*value as f64 * rand::rng().gen_range(0.9..=1.1)) as i64;
                     }
                     _ => {}
                 }

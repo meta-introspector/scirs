@@ -118,10 +118,11 @@ pub enum TPUMemoryOptimization {
 }
 
 /// TPU-optimized optimizer wrapper
-pub struct TPUOptimizer<O, A>
+pub struct TPUOptimizer<O, A, D>
 where
     A: Float,
-    O: Optimizer<A>,
+    D: Dimension,
+    O: Optimizer<A, D>,
 {
     /// Base optimizer
     base_optimizer: O,
@@ -611,10 +612,11 @@ struct MemoryRequirements {
     temp_memory: usize,
 }
 
-impl<O, A> TPUOptimizer<O, A>
+impl<O, A, D> TPUOptimizer<O, A, D>
 where
     A: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug,
-    O: Optimizer<A> + Send + Sync,
+    D: Dimension,
+    O: Optimizer<A, D> + Send + Sync,
 {
     /// Create a new TPU optimizer
     pub fn new(base_optimizer: O, config: TPUConfig) -> Result<Self> {
@@ -700,14 +702,14 @@ where
     }
 
     /// Execute TPU-optimized step
-    pub fn tpu_step<S, D>(
+    pub fn tpu_step<S, DIM>(
         &mut self,
-        params: &ArrayBase<S, D>,
-        gradients: &ArrayBase<S, D>,
-    ) -> Result<Array<A, D>>
+        params: &ArrayBase<S, DIM>,
+        gradients: &ArrayBase<S, DIM>,
+    ) -> Result<Array<A, DIM>>
     where
         S: Data<Elem = A>,
-        D: Dimension + Clone,
+        DIM: Dimension + Clone,
     {
         let start_time = std::time::Instant::now();
 
@@ -816,40 +818,40 @@ where
         })
     }
 
-    fn execute_single_tpu<S, D>(
+    fn execute_single_tpu<S, DIM>(
         &self,
         _computation_id: &str,
-        params: &ArrayBase<S, D>,
-        gradients: &ArrayBase<S, D>,
-    ) -> Result<Array<A, D>>
+        params: &ArrayBase<S, DIM>,
+        gradients: &ArrayBase<S, DIM>,
+    ) -> Result<Array<A, DIM>>
     where
         S: Data<Elem = A>,
-        D: Dimension + Clone,
+        DIM: Dimension + Clone,
     {
         // Execute on single TPU
         // For now, fall back to base optimizer
         self.base_optimizer.step(params, gradients)
     }
 
-    fn execute_distributed<S, D>(
+    fn execute_distributed<S, DIM>(
         &self,
         _computation_id: &str,
-        params: &ArrayBase<S, D>,
-        gradients: &ArrayBase<S, D>,
-    ) -> Result<Array<A, D>>
+        params: &ArrayBase<S, DIM>,
+        gradients: &ArrayBase<S, DIM>,
+    ) -> Result<Array<A, DIM>>
     where
         S: Data<Elem = A>,
-        D: Dimension + Clone,
+        DIM: Dimension + Clone,
     {
         // Execute on TPU pod with coordination
         // For now, fall back to single TPU execution
         self.execute_single_tpu(_computation_id, params, gradients)
     }
 
-    fn array_to_xla_shape<S, D>(&self, array: &ArrayBase<S, D>) -> Result<XLAShape>
+    fn array_to_xla_shape<S, DIM>(&self, array: &ArrayBase<S, DIM>) -> Result<XLAShape>
     where
         S: Data<Elem = A>,
-        D: Dimension,
+        DIM: Dimension,
     {
         let dims = array.shape();
         let mut dimensions = [1usize; 4];

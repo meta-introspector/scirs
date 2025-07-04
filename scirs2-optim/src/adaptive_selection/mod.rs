@@ -434,7 +434,7 @@ impl<A: Float + ScalarOperand + Debug> AdaptiveOptimizerSelector<A> {
         // Epsilon-greedy exploration
         if rng.random::<f64>() < epsilon {
             // Explore: random selection
-            let idx = rng.random_range(0..self.available_optimizers.len());
+            let idx = rng.gen_range(0..self.available_optimizers.len());
             return Ok(self.available_optimizers[idx]);
         }
 

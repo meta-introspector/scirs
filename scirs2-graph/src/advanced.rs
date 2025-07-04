@@ -1,4 +1,4 @@
-//! Ultrathink Mode Integration for Graph Processing
+//! Advanced Mode Integration for Graph Processing
 //!
 //! This module provides cutting-edge optimization capabilities by integrating
 //! neural reinforcement learning, GPU acceleration, neuromorphic computing,
@@ -7,12 +7,12 @@
 use crate::base::{EdgeWeight, Graph, Node};
 use crate::error::Result;
 use crate::performance::{PerformanceMonitor, PerformanceReport};
-use rand::{rng, Rng};
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
-/// Ultrathink mode configuration for graph processing
+/// Advanced mode configuration for graph processing
 #[derive(Debug, Clone)]
-pub struct UltrathinkConfig {
+pub struct AdvancedConfig {
     /// Enable neural RL-based algorithm selection
     pub enable_neural_rl: bool,
     /// Enable GPU ultra-acceleration
@@ -33,9 +33,9 @@ pub struct UltrathinkConfig {
     pub neural_hidden_size: usize,
 }
 
-impl Default for UltrathinkConfig {
+impl Default for AdvancedConfig {
     fn default() -> Self {
-        UltrathinkConfig {
+        AdvancedConfig {
             enable_neural_rl: true,
             enable_gpu_acceleration: true,
             enable_neuromorphic: true,
@@ -610,7 +610,7 @@ impl GPUAccelerationContext {
     /// Detect if GPU acceleration is available
     fn detect_gpu_availability() -> bool {
         // In practice, would check for CUDA, OpenCL, or Metal support
-        std::env::var("ULTRATHINK_GPU_ENABLE").unwrap_or_default() == "1"
+        std::env::var("advanced_GPU_ENABLE").unwrap_or_default() == "1"
     }
 
     /// Execute GPU-accelerated graph operation
@@ -852,10 +852,10 @@ impl NeuromorphicProcessor {
     }
 }
 
-/// Ultrathink mode processor that coordinates all optimization components
-pub struct UltrathinkProcessor {
+/// Advanced mode processor that coordinates all optimization components
+pub struct AdvancedProcessor {
     /// Configuration
-    config: UltrathinkConfig,
+    config: AdvancedConfig,
     /// Neural RL agent
     neural_agent: NeuralRLAgent,
     /// GPU acceleration context
@@ -875,9 +875,9 @@ pub struct UltrathinkProcessor {
     update_counter: usize,
 }
 
-impl UltrathinkProcessor {
+impl AdvancedProcessor {
     /// Create new advanced processor with enhanced features
-    pub fn new(config: UltrathinkConfig) -> Self {
+    pub fn new(config: AdvancedConfig) -> Self {
         let mut neural_agent =
             NeuralRLAgent::new(4, config.neural_hidden_size, 4, config.learning_rate);
         let gpu_context = GPUAccelerationContext::new(config.gpu_memory_pool_mb);
@@ -889,7 +889,7 @@ impl UltrathinkProcessor {
             uncertainty_threshold: 0.3,
         });
 
-        UltrathinkProcessor {
+        AdvancedProcessor {
             config,
             neural_agent,
             gpu_context,
@@ -921,7 +921,7 @@ impl UltrathinkProcessor {
             }
         }
 
-        let monitor = PerformanceMonitor::start(format!("ultrathink_enhanced_{algorithm_name}"));
+        let monitor = PerformanceMonitor::start(format!("advanced_enhanced_{algorithm_name}"));
 
         // 1. Enhanced neural RL algorithm selection
         let selected_strategy = if self.config.enable_neural_rl {
@@ -1219,7 +1219,7 @@ impl UltrathinkProcessor {
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
-        let monitor = PerformanceMonitor::start(format!("ultrathink_{algorithm_name}"));
+        let monitor = PerformanceMonitor::start(format!("advanced_{algorithm_name}"));
 
         // 1. Neural RL algorithm selection
         let selected_strategy = if self.config.enable_neural_rl {
@@ -1293,8 +1293,8 @@ impl UltrathinkProcessor {
     }
 
     /// Get current optimization statistics
-    pub fn get_optimization_stats(&self) -> UltrathinkStats {
-        UltrathinkStats {
+    pub fn get_optimization_stats(&self) -> AdvancedStats {
+        AdvancedStats {
             total_optimizations: self.performance_history.len(),
             average_speedup: self.calculate_average_speedup(),
             gpu_utilization: self.gpu_context.get_average_utilization(),
@@ -1352,9 +1352,9 @@ impl UltrathinkProcessor {
     }
 }
 
-/// Ultrathink optimization statistics
+/// Advanced optimization statistics
 #[derive(Debug, Clone)]
-pub struct UltrathinkStats {
+pub struct AdvancedStats {
     /// Total number of optimizations performed
     pub total_optimizations: usize,
     /// Average speedup achieved
@@ -1369,14 +1369,14 @@ pub struct UltrathinkStats {
 
 /// Convenience function to create an advanced processor with default config
 #[allow(dead_code)]
-pub fn create_advanced_processor() -> UltrathinkProcessor {
-    UltrathinkProcessor::new(UltrathinkConfig::default())
+pub fn create_advanced_processor() -> AdvancedProcessor {
+    AdvancedProcessor::new(AdvancedConfig::default())
 }
 
 /// Convenience function to create an enhanced advanced processor with advanced features
 #[allow(dead_code)]
-pub fn create_enhanced_advanced_processor() -> UltrathinkProcessor {
-    let config = UltrathinkConfig {
+pub fn create_enhanced_advanced_processor() -> AdvancedProcessor {
+    let config = AdvancedConfig {
         enable_neural_rl: true,
         enable_gpu_acceleration: true,
         enable_neuromorphic: true,
@@ -1387,13 +1387,13 @@ pub fn create_enhanced_advanced_processor() -> UltrathinkProcessor {
         gpu_memory_pool_mb: 4096,  // Increased for better GPU utilization
         neural_hidden_size: 256,   // Increased for better learning
     };
-    UltrathinkProcessor::new(config)
+    AdvancedProcessor::new(config)
 }
 
 /// Convenience function to execute algorithm with advanced optimizations
 #[allow(dead_code)]
 pub fn execute_with_advanced<N, E, Ix, T>(
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
     graph: &Graph<N, E, Ix>,
     algorithm_name: &str,
     algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
@@ -1409,7 +1409,7 @@ where
 /// Convenience function to execute algorithm with enhanced advanced optimizations
 #[allow(dead_code)]
 pub fn execute_with_enhanced_advanced<N, E, Ix, T>(
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
     graph: &Graph<N, E, Ix>,
     algorithm_name: &str,
     algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
@@ -1424,8 +1424,8 @@ where
 
 /// Create an advanced processor optimized for large graphs
 #[allow(dead_code)]
-pub fn create_large_graph_advanced_processor() -> UltrathinkProcessor {
-    let config = UltrathinkConfig {
+pub fn create_large_graph_advanced_processor() -> AdvancedProcessor {
+    let config = AdvancedConfig {
         enable_neural_rl: true,
         enable_gpu_acceleration: true,
         enable_neuromorphic: false, // Disabled for large graphs to save memory
@@ -1436,13 +1436,13 @@ pub fn create_large_graph_advanced_processor() -> UltrathinkProcessor {
         gpu_memory_pool_mb: 8192,
         neural_hidden_size: 128, // Smaller network for faster decisions
     };
-    UltrathinkProcessor::new(config)
+    AdvancedProcessor::new(config)
 }
 
 /// Create an advanced processor optimized for real-time applications
 #[allow(dead_code)]
-pub fn create_realtime_advanced_processor() -> UltrathinkProcessor {
-    let config = UltrathinkConfig {
+pub fn create_realtime_advanced_processor() -> AdvancedProcessor {
+    let config = AdvancedConfig {
         enable_neural_rl: true,
         enable_gpu_acceleration: true,
         enable_neuromorphic: false, // Disabled for speed
@@ -1453,13 +1453,13 @@ pub fn create_realtime_advanced_processor() -> UltrathinkProcessor {
         gpu_memory_pool_mb: 2048,
         neural_hidden_size: 64, // Smaller network for speed
     };
-    UltrathinkProcessor::new(config)
+    AdvancedProcessor::new(config)
 }
 
 /// Create an advanced processor optimized for maximum performance
 #[allow(dead_code)]
-pub fn create_performance_advanced_processor() -> UltrathinkProcessor {
-    let config = UltrathinkConfig {
+pub fn create_performance_advanced_processor() -> AdvancedProcessor {
+    let config = AdvancedConfig {
         enable_neural_rl: true,
         enable_gpu_acceleration: true,
         enable_neuromorphic: true,
@@ -1470,13 +1470,13 @@ pub fn create_performance_advanced_processor() -> UltrathinkProcessor {
         gpu_memory_pool_mb: 8192,  // Large GPU pool
         neural_hidden_size: 512,   // Large network for better learning
     };
-    UltrathinkProcessor::new(config)
+    AdvancedProcessor::new(config)
 }
 
 /// Create an advanced processor optimized for memory-constrained environments
 #[allow(dead_code)]
-pub fn create_memory_efficient_advanced_processor() -> UltrathinkProcessor {
-    let config = UltrathinkConfig {
+pub fn create_memory_efficient_advanced_processor() -> AdvancedProcessor {
+    let config = AdvancedConfig {
         enable_neural_rl: true,
         enable_gpu_acceleration: false, // Disabled to save memory
         enable_neuromorphic: false,     // Disabled to save memory
@@ -1487,19 +1487,19 @@ pub fn create_memory_efficient_advanced_processor() -> UltrathinkProcessor {
         gpu_memory_pool_mb: 512,  // Small GPU pool
         neural_hidden_size: 32,   // Very small network
     };
-    UltrathinkProcessor::new(config)
+    AdvancedProcessor::new(config)
 }
 
 /// Create an advanced processor with adaptive configuration based on system resources
 #[allow(dead_code)]
-pub fn create_adaptive_advanced_processor() -> UltrathinkProcessor {
+pub fn create_adaptive_advanced_processor() -> AdvancedProcessor {
     let system_memory = get_system_memory_mb();
     let has_gpu = detect_gpu_support();
     let cpu_cores = num_cpus::get();
 
     let config = if system_memory >= 16384 && has_gpu {
         // High-end system configuration
-        UltrathinkConfig {
+        AdvancedConfig {
             enable_neural_rl: true,
             enable_gpu_acceleration: true,
             enable_neuromorphic: true,
@@ -1512,7 +1512,7 @@ pub fn create_adaptive_advanced_processor() -> UltrathinkProcessor {
         }
     } else if system_memory >= 8192 {
         // Mid-range system configuration
-        UltrathinkConfig {
+        AdvancedConfig {
             enable_neural_rl: true,
             enable_gpu_acceleration: has_gpu,
             enable_neuromorphic: false,
@@ -1525,7 +1525,7 @@ pub fn create_adaptive_advanced_processor() -> UltrathinkProcessor {
         }
     } else {
         // Low-end system configuration
-        UltrathinkConfig {
+        AdvancedConfig {
             enable_neural_rl: cpu_cores >= 4,
             enable_gpu_acceleration: false,
             enable_neuromorphic: false,
@@ -1538,7 +1538,7 @@ pub fn create_adaptive_advanced_processor() -> UltrathinkProcessor {
         }
     };
 
-    UltrathinkProcessor::new(config)
+    AdvancedProcessor::new(config)
 }
 
 /// Get available system memory in MB
@@ -1561,7 +1561,7 @@ fn get_system_memory_mb() -> usize {
 #[allow(dead_code)]
 fn detect_gpu_support() -> bool {
     // Simple GPU detection - in practice would check for CUDA, OpenCL, etc.
-    std::env::var("ULTRATHINK_GPU_ENABLE").unwrap_or_default() == "1"
+    std::env::var("advanced_GPU_ENABLE").unwrap_or_default() == "1"
         || std::env::var("CUDA_VISIBLE_DEVICES").is_ok()
         || std::path::Path::new("/dev/nvidia0").exists()
 }
@@ -1572,7 +1572,7 @@ mod tests {
 
     #[test]
     fn test_advanced_config() {
-        let config = UltrathinkConfig::default();
+        let config = AdvancedConfig::default();
         assert!(config.enable_neural_rl);
         assert!(config.enable_gpu_acceleration);
         assert!(config.enable_neuromorphic);
@@ -1632,7 +1632,7 @@ mod tests {
 
     #[test]
     fn test_advanced_processor() {
-        let mut processor = UltrathinkProcessor::new(UltrathinkConfig::default());
+        let mut processor = AdvancedProcessor::new(AdvancedConfig::default());
 
         // Create test graph
         let mut graph: Graph<i32, f64> = Graph::new();
@@ -1665,7 +1665,7 @@ mod tests {
 
     #[test]
     fn test_advanced_stats() {
-        let stats = UltrathinkStats {
+        let stats = AdvancedStats {
             total_optimizations: 100,
             average_speedup: 2.5,
             gpu_utilization: 0.8,

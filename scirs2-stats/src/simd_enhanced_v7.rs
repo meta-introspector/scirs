@@ -154,7 +154,8 @@ pub struct SimdCovarianceResult<F> {
 
 impl<F> UltraAdvancedSimdProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     /// Create new ultra-advanced SIMD processor
     pub fn new() -> Self {
@@ -874,7 +875,8 @@ pub enum StatisticalTestType {
 
 impl<F> Default for UltraAdvancedSimdProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self::new()
@@ -889,7 +891,8 @@ pub fn ultra_simd_multiple_regression<F>(
     include_intercept: bool,
 ) -> StatsResult<SimdRegressionResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     let processor = UltraAdvancedSimdProcessor::new();
     processor.simd_multiple_regression(y, x, include_intercept)
@@ -901,7 +904,8 @@ pub fn ultra_simd_covariance_analysis<F>(
     bias_correction: bool,
 ) -> StatsResult<SimdCovarianceResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     let processor = UltraAdvancedSimdProcessor::new();
     processor.simd_multivariate_covariance(data, bias_correction)
@@ -914,7 +918,8 @@ pub fn ultra_simd_batch_tests<F>(
     test_type: StatisticalTestType,
 ) -> StatsResult<SimdMultiTestResult<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     let processor = UltraAdvancedSimdProcessor::new();
     processor.simd_batch_statistical_tests(group1, group2, test_type)

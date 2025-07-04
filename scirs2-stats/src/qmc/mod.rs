@@ -108,7 +108,7 @@ pub fn latin_hypercube(n: usize, d: usize, seed: Option<u64>) -> StatsResult<Arr
 
         // Generate samples within each interval
         for (i, &interval) in intervals.iter().enumerate() {
-            let u: f64 = rng.gen();
+            let u: f64 = rng.random();
             samples[[i, dim]] = (interval as f64 + u) / n as f64;
         }
     }

@@ -1025,7 +1025,7 @@ impl std::fmt::Display for GpuBackend {
     }
 }
 
-/// ULTRATHINK MODE ENHANCEMENTS
+/// Advanced MODE ENHANCEMENTS
 /// Advanced AI-driven optimization and real-time monitoring capabilities
 /// AI-driven performance predictor using machine learning
 #[derive(Debug, Clone)]

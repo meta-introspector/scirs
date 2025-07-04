@@ -1,4 +1,4 @@
-//! Ultrathink Enhanced Parallel Filtering Operations Showcase
+//! Advanced Enhanced Parallel Filtering Operations Showcase
 //!
 //! This example demonstrates the most advanced parallel filtering capabilities
 //! including real-time streaming, multi-rate systems, sparse filtering, and
@@ -8,14 +8,14 @@ use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_signal::filter::{
     benchmark_parallel_filtering_operations, LockFreeStreamingFilter, ParallelMultiRateFilterBank,
-    ParallelSpectralFilter, SparseParallelFilter, UltrathinkParallelConfig,
+    ParallelSpectralFilter, SparseParallelFilter, AdvancedParallelConfig,
 };
 use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultrathink Enhanced Parallel Filtering Showcase");
+    println!("🚀 Advanced Enhanced Parallel Filtering Showcase");
     println!("==================================================");
 
     // Test 1: Multi-Rate Filter Bank with Perfect Reconstruction
@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     demonstrate_advanced_configuration()?;
 
-    println!("\n🏁 Ultrathink parallel filtering showcase complete!");
+    println!("\n🏁 Advanced parallel filtering showcase complete!");
     println!("   📈 All advanced filtering operations demonstrated");
     println!("   🔬 Performance and accuracy validated");
     println!("   🚀 Ready for production deployment");
@@ -108,7 +108,7 @@ fn demonstrate_multirate_filter_bank() -> Result<(), Box<dyn std::error::Error>>
 
     println!("    📊 Input signal: {} samples", test_signal.len());
 
-    let config = UltrathinkParallelConfig::default();
+    let config = AdvancedParallelConfig::default();
     let start_time = Instant::now();
     let reconstructed = filter_bank.process(&test_signal, &config)?;
     let processing_time = start_time.elapsed();
@@ -183,7 +183,7 @@ fn demonstrate_sparse_filtering() -> Result<(), Box<dyn std::error::Error>> {
         })
         .collect();
 
-    let config = UltrathinkParallelConfig {
+    let config = AdvancedParallelConfig {
         real_time_mode: false,
         performance_monitoring: true,
         ..Default::default()
@@ -229,7 +229,7 @@ fn demonstrate_streaming_filter() -> Result<(), Box<dyn std::error::Error>> {
     let b = vec![0.1, 0.2, 0.1]; // Numerator
     let a = vec![1.0, -0.5, 0.3]; // Denominator
 
-    let config = UltrathinkParallelConfig {
+    let config = AdvancedParallelConfig {
         real_time_mode: true,
         max_latency_us: Some(100), // 100 microseconds max latency
         lock_free: true,
@@ -366,7 +366,7 @@ fn demonstrate_spectral_filtering() -> Result<(), Box<dyn std::error::Error>> {
         signal_length
     );
 
-    let config = UltrathinkParallelConfig {
+    let config = AdvancedParallelConfig {
         performance_monitoring: true,
         ..Default::default()
     };
@@ -466,7 +466,7 @@ fn demonstrate_advanced_configuration() -> Result<(), Box<dyn std::error::Error>
     println!("  🔍 Exploring advanced configuration options...");
 
     // Configuration 1: Maximum performance
-    let max_performance_config = UltrathinkParallelConfig {
+    let max_performance_config = AdvancedParallelConfig {
         real_time_mode: false,
         lock_free: true,
         zero_copy: true,
@@ -483,7 +483,7 @@ fn demonstrate_advanced_configuration() -> Result<(), Box<dyn std::error::Error>
     println!("      - Memory pool: 4MB");
 
     // Configuration 2: Real-time processing
-    let real_time_config = UltrathinkParallelConfig {
+    let real_time_config = AdvancedParallelConfig {
         real_time_mode: true,
         max_latency_us: Some(50), // 50 microseconds
         lock_free: true,
@@ -499,7 +499,7 @@ fn demonstrate_advanced_configuration() -> Result<(), Box<dyn std::error::Error>
     println!("      - Optimized for low latency");
 
     // Configuration 3: Memory efficient
-    let memory_efficient_config = UltrathinkParallelConfig {
+    let memory_efficient_config = AdvancedParallelConfig {
         real_time_mode: false,
         lock_free: false, // Allow blocking for memory efficiency
         zero_copy: true,

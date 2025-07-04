@@ -109,8 +109,7 @@ where
     use tempfile::tempdir;
 
     // Create temporary directory for memory-mapped files
-    let temp_dir = tempdir()
-        .map_err(NdimageError::IoError)?;
+    let temp_dir = tempdir().map_err(NdimageError::IoError)?;
 
     let input_path = temp_dir.path().join("input.mmap");
     let output_path = temp_dir.path().join("output.mmap");
@@ -209,7 +208,11 @@ where
                     Some(border_mode_clone),
                     None,
                 )
-                .map_err(|e| scirs2_core::error::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(e.to_string())))?;
+                .map_err(|e| {
+                    scirs2_core::error::CoreError::ComputationError(
+                        scirs2_core::error::ErrorContext::new(e.to_string()),
+                    )
+                })?;
 
                 Ok(result.into_dyn())
             },
@@ -280,7 +283,11 @@ where
                     Some(border_mode_clone),
                     None,
                 )
-                .map_err(|e| scirs2_core::error::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(e.to_string())))?;
+                .map_err(|e| {
+                    scirs2_core::error::CoreError::ComputationError(
+                        scirs2_core::error::ErrorContext::new(e.to_string()),
+                    )
+                })?;
 
                 Ok(result)
             },

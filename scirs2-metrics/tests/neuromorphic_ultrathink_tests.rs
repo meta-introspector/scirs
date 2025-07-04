@@ -1,4 +1,4 @@
-//! Tests for neuromorphic ultrathink implementations
+//! Tests for neuromorphic Advanced implementations
 //!
 //! This module tests the brain-inspired computing paradigms for metrics computation,
 //! including spiking neural networks, synaptic plasticity, and adaptive learning.
@@ -6,7 +6,7 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(dead_code)]
 
-use scirs2_metrics::domains::neuromorphic_ultrathink::*;
+use scirs2_metrics::domains::neuromorphic_advanced::*;
 use scirs2_metrics::error::Result;
 use std::time::Duration;
 
@@ -338,7 +338,7 @@ mod tests {
     }
 }
 
-// Performance tests for ultrathink mode
+// Performance tests for Advanced mode
 #[cfg(test)]
 mod performance_tests {
     use super::*;

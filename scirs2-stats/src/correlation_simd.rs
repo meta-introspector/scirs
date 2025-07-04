@@ -39,7 +39,8 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 pub fn pearson_r_simd<F, D>(x: &ArrayBase<D, Ix1>, y: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     // Validate inputs
     if x.len() != y.len() {
@@ -137,7 +138,8 @@ pub fn corrcoef_simd<F, D>(
 ) -> StatsResult<ndarray::Array2<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     use ndarray::s;
 
@@ -193,7 +195,8 @@ pub fn covariance_simd<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     if x.len() != y.len() {
         return Err(StatsError::dimension_mismatch(

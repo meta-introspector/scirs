@@ -1,4 +1,4 @@
-//! Quantum-Classical Hybrid Spatial Algorithms (Ultrathink Mode)
+//! Quantum-Classical Hybrid Spatial Algorithms (Advanced Mode)
 //!
 //! This module implements cutting-edge hybrid algorithms that seamlessly combine
 //! quantum computing advantages with classical optimization, creating unprecedented

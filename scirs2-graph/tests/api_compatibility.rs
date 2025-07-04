@@ -284,17 +284,17 @@ fn test_experimental_features_gated() {
     let _edit_distance = graph_edit_distance(&graph1, &graph2);
 }
 
-/// Test ultrathink API stability (experimental but stable interface)
+/// Test Advanced API stability (experimental but stable interface)
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_api_stable() {
+fn test_advanced_api_stable() {
     let graph = complete_graph(10);
 
-    // Ultrathink processor creation should be stable
-    let _processor = create_ultrathink_processor();
+    // Advanced processor creation should be stable
+    let _processor = create_advanced_processor();
 
-    // Basic ultrathink configuration should be stable
-    let _config = UltrathinkConfig::default();
+    // Basic Advanced configuration should be stable
+    let _config = AdvancedConfig::default();
 }
 
 /// Compile-time API signature verification

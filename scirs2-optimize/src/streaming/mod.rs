@@ -21,8 +21,11 @@
 //! - Non-stationary optimization problems
 
 use crate::error::OptimizeError;
-use crate::result::OptimizeResults;
+// Unused import
+// use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+
+type Result<T> = std::result::Result<T, OptimizeError>;
 // Unused import
 // use scirs2_core::error::CoreResult;
 

@@ -18,8 +18,9 @@ pub fn distance_matrix_simd<F, D>(
     metric: &str,
 ) -> StatsResult<ndarray::Array2<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    F: Float + NumCast + SimdUnifiedOps + std::fmt::Display + std::iter::Sum + Send + Sync,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let (n_samples, n_features) = data.dim();
 
@@ -61,7 +62,8 @@ where
 #[allow(dead_code)]
 pub fn euclidean_distance_simd<F>(x: &ArrayView1<F>, y: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps,
+    F: Float + NumCast + SimdUnifiedOps
+        + std::fmt::Display,
 {
     if x.len() != y.len() {
         return Err(StatsError::DimensionMismatch(format!(
@@ -95,7 +97,8 @@ where
 #[allow(dead_code)]
 pub fn manhattan_distance_simd<F>(x: &ArrayView1<F>, y: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps,
+    F: Float + NumCast + SimdUnifiedOps
+        + std::fmt::Display,
 {
     if x.len() != y.len() {
         return Err(StatsError::DimensionMismatch(format!(
@@ -126,7 +129,8 @@ where
 #[allow(dead_code)]
 pub fn cosine_distance_simd<F>(x: &ArrayView1<F>, y: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps,
+    F: Float + NumCast + SimdUnifiedOps
+        + std::fmt::Display,
 {
     if x.len() != y.len() {
         return Err(StatsError::DimensionMismatch(format!(
@@ -185,7 +189,8 @@ pub struct MovingWindowSIMD<F> {
 
 impl<F> MovingWindowSIMD<F>
 where
-    F: Float + NumCast + SimdUnifiedOps,
+    F: Float + NumCast + SimdUnifiedOps
+        + std::fmt::Display,
 {
     pub fn new(window_size: usize) -> Self {
         Self {
@@ -355,8 +360,9 @@ pub fn histogram_simd<F, D>(
     range: Option<(F, F)>,
 ) -> StatsResult<(ndarray::Array1<usize>, ndarray::Array1<F>)>
 where
-    F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    F: Float + NumCast + SimdUnifiedOps + std::fmt::Display + std::iter::Sum + Send + Sync,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -429,8 +435,9 @@ pub fn detect_outliers_zscore_simd<F, D>(
     threshold: F,
 ) -> StatsResult<ndarray::Array1<bool>>
 where
-    F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    F: Float + NumCast + SimdUnifiedOps + std::fmt::Display + std::iter::Sum + Send + Sync,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(

@@ -1,6 +1,6 @@
-// Enhanced Ultrathink Mode Performance Benchmark Suite
+// Enhanced Advanced Mode Performance Benchmark Suite
 //
-// This benchmark suite validates the performance improvements made during ultrathink mode
+// This benchmark suite validates the performance improvements made during Advanced mode
 // including polygamma sign fixes, Dawson function accuracy improvements, and new 
 // modified Bessel function derivatives.
 
@@ -218,7 +218,7 @@ fn bench_performance_comparison(c: &mut Criterion) {
 /// Comprehensive accuracy test across all improvements
 #[allow(dead_code)]
 fn validate_advanced_improvements() {
-    println!("\n=== ULTRATHINK MODE VALIDATION SUMMARY ===");
+    println!("\n=== Advanced MODE VALIDATION SUMMARY ===");
     
     let start_time = Instant::now();
     
@@ -262,22 +262,22 @@ fn validate_advanced_improvements() {
     
     // Overall summary
     let overall_success = polygamma_success && dawson_success && bessel_success;
-    println!("\n=== OVERALL ULTRATHINK MODE SUCCESS: {} ===", 
+    println!("\n=== OVERALL Advanced MODE SUCCESS: {} ===", 
              if overall_success { "✅ PASS" } else { "❌ FAIL" });
 }
 
 criterion_group!(
-    ultrathink_benches,
+    advanced_benches,
     bench_polygamma_improvements,
     bench_dawson_improvements, 
     bench_new_bessel_derivatives,
     bench_performance_comparison
 );
 
-criterion_main!(ultrathink_benches);
+criterion_main!(advanced_benches);
 
 /// Run validation when executed directly
 #[allow(dead_code)]
 fn main() {
-    validate_ultrathink_improvements();
+    validate_advanced_improvements();
 }

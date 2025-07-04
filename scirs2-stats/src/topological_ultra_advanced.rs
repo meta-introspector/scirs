@@ -543,7 +543,8 @@ pub struct StabilityMetrics {
 
 impl<F> UltraTopologicalAnalyzer<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + One + Zero + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + One + Zero + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     /// Create new topological data analyzer
     pub fn new(config: TopologicalConfig<F>) -> Self {
@@ -1118,7 +1119,8 @@ where
 
 impl<F> Default for TopologicalConfig<F>
 where
-    F: Float + NumCast + Copy,
+    F: Float + NumCast + Copy
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self {
@@ -1172,7 +1174,8 @@ where
 
 impl<F> TopologicalConfig<F>
 where
-    F: Float + NumCast + Copy,
+    F: Float + NumCast + Copy
+        + std::fmt::Display,
 {
     /// Ultra-advanced topological machine learning with persistent features
     pub fn topological_machine_learning(

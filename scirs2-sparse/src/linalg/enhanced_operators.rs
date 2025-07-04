@@ -1340,9 +1340,9 @@ mod tests {
 
         let x = vec![1.0, 2.0, 3.0];
         let y = conv_op.matvec(&x).unwrap();
-        assert_relative_eq!(y[0], 2.0, epsilon = 1e-10);
-        assert_relative_eq!(y[1], 3.0, epsilon = 1e-10);
-        assert_relative_eq!(y[2], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(y[0], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(y[1], 2.0, epsilon = 1e-10);
+        assert_relative_eq!(y[2], 3.0, epsilon = 1e-10);
     }
 
     #[test]

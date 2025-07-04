@@ -1,9 +1,9 @@
-//! Comprehensive Ultrathink Mode Validation Suite
+//! Comprehensive Advanced Mode Validation Suite
 //!
 //! This validation suite embodies the "advanced mode" philosophy by providing
 //! exhaustive testing, validation, and quality assurance for the scirs2-optim module.
 //!
-//! # Ultrathink Mode Features
+//! # Advanced Mode Features
 //!
 //! - **Comprehensive Code Quality Analysis**: Static analysis, linting, formatting
 //! - **Advanced Testing**: Unit tests, integration tests, property-based testing
@@ -21,7 +21,7 @@ use std::process::{Command as ProcessCommand, Stdio};
 use std::time::{Duration, Instant};
 
 #[derive(Debug, Serialize, Deserialize)]
-struct UltrathinkValidationResult {
+struct ComprehensiveValidationResult {
     pub overall_score: f64,
     pub validation_timestamp: String,
     pub validation_duration: Duration,
@@ -83,7 +83,7 @@ struct ProductionReadinessAssessment {
     pub recommended_improvements: Vec<String>,
 }
 
-struct UltrathinkValidator {
+struct ComprehensiveValidator {
     project_path: PathBuf,
     config: ValidationConfig,
     start_time: Instant,
@@ -128,7 +128,7 @@ impl Default for ValidationConfig {
     }
 }
 
-impl UltrathinkValidator {
+impl ComprehensiveValidator {
     fn new(project_path: PathBuf, config: ValidationConfig) -> Self {
         Self {
             project_path,
@@ -137,9 +137,9 @@ impl UltrathinkValidator {
         }
     }
 
-    /// Run the comprehensive ultrathink validation suite
-    fn run_validation(&self) -> UltrathinkValidationResult {
-        println!("🚀 Starting Ultrathink Mode Comprehensive Validation");
+    /// Run the comprehensive Advanced validation suite
+    fn run_validation(&self) -> ComprehensiveValidationResult {
+        println!("🚀 Starting Advanced Mode Comprehensive Validation");
         println!("══════════════════════════════════════════════════");
         
         let mut categories = HashMap::new();
@@ -209,7 +209,7 @@ impl UltrathinkValidator {
         // Generate recommendations
         self.generate_recommendations(&categories, &mut recommendations);
 
-        UltrathinkValidationResult {
+        ComprehensiveValidationResult {
             overall_score,
             validation_timestamp: chrono::Utc::now().to_rfc3339(),
             validation_duration: self.start_time.elapsed(),
@@ -808,11 +808,11 @@ fn main() {
         ..Default::default()
     };
 
-    let validator = UltrathinkValidator::new(project_path, config);
+    let validator = ComprehensiveValidator::new(project_path, config);
     let result = validator.run_validation();
 
     // Print summary
-    println!("\n🎯 ULTRATHINK VALIDATION SUMMARY");
+    println!("\n🎯 Advanced VALIDATION SUMMARY");
     println!("═══════════════════════════════════");
     println!("Overall Score: {:.1}%", result.overall_score * 100.0);
     println!("Production Ready: {}", if result.production_readiness.ready_for_production { "✅ YES" } else { "❌ NO" });

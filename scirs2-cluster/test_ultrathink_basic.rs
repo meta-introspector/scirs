@@ -1,5 +1,5 @@
 #!/usr/bin/env rust-script
-//! Basic ultrathink clustering test
+//! Basic Advanced clustering test
 //! This is a minimal test to verify the core functionality
 //! 
 //! ```cargo
@@ -11,7 +11,7 @@ use ndarray::{Array2, array};
 
 #[allow(dead_code)]
 fn main() {
-    println!("🚀 Basic Ultrathink Clustering Verification");
+    println!("🚀 Basic Advanced Clustering Verification");
     println!("==========================================");
     
     // Test data creation
@@ -28,7 +28,7 @@ fn main() {
     println!("✅ Clustering concepts validated");
     
     println!("\n🎯 Basic verification completed successfully!");
-    println!("📋 Ready for comprehensive ultrathink clustering tests");
+    println!("📋 Ready for comprehensive Advanced clustering tests");
 }
 
 #[allow(dead_code)]

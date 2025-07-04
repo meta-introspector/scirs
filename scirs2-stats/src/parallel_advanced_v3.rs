@@ -66,7 +66,8 @@ pub struct ParallelBatchProcessor<F> {
 
 impl<F> ParallelBatchProcessor<F>
 where
-    F: Float + NumCast + Send + Sync + std::iter::Sum,
+    F: Float + NumCast + Send + Sync + std::iter::Sum
+        + std::fmt::Display,
 {
     pub fn new(config: AdvancedParallelConfig) -> Self {
         Self {
@@ -214,7 +215,8 @@ pub struct ParallelCrossValidator<F> {
 
 impl<F> ParallelCrossValidator<F>
 where
-    F: Float + NumCast + Send + Sync,
+    F: Float + NumCast + Send + Sync
+        + std::fmt::Display,
 {
     pub fn new(k_folds: usize, config: AdvancedParallelConfig) -> Self {
         Self {
@@ -336,7 +338,8 @@ pub struct ParallelMonteCarlo<F> {
 
 impl<F> ParallelMonteCarlo<F>
 where
-    F: Float + NumCast + Send + Sync,
+    F: Float + NumCast + Send + Sync
+        + std::fmt::Display,
 {
     pub fn new(n_simulations: usize, config: AdvancedParallelConfig) -> Self {
         Self {
@@ -488,7 +491,8 @@ impl ParallelMatrixOps {
     where
         F: Float + NumCast + Send + Sync + std::iter::Sum,
         D1: Data<Elem = F> + Sync,
-        D2: Data<Elem = F> + Sync,
+        D2: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let (m, n) = matrix.dim();
         if n != vector.len() {
@@ -537,7 +541,8 @@ impl ParallelMatrixOps {
     where
         F: Float + NumCast + Send + Sync,
         D1: Data<Elem = F> + Sync,
-        D2: Data<Elem = F> + Sync,
+        D2: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let m = a.len();
         let n = b.len();

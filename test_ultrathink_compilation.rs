@@ -1,14 +1,14 @@
-// Test ultrathink mode compilation
+// Test Advanced mode compilation
 // This tests basic syntax and imports
 
 #[allow(dead_code)]
 fn main() {
     println!("Testing advanced mode compilation");
     
-    // This would be the ultrathink mode showcase content but as a simple test
+    // This would be the Advanced mode showcase content but as a simple test
     test_neural_architecture_search();
     
-    println!("Ultrathink mode compilation test completed");
+    println!("Advanced mode compilation test completed");
 }
 
 #[allow(dead_code)]
@@ -28,7 +28,7 @@ mod tests {
     use super::*;
     
     #[test]
-    fn test_ultrathink_compilation() {
+    fn test_advanced_compilation() {
         test_neural_architecture_search();
     }
 }

@@ -212,7 +212,8 @@ where
 #[allow(dead_code)]
 pub fn kl_divergence<F>(p: &ArrayView1<F>, q: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::fmt::Debug + Sum,
+    F: Float + std::fmt::Debug + Sum
+        + std::fmt::Display,
 {
     if p.is_empty() || q.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -292,7 +293,8 @@ where
 #[allow(dead_code)]
 pub fn cross_entropy<F>(p: &ArrayView1<F>, q: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::fmt::Debug + Sum,
+    F: Float + std::fmt::Debug + Sum
+        + std::fmt::Display,
 {
     if p.is_empty() || q.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -349,7 +351,8 @@ where
 #[derive(Debug, Clone, Copy)]
 pub struct ConfidenceInterval<F>
 where
-    F: Float,
+    F: Float
+        + std::fmt::Display
 {
     /// The estimated statistic value
     pub estimate: F,
@@ -395,7 +398,8 @@ pub fn skewness_ci<F>(
     seed: Option<u64>,
 ) -> StatsResult<ConfidenceInterval<F>>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Debug,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Debug
+        + std::fmt::Display,
 {
     use crate::sampling::bootstrap;
     use crate::skew;
@@ -497,7 +501,8 @@ pub fn kurtosis_ci<F>(
     seed: Option<u64>,
 ) -> StatsResult<ConfidenceInterval<F>>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Debug,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Debug
+        + std::fmt::Display,
 {
     use crate::kurtosis;
     use crate::sampling::bootstrap;

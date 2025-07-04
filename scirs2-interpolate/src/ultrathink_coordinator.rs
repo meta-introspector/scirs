@@ -1,4 +1,4 @@
-//! Ultrathink Mode Coordinator for Interpolation Operations
+//! Advanced Mode Coordinator for Interpolation Operations
 //!
 //! This module provides an advanced AI-driven coordination system for interpolation
 //! operations, featuring intelligent method selection, adaptive parameter tuning,
@@ -6,10 +6,10 @@
 //!
 //! # API Consistency
 //!
-//! This coordinator follows the standardized ultrathink API patterns:
+//! This coordinator follows the standardized Advanced API patterns:
 //! - Consistent naming: `enable_method_selection`, `enable_adaptive_optimization`
-//! - Unified configuration fields across all ultrathink coordinators  
-//! - Standard factory functions: `create_ultrathink_interpolation_coordinator()`
+//! - Unified configuration fields across all Advanced coordinators  
+//! - Standard factory functions: `create_advanced_interpolation_coordinator()`
 //!
 //! # Features
 //!
@@ -35,7 +35,7 @@ use serde::{Deserialize, Serialize};
 
 /// Central coordinator for advanced interpolation operations
 #[derive(Debug)]
-pub struct UltrathinkInterpolationCoordinator<F: Float + Debug> {
+pub struct advancedInterpolationCoordinator<F: Float + Debug> {
     /// Intelligent method selector
     method_selector: Arc<RwLock<IntelligentMethodSelector<F>>>,
     /// Accuracy optimization engine
@@ -53,7 +53,7 @@ pub struct UltrathinkInterpolationCoordinator<F: Float + Debug> {
     /// Performance tracker
     performance_tracker: Arc<RwLock<InterpolationPerformanceTracker>>,
     /// Configuration
-    config: UltrathinkInterpolationConfig,
+    config: advancedInterpolationConfig,
     /// Adaptive cache system
     adaptive_cache: Arc<Mutex<AdaptiveInterpolationCache<F>>>,
 }
@@ -61,7 +61,7 @@ pub struct UltrathinkInterpolationCoordinator<F: Float + Debug> {
 /// Configuration for advanced interpolation operations
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct UltrathinkInterpolationConfig {
+pub struct advancedInterpolationConfig {
     /// Enable intelligent method selection
     pub enable_method_selection: bool,
     /// Enable adaptive optimization
@@ -88,7 +88,7 @@ pub struct UltrathinkInterpolationConfig {
     pub enable_hardware_optimization: bool,
 }
 
-impl Default for UltrathinkInterpolationConfig {
+impl Default for advancedInterpolationConfig {
     fn default() -> Self {
         Self {
             enable_method_selection: true,
@@ -1077,9 +1077,9 @@ impl<F: Float> InputValidationResult<F> {
     }
 }
 
-impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
+impl<F: Float + Debug> advancedInterpolationCoordinator<F> {
     /// Create a new advanced interpolation coordinator
-    pub fn new(config: UltrathinkInterpolationConfig) -> InterpolateResult<Self> {
+    pub fn new(config: advancedInterpolationConfig) -> InterpolateResult<Self> {
         Ok(Self {
             method_selector: Arc::new(RwLock::new(IntelligentMethodSelector::new()?)),
             accuracy_optimizer: Arc::new(Mutex::new(AccuracyOptimizationEngine::new()?)),
@@ -1119,7 +1119,11 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
             recommended_parameters: parameter_recommendations,
             confidence_score: method_recommendation.confidence,
             expected_accuracy: accuracy_prediction.expected_accuracy,
-            expected_performance: method_recommendation.expected_performance,
+            expected_performance: MethodPerformanceEstimate {
+                expected_execution_time: method_recommendation.expected_performance.execution_time,
+                expected_memory_usage: method_recommendation.expected_performance.memory_usage,
+                scalability_factor: 1.0, // Default value
+            },
             data_characteristics: data_profile,
         })
     }
@@ -1139,10 +1143,11 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
             self.apply_preprocessing(x_data, y_data, &recommendation.recommended_parameters)?;
 
         // Execute interpolation with recommended method
+        let x_new_dyn = x_new.to_owned().into_dyn();
         let result = self.execute_interpolation_with_method(
             &preprocessed_x,
             &preprocessed_y,
-            x_new,
+            &x_new_dyn,
             &recommendation.recommended_method,
             &recommendation.recommended_parameters,
         )?;
@@ -1182,7 +1187,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
     /// Update advanced configuration
     pub fn update_config(
         &mut self,
-        new_config: UltrathinkInterpolationConfig,
+        new_config: advancedInterpolationConfig,
     ) -> InterpolateResult<()> {
         self.config = new_config;
         // Update subsystem configurations
@@ -1266,7 +1271,13 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         let confidence = self.calculate_method_confidence(data_profile, &method)?;
 
         // Estimate expected performance
-        let expected_performance = self.estimate_method_performance(data_profile, &method)?;
+        let perf_estimate = self.estimate_method_performance(data_profile, &method)?;
+        let expected_performance = ExpectedPerformance {
+            execution_time: perf_estimate.expected_execution_time,
+            memory_usage: perf_estimate.expected_memory_usage,
+            accuracy: 0.95, // Default accuracy estimate
+            robustness: 0.8, // Default robustness estimate
+        };
 
         Ok(MethodRecommendation {
             method,
@@ -1528,7 +1539,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         x_data: &ArrayBase<impl Data<Elem = F>, D1>,
         y_data: &ArrayBase<impl Data<Elem = F>, D2>,
         x_new: &ArrayBase<impl Data<Elem = F>, D3>,
-        parameters: &HashMap<String, F>,
+        _parameters: &HashMap<String, F>,
     ) -> InterpolateResult<ArrayD<F>> {
         // Enhanced cubic spline interpolation implementation
         if x_data.len() != y_data.len() {
@@ -1607,13 +1618,12 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
 
         for &xi in &x_new_flat {
             // Find the interval
-            let mut j = 0;
-            if xi <= x_flat[indices[0]] {
+            let j = if xi <= x_flat[indices[0]] {
                 // Left extrapolation
-                j = 0;
+                0
             } else if xi >= x_flat[indices[n - 1]] {
                 // Right extrapolation
-                j = n - 2;
+                n - 2
             } else {
                 // Find interval by binary search
                 let mut left = 0;
@@ -1626,7 +1636,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
                         left = mid;
                     }
                 }
-                j = left;
+                left
             }
 
             // Evaluate cubic polynomial
@@ -2238,7 +2248,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
     }
 
     fn calculate_memory_efficiency(&self) -> InterpolateResult<f64> {
-        let manager = self.memory_manager.lock().map_err(|_| {
+        let _manager = self.memory_manager.lock().map_err(|_| {
             InterpolateError::ComputationError("Failed to lock memory manager".to_string())
         })?;
 
@@ -2881,19 +2891,19 @@ pub struct InterpolationPerformanceMetrics {
     pub cache_hit_ratio: f64,
 }
 
-/// Create a new ultrathink interpolation coordinator with default configuration
+/// Create a new Advanced interpolation coordinator with default configuration
 #[allow(dead_code)]
-pub fn create_ultrathink_interpolation_coordinator<F: Float + Debug>(
-) -> InterpolateResult<UltrathinkInterpolationCoordinator<F>> {
-    UltrathinkInterpolationCoordinator::new(UltrathinkInterpolationConfig::default())
+pub fn create_advanced_interpolation_coordinator<F: Float + Debug>(
+) -> InterpolateResult<advancedInterpolationCoordinator<F>> {
+    advancedInterpolationCoordinator::new(advancedInterpolationConfig::default())
 }
 
-/// Create a new ultrathink interpolation coordinator with custom configuration
+/// Create a new Advanced interpolation coordinator with custom configuration
 #[allow(dead_code)]
-pub fn create_ultrathink_interpolation_coordinator_with_config<F: Float + Debug>(
-    config: UltrathinkInterpolationConfig,
-) -> InterpolateResult<UltrathinkInterpolationCoordinator<F>> {
-    UltrathinkInterpolationCoordinator::new(config)
+pub fn create_advanced_interpolation_coordinator_with_config<F: Float + Debug>(
+    config: advancedInterpolationConfig,
+) -> InterpolateResult<advancedInterpolationCoordinator<F>> {
+    advancedInterpolationCoordinator::new(config)
 }
 
 #[allow(dead_code)]
@@ -2901,7 +2911,7 @@ fn example_usage() -> InterpolateResult<()> {
     use ndarray::Array1;
 
     // Create coordinator
-    let coordinator = create_ultrathink_interpolation_coordinator::<f64>()?;
+    let coordinator = create_advanced_interpolation_coordinator::<f64>()?;
 
     // Create example data
     let x_data = Array1::from_vec((0..10).map(|i| i as f64).collect());
@@ -2926,14 +2936,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ultrathink_coordinator_creation() {
-        let coordinator = create_ultrathink_interpolation_coordinator::<f64>();
+    fn test_advanced_coordinator_creation() {
+        let coordinator = create_advanced_interpolation_coordinator::<f64>();
         assert!(coordinator.is_ok());
     }
 
     #[test]
-    fn test_ultrathink_config_default() {
-        let config = UltrathinkInterpolationConfig::default();
+    fn test_advanced_config_default() {
+        let config = advancedInterpolationConfig::default();
         assert!(config.enable_method_selection);
         assert!(config.enable_adaptive_optimization);
         assert!(config.enable_quantum_optimization);

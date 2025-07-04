@@ -2727,7 +2727,7 @@ impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
                 // Add controlled randomness
                 let mut rng = rand::rng();
                 last_output.mapv(|x| {
-                    let noise = T::from(rng.random_range(-0.1..0.1)).unwrap();
+                    let noise = T::from(rng.gen_range(-0.1..0.1)).unwrap();
                     x + noise
                 })
             }
@@ -3741,7 +3741,7 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
                 // Xavier initialization
                 let bound = (6.0 / (max_seq_len + model_dim) as f64).sqrt();
                 for elem in embeddings.iter_mut() {
-                    *elem = T::from(rng.random_range(-bound..bound)).unwrap();
+                    *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
                 }
                 position_embeddings = Some(embeddings);
             }
@@ -3939,7 +3939,7 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
 
         if rng.random::<f64>() < epsilon {
             // Explore: choose randomly
-            Ok(rng.random_range(0..self.strategies.len()))
+            Ok(rng.gen_range(0..self.strategies.len()))
         } else {
             // Exploit: use performance-weighted selection
             let mut weighted_scores = strategy_scores.clone();
@@ -4004,21 +4004,21 @@ impl<T: Float + Default + Clone> StrategyNetwork<T> {
         let bound_input = (6.0 / (input_dim + hidden_dim) as f64).sqrt();
         let mut input_layer = Array2::zeros((input_dim, hidden_dim));
         for elem in input_layer.iter_mut() {
-            *elem = T::from(rng.random_range(-bound_input..bound_input)).unwrap();
+            *elem = T::from(rng.gen_range(-bound_input..bound_input)).unwrap();
         }
 
         // Initialize hidden layers (single hidden layer for simplicity)
         let bound_hidden = (6.0 / (hidden_dim + hidden_dim) as f64).sqrt();
         let mut hidden_layer = Array2::zeros((hidden_dim, hidden_dim));
         for elem in hidden_layer.iter_mut() {
-            *elem = T::from(rng.random_range(-bound_hidden..bound_hidden)).unwrap();
+            *elem = T::from(rng.gen_range(-bound_hidden..bound_hidden)).unwrap();
         }
 
         // Initialize output layer
         let bound_output = (6.0 / (hidden_dim + num_strategies) as f64).sqrt();
         let mut output_layer = Array2::zeros((hidden_dim, num_strategies));
         for elem in output_layer.iter_mut() {
-            *elem = T::from(rng.random_range(-bound_output..bound_output)).unwrap();
+            *elem = T::from(rng.gen_range(-bound_output..bound_output)).unwrap();
         }
 
         // Initialize strategy embeddings
@@ -4026,7 +4026,7 @@ impl<T: Float + Default + Clone> StrategyNetwork<T> {
         let mut strategy_embeddings = Array2::zeros((num_strategies, embedding_dim));
         let bound_embed = (6.0 / (num_strategies + embedding_dim) as f64).sqrt();
         for elem in strategy_embeddings.iter_mut() {
-            *elem = T::from(rng.random_range(-bound_embed..bound_embed)).unwrap();
+            *elem = T::from(rng.gen_range(-bound_embed..bound_embed)).unwrap();
         }
 
         Ok(Self {
@@ -4139,7 +4139,7 @@ impl<T: Float + Default + Clone> InputEmbedding<T> {
         // Xavier initialization
         let bound = (6.0 / (input_dim + model_dim) as f64).sqrt();
         for elem in weights.iter_mut() {
-            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
         }
 
         Self {
@@ -4296,16 +4296,16 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         let mut wo = Array2::zeros((model_dim, model_dim));
 
         for elem in wq.iter_mut() {
-            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
         }
         for elem in wk.iter_mut() {
-            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
         }
         for elem in wv.iter_mut() {
-            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
         }
         for elem in wo.iter_mut() {
-            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
         }
 
         let relative_bias = if config.relative_position_bias {
@@ -4534,10 +4534,10 @@ impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
         let mut linear2 = Array2::zeros((ff_dim, model_dim));
 
         for elem in linear1.iter_mut() {
-            *elem = T::from(rng.random_range(-bound1..bound1)).unwrap();
+            *elem = T::from(rng.gen_range(-bound1..bound1)).unwrap();
         }
         for elem in linear2.iter_mut() {
-            *elem = T::from(rng.random_range(-bound2..bound2)).unwrap();
+            *elem = T::from(rng.gen_range(-bound2..bound2)).unwrap();
         }
 
         let bias1 = Array1::zeros(ff_dim);
@@ -4693,7 +4693,7 @@ impl<T: Float + Default + Clone> OutputProjectionLayer<T> {
         // Xavier initialization
         let bound = (6.0 / (input_dim + output_dim) as f64).sqrt();
         for elem in weights.iter_mut() {
-            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
         }
 
         let bias = Array1::zeros(output_dim);
@@ -4775,7 +4775,7 @@ impl<T: Float + Default + Clone> RelativePositionBias<T> {
 
         let bound = 0.1;
         for elem in bias_table.iter_mut() {
-            *elem = T::from(rng.random_range(-bound..bound)).unwrap();
+            *elem = T::from(rng.gen_range(-bound..bound)).unwrap();
         }
 
         Ok(Self {

@@ -97,7 +97,8 @@ impl<F: Float> MemoryPool<F> {
 pub fn mean_zero_copy<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     if x.is_empty() {
         return Err(StatsError::invalid_argument(
@@ -130,7 +131,8 @@ pub fn variance_cache_aware<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     if n <= ddof {
@@ -169,7 +171,8 @@ where
 pub struct LazyStats<'a, F, D>
 where
     F: Float,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     data: &'a ArrayBase<D, Ix1>,
     mean: RefCell<Option<F>>,
@@ -182,7 +185,8 @@ where
 impl<'a, F, D> LazyStats<'a, F, D>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     pub fn new(data: &'a ArrayBase<D, Ix1>) -> Self {
         Self {
@@ -286,7 +290,7 @@ pub struct StreamingCovariance<F> {
     pool: Rc<MemoryPool<F>>,
 }
 
-impl<F: Float + NumCast> StreamingCovariance<F> {
+impl<F: Float + NumCast + std::fmt::Display> StreamingCovariance<F> {
     pub fn new(n_features: usize, pool: Rc<MemoryPool<F>>) -> Self {
         Self {
             n: 0,

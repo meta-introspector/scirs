@@ -175,7 +175,8 @@ pub struct MonteCarloResult<F> {
 /// Trait for functions to integrate
 pub trait IntegrableFunction<F>: Send + Sync
 where
-    F: Float + Copy,
+    F: Float + Copy
+        + std::fmt::Display,
 {
     /// Evaluate function at given point
     fn evaluate(&self, x: &ArrayView1<F>) -> F;
@@ -208,7 +209,8 @@ where
         + SimdUnifiedOps
         + FromPrimitive
         + std::iter::Product
-        + 'static,
+        + 'static
+        + std::fmt::Display,
 {
     /// Create new advanced parallel Monte Carlo integrator
     pub fn new(config: MonteCarloConfig, variance_reduction: VarianceReductionConfig) -> Self {
@@ -642,7 +644,8 @@ where
         + SimdUnifiedOps
         + FromPrimitive
         + 'static
-        + std::iter::Product,
+        + std::iter::Product
+        + std::fmt::Display,
 {
     let config = config.unwrap_or_default();
     let variance_reduction = VarianceReductionConfig::default();

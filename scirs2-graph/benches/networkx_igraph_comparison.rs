@@ -295,7 +295,7 @@ fn bench_creation_comparison(c: &mut Criterion) {
         // scirs2-graph with advanced optimization for larger graphs
         if *size >= 1000 {
             group.bench_with_input(
-                BenchmarkId::new("scirs2_erdos_renyi_ultrathink", size),
+                BenchmarkId::new("scirs2_erdos_renyi_advanced", size),
                 size,
                 |b, &size| {
                     b.iter(|| {
@@ -789,7 +789,7 @@ fn generate_markdown_report(results: &[(String, String, usize, ComparisonMetrics
 /// Comprehensive advanced performance comparison
 #[allow(dead_code)]
 fn bench_advanced_comprehensive_comparison(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultrathink_comprehensive_comparison");
+    let mut group = c.benchmark_group("advanced_comprehensive_comparison");
     let external_runner = ExternalBenchmarkRunner::new();
 
     // Test different graph types and sizes optimized for each library's strengths
@@ -827,7 +827,7 @@ fn bench_advanced_comprehensive_comparison(c: &mut Criterion) {
             // Benchmark scirs2-graph with advanced
             group.bench_with_input(
                 BenchmarkId::new(
-                    format!("scirs2_ultrathink_{}_{}", graph_type, algorithm),
+                    format!("scirs2_advanced_{}_{}", graph_type, algorithm),
                     size,
                 ),
                 &test_graph,

@@ -1,6 +1,6 @@
-//! Unified Ultrathink Statistical Processing Framework
+//! Unified Advanced Statistical Processing Framework
 //!
-//! This module provides a unified interface that integrates all ultrathink mode
+//! This module provides a unified interface that integrates all Advanced mode
 //! optimizations: SIMD acceleration, parallel processing, and numerical stability
 //! testing. It automatically selects the optimal combination of techniques based
 //! on data characteristics and system capabilities.
@@ -11,13 +11,13 @@ use crate::error::{StatsError, StatsResult};
 use crate::error_handling_enhancements::{UltrathinkContextBuilder, UltrathinkErrorMessages};
 use crate::error_standardization::ErrorMessages;
 use crate::ultrathink_stubs::{
-    BatchOperation, BatchResults, UltraThinkSimdConfig, UltraThinkSimdOptimizer,
+    BatchOperation, BatchResults, AdvancedSimdConfig, UltraThinkSimdOptimizer,
     create_exhaustive_numerical_stability_tester,
     ComprehensiveStabilityResult as StabilityAnalysisReport,
     UltraThinkNumericalStabilityConfig as NumericalStabilityConfig,
     UltrathinkNumericalStabilityAnalyzer,
     create_ultra_parallel_processor, MatrixOperationType, TimeSeriesOperation,
-    UltraParallelProcessor, UltrathinkParallelConfig,
+    UltraParallelProcessor, AdvancedParallelConfig,
 };
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
@@ -35,13 +35,13 @@ pub struct MovingWindowResult<F> {
     pub window_size: usize,
 }
 
-/// Comprehensive ultrathink processing configuration
+/// Comprehensive Advanced processing configuration
 #[derive(Debug, Clone)]
 pub struct UltrathinkProcessorConfig {
     /// SIMD optimization settings
-    pub simd_config: UltraThinkSimdConfig,
+    pub simd_config: AdvancedSimdConfig,
     /// Parallel processing settings
-    pub parallel_config: UltrathinkParallelConfig,
+    pub parallel_config: AdvancedParallelConfig,
     /// Numerical stability testing settings
     pub stability_config: NumericalStabilityConfig,
     /// Enable automatic optimization selection
@@ -57,8 +57,8 @@ pub struct UltrathinkProcessorConfig {
 impl Default for UltrathinkProcessorConfig {
     fn default() -> Self {
         Self {
-            simd_config: UltraThinkSimdConfig::default(),
-            parallel_config: UltrathinkParallelConfig::default(),
+            simd_config: AdvancedSimdConfig::default(),
+            parallel_config: AdvancedParallelConfig::default(),
             stability_config: NumericalStabilityConfig::default(),
             auto_optimize: true,
             enable_stability_testing: true,
@@ -81,7 +81,7 @@ pub enum OptimizationMode {
     Adaptive,
 }
 
-/// Unified ultrathink statistical processor
+/// Unified Advanced statistical processor
 pub struct UltrathinkUnifiedProcessor {
     config: UltrathinkProcessorConfig,
     simd_processor: Option<()>, // Placeholder for SIMD processor state
@@ -92,7 +92,7 @@ pub struct UltrathinkUnifiedProcessor {
 }
 
 impl UltrathinkUnifiedProcessor {
-    /// Create a new unified ultrathink processor
+    /// Create a new unified Advanced processor
     pub fn new(config: UltrathinkProcessorConfig) -> Self {
         Self {
             parallel_processor: create_ultra_parallel_processor(),
@@ -104,14 +104,15 @@ impl UltrathinkUnifiedProcessor {
         }
     }
 
-    /// Process comprehensive batch statistics with full ultrathink optimization
+    /// Process comprehensive batch statistics with full Advanced optimization
     pub fn process_comprehensive_statistics<F, D>(
         &mut self,
         data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<UltrathinkComprehensiveResult<F>>
     where
         F: Float + NumCast + SimdUnifiedOps + Send + Sync + Copy + PartialOrd + std::fmt::Debug,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let start_time = Instant::now();
         let n = data.len();
@@ -192,7 +193,7 @@ impl UltrathinkUnifiedProcessor {
         })
     }
 
-    /// Process matrix operations with full ultrathink optimization
+    /// Process matrix operations with full Advanced optimization
     pub fn process_matrix_operations<F, D>(
         &mut self,
         data: &ArrayBase<D, Ix2>,
@@ -200,7 +201,8 @@ impl UltrathinkUnifiedProcessor {
     ) -> StatsResult<UltrathinkMatrixResult<F>>
     where
         F: Float + NumCast + SimdUnifiedOps + Send + Sync + Copy + PartialOrd + std::fmt::Debug,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let start_time = Instant::now();
         let (n_rows, n_cols) = data.dim();
@@ -271,7 +273,7 @@ impl UltrathinkUnifiedProcessor {
         })
     }
 
-    /// Process time series analysis with ultrathink optimization
+    /// Process time series analysis with Advanced optimization
     pub fn process_time_series<F, D>(
         &mut self,
         data: &ArrayBase<D, Ix1>,
@@ -280,7 +282,8 @@ impl UltrathinkUnifiedProcessor {
     ) -> StatsResult<UltrathinkTimeSeriesResult<F>>
     where
         F: Float + NumCast + SimdUnifiedOps + Send + Sync + Copy + PartialOrd + std::fmt::Debug,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let start_time = Instant::now();
         let n = data.len();
@@ -583,10 +586,11 @@ impl UltrathinkUnifiedProcessor {
 
     fn convert_parallel_to_batch_stats<F>(
         &self,
-        parallel_result: crate::ultrathink_parallel_enhancements::UltraParallelBatchResult<F>,
+        parallel_result: crate::parallel_enhancements::UltraParallelBatchResult<F>,
     ) -> BatchResults<F>
     where
-        F: Float + NumCast + Copy,
+        F: Float + NumCast + Copy
+        + std::fmt::Display,
     {
         BatchResults {
             mean: parallel_result.mean,
@@ -608,7 +612,8 @@ impl UltrathinkUnifiedProcessor {
     ) -> StatsResult<BatchResults<F>>
     where
         F: Float + NumCast + SimdUnifiedOps + Send + Sync + Copy + PartialOrd + 'static,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         // For now, fall back to SIMD-only
         let optimizer = UltraThinkSimdOptimizer::new(self.config.simd_config.clone());
@@ -628,7 +633,8 @@ impl UltrathinkUnifiedProcessor {
     ) -> StatsResult<BatchResults<F>>
     where
         F: Float + NumCast + Copy + PartialOrd,
-        D: Data<Elem = F>,
+        D: Data<Elem = F>
+        + std::fmt::Display,
     {
         let n = data.len();
         let mut sum = F::zero();
@@ -687,7 +693,8 @@ impl UltrathinkUnifiedProcessor {
     ) -> StatsResult<Array2<F>>
     where
         F: Float + NumCast + Copy,
-        D: Data<Elem = F>,
+        D: Data<Elem = F>
+        + std::fmt::Display,
     {
         match operation {
             UltrathinkMatrixOperation::Covariance => {
@@ -722,10 +729,11 @@ impl UltrathinkUnifiedProcessor {
 
     fn convert_parallel_ts_result<F>(
         &self,
-        _result: crate::ultrathink_parallel_enhancements::UltraParallelTimeSeriesResult<F>,
+        _result: crate::parallel_enhancements::UltraParallelTimeSeriesResult<F>,
     ) -> StatsResult<MovingWindowResult<F>>
     where
-        F: Float + NumCast + Copy,
+        F: Float + NumCast + Copy
+        + std::fmt::Display,
     {
         // Placeholder implementation
         Ok(MovingWindowResult {
@@ -745,7 +753,8 @@ impl UltrathinkUnifiedProcessor {
     ) -> StatsResult<MovingWindowResult<F>>
     where
         F: Float + NumCast + Copy,
-        D: Data<Elem = F>,
+        D: Data<Elem = F>
+        + std::fmt::Display,
     {
         // Placeholder implementation
         Ok(MovingWindowResult {
@@ -822,7 +831,7 @@ impl ProcessingStrategy {
     }
 }
 
-/// Matrix operation types for ultrathink processing
+/// Matrix operation types for Advanced processing
 #[derive(Debug, Clone, Copy)]
 pub enum UltrathinkMatrixOperation {
     Covariance,
@@ -830,7 +839,7 @@ pub enum UltrathinkMatrixOperation {
     Distance,
 }
 
-/// Time series operation types for ultrathink processing
+/// Time series operation types for Advanced processing
 #[derive(Debug, Clone, Copy)]
 pub enum UltrathinkTimeSeriesOperation {
     MovingWindow,
@@ -848,7 +857,7 @@ pub struct ProcessingMetrics {
     pub memory_usage_mb: f64,
 }
 
-/// Comprehensive ultrathink processing result
+/// Comprehensive Advanced processing result
 #[derive(Debug, Clone)]
 pub struct UltrathinkComprehensiveResult<F> {
     pub statistics: BatchResults<F>,
@@ -876,7 +885,7 @@ pub struct UltrathinkTimeSeriesResult<F> {
     pub processing_metrics: ProcessingMetrics,
 }
 
-/// Performance analytics for the ultrathink processor
+/// Performance analytics for the Advanced processor
 #[derive(Debug, Clone, Default)]
 pub struct UltrathinkPerformanceAnalytics {
     pub total_operations: usize,
@@ -888,13 +897,13 @@ pub struct UltrathinkPerformanceAnalytics {
     pub recommendations: Vec<String>,
 }
 
-/// Create a unified ultrathink processor with default configuration
+/// Create a unified Advanced processor with default configuration
 #[allow(dead_code)]
-pub fn create_ultrathink_processor() -> UltrathinkUnifiedProcessor {
+pub fn create_advanced_processor() -> UltrathinkUnifiedProcessor {
     UltrathinkUnifiedProcessor::new(UltrathinkProcessorConfig::default())
 }
 
-/// Create a unified ultrathink processor with custom configuration
+/// Create a unified Advanced processor with custom configuration
 #[allow(dead_code)]
 pub fn create_configured_ultrathink_processor(
     config: UltrathinkProcessorConfig,
@@ -909,13 +918,13 @@ mod tests {
 
     #[test]
     fn test_ultrathink_processor_creation() {
-        let processor = create_ultrathink_processor();
+        let processor = create_advanced_processor();
         assert!(processor.capabilities.has_sse2()); // Most modern systems have SSE2
     }
 
     #[test]
     fn test_comprehensive_statistics() {
-        let mut processor = create_ultrathink_processor();
+        let mut processor = create_advanced_processor();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         let result = processor
@@ -930,7 +939,7 @@ mod tests {
 
     #[test]
     fn test_performance_analytics() {
-        let processor = create_ultrathink_processor();
+        let processor = create_advanced_processor();
         let analytics = processor.get_performance_analytics();
 
         // Should have default values when no operations have been performed
@@ -940,7 +949,7 @@ mod tests {
 
     #[test]
     fn test_processing_strategy_selection() {
-        let processor = create_ultrathink_processor();
+        let processor = create_advanced_processor();
         let context = UltrathinkContextBuilder::new(1000).build();
 
         // Test different data sizes

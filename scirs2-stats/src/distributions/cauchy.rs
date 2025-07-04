@@ -23,7 +23,7 @@ pub struct Cauchy<F: Float> {
     rand_distr: RandUniform<f64>,
 }
 
-impl<F: Float + NumCast> Cauchy<F> {
+impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// Create a new Cauchy distribution with given parameters
     ///
     /// # Arguments
@@ -361,13 +361,14 @@ impl<F: Float + NumCast> Cauchy<F> {
 #[allow(dead_code)]
 pub fn cauchy<F>(loc: F, scale: F) -> StatsResult<Cauchy<F>>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     Cauchy::new(loc, scale)
 }
 
 /// Implementation of SampleableDistribution for Cauchy
-impl<F: Float + NumCast> SampleableDistribution<F> for Cauchy<F> {
+impl<F: Float + NumCast + std::fmt::Display> SampleableDistribution<F> for Cauchy<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs_vec(size)
     }
@@ -377,7 +378,7 @@ impl<F: Float + NumCast> SampleableDistribution<F> for Cauchy<F> {
 ///
 /// Note: Cauchy distribution doesn't have defined mean or variance,
 /// but we implement the Distribution trait with appropriate behavior.
-impl<F: Float + NumCast> ScirsDist<F> for Cauchy<F> {
+impl<F: Float + NumCast + std::fmt::Display> ScirsDist<F> for Cauchy<F> {
     /// Returns NaN as the mean is undefined for Cauchy distribution
     fn mean(&self) -> F {
         F::nan()
@@ -405,7 +406,7 @@ impl<F: Float + NumCast> ScirsDist<F> for Cauchy<F> {
 }
 
 /// Implementation of ContinuousDistribution trait for Cauchy
-impl<F: Float + NumCast> ContinuousDistribution<F> for Cauchy<F> {
+impl<F: Float + NumCast + std::fmt::Display> ContinuousDistribution<F> for Cauchy<F> {
     /// Calculate the probability density function (PDF) at a given point
     fn pdf(&self, x: F) -> F {
         self.pdf(x)

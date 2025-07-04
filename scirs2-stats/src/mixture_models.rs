@@ -244,7 +244,8 @@ impl Default for GMMConfig {
 
 impl<F> GaussianMixtureModel<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     /// Create new Gaussian Mixture Model
     pub fn new(n_components: usize, config: GMMConfig) -> StatsResult<Self> {
@@ -804,7 +805,8 @@ impl Default for KDEConfig {
 
 impl<F> KernelDensityEstimator<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     /// Create new KDE
     pub fn new(kernel: KernelType, bandwidth: F, config: KDEConfig) -> Self {
@@ -991,7 +993,8 @@ pub fn gaussian_mixture_model<F>(
     config: Option<GMMConfig>,
 ) -> StatsResult<GMMParameters<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     let config = config.unwrap_or_default();
     let mut gmm = GaussianMixtureModel::new(n_components, config)?;
@@ -1006,7 +1009,8 @@ pub fn kernel_density_estimation<F>(
     bandwidth: Option<F>,
 ) -> StatsResult<Array1<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display,
 {
     let kernel = kernel.unwrap_or(KernelType::Gaussian);
     let bandwidth = bandwidth.unwrap_or_else(|| {
@@ -1032,7 +1036,8 @@ pub fn gmm_model_selection<F>(
     config: Option<GMMConfig>,
 ) -> StatsResult<(usize, GMMParameters<F>)>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     let config = config.unwrap_or_default();
     let mut best_n_components = min_components;
@@ -1066,7 +1071,8 @@ pub struct RobustGMM<F> {
 
 impl<F> RobustGMM<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display,
 {
     /// Create new Robust GMM
     pub fn new(
@@ -1144,7 +1150,8 @@ pub struct StreamingGMM<F> {
 
 impl<F> StreamingGMM<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     /// Create new Streaming GMM
     pub fn new(
@@ -1244,7 +1251,8 @@ pub fn hierarchical_gmm_init<F>(
     config: GMMConfig,
 ) -> StatsResult<GMMParameters<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display,
 {
     // Simplified hierarchical clustering for initialization
     // Full implementation would use proper hierarchical clustering
@@ -1264,7 +1272,8 @@ pub fn gmm_cross_validation<F>(
     config: GMMConfig,
 ) -> StatsResult<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     let (n_samples, _) = data.dim();
     let fold_size = n_samples / n_folds;
@@ -1322,7 +1331,8 @@ pub fn benchmark_mixture_models<F>(
     )],
 ) -> StatsResult<Vec<(String, std::time::Duration, F)>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display,
 {
     let mut results = Vec::new();
 
@@ -1536,7 +1546,8 @@ pub struct VariationalGMMResult<F> {
 
 impl<F> VariationalGMM<F>
 where
-    F: Float + FromPrimitive + SimdUnifiedOps + Send + Sync + std::fmt::Debug,
+    F: Float + FromPrimitive + SimdUnifiedOps + Send + Sync + std::fmt::Debug
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     /// Create new Variational GMM
     pub fn new(max_components: usize, config: VariationalGMMConfig) -> Self {

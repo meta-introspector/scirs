@@ -1,6 +1,6 @@
-//! Ultrathink Mode Performance Benchmarks
+//! Advanced Mode Performance Benchmarks
 //!
-//! This benchmark suite tests the performance of ultrathink optimizations
+//! This benchmark suite tests the performance of Advanced optimizations
 //! against standard graph algorithms and compares against NetworkX/igraph.
 
 #![allow(dead_code)]
@@ -10,21 +10,21 @@ use criterion::{
     PlotConfiguration,
 };
 use scirs2_graph::advanced::{
-    create_ultrathink_processor, execute_with_ultrathink, UltrathinkConfig, UltrathinkProcessor,
+    create_advanced_processor, execute_with_advanced, AdvancedConfig, AdvancedProcessor,
 };
 use scirs2_graph::algorithms::community::louvain_communities;
 use scirs2_graph::algorithms::connectivity::connected_components;
-use scirs2_graph::algorithms::shortest_path::dijkstra_path;
 use scirs2_graph::algorithms::properties::betweenness_centrality;
+use scirs2_graph::algorithms::shortest_path::dijkstra_path;
 use scirs2_graph::base::Graph;
 use scirs2_graph::generators::random_graph;
 use scirs2_graph::measures::pagerank_centrality;
 use std::collections::HashMap;
 use std::time::Instant;
 
-/// Benchmark configuration for ultrathink tests
+/// Benchmark configuration for Advanced tests
 #[derive(Debug, Clone)]
-pub struct UltrathinkBenchmarkConfig {
+pub struct advancedBenchmarkConfig {
     /// Graph sizes to test
     pub graph_sizes: Vec<usize>,
     /// Density values for random graphs
@@ -39,7 +39,7 @@ pub struct UltrathinkBenchmarkConfig {
     pub enable_neuromorphic: bool,
 }
 
-impl Default for UltrathinkBenchmarkConfig {
+impl Default for advancedBenchmarkConfig {
     fn default() -> Self {
         Self {
             graph_sizes: vec![100, 500, 1000, 5000, 10000],
@@ -57,13 +57,13 @@ impl Default for UltrathinkBenchmarkConfig {
 pub struct BenchmarkResults {
     /// Standard algorithm execution time (μs)
     pub standard_time_us: u64,
-    /// Ultrathink optimized execution time (μs)
-    pub ultrathink_time_us: u64,
+    /// Advanced optimized execution time (μs)
+    pub advanced_time_us: u64,
     /// Memory usage for standard algorithm (bytes)
     pub standard_memory_bytes: usize,
-    /// Memory usage for ultrathink algorithm (bytes)
-    pub ultrathink_memory_bytes: usize,
-    /// Speedup ratio (standard_time / ultrathink_time)
+    /// Memory usage for Advanced algorithm (bytes)
+    pub advanced_memory_bytes: usize,
+    /// Speedup ratio (standard_time / advanced_time)
     pub speedup_ratio: f64,
     /// Memory efficiency ratio
     pub memory_efficiency_ratio: f64,
@@ -76,29 +76,29 @@ pub struct BenchmarkResults {
 impl BenchmarkResults {
     pub fn new(
         standard_time_us: u64,
-        ultrathink_time_us: u64,
+        advanced_time_us: u64,
         standard_memory_bytes: usize,
-        ultrathink_memory_bytes: usize,
+        advanced_memory_bytes: usize,
         graph_size: usize,
         graph_density: f64,
     ) -> Self {
-        let speedup_ratio = if ultrathink_time_us > 0 {
-            standard_time_us as f64 / ultrathink_time_us as f64
+        let speedup_ratio = if advanced_time_us > 0 {
+            standard_time_us as f64 / advanced_time_us as f64
         } else {
             1.0
         };
 
-        let memory_efficiency_ratio = if ultrathink_memory_bytes > 0 {
-            standard_memory_bytes as f64 / ultrathink_memory_bytes as f64
+        let memory_efficiency_ratio = if advanced_memory_bytes > 0 {
+            standard_memory_bytes as f64 / advanced_memory_bytes as f64
         } else {
             1.0
         };
 
         Self {
             standard_time_us,
-            ultrathink_time_us,
+            advanced_time_us,
             standard_memory_bytes,
-            ultrathink_memory_bytes,
+            advanced_memory_bytes,
             speedup_ratio,
             memory_efficiency_ratio,
             graph_size,
@@ -114,10 +114,10 @@ fn generate_test_graph(size: usize, density: f64) -> Graph<i32, f64> {
     random_graph(size, num_edges, false).unwrap()
 }
 
-/// Benchmark connected components with and without ultrathink
+/// Benchmark connected components with and without Advanced
 #[allow(dead_code)]
 fn benchmark_connected_components(c: &mut Criterion) {
-    let config = UltrathinkBenchmarkConfig::default();
+    let config = advancedBenchmarkConfig::default();
     let mut group = c.benchmark_group("connected_components");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 
@@ -135,7 +135,7 @@ fn benchmark_connected_components(c: &mut Criterion) {
 
             // Benchmark advanced optimized algorithm
             group.bench_with_input(
-                BenchmarkId::new("ultrathink", format!("{}_{}", size, density)),
+                BenchmarkId::new("Advanced", format!("{}_{}", size, density)),
                 &graph_clone,
                 |b, g| {
                     let mut processor = create_advanced_processor();
@@ -160,7 +160,7 @@ fn benchmark_connected_components(c: &mut Criterion) {
 /// Benchmark shortest path algorithms with and without advanced
 #[allow(dead_code)]
 fn benchmark_shortest_paths(c: &mut Criterion) {
-    let config = UltrathinkBenchmarkConfig::default();
+    let config = advancedBenchmarkConfig::default();
     let mut group = c.benchmark_group("shortest_paths");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 
@@ -181,7 +181,7 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
 
                 // Benchmark advanced optimized Dijkstra
                 group.bench_with_input(
-                    BenchmarkId::new("dijkstra_ultrathink", format!("{}_{}", size, density)),
+                    BenchmarkId::new("dijkstra_advanced", format!("{}_{}", size, density)),
                     &(&graph_clone, start_node),
                     |b, (g, start)| {
                         let mut processor = create_advanced_processor();
@@ -207,7 +207,7 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
 /// Benchmark PageRank with and without advanced
 #[allow(dead_code)]
 fn benchmark_pagerank(c: &mut Criterion) {
-    let config = UltrathinkBenchmarkConfig::default();
+    let config = advancedBenchmarkConfig::default();
     let mut group = c.benchmark_group("pagerank");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 
@@ -225,7 +225,7 @@ fn benchmark_pagerank(c: &mut Criterion) {
 
             // Benchmark advanced optimized PageRank
             group.bench_with_input(
-                BenchmarkId::new("pagerank_ultrathink", format!("{}_{}", size, density)),
+                BenchmarkId::new("pagerank_advanced", format!("{}_{}", size, density)),
                 &graph_clone,
                 |b, g| {
                     let mut processor = create_advanced_processor();
@@ -247,7 +247,7 @@ fn benchmark_pagerank(c: &mut Criterion) {
 /// Benchmark community detection with and without advanced
 #[allow(dead_code)]
 fn benchmark_community_detection(c: &mut Criterion) {
-    let config = UltrathinkBenchmarkConfig::default();
+    let config = advancedBenchmarkConfig::default();
     let mut group = c.benchmark_group("community_detection");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 
@@ -265,7 +265,7 @@ fn benchmark_community_detection(c: &mut Criterion) {
 
             // Benchmark advanced optimized Louvain
             group.bench_with_input(
-                BenchmarkId::new("louvain_ultrathink", format!("{}_{}", size, density)),
+                BenchmarkId::new("louvain_advanced", format!("{}_{}", size, density)),
                 &graph_clone,
                 |b, g| {
                     let mut processor = create_advanced_processor();
@@ -290,7 +290,7 @@ fn benchmark_community_detection(c: &mut Criterion) {
 /// Benchmark centrality measures with and without advanced
 #[allow(dead_code)]
 fn benchmark_centrality(c: &mut Criterion) {
-    let config = UltrathinkBenchmarkConfig::default();
+    let config = advancedBenchmarkConfig::default();
     let mut group = c.benchmark_group("centrality");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 
@@ -309,7 +309,7 @@ fn benchmark_centrality(c: &mut Criterion) {
 
             // Benchmark advanced optimized betweenness centrality
             group.bench_with_input(
-                BenchmarkId::new("betweenness_ultrathink", format!("{}_{}", size, density)),
+                BenchmarkId::new("betweenness_advanced", format!("{}_{}", size, density)),
                 &graph_clone,
                 |b, g| {
                     let mut processor = create_advanced_processor();
@@ -334,42 +334,42 @@ fn benchmark_centrality(c: &mut Criterion) {
 /// Comprehensive advanced performance benchmark
 #[allow(dead_code)]
 fn benchmark_advanced_comprehensive(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultrathink_comprehensive");
+    let mut group = c.benchmark_group("advanced_comprehensive");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 
     let configs = vec![
-        ("default", UltrathinkConfig::default()),
+        ("default", AdvancedConfig::default()),
         (
             "neural_rl_only",
-            UltrathinkConfig {
+            AdvancedConfig {
                 enable_neural_rl: true,
                 enable_gpu_acceleration: false,
                 enable_neuromorphic: false,
                 enable_realtime_adaptation: false,
                 enable_memory_optimization: false,
-                ..UltrathinkConfig::default()
+                ..AdvancedConfig::default()
             },
         ),
         (
             "gpu_only",
-            UltrathinkConfig {
+            AdvancedConfig {
                 enable_neural_rl: false,
                 enable_gpu_acceleration: true,
                 enable_neuromorphic: false,
                 enable_realtime_adaptation: false,
                 enable_memory_optimization: false,
-                ..UltrathinkConfig::default()
+                ..AdvancedConfig::default()
             },
         ),
         (
             "neuromorphic_only",
-            UltrathinkConfig {
+            AdvancedConfig {
                 enable_neural_rl: false,
                 enable_gpu_acceleration: false,
                 enable_neuromorphic: true,
                 enable_realtime_adaptation: false,
                 enable_memory_optimization: false,
-                ..UltrathinkConfig::default()
+                ..AdvancedConfig::default()
             },
         ),
     ];
@@ -381,10 +381,10 @@ fn benchmark_advanced_comprehensive(c: &mut Criterion) {
             BenchmarkId::new("advanced_config", config_name),
             &(&graph, &config),
             |b, (g, cfg)| {
-                let mut processor = UltrathinkProcessor::new(cfg.clone());
+                let mut processor = AdvancedProcessor::new(cfg.clone());
                 b.iter(|| {
                     black_box(
-                        execute_with_ultrathink(&mut processor, g, "comprehensive_test", |graph| {
+                        execute_with_advanced(&mut processor, g, "comprehensive_test", |graph| {
                             // Run multiple algorithms in sequence
                             let _components = connected_components(graph)?;
                             let _pagerank = pagerank(graph, 0.85, Some(50), Some(1e-6))?;
@@ -422,16 +422,16 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
             })
         });
 
-        // Ultrathink memory usage
+        // Advanced memory usage
         group.bench_with_input(
             BenchmarkId::new("memory_advanced", size),
             &graph_clone,
             |b, g| {
-                let mut processor = create_ultrathink_processor();
+                let mut processor = create_advanced_processor();
                 b.iter_custom(|iters| {
                     let start = Instant::now();
                     for _ in 0..iters {
-                        let _result = execute_with_ultrathink(
+                        let _result = execute_with_advanced(
                             &mut processor,
                             g,
                             "pagerank_memory_test",
@@ -459,7 +459,7 @@ pub fn generate_performance_report(
 
     let mut file = File::create(output_path)?;
 
-    writeln!(file, "# Ultrathink Mode Performance Report\n")?;
+    writeln!(file, "# Advanced Mode Performance Report\n")?;
     writeln!(
         file,
         "Generated at: {}\n",
@@ -494,7 +494,7 @@ pub fn generate_performance_report(
     )?;
 
     writeln!(file, "\n## Detailed Results\n")?;
-    writeln!(file, "| Graph Size | Density | Standard Time (μs) | Ultrathink Time (μs) | Speedup | Memory Efficiency |")?;
+    writeln!(file, "| Graph Size | Density | Standard Time (μs) | Advanced Time (μs) | Speedup | Memory Efficiency |")?;
     writeln!(file, "|------------|---------|-------------------|-------------------|---------|------------------|")?;
 
     for result in results {
@@ -539,7 +539,7 @@ pub fn generate_performance_report(
     writeln!(file, "\n## Recommendations\n")?;
     writeln!(
         file,
-        "- Ultrathink mode shows significant performance improvements for most graph operations"
+        "- Advanced mode shows significant performance improvements for most graph operations"
     )?;
     writeln!(
         file,
@@ -558,14 +558,14 @@ pub fn generate_performance_report(
 }
 
 criterion_group!(
-    ultrathink_benches,
+    advanced_benches,
     benchmark_connected_components,
     benchmark_shortest_paths,
     benchmark_pagerank,
     benchmark_community_detection,
     benchmark_centrality,
-    benchmark_ultrathink_comprehensive,
+    benchmark_advanced_comprehensive,
     benchmark_memory_efficiency
 );
 
-criterion_main!(ultrathink_benches);
+criterion_main!(advanced_benches);

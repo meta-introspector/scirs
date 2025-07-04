@@ -6,7 +6,7 @@
 //! production validation.
 
 use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
-use crate::error::{SignalResult};
+use crate::error::SignalResult;
 use crate::filter::{butter, FilterType};
 use crate::lombscargle_scipy_validation::{
     run_comprehensive_validation, validate_lombscargle_against_scipy, ScipyValidationConfig,

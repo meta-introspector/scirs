@@ -154,9 +154,9 @@ pub use gradient_accumulation::{
 // };
 // Temporarily commented out complex re-exports to resolve compilation issues
 // pub use learned_optimizers::optimization_coordinator::{
-//     LandscapeFeatures, OptimizationContext as UltraThinkOptimizationContext,
-//     OptimizationRecommendation, OptimizerCapabilities, PerformanceSnapshot, UltraThinkConfig,
-//     UltraThinkCoordinator, UltraThinkResult,
+//     LandscapeFeatures, OptimizationContext as advancedOptimizationContext,
+//     OptimizationRecommendation, OptimizerCapabilities, PerformanceSnapshot, AdvancedConfig,
+//     AdvancedCoordinator, AdvancedResult,
 // };
 pub use learned_optimizers::{
     LSTMOptimizer, LearnedOptimizerConfig, LearnedOptimizerMetrics, LearnedOptimizerState,

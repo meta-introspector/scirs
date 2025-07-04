@@ -99,7 +99,8 @@ pub fn mean_parallel_enhanced<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     // Use scirs2-core validation
     check_not_empty(x.as_slice().unwrap(), "x")
@@ -137,7 +138,8 @@ pub fn variance_parallel_enhanced<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     let n = x.len();
     if n <= ddof {
@@ -199,7 +201,8 @@ pub fn corrcoef_parallel_enhanced<F, D>(
 ) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     let (n_samples, n_features) = data.dim();
 
@@ -263,7 +266,8 @@ pub fn bootstrap_parallel_enhanced<F, D>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Send + Sync,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     if data.is_empty() {
         return Err(StatsError::invalid_argument("Cannot bootstrap empty data"));
@@ -303,7 +307,8 @@ where
 #[allow(dead_code)]
 fn parallel_sum_slice<F>(slice: &[F], config: &ParallelConfig) -> F
 where
-    F: Float + NumCast + Send + Sync + std::iter::Sum,
+    F: Float + NumCast + Send + Sync + std::iter::Sum
+        + std::fmt::Display,
 {
     let chunk_size = config.get_chunk_size(slice.len());
 
@@ -317,7 +322,8 @@ where
 fn parallel_sum_indexed<F, D>(arr: &ArrayBase<D, Ix1>, config: &ParallelConfig) -> F
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     let n = arr.len();
     let chunk_size = config.get_chunk_size(n);
@@ -343,7 +349,8 @@ where
 fn variance_sequential_welford<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let mut mean = F::zero();
     let mut m2 = F::zero();
@@ -364,7 +371,8 @@ where
 #[allow(dead_code)]
 fn combine_welford_stats<F>(stats: &[(F, F, usize)]) -> (F, F, usize)
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     stats.iter().fold(
         (F::zero(), F::zero(), 0),
@@ -385,7 +393,8 @@ where
 #[allow(dead_code)]
 fn compute_correlation_pair<F>(x: &ArrayView1<F>, y: &ArrayView1<F>, mean_x: F, mean_y: F) -> F
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     let n = x.len();
     let mut cov = F::zero();

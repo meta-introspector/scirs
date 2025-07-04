@@ -1,4 +1,4 @@
-//! Ultrathink Enhanced SIMD Operations Showcase
+//! Advanced Enhanced SIMD Operations Showcase
 //!
 //! This example demonstrates the most impactful SIMD optimizations for signal processing,
 //! including FFT, STFT, Wavelet transforms, and resampling with comprehensive
@@ -7,20 +7,20 @@
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_signal::{
-    generate_simd_performance_report, ultrathink_simd_dwt, ultrathink_simd_fft,
-    ultrathink_simd_resample, ultrathink_simd_rfft, ultrathink_simd_stft, UltrathinkSimdConfig,
+    generate_simd_performance_report, advanced_simd_dwt, advanced_simd_fft,
+    advanced_simd_resample, advanced_simd_rfft, advanced_simd_stft, AdvancedSimdConfig,
 };
 use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultrathink Enhanced SIMD Operations Showcase");
+    println!("🚀 Advanced Enhanced SIMD Operations Showcase");
     println!("================================================");
 
     // Create test signals of various sizes and types
     let test_signals = create_test_signals();
-    let config = UltrathinkSimdConfig::default();
+    let config = AdvancedSimdConfig::default();
 
     println!("\n📊 Testing SIMD-optimized signal processing operations...");
 
@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("  🔍 Testing {}: {} samples", name, signal_complex.len());
 
         let start_time = Instant::now();
-        let fft_result = ultrathink_simd_fft(signal_complex, &config)?;
+        let fft_result = advanced_simd_fft(signal_complex, &config)?;
         let elapsed = start_time.elapsed();
 
         println!(
@@ -88,7 +88,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("  🔍 Testing {}: {} samples", name, signal_real.len());
 
         let start_time = Instant::now();
-        let rfft_result = ultrathink_simd_rfft(signal_real, &config)?;
+        let rfft_result = advanced_simd_rfft(signal_real, &config)?;
         let elapsed = start_time.elapsed();
 
         println!(
@@ -124,7 +124,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let start_time = Instant::now();
             let stft_result =
-                ultrathink_simd_stft(signal_real, window_size, hop_size, None, &config)?;
+                advanced_simd_stft(signal_real, window_size, hop_size, None, &config)?;
             let elapsed = start_time.elapsed();
 
             println!(
@@ -178,7 +178,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let wavelet = "haar";
 
             let start_time = Instant::now();
-            let wavelet_result = ultrathink_simd_dwt(signal_real, wavelet, levels, &config)?;
+            let wavelet_result = advanced_simd_dwt(signal_real, wavelet, levels, &config)?;
             let elapsed = start_time.elapsed();
 
             println!("    🌊 Decomposition Levels: {}", wavelet_result.levels);
@@ -212,7 +212,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let target_rate = 48000.0; // 48 kHz (common upsampling)
 
         let start_time = Instant::now();
-        let resampled = ultrathink_simd_resample(signal_real, original_rate, target_rate, &config)?;
+        let resampled = advanced_simd_resample(signal_real, original_rate, target_rate, &config)?;
         let elapsed = start_time.elapsed();
 
         let ratio = target_rate / original_rate;
@@ -351,7 +351,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
-    println!("\n🏁 Ultrathink SIMD showcase complete!");
+    println!("\n🏁 Advanced SIMD showcase complete!");
     println!("   📈 Performance improvements demonstrated across all operations");
     println!("   🔬 Comprehensive validation and benchmarking completed");
     println!("   🚀 Ready for production deployment with maximum performance");

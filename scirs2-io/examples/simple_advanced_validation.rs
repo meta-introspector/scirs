@@ -1,23 +1,23 @@
-//! Simple Ultra-Think Mode Validation Test
+//! Simple advanced Mode Validation Test
 //!
-//! A minimal test to validate that the Ultra-Think mode implementations
+//! A minimal test to validate that the advanced mode implementations
 //! compile correctly and core functionality works as expected.
 
 use scirs2_io::error::Result;
-use scirs2_io::ultrathink_coordinator::UltraThinkCoordinator;
+use scirs2_io::advanced_coordinator::AdvancedCoordinator;
 use scirs2_io::ultrathink_enhanced_algorithms::AdvancedPatternRecognizer;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🔍 Simple Ultra-Think Mode Validation");
+    println!("🔍 Simple advanced Mode Validation");
     println!("=====================================\n");
 
-    // Test 1: Create Ultra-Think Coordinator
-    println!("Test 1: Ultra-Think Coordinator Creation");
-    match UltraThinkCoordinator::new() {
-        Ok(_coordinator) => println!("✅ PASS: Ultra-Think Coordinator created successfully"),
+    // Test 1: Create advanced Coordinator
+    println!("Test 1: advanced Coordinator Creation");
+    match AdvancedCoordinator::new() {
+        Ok(_coordinator) => println!("✅ PASS: advanced Coordinator created successfully"),
         Err(e) => {
-            println!("❌ FAIL: Ultra-Think Coordinator creation failed: {}", e);
+            println!("❌ FAIL: advanced Coordinator creation failed: {}", e);
             return Err(e);
         }
     }
@@ -116,8 +116,8 @@ fn main() -> Result<()> {
         }
     }
 
-    println!("\n🎉 All Ultra-Think validation tests passed!");
-    println!("The Ultra-Think mode implementations are working correctly.");
+    println!("\n🎉 All advanced validation tests passed!");
+    println!("The advanced mode implementations are working correctly.");
 
     Ok(())
 }

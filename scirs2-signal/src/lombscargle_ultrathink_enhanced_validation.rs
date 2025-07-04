@@ -1,4 +1,4 @@
-//! Ultra-enhanced Lomb-Scargle validation in ultrathink mode
+//! Ultra-enhanced Lomb-Scargle validation in Advanced mode
 //!
 //! This module provides advanced validation capabilities for Lomb-Scargle periodogram
 //! implementation with comprehensive statistical testing, edge case validation,
@@ -139,7 +139,7 @@ pub struct FalseAlarmAnalysisMetrics {
 #[allow(dead_code)]
 pub fn run_ultra_enhanced_lombscargle_validation(
 ) -> SignalResult<UltraEnhancedLombScargleValidationResult> {
-    println!("Running ultra-enhanced Lomb-Scargle validation in ultrathink mode...");
+    println!("Running ultra-enhanced Lomb-Scargle validation in Advanced mode...");
 
     let mut critical_issues = Vec::new();
     let mut recommendations = Vec::new();

@@ -1,16 +1,16 @@
 use ndarray::{Array2, ScalarOperand};
 use ndarray_rand::rand::rngs::SmallRng;
-use ndarray_rand::rand::SeedableRng;
+use ndarray_rand::rand::{Rng, SeedableRng};
 use num_traits::Float;
 // use scirs2_neural::callbacks::{CallbackManager, EarlyStopping};
 use scirs2_neural::error::Result;
-use scirs2_neural::layers::Dense;
-use scirs2_neural::losses::MeanSquaredError;
+use scirs2_neural::layers::{Dense, Sequential};
+// use scirs2_neural::losses::MeanSquaredError; // Unused import
 // use scirs2_neural::models::{sequential::Sequential, Model};
 // use scirs2_neural::optimizers::Adam;
-use std::collections::HashMap;
+// use std::collections::HashMap; // Unused import
 use std::fmt::Debug;
-use std::time::Instant;
+// use std::time::Instant; // Unused import
 
 // Create a synthetic regression dataset (noisy sine wave)
 #[allow(dead_code)]
@@ -25,7 +25,7 @@ fn create_sine_dataset(
         let x_val = (i as f32) / (n_samples as f32) * 4.0 * std::f32::consts::PI;
         let y_val = x_val.sin();
         // Add some noise
-        let noise = rng.random_range(-noise_level..noise_level);
+        let noise = rng.gen_range(-noise_level..noise_level);
         x[[i, 0]] = x_val;
         y[[i, 0]] = y_val + noise;
     }

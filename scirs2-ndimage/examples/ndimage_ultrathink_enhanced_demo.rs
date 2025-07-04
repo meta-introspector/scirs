@@ -1,10 +1,10 @@
-//! # Enhanced Ultrathink Mode Demonstration
+//! # Enhanced Advanced Mode Demonstration
 //!
-//! This example demonstrates the enhanced ultrathink mode with comprehensive
+//! This example demonstrates the enhanced Advanced mode with comprehensive
 //! validation, performance monitoring, and quality assessment capabilities.
 //!
 //! ## Features Demonstrated
-//! - Enhanced ultrathink processing with validation
+//! - Enhanced Advanced processing with validation
 //! - Real-time performance monitoring
 //! - Quality assessment and reporting
 //! - Error handling and robustness testing
@@ -15,16 +15,16 @@ use std::time::Instant;
 
 use scirs2_ndimage::{
     error::NdimageResult,
-    ultrathink_enhanced_validation::{
-        validated_ultrathink_processing, UltrathinkValidator, ValidationConfig,
+    enhanced_validation::{
+        validated_ultrathink_processing, ComprehensiveValidator, ValidationConfig,
     },
-    ultrathink_fusion_core::UltrathinkConfig,
+    fusion_core::AdvancedConfig,
 };
 
-/// Comprehensive enhanced ultrathink demonstration
+/// Comprehensive enhanced Advanced demonstration
 #[allow(dead_code)]
 pub fn enhanced_ultrathink_demo() -> NdimageResult<()> {
-    println!("🚀 Enhanced Ultrathink Mode Demonstration");
+    println!("🚀 Enhanced Advanced Mode Demonstration");
     println!("========================================");
     println!("Showcasing advanced validation and monitoring capabilities\n");
 
@@ -38,7 +38,7 @@ pub fn enhanced_ultrathink_demo() -> NdimageResult<()> {
         validate_consciousness_state: true,
     };
 
-    let mut validator = UltrathinkValidator::with_config(validation_config);
+    let mut validator = ComprehensiveValidator::with_config(validation_config);
     println!("✓ Initialized enhanced validation system");
 
     // Create comprehensive test dataset
@@ -92,7 +92,7 @@ pub fn enhanced_ultrathink_demo() -> NdimageResult<()> {
     println!("\n🔥 Running Stress Tests");
     run_stress_tests(&mut validator)?;
 
-    println!("\n🎉 Enhanced Ultrathink Demonstration Complete!");
+    println!("\n🎉 Enhanced Advanced Demonstration Complete!");
     println!("All advanced features validated successfully.");
 
     Ok(())
@@ -199,15 +199,15 @@ fn create_edge_case_image(height: usize, width: usize) -> Array2<f64> {
     image
 }
 
-/// Create enhanced ultrathink configuration
+/// Create enhanced Advanced configuration
 #[allow(dead_code)]
-fn create_enhanced_config() -> UltrathinkConfig {
+fn create_enhanced_config() -> AdvancedConfig {
     use scirs2_ndimage::{
         neuromorphic_computing::NeuromorphicConfig, quantum_inspired::QuantumConfig,
         quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
     };
 
-    UltrathinkConfig {
+    AdvancedConfig {
         quantum: QuantumConfig::default(),
         neuromorphic: NeuromorphicConfig::default(),
         quantum_neuromorphic: QuantumNeuromorphicConfig::default(),
@@ -283,7 +283,7 @@ fn print_performance_summary(summary: &scirs2_ndimage::PerformanceSummary) {
 
 /// Run stress tests with various configurations
 #[allow(dead_code)]
-fn run_stress_tests(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
+fn run_stress_tests(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Running stress tests...");
 
     let stress_configs = vec![
@@ -315,7 +315,7 @@ fn run_stress_tests(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn create_low_intensity_config() -> UltrathinkConfig {
+fn create_low_intensity_config() -> AdvancedConfig {
     let mut config = create_enhanced_config();
     config.consciousness_depth = 1;
     config.ultra_dimensions = 2;
@@ -324,7 +324,7 @@ fn create_low_intensity_config() -> UltrathinkConfig {
 }
 
 #[allow(dead_code)]
-fn create_high_intensity_config() -> UltrathinkConfig {
+fn create_high_intensity_config() -> AdvancedConfig {
     let mut config = create_enhanced_config();
     config.consciousness_depth = 5;
     config.ultra_dimensions = 12;
@@ -333,7 +333,7 @@ fn create_high_intensity_config() -> UltrathinkConfig {
 }
 
 #[allow(dead_code)]
-fn create_maximum_features_config() -> UltrathinkConfig {
+fn create_maximum_features_config() -> AdvancedConfig {
     let mut config = create_enhanced_config();
     config.consciousness_depth = 8;
     config.ultra_dimensions = 16;
@@ -346,14 +346,14 @@ fn create_maximum_features_config() -> UltrathinkConfig {
 /// Main demonstration function
 #[allow(dead_code)]
 fn main() -> NdimageResult<()> {
-    println!("🎯 Enhanced Ultrathink Mode Demonstration");
+    println!("🎯 Enhanced Advanced Mode Demonstration");
     println!("==========================================");
     println!("Advanced validation and performance monitoring\n");
 
     enhanced_ultrathink_demo()?;
 
     println!("\n✨ Demonstration completed successfully!");
-    println!("Enhanced ultrathink mode is fully operational.");
+    println!("Enhanced Advanced mode is fully operational.");
 
     Ok(())
 }
@@ -366,7 +366,7 @@ mod tests {
     fn test_enhanced_validation() -> NdimageResult<()> {
         let test_image = create_random_image(16, 16);
         let config = create_enhanced_config();
-        let mut validator = UltrathinkValidator::new();
+        let mut validator = ComprehensiveValidator::new();
 
         let (output, _state, report) =
             validated_ultrathink_processing(test_image.view(), &config, None, &mut validator)?;
@@ -381,7 +381,7 @@ mod tests {
     #[test]
     fn test_stress_configurations() -> NdimageResult<()> {
         let test_image = create_structured_image(8, 8);
-        let mut validator = UltrathinkValidator::new();
+        let mut validator = ComprehensiveValidator::new();
 
         let configs = vec![
             create_low_intensity_config(),

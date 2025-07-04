@@ -32,8 +32,7 @@
 #![allow(clippy::should_implement_trait)] // from_str methods are used consistently across modules
 #![allow(clippy::type_complexity)] // Complex type is necessary for format validators
 
-pub mod arff;
-/// Ultra-Think Mode Coordinator - Unified Intelligence for I/O Operations
+/// Advanced Mode Coordinator - Unified Intelligence for I/O Operations
 ///
 /// Provides the highest level of intelligent I/O processing by coordinating multiple advanced systems:
 /// - Neural adaptive optimization with reinforcement learning
@@ -43,16 +42,17 @@ pub mod arff;
 /// - Real-time performance monitoring and self-optimization
 /// - Meta-learning for cross-domain adaptation
 /// - Emergent behavior detection and autonomous system improvement
-pub mod ultrathink_coordinator;
-/// Enhanced algorithms for Ultra-Think Mode
+pub mod advanced_coordinator;
+pub mod arff;
+/// Enhanced algorithms for Advanced Mode
 ///
-/// Provides advanced algorithmic enhancements for the Ultra-Think coordinator:
+/// Provides advanced algorithmic enhancements for the Advanced coordinator:
 /// - Advanced pattern recognition with deep learning capabilities
 /// - Multi-scale feature extraction and analysis
 /// - Emergent pattern detection and meta-pattern recognition
 /// - Sophisticated optimization recommendation systems
 /// - Self-improving algorithmic components with adaptive learning
-pub mod ultrathink_enhanced_algorithms;
+pub mod enhanced_algorithms;
 
 /// Async I/O support for streaming capabilities
 ///
@@ -257,7 +257,7 @@ pub mod netcdf;
 /// println!("Network client created for file operations");
 /// ```
 pub mod network;
-/// Neural-adaptive I/O optimization with ultrathink-level intelligence
+/// Neural-adaptive I/O optimization with advanced-level intelligence
 ///
 /// Provides AI-driven adaptive optimization for I/O operations:
 /// - Machine learning-based performance optimization
@@ -286,7 +286,7 @@ pub mod out_of_core;
 /// - Progress tracking and monitoring
 /// - Caching and checkpointing for long-running pipelines
 pub mod pipeline;
-/// Quantum-inspired I/O processing algorithms with ultrathink capabilities
+/// Quantum-inspired I/O processing algorithms with advanced capabilities
 ///
 /// Provides quantum-inspired algorithms for ultra-high performance I/O:
 /// - Quantum superposition for parallel processing paths
@@ -432,11 +432,11 @@ pub mod workflow;
 pub mod zero_copy;
 
 // Re-export commonly used functionality
-pub use ultrathink_coordinator::{
+pub use advanced_coordinator::{
     AdaptiveImprovements, IntelligenceLevel, PerformanceIntelligenceStats, ProcessingResult,
-    QualityMetrics, StrategyType, UltraThinkCoordinator, UltraThinkStatistics,
+    QualityMetrics, StrategyType, AdvancedCoordinator, UltraThinkStatistics,
 };
-pub use ultrathink_enhanced_algorithms::{
+pub use enhanced_algorithms::{
     AdvancedPatternAnalysis, AdvancedPatternRecognizer, DataCharacteristics, EmergentPattern,
     MetaPattern, OptimizationRecommendation, SynergyType,
 };

@@ -152,7 +152,8 @@ where
         + Send
         + Sync
         + std::iter::Sum<F>
-        + std::fmt::Debug,
+        + std::fmt::Debug
+        + std::fmt::Display,
 {
     let start_time = std::time::Instant::now();
 
@@ -202,7 +203,8 @@ pub fn cache_oblivious_matrix_mult<F>(
     threshold: usize,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + Zero + One + Copy + Send + Sync,
+    F: Float + NumCast + Zero + One + Copy + Send + Sync
+        + std::fmt::Display,
 {
     let (m, n) = a.dim();
     let (n2, p) = b.dim();
@@ -260,7 +262,8 @@ pub fn streaming_covariance_matrix<'a, F>(
     manager: &mut AdaptiveMemoryManager,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + Zero + One + Copy + 'a,
+    F: Float + NumCast + Zero + One + Copy + 'a
+        + std::fmt::Display,
 {
     let start_time = std::time::Instant::now();
 
@@ -346,7 +349,8 @@ pub fn pca_memory_efficient<F>(
     manager: &mut AdaptiveMemoryManager,
 ) -> StatsResult<PCAResult<F>>
 where
-    F: Float + NumCast + Zero + One + Copy + Send + Sync + std::fmt::Debug,
+    F: Float + NumCast + Zero + One + Copy + Send + Sync + std::fmt::Debug
+        + std::fmt::Display,
 {
     let start_time = std::time::Instant::now();
 
@@ -420,7 +424,8 @@ pub fn streaming_pca_enhanced<'a, F>(
     manager: &mut AdaptiveMemoryManager,
 ) -> StatsResult<PCAResult<F>>
 where
-    F: Float + NumCast + Zero + One + Copy + 'a,
+    F: Float + NumCast + Zero + One + Copy + 'a
+        + std::fmt::Display,
 {
     let start_time = std::time::Instant::now();
 
@@ -507,7 +512,8 @@ pub fn streaming_histogram_adaptive<'a, F>(
     manager: &mut AdaptiveMemoryManager,
 ) -> StatsResult<(Array1<F>, Array1<usize>)>
 where
-    F: Float + NumCast + Zero + One + Copy + PartialOrd + 'a,
+    F: Float + NumCast + Zero + One + Copy + PartialOrd + 'a
+        + std::fmt::Display,
 {
     let start_time = std::time::Instant::now();
 
@@ -602,7 +608,8 @@ pub fn streaming_quantiles_p2<'a, F>(
     manager: &mut AdaptiveMemoryManager,
 ) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + Zero + One + Copy + PartialOrd + 'a,
+    F: Float + NumCast + Zero + One + Copy + PartialOrd + 'a
+        + std::fmt::Display,
 {
     let start_time = std::time::Instant::now();
 
@@ -650,7 +657,8 @@ struct P2Estimator<F> {
 
 impl<F> P2Estimator<F>
 where
-    F: Float + NumCast + Copy + PartialOrd,
+    F: Float + NumCast + Copy + PartialOrd
+        + std::fmt::Display,
 {
     fn new(quantile: f64) -> Self {
         let mut estimator = Self {
@@ -786,7 +794,8 @@ pub fn streaming_regression_enhanced<'a, F>(
     manager: &mut AdaptiveMemoryManager,
 ) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + Zero + One + Copy + 'a,
+    F: Float + NumCast + Zero + One + Copy + 'a
+        + std::fmt::Display,
 {
     let start_time = std::time::Instant::now();
 
@@ -872,7 +881,8 @@ where
 #[allow(dead_code)]
 fn solve_linear_system<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + Zero + One + Copy,
+    F: Float + NumCast + Zero + One + Copy
+        + std::fmt::Display,
 {
     let n = a.nrows();
     if a.ncols() != n || b.len() != n {
@@ -951,7 +961,8 @@ fn compute_correlation_matrix_standard<F>(
     method: &str,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + Zero + One + Copy + std::iter::Sum<F> + std::fmt::Debug,
+    F: Float + NumCast + Zero + One + Copy + std::iter::Sum<F> + std::fmt::Debug
+        + std::fmt::Display,
 {
     // Use existing corrcoef implementation
     crate::corrcoef(data, method)
@@ -964,7 +975,8 @@ fn compute_correlation_matrix_blocked<F>(
     block_size: usize,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + Zero + One + Copy + std::iter::Sum<F> + std::fmt::Debug,
+    F: Float + NumCast + Zero + One + Copy + std::iter::Sum<F> + std::fmt::Debug
+        + std::fmt::Display,
 {
     let (_, n_vars) = data.dim();
     let mut corr_matrix = Array2::<F>::zeros((n_vars, n_vars));
@@ -1012,7 +1024,8 @@ where
 #[allow(dead_code)]
 fn compute_covariance_from_centered<F>(data: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + Zero + Copy,
+    F: Float + NumCast + Zero + Copy
+        + std::fmt::Display,
 {
     let (n_obs, n_vars) = data.dim();
     let mut cov_matrix = Array2::<F>::zeros((n_vars, n_vars));
@@ -1039,7 +1052,8 @@ fn compute_eigendecomposition<F>(
     n_components: usize,
 ) -> StatsResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumCast + Zero + One + Copy,
+    F: Float + NumCast + Zero + One + Copy
+        + std::fmt::Display,
 {
     let n = matrix.dim().0;
     let n_components = n_components.min(n);
@@ -1130,7 +1144,8 @@ where
 #[allow(dead_code)]
 fn matrix_multiply<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + Zero + Copy,
+    F: Float + NumCast + Zero + Copy
+        + std::fmt::Display,
 {
     let (m, n) = a.dim();
     let (n2, p) = b.dim();
@@ -1164,7 +1179,8 @@ fn incremental_pca<F>(
     manager: &mut AdaptiveMemoryManager,
 ) -> StatsResult<PCAResult<F>>
 where
-    F: Float + NumCast + Zero + One + Copy + Send + Sync + std::fmt::Debug,
+    F: Float + NumCast + Zero + One + Copy + Send + Sync + std::fmt::Debug
+        + std::fmt::Display,
 {
     let (n_obs, n_vars) = data.dim();
     let n_components = n_components.min(n_vars);
@@ -1267,7 +1283,8 @@ where
 fn check_array_finite_2d<F, D>(arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
 where
     F: Float,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     for &val in arr.iter() {
         if !val.is_finite() {

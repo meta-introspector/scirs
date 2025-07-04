@@ -46,7 +46,8 @@ use std::cmp::Ordering;
 #[allow(dead_code)]
 pub fn mean_abs_deviation<F>(x: &ArrayView1<F>, center: Option<F>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + SimdUnifiedOps,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + SimdUnifiedOps
+        + std::fmt::Display,
 {
     // Use standardized validation
     if x.is_empty() {
@@ -113,7 +114,8 @@ pub fn median_abs_deviation<F>(
     scale: Option<F>,
 ) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
+        + std::fmt::Display,
 {
     // Use standardized validation
     if x.is_empty() {
@@ -168,7 +170,8 @@ where
 #[allow(dead_code)]
 pub fn iqr<F>(x: &ArrayView1<F>, interpolation: Option<&str>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
+        + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {
@@ -214,7 +217,8 @@ where
 #[allow(dead_code)]
 pub fn data_range<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + SimdUnifiedOps,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + SimdUnifiedOps
+        + std::fmt::Display,
 {
     // Use standardized validation
     if x.is_empty() {
@@ -269,7 +273,8 @@ where
 #[allow(dead_code)]
 pub fn coef_variation<F>(x: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
+        + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {
@@ -309,7 +314,8 @@ where
 #[allow(dead_code)]
 fn percentile<F>(x: &ArrayView1<F>, q: F, interpolation: &str) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
+        + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {
@@ -403,7 +409,8 @@ where
 #[allow(dead_code)]
 pub fn gini_coefficient<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
+        + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {

@@ -324,7 +324,8 @@ where
 fn compute_moments_simd<F, D>(x: &ArrayBase<D, Ix1>, mean: F, n: usize) -> (F, F)
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     // Create mean array for SIMD subtraction
     let mean_array = Array1::from_elem(n, mean);
@@ -349,7 +350,8 @@ where
 fn compute_moments_scalar<F, D>(x: &ArrayBase<D, Ix1>, mean: F) -> (F, F)
 where
     F: Float + NumCast + Zero + One + Copy,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let mut sum_sq_dev = F::zero();
     let mut sum_cubed_dev = F::zero();
@@ -368,7 +370,8 @@ where
 fn compute_fourth_moments_simd<F, D>(x: &ArrayBase<D, Ix1>, mean: F, n: usize) -> (F, F)
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     // Create mean array for SIMD subtraction
     let mean_array = Array1::from_elem(n, mean);
@@ -393,7 +396,8 @@ where
 fn compute_fourth_moments_scalar<F, D>(x: &ArrayBase<D, Ix1>, mean: F) -> (F, F)
 where
     F: Float + NumCast + Zero + One + Copy,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let mut sum_sq_dev = F::zero();
     let mut sum_fourth_dev = F::zero();
@@ -412,7 +416,8 @@ where
 fn compute_central_moment_simd<F, D>(x: &ArrayBase<D, Ix1>, mean: F, order: usize) -> F
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     let mean_array = Array1::from_elem(n, mean);
@@ -450,7 +455,8 @@ where
 fn compute_central_moment_scalar<F, D>(x: &ArrayBase<D, Ix1>, mean: F, order: usize) -> F
 where
     F: Float + NumCast + Zero + One + Copy,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let order_f = F::from(order as f64).unwrap();
     x.iter()
@@ -462,7 +468,8 @@ where
 fn compute_raw_moment_simd<F, D>(x: &ArrayBase<D, Ix1>, order: usize) -> F
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     // Compute power of x
     match order {
@@ -494,7 +501,8 @@ where
 fn compute_raw_moment_scalar<F, D>(x: &ArrayBase<D, Ix1>, order: usize) -> F
 where
     F: Float + NumCast + Zero + One + Copy,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let order_f = F::from(order as f64).unwrap();
     x.iter()

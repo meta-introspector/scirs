@@ -1,16 +1,16 @@
-//! Test enhanced ultrathink clustering functionality
+//! Test enhanced Advanced clustering functionality
 //! This test focuses only on the cluster module without dependencies on other modules
 
 use ndarray::Array2;
-use scirs2_cluster::ultrathink_clustering::UltrathinkClusterer;
-use scirs2_cluster::ultrathink_visualization::{
+use scirs2_cluster::advanced_clustering::AdvancedClusterer;
+use scirs2_cluster::advanced_visualization::{
     QuantumColorScheme, UltrathinkVisualizationConfig, UltrathinkVisualizer,
     VisualizationExportFormat,
 };
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Testing Enhanced Ultrathink Clustering");
+    println!("🚀 Testing Enhanced Advanced Clustering");
     println!("==========================================");
 
     // Create sophisticated test data
@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         data.ncols()
     );
 
-    // Test 1: Basic enhanced ultrathink clustering
+    // Test 1: Basic enhanced Advanced clustering
     println!("\n🧪 Test 1: Enhanced AI-driven algorithm selection");
     test_enhanced_ai_selection(&data)?;
 
@@ -37,11 +37,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧪 Test 4: Enhanced visualization with quantum PCA");
     test_enhanced_visualization(&data)?;
 
-    // Test 5: Full ultrathink mode with all enhancements
-    println!("\n🧪 Test 5: Full enhanced ultrathink mode");
-    test_full_enhanced_ultrathink(&data)?;
+    // Test 5: Full Advanced mode with all enhancements
+    println!("\n🧪 Test 5: Full enhanced Advanced mode");
+    test_full_enhanced_advanced(&data)?;
 
-    println!("\n✅ All enhanced ultrathink clustering tests completed successfully!");
+    println!("\n✅ All enhanced Advanced clustering tests completed successfully!");
     println!("🎯 Enhanced features validated:");
     println!("   ⚛️  Quantum-enhanced initialization and distance calculations");
     println!("   🧠 Advanced neuromorphic adaptation with spike-timing plasticity");
@@ -95,7 +95,7 @@ fn create_complex_test_data() -> Array2<f64> {
 
 #[allow(dead_code)]
 fn test_enhanced_ai_selection(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
-    let mut clusterer = UltrathinkClusterer::new().with_ai_algorithm_selection(true);
+    let mut clusterer = AdvancedClusterer::new().with_ai_algorithm_selection(true);
 
     let result = clusterer.cluster(&data.view())?;
 
@@ -129,7 +129,7 @@ fn test_enhanced_ai_selection(data: &Array2<f64>) -> Result<(), Box<dyn std::err
 fn test_quantum_neuromorphic_enhanced(
     data: &Array2<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut clusterer = UltrathinkClusterer::new().with_quantum_neuromorphic_fusion(true);
+    let mut clusterer = AdvancedClusterer::new().with_quantum_neuromorphic_fusion(true);
 
     let result = clusterer.cluster(&data.view())?;
 
@@ -176,7 +176,7 @@ fn test_quantum_neuromorphic_enhanced(
 
 #[allow(dead_code)]
 fn test_enhanced_meta_learning(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
-    let mut clusterer = UltrathinkClusterer::new()
+    let mut clusterer = AdvancedClusterer::new()
         .with_meta_learning(true)
         .with_ai_algorithm_selection(true);
 
@@ -214,7 +214,7 @@ fn test_enhanced_meta_learning(data: &Array2<f64>) -> Result<(), Box<dyn std::er
 #[allow(dead_code)]
 fn test_enhanced_visualization(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     // First run clustering
-    let mut clusterer = UltrathinkClusterer::new()
+    let mut clusterer = AdvancedClusterer::new()
         .with_quantum_neuromorphic_fusion(true)
         .with_ai_algorithm_selection(true);
 
@@ -278,8 +278,8 @@ fn test_enhanced_visualization(data: &Array2<f64>) -> Result<(), Box<dyn std::er
 }
 
 #[allow(dead_code)]
-fn test_full_enhanced_ultrathink(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
-    let mut clusterer = UltrathinkClusterer::new()
+fn test_full_enhanced_advanced(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+    let mut clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true)
         .with_meta_learning(true)
@@ -288,7 +288,7 @@ fn test_full_enhanced_ultrathink(data: &Array2<f64>) -> Result<(), Box<dyn std::
 
     let result = clusterer.cluster(&data.view())?;
 
-    println!("   ✅ Full enhanced ultrathink mode completed");
+    println!("   ✅ Full enhanced Advanced mode completed");
     println!(
         "      🤖 AI selected algorithm: {}",
         result.selected_algorithm

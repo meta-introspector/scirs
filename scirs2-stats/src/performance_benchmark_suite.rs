@@ -1,4 +1,4 @@
-//! Ultra-Think Enhanced Benchmark Suite
+//! advanced Enhanced Benchmark Suite
 //!
 //! This module provides next-generation benchmarking capabilities with intelligent
 //! performance analysis, predictive modeling, automated optimization recommendations,
@@ -27,7 +27,7 @@ pub enum CompatibilityImpact {
     Breaking,
 }
 
-/// Ultra-Think Benchmark Configuration with Advanced Analytics
+/// advanced Benchmark Configuration with Advanced Analytics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UltraThinkBenchmarkConfig {
     /// Base benchmark configuration
@@ -280,7 +280,7 @@ pub struct PredictionAccuracyMetrics {
     pub prediction_vs_actual: Vec<(f64, f64)>, // (predicted, actual)
 }
 
-/// Ultra-Think Benchmark Suite
+/// advanced Benchmark Suite
 pub struct UltraThinkBenchmarkSuite {
     config: UltraThinkBenchmarkConfig,
     performance_models: HashMap<String, PerformanceModel>,
@@ -387,7 +387,7 @@ pub enum PlatformSpecificity {
 }
 
 impl UltraThinkBenchmarkSuite {
-    /// Create new ultra-think benchmark suite
+    /// Create new advanced benchmark suite
     pub fn new(config: UltraThinkBenchmarkConfig) -> Self {
         Self {
             config,
@@ -1406,7 +1406,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
     }
 }
 
-/// Ultra-Think Benchmark Report
+/// advanced Benchmark Report
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UltraThinkBenchmarkReport {
     pub timestamp: String,
@@ -1570,7 +1570,7 @@ impl Default for UltraThinkBenchmarkConfig {
     }
 }
 
-/// Convenience function to run ultra-think benchmarks
+/// Convenience function to run advanced benchmarks
 #[allow(dead_code)]
 pub fn run_ultrathink_benchmarks(
     config: Option<UltraThinkBenchmarkConfig>,

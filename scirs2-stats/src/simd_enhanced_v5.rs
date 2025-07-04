@@ -127,7 +127,7 @@ fn compute_window_statistics<F>(
     results: &mut RollingStatsResult<F>,
     window_idx: usize,
 ) where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
 {
     let window_size = window.len();
     let window_size_f = F::from(window_size).unwrap();
@@ -491,7 +491,7 @@ fn compute_column_statistics<F>(
     results: &mut MatrixStatsResult<F>,
     col_idx: usize,
 ) where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
 {
     for operation in operations {
         compute_vector_operation(column, operation, results, col_idx);
@@ -505,7 +505,7 @@ fn compute_row_statistics<F>(
     results: &mut MatrixStatsResult<F>,
     row_idx: usize,
 ) where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
 {
     for operation in operations {
         compute_vector_operation(row, operation, results, row_idx);
@@ -519,7 +519,7 @@ fn compute_vector_operation<F>(
     results: &mut MatrixStatsResult<F>,
     idx: usize,
 ) where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
 {
     let n = data.len();
     let n_f = F::from(n).unwrap();
@@ -910,7 +910,7 @@ where
 #[allow(dead_code)]
 fn compute_bootstrap_statistic<F>(data: &ArrayView1<F>, statistic: &BootstrapStatistic) -> F
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
 {
     let n = data.len();
     let n_f = F::from(n).unwrap();
@@ -1272,7 +1272,8 @@ pub enum KernelType {
 #[allow(dead_code)]
 fn kernel_function<F>(z: F, kernel: &KernelType) -> F
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     match kernel {
         KernelType::Gaussian => {

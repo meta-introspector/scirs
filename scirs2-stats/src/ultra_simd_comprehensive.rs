@@ -135,7 +135,8 @@ pub struct MatrixStatsResult<F> {
 
 impl<F> UltraComprehensiveSimdProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     /// Create new ultra-comprehensive SIMD processor
     pub fn new() -> Self {
@@ -938,7 +939,8 @@ pub type F32UltraSimdProcessor = UltraComprehensiveSimdProcessor<f32>;
 
 impl<F> Default for UltraComprehensiveSimdProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self::new()
@@ -949,7 +951,8 @@ where
 #[allow(dead_code)]
 pub fn create_ultra_simd_processor<F>() -> UltraComprehensiveSimdProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     UltraComprehensiveSimdProcessor::new()
 }
@@ -959,7 +962,8 @@ pub fn create_optimized_simd_processor<F>(
     config: UltraComprehensiveSimdConfig,
 ) -> UltraComprehensiveSimdProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     UltraComprehensiveSimdProcessor::with_config(config)
 }

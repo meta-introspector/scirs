@@ -1,4 +1,4 @@
-//! Quantum-Neural Hybrid Optimization for Ultrathink Mode
+//! Quantum-Neural Hybrid Optimization for Advanced Mode
 //!
 //! This module combines quantum-inspired computation with neural-adaptive learning
 //! to create a hybrid optimization approach that leverages the best of both paradigms.

@@ -5,7 +5,8 @@
 //! characteristics and optimization progress.
 
 use crate::error::{ScirsError, ScirsResult};
-use ndarray::{Array1, Array2, ArrayView1};
+// Unused imports
+// use ndarray::{Array1, Array2, ArrayView1};
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 

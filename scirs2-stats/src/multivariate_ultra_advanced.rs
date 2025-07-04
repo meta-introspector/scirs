@@ -537,7 +537,8 @@ pub struct ValidationResults<F> {
 
 impl<F> UltraMultivariateAnalysis<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     /// Create new ultra-advanced multivariate analysis
     pub fn new(config: UltraMultivariateConfig<F>) -> Self {
@@ -967,7 +968,8 @@ where
 
 impl<F> Default for UltraMultivariateConfig<F>
 where
-    F: Float + NumCast + Copy,
+    F: Float + NumCast + Copy
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self {

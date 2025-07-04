@@ -2514,7 +2514,8 @@ mod tests {
     use super::risk::*;
     use super::technical_indicators::*;
     use super::volatility::*;
-    use super::{Distribution, GarchConfig, GarchModel, MeanModel};
+    use super::{black_scholes, Distribution, EgarchModel, GarchConfig, GarchModel, MeanModel};
+    use crate::error::TimeSeriesError;
     use approx::assert_abs_diff_eq;
     use ndarray::Array1;
 
@@ -2854,12 +2855,14 @@ mod tests {
         let result = adx(&high, &low, &close, 3);
         assert!(result.is_ok(), "ADX calculation should succeed");
 
-        let adx_values = result.unwrap();
+        let (adx_values, plus_di, minus_di) = result.unwrap();
         assert!(!adx_values.is_empty(), "ADX should produce values");
         assert!(
             adx_values.iter().all(|&x| x >= 0.0 && x <= 100.0),
             "ADX should be between 0 and 100"
         );
+        assert!(!plus_di.is_empty(), "+DI should produce values");
+        assert!(!minus_di.is_empty(), "-DI should produce values");
     }
 
     #[test]
@@ -2902,10 +2905,10 @@ mod tests {
         assert!(put_price > 0.0, "Put option should have positive price");
 
         // Test put-call parity approximately holds
-        let strike = 100.0;
-        let spot = 100.0;
-        let rate = 0.05;
-        let time = 1.0;
+        let strike = 100.0f64;
+        let spot = 100.0f64;
+        let rate = 0.05f64;
+        let time = 1.0f64;
         let pv_strike = strike * (-rate * time).exp();
 
         let parity_diff = (call_price - put_price - (spot - pv_strike)).abs();

@@ -79,7 +79,7 @@ pub struct ParallelHistogram<F: Float> {
     n_bins: usize,
 }
 
-impl<F: Float + NumCast + Send + Sync> ParallelHistogram<F> {
+impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> {
     /// Create a new parallel histogram
     pub fn new<D>(data: &ArrayBase<D, Ix1>, n_bins: usize) -> StatsResult<Self>
     where
@@ -235,7 +235,8 @@ pub fn kde_parallel<F, D>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     use std::f64::consts::PI;
 
@@ -298,7 +299,7 @@ pub struct ParallelMovingStats<F: Float> {
     data: Arc<Vec<F>>,
 }
 
-impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps> ParallelMovingStats<F> {
+impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> ParallelMovingStats<F> {
     /// Create a new moving statistics calculator
     pub fn new<D>(data: &ArrayBase<D, Ix1>, window_size: usize) -> StatsResult<Self>
     where
@@ -434,7 +435,8 @@ pub fn pairwise_distances_parallel<F, D>(
 ) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     let n = x.nrows();
     let d = x.ncols();
@@ -529,7 +531,7 @@ pub struct ParallelCrossValidation<F: Float> {
     _phantom: std::marker::PhantomData<F>,
 }
 
-impl<F: Float + NumCast + Send + Sync> ParallelCrossValidation<F> {
+impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidation<F> {
     /// Create a new cross-validation splitter
     pub fn new(n_folds: usize, shuffle: bool, random_state: Option<u64>) -> Self {
         Self {
@@ -620,7 +622,8 @@ impl<F: Float + NumCast + Send + Sync> ParallelCrossValidation<F> {
 pub fn corrcoef_parallel<F, D>(data: &ArrayBase<D, Ix2>, rowvar: bool) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     use crate::correlation_simd::pearson_r_simd;
 
@@ -722,7 +725,8 @@ where
         + ndarray::ScalarOperand
         + std::iter::Sum
         + num_traits::NumAssign,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     use scirs2_linalg::lstsq;
 
@@ -840,7 +844,8 @@ pub fn autocorrelation_parallel<F, D>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     let n = data.len();
     if max_lag >= n {

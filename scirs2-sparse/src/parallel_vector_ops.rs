@@ -662,7 +662,7 @@ pub fn parallel_sparse_matvec_csr<T>(
 
 /// Ultra-optimized parallel sparse matrix-vector multiplication with adaptive strategies
 ///
-/// This is an ultrathink mode enhancement that automatically selects the best
+/// This is an Advanced mode enhancement that automatically selects the best
 /// computational strategy based on matrix characteristics and hardware capabilities.
 ///
 /// # Arguments

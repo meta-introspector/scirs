@@ -567,11 +567,11 @@ mod ultra_simd_enhanced;
 // pub mod ultrathink_benchmark_validation;
 // pub mod ultrathink_cross_platform_validation;
 // pub mod ultrathink_memory_ultra_enhanced;
-// pub mod ultrathink_parallel_enhancements;
+// pub mod parallel_enhancements;
 // pub mod ultrathink_parallel_ultra_enhanced;
 // pub mod ultrathink_property_testing_ultra_enhanced;
 // pub mod ultrathink_property_tests;
-// pub mod ultrathink_unified_processor; // Commented out for now
+// pub mod unified_processor; // Commented out for now
 // pub mod ultrathink_stubs; // Temporary stubs for compilation
 pub use descriptive::*;
 pub use descriptive_simd::{descriptive_stats_simd, mean_simd, std_simd, variance_simd};
@@ -597,7 +597,7 @@ pub use advanced_simd_stats::{
     AccuracyLevel, AlgorithmChoice as UltraAlgorithmChoice, BatchOperation, BatchResults,
     MemoryConstraints as UltraMemoryConstraints, PerformancePreference,
     PerformanceProfile as UltraPerformanceProfile, ScalarAlgorithm, SimdAlgorithm,
-    ThreadingPreferences, UltraThinkSimdConfig as UltraThinkSimdConfigV2, UltraThinkSimdOptimizer,
+    ThreadingPreferences, AdvancedSimdConfig as UltraThinkSimdConfigV2, UltraThinkSimdOptimizer,
 };
 pub use bayesian_advanced::{
     ActivationType, AdvancedBayesianResult, AdvancedPrior, BayesianGaussianProcess, BayesianModel,
@@ -797,7 +797,7 @@ pub use ultrathink_memory_ultra_enhanced::{
     LifetimeHint, MemoryOptimizationLevel, MemoryPoolStrategy, MemoryStatistics, MemoryUsageHint,
     NumaMemoryPolicy, UltraThinkMemoryConfig as UltraThinkMemoryConfigV2, UltraThinkMemoryManager,
 };
-pub use ultrathink_parallel_enhancements::{
+pub use parallel_enhancements::{
     create_configured_ultra_parallel_processor as create_configured_ultrathink_parallel_processor,
     create_ultra_parallel_processor as create_ultrathink_parallel_processor,
     LoadBalancingStrategy as UltrathinkLoadBalancingStrategy, MatrixOperationType,
@@ -811,8 +811,8 @@ pub use ultrathink_parallel_ultra_enhanced::{
     StatisticalOperation as UltraStatisticalOperation,
     StreamingOperation as UltraStreamingOperation, ThreadPoolStrategy,
     UltraParallelBatchResult as UltraParallelBatchResultV2, UltraParallelStatisticsResult,
-    UltraParallelStreamingResult, UltraThinkParallelConfig as UltraThinkParallelConfigV2,
-    UltraThinkParallelConfig, UltraThinkParallelProcessor,
+    UltraParallelStreamingResult, AdvancedParallelConfig as UltraThinkParallelConfigV2,
+    AdvancedParallelConfig, UltraThinkParallelProcessor,
 };
 pub use ultrathink_property_testing_ultra_enhanced::{
     create_comprehensive_property_tester, create_fast_property_tester,
@@ -827,20 +827,20 @@ pub use ultrathink_property_tests::{
     create_ultrathink_property_tester, ComprehensiveTestReport, PropertyTestResult,
     UltrathinkPropertyTester,
 };
-pub use ultrathink_unified_processor::{
-    create_configured_ultrathink_processor, create_ultrathink_processor, OptimizationMode,
+pub use unified_processor::{
+    create_configured_ultrathink_processor, create_advanced_processor, OptimizationMode,
     ProcessingStrategy, UltrathinkComprehensiveResult, UltrathinkMatrixResult,
     UltrathinkPerformanceAnalytics, UltrathinkProcessorConfig, UltrathinkTimeSeriesResult,
     UltrathinkUnifiedProcessor,
 };
 */
 
-// Ultrathink benchmark validation - temporarily commented out
+// Advanced benchmark validation - temporarily commented out
 /*
 pub use ultrathink_benchmark_validation::{
     create_custom_ultrathink_validator, create_ultrathink_validator, UltrathinkBenchmarkValidator,
-    ValidationConfig as UltrathinkValidationConfig, ValidationReport as UltrathinkValidationReport,
-    ValidationResult as UltrathinkValidationResult,
+    ValidationConfig as ComprehensiveValidationConfig, ValidationReport as UltrathinkValidationReport,
+    ValidationResult as ComprehensiveValidationResult,
 };
 */
 

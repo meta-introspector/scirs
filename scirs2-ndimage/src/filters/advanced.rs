@@ -13,7 +13,6 @@ use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{convolve, BorderMode};
 use crate::utils::safe_f64_to_float;
 
-
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
 fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
@@ -69,10 +68,13 @@ where
 {
     fn default() -> Self {
         Self {
-            wavelength: safe_f64_to_float(4.0).unwrap_or_else(|_| T::from(4.0)),
+            wavelength: safe_f64_to_float(4.0)
+                .unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::one())),
             orientation: T::zero(),
-            sigma_x: safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0)),
-            sigma_y: safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0)),
+            sigma_x: safe_f64_to_float(2.0)
+                .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one())),
+            sigma_y: safe_f64_to_float(2.0)
+                .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one())),
             phase: T::zero(),
             aspect_ratio: None,
         }
@@ -134,9 +136,10 @@ where
         params.sigma_x.max(params.sigma_y)
     };
 
-    let auto_size = (sigma_max * safe_f64_to_float(6.0).unwrap_or_else(|_| T::from(6.0)))
-        .to_usize()
-        .unwrap_or(21);
+    let auto_size = (sigma_max
+        * safe_f64_to_float(6.0).unwrap_or_else(|_| T::from_f64(6.0).unwrap_or_else(|| T::one())))
+    .to_usize()
+    .unwrap_or(21);
     let size = kernel_size.unwrap_or(auto_size);
 
     // Ensure odd kernel size
@@ -531,9 +534,11 @@ fn apply_frequency_filter(
         ));
     }
 
-    let result = fft_data.zip_map(filter, |&complex_val, &filter_val| {
-        Complex64::new(complex_val.re * filter_val, complex_val.im * filter_val)
-    });
+    let result = Zip::from(fft_data)
+        .and(filter)
+        .map_collect(|&complex_val, &filter_val| {
+            Complex64::new(complex_val.re * filter_val, complex_val.im * filter_val)
+        });
 
     Ok(result)
 }
@@ -596,9 +601,10 @@ fn generate_steerable_basis<T>(order: usize, sigma: T) -> NdimageResult<Vec<Arra
 where
     T: Float + FromPrimitive + Debug,
 {
-    let size = (sigma * safe_f64_to_float(6.0).unwrap_or_else(|_| T::from(6.0)))
-        .to_usize()
-        .unwrap_or(15);
+    let size = (sigma
+        * safe_f64_to_float(6.0).unwrap_or_else(|_| T::from_f64(6.0).unwrap_or_else(|| T::one())))
+    .to_usize()
+    .unwrap_or(15);
     let size = if size % 2 == 0 { size + 1 } else { size };
     let center = (size / 2) as isize;
 
@@ -732,7 +738,9 @@ where
             let cos_sin = cos_theta * sin_theta;
             vec![
                 cos2,
-                safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0)) * cos_sin,
+                safe_f64_to_float(2.0)
+                    .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one()))
+                    * cos_sin,
                 sin2,
             ]
         }
@@ -743,8 +751,12 @@ where
             let cos_sin2 = cos_theta * sin_theta * sin_theta;
             vec![
                 cos3,
-                safe_f64_to_float(3.0).unwrap_or_else(|_| T::from(3.0)) * cos2_sin,
-                safe_f64_to_float(3.0).unwrap_or_else(|_| T::from(3.0)) * cos_sin2,
+                safe_f64_to_float(3.0)
+                    .unwrap_or_else(|_| T::from_f64(3.0).unwrap_or_else(|| T::one()))
+                    * cos2_sin,
+                safe_f64_to_float(3.0)
+                    .unwrap_or_else(|_| T::from_f64(3.0).unwrap_or_else(|| T::one()))
+                    * cos_sin2,
                 sin3,
             ]
         }
@@ -779,9 +791,10 @@ where
     let (height, width) = input.dim();
     let mut output = Array2::zeros((height, width));
 
-    let window_size = (spatial_sigma * safe_f64_to_float(6.0).unwrap_or_else(|_| T::from(6.0)))
-        .to_usize()
-        .unwrap_or(7);
+    let window_size = (spatial_sigma
+        * safe_f64_to_float(6.0).unwrap_or_else(|_| T::from_f64(6.0).unwrap_or_else(|| T::one())))
+    .to_usize()
+    .unwrap_or(7);
     let window_size = if window_size % 2 == 0 {
         window_size + 1
     } else {
@@ -789,10 +802,12 @@ where
     };
     let half_window = window_size / 2;
 
-    let spatial_factor =
-        -safe_f64_to_float(0.5).unwrap_or_else(|_| T::from(0.5)) / (spatial_sigma * spatial_sigma);
-    let range_factor =
-        -safe_f64_to_float(0.5).unwrap_or_else(|_| T::from(0.5)) / (range_sigma * range_sigma);
+    let spatial_factor = -safe_f64_to_float(0.5)
+        .unwrap_or_else(|_| T::from_f64(0.5).unwrap_or_else(|| T::one()))
+        / (spatial_sigma * spatial_sigma);
+    let range_factor = -safe_f64_to_float(0.5)
+        .unwrap_or_else(|_| T::from_f64(0.5).unwrap_or_else(|| T::one()))
+        / (range_sigma * range_sigma);
 
     // Process each pixel
     for i in half_window..height - half_window {
@@ -881,7 +896,8 @@ where
     let (height, width) = input.dim();
     let mut image = input.to_owned();
 
-    let gamma_quarter = gamma / safe_f64_to_float(4.0).unwrap_or_else(|_| T::from(4.0));
+    let gamma_quarter = gamma
+        / safe_f64_to_float(4.0).unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::one()));
 
     for _ in 0..num_iterations {
         let mut new_image = image.clone();
@@ -1141,9 +1157,11 @@ where
         for j in 1..width - 1 {
             // Compute gradients on smoothed image
             let grad_x = (smoothed[[i, j + 1]] - smoothed[[i, j - 1]])
-                / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
+                / safe_f64_to_float(2.0)
+                    .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one()));
             let grad_y = (smoothed[[i + 1, j]] - smoothed[[i - 1, j]])
-                / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
+                / safe_f64_to_float(2.0)
+                    .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one()));
             let grad_magnitude = (grad_x * grad_x + grad_y * grad_y).sqrt();
 
             if grad_magnitude > T::zero() {
@@ -1153,17 +1171,23 @@ where
 
                 // Second directional derivative (along gradient direction)
                 let uxx = input[[i, j + 1]]
-                    - safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0)) * input[[i, j]]
+                    - safe_f64_to_float(2.0)
+                        .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one()))
+                        * input[[i, j]]
                     + input[[i, j - 1]];
                 let uyy = input[[i + 1, j]]
-                    - safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0)) * input[[i, j]]
+                    - safe_f64_to_float(2.0)
+                        .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one()))
+                        * input[[i, j]]
                     + input[[i - 1, j]];
                 let uxy = (input[[i + 1, j + 1]] - input[[i + 1, j - 1]] - input[[i - 1, j + 1]]
                     + input[[i - 1, j - 1]])
-                    / safe_f64_to_float(4.0).unwrap_or_else(|_| T::from(4.0));
+                    / safe_f64_to_float(4.0)
+                        .unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::one()));
 
                 let directional_curvature = grad_x_norm * grad_x_norm * uxx
-                    + safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0))
+                    + safe_f64_to_float(2.0)
+                        .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one()))
                         * grad_x_norm
                         * grad_y_norm
                         * uxy
@@ -1235,15 +1259,18 @@ where
     let (height, width) = input.dim();
     let mut output = input.to_owned();
 
-    let dt = safe_f64_to_float(0.25).unwrap_or_else(|_| T::from(0.25)); // Time step
+    let dt =
+        safe_f64_to_float(0.25).unwrap_or_else(|_| T::from_f64(0.25).unwrap_or_else(|| T::one())); // Time step
 
     for i in 1..height - 1 {
         for j in 1..width - 1 {
             // Compute structure tensor
             let grad_x = (input[[i, j + 1]] - input[[i, j - 1]])
-                / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
+                / safe_f64_to_float(2.0)
+                    .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one()));
             let grad_y = (input[[i + 1, j]] - input[[i - 1, j]])
-                / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
+                / safe_f64_to_float(2.0)
+                    .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one()));
 
             let j11 = grad_x * grad_x;
             let j12 = grad_x * grad_y;
@@ -1253,14 +1280,18 @@ where
             let trace = j11 + j22;
             let det = j11 * j22 - j12 * j12;
             let discriminant = (trace * trace
-                - safe_f64_to_float(4.0).unwrap_or_else(|_| T::from(4.0)) * det)
+                - safe_f64_to_float(4.0)
+                    .unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::one()))
+                    * det)
                 .max(T::zero())
                 .sqrt();
 
-            let lambda1 =
-                (trace + discriminant) / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
-            let lambda2 =
-                (trace - discriminant) / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
+            let lambda1 = (trace + discriminant)
+                / safe_f64_to_float(2.0)
+                    .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one()));
+            let lambda2 = (trace - discriminant)
+                / safe_f64_to_float(2.0)
+                    .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one()));
 
             // Compute diffusivities
             let coherence = if lambda1 > T::zero() {
@@ -1275,11 +1306,14 @@ where
             // Compute diffusion update (simplified)
             let laplacian =
                 input[[i + 1, j]] + input[[i - 1, j]] + input[[i, j + 1]] + input[[i, j - 1]]
-                    - safe_f64_to_float(4.0).unwrap_or_else(|_| T::from(4.0)) * input[[i, j]];
+                    - safe_f64_to_float(4.0)
+                        .unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::one()))
+                        * input[[i, j]];
 
             // Average diffusivity for simplification
-            let avg_diffusivity =
-                (d1 + d2) / safe_f64_to_float(2.0).unwrap_or_else(|_| T::from(2.0));
+            let avg_diffusivity = (d1 + d2)
+                / safe_f64_to_float(2.0)
+                    .unwrap_or_else(|_| T::from_f64(2.0).unwrap_or_else(|| T::one()));
 
             output[[i, j]] = input[[i, j]] + dt * avg_diffusivity * laplacian;
         }

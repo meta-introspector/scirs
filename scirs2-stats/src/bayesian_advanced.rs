@@ -488,7 +488,8 @@ pub struct PredictiveDistribution<F> {
 
 impl<F> BayesianModelComparison<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     /// Create new model comparison framework
     pub fn new() -> Self {
@@ -760,7 +761,8 @@ impl Default for VIConfig {
 
 impl<F> Default for BayesianModelComparison<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self::new()
@@ -769,7 +771,8 @@ where
 
 impl<F> BayesianGaussianProcess<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     /// Create new Gaussian process
     pub fn new(
@@ -931,7 +934,8 @@ where
 
 impl<F> BayesianNeuralNetwork<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     /// Create new Bayesian neural network
     pub fn new(architecture: Vec<usize>, activations: Vec<ActivationType>) -> StatsResult<Self> {

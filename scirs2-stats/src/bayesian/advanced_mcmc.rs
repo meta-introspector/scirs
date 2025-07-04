@@ -444,7 +444,7 @@ impl NoUTurnSampler {
 
         let mut current_pos = position.clone();
         let mut current_mom = momentum.clone();
-        let current_log_prob = target.log_density(&current_pos.view())?;
+        let _current_log_prob = target.log_density(&current_pos.view())?;
 
         // Take a few leapfrog steps (simplified)
         let n_steps = 2_usize.pow(rng.random_range(1..=self.max_tree_depth.min(4)) as u32);

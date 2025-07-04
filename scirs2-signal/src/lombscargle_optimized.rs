@@ -1,4 +1,4 @@
-//! Ultrathink Enhanced Lomb-Scargle Validation Suite
+//! Advanced Enhanced Lomb-Scargle Validation Suite
 //!
 //! This module provides complete implementation of critical validation functions
 //! that were previously stubs, with focus on real SciPy comparison, SIMD validation,
@@ -16,9 +16,9 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
-/// Complete ultrathink validation result with all implementations
+/// Complete Advanced validation result with all implementations
 #[derive(Debug, Clone)]
-pub struct UltrathinkLombScargleResult {
+pub struct AdvancedLombScargleResult {
     /// Comprehensive accuracy validation
     pub accuracy_validation: ComprehensiveAccuracyResult,
     /// Real SciPy comparison results
@@ -267,10 +267,10 @@ pub struct PerformanceTrendAnalysis {
     pub regression_confidence: f64,
 }
 
-/// Run complete ultrathink enhanced Lomb-Scargle validation
+/// Run complete Advanced enhanced Lomb-Scargle validation
 #[allow(dead_code)]
-pub fn run_ultrathink_lombscargle_validation() -> SignalResult<UltrathinkLombScargleResult> {
-    println!("🚀 Starting Ultrathink Enhanced Lomb-Scargle Validation...");
+pub fn run_advanced_lombscargle_validation() -> SignalResult<AdvancedLombScargleResult> {
+    println!("🚀 Starting Advanced Enhanced Lomb-Scargle Validation...");
 
     // 1. Comprehensive accuracy validation
     println!("📊 Running comprehensive accuracy validation...");
@@ -322,9 +322,9 @@ pub fn run_ultrathink_lombscargle_validation() -> SignalResult<UltrathinkLombSca
         &mut recommendations,
     );
 
-    println!("✅ Ultrathink validation complete!");
+    println!("✅ Advanced validation complete!");
 
-    Ok(UltrathinkLombScargleResult {
+    Ok(AdvancedLombScargleResult {
         accuracy_validation,
         scipy_comparison,
         simd_validation,
@@ -1136,10 +1136,10 @@ fn perform_statistical_tests(errors: &[f64]) -> SignalResult<StatisticalTestResu
 
 /// Generate comprehensive validation report
 #[allow(dead_code)]
-pub fn generate_ultrathink_lombscargle_report(result: &UltrathinkLombScargleResult) -> String {
+pub fn generate_advanced_lombscargle_report(result: &AdvancedLombScargleResult) -> String {
     let mut report = String::new();
 
-    report.push_str("# Ultrathink Enhanced Lomb-Scargle Validation Report\n\n");
+    report.push_str("# Advanced Enhanced Lomb-Scargle Validation Report\n\n");
     report.push_str(&format!(
         "🎯 **Overall Quality Score: {:.1}/100**\n\n",
         result.quality_score
@@ -1350,7 +1350,7 @@ pub fn generate_ultrathink_lombscargle_report(result: &UltrathinkLombScargleResu
 
     // Footer
     report.push_str("\n---\n");
-    report.push_str("**Ultrathink Enhanced Validation Suite**\n");
+    report.push_str("**Advanced Enhanced Validation Suite**\n");
     report.push_str(&format!(
         "Generated at: {:?}\n",
         std::time::SystemTime::now()

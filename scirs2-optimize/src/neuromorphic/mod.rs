@@ -23,6 +23,7 @@
 
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
+use rand::Rng;
 use scirs2_core::error::CoreResult as Result;
 
 pub mod event_driven;
@@ -185,7 +186,7 @@ impl NeuromorphicNetwork {
             for j in 0..config.num_neurons {
                 if i != j {
                     // Random connection strength
-                    connectivity[[i, j]] = (rand::rng().random::<f64>() - 0.5) * 0.1;
+                    connectivity[[i, j]] = rand::rng().random_range(-0.05..0.05);
                 }
             }
         }
@@ -274,7 +275,7 @@ impl NeuromorphicNetwork {
 
             // Add noise
             if self.config.noise_level > 0.0 {
-                let noise = (rand::rng().random::<f64>() - 0.5) * 2.0 * self.config.noise_level;
+                let noise = rand::rng().random_range(-self.config.noise_level..self.config.noise_level);
                 self.neurons[i].potential += noise;
             }
 

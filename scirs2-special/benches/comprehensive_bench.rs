@@ -341,7 +341,7 @@ fn bench_memory_usage(c: &mut Criterion) {
 
 #[allow(dead_code)]
 fn bench_advanced_functions(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultrathink_functions");
+    let mut group = c.benchmark_group("advanced_functions");
 
     // Dawson's integral benchmarks
     group.bench_function("dawsn", |b| {

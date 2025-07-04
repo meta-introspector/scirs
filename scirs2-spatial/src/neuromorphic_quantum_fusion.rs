@@ -1,4 +1,4 @@
-//! Neuromorphic-Quantum Fusion Algorithms (Ultrathink Mode)
+//! Neuromorphic-Quantum Fusion Algorithms (Advanced Mode)
 //!
 //! This module represents the pinnacle of spatial computing innovation, fusing
 //! neuromorphic brain-inspired computing with quantum algorithms to create

@@ -1,11 +1,11 @@
-//! Ultrathink Clustering - AI-Driven Quantum-Neuromorphic Clustering (Ultrathink Mode)
+//! Advanced Clustering - AI-Driven Quantum-Neuromorphic Clustering (Advanced Mode)
 //!
 //! This module represents the pinnacle of clustering intelligence, combining
 //! AI-driven algorithm selection with quantum-neuromorphic fusion algorithms
 //! to achieve unprecedented clustering performance. It leverages meta-learning,
 //! neural architecture search, and bio-quantum computing paradigms.
 //!
-//! # Revolutionary Ultrathink Features
+//! # Revolutionary Advanced Features
 //!
 //! - **AI-Driven Clustering Selection** - Automatically select optimal clustering algorithms
 //! - **Quantum-Neuromorphic Clustering** - Fusion of quantum and spiking neural networks
@@ -28,20 +28,20 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_cluster::ultrathink_clustering::{UltrathinkClusterer, QuantumNeuromorphicCluster};
+//! use scirs2_cluster::advanced_clustering::{AdvancedClusterer, QuantumNeuromorphicCluster};
 //! use ndarray::array;
 //!
-//! // AI-driven ultrathink clustering
+//! // AI-driven Advanced clustering
 //! let data = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [5.0, 5.0], [6.0, 5.0]];
-//! let mut ultrathink = UltrathinkClusterer::new()
+//! let mut Advanced = AdvancedClusterer::new()
 //!     .with_ai_algorithm_selection(true)
 //!     .with_quantum_neuromorphic_fusion(true)
 //!     .with_meta_learning(true)
 //!     .with_continual_adaptation(true)
 //!     .with_multi_objective_optimization(true);
 //!
-//! let result = ultrathink.cluster(&data.view())?;
-//! println!("Ultrathink clusters: {:?}", result.clusters);
+//! let result = Advanced.cluster(&data.view())?;
+//! println!("Advanced clusters: {:?}", result.clusters);
 //! println!("AI advantage: {:.2}x speedup", result.ai_speedup);
 //! println!("Quantum advantage: {:.2}x optimization", result.quantum_advantage);
 //! ```
@@ -58,9 +58,9 @@ use std::time::Instant;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// Ultrathink clusterer with AI-driven quantum-neuromorphic algorithms
+/// Advanced clusterer with AI-driven quantum-neuromorphic algorithms
 #[derive(Debug)]
-pub struct UltrathinkClusterer {
+pub struct AdvancedClusterer {
     /// AI algorithm selection enabled
     ai_selection: bool,
     /// Quantum-neuromorphic fusion enabled
@@ -113,7 +113,7 @@ pub struct QuantumClusterState {
     decoherence_rate: f64,
 }
 
-/// Ultrathink clustering result
+/// Advanced clustering result
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UltrathinkClusteringResult {
@@ -137,7 +137,7 @@ pub struct UltrathinkClusteringResult {
     pub performance: UltrathinkPerformanceMetrics,
 }
 
-/// Performance metrics for ultrathink clustering
+/// Performance metrics for Advanced clustering
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UltrathinkPerformanceMetrics {
@@ -157,10 +157,10 @@ pub struct UltrathinkPerformanceMetrics {
     pub energy_efficiency: f64,
 }
 
-/// Configuration for ultrathink clustering
+/// Configuration for Advanced clustering
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct UltrathinkConfig {
+pub struct AdvancedConfig {
     /// Maximum number of clusters to consider
     pub max_clusters: usize,
     /// AI selection confidence threshold
@@ -179,7 +179,7 @@ pub struct UltrathinkConfig {
     pub tolerance: f64,
 }
 
-impl Default for UltrathinkConfig {
+impl Default for AdvancedConfig {
     fn default() -> Self {
         Self {
             max_clusters: 20,
@@ -194,8 +194,8 @@ impl Default for UltrathinkConfig {
     }
 }
 
-impl UltrathinkClusterer {
-    /// Create a new ultrathink clusterer
+impl AdvancedClusterer {
+    /// Create a new Advanced clusterer
     pub fn new() -> Self {
         Self {
             ai_selection: false,
@@ -241,7 +241,7 @@ impl UltrathinkClusterer {
         self
     }
 
-    /// Perform ultrathink clustering
+    /// Perform Advanced clustering
     pub fn cluster(&mut self, data: &ArrayView2<f64>) -> Result<UltrathinkClusteringResult> {
         // Input validation
         if data.is_empty() {
@@ -1694,7 +1694,7 @@ impl TransferLearningEngine {
     }
 }
 
-impl Default for UltrathinkClusterer {
+impl Default for AdvancedClusterer {
     fn default() -> Self {
         Self::new()
     }

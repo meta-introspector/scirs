@@ -591,7 +591,8 @@ pub struct QuantumAdvantageMetrics {
 
 impl<F> UltraQuantumAnalyzer<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + One + Zero + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + One + Zero + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     /// Create new quantum-inspired statistical analyzer
     pub fn new(config: QuantumConfig<F>) -> Self {
@@ -1019,7 +1020,8 @@ where
 
 impl<F> Default for QuantumConfig<F>
 where
-    F: Float + NumCast + Copy,
+    F: Float + NumCast + Copy
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self {
@@ -1155,7 +1157,8 @@ mod tests {
 /// Ultra-advanced quantum-inspired methods extension
 impl<F> UltraQuantumAnalyzer<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + One + Zero + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + One + Zero + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     /// Quantum-inspired Monte Carlo with variance reduction
     pub fn quantum_monte_carlo_integration(

@@ -1,5 +1,5 @@
-// Quick validation script for ultrathink mode improvements
-// Run with: cargo run --bin validate_ultrathink_improvements
+// Quick validation script for Advanced mode improvements
+// Run with: cargo run --bin validate_advanced_improvements
 
 use scirs2_special::{
     polygamma, dawsn, 
@@ -9,7 +9,7 @@ use scirs2_special::{
 
 #[allow(dead_code)]
 fn main() {
-    println!("=== Ultrathink Mode Improvements Validation ===\n");
+    println!("=== Advanced Mode Improvements Validation ===\n");
     
     // 1. Test polygamma sign fix
     println!("1. Polygamma Sign Fix:");
@@ -92,7 +92,7 @@ fn main() {
     println!("Dawson accuracy: {}", if dawson_all_pass { "✅ PASS" } else { "❌ FAIL" });
     println!("New Bessel derivatives: {}", if i0_correct && k0_correct { "✅ PASS" } else { "❌ FAIL" });
     println!("Mathematical properties: {}", if symmetry_all_pass { "✅ PASS" } else { "❌ FAIL" });
-    println!("\n🎯 ULTRATHINK MODE SUCCESS: {}", if overall_success { "✅ COMPLETE" } else { "❌ PARTIAL" });
+    println!("\n🎯 Advanced MODE SUCCESS: {}", if overall_success { "✅ COMPLETE" } else { "❌ PARTIAL" });
     
     if overall_success {
         println!("\n🚀 All improvements validated successfully!");

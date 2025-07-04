@@ -172,7 +172,8 @@ pub struct UltraParallelProcessor<F> {
 
 impl<F> UltraParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     /// Create new ultra-parallel processor
     pub fn new() -> Self {
@@ -1203,7 +1204,8 @@ pub struct OptimizationResult<F> {
 
 impl<F> Default for UltraParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self::new()
@@ -1217,7 +1219,8 @@ pub fn ultra_parallel_matrix_multiply<F>(
     b: &ArrayView2<F>,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     let mut processor = UltraParallelProcessor::new();
     processor.parallel_matrix_multiply(a, b)
@@ -1231,7 +1234,8 @@ pub fn ultra_parallel_bootstrap<F>(
     strategy: BootstrapSamplingStrategy,
 ) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     let mut processor = UltraParallelProcessor::new();
     processor.parallel_bootstrap_advanced(data, statistic_fn, n_bootstrap, strategy)

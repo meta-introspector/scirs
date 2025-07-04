@@ -34,7 +34,8 @@ const CHUNK_SIZE: usize = 8192;
 pub fn streaming_mean<F, I>(mut data_iter: I, total_count: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
-    I: Iterator<Item = F>,
+    I: Iterator<Item = F>
+        + std::fmt::Display,
 {
     if total_count == 0 {
         return Err(ErrorMessages::empty_array("dataset"));
@@ -74,7 +75,8 @@ where
 pub fn welford_variance<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<(F, F)>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     if n <= ddof {
@@ -111,7 +113,8 @@ where
 #[allow(dead_code)]
 pub fn normalize_inplace<F>(data: &mut ArrayViewMut1<F>, ddof: usize) -> StatsResult<()>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     let (mean, variance) = welford_variance(&data.view(), ddof)?;
 
@@ -147,7 +150,8 @@ where
 #[allow(dead_code)]
 pub fn quantile_quickselect<F>(data: &mut [F], q: F) -> StatsResult<F>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -241,7 +245,8 @@ pub fn covariance_chunked<F, D>(
 ) -> StatsResult<ndarray::Array2<F>>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n_obs = data.nrows();
     let n_vars = data.ncols();
@@ -310,7 +315,7 @@ pub struct StreamingCorrelation<F: Float> {
 }
 
 #[allow(dead_code)]
-impl<F: Float + NumCast> StreamingCorrelation<F> {
+impl<F: Float + NumCast + std::fmt::Display> StreamingCorrelation<F> {
     /// Create a new streaming correlation calculator
     pub fn new() -> Self {
         Self {
@@ -392,7 +397,7 @@ pub struct IncrementalCovariance<F: Float> {
 }
 
 #[allow(dead_code)]
-impl<F: Float + NumCast + ndarray::ScalarOperand> IncrementalCovariance<F> {
+impl<F: Float + NumCast + ndarray::ScalarOperand + std::fmt::Display> IncrementalCovariance<F> {
     /// Create a new incremental covariance calculator
     pub fn new(n_vars: usize) -> Self {
         Self {
@@ -470,7 +475,7 @@ pub struct RollingStats<F: Float> {
 }
 
 #[allow(dead_code)]
-impl<F: Float + NumCast> RollingStats<F> {
+impl<F: Float + NumCast + std::fmt::Display> RollingStats<F> {
     /// Create a new rolling statistics calculator
     pub fn new(window_size: usize) -> StatsResult<Self> {
         if window_size == 0 {
@@ -561,7 +566,7 @@ pub struct StreamingHistogram<F: Float> {
     total_count: usize,
 }
 
-impl<F: Float + NumCast> StreamingHistogram<F> {
+impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
     /// Create a new streaming histogram
     pub fn new(n_bins: usize, min_val: F, max_val: F) -> Self {
         let bin_width = (max_val - min_val) / F::from(n_bins).unwrap();
@@ -631,7 +636,7 @@ pub struct OutOfCoreStats<F: Float> {
 }
 
 #[allow(dead_code)]
-impl<F: Float + NumCast + std::str::FromStr> OutOfCoreStats<F> {
+impl<F: Float + NumCast + std::str::FromStr + std::fmt::Display> OutOfCoreStats<F> {
     /// Create a new out-of-core statistics processor
     pub fn new(chunk_size: usize) -> Self {
         Self {
@@ -821,7 +826,7 @@ pub struct MemoryMappedStats<F: Float> {
 }
 
 #[cfg(feature = "memmap")]
-impl<F: Float + NumCast> MemoryMappedStats<F> {
+impl<F: Float + NumCast + std::fmt::Display> MemoryMappedStats<F> {
     /// Create a new memory-mapped statistics processor
     pub fn new() -> Self {
         Self {

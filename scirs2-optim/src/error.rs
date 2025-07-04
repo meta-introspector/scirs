@@ -43,6 +43,8 @@ pub enum OptimError {
     LockError(String),
     /// Thread error
     ThreadError(String),
+    /// Computation error
+    ComputationError(String),
     /// Other error
     Other(String),
 }
@@ -103,6 +105,9 @@ impl fmt::Display for OptimError {
             }
             OptimError::ThreadError(msg) => {
                 write!(f, "Thread error: {msg}")
+            }
+            OptimError::ComputationError(msg) => {
+                write!(f, "Computation error: {msg}")
             }
             OptimError::Other(msg) => write!(f, "Error: {msg}"),
         }

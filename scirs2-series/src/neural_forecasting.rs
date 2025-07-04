@@ -1511,7 +1511,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
     }
 }
 
-/// **ULTRATHINK MODE: Cutting-Edge Neural Architectures**
+/// **Advanced MODE: Cutting-Edge Neural Architectures**
 /// Mamba/State Space Model implementation for time series
 /// Based on "Mamba: Linear-Time Sequence Modeling with Selective State Spaces"
 #[derive(Debug)]
@@ -2825,7 +2825,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
     }
 }
 
-/// **ULTRATHINK MODE: NEXT-GENERATION ATTENTION MECHANISMS**
+/// **Advanced MODE: NEXT-GENERATION ATTENTION MECHANISMS**
 /// Ring Attention for distributed computation across multiple devices
 #[derive(Debug)]
 pub struct RingAttention<F: Float + Debug> {
@@ -4358,7 +4358,7 @@ mod tests {
         assert_eq!(multistep_forecast.len(), 12);
     }
 
-    // **ULTRATHINK MODE Tests**
+    // **Advanced MODE Tests**
 
     #[test]
     fn test_mamba_block() {
@@ -4718,7 +4718,7 @@ mod tests {
         }
     }
 
-    // **ULTRATHINK MODE: NEXT-GENERATION TESTS**
+    // **Advanced MODE: NEXT-GENERATION TESTS**
 
     #[test]
     fn test_ring_attention() {

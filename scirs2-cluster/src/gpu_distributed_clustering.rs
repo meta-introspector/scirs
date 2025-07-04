@@ -1,11 +1,11 @@
-//! Ultrathink GPU and Distributed Computing Extensions
+//! Advanced GPU and Distributed Computing Extensions
 //!
 //! This module provides GPU acceleration and distributed computing capabilities
-//! for ultrathink clustering, enabling massive scalability and performance
+//! for Advanced clustering, enabling massive scalability and performance
 //! improvements for large-scale clustering tasks.
 
 use crate::error::{ClusteringError, Result};
-use crate::ultrathink_clustering::{UltrathinkClusterer, UltrathinkClusteringResult};
+use crate::advanced_clustering::{AdvancedClusterer, UltrathinkClusteringResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -14,11 +14,11 @@ use std::thread;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// GPU-accelerated ultrathink clusterer
+/// GPU-accelerated Advanced clusterer
 #[derive(Debug)]
 pub struct GpuUltrathinkClusterer {
-    /// Base ultrathink clusterer
-    base_clusterer: UltrathinkClusterer,
+    /// Base Advanced clusterer
+    base_clusterer: AdvancedClusterer,
     /// GPU configuration
     gpu_config: GpuAccelerationConfig,
     /// GPU memory manager
@@ -29,7 +29,7 @@ pub struct GpuUltrathinkClusterer {
     performance_monitor: GpuPerformanceMonitor,
 }
 
-/// Distributed ultrathink clustering system
+/// Distributed Advanced clustering system
 #[derive(Debug)]
 pub struct DistributedUltrathinkClusterer {
     /// Worker node configurations
@@ -212,10 +212,10 @@ pub struct HybridGpuDistributedResult {
 }
 
 impl GpuUltrathinkClusterer {
-    /// Create new GPU-accelerated ultrathink clusterer
+    /// Create new GPU-accelerated Advanced clusterer
     pub fn new(gpu_config: GpuAccelerationConfig) -> Self {
         Self {
-            base_clusterer: UltrathinkClusterer::new(),
+            base_clusterer: AdvancedClusterer::new(),
             gpu_config: gpu_config.clone(),
             memory_manager: GpuMemoryManager::new(&gpu_config),
             kernel_executor: GpuKernelExecutor::new(&gpu_config),
@@ -235,7 +235,7 @@ impl GpuUltrathinkClusterer {
         self
     }
 
-    /// Perform GPU-accelerated ultrathink clustering
+    /// Perform GPU-accelerated Advanced clustering
     pub fn gpu_cluster(&mut self, data: &ArrayView2<f64>) -> Result<GpuUltrathinkResult> {
         // Phase 1: Initialize GPU resources
         self.performance_monitor.start_timing("gpu_initialization");
@@ -265,7 +265,7 @@ impl GpuUltrathinkClusterer {
         let cpu_centroids = self.memory_manager.transfer_to_cpu(&gpu_centroids)?;
         let result_transfer_time = self.performance_monitor.end_timing("result_transfer");
 
-        // Phase 6: Create ultrathink result from GPU computation
+        // Phase 6: Create Advanced result from GPU computation
         let base_result =
             self.create_ultrathink_result_from_gpu(&cpu_clusters, &cpu_centroids, data)?;
 
@@ -305,11 +305,11 @@ impl GpuUltrathinkClusterer {
         centroids: &Array2<f64>,
         original_data: &ArrayView2<f64>,
     ) -> Result<UltrathinkClusteringResult> {
-        // Create base ultrathink result with GPU-computed values
+        // Create base Advanced result with GPU-computed values
         // This would normally integrate with the base clusterer
 
         // For demonstration, create a basic result structure
-        use crate::ultrathink_clustering::UltrathinkPerformanceMetrics;
+        use crate::advanced_clustering::UltrathinkPerformanceMetrics;
 
         let performance = UltrathinkPerformanceMetrics {
             silhouette_score: self.calculate_gpu_silhouette_score(
@@ -440,7 +440,7 @@ impl GpuUltrathinkClusterer {
 }
 
 impl DistributedUltrathinkClusterer {
-    /// Create new distributed ultrathink clusterer
+    /// Create new distributed Advanced clusterer
     pub fn new(
         worker_configs: Vec<WorkerNodeConfig>,
         coordination_strategy: CoordinationStrategy,
@@ -454,7 +454,7 @@ impl DistributedUltrathinkClusterer {
         }
     }
 
-    /// Perform distributed ultrathink clustering
+    /// Perform distributed Advanced clustering
     pub fn distributed_cluster(
         &mut self,
         data: &ArrayView2<f64>,
@@ -535,7 +535,7 @@ impl DistributedUltrathinkClusterer {
         let start_time = std::time::Instant::now();
 
         // Create local clusterer for this worker
-        let mut local_clusterer = UltrathinkClusterer::new()
+        let mut local_clusterer = AdvancedClusterer::new()
             .with_ai_algorithm_selection(true)
             .with_quantum_neuromorphic_fusion(true);
 
@@ -634,7 +634,7 @@ impl DistributedUltrathinkClusterer {
             .sum::<f64>()
             / worker_results.len() as f64;
 
-        use crate::ultrathink_clustering::UltrathinkPerformanceMetrics;
+        use crate::advanced_clustering::UltrathinkPerformanceMetrics;
 
         let aggregated_performance = UltrathinkPerformanceMetrics {
             silhouette_score: 0.82, // Would be calculated from aggregated data

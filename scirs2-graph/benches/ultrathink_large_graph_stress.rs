@@ -1,14 +1,14 @@
-//! Large graph stress testing with ultrathink mode optimizations
+//! Large graph stress testing with Advanced mode optimizations
 //!
 //! This benchmark tests the performance of graph algorithms on very large graphs
-//! (>1M nodes) using ultrathink mode for optimization.
+//! (>1M nodes) using Advanced mode for optimization.
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::{rng, Rng};
 use scirs2_graph::advanced::{
-    create_enhanced_ultrathink_processor, create_large_graph_ultrathink_processor,
-    create_realtime_ultrathink_processor, execute_with_enhanced_ultrathink, UltrathinkConfig,
-    UltrathinkProcessor,
+    create_enhanced_advanced_processor, create_large_graph_advanced_processor,
+    create_realtime_advanced_processor, execute_with_enhanced_advanced, AdvancedConfig,
+    AdvancedProcessor,
 };
 use scirs2_graph::base::Graph;
 use std::collections::HashMap;
@@ -308,7 +308,7 @@ fn select_powerlaw_node(rng: &mut impl Rng, num_nodes: usize) -> usize {
 #[allow(dead_code)]
 fn stress_test_algorithms(
     graph: &Graph<usize, f64>,
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
     test_name: &str,
 ) -> HashMap<String, Duration> {
     use scirs2_graph::algorithms::community::louvain_communities;
@@ -431,7 +431,7 @@ fn stress_test_algorithms(
 #[allow(dead_code)]
 fn extreme_stress_test(
     graph: &Graph<usize, f64>,
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
     test_name: &str,
 ) -> HashMap<String, (Duration, Result<String, String>)> {
     let mut results = HashMap::new();
@@ -598,7 +598,7 @@ fn get_memory_usage() -> usize {
 #[allow(dead_code)]
 fn failure_recovery_stress_test(
     graph: &Graph<usize, f64>,
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
 ) -> HashMap<String, (Duration, String)> {
     let mut results = HashMap::new();
     println!("🛠️  FAILURE RECOVERY TEST: Testing error handling and recovery");
@@ -832,7 +832,7 @@ fn bench_large_graph_creation(c: &mut Criterion) {
 /// Benchmark advanced processors on large graphs
 #[allow(dead_code)]
 fn bench_advanced_processors(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultrathink_large_graphs");
+    let mut group = c.benchmark_group("advanced_large_graphs");
     group.measurement_time(Duration::from_secs(120));
     group.sample_size(5);
 
@@ -981,45 +981,45 @@ fn bench_configuration_comparison(c: &mut Criterion) {
     let configs = vec![
         (
             "baseline",
-            UltrathinkConfig {
+            AdvancedConfig {
                 enable_neural_rl: false,
                 enable_gpu_acceleration: false,
                 enable_neuromorphic: false,
                 enable_realtime_adaptation: false,
                 enable_memory_optimization: false,
-                ..UltrathinkConfig::default()
+                ..AdvancedConfig::default()
             },
         ),
         (
             "neural_only",
-            UltrathinkConfig {
+            AdvancedConfig {
                 enable_neural_rl: true,
                 enable_gpu_acceleration: false,
                 enable_neuromorphic: false,
                 enable_realtime_adaptation: false,
                 enable_memory_optimization: false,
-                ..UltrathinkConfig::default()
+                ..AdvancedConfig::default()
             },
         ),
         (
             "memory_only",
-            UltrathinkConfig {
+            AdvancedConfig {
                 enable_neural_rl: false,
                 enable_gpu_acceleration: false,
                 enable_neuromorphic: false,
                 enable_realtime_adaptation: false,
                 enable_memory_optimization: true,
-                ..UltrathinkConfig::default()
+                ..AdvancedConfig::default()
             },
         ),
-        ("full_advanced", UltrathinkConfig::default()),
+        ("full_advanced", AdvancedConfig::default()),
     ];
 
     for (name, config) in configs {
         group.bench_function(name, |b| {
             b.iter(|| {
-                let mut processor = UltrathinkProcessor::new(config.clone());
-                let _result = execute_with_enhanced_ultrathink(
+                let mut processor = AdvancedProcessor::new(config.clone());
+                let _result = execute_with_enhanced_advanced(
                     &mut processor,
                     &test_graph,
                     "config_test",
@@ -1428,7 +1428,7 @@ pub fn run_comprehensive_stress_tests() {
 criterion_group!(
     benches,
     bench_large_graph_creation,
-    bench_ultrathink_processors,
+    bench_advanced_processors,
     bench_memory_usage,
     bench_adaptive_performance,
     bench_concurrent_processing,

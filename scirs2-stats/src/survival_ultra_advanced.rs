@@ -610,7 +610,8 @@ pub struct CompetingRisksResults<F> {
 
 impl<F> UltraSurvivalAnalysis<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     /// Create new ultra-advanced survival analysis
     pub fn new(config: UltraSurvivalConfig<F>) -> Self {
@@ -1098,7 +1099,8 @@ where
 
 impl<F> Default for UltraSurvivalConfig<F>
 where
-    F: Float + NumCast + Copy,
+    F: Float + NumCast + Copy
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self {

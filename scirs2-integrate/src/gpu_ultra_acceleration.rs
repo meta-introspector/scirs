@@ -2,7 +2,7 @@
 //!
 //! This module provides cutting-edge GPU acceleration capabilities for ODE solving,
 //! featuring ultra-optimized CUDA/OpenCL kernels, advanced memory management,
-//! and real-time performance adaptation in ultrathink mode.
+//! and real-time performance adaptation in Advanced mode.
 //!
 //! Key features:
 //! - Ultra-optimized GPU kernels for Runge-Kutta methods

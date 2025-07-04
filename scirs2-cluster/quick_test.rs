@@ -5,7 +5,7 @@ use std::error::Error;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
-    println!("🚀 Quick Ultrathink Clustering Test");
+    println!("🚀 Quick Advanced Clustering Test");
     println!("===================================");
     
     // Simple test to verify basic functionality

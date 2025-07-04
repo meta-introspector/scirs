@@ -187,38 +187,41 @@ impl<T: Float + Debug + FromPrimitive + Zero> OnlineSplineInterpolator<T> {
         }
     }
 
-    /// Add a new point to the streaming interpolator
-    pub fn add_point(&mut self, x: T, y: T) -> InterpolateResult<()> {
-        check_finite(
-            &[x.to_f64().unwrap_or(0.0), y.to_f64().unwrap_or(0.0)],
-            "input point",
-        )?;
+    /// Add a new point coordinates to the streaming interpolator
+    pub fn add_point_coords(&mut self, x: T, y: T) -> InterpolateResult<()> {
+        if !x.is_finite() || !y.is_finite() {
+            return Err(InterpolateError::InvalidInput {
+                message: "input point contains non-finite values".to_string(),
+            });
+        }
 
         let point = StreamingPoint {
             x,
             y,
             timestamp: Instant::now(),
+            quality: 1.0,
+            metadata: HashMap::new(),
         };
 
         // Check for outliers
         if !self.is_outlier(&point) {
             self.points.push_back(point);
-            self.stats.points_added += 1;
+            self.stats.points_processed += 1;
         } else {
-            self.stats.outliers_detected += 1;
+            self.stats.outliers_rejected += 1;
             return Ok(()); // Skip outlier
         }
 
         // Maintain memory bounds
         if self.points.len() > self.config.max_points {
             self.points.pop_front();
-            self.stats.points_removed += 1;
+            self.stats.points_processed += 1;
         }
 
         // Update model if needed
-        if (self.stats.points_added - self.last_update_count) >= self.config.update_frequency {
+        if (self.stats.points_processed - self.last_update_count) >= self.config.update_frequency {
             self.update_spline_coefficients()?;
-            self.last_update_count = self.stats.points_added;
+            self.last_update_count = self.stats.points_processed;
         }
 
         Ok(())
@@ -403,13 +406,10 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
 {
     fn add_point(&mut self, point: StreamingPoint<T>) -> InterpolateResult<()> {
         // Validate point
-        check_finite(
-            &[
-                point.x.to_f64().unwrap_or(f64::NAN),
-                point.y.to_f64().unwrap_or(f64::NAN),
-            ],
-            "point coordinates",
-        )?;
+        let x_val = point.x.to_f64().unwrap_or(f64::NAN);
+        let y_val = point.y.to_f64().unwrap_or(f64::NAN);
+        check_finite(x_val, "point x coordinate")?;
+        check_finite(y_val, "point y coordinate")?;
 
         // Check for outliers
         if self.is_outlier(&point) {
@@ -698,13 +698,10 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
     for StreamingRBFInterpolator<T>
 {
     fn add_point(&mut self, point: StreamingPoint<T>) -> InterpolateResult<()> {
-        check_finite(
-            &[
-                point.x.to_f64().unwrap_or(f64::NAN),
-                point.y.to_f64().unwrap_or(f64::NAN),
-            ],
-            "point coordinates",
-        )?;
+        let x_val = point.x.to_f64().unwrap_or(f64::NAN);
+        let y_val = point.y.to_f64().unwrap_or(f64::NAN);
+        check_finite(x_val, "point x coordinate")?;
+        check_finite(y_val, "point y coordinate")?;
 
         self.points.push_back(point);
         self.stats.points_processed += 1;

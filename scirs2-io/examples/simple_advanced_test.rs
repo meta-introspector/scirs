@@ -1,21 +1,21 @@
-//! Simple Ultra-Think Test
+//! Simple advanced Test
 //!
-//! A minimal test to validate Ultra-Think coordinator functionality
+//! A minimal test to validate advanced coordinator functionality
 //! and check if all components are working properly.
 
 use scirs2_io::error::Result;
-use scirs2_io::ultrathink_coordinator::UltraThinkCoordinator;
+use scirs2_io::advanced_coordinator::AdvancedCoordinator;
 use scirs2_io::ultrathink_enhanced_algorithms::AdvancedPatternRecognizer;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🧪 Simple Ultra-Think Test");
+    println!("🧪 Simple advanced Test");
     println!("========================\n");
 
-    // Test 1: Create Ultra-Think Coordinator
-    println!("Test 1: Creating Ultra-Think Coordinator...");
-    let mut coordinator = UltraThinkCoordinator::new()?;
-    println!("✅ Ultra-Think Coordinator created successfully\n");
+    // Test 1: Create advanced Coordinator
+    println!("Test 1: Creating advanced Coordinator...");
+    let mut coordinator = AdvancedCoordinator::new()?;
+    println!("✅ advanced Coordinator created successfully\n");
 
     // Test 2: Test basic data processing
     println!("Test 2: Basic data processing...");
@@ -62,6 +62,6 @@ fn main() -> Result<()> {
         stats.overall_system_efficiency
     );
 
-    println!("\n🎉 All tests passed! Ultra-Think mode is working correctly.");
+    println!("\n🎉 All tests passed! advanced mode is working correctly.");
     Ok(())
 }

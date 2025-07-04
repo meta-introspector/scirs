@@ -22,13 +22,27 @@ fn test_pagerank_accuracy() -> CoreResult<()> {
         graph.add_node(i);
     }
 
-    graph.add_edge(0, 1, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-    graph.add_edge(0, 2, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-    graph.add_edge(1, 2, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-    graph.add_edge(2, 0, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-    graph.add_edge(3, 0, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-    graph.add_edge(3, 1, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-    graph.add_edge(3, 2, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(0, 1, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(0, 2, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(1, 2, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(2, 0, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(3, 0, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(3, 1, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(3, 2, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
     // Known PageRank values for damping factor 0.85
     // Computed using NetworkX as reference
@@ -47,12 +61,16 @@ fn test_pagerank_accuracy() -> CoreResult<()> {
         assert!(
             diff < 1e-5,
             "PageRank for node {} differs from reference: expected {}, got {}, diff {}",
-            node, expected, actual, diff
+            node,
+            expected,
+            actual,
+            diff
         );
     }
 
     // Test case 2: Complete graph (all nodes should have equal PageRank)
-    let complete = generators::complete_graph(10).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    let complete = generators::complete_graph(10)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
     // Convert to DiGraph for pagerank
     let mut complete_digraph = DiGraph::new();
     for i in 0..10 {
@@ -61,7 +79,9 @@ fn test_pagerank_accuracy() -> CoreResult<()> {
     for i in 0..10 {
         for j in 0..10 {
             if i != j {
-                complete_digraph.add_edge(i, j, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+                complete_digraph
+                    .add_edge(i, j, 1.0)
+                    .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
             }
         }
     }
@@ -74,7 +94,9 @@ fn test_pagerank_accuracy() -> CoreResult<()> {
         assert!(
             diff < 1e-6,
             "Complete graph PageRank should be uniform: expected {}, got {}, diff {}",
-            expected_value, actual, diff
+            expected_value,
+            actual,
+            diff
         );
     }
 
@@ -178,12 +200,21 @@ fn test_clustering_coefficient_accuracy() -> CoreResult<()> {
         graph.add_node(i);
     }
     // Create a triangle with one additional edge
-    graph.add_edge(0, 1, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-    graph.add_edge(1, 2, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-    graph.add_edge(2, 0, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-    graph.add_edge(2, 3, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(0, 1, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(1, 2, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(2, 0, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(2, 3, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
-    let coefficients = measures::clustering_coefficient(&graph).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    let coefficients = measures::clustering_coefficient(&graph)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
     let local_cc = coefficients.get(&2).copied().unwrap_or(0.0);
     // Node 2 has 3 neighbors, with 1 triangle among them
     // CC = 2 * triangles / (degree * (degree - 1)) = 2 * 1 / (3 * 2) = 1/3
@@ -192,7 +223,9 @@ fn test_clustering_coefficient_accuracy() -> CoreResult<()> {
     assert!(
         diff < 1e-10,
         "Local clustering coefficient calculation: expected {}, got {}, diff {}",
-        expected, local_cc, diff
+        expected,
+        local_cc,
+        diff
     );
 
     Ok(())
@@ -208,14 +241,25 @@ fn test_shortest_path_accuracy() -> CoreResult<()> {
     }
 
     // Create a graph where the shortest path is not the path with fewest edges
-    graph.add_edge(0, 1, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-    graph.add_edge(1, 2, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-    graph.add_edge(2, 4, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?; // Path 0->1->2->4 has length 3
+    graph
+        .add_edge(0, 1, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(1, 2, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(2, 4, 1.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?; // Path 0->1->2->4 has length 3
 
-    graph.add_edge(0, 3, 2.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-    graph.add_edge(3, 4, 0.5).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?; // Path 0->3->4 has length 2.5 (shorter)
+    graph
+        .add_edge(0, 3, 2.0)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph
+        .add_edge(3, 4, 0.5)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?; // Path 0->3->4 has length 2.5 (shorter)
 
-    let path_result = algorithms::dijkstra_path(&graph, &0, &4).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    let path_result = algorithms::dijkstra_path(&graph, &0, &4)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
     let path = path_result.unwrap();
     let expected_path = vec![0, 3, 4];
 
@@ -225,7 +269,8 @@ fn test_shortest_path_accuracy() -> CoreResult<()> {
     );
 
     // Test all-pairs shortest paths
-    let distances = algorithms::floyd_warshall(&graph).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    let distances = algorithms::floyd_warshall(&graph)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
     let expected = 2.5;
     let actual = distances[(0, 4)];
@@ -233,7 +278,9 @@ fn test_shortest_path_accuracy() -> CoreResult<()> {
     assert!(
         diff < 1e-10,
         "Floyd-Warshall distance calculation: expected {}, got {}, diff {}",
-        expected, actual, diff
+        expected,
+        actual,
+        diff
     );
 
     Ok(())
@@ -478,7 +525,8 @@ fn test_katz_centrality_accuracy() -> CoreResult<()> {
     let alpha = 0.1; // Attenuation factor
     let beta = 1.0; // Base centrality
 
-    let katz = measures::katz_centrality(&graph, alpha, beta, Some(100), Some(1e-6)).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    let katz = measures::katz_centrality(&graph, alpha, beta, Some(100), Some(1e-6))
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
     // Verify Katz centrality properties
     // Central nodes (1, 2) should have higher centrality than endpoints (0, 3)
@@ -492,7 +540,9 @@ fn test_katz_centrality_accuracy() -> CoreResult<()> {
     assert!(
         diff < 1e-6,
         "Symmetric nodes should have equal Katz centrality: node 1 = {}, node 2 = {}, diff = {}",
-        katz[&1], katz[&2], diff
+        katz[&1],
+        katz[&2],
+        diff
     );
 
     Ok(())
@@ -506,7 +556,8 @@ fn test_large_graph_numerical_stability() -> CoreResult<()> {
     // Generate a large random graph
     let n = 1000;
     let p = 0.01;
-    let graph = generators::erdos_renyi_graph(n, p, Some(42)).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    let graph = generators::erdos_renyi_graph(n, p, Some(42))
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
     // Convert to DiGraph for pagerank
     let mut digraph = DiGraph::new();
@@ -515,8 +566,12 @@ fn test_large_graph_numerical_stability() -> CoreResult<()> {
     }
     // Add edges from undirected graph as bidirectional edges
     for edge in graph.edges() {
-        digraph.add_edge(edge.source(), edge.target(), *edge.weight()).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-        digraph.add_edge(edge.target(), edge.source(), *edge.weight()).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        digraph
+            .add_edge(edge.source(), edge.target(), *edge.weight())
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        digraph
+            .add_edge(edge.target(), edge.source(), *edge.weight())
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
     }
 
     // Test PageRank convergence

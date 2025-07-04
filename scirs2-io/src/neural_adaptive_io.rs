@@ -1,4 +1,4 @@
-//! Neural-adaptive I/O optimization with ultrathink-level intelligence
+//! Neural-adaptive I/O optimization with advanced-level intelligence
 //!
 //! This module provides AI-driven adaptive optimization for I/O operations,
 //! incorporating machine learning techniques to dynamically optimize performance
@@ -665,7 +665,7 @@ impl Default for UltraThinkIoProcessor {
 }
 
 impl UltraThinkIoProcessor {
-    /// Create a new ultra-think I/O processor
+    /// Create a new advanced I/O processor
     pub fn new() -> Self {
         Self {
             controller: NeuralAdaptiveIoController::new(),

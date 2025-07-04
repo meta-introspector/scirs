@@ -1276,15 +1276,15 @@ impl<T: Float> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                         .unwrap_or(T::from(100).unwrap())
                         .to_i64()
                         .unwrap_or(100);
-                    ParameterValue::Integer(self.rng.random_range(min..=max))
+                    ParameterValue::Integer(self.rng.gen_range(min..=max))
                 }
                 ParameterType::Boolean => ParameterValue::Boolean(self.rng.gen()),
                 ParameterType::Categorical(categories) => {
-                    let idx = self.rng.random_range(0..categories.len());
+                    let idx = self.rng.gen_range(0..categories.len());
                     ParameterValue::Categorical(categories[idx].clone())
                 }
                 ParameterType::Ordinal(values) => {
-                    let idx = self.rng.random_range(0..values.len());
+                    let idx = self.rng.gen_range(0..values.len());
                     ParameterValue::Ordinal(idx)
                 }
             };

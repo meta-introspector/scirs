@@ -1,12 +1,12 @@
-//! Comprehensive numerical accuracy validation for ultrathink mode
+//! Comprehensive numerical accuracy validation for Advanced mode
 //!
 //! This module tests the numerical accuracy of graph algorithms when
-//! run through ultrathink optimizations compared to reference implementations.
+//! run through Advanced optimizations compared to reference implementations.
 
 use scirs2_graph::advanced::{
     create_adaptive_advanced_processor, create_enhanced_advanced_processor,
     create_memory_efficient_advanced_processor, create_performance_advanced_processor,
-    execute_with_enhanced_advanced, UltrathinkProcessor, UltrathinkStats,
+    execute_with_enhanced_advanced, AdvancedProcessor,
 };
 use scirs2_graph::base::Graph;
 use std::collections::HashMap;
@@ -16,7 +16,6 @@ const EPSILON: f64 = 1e-10;
 const RELATIVE_TOLERANCE: f64 = 1e-6;
 
 /// Test data structure for numerical validation
-#[derive(Debug, Clone)]
 struct ValidationTestCase {
     name: String,
     graph: Graph<usize, f64>,
@@ -119,7 +118,7 @@ fn calculate_reference_properties(graph: &Graph<usize, f64>) -> HashMap<String, 
     properties.insert("edge_count".to_string(), graph.edge_count() as f64);
 
     // Calculate total weight
-    let total_weight: f64 = graph.edges().map(|edge| *edge.weight()).sum();
+    let total_weight: f64 = graph.edges().into_iter().map(|edge| edge.weight).sum();
     properties.insert("total_weight".to_string(), total_weight);
 
     // Calculate density
@@ -130,7 +129,7 @@ fn calculate_reference_properties(graph: &Graph<usize, f64>) -> HashMap<String, 
     }
 
     // Calculate degree-related properties
-    let nodes: Vec<_> = graph.nodes().collect();
+    let nodes: Vec<_> = graph.nodes().into_iter().collect();
     if !nodes.is_empty() {
         let degrees: Vec<usize> = nodes.iter().map(|&node| graph.degree(node)).collect();
         let max_degree = *degrees.iter().max().unwrap_or(&0);
@@ -148,7 +147,7 @@ fn calculate_reference_properties(graph: &Graph<usize, f64>) -> HashMap<String, 
     }
 
     // Check for cycles (simplified - just check if any node has degree > 2)
-    let has_high_degree = graph.nodes().any(|node| graph.degree(node) > 2);
+    let has_high_degree = graph.nodes().into_iter().any(|node| graph.degree(node) > 2);
     properties.insert(
         "is_cyclic".to_string(),
         if has_high_degree { 1.0 } else { 0.0 },
@@ -161,7 +160,7 @@ fn calculate_reference_properties(graph: &Graph<usize, f64>) -> HashMap<String, 
 #[allow(dead_code)]
 fn test_numerical_accuracy(
     test_case: &ValidationTestCase,
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
     processor_name: &str,
 ) -> ValidationResult {
     let mut results = ValidationResult::new(test_case.name.clone(), processor_name.to_string());
@@ -346,7 +345,7 @@ fn run_comprehensive_validation() -> Vec<ValidationResult> {
 #[allow(dead_code)]
 fn generate_validation_report(results: &[ValidationResult]) -> String {
     let mut report = String::new();
-    report.push_str("=== Ultrathink Numerical Validation Report ===\n\n");
+    report.push_str("=== Advanced Numerical Validation Report ===\n\n");
 
     // Overall statistics
     let total_tests = results.len();
@@ -427,13 +426,12 @@ fn generate_algorithm_validation_tests() -> Vec<AlgorithmValidationTest> {
     tests
 }
 
-#[derive(Debug, Clone)]
 struct AlgorithmValidationTest {
     name: String,
     graph: Graph<usize, f64>,
     reference_implementation: fn(&Graph<usize, f64>) -> Result<ValidationOutput, String>,
     advanced_implementation:
-        fn(&Graph<usize, f64>, &mut UltrathinkProcessor) -> Result<ValidationOutput, String>,
+        fn(&Graph<usize, f64>, &mut AdvancedProcessor) -> Result<ValidationOutput, String>,
     tolerance: f64,
     description: String,
 }
@@ -472,7 +470,7 @@ fn create_pagerank_validation_test() -> AlgorithmValidationTest {
             for _ in 0..100 {
                 // iterations
                 for (i, &node) in nodes.iter().enumerate() {
-                    let out_degree = g.out_degree(node) as f64;
+                    let out_degree = g.degree(node) as f64;
                     if out_degree > 0.0 {
                         let contribution = ranks[i] / out_degree;
                         for neighbor in g.neighbors(node) {
@@ -618,11 +616,11 @@ fn create_shortest_path_validation_test() -> AlgorithmValidationTest {
                 execute_with_enhanced_advanced(processor, g, "shortest_path_validation", |graph| {
                     use scirs2_graph::algorithms::shortest_path::dijkstra_path;
                     use std::collections::HashMap;
-                    
+
                     // Compute shortest paths from node 0 to all other nodes
                     let mut distances = HashMap::new();
-                    let nodes: Vec<_> = graph.nodes().collect();
-                    
+                    let nodes: Vec<_> = graph.nodes().into_iter().collect();
+
                     for &target in &nodes {
                         if target != 0 {
                             if let Ok(Some(path)) = dijkstra_path(graph, &0, &target) {
@@ -632,7 +630,7 @@ fn create_shortest_path_validation_test() -> AlgorithmValidationTest {
                             distances.insert(0, Default::default()); // Distance to self is 0
                         }
                     }
-                    
+
                     Ok(distances)
                 });
 
@@ -701,8 +699,8 @@ fn create_community_detection_validation_test() -> AlgorithmValidationTest {
         advanced_implementation: |g, processor| {
             let result =
                 execute_with_enhanced_advanced(processor, g, "community_validation", |graph| {
-                    use scirs2_graph::algorithms::community::louvain_communities;
-                    louvain_communities(graph, None)
+                    use scirs2_graph::algorithms::community::louvain_communities_result;
+                    louvain_communities_result(graph)
                 });
 
             match result {
@@ -747,11 +745,11 @@ fn create_connected_components_validation_test() -> AlgorithmValidationTest {
                     visited.insert(node);
 
                     while let Some(current) = queue.pop_front() {
-                        component.push(current);
+                        component.push(*current);
                         for neighbor in g.neighbors(current) {
                             if !visited.contains(&neighbor) {
-                                visited.insert(neighbor);
-                                queue.push_back(neighbor);
+                                visited.insert(&neighbor);
+                                queue.push_back(&neighbor);
                             }
                         }
                     }
@@ -828,7 +826,7 @@ struct AlgorithmValidationResult {
 #[allow(dead_code)]
 fn validate_algorithm(
     test: &AlgorithmValidationTest,
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
     processor_name: &str,
 ) -> AlgorithmValidationResult {
     // Run reference implementation

@@ -15,7 +15,7 @@ use scirs2_linalg::hierarchical::{adaptive_block_lowrank, HMatrix, HSSMatrix};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Hierarchical Matrix Factorizations - ULTRATHINK DEMONSTRATION");
+    println!("🚀 Hierarchical Matrix Factorizations - Advanced DEMONSTRATION");
     println!("================================================================");
 
     // Test 1: H-Matrix Construction and Operations
@@ -212,7 +212,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("      - Materials science calculations");
 
     println!("\n================================================================");
-    println!("🎯 ULTRATHINK ACHIEVEMENT: HIERARCHICAL MATRIX FACTORIZATIONS");
+    println!("🎯 Advanced ACHIEVEMENT: HIERARCHICAL MATRIX FACTORIZATIONS");
     println!("================================================================");
     println!("✅ H-matrices: O(n log n) storage and operations");
     println!("✅ HSS matrices: O(n) complexity for specialized problems");

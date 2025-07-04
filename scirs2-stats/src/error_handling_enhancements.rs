@@ -1,13 +1,13 @@
-//! Ultrathink Error Handling Enhancements
+//! Advanced Error Handling Enhancements
 //!
-//! Advanced error handling specifically designed for ultrathink mode operations,
+//! Advanced error handling specifically designed for Advanced mode operations,
 //! providing intelligent diagnostics, performance-aware suggestions, and
 //! adaptive recovery strategies.
 
 use crate::error::StatsError;
 use std::time::{Duration, Instant};
 
-/// Ultrathink-specific error context with performance tracking
+/// Advanced-specific error context with performance tracking
 #[derive(Debug, Clone)]
 pub struct UltrathinkErrorContext {
     pub operation_start: Instant,
@@ -45,7 +45,7 @@ pub enum OptimizationSuggestion {
     },
 }
 
-/// Enhanced error messages for ultrathink mode
+/// Enhanced error messages for Advanced mode
 pub struct UltrathinkErrorMessages;
 
 impl UltrathinkErrorMessages {
@@ -218,7 +218,7 @@ impl UltrathinkErrorMessages {
     }
 }
 
-/// Adaptive error recovery system for ultrathink mode
+/// Adaptive error recovery system for Advanced mode
 pub struct UltrathinkErrorRecovery;
 
 impl UltrathinkErrorRecovery {
@@ -327,7 +327,7 @@ pub enum RecoveryStrategy {
     },
 }
 
-/// Context builder for ultrathink error handling
+/// Context builder for Advanced error handling
 pub struct UltrathinkContextBuilder {
     data_size: usize,
     operation_start: Instant,

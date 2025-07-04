@@ -2,9 +2,9 @@
 //!
 //! This module provides tools and utilities for optimizing performance-critical
 //! sections of scirs2-core based on profiling data. Enhanced with AI-driven
-//! adaptive optimization and ML-based performance modeling for ultrathink mode.
+//! adaptive optimization and ML-based performance modeling for Advanced mode.
 //!
-//! # Ultrathink Mode Features
+//! # Advanced Mode Features
 //!
 //! - **AI-Driven Strategy Selection**: Machine learning models predict optimal strategies
 //! - **Neural Performance Modeling**: Deep learning for performance prediction
@@ -2064,7 +2064,7 @@ pub mod cache_aware_algorithms {
     }
 }
 
-/// Ultrathink Mode: AI-Driven Adaptive Optimization Engine
+/// Advanced Mode: AI-Driven Adaptive Optimization Engine
 ///
 /// This module provides advanced AI-driven optimization capabilities that learn
 /// from runtime characteristics and automatically adapt optimization strategies
@@ -2099,13 +2099,13 @@ pub mod advanced_optimization {
         #[allow(dead_code)]
         metrics_collector: Arc<Mutex<RealTimeMetricsCollector>>,
         /// Configuration
-        config: UltrathinkOptimizationConfig,
+        config: AdvancedOptimizationConfig,
     }
 
     /// Configuration for advanced optimization
     #[derive(Debug, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub struct UltrathinkOptimizationConfig {
+    pub struct AdvancedOptimizationConfig {
         /// Enable neural performance prediction
         pub enable_neural_prediction: bool,
         /// Enable adaptive learning
@@ -2124,7 +2124,7 @@ pub mod advanced_optimization {
         pub context_window_size: usize,
     }
 
-    impl Default for UltrathinkOptimizationConfig {
+    impl Default for AdvancedOptimizationConfig {
         fn default() -> Self {
             Self {
                 enable_neural_prediction: true,
@@ -2792,11 +2792,11 @@ pub mod advanced_optimization {
     impl AIOptimizationEngine {
         /// Create a new AI optimization engine
         pub fn new() -> Self {
-            Self::with_config(UltrathinkOptimizationConfig::default())
+            Self::with_config(AdvancedOptimizationConfig::default())
         }
 
         /// Create with custom configuration
-        pub fn with_config(config: UltrathinkOptimizationConfig) -> Self {
+        pub fn with_config(config: AdvancedOptimizationConfig) -> Self {
             Self {
                 performance_predictor: Arc::new(RwLock::new(NeuralPerformancePredictor::new())),
                 strategy_classifier: Arc::new(RwLock::new(StrategyClassifier::new())),
@@ -4254,8 +4254,8 @@ mod tests {
 
     #[test]
     #[cfg(feature = "benchmarking")]
-    fn test_ultrathink_benchmark_config() {
-        let config = benchmarking::presets::ultrathink_comprehensive();
+    fn test_advanced_benchmark_config() {
+        let config = benchmarking::presets::advanced_comprehensive();
 
         // Verify comprehensive strategy coverage
         assert!(config

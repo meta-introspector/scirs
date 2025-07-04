@@ -15,7 +15,6 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
     })
 }
 
-
 /// Apply a threshold to an image to create a binary image
 ///
 /// # Arguments

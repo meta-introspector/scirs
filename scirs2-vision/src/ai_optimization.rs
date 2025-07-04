@@ -243,7 +243,7 @@ impl RLParameterOptimizer {
 
         if rng.random::<f64>() < self.learning_params.epsilon {
             // Explore: random action
-            self.action_space.choose(&mut rng).unwrap().clone()
+            self.action_space.choose(&mut rng).expect("Action space should not be empty").clone()
         } else {
             // Exploit: best known action
             self.get_best_action(state)
@@ -255,7 +255,7 @@ impl RLParameterOptimizer {
         if let Some(action_values) = self.q_table.get(state) {
             action_values
                 .iter()
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
                 .map(|(action, _)| action.clone())
                 .unwrap_or_else(|| self.action_space[0].clone())
         } else {
@@ -1180,7 +1180,7 @@ impl GeneticPipelineOptimizer {
 
         // Record generation statistics
         let best_fitness = self.population[0].fitness;
-        let worst_fitness = self.population.last().unwrap().fitness;
+        let worst_fitness = self.population.last().expect("Population should not be empty").fitness;
         let avg_fitness =
             self.population.iter().map(|g| g.fitness).sum::<f64>() / self.population.len() as f64;
 

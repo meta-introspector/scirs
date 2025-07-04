@@ -30,6 +30,7 @@ struct LearningProfile {
     assessment_scores: Vec<AssessmentResult>,
     mistake_patterns: HashMap<String, u32>, // Error type -> frequency
     mastery_goals: Vec<String>,
+    #[allow(dead_code)]
     last_session: Option<Instant>,
 }
 
@@ -46,9 +47,12 @@ enum LearningStyle {
 struct AssessmentResult {
     topic: String,
     score: f64,
+    #[allow(dead_code)]
     time_taken: Duration,
     difficulty_level: u32,
+    #[allow(dead_code)]
     mistakes: Vec<String>,
+    #[allow(dead_code)]
     timestamp: Instant,
 }
 
@@ -68,13 +72,17 @@ struct ConceptNode {
 #[derive(Debug, Clone)]
 enum VisualizationType {
     Graph2D {
+        #[allow(dead_code)]
         x_range: (f64, f64),
+        #[allow(dead_code)]
         y_range: (f64, f64),
     },
     Graph3D {
+        #[allow(dead_code)]
         ranges: ((f64, f64), (f64, f64), (f64, f64)),
     },
     ComplexPlane {
+        #[allow(dead_code)]
         radius: f64,
     },
     Contour {
@@ -370,7 +378,7 @@ impl AdaptiveLearningSession {
 
     fn calculate_topic_score(
         &self,
-        topic: &str,
+        _topic: &str,
         node: &ConceptNode,
         skill: f64,
         difficulty: f64,
@@ -579,7 +587,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("============================================================\n");
 
     // Initialize or load user profile
-    let mut profile = create_or_load_profile()?;
+    let profile = create_or_load_profile()?;
 
     // Create adaptive learning session
     let mut session = AdaptiveLearningSession::new(profile.clone());
@@ -1003,7 +1011,7 @@ fn present_practical_content(
             println!();
 
             // Calculate some frequencies using Bessel zeros
-            let j0_zeros = vec![2.4048, 5.5201, 8.6537]; // First few zeros of J₀
+            let j0_zeros = [2.4048, 5.5201, 8.6537]; // First few zeros of J₀
             println!("Fundamental frequencies (J₀ zeros):");
             for (mode, &zero) in j0_zeros.iter().enumerate() {
                 let frequency = zero * wave_speed / (2.0 * PI * radius);
@@ -1016,7 +1024,7 @@ fn present_practical_content(
             }
 
             // J₁ zeros give different mode shapes
-            let j1_zeros = vec![3.8317, 7.0156, 10.1735];
+            let j1_zeros = [3.8317, 7.0156, 10.1735];
             println!("\nNext mode family (J₁ zeros):");
             for (mode, &zero) in j1_zeros.iter().enumerate() {
                 let frequency = zero * wave_speed / (2.0 * PI * radius);
@@ -1664,7 +1672,7 @@ fn visualize_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
         let position = center + (j_val * 15.0) as i32;
         let display_pos = position.max(0).min(40) as usize;
 
-        let mut line = vec![' '; 41];
+        let mut line = [' '; 41];
         line[center as usize] = '|';
         if display_pos < line.len() {
             line[display_pos] = if j_val > 0.0 { '●' } else { '○' };
@@ -1696,7 +1704,7 @@ fn visualize_error_function() -> Result<(), Box<dyn std::error::Error>> {
         let erf_pos = (15.0 + erf_val * 10.0) as usize;
         let erfc_pos = (erfc_val * 20.0) as usize;
 
-        let mut line = vec![' '; 31];
+        let mut line = [' '; 31];
         line[15] = '|'; // Zero line
         if erf_pos < line.len() {
             line[erf_pos] = '●';

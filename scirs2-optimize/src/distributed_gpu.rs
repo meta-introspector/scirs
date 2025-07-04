@@ -337,7 +337,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
             // Mutation and crossover
             let j_rand = rng.random_range(0..dims);
             for j in 0..dims {
-                if rng.random::<f64>() < crossover_rate || j == j_rand {
+                if rng.random_range(0.0..1.0) < crossover_rate || j == j_rand {
                     trial_population[[i, j]] = population[[a, j]]
                         + f_scale * (population[[b, j]] - population[[c, j]]);
                 } else {
@@ -521,7 +521,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         let mut values = Array1::zeros(count);
 
         for i in 0..count {
-            values[i] = rng.random::<f64>();
+            values[i] = rng.random_range(0.0..1.0);
         }
 
         Ok(values)

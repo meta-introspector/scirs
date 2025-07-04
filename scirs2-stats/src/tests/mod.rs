@@ -329,7 +329,8 @@ where
 pub fn kstest<F, G>(x: &ArrayView1<F>, cdf: G) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast,
-    G: Fn(F) -> F,
+    G: Fn(F) -> F
+        + std::fmt::Display,
 {
     // Check if the input array is empty
     if x.is_empty() {
@@ -462,7 +463,8 @@ fn calculate_ks_p_value<F: Float + NumCast>(ks_stat: F, n: F) -> F {
 #[allow(dead_code)]
 pub fn shapiro<F>(x: &ArrayView1<F>) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast
+        + std::fmt::Display,
 {
     // Check if the input array is empty
     if x.is_empty() {

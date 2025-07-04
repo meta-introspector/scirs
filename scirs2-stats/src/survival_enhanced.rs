@@ -308,7 +308,8 @@ impl Default for CoxConfig {
 
 impl<F> CoxProportionalHazards<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display,
 {
     /// Create new Cox model
     pub fn new(config: CoxConfig) -> Self {
@@ -649,7 +650,8 @@ pub fn cox_regression<F>(
     config: Option<CoxConfig>,
 ) -> StatsResult<CoxProportionalHazards<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display,
 {
     let config = config.unwrap_or_default();
     let mut cox = CoxProportionalHazards::new(config);

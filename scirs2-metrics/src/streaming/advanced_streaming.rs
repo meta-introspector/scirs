@@ -4203,7 +4203,7 @@ impl<
         let mut params = HashMap::new();
 
         // Simple conversion - map array elements to parameter names
-        let param_names = vec![
+        let param_names = [
             "learning_rate",
             "momentum",
             "weight_decay",

@@ -1,7 +1,7 @@
-//! Ultra-Think Enhanced Algorithms Demo
+//! advanced Enhanced Algorithms Demo
 //!
 //! This example demonstrates the advanced pattern recognition and algorithmic
-//! enhancements available in the Ultra-Think system, showcasing:
+//! enhancements available in the advanced system, showcasing:
 //! - Multi-scale pattern analysis with deep learning
 //! - Emergent pattern detection and meta-pattern recognition
 //! - Advanced optimization recommendations
@@ -13,7 +13,7 @@ use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🚀 SciRS2-IO Ultra-Think Enhanced Algorithms Demo");
+    println!("🚀 SciRS2-IO advanced Enhanced Algorithms Demo");
     println!("=================================================\n");
 
     // Initialize the advanced pattern recognizer
@@ -43,7 +43,7 @@ fn main() -> Result<()> {
     // Demo 6: Real-World Data Analysis
     demonstrate_real_world_analysis(&mut recognizer)?;
 
-    println!("\n🎉 Ultra-Think Enhanced Algorithms Demo Complete!");
+    println!("\n🎉 advanced Enhanced Algorithms Demo Complete!");
     println!("The system has demonstrated:");
     println!("  ✅ Advanced multi-scale pattern recognition");
     println!("  ✅ Emergent pattern detection with deep learning");

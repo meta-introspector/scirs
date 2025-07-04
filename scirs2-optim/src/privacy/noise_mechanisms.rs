@@ -50,19 +50,19 @@ pub struct NoiseParameters<T: Float> {
 
 /// Gaussian noise mechanism for (ε, δ)-differential privacy
 pub struct GaussianMechanism<T: Float> {
-    rng: Box<dyn rand::RngCore + Send>,
+    rng: rand::rngs::ThreadRng,
     _phantom: PhantomData<T>,
 }
 
 /// Laplace noise mechanism for ε-differential privacy
 pub struct LaplaceMechanism<T: Float> {
-    rng: Box<dyn rand::RngCore + Send>,
+    rng: rand::rngs::ThreadRng,
     _phantom: PhantomData<T>,
 }
 
 /// Exponential mechanism for discrete optimization
 pub struct ExponentialMechanism<T: Float> {
-    rng: Box<dyn rand::RngCore + Send>,
+    rng: rand::rngs::ThreadRng,
     quality_function: Box<dyn Fn(&T) -> T + Send + Sync>,
     _phantom: PhantomData<T>,
 }
@@ -145,7 +145,7 @@ where
     /// Create a new Gaussian mechanism
     pub fn new() -> Self {
         Self {
-            rng: Box::new(rand::rng()),
+            rng: rand::rng(),
             _phantom: PhantomData,
         }
     }
@@ -227,7 +227,7 @@ where
     /// Create a new Laplace mechanism
     pub fn new() -> Self {
         Self {
-            rng: Box::new(rand::rng()),
+            rng: rand::rng(),
             _phantom: PhantomData,
         }
     }
@@ -309,7 +309,7 @@ where
     /// Create a new exponential mechanism
     pub fn new(quality_function: Box<dyn Fn(&T) -> T + Send + Sync>) -> Self {
         Self {
-            rng: Box::new(rand::rng()),
+            rng: rand::rng(),
             quality_function,
             _phantom: PhantomData,
         }
@@ -343,7 +343,7 @@ where
         // Sample according to weights
         let total_weight: f64 = weights.iter().sum();
         let mut cumulative = 0.0;
-        let random_val: f64 = self.rng.random_range(0.0..total_weight);
+        let random_val: f64 = self.rng.gen_range(0.0..total_weight);
 
         for (i, &weight) in weights.iter().enumerate() {
             cumulative += weight;

@@ -14,6 +14,8 @@ use ndarray::{Array1, Array2, ArrayView1};
 // use scirs2_core::error::CoreResult;
 use std::time::{Duration, Instant};
 
+type Result<T> = std::result::Result<T, OptimizeError>;
+
 /// Real-time estimation methods
 #[derive(Debug, Clone, Copy)]
 pub enum RealTimeMethod {

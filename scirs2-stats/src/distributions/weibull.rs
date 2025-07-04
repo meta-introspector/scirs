@@ -23,7 +23,7 @@ pub struct Weibull<F: Float> {
     rand_distr: RandUniform<f64>,
 }
 
-impl<F: Float + NumCast> Weibull<F> {
+impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// Create a new Weibull distribution with given parameters
     ///
     /// # Arguments
@@ -411,13 +411,14 @@ fn gamma_function<F: Float + NumCast>(x: F) -> F {
 #[allow(dead_code)]
 pub fn weibull<F>(shape: F, scale: F, loc: F) -> StatsResult<Weibull<F>>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     Weibull::new(shape, scale, loc)
 }
 
 /// Implementation of SampleableDistribution for Weibull
-impl<F: Float + NumCast> SampleableDistribution<F> for Weibull<F> {
+impl<F: Float + NumCast + std::fmt::Display> SampleableDistribution<F> for Weibull<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs(size)
     }

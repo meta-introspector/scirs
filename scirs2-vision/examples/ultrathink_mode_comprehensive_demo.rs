@@ -1,7 +1,7 @@
-//! Comprehensive Ultrathink Mode Demonstration
+//! Comprehensive Advanced Mode Demonstration
 //!
 //! This example showcases the ultra-advanced computer vision capabilities implemented
-//! in ultrathink mode, including:
+//! in Advanced mode, including:
 //! - Scene understanding with cognitive-level reasoning
 //! - Visual reasoning and question answering
 //! - Advanced activity recognition
@@ -54,7 +54,7 @@ use std::collections::HashMap;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🚀 Scirs2-Vision Ultrathink Mode Comprehensive Demonstration");
+    println!("🚀 Scirs2-Vision Advanced Mode Comprehensive Demonstration");
     println!("============================================================");
     println!();
 
@@ -520,7 +520,7 @@ fn main() -> Result<()> {
     println!();
 
     // Final Summary
-    println!("🎉 Ultrathink Mode Demonstration Complete!");
+    println!("🎉 Advanced Mode Demonstration Complete!");
     println!("==========================================");
     println!();
     println!("Successfully demonstrated:");
@@ -534,7 +534,7 @@ fn main() -> Result<()> {
     println!("✓ Real-time performance with scalable architectures");
     println!("✓ Integrated multi-modal computer vision pipeline");
     println!();
-    println!("🚀 Scirs2-Vision is ready for production use with ultrathink capabilities!");
+    println!("🚀 Scirs2-Vision is ready for production use with Advanced capabilities!");
 
     Ok(())
 }
@@ -599,4 +599,4 @@ fn estimate_memory_usage() -> f64 {
     350.0 // Total estimated MB
 }
 
-// Demo complete - all ultrathink mode features demonstrated successfully!
+// Demo complete - all Advanced mode features demonstrated successfully!

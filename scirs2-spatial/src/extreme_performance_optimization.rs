@@ -1,4 +1,4 @@
-//! Extreme Performance Optimization (Ultrathink Mode)
+//! Extreme Performance Optimization (Advanced Mode)
 //!
 //! This module represents the absolute pinnacle of spatial computing performance,
 //! pushing the boundaries of what's possible on current and future hardware.

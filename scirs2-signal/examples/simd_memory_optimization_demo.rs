@@ -45,8 +45,8 @@ fn main() -> SignalResult<()> {
     // Demo 7: Memory-optimized spectrogram
     demo_memory_optimized_spectrogram()?;
 
-    // Demo 8: Ultrathink Mode SIMD Memory Optimization
-    demo_ultrathink_simd_memory()?;
+    // Demo 8: Advanced Mode SIMD Memory Optimization
+    demo_advanced_simd_memory()?;
 
     println!("\nDemo completed successfully!");
     Ok(())
@@ -476,8 +476,8 @@ fn demo_memory_optimized_spectrogram() -> SignalResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_ultrathink_simd_memory() -> SignalResult<()> {
-    println!("\n8. Ultrathink Mode SIMD Memory Optimization");
+fn demo_advanced_simd_memory() -> SignalResult<()> {
+    println!("\n8. Advanced Mode SIMD Memory Optimization");
     println!("===========================================");
 
     // Configure advanced SIMD memory optimization
@@ -490,7 +490,7 @@ fn demo_ultrathink_simd_memory() -> SignalResult<()> {
         enable_prefetch: true,
     };
 
-    println!("🚀 Ultrathink Mode Configuration:");
+    println!("🚀 Advanced Mode Configuration:");
     println!("  - SIMD Vectorization: {}", config.enable_simd);
     println!("  - Parallel Processing: {}", config.enable_parallel);
     println!("  - Cache Block Size: {} bytes", config.cache_block_size);
@@ -607,7 +607,7 @@ fn demo_ultrathink_simd_memory() -> SignalResult<()> {
     let total_time = conv_result.processing_time_ms + fir_result.processing_time_ms;
     let throughput = (total_operations as f64) / (total_time / 1000.0);
 
-    println!("\n🎯 Ultrathink Mode Performance Summary:");
+    println!("\n🎯 Advanced Mode Performance Summary:");
     println!("  - Total operations: {} samples", total_operations);
     println!("  - Total processing time: {:.2} ms", total_time);
     println!("  - Throughput: {:.0} samples/second", throughput);
@@ -659,7 +659,7 @@ fn demo_ultrathink_simd_memory() -> SignalResult<()> {
         println!("  ✅ All values match expected results!");
     }
 
-    println!("\n🚀 Ultrathink Mode SIMD Memory Optimization completed!");
+    println!("\n🚀 Advanced Mode SIMD Memory Optimization completed!");
 
     Ok(())
 }

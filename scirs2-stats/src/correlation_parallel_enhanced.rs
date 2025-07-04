@@ -87,7 +87,8 @@ where
         + Send
         + Sync
         + std::iter::Sum<F>
-        + std::fmt::Debug,
+        + std::fmt::Debug
+        + std::fmt::Display,
 {
     // Validate inputs
     check_array_finite_2d(data, "data")?;
@@ -219,7 +220,8 @@ where
 pub fn pearson_r_simd_enhanced<F, D>(x: &ArrayBase<D, Ix1>, y: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + std::iter::Sum<F>,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     // Check dimensions
     if x.len() != y.len() {
@@ -340,7 +342,8 @@ where
         + Send
         + Sync
         + std::iter::Sum<F>
-        + std::fmt::Debug,
+        + std::fmt::Debug
+        + std::fmt::Display,
 {
     if pairs.is_empty() {
         return Ok(Vec::new());
@@ -455,7 +458,8 @@ where
         + Send
         + Sync
         + std::iter::Sum<F>
-        + std::fmt::Debug,
+        + std::fmt::Debug
+        + std::fmt::Display,
 {
     if x.len() != y.len() {
         return Err(StatsError::DimensionMismatch(format!(
@@ -500,7 +504,8 @@ where
 fn check_array_finite_2d<F, D>(arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
 where
     F: Float,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     for &val in arr.iter() {
         if !val.is_finite() {

@@ -23,7 +23,7 @@ pub struct Pareto<F: Float> {
     rand_distr: RandUniform<f64>,
 }
 
-impl<F: Float + NumCast> Pareto<F> {
+impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// Create a new Pareto distribution with given parameters
     ///
     /// # Arguments
@@ -350,13 +350,14 @@ impl<F: Float + NumCast> Pareto<F> {
 #[allow(dead_code)]
 pub fn pareto<F>(shape: F, scale: F, loc: F) -> StatsResult<Pareto<F>>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     Pareto::new(shape, scale, loc)
 }
 
 /// Implementation of SampleableDistribution for Pareto
-impl<F: Float + NumCast> SampleableDistribution<F> for Pareto<F> {
+impl<F: Float + NumCast + std::fmt::Display> SampleableDistribution<F> for Pareto<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs(size)
     }

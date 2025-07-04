@@ -1,4 +1,4 @@
-/// Integration test for new ultrathink mode functions
+/// Integration test for new Advanced mode functions
 use scirs2_special::{erfcx, erfi, shichi, sici, spence, wofz};
 
 #[test]

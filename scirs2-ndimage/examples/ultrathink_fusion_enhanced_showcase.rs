@@ -1,6 +1,6 @@
-//! Enhanced Ultrathink Fusion Showcase - Next Generation Capabilities
+//! Enhanced Advanced Fusion Showcase - Next Generation Capabilities
 //!
-//! This example demonstrates the latest cutting-edge enhancements to the ultrathink fusion core,
+//! This example demonstrates the latest cutting-edge enhancements to the Advanced fusion core,
 //! including advanced quantum consciousness evolution, enhanced meta-learning with temporal
 //! memory fusion, and quantum-aware resource scheduling optimization.
 //!
@@ -30,11 +30,11 @@
 use ndarray::{Array1, Array2, Array3, ArrayView2};
 use scirs2_ndimage::{
     enhanced_meta_learning_with_temporal_fusion,
-    // Latest ultrathink enhancements
+    // Latest Advanced enhancements
     enhanced_quantum_consciousness_evolution,
     quantum_aware_resource_scheduling_optimization,
     quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
-    ultrathink_fusion_processing,
+    fusion_processing,
     ConsciousnessState,
     EnhancedMetaLearningSystem,
     NeuromorphicConfig,
@@ -44,7 +44,7 @@ use scirs2_ndimage::{
     QuantumConsciousnessEvolution,
     ResourceSchedulingDecision,
     // Core structures
-    UltrathinkConfig,
+    AdvancedConfig,
     UltrathinkState,
     WorkloadCharacteristics,
 };
@@ -53,7 +53,7 @@ use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🌟🧠🌟 ENHANCED ULTRATHINK FUSION SHOWCASE 🌟🧠🌟");
+    println!("🌟🧠🌟 ENHANCED Advanced FUSION SHOWCASE 🌟🧠🌟");
     println!("========================================================");
     println!("Next-Generation Quantum Consciousness & Meta-Learning");
     println!("Advanced Resource Optimization & Evolutionary Intelligence");
@@ -67,9 +67,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         test_image.ncols()
     );
 
-    // Initialize advanced ultrathink configuration
+    // Initialize advanced Advanced configuration
     let config = create_advanced_ultrathink_config();
-    println!("⚙️ Configured advanced ultrathink parameters");
+    println!("⚙️ Configured advanced Advanced parameters");
 
     // Initialize consciousness evolution system
     let mut consciousness_evolution = QuantumConsciousnessEvolution::default();
@@ -94,7 +94,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Phase 3: Demonstrate Quantum Resource Scheduling Optimization
     demonstrate_quantum_resource_scheduling(&config, &mut resource_scheduler)?;
 
-    // Phase 4: Integrated Ultrathink Fusion Processing
+    // Phase 4: Integrated Advanced Fusion Processing
     demonstrate_integrated_ultrathink_processing(
         &test_image,
         &config,
@@ -111,7 +111,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     println!();
-    println!("🎉 Enhanced Ultrathink Fusion Showcase completed successfully!");
+    println!("🎉 Enhanced Advanced Fusion Showcase completed successfully!");
     println!("   This demonstration showcases the future of AI-enhanced image processing");
     println!("   combining quantum consciousness, advanced meta-learning, and optimal resource scheduling.");
 
@@ -122,7 +122,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demonstrate_consciousness_evolution(
     image: &Array2<f64>,
-    config: &UltrathinkConfig,
+    config: &AdvancedConfig,
     consciousness_evolution: &mut QuantumConsciousnessEvolution,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🧠 Phase 1: Advanced Quantum Consciousness Evolution");
@@ -133,7 +133,7 @@ fn demonstrate_consciousness_evolution(
     // Create ultra-dimensional features for consciousness processing
     let ultra_features = create_mock_ultra_features(image, config);
 
-    // Initialize ultrathink state
+    // Initialize Advanced state
     let mut ultra_state = create_mock_ultra_state(image.dim(), config);
 
     // Process through quantum consciousness evolution
@@ -223,7 +223,7 @@ fn demonstrate_consciousness_evolution(
 #[allow(dead_code)]
 fn demonstrate_enhanced_meta_learning(
     image: &Array2<f64>,
-    config: &UltrathinkConfig,
+    config: &AdvancedConfig,
     meta_learning_system: &mut EnhancedMetaLearningSystem,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎓 Phase 2: Enhanced Meta-Learning with Temporal Fusion");
@@ -236,7 +236,7 @@ fn demonstrate_enhanced_meta_learning(
     let neural_response = create_mock_response(image.dim());
     let causal_response = create_mock_response(image.dim());
 
-    // Initialize ultrathink state
+    // Initialize Advanced state
     let mut ultra_state = create_mock_ultra_state(image.dim(), config);
 
     // Process through enhanced meta-learning
@@ -311,7 +311,7 @@ fn demonstrate_enhanced_meta_learning(
 /// Phase 3: Demonstrate Quantum Resource Scheduling Optimization
 #[allow(dead_code)]
 fn demonstrate_quantum_resource_scheduling(
-    config: &UltrathinkConfig,
+    config: &AdvancedConfig,
     resource_scheduler: &mut QuantumAwareResourceScheduler,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ Phase 3: Quantum-Aware Resource Scheduling Optimization");
@@ -319,7 +319,7 @@ fn demonstrate_quantum_resource_scheduling(
 
     let start_time = Instant::now();
 
-    // Create mock ultrathink state
+    // Create mock Advanced state
     let mut ultra_state = create_mock_ultra_state((256, 256), config);
 
     // Create workload characteristics
@@ -358,18 +358,18 @@ fn demonstrate_quantum_resource_scheduling(
     println!("   🔧 Active scheduling algorithms:");
     for (i, algorithm) in resource_scheduler.scheduling_algorithms.iter().enumerate() {
         match algorithm {
-            scirs2_ndimage::ultrathink_fusion_core::QuantumSchedulingAlgorithm::QuantumAnnealing {
+            scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::QuantumAnnealing {
                 annealing_schedule, optimization_target
             } => {
                 println!("      Algorithm {}: Quantum Annealing ({} steps)", 
                          i + 1, annealing_schedule.steps);
             },
-            scirs2_ndimage::ultrathink_fusion_core::QuantumSchedulingAlgorithm::QAOA {
+            scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::QAOA {
                 layers, ..
             } => {
                 println!("      Algorithm {}: QAOA ({} layers)", i + 1, layers);
             },
-            scirs2_ndimage::ultrathink_fusion_core::QuantumSchedulingAlgorithm::VQEScheduling {
+            scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::VQEScheduling {
                 ansatz, ..
             } => {
                 println!("      Algorithm {}: VQE Scheduling (ansatz: {})", i + 1, ansatz);
@@ -389,13 +389,13 @@ fn demonstrate_quantum_resource_scheduling(
         .enumerate()
     {
         match strategy {
-            scirs2_ndimage::ultrathink_fusion_core::QuantumLoadBalancingStrategy::QuantumSuperposition {
+            scirs2_ndimage::fusion_core::QuantumLoadBalancingStrategy::QuantumSuperposition {
                 measurement_basis, ..
             } => {
                 println!("      Strategy {}: Quantum Superposition (basis: {})", 
                          i + 1, measurement_basis);
             },
-            scirs2_ndimage::ultrathink_fusion_core::QuantumLoadBalancingStrategy::EntanglementSharing {
+            scirs2_ndimage::fusion_core::QuantumLoadBalancingStrategy::EntanglementSharing {
                 entanglement_strength, ..
             } => {
                 println!("      Strategy {}: Entanglement Sharing (strength: {:.3})", 
@@ -411,26 +411,26 @@ fn demonstrate_quantum_resource_scheduling(
     Ok(())
 }
 
-/// Phase 4: Integrated Ultrathink Fusion Processing
+/// Phase 4: Integrated Advanced Fusion Processing
 #[allow(dead_code)]
 fn demonstrate_integrated_ultrathink_processing(
     image: &Array2<f64>,
-    config: &UltrathinkConfig,
+    config: &AdvancedConfig,
     consciousness_evolution: &mut QuantumConsciousnessEvolution,
     meta_learning_system: &mut EnhancedMetaLearningSystem,
     resource_scheduler: &mut QuantumAwareResourceScheduler,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("🌟 Phase 4: Integrated Ultrathink Fusion Processing");
+    println!("🌟 Phase 4: Integrated Advanced Fusion Processing");
     println!("=================================================");
 
     let start_time = Instant::now();
 
-    // Initialize ultrathink state
+    // Initialize Advanced state
     let mut ultra_state = create_mock_ultra_state(image.dim(), config);
 
-    // Perform integrated ultrathink fusion processing
+    // Perform integrated Advanced fusion processing
     let (processed_image, final_state) =
-        ultrathink_fusion_processing(image.view(), config, Some(ultra_state))?;
+        fusion_processing(image.view(), config, Some(ultra_state))?;
 
     let duration = start_time.elapsed();
 
@@ -453,7 +453,7 @@ fn demonstrate_integrated_ultrathink_processing(
     println!("      Operations per second: {:.0}", final_efficiency);
     println!("      Total processing time: {:.2}ms", duration.as_millis());
 
-    // Display ultrathink system convergence
+    // Display Advanced system convergence
     println!("   🎯 System Convergence Metrics:");
     println!(
         "      Consciousness emergence: {:.4}",
@@ -544,8 +544,8 @@ fn create_complex_test_image() -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_advanced_ultrathink_config() -> UltrathinkConfig {
-    UltrathinkConfig {
+fn create_advanced_ultrathink_config() -> AdvancedConfig {
+    AdvancedConfig {
         quantum: QuantumConfig {
             coherence_threshold: 0.85,
             entanglement_strength: 0.7,
@@ -582,23 +582,23 @@ fn create_advanced_ultrathink_config() -> UltrathinkConfig {
 }
 
 #[allow(dead_code)]
-fn create_mock_ultra_features(image: &Array2<f64>, config: &UltrathinkConfig) -> Array3<f64> {
+fn create_mock_ultra_features(image: &Array2<f64>, config: &AdvancedConfig) -> Array3<f64> {
     // Simplified mock ultra-features for demonstration
     let (height, width) = image.dim();
     Array3::zeros((height, width, config.ultra_dimensions))
 }
 
 #[allow(dead_code)]
-fn create_mock_ultra_state(shape: (usize, usize), config: &UltrathinkConfig) -> UltrathinkState {
+fn create_mock_ultra_state(shape: (usize, usize), config: &AdvancedConfig) -> UltrathinkState {
     // Create a simplified mock state for demonstration
     let mut state = UltrathinkState {
         consciousness_amplitudes: Array3::zeros((shape.0, shape.1, config.consciousness_depth)),
         meta_parameters: Array2::zeros((config.ultra_dimensions, config.temporal_window)),
         network_topology: std::sync::Arc::new(std::sync::RwLock::new(
-            scirs2_ndimage::ultrathink_fusion_core::NetworkTopology {
+            scirs2_ndimage::fusion_core::NetworkTopology {
                 connections: HashMap::new(),
                 nodes: Vec::new(),
-                global_properties: scirs2_ndimage::ultrathink_fusion_core::NetworkProperties {
+                global_properties: scirs2_ndimage::fusion_core::NetworkProperties {
                     coherence: 0.8,
                     self_organization_index: 0.7,
                     consciousness_emergence: 0.6,
@@ -609,14 +609,14 @@ fn create_mock_ultra_state(shape: (usize, usize), config: &UltrathinkConfig) -> 
         temporal_memory: std::collections::VecDeque::new(),
         causal_graph: std::collections::BTreeMap::new(),
         ultra_features: Array3::zeros((shape.0, shape.1, config.ultra_dimensions)),
-        resource_allocation: scirs2_ndimage::ultrathink_fusion_core::ResourceState {
+        resource_allocation: scirs2_ndimage::fusion_core::ResourceState {
             cpu_allocation: vec![0.7; num_cpus::get()],
             memory_allocation: 0.6,
             gpu_allocation: Some(0.8),
             quantum_allocation: Some(0.5),
             allocation_history: std::collections::VecDeque::new(),
         },
-        efficiency_metrics: scirs2_ndimage::ultrathink_fusion_core::EfficiencyMetrics {
+        efficiency_metrics: scirs2_ndimage::fusion_core::EfficiencyMetrics {
             ops_per_second: 10000.0,
             memory_efficiency: 0.85,
             energy_efficiency: 0.75,
@@ -651,7 +651,7 @@ fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
     let mut task_types = HashMap::new();
     task_types.insert(
         "image_processing".to_string(),
-        scirs2_ndimage::ultrathink_fusion_core::QuantumTaskRequirements {
+        scirs2_ndimage::fusion_core::QuantumTaskRequirements {
             qubit_requirement: 16,
             coherence_requirement: 50.0,
             gate_operations: vec![
@@ -667,7 +667,7 @@ fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
         task_types,
         intensity_pattern: vec![0.5, 0.7, 0.9, 0.8, 0.6, 0.4, 0.3, 0.5, 0.8, 0.9],
         dependencies: vec![("task1".to_string(), "task2".to_string())],
-        performance_requirements: scirs2_ndimage::ultrathink_fusion_core::PerformanceRequirements {
+        performance_requirements: scirs2_ndimage::fusion_core::PerformanceRequirements {
             max_latency: 100.0,
             min_throughput: 1000.0,
             accuracy_requirement: 0.95,

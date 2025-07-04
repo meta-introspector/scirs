@@ -421,7 +421,7 @@ pub mod algorithms {
                 // Mutation and crossover
                 let j_rand = rng.random_range(0..dims);
                 for j in 0..dims {
-                    if rng.random::<f64>() < self.crossover_rate || j == j_rand {
+                    if rng.random_range(0.0..1.0) < self.crossover_rate || j == j_rand {
                         trial_population[[i, j]] = population[[a, j]]
                             + self.f_scale * (population[[b, j]] - population[[c, j]]);
                     } else {
@@ -617,8 +617,8 @@ pub mod algorithms {
 
             for i in 0..swarm_size {
                 for j in 0..dims {
-                    let r1: f64 = rng.gen();
-                    let r2: f64 = rng.gen();
+                    let r1: f64 = rng.random_range(0.0..1.0);
+                    let r2: f64 = rng.random_range(0.0..1.0);
 
                     // Update velocity
                     velocities[[i, j]] = self.w * velocities[[i, j]]

@@ -193,7 +193,7 @@ impl Default for LombScargleValidationConfig {
     }
 }
 
-/// Enhanced ultrathink validation of Lomb-Scargle implementation
+/// Enhanced Advanced validation of Lomb-Scargle implementation
 ///
 /// This function runs an ultra-comprehensive validation suite covering:
 /// - Single and multi-frequency signals with precision analysis
@@ -210,15 +210,15 @@ impl Default for LombScargleValidationConfig {
 ///
 /// # Returns
 ///
-/// * Enhanced validation results with ultrathink features
+/// * Enhanced validation results with Advanced features
 #[allow(dead_code)]
-pub fn validate_lombscargle_ultrathink(
+pub fn validate_lombscargle_advanced(
     config: &LombScargleValidationConfig,
     tolerance: f64,
 ) -> SignalResult<LombScargleValidationResult> {
     let mut comprehensive_result = validate_lombscargle_comprehensive(config)?;
 
-    // Enhance validation with ultrathink features
+    // Enhance validation with Advanced features
     enhance_with_advanced_sampling_tests(&mut comprehensive_result, config, tolerance)?;
     enhance_with_memory_efficiency_tests(&mut comprehensive_result, config)?;
     enhance_with_simd_performance_validation(&mut comprehensive_result, config)?;
@@ -1611,7 +1611,7 @@ fn enhance_with_statistical_robustness_tests(
     Ok(())
 }
 
-/// Calculate enhanced overall score for ultrathink validation
+/// Calculate enhanced overall score for Advanced validation
 #[allow(dead_code)]
 fn calculate_enhanced_lombscargle_score(result: &LombScargleValidationResult) -> f64 {
     let mut score = 100.0;

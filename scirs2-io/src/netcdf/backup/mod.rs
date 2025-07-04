@@ -15,14 +15,14 @@
 
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use ndarray::{Array, ArrayD, Dimension, IxDyn};
-use netcdf3::{File as NC3File, Variable, DataType};
+use netcdf3::{DataType, File as NC3File, Variable};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::Path;
 
-use scirs2_core::error::ScirsCoreError;
 use crate::error::{IOError, Result};
+use scirs2_core::error::ScirsCoreError;
 
 /// NetCDF file containing dimensions, variables, and attributes
 #[derive(Debug)]

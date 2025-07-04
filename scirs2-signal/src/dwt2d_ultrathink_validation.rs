@@ -1,11 +1,11 @@
-//! Ultra-comprehensive 2D wavelet transform validation in ultrathink mode
+//! Ultra-comprehensive 2D wavelet transform validation in Advanced mode
 //!
 //! This module provides the most thorough validation possible for 2D wavelet
 //! transforms, covering all aspects from mathematical correctness to performance
 //! optimization and numerical stability.
 
-use crate::error::{SignalResult};
-use ndarray::{Array2};
+use crate::error::SignalResult;
+use ndarray::Array2;
 use rand::prelude::*;
 // use scirs2_core::simd_ops::SimdUnifiedOps;
 // use scirs2_core::validation::{check_finite, check_positive};
@@ -15,7 +15,7 @@ use std::time::Instant;
 
 /// Ultra-comprehensive 2D wavelet validation configuration
 #[derive(Debug, Clone)]
-pub struct Dwt2dUltrathinkConfig {
+pub struct Dwt2dadvancedConfig {
     /// Test image sizes for scaling analysis
     pub test_sizes: Vec<(usize, usize)>,
     /// Wavelet types to test
@@ -42,7 +42,7 @@ pub struct Dwt2dUltrathinkConfig {
     pub max_test_duration: f64,
 }
 
-impl Default for Dwt2dUltrathinkConfig {
+impl Default for Dwt2dadvancedConfig {
     fn default() -> Self {
         Self {
             test_sizes: vec![(32, 32), (64, 64), (128, 128), (256, 256), (512, 512)],
@@ -74,7 +74,7 @@ impl Default for Dwt2dUltrathinkConfig {
 
 /// Ultra-comprehensive 2D wavelet validation results
 #[derive(Debug, Clone)]
-pub struct Dwt2dUltrathinkResult {
+pub struct Dwt2dadvancedResult {
     /// Perfect reconstruction validation
     pub reconstruction_validation: ReconstructionValidationResult,
     /// Orthogonality validation
@@ -316,9 +316,9 @@ pub struct ScalingBehaviorResult {
 ///
 /// * Comprehensive validation results with detailed analysis
 #[allow(dead_code)]
-pub fn run_dwt2d_ultrathink_validation(
-    config: &Dwt2dUltrathinkConfig,
-) -> SignalResult<Dwt2dUltrathinkResult> {
+pub fn run_dwt2d_comprehensive_validation(
+    config: &Dwt2dadvancedConfig,
+) -> SignalResult<Dwt2dadvancedResult> {
     let start_time = Instant::now();
     let mut issues = Vec::new();
     let mut recommendations = Vec::new();
@@ -494,7 +494,7 @@ pub fn run_dwt2d_ultrathink_validation(
         zero_coefficient_percentage: 75.0,
     };
 
-    Ok(Dwt2dUltrathinkResult {
+    Ok(Dwt2dadvancedResult {
         reconstruction_validation,
         orthogonality_validation,
         energy_conservation,
@@ -517,7 +517,7 @@ pub fn run_dwt2d_ultrathink_validation(
 
 #[allow(dead_code)]
 fn validate_perfect_reconstruction(
-    config: &Dwt2dUltrathinkConfig,
+    config: &Dwt2dadvancedConfig,
     rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ReconstructionValidationResult> {
     let mut max_error = 0.0;
@@ -568,7 +568,7 @@ fn validate_perfect_reconstruction(
 
 #[allow(dead_code)]
 fn validate_orthogonality(
-    config: &Dwt2dUltrathinkConfig,
+    config: &Dwt2dadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<OrthogonalityValidationResult> {
     // Placeholder implementation
@@ -583,7 +583,7 @@ fn validate_orthogonality(
 
 #[allow(dead_code)]
 fn validate_energy_conservation(
-    config: &Dwt2dUltrathinkConfig,
+    config: &Dwt2dadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<EnergyConservationResult> {
     // Placeholder implementation
@@ -597,7 +597,7 @@ fn validate_energy_conservation(
 
 #[allow(dead_code)]
 fn validate_boundary_conditions(
-    config: &Dwt2dUltrathinkConfig,
+    config: &Dwt2dadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<BoundaryValidationResult> {
     // Placeholder implementation
@@ -612,7 +612,7 @@ fn validate_boundary_conditions(
 
 #[allow(dead_code)]
 fn validate_multilevel_decomposition(
-    config: &Dwt2dUltrathinkConfig,
+    config: &Dwt2dadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<MultilevelValidationResult> {
     // Placeholder implementation
@@ -626,7 +626,7 @@ fn validate_multilevel_decomposition(
 
 #[allow(dead_code)]
 fn validate_denoising_performance(
-    config: &Dwt2dUltrathinkConfig,
+    config: &Dwt2dadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<DenoisingValidationResult> {
     // Placeholder implementation
@@ -643,7 +643,7 @@ fn validate_denoising_performance(
 
 #[allow(dead_code)]
 fn validate_compression_performance(
-    config: &Dwt2dUltrathinkConfig,
+    config: &Dwt2dadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<CompressionValidationResult> {
     // Placeholder implementation
@@ -658,7 +658,7 @@ fn validate_compression_performance(
 
 #[allow(dead_code)]
 fn validate_numerical_stability(
-    config: &Dwt2dUltrathinkConfig,
+    config: &Dwt2dadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<StabilityValidationResult> {
     // Placeholder implementation
@@ -678,7 +678,7 @@ fn validate_numerical_stability(
 
 #[allow(dead_code)]
 fn analyze_performance(
-    config: &Dwt2dUltrathinkConfig,
+    config: &Dwt2dadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<PerformanceAnalysisResult> {
     // Placeholder implementation
@@ -698,7 +698,7 @@ fn analyze_performance(
 
 #[allow(dead_code)]
 fn validate_simd_optimizations(
-    config: &Dwt2dUltrathinkConfig,
+    config: &Dwt2dadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<SimdOptimizationResult> {
     // Placeholder implementation
@@ -712,7 +712,7 @@ fn validate_simd_optimizations(
 
 #[allow(dead_code)]
 fn analyze_memory_usage(
-    config: &Dwt2dUltrathinkConfig,
+    config: &Dwt2dadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<MemoryAnalysisResult> {
     // Placeholder implementation
@@ -726,7 +726,7 @@ fn analyze_memory_usage(
 
 #[allow(dead_code)]
 fn validate_consistency(
-    config: &Dwt2dUltrathinkConfig,
+    config: &Dwt2dadvancedConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ConsistencyAnalysisResult> {
     // Placeholder implementation
@@ -871,7 +871,7 @@ fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
 
 /// Generate a comprehensive report of 2D wavelet validation results
 #[allow(dead_code)]
-pub fn generate_dwt2d_ultrathink_report(result: &Dwt2dUltrathinkResult) -> String {
+pub fn generate_dwt2d_comprehensive_report(result: &Dwt2dadvancedResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Ultra-comprehensive 2D Wavelet Transform Validation Report\n\n");
@@ -968,8 +968,8 @@ pub fn generate_dwt2d_ultrathink_report(result: &Dwt2dUltrathinkResult) -> Strin
 #[allow(dead_code)]
 /// Quick 2D wavelet validation for development
 #[allow(dead_code)]
-pub fn run_quick_dwt2d_validation() -> SignalResult<Dwt2dUltrathinkResult> {
-    let config = Dwt2dUltrathinkConfig {
+pub fn run_quick_dwt2d_validation() -> SignalResult<Dwt2dadvancedResult> {
+    let config = Dwt2dadvancedConfig {
         test_sizes: vec![(32, 32), (64, 64)],
         decomposition_levels: vec![1, 2],
         monte_carlo_trials: 10,
@@ -979,5 +979,5 @@ pub fn run_quick_dwt2d_validation() -> SignalResult<Dwt2dUltrathinkResult> {
         ..Default::default()
     };
 
-    run_dwt2d_ultrathink_validation(&config)
+    run_dwt2d_comprehensive_validation(&config)
 }

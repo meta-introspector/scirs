@@ -1,6 +1,6 @@
-//! Simple Ultrathink Mode Validation
+//! Simple Advanced Mode Validation
 //!
-//! This example demonstrates and validates basic ultrathink mode functionality.
+//! This example demonstrates and validates basic Advanced mode functionality.
 
 use rand::rng;
 use scirs2_graph::{
@@ -8,14 +8,14 @@ use scirs2_graph::{
     base::Graph,
     generators::erdos_renyi_graph,
     measures::pagerank_centrality,
-    ultrathink::{create_ultrathink_processor, execute_with_ultrathink},
+    Advanced::{create_advanced_processor, execute_with_advanced},
     Result,
 };
 use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🧪 Simple Ultrathink Mode Validation");
+    println!("🧪 Simple Advanced Mode Validation");
     println!("====================================");
 
     // Create a small test graph
@@ -28,7 +28,7 @@ fn main() -> Result<()> {
 
     // Create advanced processor
     let mut processor = create_advanced_processor();
-    println!("🚀 Ultrathink processor initialized");
+    println!("🚀 Advanced processor initialized");
 
     // Test 1: PageRank with advanced optimization
     println!("\n🧠 Test 1: PageRank Centrality");

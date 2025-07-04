@@ -1,12 +1,12 @@
-//! Enhanced Ultrathink Features - Advanced AI-Driven Clustering Extensions
+//! Enhanced Advanced Features - Advanced AI-Driven Clustering Extensions
 //!
-//! This module extends the ultrathink clustering capabilities with cutting-edge
+//! This module extends the Advanced clustering capabilities with cutting-edge
 //! features including deep learning integration, quantum-inspired algorithms,
 //! and advanced ensemble methods for superior clustering performance.
 
 use crate::error::{ClusteringError, Result};
-use crate::ultrathink_clustering::{
-    QuantumNeuromorphicMetrics, UltrathinkClusterer, UltrathinkClusteringResult,
+use crate::advanced_clustering::{
+    QuantumNeuromorphicMetrics, AdvancedClusterer, UltrathinkClusteringResult,
 };
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
@@ -16,11 +16,11 @@ use std::f64::consts::PI;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// Deep learning enhanced ultrathink clusterer
+/// Deep learning enhanced Advanced clusterer
 #[derive(Debug)]
 pub struct DeepUltrathinkClusterer {
-    /// Base ultrathink clusterer
-    base_clusterer: UltrathinkClusterer,
+    /// Base Advanced clusterer
+    base_clusterer: AdvancedClusterer,
     /// Transformer-based cluster embeddings
     transformer_embedder: TransformerClusterEmbedder,
     /// Graph neural network processor
@@ -108,7 +108,7 @@ pub struct DeepEnsembleCoordinator {
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct DeepUltrathinkResult {
-    /// Base ultrathink results
+    /// Base Advanced results
     pub base_result: UltrathinkClusteringResult,
     /// Deep learning embeddings
     pub deep_embeddings: Array2<f64>,
@@ -125,10 +125,10 @@ pub struct DeepUltrathinkResult {
 }
 
 impl DeepUltrathinkClusterer {
-    /// Create a new deep ultrathink clusterer
+    /// Create a new deep Advanced clusterer
     pub fn new() -> Self {
         Self {
-            base_clusterer: UltrathinkClusterer::new(),
+            base_clusterer: AdvancedClusterer::new(),
             transformer_embedder: TransformerClusterEmbedder::new(),
             gnn_processor: GraphNeuralNetworkProcessor::new(),
             rl_agent: ReinforcementLearningAgent::new(),
@@ -149,7 +149,7 @@ impl DeepUltrathinkClusterer {
         self
     }
 
-    /// Perform deep ultrathink clustering
+    /// Perform deep Advanced clustering
     pub fn deep_cluster(&mut self, data: &ArrayView2<f64>) -> Result<DeepUltrathinkResult> {
         // Phase 1: Transformer-based feature embedding
         let transformer_embeddings = self.transformer_embedder.embed_features(data)?;
@@ -169,7 +169,7 @@ impl DeepUltrathinkClusterer {
             .rl_agent
             .optimize_clustering_strategy(data, &transformer_embeddings)?;
 
-        // Phase 5: Base ultrathink clustering with enhanced features
+        // Phase 5: Base Advanced clustering with enhanced features
         let base_result = self
             .base_clusterer
             .cluster(&transformer_embeddings.view())?;

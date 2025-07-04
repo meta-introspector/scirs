@@ -1899,7 +1899,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
                 use rand::Rng;
                 let mut rng = rand::rng();
                 for _ in 0..range.num_samples {
-                    let value = rng.random_range(range.min..=range.max);
+                    let value = rng.gen_range(range.min..=range.max);
                     values.push(T::from(value).unwrap());
                 }
             }

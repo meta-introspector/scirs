@@ -1,4 +1,4 @@
-//! Advanced 2D Wavelet Denoising Methods for Ultrathink Mode
+//! Advanced 2D Wavelet Denoising Methods for Advanced Mode
 //!
 //! This module provides state-of-the-art 2D wavelet denoising techniques
 //! with SIMD optimization, adaptive thresholding, and multi-scale analysis.

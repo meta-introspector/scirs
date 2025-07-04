@@ -1559,7 +1559,7 @@ pub struct TextAnalysisResult {
 pub struct UltraSIMDTextProcessor;
 
 impl UltraSIMDTextProcessor {
-    /// Ultrathink-enhanced batch text processing with predictive optimization
+    /// Advanced-enhanced batch text processing with predictive optimization
     pub fn ultra_batch_process(texts: &[String]) -> Vec<TextProcessingResult> {
         use scirs2_core::parallel_ops::*;
 

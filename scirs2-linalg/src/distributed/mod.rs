@@ -346,7 +346,7 @@ impl DistributedLinalgOps {
                 "Matrix dimensions don't match for multiplication: ({}, {}) x ({}, {})",
                 m, k, k2, n
 
-/// ULTRATHINK MODE: Advanced Distributed Computing Enhancements
+/// Advanced MODE: Advanced Distributed Computing Enhancements
 /// 
 /// These enhancements provide sophisticated distributed computing capabilities
 /// including adaptive load balancing, intelligent fault tolerance, and

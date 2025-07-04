@@ -14,6 +14,8 @@ use ndarray::{Array1, Array2, ArrayView1};
 // use scirs2_core::error::CoreResult;
 use std::collections::VecDeque;
 
+type Result<T> = std::result::Result<T, OptimizeError>;
+
 /// Rolling window optimizer that maintains a sliding window of recent data
 #[derive(Debug, Clone)]
 pub struct RollingWindowOptimizer<T: StreamingObjective> {

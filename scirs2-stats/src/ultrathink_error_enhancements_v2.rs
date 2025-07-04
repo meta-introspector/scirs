@@ -1,4 +1,4 @@
-//! Advanced Ultra-Think Error Enhancement System
+//! Advanced advanced Error Enhancement System
 //!
 //! This module provides next-generation error handling with intelligent diagnostics,
 //! context-aware recovery suggestions, and performance-optimized error reporting
@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
-/// Ultra-Think Enhanced Error Context with Intelligent Diagnostics
+/// advanced Enhanced Error Context with Intelligent Diagnostics
 #[derive(Debug, Clone)]
 pub struct UltraThinkErrorContext {
     /// Core error information
@@ -410,7 +410,7 @@ pub enum InteractiveType {
     AlternativeMethod,
 }
 
-/// Ultra-Think Error Enhancement Engine
+/// advanced Error Enhancement Engine
 pub struct UltraThinkErrorEngine {
     /// Configuration for error analysis
     config: ErrorEngineConfig,
@@ -457,7 +457,7 @@ impl UltraThinkErrorEngine {
         }
     }
 
-    /// Enhance error with ultra-think analysis
+    /// Enhance error with advanced analysis
     pub fn enhance_error(
         &mut self,
         error: StatsError,

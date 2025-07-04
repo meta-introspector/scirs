@@ -1,7 +1,7 @@
-//! Ultrathink Mode Enhanced Validation Showcase
+//! Advanced Mode Enhanced Validation Showcase
 //!
 //! This example demonstrates the comprehensive validation capabilities added to scirs2-signal
-//! in ultrathink mode, including:
+//! in Advanced mode, including:
 //! - Enhanced multitaper spectral estimation validation
 //! - Comprehensive Lomb-Scargle periodogram testing
 //! - Parametric spectral estimation validation (AR, ARMA)
@@ -366,7 +366,7 @@ fn showcase_lombscargle_enhancements() -> SignalResult<()> {
 /// Display summary of validation enhancements
 #[allow(dead_code)]
 fn display_validation_summary() {
-    println!("\n=== Ultrathink Mode Validation Enhancement Summary ===\n");
+    println!("\n=== Advanced Mode Validation Enhancement Summary ===\n");
 
     println!("🚀 Multitaper Spectral Estimation Enhancements:");
     println!("  • Enhanced numerical precision validation");
@@ -411,7 +411,7 @@ fn display_validation_summary() {
 
 #[allow(dead_code)]
 fn main() -> SignalResult<()> {
-    println!("🔬 Ultrathink Mode Enhanced Validation Showcase");
+    println!("🔬 Advanced Mode Enhanced Validation Showcase");
     println!("===============================================");
     println!("Demonstrating comprehensive validation enhancements");
     println!("for robust signal processing in production environments.\n");

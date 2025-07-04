@@ -87,7 +87,7 @@ pub mod dwt2d_enhanced;
 pub mod dwt2d_image;
 pub mod dwt2d_performance_optimization;
 pub mod dwt2d_ultra_refined;
-pub mod dwt2d_ultrathink_validation;
+pub mod dwt2d_advanced_validation;
 pub mod dwt2d_validation;
 pub mod emd;
 pub mod features;
@@ -118,7 +118,7 @@ pub mod lombscargle_optimized;
 pub mod lombscargle_scipy_validation;
 pub mod lombscargle_simd;
 pub mod lombscargle_ultra_validation;
-pub mod lombscargle_ultrathink_enhanced_validation;
+pub mod lombscargle_advanced_enhanced_validation;
 pub mod lombscargle_validation;
 pub mod lti;
 pub mod lti_analysis_enhanced;
@@ -174,8 +174,8 @@ pub mod sysid_robust_enhancements;
 pub mod sysid_ultra_enhanced;
 pub mod test_rng;
 pub mod tv;
-pub mod ultrathink_comprehensive_validation;
-pub mod ultrathink_validation_suite;
+pub mod comprehensive_validation;
+pub mod comprehensive_validation_suite;
 pub mod validation_runner;
 pub mod waveforms;
 pub mod wavelet_vis;
@@ -187,7 +187,7 @@ pub mod wpt2d;
 pub mod wpt_comprehensive_validation;
 pub mod wpt_enhanced_modern_validation;
 pub mod wpt_ultra_validation;
-pub mod wpt_ultrathink_validation;
+pub mod wpt_advanced_validation;
 pub mod wpt_validation;
 pub mod wvd;
 
@@ -250,7 +250,7 @@ pub use filter::{
     StreamingFilterState,
     StreamingStats,
     // Advanced Enhanced Parallel Filtering
-    UltrathinkParallelConfig,
+    AdvancedParallelConfig,
 };
 pub use filter_banks::{
     CosineModulatedFilterBank, FilterBankAnalysis, FilterBankType, FilterBankWindow, IirStabilizer,
@@ -295,14 +295,14 @@ pub use lombscargle_simd::{simd_lombscargle, SimdLombScargleResult, ValidationMe
 
 // Advanced Enhanced Lomb-Scargle Validation
 pub use lombscargle_optimized::{
-    generate_ultrathink_lombscargle_report, run_ultrathink_lombscargle_validation,
+    generate_advanced_lombscargle_report, run_advanced_lombscargle_validation,
     CompleteSimdValidation, ComprehensiveAccuracyResult, MemoryProfilingResult,
     PerformanceRegressionResult, ScipyComparisonResult, StatisticalValidationResult,
-    UltrathinkLombScargleResult,
+    AdvancedLombScargleResult,
 };
 
 // Ultra-enhanced Lomb-Scargle validation
-pub use lombscargle_ultrathink_enhanced_validation::{
+pub use lombscargle_advanced_enhanced_validation::{
     generate_ultra_enhanced_validation_report, run_ultra_enhanced_lombscargle_validation,
     EdgeCaseValidationMetrics, LombScargleAccuracyValidation, StatisticalRobustnessMetrics,
     UltraEnhancedLombScargleValidationResult,
@@ -389,11 +389,11 @@ pub use simd_ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
 
 // Advanced Enhanced SIMD Operations
 pub use simd_advanced_enhanced::{
-    generate_simd_performance_report, ultrathink_simd_dwt as advanced_simd_dwt,
-    ultrathink_simd_fft as advanced_simd_fft, ultrathink_simd_resample as advanced_simd_resample,
-    ultrathink_simd_rfft as advanced_simd_rfft, ultrathink_simd_stft as advanced_simd_stft,
+    generate_simd_performance_report, advanced_simd_dwt as advanced_simd_dwt,
+    advanced_simd_fft as advanced_simd_fft, advanced_simd_resample as advanced_simd_resample,
+    advanced_simd_rfft as advanced_simd_rfft, advanced_simd_stft as advanced_simd_stft,
     FftPerformanceMetrics, SimdFftResult, SimdStftResult, SimdUtilizationStats, SimdWaveletResult,
-    StftPerformanceMetrics, UltrathinkSimdConfig as AdvancedSimdConfig, WaveletPerformanceMetrics,
+    StftPerformanceMetrics, AdvancedSimdConfig as AdvancedSimdConfig, WaveletPerformanceMetrics,
 };
 pub use sparse::{
     basis_pursuit, compressed_sensing_recover, cosamp, estimate_rip_constant, fista, iht,
@@ -464,10 +464,10 @@ pub use dwt2d_performance_optimization::{
 };
 
 // 2D wavelet advanced validation
-pub use dwt2d_ultrathink_validation::{
-    generate_dwt2d_ultrathink_report, run_dwt2d_ultrathink_validation, run_quick_dwt2d_validation,
+pub use dwt2d_advanced_validation::{
+    generate_dwt2d_comprehensive_report, run_dwt2d_comprehensive_validation, run_quick_dwt2d_validation,
     BoundaryValidationResult, CompressionValidationResult, ConsistencyAnalysisResult,
-    DenoisingValidationResult, Dwt2dUltrathinkConfig, Dwt2dUltrathinkResult,
+    DenoisingValidationResult, Dwt2dadvancedConfig, Dwt2dadvancedResult,
     EnergyConservationResult, MemoryAnalysisResult, MultilevelValidationResult,
     OrthogonalityValidationResult, PerformanceAnalysisResult, ReconstructionValidationResult,
     SimdOptimizationResult, StabilityValidationResult,
@@ -646,17 +646,17 @@ pub use scipy_validation::{
 };
 
 // Advanced comprehensive validation
-pub use ultrathink_comprehensive_validation::{
-    generate_ultrathink_report, run_ultrathink_comprehensive_validation, PerformanceImprovements,
-    UltrathinkValidationResult,
+pub use comprehensive_validation::{
+    generate_comprehensive_report, run_comprehensive_validation, PerformanceImprovements,
+    ComprehensiveValidationResult,
 };
 
 // Advanced validation suite
-pub use ultrathink_validation_suite::{
-    generate_ultrathink_report as generate_ultra_validation_report, run_full_ultrathink_validation,
-    run_quick_ultrathink_validation, run_ultrathink_validation, LombScargleUltraResults,
-    MultitaperUltraResults, ParametricUltraResults, UltrathinkValidationConfig,
-    UltrathinkValidationResult as UltraValidationResult, UltrathinkValidationSummary,
+pub use comprehensive_validation_suite::{
+    generate_comprehensive_report as generate_comprehensive_validation_report, run_full_comprehensive_validation,
+    run_quick_comprehensive_validation, run_comprehensive_validation, LombScargleUltraResults,
+    MultitaperUltraResults, ParametricUltraResults, ComprehensiveValidationConfig,
+    ComprehensiveValidationResult as UltraValidationResult, ComprehensiveValidationSummary,
     Wavelet2dUltraResults, WaveletPacketUltraResults,
 };
 
@@ -668,10 +668,10 @@ pub use benchmarking::{
 
 // Advanced mode coordination and comprehensive validation
 pub use advanced_mode_coordinator::{
-    run_quick_ultrathink_validation as run_quick_advanced_validation_coordinator,
-    run_ultrathink_validation_with_config as run_advanced_validation_with_config,
-    PerformanceMetrics as AdvancedPerformanceMetrics, UltrathinkConfig as AdvancedConfig,
-    UltrathinkCoordinator as AdvancedCoordinator, UltrathinkResults as AdvancedResults,
+    run_quick_comprehensive_validation as run_quick_advanced_validation_coordinator,
+    run_advanced_validation_with_config as run_advanced_validation_with_config,
+    PerformanceMetrics as AdvancedPerformanceMetrics, AdvancedConfig as AdvancedConfig,
+    AdvancedCoordinator as AdvancedCoordinator, advancedResults as AdvancedResults,
     ValidationResults as AdvancedValidationResults,
 };
 

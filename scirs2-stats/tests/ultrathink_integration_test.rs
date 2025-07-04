@@ -1,4 +1,4 @@
-//! Integration tests for ultrathink mode functionality
+//! Integration tests for Advanced mode functionality
 
 use ndarray::Array1;
 use scirs2_stats::ultrathink_error_enhancements::{
@@ -7,9 +7,9 @@ use scirs2_stats::ultrathink_error_enhancements::{
 use scirs2_stats::ultrathink_numerical_stability::{
     NumericalStabilityConfig, UltrathinkNumericalStabilityAnalyzer,
 };
-use scirs2_stats::ultrathink_parallel_enhancements::UltrathinkParallelConfig;
+use scirs2_stats::parallel_enhancements::AdvancedParallelConfig;
 use scirs2_stats::ultrathink_property_tests::UltrathinkPropertyTester;
-use scirs2_stats::ultrathink_simd_optimizations::{ultra_batch_statistics, UltrathinkSimdConfig};
+use scirs2_stats::ultrathink_simd_optimizations::{ultra_batch_statistics, AdvancedSimdConfig};
 use scirs2_stats::{mean, var};
 
 #[test]
@@ -52,7 +52,7 @@ fn test_ultrathink_numerical_stability_config() {
 #[test]
 #[allow(dead_code)]
 fn test_ultrathink_parallel_config() {
-    let config = UltrathinkParallelConfig::default();
+    let config = AdvancedParallelConfig::default();
     assert!(config.max_threads > 0);
     assert_eq!(config.min_chunk_size, 1000);
     assert!(config.enable_work_stealing);
@@ -62,7 +62,7 @@ fn test_ultrathink_parallel_config() {
 #[test]
 #[allow(dead_code)]
 fn test_ultrathink_simd_config() {
-    let config = UltrathinkSimdConfig::default();
+    let config = AdvancedSimdConfig::default();
     assert_eq!(config.min_simd_size, 64);
     assert_eq!(config.chunk_size, 8192);
     assert!(config.adaptive_vectorization);
@@ -74,7 +74,7 @@ fn test_ultrathink_simd_config() {
 #[allow(dead_code)]
 fn test_ultrathink_batch_statistics() {
     let data = Array1::from_vec((1..=1000).map(|x| x as f64).collect());
-    let config = UltrathinkSimdConfig::default();
+    let config = AdvancedSimdConfig::default();
 
     let result = ultra_batch_statistics(&data.view(), &config);
     assert!(result.is_ok());
@@ -93,8 +93,8 @@ fn test_ultrathink_batch_statistics() {
 #[test]
 #[allow(dead_code)]
 fn test_ultrathink_property_tester_creation() {
-    let simd_config = UltrathinkSimdConfig::default();
-    let parallel_config = UltrathinkParallelConfig::default();
+    let simd_config = AdvancedSimdConfig::default();
+    let parallel_config = AdvancedParallelConfig::default();
 
     let tester = UltrathinkPropertyTester::new(simd_config, parallel_config);
 
@@ -122,7 +122,7 @@ fn test_numerical_stability_analyzer() {
 #[test]
 #[allow(dead_code)]
 fn test_ultrathink_integration_basic_stats() {
-    // Test that ultrathink features work with basic statistical functions
+    // Test that Advanced features work with basic statistical functions
     let data = Array1::from_vec((1..=100).map(|x| x as f64).collect());
 
     // Test mean calculation
@@ -135,8 +135,8 @@ fn test_ultrathink_integration_basic_stats() {
     assert!(var_result.is_ok());
     assert!(var_result.unwrap() > 0.0);
 
-    // Test ultrathink batch statistics
-    let config = UltrathinkSimdConfig::default();
+    // Test Advanced batch statistics
+    let config = AdvancedSimdConfig::default();
     let batch_result = ultra_batch_statistics(&data.view(), &config);
     assert!(batch_result.is_ok());
 

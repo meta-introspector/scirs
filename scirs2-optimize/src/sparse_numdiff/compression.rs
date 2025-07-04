@@ -5,10 +5,12 @@
 //! for finite differences.
 
 use crate::error::OptimizeError;
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{Array2, ArrayView2};
+// Unused import: Array1
 use scirs2_sparse::csr_array::CsrArray;
 use scirs2_sparse::SparseArray;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
+// Unused import: HashMap
 
 /// Type alias for the return type of compress_jacobian_pattern
 pub type CompressedJacobianPattern = (CsrArray<f64>, Array2<f64>, Array2<f64>);

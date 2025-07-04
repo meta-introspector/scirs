@@ -109,12 +109,12 @@ pub use planning_parallel::{
 pub mod auto_tuning;
 pub use auto_tuning::{AutoTuneConfig, AutoTuner, FftVariant, SizeRange, SizeStep};
 
-// Ultrathink mode coordinator for advanced AI-driven optimization
-pub mod ultrathink_coordinator;
-pub use ultrathink_coordinator::{
-    create_ultrathink_fft_coordinator, create_ultrathink_fft_coordinator_with_config,
-    FftPerformanceMetrics, FftRecommendation, UltrathinkFftConfig, UltrathinkFftCoordinator,
-};
+// Advanced mode coordinator for advanced AI-driven optimization (temporarily disabled)
+// pub mod advanced_coordinator;
+// pub use advanced_coordinator::{
+//     create_advanced_fft_coordinator, create_advanced_fft_coordinator_with_config,
+//     FftPerformanceMetrics, FftRecommendation, advancedFftConfig, advancedFftCoordinator,
+// };
 
 // Core modules are used conditionally in feature-specific implementations
 

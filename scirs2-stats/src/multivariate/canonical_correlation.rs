@@ -319,7 +319,7 @@ impl CanonicalCorrelationAnalysis {
 
         let n = cov.nrows();
         let trace = (0..n).map(|i| cov[[i, i]]).sum::<f64>();
-        let reg_term = Array2::eye(n) * (self.reg_param * trace / n as f64);
+        let reg_term: Array2<f64> = Array2::eye(n) * (self.reg_param * trace / n as f64);
 
         Ok(cov + &reg_term)
     }

@@ -361,7 +361,8 @@ pub enum RecommendationPriority {
 
 impl<F> UltraAdvancedStreamingProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     /// Create a new ultra-advanced streaming processor
     pub fn new(config: UltraStreamingConfig) -> Self {
@@ -744,7 +745,8 @@ where
 
 impl<F> ChangePointDetector<F>
 where
-    F: Float + NumCast + Copy,
+    F: Float + NumCast + Copy
+        + std::fmt::Display,
 {
     fn new() -> Self {
         Self {
@@ -801,7 +803,8 @@ where
 
 impl<F> AnomalyDetector<F>
 where
-    F: Float + NumCast + Copy,
+    F: Float + NumCast + Copy
+        + std::fmt::Display,
 {
     fn new() -> Self {
         let baseline = StreamingStatistics {
@@ -862,7 +865,8 @@ where
 
 impl<F> CompressionEngine<F>
 where
-    F: Float + NumCast + Copy,
+    F: Float + NumCast + Copy
+        + std::fmt::Display,
 {
     fn new() -> Self {
         Self {
@@ -906,7 +910,8 @@ where
 #[allow(dead_code)]
 pub fn create_ultra_streaming_processor<F>() -> UltraAdvancedStreamingProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     UltraAdvancedStreamingProcessor::new(UltraStreamingConfig::default())
 }
@@ -917,7 +922,8 @@ pub fn create_streaming_processor_with_config<F>(
     config: UltraStreamingConfig,
 ) -> UltraAdvancedStreamingProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     UltraAdvancedStreamingProcessor::new(config)
 }

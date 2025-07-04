@@ -279,12 +279,12 @@ where
     let half_size = kernel_size / 2;
 
     let mut kernel = Array1::<T>::zeros(kernel_size);
-    let norm_factor = T::from(1.0 / (sigma_f64 * (2.0 * std::f64::consts::PI).sqrt())).unwrap();
+    let norm_factor = T::from_f64(1.0 / (sigma_f64 * (2.0 * std::f64::consts::PI).sqrt())).unwrap();
 
     for i in 0..kernel_size {
         let x = (i as i32 - half_size as i32) as f64;
         let value = (-0.5 * x * x / (sigma_f64 * sigma_f64)).exp();
-        kernel[i] = norm_factor * T::from(value).unwrap();
+        kernel[i] = norm_factor * T::from_f64(value).unwrap();
     }
 
     // Normalize

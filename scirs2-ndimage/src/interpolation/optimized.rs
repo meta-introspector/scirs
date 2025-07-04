@@ -17,7 +17,6 @@ use super::{BoundaryMode, InterpolationOrder};
 use crate::error::{NdimageError, NdimageResult};
 use crate::utils::safe_f64_to_float;
 
-
 /// Helper function for safe i32 conversion
 #[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {

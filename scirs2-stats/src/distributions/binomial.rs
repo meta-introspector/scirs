@@ -22,7 +22,7 @@ pub struct Binomial<F: Float> {
     rand_distr: RandBinomial,
 }
 
-impl<F: Float + NumCast> Binomial<F> {
+impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// Create a new Binomial distribution with given parameters
     ///
     /// # Arguments
@@ -583,13 +583,14 @@ impl<F: Float + NumCast> Binomial<F> {
 #[allow(dead_code)]
 pub fn binom<F>(n: usize, p: F) -> StatsResult<Binomial<F>>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     Binomial::new(n, p)
 }
 
 /// Implementation of SampleableDistribution for Binomial
-impl<F: Float + NumCast> SampleableDistribution<F> for Binomial<F> {
+impl<F: Float + NumCast + std::fmt::Display> SampleableDistribution<F> for Binomial<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs(size)
     }

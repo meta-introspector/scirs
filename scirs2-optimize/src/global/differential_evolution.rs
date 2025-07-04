@@ -534,7 +534,7 @@ where
                 // Binomial crossover
                 let randn = self.rng.random_range(0..self.ndim);
                 for i in 0..self.ndim {
-                    if i == randn || self.rng.random::<f64>() < self.options.recombination {
+                    if i == randn || self.rng.random_range(0.0..1.0) < self.options.recombination {
                         trial[i] = mutant[i];
                     }
                 }
@@ -550,7 +550,7 @@ where
                 loop {
                     trial[i] = mutant[i];
                     i = (i + 1) % self.ndim;
-                    if i == randn || self.rng.random::<f64>() >= self.options.recombination {
+                    if i == randn || self.rng.random_range(0.0..1.0) >= self.options.recombination {
                         break;
                     }
                 }

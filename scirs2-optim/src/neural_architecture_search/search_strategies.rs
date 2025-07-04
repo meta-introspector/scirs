@@ -49,7 +49,7 @@ pub struct SearchStrategyStatistics<T: Float> {
 
 /// Random search baseline strategy
 pub struct RandomSearch<T: Float> {
-    rng: Box<dyn Rng + Send + Sync>,
+    rng: rand::rngs::ThreadRng,
     statistics: SearchStrategyStatistics<T>,
     search_space: Option<SearchSpaceConfig>,
 }
@@ -287,11 +287,9 @@ pub struct BaselineOptimizer<T: Float> {
 
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> RandomSearch<T> {
     pub fn new(seed: Option<u64>) -> Self {
-        let rng: Box<dyn Rng + Send + Sync> = if let Some(s) = seed {
-            Box::new(rand::rngs::StdRng::seed_from_u64(s))
-        } else {
-            Box::new(rand::rng())
-        };
+        // Note: seeding is simplified for concrete type compatibility
+        let _seed = seed; // Keep parameter for API compatibility
+        let rng = rand::rng();
 
         Self {
             rng,
@@ -317,14 +315,14 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         use super::OptimizerComponent;
 
         // Randomly select number of components
-        let num_components = self.rng.random_range(1..=5);
+        let num_components = self.rng.gen_range(1..=5);
         let mut components = Vec::new();
 
         for _ in 0..num_components {
             // Randomly select component type
             let component_config = &search_space.optimizer_components[self
                 .rng
-                .random_range(0..search_space.optimizer_components.len())];
+                .gen_range(0..search_space.optimizer_components.len())];
 
             let mut hyperparameters = HashMap::new();
 
@@ -332,17 +330,17 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
             for (param_name, param_range) in &component_config.hyperparameter_ranges {
                 let value = match param_range {
                     super::ParameterRange::Continuous(min, max) => {
-                        let val = self.rng.random_range(*min..=*max);
+                        let val = self.rng.gen_range(*min..=*max);
                         T::from(val).unwrap()
                     }
                     super::ParameterRange::LogUniform(min, max) => {
                         let log_min = min.ln();
                         let log_max = max.ln();
-                        let log_val = self.rng.random_range(log_min..=log_max);
+                        let log_val = self.rng.gen_range(log_min..=log_max);
                         T::from(log_val.exp()).unwrap()
                     }
                     super::ParameterRange::Integer(min, max) => {
-                        let val = self.rng.random_range(*min..=*max) as f64;
+                        let val = self.rng.gen_range(*min..=*max) as f64;
                         T::from(val).unwrap()
                     }
                     super::ParameterRange::Boolean => {
@@ -350,7 +348,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
                         T::from(val).unwrap()
                     }
                     super::ParameterRange::Discrete(values) => {
-                        let idx = self.rng.random_range(0..values.len());
+                        let idx = self.rng.gen_range(0..values.len());
                         T::from(values[idx]).unwrap()
                     }
                     super::ParameterRange::Categorical(_values) => {

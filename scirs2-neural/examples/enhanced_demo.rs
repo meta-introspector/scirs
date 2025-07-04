@@ -1,4 +1,4 @@
-//! Enhanced neural network demonstration showcasing ultrathink mode improvements
+//! Enhanced neural network demonstration showcasing advanced mode improvements
 //!
 //! This example demonstrates the expanded functionality in scirs2-neural including:
 //! - Dense, Conv2D, and LSTM layers

@@ -1,6 +1,6 @@
-//! Real-world Ultrathink Mode Integration Demo
+//! Real-world Advanced Mode Integration Demo
 //!
-//! This example demonstrates practical integration of ultrathink mode features
+//! This example demonstrates practical integration of Advanced mode features
 //! in realistic scenarios, showing how to build intelligent I/O systems that
 //! adapt to changing conditions and optimize performance automatically.
 
@@ -27,7 +27,7 @@ pub struct IntelligentIoManager {
 enum ProcessingMode {
     Neural,
     Quantum,
-    UltraThink,
+    Advanced,
     Adaptive,
 }
 
@@ -56,7 +56,7 @@ impl IntelligentIoManager {
         let result = match chosen_mode {
             ProcessingMode::Neural => self.process_neural_adaptive(data),
             ProcessingMode::Quantum => self.process_quantum_parallel(data),
-            ProcessingMode::UltraThink => self.process_ultra_think(data),
+            ProcessingMode::Advanced => self.process_ultra_think(data),
             ProcessingMode::Adaptive => self.process_adaptive_hybrid(data, &metrics),
         }?;
 
@@ -78,7 +78,7 @@ impl IntelligentIoManager {
         self.quantum_processor.process_quantum_parallel(data)
     }
 
-    /// Ultra-think integrated processing
+    /// advanced integrated processing
     fn process_ultra_think(&mut self, data: &[u8]) -> Result<Vec<u8>> {
         self.ultra_think_processor.process_data_adaptive(data)
     }
@@ -97,7 +97,7 @@ impl IntelligentIoManager {
             // Large data with available memory - use neural adaptive
             self.ultra_think_processor.process_data_adaptive(data)
         } else {
-            // Default to ultra-think for balanced approach
+            // Default to advanced for balanced approach
             self.ultra_think_processor.process_data_adaptive(data)
         }
     }
@@ -116,7 +116,7 @@ impl IntelligentIoManager {
             ProcessingMode::Quantum
         } else if metrics.memory_usage > 0.8 || metrics.cpu_usage > 0.9 {
             // Resource constrained - use adaptive strategy
-            ProcessingMode::UltraThink
+            ProcessingMode::Advanced
         } else {
             // Balanced conditions - use adaptive hybrid
             ProcessingMode::Adaptive
@@ -435,7 +435,7 @@ impl WorkloadSimulator {
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🚀 SciRS2-IO Ultrathink Mode Integration Demo");
+    println!("🚀 SciRS2-IO Advanced Mode Integration Demo");
     println!("===============================================\n");
 
     let mut simulator = WorkloadSimulator::new();
@@ -460,7 +460,7 @@ fn main() -> Result<()> {
     println!("Performance Trend: {:?}", analytics.improvement_trend);
 
     println!("\n🎉 Integration Demo Complete!");
-    println!("The ultrathink mode successfully adapted to different workloads,");
+    println!("The Advanced mode successfully adapted to different workloads,");
     println!("demonstrating intelligent strategy selection and performance optimization.");
 
     Ok(())

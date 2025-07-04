@@ -1,6 +1,6 @@
-//! Comprehensive Ultrathink Mode Demonstration
+//! Comprehensive Advanced Mode Demonstration
 //!
-//! This example showcases the full capabilities of scirs2-stats in ultrathink mode,
+//! This example showcases the full capabilities of scirs2-stats in Advanced mode,
 //! demonstrating enhanced error handling, numerical stability, parallel processing,
 //! SIMD optimizations, and property-based testing.
 
@@ -11,16 +11,16 @@ use scirs2_stats::{
     ultrathink_numerical_stability::{
         NumericalStabilityConfig, UltrathinkNumericalStabilityAnalyzer,
     },
-    ultrathink_parallel_enhancements::{create_ultra_parallel_processor, UltrathinkParallelConfig},
+    parallel_enhancements::{create_ultra_parallel_processor, AdvancedParallelConfig},
     ultrathink_property_tests::UltrathinkPropertyTester,
-    ultrathink_simd_optimizations::{ultra_batch_statistics, UltrathinkSimdConfig},
+    ultrathink_simd_optimizations::{ultra_batch_statistics, AdvancedSimdConfig},
     var,
 };
 use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultrathink Mode Comprehensive Demo");
+    println!("🚀 Advanced Mode Comprehensive Demo");
     println!("=====================================\n");
 
     // Generate test data with varying characteristics
@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("3. ⚡ Advanced Parallel Processing");
     println!("   Testing adaptive thread management and load balancing");
 
-    let parallel_config = UltrathinkParallelConfig {
+    let parallel_config = AdvancedParallelConfig {
         max_threads: 4,
         min_chunk_size: 1000,
         enable_work_stealing: true,
@@ -128,7 +128,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("4. 🏎️  SIMD Optimizations");
     println!("   Testing vectorized batch statistics computation");
 
-    let simd_config = UltrathinkSimdConfig {
+    let simd_config = AdvancedSimdConfig {
         min_simd_size: 64,
         chunk_size: 8192,
         adaptive_vectorization: true,
@@ -197,7 +197,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 6. Performance Comparison
     println!("6. 📊 Performance Summary");
-    println!("   Comparing standard vs ultrathink mode performance");
+    println!("   Comparing standard vs Advanced mode performance");
 
     let test_sizes = vec![1_000, 10_000, 100_000];
 
@@ -210,14 +210,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let _std_var = var(&data.view(), 1)?;
         let std_time = start.elapsed();
 
-        // Ultrathink computation
+        // Advanced computation
         let start = Instant::now();
         let _ultra_stats = ultra_batch_statistics(&data.view(), &simd_config)?;
         let ultra_time = start.elapsed();
 
         let speedup = std_time.as_nanos() as f64 / ultra_time.as_nanos() as f64;
         println!(
-            "   Size {}: Standard {:.3}ms, Ultrathink {:.3}ms, Speedup: {:.2}x",
+            "   Size {}: Standard {:.3}ms, Advanced {:.3}ms, Speedup: {:.2}x",
             size,
             std_time.as_millis(),
             ultra_time.as_millis(),
@@ -225,7 +225,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
-    println!("\n🎉 Ultrathink Mode Demo Complete!");
+    println!("\n🎉 Advanced Mode Demo Complete!");
     println!("All systems operational and performing optimally.");
 
     Ok(())

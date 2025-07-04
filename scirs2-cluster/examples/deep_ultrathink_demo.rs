@@ -1,23 +1,23 @@
-//! Deep Ultrathink Clustering Demonstration
+//! Deep Advanced Clustering Demonstration
 //!
 //! This example showcases the most advanced clustering capabilities with deep learning
 //! integration, including transformer-based embeddings, graph neural networks,
 //! reinforcement learning optimization, and neural architecture search.
 
 use ndarray::Array2;
-use scirs2_cluster::ultrathink_clustering::UltrathinkClusterer;
+use scirs2_cluster::advanced_clustering::AdvancedClusterer;
 use scirs2_cluster::ultrathink_enhanced_features::{
     DeepEnsembleCoordinator, DeepUltrathinkClusterer, GraphNeuralNetworkProcessor,
     NeuralArchitectureSearchEngine, ReinforcementLearningAgent, TransformerClusterEmbedder,
 };
-use scirs2_cluster::ultrathink_visualization::{
+use scirs2_cluster::advanced_visualization::{
     QuantumColorScheme, UltrathinkVisualizationConfig, UltrathinkVisualizer,
     VisualizationExportFormat,
 };
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Deep Ultrathink Clustering - Next-Generation AI Clustering Demo");
+    println!("🚀 Deep Advanced Clustering - Next-Generation AI Clustering Demo");
     println!("=================================================================");
 
     // Example 1: Transformer-Based Cluster Embeddings
@@ -40,16 +40,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n5️⃣  Deep Ensemble Clustering with Uncertainty Quantification");
     deep_ensemble_demo()?;
 
-    // Example 6: Complete Deep Ultrathink Pipeline
-    println!("\n6️⃣  Complete Deep Ultrathink Pipeline");
+    // Example 6: Complete Deep Advanced Pipeline
+    println!("\n6️⃣  Complete Deep Advanced Pipeline");
     complete_deep_ultrathink_demo()?;
 
     // Example 7: Advanced Visualization
     println!("\n7️⃣  Advanced Deep Learning Visualization");
     advanced_visualization_demo()?;
 
-    println!("\n✅ All Deep Ultrathink examples completed successfully!");
-    println!("🎯 The Deep Ultrathink system represents the future of intelligent clustering.");
+    println!("\n✅ All Deep Advanced examples completed successfully!");
+    println!("🎯 The Deep Advanced system represents the future of intelligent clustering.");
 
     Ok(())
 }
@@ -195,8 +195,8 @@ fn deep_ensemble_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("   📊 Ensemble data shape: {ens_shape:?}");
     println!("   🎭 Creating deep ensemble with uncertainty quantification...");
 
-    // Create base ultrathink clusterer for comparison
-    let mut base_clusterer = UltrathinkClusterer::new()
+    // Create base Advanced clusterer for comparison
+    let mut base_clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true);
 
@@ -237,23 +237,23 @@ fn deep_ensemble_demo() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Demonstrates complete deep ultrathink pipeline
+/// Demonstrates complete deep Advanced pipeline
 #[allow(dead_code)]
 fn complete_deep_ultrathink_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_comprehensive_test_data();
 
     let comp_shape = data.shape();
     println!("   📊 Comprehensive data shape: {comp_shape:?}");
-    println!("   🚀 Launching complete Deep Ultrathink pipeline...");
+    println!("   🚀 Launching complete Deep Advanced pipeline...");
 
-    // Create deep ultrathink clusterer
+    // Create deep Advanced clusterer
     let mut deep_clusterer = DeepUltrathinkClusterer::new().with_full_deep_learning();
 
     // Perform deep clustering
     let deep_result = deep_clusterer.deep_cluster(&data.view())?;
 
-    println!("   ✅ Complete Deep Ultrathink clustering completed!");
-    println!("   🧠 Base ultrathink results:");
+    println!("   ✅ Complete Deep Advanced clustering completed!");
+    println!("   🧠 Base Advanced results:");
     println!(
         "      - AI speedup: {:.2}x",
         deep_result.base_result.ai_speedup
@@ -314,7 +314,7 @@ fn advanced_visualization_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("   🎨 Creating advanced deep learning visualizations...");
 
     // Create base clustering result
-    let mut clusterer = UltrathinkClusterer::new()
+    let mut clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true)
         .with_meta_learning(true);

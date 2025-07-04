@@ -1,4 +1,4 @@
-/// Quick test file to validate new ultrathink mode functions
+/// Quick test file to validate new Advanced mode functions
 use scirs2_special::{sici, shichi, spence, erfcx, erfi, wofz, expit, logit, expit_array, logit_array};
 use ndarray::array;
 
@@ -117,5 +117,5 @@ fn main() {
     println!("✓ logit (inverse logistic)"); 
     println!("✓ expit_array");
     println!("✓ logit_array");
-    println!("\nUltrathink mode SciPy parity implementation completed! 🚀");
+    println!("\nadvanced mode SciPy parity implementation completed! 🚀");
 }

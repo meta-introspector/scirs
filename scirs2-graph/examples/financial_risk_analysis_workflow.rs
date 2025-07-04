@@ -1,14 +1,14 @@
-//! Financial Risk Analysis Workflow with Ultrathink Mode
+//! Financial Risk Analysis Workflow with Advanced Mode
 //!
-//! This example demonstrates how to use scirs2-graph with ultrathink optimizations
+//! This example demonstrates how to use scirs2-graph with Advanced optimizations
 //! for financial network analysis, including risk assessment, contagion modeling,
 //! and market structure analysis.
 
 #![allow(dead_code)]
 
 use scirs2_graph::advanced::{
-    create_enhanced_ultrathink_processor, create_performance_ultrathink_processor,
-    execute_with_enhanced_ultrathink, UltrathinkProcessor,
+    create_enhanced_advanced_processor, create_performance_advanced_processor,
+    execute_with_enhanced_advanced, AdvancedProcessor,
 };
 use scirs2_graph::algorithms::community::louvain_communities;
 use scirs2_graph::algorithms::connectivity::connected_components;
@@ -260,7 +260,7 @@ fn create_financial_network(
 /// Assess systemic risk using multiple centrality measures and network analysis
 #[allow(dead_code)]
 fn assess_systemic_risk(
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
     graph: &Graph<usize, f64>,
 ) -> Result<RiskAssessment, Box<dyn std::error::Error>> {
     println!("   🔍 Computing betweenness centrality...");
@@ -340,7 +340,7 @@ fn assess_systemic_risk(
 /// Analyze critical institutions using centrality measures
 #[allow(dead_code)]
 fn analyze_critical_institutions(
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
     graph: &Graph<usize, f64>,
 ) -> Result<Vec<(usize, f64)>, Box<dyn std::error::Error>> {
     println!("   🔍 Computing institution criticality scores...");
@@ -366,7 +366,7 @@ fn analyze_critical_institutions(
 /// Model contagion spread from critical institutions
 #[allow(dead_code)]
 fn model_contagion_spread(
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
     graph: &Graph<usize, f64>,
     critical_institutions: &[usize],
 ) -> Result<HashMap<String, f64>, Box<dyn std::error::Error>> {
@@ -433,7 +433,7 @@ fn model_contagion_spread(
 /// Analyze financial clusters and sectoral concentrations
 #[allow(dead_code)]
 fn analyze_financial_clusters(
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
     graph: &Graph<usize, f64>,
 ) -> Result<HashMap<usize, usize>, Box<dyn std::error::Error>> {
     println!("   🔍 Detecting financial clusters...");
@@ -452,7 +452,7 @@ fn analyze_financial_clusters(
 /// Run various stress testing scenarios
 #[allow(dead_code)]
 fn run_stress_tests(
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
     graph: &Graph<usize, f64>,
 ) -> Result<HashMap<String, f64>, Box<dyn std::error::Error>> {
     let mut results = HashMap::new();
@@ -543,7 +543,7 @@ mod tests {
     #[test]
     fn test_risk_assessment() {
         let graph = create_financial_network(50, 0.1).unwrap();
-        let mut processor = create_performance_ultrathink_processor();
+        let mut processor = create_performance_advanced_processor();
 
         let risk_assessment = assess_systemic_risk(&mut processor, &graph).unwrap();
 
@@ -557,7 +557,7 @@ mod tests {
     #[test]
     fn test_contagion_modeling() {
         let graph = create_financial_network(30, 0.15).unwrap();
-        let mut processor = create_enhanced_ultrathink_processor();
+        let mut processor = create_enhanced_advanced_processor();
         let critical_institutions = vec![0, 1, 2]; // Top 3 institutions
 
         let contagion_results =
@@ -573,7 +573,7 @@ mod tests {
     #[test]
     fn test_stress_testing() {
         let graph = create_financial_network(40, 0.12).unwrap();
-        let mut processor = create_enhanced_ultrathink_processor();
+        let mut processor = create_enhanced_advanced_processor();
 
         let stress_results = run_stress_tests(&mut processor, &graph).unwrap();
 

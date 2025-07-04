@@ -1,6 +1,6 @@
-//! Ultrathink Benchmark Validation Framework
+//! Advanced Benchmark Validation Framework
 //!
-//! This module provides comprehensive validation of ultrathink optimizations by
+//! This module provides comprehensive validation of Advanced optimizations by
 //! comparing optimized implementations against reference implementations for
 //! both performance and correctness. It ensures that SIMD, parallel, and other
 //! optimizations maintain numerical accuracy while providing performance benefits.
@@ -8,7 +8,7 @@
 #![allow(dead_code)]
 
 use crate::error::{StatsError, StatsResult};
-use crate::ultrathink_unified_processor::{
+use crate::unified_processor::{
     OptimizationMode, UltrathinkProcessorConfig, UltrathinkUnifiedProcessor,
 };
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
@@ -16,7 +16,7 @@ use num_traits::Float;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
-/// Validation configuration for ultrathink benchmarks
+/// Validation configuration for Advanced benchmarks
 #[derive(Debug, Clone)]
 pub struct ValidationConfig {
     /// Tolerance for numerical comparisons
@@ -70,7 +70,7 @@ pub struct ValidationReport {
     pub summary: String,
 }
 
-/// Ultrathink benchmark validation framework
+/// Advanced benchmark validation framework
 pub struct UltrathinkBenchmarkValidator {
     config: ValidationConfig,
     processor: UltrathinkUnifiedProcessor,
@@ -356,7 +356,7 @@ impl UltrathinkBenchmarkValidator {
         for _ in 0..self.config.benchmark_iterations.min(10) {
             match operation {
                 "correlation" => {
-                    // This would use the ultrathink matrix operations
+                    // This would use the Advanced matrix operations
                     // For now, we'll simulate with a placeholder
                     optimized_result = Some(reference_result.clone()); // Placeholder
                 }
@@ -467,7 +467,7 @@ impl UltrathinkBenchmarkValidator {
         };
 
         let summary = format!(
-            "Ultrathink Validation Report: {}/{} tests passed ({:.1}%). Average speedup: {:.2}x, Average accuracy: {:.6}",
+            "Advanced Validation Report: {}/{} tests passed ({:.1}%). Average speedup: {:.2}x, Average accuracy: {:.6}",
             passed_tests, total_tests, success_rate, average_speedup, average_accuracy
         );
 
@@ -483,13 +483,13 @@ impl UltrathinkBenchmarkValidator {
     }
 }
 
-/// Create a default ultrathink benchmark validator  
+/// Create a default Advanced benchmark validator  
 #[allow(dead_code)]
 pub fn create_ultrathink_validator() -> UltrathinkBenchmarkValidator {
     UltrathinkBenchmarkValidator::new(ValidationConfig::default())
 }
 
-/// Create a custom ultrathink benchmark validator
+/// Create a custom Advanced benchmark validator
 #[allow(dead_code)]
 pub fn create_custom_ultrathink_validator(
     config: ValidationConfig,

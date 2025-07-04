@@ -298,21 +298,22 @@ where
         let original_statistic = statistic_fn(data)?.into();
 
         // Generate bootstrap samples based on method
-        let bootstrap_samples = match &self.config.bootstrap_type {
+        let bootstrap_type = self.config.bootstrap_type.clone();
+        let bootstrap_samples = match bootstrap_type {
             BootstrapType::Basic => self.basic_bootstrap(data, statistic_fn)?,
             BootstrapType::Stratified { strata } => {
-                self.stratified_bootstrap(data, strata, statistic_fn)?
+                self.stratified_bootstrap(data, &strata, statistic_fn)?
             }
             BootstrapType::Block { block_type } => {
-                self.block_bootstrap(data, block_type, statistic_fn)?
+                self.block_bootstrap(data, &block_type, statistic_fn)?
             }
             BootstrapType::Bayesian => self.bayesian_bootstrap(data, statistic_fn)?,
             BootstrapType::Wild { distribution } => {
-                self.wild_bootstrap(data, distribution, statistic_fn)?
+                self.wild_bootstrap(data, &distribution, statistic_fn)?
             }
             BootstrapType::Parametric {
                 distribution_params,
-            } => self.parametric_bootstrap(data, distribution_params, statistic_fn)?,
+            } => self.parametric_bootstrap(data, &distribution_params, statistic_fn)?,
             BootstrapType::Balanced => self.balanced_bootstrap(data, statistic_fn)?,
         };
 
@@ -755,7 +756,7 @@ where
                         }
                     }
                     WildDistribution::Mammen => {
-                        let golden_ratio = (1.0 + 5.0_f64.sqrt()) / 2.0;
+                        let _golden_ratio = (1.0 + 5.0_f64.sqrt()) / 2.0;
                         let p = (5.0_f64.sqrt() + 1.0) / (2.0 * 5.0_f64.sqrt());
                         if self.rng.random::<f64>() < p {
                             -(5.0_f64.sqrt() - 1.0) / 2.0
@@ -814,7 +815,7 @@ where
                 ParametricBootstrapParams::Beta { alpha, beta } => {
                     self.generate_beta_sample(n, *alpha, *beta)?
                 }
-                ParametricBootstrapParams::Custom { name, params } => {
+                ParametricBootstrapParams::Custom { name, params: _ } => {
                     return Err(StatsError::InvalidArgument(format!(
                         "Custom distribution '{}' not implemented",
                         name
@@ -961,7 +962,7 @@ where
         &self,
         bootstrap_samples: &Array1<F>,
         original_statistic: F,
-        standard_error: F,
+        _standard_error: F,
     ) -> StatsResult<BootstrapConfidenceIntervals<F>> {
         let alpha = 1.0 - self.config.confidence_level;
         let lower_percentile = alpha / 2.0;

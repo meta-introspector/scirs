@@ -1,18 +1,18 @@
-//! Enhanced visualization for Ultrathink Clustering
+//! Enhanced visualization for Advanced Clustering
 //!
-//! This module provides specialized visualization capabilities for ultrathink clustering
+//! This module provides specialized visualization capabilities for Advanced clustering
 //! results, including quantum state visualization, neuromorphic adaptation plots,
 //! and AI algorithm selection insights.
 
 use crate::error::{ClusteringError, Result};
-use crate::ultrathink_clustering::{UltrathinkClusteringResult, UltrathinkPerformanceMetrics};
+use crate::advanced_clustering::{UltrathinkClusteringResult, UltrathinkPerformanceMetrics};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::HashMap;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// Visualization configuration for ultrathink clustering results
+/// Visualization configuration for Advanced clustering results
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UltrathinkVisualizationConfig {
@@ -44,7 +44,7 @@ pub enum QuantumColorScheme {
     Custom(Vec<[f32; 3]>),
 }
 
-/// Export formats for ultrathink visualizations
+/// Export formats for Advanced visualizations
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum VisualizationExportFormat {
@@ -62,7 +62,7 @@ pub enum VisualizationExportFormat {
     Video4K,
 }
 
-/// Ultrathink clustering visualization
+/// Advanced clustering visualization
 #[derive(Debug)]
 pub struct UltrathinkVisualizer {
     /// Configuration for visualization
@@ -179,7 +179,7 @@ impl Default for UltrathinkVisualizationConfig {
 }
 
 impl UltrathinkVisualizer {
-    /// Create a new ultrathink visualizer
+    /// Create a new Advanced visualizer
     pub fn new(config: UltrathinkVisualizationConfig) -> Self {
         Self {
             config,
@@ -189,7 +189,7 @@ impl UltrathinkVisualizer {
         }
     }
 
-    /// Visualize ultrathink clustering results
+    /// Visualize Advanced clustering results
     pub fn visualize_results(
         &mut self,
         data: &ArrayView2<f64>,
@@ -715,7 +715,7 @@ impl UltrathinkVisualizer {
                 ClusteringError::InvalidInput(format!("Failed to write file: {}", e))
             })?;
 
-            println!("✅ Exported ultrathink visualization to {filename}.json");
+            println!("✅ Exported Advanced visualization to {filename}.json");
         }
 
         #[cfg(not(feature = "serde"))]
@@ -758,7 +758,7 @@ impl UltrathinkVisualizer {
         })?;
 
         println!(
-            "🌐 Exported interactive ultrathink visualization to {}.html",
+            "🌐 Exported interactive Advanced visualization to {}.html",
             filename
         );
         Ok(())
@@ -770,7 +770,7 @@ impl UltrathinkVisualizer {
         use serde_json::json;
 
         json!({
-            "ultrathink_visualization": {
+            "advanced_visualization": {
                 "metadata": {
                     "export_timestamp": std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
@@ -820,7 +820,7 @@ impl UltrathinkVisualizer {
     fn create_basic_json_export(&self, output: &UltrathinkVisualizationOutput) -> String {
         format!(
             r#"{{
-  "ultrathink_visualization": {{
+  "advanced_visualization": {{
     "metadata": {{
       "export_format": "ultrathink_basic_v1.0",
       "quantum_enhanced": true,
@@ -862,7 +862,7 @@ impl UltrathinkVisualizer {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultrathink Clustering Visualization</title>
+    <title>Advanced Clustering Visualization</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {{
@@ -893,7 +893,7 @@ impl UltrathinkVisualizer {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 Ultrathink Clustering Visualization</h1>
+            <h1>🚀 Advanced Clustering Visualization</h1>
             <p>AI-Driven Quantum-Neuromorphic Clustering Analysis</p>
         </div>
         
@@ -908,7 +908,7 @@ impl UltrathinkVisualizer {
     </div>
 
     <script>
-        console.log("Ultrathink visualization loaded");
+        console.log("Advanced visualization loaded");
         // Simplified visualization without complex D3.js interactions
         // This avoids the parsing issues while still providing basic functionality
     </script>
@@ -986,7 +986,7 @@ impl UltrathinkVisualizer {
     }
 }
 
-/// Complete visualization output for ultrathink clustering
+/// Complete visualization output for Advanced clustering
 #[derive(Debug)]
 pub struct UltrathinkVisualizationOutput {
     /// Standard cluster plot with quantum enhancement
@@ -1036,7 +1036,7 @@ pub struct AISelectionPlot {
 /// Performance metrics dashboard
 #[derive(Debug)]
 pub struct PerformanceDashboard {
-    /// Ultrathink clustering metrics
+    /// Advanced clustering metrics
     pub ultrathink_metrics: HashMap<String, f64>,
     /// Classical baseline comparison
     pub classical_baseline: HashMap<String, f64>,
@@ -1094,7 +1094,7 @@ impl Default for AISelectionInsights {
     }
 }
 
-/// Convenience function to create ultrathink visualization
+/// Convenience function to create Advanced visualization
 #[allow(dead_code)]
 pub fn visualize_ultrathink_results(
     data: &ArrayView2<f64>,
@@ -1106,7 +1106,7 @@ pub fn visualize_ultrathink_results(
     visualizer.visualize_results(data, result)
 }
 
-/// Convenience function to create and export ultrathink visualization
+/// Convenience function to create and export Advanced visualization
 #[allow(dead_code)]
 pub fn create_ultrathink_visualization_report(
     data: &ArrayView2<f64>,

@@ -276,7 +276,8 @@ pub struct NumaTopology {
 
 impl<F> AdaptiveParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     /// Create new adaptive parallel processor
     pub fn new() -> Self {

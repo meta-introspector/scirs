@@ -27,7 +27,7 @@ use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 FFT AND SPECTRAL ANALYSIS - ULTRATHINK DEMONSTRATION");
+    println!("🚀 FFT AND SPECTRAL ANALYSIS - Advanced DEMONSTRATION");
     println!("========================================================");
 
     // Test 1: Basic 1D FFT Algorithms
@@ -408,7 +408,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("\n========================================================");
-    println!("🎯 ULTRATHINK ACHIEVEMENT: FAST FOURIER TRANSFORM");
+    println!("🎯 Advanced ACHIEVEMENT: FAST FOURIER TRANSFORM");
     println!("========================================================");
     println!("✅ Core FFT algorithms: Cooley-Tukey, mixed-radix, Bluestein");
     println!("✅ Real FFT optimization: 2x speedup via Hermitian symmetry");

@@ -24,7 +24,7 @@ pub struct Beta<F: Float> {
     rand_distr: RandBeta<f64>,
 }
 
-impl<F: Float + NumCast + Debug> Beta<F> {
+impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// Create a new beta distribution with given alpha, beta, location, and scale parameters
     ///
     /// # Arguments
@@ -600,14 +600,14 @@ fn one_minus_p<F: Float>(p: F) -> F {
 }
 
 /// Implementation of SampleableDistribution for Beta
-impl<F: Float + NumCast + Debug> SampleableDistribution<F> for Beta<F> {
+impl<F: Float + NumCast + Debug + std::fmt::Display> SampleableDistribution<F> for Beta<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs_vec(size)
     }
 }
 
 /// Implementation of Distribution trait for Beta
-impl<F: Float + NumCast + Debug> ScirsDist<F> for Beta<F> {
+impl<F: Float + NumCast + Debug + std::fmt::Display> ScirsDist<F> for Beta<F> {
     /// Return the mean of the distribution
     fn mean(&self) -> F {
         // Mean = alpha / (alpha + beta)
@@ -645,7 +645,7 @@ impl<F: Float + NumCast + Debug> ScirsDist<F> for Beta<F> {
 }
 
 /// Implementation of ContinuousDistribution trait for Beta
-impl<F: Float + NumCast + Debug> ContinuousDistribution<F> for Beta<F> {
+impl<F: Float + NumCast + Debug + std::fmt::Display> ContinuousDistribution<F> for Beta<F> {
     /// Calculate the probability density function (PDF) at a given point
     fn pdf(&self, x: F) -> F {
         self.pdf(x)

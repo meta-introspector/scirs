@@ -72,7 +72,7 @@ pub struct Hypergeometric<F: Float> {
     loc: F,
 }
 
-impl<F: Float + NumCast + FloatConst> Hypergeometric<F> {
+impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
     /// Create a new hypergeometric distribution
     ///
     /// # Arguments
@@ -346,7 +346,8 @@ pub fn hypergeom<F>(
     loc: F,
 ) -> StatsResult<Hypergeometric<F>>
 where
-    F: Float + NumCast + FloatConst,
+    F: Float + NumCast + FloatConst
+        + std::fmt::Display,
 {
     Hypergeometric::new(n_population, n_success, n_draws, loc)
 }

@@ -6,10 +6,10 @@
 
 #![allow(missing_docs)]
 
-use crate::advanced::UltrathinkProcessor;
+use crate::advanced::AdvancedProcessor;
 use crate::base::{EdgeWeight, Graph, Node};
 use crate::error::Result;
-use rand::{rng, Rng};
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, SystemTime};
 
@@ -212,7 +212,7 @@ impl AdvancedMemoryProfiler {
     }
 
     /// Start profiling an advanced processor
-    pub fn start_profiling(&mut self, processor: &UltrathinkProcessor) {
+    pub fn start_profiling(&mut self, processor: &AdvancedProcessor) {
         self.start_time = SystemTime::now();
         self.record_initial_state(processor);
 
@@ -317,7 +317,7 @@ impl AdvancedMemoryProfiler {
     }
 
     /// Record memory usage snapshot
-    pub fn record_memory_snapshot(&mut self, processor: &UltrathinkProcessor) {
+    pub fn record_memory_snapshot(&mut self, processor: &AdvancedProcessor) {
         let current_time = SystemTime::now();
         let current_usage = self.estimate_processor_memory_usage(processor);
 
@@ -352,7 +352,7 @@ impl AdvancedMemoryProfiler {
     /// Profile memory usage during algorithm execution
     pub fn profile_algorithm_execution<N, E, Ix, T>(
         &mut self,
-        processor: &mut UltrathinkProcessor,
+        processor: &mut AdvancedProcessor,
         graph: &Graph<N, E, Ix>,
         algorithm_name: &str,
         algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
@@ -443,7 +443,7 @@ impl AdvancedMemoryProfiler {
     }
 
     /// Estimate memory usage of an advanced processor
-    fn estimate_processor_memory_usage(&self, processor: &UltrathinkProcessor) -> usize {
+    fn estimate_processor_memory_usage(&self, processor: &AdvancedProcessor) -> usize {
         let stats = processor.get_optimization_stats();
 
         // Base processor memory (estimated)
@@ -470,7 +470,7 @@ impl AdvancedMemoryProfiler {
     }
 
     /// Estimate cache memory usage
-    fn estimate_cache_memory(&self, processor: &UltrathinkProcessor) -> usize {
+    fn estimate_cache_memory(&self, processor: &AdvancedProcessor) -> usize {
         let stats = processor.get_optimization_stats();
         // Estimate based on optimization count and efficiency
         (stats.total_optimizations as f64 * stats.memory_efficiency * 1024.0) as usize
@@ -488,7 +488,7 @@ impl AdvancedMemoryProfiler {
     }
 
     /// Record initial profiling state
-    fn record_initial_state(&mut self, processor: &UltrathinkProcessor) {
+    fn record_initial_state(&mut self, processor: &AdvancedProcessor) {
         let initial_memory = self.estimate_processor_memory_usage(processor);
         self.profile.overall_stats.current_usage = initial_memory;
         self.profile.overall_stats.peak_usage = initial_memory;
@@ -1034,12 +1034,12 @@ pub fn create_extreme_stress_memory_profiler() -> AdvancedMemoryProfiler {
 #[allow(dead_code)]
 pub fn profile_comprehensive_stress_test<F>(
     profiler: &mut AdvancedMemoryProfiler,
-    processor: &mut UltrathinkProcessor,
+    processor: &mut AdvancedProcessor,
     test_name: &str,
     test_function: F,
 ) -> Result<(MemoryUsageReport, Duration)>
 where
-    F: FnOnce(&mut UltrathinkProcessor) -> Result<String>,
+    F: FnOnce(&mut AdvancedProcessor) -> Result<String>,
 {
     println!("🧠 Starting memory-profiled stress test: {test_name}");
 

@@ -421,7 +421,7 @@ where
     )
 }
 
-/// Generate a learning curve with real model evaluation (ultrathink mode)
+/// Generate a learning curve with real model evaluation (Advanced mode)
 ///
 /// This function provides a sophisticated interface for learning curve generation
 /// that actually trains and evaluates models on different training set sizes.

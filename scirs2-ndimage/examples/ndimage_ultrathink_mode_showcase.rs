@@ -1,6 +1,6 @@
-//! Ultrathink Mode Showcase: Advanced scirs2-ndimage Features Demo
+//! Advanced Mode Showcase: Advanced scirs2-ndimage Features Demo
 //!
-//! This example demonstrates the cutting-edge features implemented in ultrathink mode,
+//! This example demonstrates the cutting-edge features implemented in Advanced mode,
 //! including GPU acceleration, ultra-SIMD optimizations, comprehensive validation,
 //! and performance profiling. This showcases why scirs2-ndimage is a compelling
 //! choice for high-performance scientific computing.
@@ -21,7 +21,7 @@ use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 SCIRS2-NDIMAGE ULTRATHINK MODE SHOWCASE 🚀");
+    println!("🚀 SCIRS2-NDIMAGE Advanced MODE SHOWCASE 🚀");
     println!("==============================================\n");
 
     // 1. GPU Acceleration Demonstration
@@ -261,7 +261,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Summary
-    println!("📊 ULTRATHINK MODE SHOWCASE SUMMARY");
+    println!("📊 Advanced MODE SHOWCASE SUMMARY");
     println!("=====================================");
     println!("✓ GPU acceleration framework operational");
     println!("✓ Ultra-enhanced SIMD optimizations active");

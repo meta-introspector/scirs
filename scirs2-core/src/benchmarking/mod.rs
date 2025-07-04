@@ -851,12 +851,12 @@ impl PerformanceBottleneck {
 pub mod presets {
     use super::*;
 
-    /// Comprehensive benchmark configuration for ultrathink mode
+    /// Comprehensive benchmark configuration for Advanced mode
     ///
     /// This configuration includes all available optimization strategies
     /// and provides extensive sample size coverage for thorough testing.
     #[allow(dead_code)]
-    pub fn ultrathink_comprehensive() -> BenchmarkConfig {
+    pub fn advanced_comprehensive() -> BenchmarkConfig {
         let mut strategies = HashSet::new();
         strategies.insert(OptimizationStrategy::Scalar);
         strategies.insert(OptimizationStrategy::Simd);
@@ -888,7 +888,7 @@ pub mod presets {
             max_cv: 0.1,
             enable_profiling: true,
             enable_memory_tracking: true,
-            tags: vec!["ultrathink".to_string(), "comprehensive".to_string()],
+            tags: vec!["Advanced".to_string(), "comprehensive".to_string()],
         }
     }
 

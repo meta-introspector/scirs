@@ -153,17 +153,17 @@ pub mod error_estimation;
 pub mod parallel_optimization;
 pub mod performance_monitor;
 
-// Ultra-performance optimization modules (ultrathink mode)
+// Ultra-performance optimization modules (Advanced mode)
 pub mod gpu_ultra_acceleration;
 pub mod neural_rl_step_control;
 pub mod realtime_performance_adaptation;
 pub mod ultra_memory_optimization;
 pub mod ultra_simd_acceleration;
-pub mod ultrathink_mode_coordinator;
+pub mod advanced_mode_coordinator;
 
-// Comprehensive tests for ultrathink mode
+// Comprehensive tests for Advanced mode
 #[cfg(test)]
-pub mod ultrathink_mode_tests;
+pub mod advanced_mode_tests;
 
 // Integration modules
 pub mod bvp;
@@ -473,9 +473,9 @@ pub use ultra_simd_acceleration::{
     Avx512Support, MixedPrecisionOperation, PrecisionLevel, SimdCapabilities, SveSupport,
     UltraSimdAccelerator, VectorizationStrategies,
 };
-pub use ultrathink_mode_coordinator::{
-    PerformanceTargets, UltrathinkModeConfig, UltrathinkModeCoordinator, UltrathinkModeMetrics,
-    UltrathinkModePerformanceReport, UltrathinkModeResult,
+pub use advanced_mode_coordinator::{
+    PerformanceTargets, advancedModeConfig, advancedModeCoordinator, advancedModeMetrics,
+    advancedModePerformanceReport, advancedModeResult,
 };
 // Neural Reinforcement Learning Step Control exports
 pub use neural_rl_step_control::{

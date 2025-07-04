@@ -64,7 +64,8 @@ where
 /// Huber loss function and constants for robust regression
 pub struct HuberT<F>
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     /// The parameter that controls the transition between squared and absolute error
     pub t: F,
@@ -75,7 +76,8 @@ where
 
 impl<F> HuberT<F>
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     /// Create a new Huber T object with default parameters
     ///
@@ -128,7 +130,8 @@ where
 
 impl<F> Default for HuberT<F>
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self::new()
@@ -152,7 +155,8 @@ where
 #[allow(dead_code)]
 fn huber_weight<F>(r: F, t: F) -> F
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     let abs_r = crate::regression::utils::float_abs(r);
     if abs_r <= t {
@@ -328,7 +332,8 @@ where
 #[allow(dead_code)]
 fn compute_median<F>(x: &ArrayView1<F>) -> F
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     let n = x.len();
     if n == 0 {
@@ -687,7 +692,8 @@ where
         + 'static
         + num_traits::NumAssign
         + num_traits::One
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + std::fmt::Display,
 {
     match lstsq(x, y, None) {
         Ok(result) => Ok(result.x),
@@ -1147,7 +1153,8 @@ where
         + 'static
         + num_traits::NumAssign
         + num_traits::One
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + std::fmt::Display,
 {
     match lstsq(x, y, None) {
         Ok(result) => Ok(result.x),
@@ -1174,7 +1181,8 @@ where
         + 'static
         + num_traits::NumAssign
         + num_traits::One
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + std::fmt::Display,
 {
     // Calculate weighted X'X
     let mut xtx = Array2::<F>::zeros((x.ncols(), x.ncols()));

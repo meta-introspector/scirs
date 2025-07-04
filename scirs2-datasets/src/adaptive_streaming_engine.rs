@@ -955,7 +955,7 @@ pub fn create_adaptive_engine_with_config(config: AdaptiveStreamConfig) -> Adapt
     AdaptiveStreamingEngine::new(config)
 }
 
-/// ULTRATHINK MODE ENHANCEMENTS
+/// Advanced MODE ENHANCEMENTS
 /// Advanced quantum-inspired optimization, neural adaptation, and predictive analytics
 /// Quantum-Inspired Optimization Engine for Ultra-Advanced Stream Processing
 #[derive(Debug)]

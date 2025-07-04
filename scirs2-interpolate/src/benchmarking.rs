@@ -399,7 +399,14 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
                     let x = T::from_usize(i).unwrap() / T::from_usize(size).unwrap();
                     let y = x * x; // Simple quadratic function
 
-                    interpolator.add_point(x, y)?;
+                    let point = crate::streaming::StreamingPoint {
+                        x,
+                        y,
+                        timestamp: std::time::Instant::now(),
+                        quality: 1.0,
+                        metadata: std::collections::HashMap::new(),
+                    };
+                    interpolator.add_point(point)?;
                 }
 
                 // Make predictions

@@ -52,7 +52,8 @@ where
         + std::fmt::Debug
         + std::marker::Send
         + std::marker::Sync
-        + 'static,
+        + 'static
+        + std::fmt::Display,
 {
     // Check input dimensions
     if observed.ndim() != 2 {
@@ -195,7 +196,8 @@ where
         + std::fmt::Debug
         + std::marker::Send
         + std::marker::Sync
-        + 'static,
+        + 'static
+        + std::fmt::Display,
 {
     // Check input dimensions
     if table.nrows() != 2 || table.ncols() != 2 {
@@ -351,7 +353,8 @@ where
         + std::fmt::Debug
         + std::marker::Send
         + std::marker::Sync
-        + 'static,
+        + 'static
+        + std::fmt::Display,
 {
     // Check input dimensions
     if table.ndim() != 2 {
@@ -445,7 +448,8 @@ where
         + std::fmt::Debug
         + std::marker::Send
         + std::marker::Sync
-        + 'static,
+        + 'static
+        + std::fmt::Display,
 {
     // Check input dimensions
     if table.nrows() != 2 || table.ncols() != 2 {
@@ -561,7 +565,8 @@ where
         + std::fmt::Debug
         + std::marker::Send
         + std::marker::Sync
-        + 'static,
+        + 'static
+        + std::fmt::Display,
 {
     // Check input dimensions
     if table.nrows() != 2 || table.ncols() != 2 {

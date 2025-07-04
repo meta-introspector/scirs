@@ -10,10 +10,16 @@ use super::{
     StreamingStats,
 };
 use crate::error::OptimizeError;
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1};
+// Unused import
+// use ndarray::ArrayView2;
 // Unused import
 // use scirs2_core::error::CoreResult;
-use scirs2_linalg::{cholesky, solve, LinalgError};
+// Unused import
+// use scirs2_linalg::{cholesky, solve, LinalgError};
+use scirs2_linalg::{solve, LinalgError};
+
+type Result<T> = std::result::Result<T, OptimizeError>;
 
 /// Types of incremental Newton methods
 #[derive(Debug, Clone, Copy)]

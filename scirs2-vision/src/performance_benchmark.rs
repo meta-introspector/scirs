@@ -1,7 +1,7 @@
-//! Advanced Performance Benchmarking for Ultrathink Mode
+//! Advanced Performance Benchmarking for Advanced Mode
 //!
 //! This module provides comprehensive performance benchmarking capabilities
-//! for all ultrathink mode features, including quantum-inspired processing,
+//! for all Advanced mode features, including quantum-inspired processing,
 //! neuromorphic computing, AI optimization, and cross-module coordination.
 
 #![allow(dead_code)]
@@ -13,7 +13,7 @@ use crate::ultrathink_integration::NeuralQuantumHybridProcessor;
 use ndarray::Array2;
 use std::time::{Duration, Instant};
 
-/// Comprehensive performance benchmark suite for ultrathink mode
+/// Comprehensive performance benchmark suite for Advanced mode
 pub struct UltrathinkBenchmarkSuite {
     /// Benchmarking configuration
     config: BenchmarkConfig,
@@ -331,7 +331,7 @@ impl UltrathinkBenchmarkSuite {
         }
     }
 
-    /// Run comprehensive ultrathink mode benchmarks
+    /// Run comprehensive Advanced mode benchmarks
     pub fn run_comprehensive_benchmark(&mut self) -> Result<Vec<BenchmarkResult>> {
         let results = vec![
             self.benchmark_baseline_performance()?,
@@ -417,7 +417,7 @@ impl UltrathinkBenchmarkSuite {
 
         // Warmup phase
         for frame in test_frames.iter().take(self.config.warmup_iterations) {
-            let _ = processor.process_ultrathink(frame.clone())?;
+            let _ = processor.process_advanced(frame.clone())?;
         }
 
         // Measurement phase
@@ -426,7 +426,7 @@ impl UltrathinkBenchmarkSuite {
 
         for frame in test_frames.iter().skip(self.config.warmup_iterations) {
             let frame_start = Instant::now();
-            let result = processor.process_ultrathink(frame.clone())?;
+            let result = processor.process_advanced(frame.clone())?;
             let frame_latency = frame_start.elapsed().as_secs_f64() * 1000.0;
 
             latencies.push(frame_latency);

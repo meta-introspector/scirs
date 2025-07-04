@@ -10,6 +10,7 @@ use ndarray::{Array1, ArrayView1};
 use rand::distr::Uniform;
 use rand::prelude::*;
 use rand::rngs::StdRng;
+use rand::Rng;
 
 /// Enforce bounds using reflection method for better exploration
 #[allow(dead_code)]
@@ -160,7 +161,7 @@ where
         take_step: Option<TakeStep>,
     ) -> Self {
         let ndim = x0.len();
-        let seed = options.seed.unwrap_or_else(rand::rng().gen);
+        let seed = options.seed.unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
         let mut rng = StdRng::seed_from_u64(seed);
 
         // Default accept test is Metropolis criterion
@@ -171,7 +172,7 @@ where
                     true
                 } else {
                     let delta = (f_old - f_new) / temp;
-                    delta > 0.0 && rand::rng().random::<f64>() < delta.exp()
+                    delta > 0.0 && rand::rng().random_range(0.0..1.0) < delta.exp()
                 }
             })
         });
@@ -180,7 +181,7 @@ where
         let take_step = take_step.unwrap_or_else(|| {
             let stepsize = options.stepsize;
             let bounds = options.bounds.clone();
-            let seed = options.seed.unwrap_or_else(rand::rng().gen);
+            let seed = options.seed.unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
             Box::new(move |x: &Array1<f64>| {
                 let mut local_rng = StdRng::seed_from_u64(seed + x.len() as u64);
                 let mut x_new = x.clone();

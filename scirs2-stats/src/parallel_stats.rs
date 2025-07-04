@@ -29,7 +29,8 @@ const PARALLEL_THRESHOLD: usize = 10_000;
 pub fn mean_parallel<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
@@ -71,7 +72,8 @@ where
 pub fn variance_parallel<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     let n = x.len();
     if n <= ddof {
@@ -126,7 +128,8 @@ pub fn quantiles_parallel<F, D>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Send + Sync,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     if x.is_empty() {
         return Err(StatsError::invalid_argument(
@@ -200,7 +203,8 @@ pub fn row_statistics_parallel<F, D, S>(
 where
     F: Float + NumCast + Send + Sync,
     D: Data<Elem = F> + Sync,
-    S: Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync,
+    S: Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync
+        + std::fmt::Display,
 {
     let nrows = data.nrows();
 
@@ -239,7 +243,8 @@ where
 pub fn corrcoef_parallel<F, D>(data: &ArrayBase<D, Ix2>) -> StatsResult<ndarray::Array2<F>>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum + std::fmt::Debug,
-    D: Data<Elem = F> + Sync,
+    D: Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     use crate::pearson_r;
 
@@ -303,7 +308,8 @@ pub fn bootstrap_parallel<F, S>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Send + Sync,
-    S: Fn(&ArrayBase<ndarray::ViewRepr<&F>, Ix1>) -> StatsResult<F> + Send + Sync,
+    S: Fn(&ArrayBase<ndarray::ViewRepr<&F>, Ix1>) -> StatsResult<F> + Send + Sync
+        + std::fmt::Display,
 {
     use crate::sampling::bootstrap;
 

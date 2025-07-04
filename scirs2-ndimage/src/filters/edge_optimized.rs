@@ -13,7 +13,6 @@ use super::BorderMode;
 use crate::error::{NdimageError, NdimageResult};
 use crate::utils::safe_f64_to_float;
 
-
 /// Optimized Sobel filter for detecting edges in 2D arrays
 ///
 /// This implementation provides significant performance improvements over the basic version:

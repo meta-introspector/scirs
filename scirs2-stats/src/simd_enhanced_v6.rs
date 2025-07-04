@@ -447,7 +447,8 @@ pub struct BootstrapResult<F> {
 /// Specialized SIMD operations for advanced statistics
 pub trait AdvancedSimdOps<F>: SimdUnifiedOps
 where
-    F: Float + NumCast + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     /// SIMD-optimized sum of cubes
     fn simd_sum_cubes(data: &ArrayView1<F>) -> F {

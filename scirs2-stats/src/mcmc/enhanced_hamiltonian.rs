@@ -11,14 +11,15 @@ use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::{Float, NumAssign};
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 use std::fmt::Display;
+use std::iter::Sum;
 use std::marker::PhantomData;
 
 /// Enhanced target distribution trait with automatic differentiation support
 pub trait EnhancedDifferentiableTarget<F>: Send + Sync
 where
-    F: Float + Copy + ScalarOperand + NumAssign + Display + Send + Sync,
+    F: Float + Copy + ScalarOperand + NumAssign + Display + Sum + Send + Sync,
 {
     /// Compute log probability density
     fn log_density(&self, x: &Array1<F>) -> F;
@@ -202,6 +203,7 @@ where
         + ScalarOperand
         + NumAssign
         + Display
+        + Sum
         + 'static,
 {
     /// Create new enhanced HMC sampler
@@ -639,6 +641,7 @@ where
         + ScalarOperand
         + NumAssign
         + Display
+        + Sum
         + 'static,
     R: Rng + ?Sized,
 {

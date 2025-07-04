@@ -1,6 +1,6 @@
-//! Comprehensive demonstration of Ultrathink Mode capabilities in scirs2-ndimage
+//! Comprehensive demonstration of Advanced Mode capabilities in scirs2-ndimage
 //!
-//! This example showcases the advanced ultrathink mode features that have been
+//! This example showcases the advanced Advanced mode features that have been
 //! implemented, including:
 //! - Adaptive optimization system
 //! - Quantum consciousness evolution
@@ -13,17 +13,17 @@
 use ndarray::{Array2, Array3};
 use scirs2_ndimage::{
     adaptive_ultrathink_optimizer::*, error::Result, gpu_operations::*, performance_profiler::*,
-    ultrathink_fusion_core::*,
+    fusion_core::*,
 };
 use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🚀 SciRS2 NDImage - Ultrathink Mode Comprehensive Demo");
+    println!("🚀 SciRS2 NDImage - Advanced Mode Comprehensive Demo");
     println!("====================================================");
 
-    // 1. Initialize Adaptive Ultrathink Optimizer
-    println!("\n1️⃣ Initializing Adaptive Ultrathink Optimizer...");
+    // 1. Initialize Adaptive Advanced Optimizer
+    println!("\n1️⃣ Initializing Adaptive Advanced Optimizer...");
     let mut optimizer = AdaptiveUltrathinkOptimizer::new(AdaptiveOptimizerConfig::default())?;
 
     // Create test data with various characteristics
@@ -165,7 +165,7 @@ fn main() -> Result<()> {
 
     // Simulate complex processing
     let processed =
-        ultrathink_fusion_processing(&large_image.view(), &UltrathinkConfig::default())?;
+        fusion_processing(&large_image.view(), &AdvancedConfig::default())?;
 
     let processing_time = start_time.elapsed();
     profiler.end_operation("large_scale_processing");
@@ -253,7 +253,7 @@ fn main() -> Result<()> {
     }
 
     // 8. Summary and Future Potential
-    println!("\n8️⃣ Ultrathink Mode Summary");
+    println!("\n8️⃣ Advanced Mode Summary");
     println!("================================");
     println!("✅ Adaptive optimization system: ACTIVE");
     println!("✅ Quantum consciousness evolution: ACTIVE");
@@ -263,7 +263,7 @@ fn main() -> Result<()> {
     println!("✅ GPU acceleration framework: AVAILABLE");
     println!("✅ Comprehensive documentation: COMPLETE");
 
-    println!("\n🎉 Ultrathink Mode demonstration completed successfully!");
+    println!("\n🎉 Advanced Mode demonstration completed successfully!");
     println!("   This showcases the cutting-edge capabilities of scirs2-ndimage");
     println!("   for high-performance scientific computing and AI workloads.");
 

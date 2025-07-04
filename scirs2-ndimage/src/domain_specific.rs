@@ -719,13 +719,13 @@ pub mod microscopy {
 
         // Apply thresholds
         let thresh1 = threshold1.unwrap_or_else(|| {
-            let mean = channel1.mean().unwrap_or(T::zero());
+            let mean = channel1.sum() / safe_usize_to_float(channel1.len()).unwrap_or(T::one());
             let std = channel1.std(T::zero());
             mean + std
         });
 
         let thresh2 = threshold2.unwrap_or_else(|| {
-            let mean = channel2.mean().unwrap_or(T::zero());
+            let mean = channel2.sum() / safe_usize_to_float(channel2.len()).unwrap_or(T::one());
             let std = channel2.std(T::zero());
             mean + std
         });
@@ -772,8 +772,8 @@ pub mod microscopy {
         let manders_m2 = if sum2 > 0.0 { m2 / sum2 } else { 0.0 };
 
         // Compute Pearson correlation
-        let mean1 = safe_float_to_f64(channel1.mean().unwrap_or(T::zero())).unwrap_or(0.0);
-        let mean2 = safe_float_to_f64(channel2.mean().unwrap_or(T::zero())).unwrap_or(0.0);
+        let mean1 = safe_float_to_f64(channel1.sum() / safe_usize_to_float(channel1.len()).unwrap_or(T::one())).unwrap_or(0.0);
+        let mean2 = safe_float_to_f64(channel2.sum() / safe_usize_to_float(channel2.len()).unwrap_or(T::one())).unwrap_or(0.0);
 
         let mut cov = 0.0;
         let mut var1 = 0.0;

@@ -1,7 +1,7 @@
-//! Comprehensive tests for ultrathink mode features
+//! Comprehensive tests for Advanced mode features
 //!
 //! This test module demonstrates and tests all the advanced features implemented
-//! during the ultrathink mode development session, including:
+//! during the Advanced mode development session, including:
 //! - Custom activation function framework
 //! - Performance optimizations (SIMD operations, cache-friendly algorithms)
 //! - Enhanced dynamic computation graph features

@@ -4,9 +4,9 @@
 //! variational inference, hierarchical models, and robust Bayesian regression.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
-use num_traits::{Float, NumAssign, One, Zero};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use ndarray::{Array1, Array2, ArrayView2, ScalarOperand};
+use num_traits::{Float, NumAssign, One, Zero, ToPrimitive, FromPrimitive};
+use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
 
 /// Enhanced Bayesian linear regression with multiple inference methods
@@ -120,7 +120,9 @@ where
         + 'static
         + std::iter::Sum
         + NumAssign
-        + ScalarOperand,
+        + ScalarOperand
+        + ToPrimitive
+        + FromPrimitive,
 {
     /// Create new enhanced Bayesian regression model
     pub fn new(
@@ -224,7 +226,8 @@ where
             .dot(&(xtx_f64.dot(&xty_f64) + prior_precision_f64.dot(&prior_mean_f64)));
 
         // Posterior noise parameters
-        let residual = y - &x.dot(&posterior_mean_f64.mapv(|v| F::from(v).unwrap()));
+        let posterior_mean_f: Array1<F> = posterior_mean_f64.mapv(|v| F::from(v).unwrap());
+        let residual = y - &x.dot(&posterior_mean_f);
         let residual_sum_squares = residual.dot(&residual).to_f64().unwrap_or(0.0);
 
         let posterior_noise_shape = noise_shape_f64 + n / 2.0;
@@ -241,7 +244,7 @@ where
         // Compute predictive distribution
         let predictive_mean = x.dot(&beta_mean);
         let predictive_var_diag =
-            self.compute_predictive_variance(x, &beta_covariance, noise_precision_mean)?;
+            self.compute_predictive_variance(x.view(), &beta_covariance, noise_precision_mean)?;
 
         // Compute log marginal likelihood
         let log_marginal_likelihood = self.compute_log_marginal_likelihood(
@@ -275,7 +278,7 @@ where
     fn fit_variational_bayes(&self) -> StatsResult<BayesianRegressionResult<F>> {
         let x = &self.design_matrix;
         let y = &self.response;
-        let (n, p) = x.dim();
+        let (n, _p) = x.dim();
 
         // Initialize variational parameters
         let mut q_beta_mean = self.prior.beta_mean.clone();
@@ -309,7 +312,7 @@ where
             // Update noise parameters
             q_noise_shape = self.prior.noise_shape + F::from(n).unwrap() / F::from(2.0).unwrap();
 
-            let expected_beta_squared =
+            let _expected_beta_squared =
                 q_beta_mean.dot(&q_beta_mean) + q_beta_covariance.diag().sum();
             let residual_term = y.dot(y) - F::from(2.0).unwrap() * y.dot(&x.dot(&q_beta_mean))
                 + x.dot(&q_beta_mean).dot(&x.dot(&q_beta_mean))
@@ -339,7 +342,7 @@ where
 
         let predictive_mean = x.dot(&q_beta_mean);
         let predictive_var =
-            self.compute_predictive_variance(x, &beta_covariance, noise_precision_mean)?;
+            self.compute_predictive_variance(x.view(), &beta_covariance, noise_precision_mean)?;
 
         let log_marginal_likelihood = prev_elbo; // ELBO approximates log marginal likelihood
 
@@ -380,7 +383,13 @@ where
 
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => {
+                let mut thread_rng = rand::rng();
+                match StdRng::from_rng(&mut thread_rng) {
+                    Ok(rng) => rng,
+                    Err(_) => StdRng::seed_from_u64(0), // fallback to deterministic seed
+                }
+            },
         };
 
         // Initialize parameters
@@ -491,7 +500,7 @@ where
         // Predictive distribution
         let predictive_mean = x.dot(&posterior_beta_mean);
         let predictive_var =
-            self.compute_predictive_variance(x, &posterior_beta_cov, noise_precision_mean)?;
+            self.compute_predictive_variance(x.view(), &posterior_beta_cov, noise_precision_mean)?;
 
         // Compute final log marginal likelihood estimate
         let final_log_likelihood = if log_likelihood_history.is_empty() {
@@ -735,7 +744,7 @@ where
     /// Make predictions on new data
     pub fn predict(
         &self,
-        x_new: &ArrayView2<F>,
+        x_new: &Array2<F>,
         result: &BayesianRegressionResult<F>,
     ) -> StatsResult<(Array1<F>, Array1<F>)> {
         check_array_finite(x_new, "x_new")?;
@@ -750,7 +759,7 @@ where
 
         let pred_mean = x_new.dot(&result.beta_mean);
         let pred_var = self.compute_predictive_variance(
-            x_new,
+            x_new.view(),
             &result.beta_covariance,
             result.noise_precision_mean,
         )?;
@@ -761,7 +770,9 @@ where
 
 impl<F> BayesianRegressionPrior<F>
 where
-    F: Float + Zero + One + Copy,
+    F: Float + Zero + One + Copy + ScalarOperand
+        + std::fmt::Display
+        + FromPrimitive,
 {
     /// Create uninformative prior
     pub fn uninformative(p: usize) -> Self {
@@ -812,7 +823,10 @@ where
         + 'static
         + std::iter::Sum
         + NumAssign
-        + ScalarOperand,
+        + ScalarOperand
+        + std::fmt::Display
+        + ToPrimitive
+        + FromPrimitive,
 {
     let p = x.ncols();
     let prior = prior.unwrap_or_else(|| BayesianRegressionPrior::uninformative(p));
@@ -839,7 +853,10 @@ where
         + 'static
         + std::iter::Sum
         + NumAssign
-        + ScalarOperand,
+        + ScalarOperand
+        + std::fmt::Display
+        + ToPrimitive
+        + FromPrimitive,
 {
     let p = x.ncols();
     let prior = prior.unwrap_or_else(|| BayesianRegressionPrior::uninformative(p));

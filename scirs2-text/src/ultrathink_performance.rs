@@ -1,14 +1,14 @@
-//! Ultrathink Performance Monitoring and Optimization
+//! Advanced Performance Monitoring and Optimization
 //!
 //! This module provides comprehensive performance monitoring, analysis, and optimization
-//! capabilities for ultrathink mode text processing operations.
+//! capabilities for Advanced mode text processing operations.
 
 use crate::error::{Result, TextError};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-/// Comprehensive performance monitor for ultrathink operations
+/// Comprehensive performance monitor for Advanced operations
 #[derive(Debug)]
 pub struct UltrathinkPerformanceMonitor {
     /// Historical performance data

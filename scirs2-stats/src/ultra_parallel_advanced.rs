@@ -616,7 +616,8 @@ pub struct GpuStream {
 
 impl<F> UltraParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     /// Create new ultra-parallel processor
     pub fn new() -> Self {
@@ -860,7 +861,8 @@ impl Default for PerformanceMetrics {
 
 impl<F> Default for UltraParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self::new()
@@ -875,7 +877,8 @@ pub type F32UltraParallelProcessor = UltraParallelProcessor<f32>;
 #[allow(dead_code)]
 pub fn create_ultra_parallel_processor<F>() -> UltraParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     UltraParallelProcessor::new()
 }
@@ -885,7 +888,8 @@ pub fn create_optimized_parallel_processor<F>(
     config: UltraParallelConfig,
 ) -> UltraParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     UltraParallelProcessor::with_config(config)
 }

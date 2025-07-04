@@ -1,4 +1,4 @@
-//! Neural-Adaptive Sparse Matrix Operations for Ultrathink Mode
+//! Neural-Adaptive Sparse Matrix Operations for Advanced Mode
 //!
 //! This module implements neural network-inspired adaptive algorithms for sparse matrix
 //! operations that learn and optimize based on matrix characteristics and usage patterns.

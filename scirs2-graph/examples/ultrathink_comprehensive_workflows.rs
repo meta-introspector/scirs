@@ -1,15 +1,15 @@
-//! Comprehensive Ultrathink Mode Workflows
+//! Comprehensive Advanced Mode Workflows
 //!
 //! This example demonstrates real-world usage patterns and workflows
-//! for ultrathink mode in various application domains.
+//! for Advanced mode in various application domains.
 
 #![allow(dead_code)]
 
 use rand::{random, rng, Rng};
 use scirs2_graph::advanced::{
-    create_enhanced_ultrathink_processor, create_large_graph_ultrathink_processor,
-    create_performance_ultrathink_processor, create_realtime_ultrathink_processor,
-    execute_with_enhanced_ultrathink, ExplorationStrategy, UltrathinkConfig, UltrathinkProcessor,
+    create_enhanced_advanced_processor, create_large_graph_advanced_processor,
+    create_performance_advanced_processor, create_realtime_advanced_processor,
+    execute_with_enhanced_advanced, ExplorationStrategy, AdvancedConfig, AdvancedProcessor,
 };
 use scirs2_graph::{
     barabasi_albert_graph, betweenness_centrality, closeness_centrality, connected_components,
@@ -21,7 +21,7 @@ use std::time::{Duration, Instant};
 
 /// Workflow 1: Social Network Analysis
 ///
-/// This workflow demonstrates how to analyze social networks using ultrathink mode,
+/// This workflow demonstrates how to analyze social networks using Advanced mode,
 /// including community detection, influence analysis, and path finding.
 #[allow(dead_code)]
 fn social_network_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> {
@@ -141,7 +141,7 @@ fn social_network_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> 
     );
 
     let stats = processor.get_optimization_stats();
-    println!("   - Ultrathink speedup: {:.2}x", stats.average_speedup);
+    println!("   - Advanced speedup: {:.2}x", stats.average_speedup);
     println!("   - Memory efficiency: {:.2}", stats.memory_efficiency);
 
     Ok(())
@@ -579,7 +579,7 @@ fn benchmark_suite_workflow() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create multiple processor configurations for comparison
     let mut processors = vec![
-        ("Standard Ultrathink", create_enhanced_advanced_processor()),
+        ("Standard Advanced", create_enhanced_advanced_processor()),
         (
             "Performance Optimized",
             create_performance_advanced_processor(),
@@ -738,7 +738,7 @@ fn benchmark_suite_workflow() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 SciRS2 Ultrathink Comprehensive Workflows");
+    println!("🚀 SciRS2 Advanced Comprehensive Workflows");
     println!("============================================");
     println!("This demo showcases real-world usage patterns for advanced mode.");
     println!();

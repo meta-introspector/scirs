@@ -10,6 +10,7 @@ use crate::unconstrained::{line_search::backtracking_line_search, OptimizeResult
 use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
 use rand::SeedableRng;
+use rand::Rng;
 use std::collections::VecDeque;
 
 /// Options for subspace optimization methods
@@ -126,7 +127,7 @@ impl SubspaceState {
             let num_nonzeros = (n / 10).clamp(1, 20); // At most 20 nonzeros
             for _ in 0..num_nonzeros {
                 let idx = self.rng.random_range(0..n);
-                vec[idx] = self.rng.random::<f64>() * 2.0 - 1.0; // Random value in [-1, 1]
+                vec[idx] = self.rng.random_range(-1.0..1.0); // Random value in [-1, 1]
             }
             // Normalize
             let norm = vec.mapv(|x: f64| x.powi(2)).sum().sqrt();

@@ -1,4 +1,4 @@
-//! ULTRATHINK MODE: Advanced GPU Acceleration Framework
+//! Advanced MODE: Advanced GPU Acceleration Framework
 //!
 //! This module provides a comprehensive GPU acceleration framework that automatically
 //! selects the optimal GPU backend and kernel for any given linear algebra operation.
@@ -567,7 +567,7 @@ pub fn initialize_global_gpu_acceleration() -> LinalgResult<()> {
     Ok(())
 }
 
-/// ULTRATHINK MODE: Advanced GPU Memory Management and Streaming
+/// Advanced MODE: Advanced GPU Memory Management and Streaming
 ///
 /// This extension provides sophisticated memory management and streaming capabilities
 /// for handling very large matrices that don't fit in GPU memory.

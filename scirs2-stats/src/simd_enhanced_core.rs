@@ -39,7 +39,8 @@ use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps}
 pub fn mean_enhanced<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
@@ -81,7 +82,8 @@ where
 pub fn variance_enhanced<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     if n == 0 {
@@ -139,7 +141,8 @@ pub fn correlation_simd_enhanced<F, D1, D2>(
 where
     F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
     D1: Data<Elem = F>,
-    D2: Data<Elem = F>,
+    D2: Data<Elem = F>
+        + std::fmt::Display,
 {
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
@@ -183,7 +186,8 @@ pub fn comprehensive_stats_simd<F, D>(
 ) -> StatsResult<ComprehensiveStats<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::fmt::Debug,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     if n == 0 {
@@ -237,7 +241,8 @@ pub struct ComprehensiveStats<F> {
 fn compensated_simd_sum<F, D>(x: &ArrayBase<D, Ix1>, optimizer: &AutoOptimizer) -> F
 where
     F: Float + NumCast + SimdUnifiedOps + Copy,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     const CHUNK_SIZE: usize = 8192; // Cache-friendly chunk size
 
@@ -285,7 +290,8 @@ where
 fn welford_variance_simd<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     let mut mean = F::zero();
@@ -326,8 +332,9 @@ where
 #[allow(dead_code)]
 fn simd_sum_squared_deviations<F, D>(x: &ArrayBase<D, Ix1>, mean: F) -> F
 where
-    F: Float + NumCast + SimdUnifiedOps + Copy,
-    D: Data<Elem = F>,
+    F: Float + NumCast + SimdUnifiedOps + Copy + std::iter::Sum<F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let mean_array = Array1::from_elem(x.len(), mean);
     let deviations = F::simd_sub(&x.view(), &mean_array.view());
@@ -343,7 +350,8 @@ fn simd_correlation_full<F, D1, D2>(
 where
     F: Float + NumCast + SimdUnifiedOps + Copy,
     D1: Data<Elem = F>,
-    D2: Data<Elem = F>,
+    D2: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     let n_f = F::from(n).unwrap();
@@ -385,7 +393,8 @@ fn scalar_correlation_optimized<F, D1, D2>(
 where
     F: Float + NumCast + Copy,
     D1: Data<Elem = F>,
-    D2: Data<Elem = F>,
+    D2: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     let n_f = F::from(n).unwrap();
@@ -430,7 +439,8 @@ fn simd_comprehensive_single_pass<F, D>(
 ) -> StatsResult<ComprehensiveStats<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy + std::fmt::Debug,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     let n_f = F::from(n).unwrap();

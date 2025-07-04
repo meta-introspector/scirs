@@ -22,7 +22,7 @@ pub struct ChiSquare<F: Float + Send + Sync> {
     rand_distr: RandChiSquared<f64>,
 }
 
-impl<F: Float + NumCast + Send + Sync + 'static> ChiSquare<F> {
+impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F> {
     /// Create a new Chi-square distribution with given degrees of freedom, location, and scale
     ///
     /// # Arguments
@@ -454,7 +454,7 @@ fn gamma_function<F: Float>(x: F) -> F {
 }
 
 /// Implementation of Distribution trait for ChiSquare
-impl<F: Float + NumCast + Send + Sync + 'static> ScirsDist<F> for ChiSquare<F> {
+impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ScirsDist<F> for ChiSquare<F> {
     fn mean(&self) -> F {
         // Mean of chi-square is degrees of freedom * scale + loc
         self.df * self.scale + self.loc
@@ -507,7 +507,7 @@ impl<F: Float + NumCast + Send + Sync + 'static> ScirsDist<F> for ChiSquare<F> {
 }
 
 /// Implementation of ContinuousDistribution trait for ChiSquare
-impl<F: Float + NumCast + Send + Sync + 'static> ContinuousDistribution<F> for ChiSquare<F> {
+impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ContinuousDistribution<F> for ChiSquare<F> {
     fn pdf(&self, x: F) -> F {
         // Call the implementation from the struct
         ChiSquare::pdf(self, x)
@@ -578,7 +578,7 @@ impl<F: Float + NumCast + Send + Sync + 'static> ContinuousDistribution<F> for C
 }
 
 /// Implementation of SampleableDistribution for ChiSquare
-impl<F: Float + NumCast + Send + Sync + 'static> SampleableDistribution<F> for ChiSquare<F> {
+impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> SampleableDistribution<F> for ChiSquare<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs_vec(size)
     }

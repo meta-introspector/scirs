@@ -21,7 +21,7 @@ pub struct Logistic<F: Float> {
     rand_distr: RandUniform<f64>,
 }
 
-impl<F: Float + NumCast> Logistic<F> {
+impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// Create a new Logistic distribution with given parameters
     ///
     /// # Arguments
@@ -432,13 +432,14 @@ impl<F: Float + NumCast> Logistic<F> {
 #[allow(dead_code)]
 pub fn logistic<F>(loc: F, scale: F) -> StatsResult<Logistic<F>>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     Logistic::new(loc, scale)
 }
 
 /// Implementation of SampleableDistribution for Logistic
-impl<F: Float + NumCast> SampleableDistribution<F> for Logistic<F> {
+impl<F: Float + NumCast + std::fmt::Display> SampleableDistribution<F> for Logistic<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs(size)
     }

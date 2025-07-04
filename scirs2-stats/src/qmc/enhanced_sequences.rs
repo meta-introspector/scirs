@@ -84,7 +84,7 @@ pub enum BaseSelectionStrategy {
 }
 
 /// Digital net parameters
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DigitalNetParams {
     /// t parameter (strength)
     pub t: usize,
@@ -183,7 +183,8 @@ pub struct QualityMetrics {
 
 impl<F> EnhancedQMCGenerator<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display,
 {
     /// Create new enhanced QMC generator
     pub fn new(
@@ -658,7 +659,8 @@ pub fn enhanced_sobol<F>(
     seed: Option<u64>,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display,
 {
     let sequence_type = EnhancedSequenceType::SobolAdvanced {
         owen_scrambling: scrambling,
@@ -682,7 +684,8 @@ pub fn enhanced_niederreiter<F>(
     seed: Option<u64>,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display,
 {
     let sequence_type = EnhancedSequenceType::Niederreiter {
         base_strategy: BaseSelectionStrategy::OptimizedPrimes,
@@ -706,7 +709,8 @@ pub fn enhanced_digital_net<F>(
     seed: Option<u64>,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display,
 {
     let net_params = DigitalNetParams {
         t,

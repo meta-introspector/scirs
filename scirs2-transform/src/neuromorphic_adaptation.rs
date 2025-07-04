@@ -9,7 +9,7 @@ use crate::auto_feature_engineering::{
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2};
 use rand::Rng;
-// use scirs2_core::parallel_ops::*; // Currently unused
+// use scirs2_core::parallel_ops::*; // Reserved for future parallel processing
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_not_empty, check_positive};
 use std::collections::{HashMap, VecDeque};
@@ -996,17 +996,17 @@ impl NeuromorphicTransformationSystem {
     }
 
     /// Get current system state for monitoring
-    pub fn get_system_state(&self) -> &SystemState {
+    pub const fn get_system_state(&self) -> &SystemState {
         &self.system_state
     }
 }
 
 // ========================================================================
-// ✅ ULTRATHINK MODE: Advanced Neuromorphic Optimizations
+// ✅ Advanced MODE: Advanced Neuromorphic Optimizations
 // ========================================================================
 
-/// ✅ ULTRATHINK MODE: SIMD-optimized spike processing for ultra-fast computation
-pub struct UltraThinkNeuromorphicProcessor {
+/// ✅ Advanced MODE: SIMD-optimized spike processing for ultra-fast computation
+pub struct advancedNeuromorphicProcessor {
     /// Network for processing
     network: NeuromorphicAdaptationNetwork,
     /// SIMD-optimized spike buffer
@@ -1016,16 +1016,16 @@ pub struct UltraThinkNeuromorphicProcessor {
     /// Parallel processing pool
     processing_chunks: usize,
     /// Real-time performance metrics
-    performance_metrics: UltraThinkNeuromorphicMetrics,
+    performance_metrics: advancedNeuromorphicMetrics,
     /// Adaptive threshold tuning
     adaptive_thresholds: Array1<f64>,
     /// Memory pool for efficient allocations
     memory_pool: Vec<Array1<f64>>,
 }
 
-/// ✅ ULTRATHINK MODE: Performance metrics for neuromorphic processing
+/// ✅ Advanced MODE: Performance metrics for neuromorphic processing
 #[derive(Debug, Clone)]
-pub struct UltraThinkNeuromorphicMetrics {
+pub struct advancedNeuromorphicMetrics {
     /// Processing throughput (samples per second)
     throughput: f64,
     /// Memory efficiency ratio
@@ -1040,19 +1040,19 @@ pub struct UltraThinkNeuromorphicMetrics {
     real_time_satisfaction: f64,
 }
 
-impl UltraThinkNeuromorphicProcessor {
-    /// ✅ ULTRATHINK OPTIMIZATION: Create ultra-fast neuromorphic processor
+impl advancedNeuromorphicProcessor {
+    /// ✅ Advanced OPTIMIZATION: Create ultra-fast neuromorphic processor
     pub fn new(input_size: usize, hidden_size: usize, output_size: usize) -> Self {
         let network = NeuromorphicAdaptationNetwork::new(input_size, hidden_size, output_size);
         let batch_size = 64; // Optimal batch size for SIMD
         let processing_chunks = num_cpus::get().min(8); // Limit for memory efficiency
 
-        UltraThinkNeuromorphicProcessor {
+        advancedNeuromorphicProcessor {
             network,
             spike_buffer: Array2::zeros((batch_size, input_size + hidden_size + output_size)),
             batch_size,
             processing_chunks,
-            performance_metrics: UltraThinkNeuromorphicMetrics {
+            performance_metrics: advancedNeuromorphicMetrics {
                 throughput: 0.0,
                 memory_efficiency: 1.0,
                 network_utilization: 0.0,
@@ -1065,7 +1065,7 @@ impl UltraThinkNeuromorphicProcessor {
         }
     }
 
-    /// ✅ ULTRATHINK MODE: Ultra-fast parallel batch processing
+    /// ✅ Advanced MODE: Ultra-fast parallel batch processing
     pub fn process_batch(
         &mut self,
         meta_features_batch: &[DatasetMetaFeatures],
@@ -1078,7 +1078,7 @@ impl UltraThinkNeuromorphicProcessor {
         let start_time = std::time::Instant::now();
         let mut results = Vec::with_capacity(meta_features_batch.len());
 
-        // ✅ ULTRATHINK OPTIMIZATION: Sequential processing (avoiding borrow checker issues)
+        // ✅ Advanced OPTIMIZATION: Sequential processing (avoiding borrow checker issues)
         for meta_features in meta_features_batch {
             let configs = self.process_single_ultrafast(meta_features)?;
             results.push(configs);
@@ -1086,7 +1086,7 @@ impl UltraThinkNeuromorphicProcessor {
 
         // Results are already populated in the sequential loop
 
-        // ✅ ULTRATHINK OPTIMIZATION: Update performance metrics
+        // ✅ Advanced OPTIMIZATION: Update performance metrics
         let processing_time = start_time.elapsed().as_secs_f64();
         self.performance_metrics.throughput = meta_features_batch.len() as f64 / processing_time;
         self.update_advanced_metrics();
@@ -1094,30 +1094,30 @@ impl UltraThinkNeuromorphicProcessor {
         Ok(results)
     }
 
-    /// ✅ ULTRATHINK MODE: Ultra-fast single sample processing
+    /// ✅ Advanced MODE: Ultra-fast single sample processing
     fn process_single_ultrafast(
         &mut self,
         meta_features: &DatasetMetaFeatures,
     ) -> Result<Vec<TransformationConfig>> {
-        // ✅ ULTRATHINK OPTIMIZATION: SIMD-optimized feature encoding
+        // ✅ Advanced OPTIMIZATION: SIMD-optimized feature encoding
         let input_pattern = self.ultrafast_feature_encoding(meta_features)?;
 
-        // ✅ ULTRATHINK OPTIMIZATION: Memory-efficient network simulation
+        // ✅ Advanced OPTIMIZATION: Memory-efficient network simulation
         let output_spikes = self.ultrafast_network_simulation(&input_pattern)?;
 
-        // ✅ ULTRATHINK OPTIMIZATION: Adaptive threshold tuning
+        // ✅ Advanced OPTIMIZATION: Adaptive threshold tuning
         self.adapt_thresholds_realtime(&output_spikes);
 
-        // ✅ ULTRATHINK OPTIMIZATION: Fast transformation generation
+        // ✅ Advanced OPTIMIZATION: Fast transformation generation
         self.ultrafast_transformation_generation(&output_spikes)
     }
 
-    /// ✅ ULTRATHINK OPTIMIZATION: SIMD-accelerated feature encoding
+    /// ✅ Advanced OPTIMIZATION: SIMD-accelerated feature encoding
     fn ultrafast_feature_encoding(
         &self,
         meta_features: &DatasetMetaFeatures,
     ) -> Result<Array1<f64>> {
-        // ✅ ULTRATHINK MODE: Use SIMD operations for feature normalization
+        // ✅ Advanced MODE: Use SIMD operations for feature normalization
         let raw_features = vec![
             (meta_features.n_samples as f64).ln().max(0.0),
             (meta_features.n_features as f64).ln().max(0.0),
@@ -1131,7 +1131,7 @@ impl UltraThinkNeuromorphicProcessor {
             meta_features.outlier_ratio * 10.0,
         ];
 
-        // ✅ ULTRATHINK OPTIMIZATION: SIMD normalization
+        // ✅ Advanced OPTIMIZATION: SIMD normalization
         let features = Array1::from_vec(raw_features);
         let norm = f64::simd_norm(&features.view());
         let normalized = if norm > 1e-8 {
@@ -1143,14 +1143,14 @@ impl UltraThinkNeuromorphicProcessor {
         Ok(normalized)
     }
 
-    /// ✅ ULTRATHINK MODE: Memory-efficient network simulation with SIMD
+    /// ✅ Advanced MODE: Memory-efficient network simulation with SIMD
     fn ultrafast_network_simulation(&mut self, input_pattern: &Array1<f64>) -> Result<Array1<f64>> {
         let simulation_steps = 50; // Reduced for real-time processing
         let mut output_accumulator = self.get_pooled_array(self.network.output_neurons.len());
 
-        // ✅ ULTRATHINK OPTIMIZATION: Vectorized spike computation
+        // ✅ Advanced OPTIMIZATION: Vectorized spike computation
         for _step in 0..simulation_steps {
-            // ✅ ULTRATHINK MODE: SIMD-accelerated neuron updates
+            // ✅ Advanced MODE: SIMD-accelerated neuron updates
             let input_spikes =
                 self.compute_layer_spikes_simd(&self.network.input_neurons, input_pattern)?;
             let hidden_spikes =
@@ -1158,18 +1158,18 @@ impl UltraThinkNeuromorphicProcessor {
             let output_spikes =
                 self.compute_layer_spikes_simd(&self.network.output_neurons, &hidden_spikes)?;
 
-            // ✅ ULTRATHINK OPTIMIZATION: SIMD accumulation
+            // ✅ Advanced OPTIMIZATION: SIMD accumulation
             output_accumulator = f64::simd_add(&output_accumulator.view(), &output_spikes.view());
         }
 
-        // ✅ ULTRATHINK OPTIMIZATION: SIMD normalization
+        // ✅ Advanced OPTIMIZATION: SIMD normalization
         let max_spikes = simulation_steps as f64;
         output_accumulator = f64::simd_scalar_mul(&output_accumulator.view(), 1.0 / max_spikes);
 
         Ok(output_accumulator)
     }
 
-    /// ✅ ULTRATHINK MODE: SIMD-optimized layer spike computation
+    /// ✅ Advanced MODE: SIMD-optimized layer spike computation
     fn compute_layer_spikes_simd(
         &self,
         neurons: &[SpikingNeuron],
@@ -1177,7 +1177,7 @@ impl UltraThinkNeuromorphicProcessor {
     ) -> Result<Array1<f64>> {
         let mut spikes = Array1::zeros(neurons.len());
 
-        // ✅ ULTRATHINK OPTIMIZATION: Vectorized threshold comparison
+        // ✅ Advanced OPTIMIZATION: Vectorized threshold comparison
         for (i, neuron) in neurons.iter().enumerate() {
             // Simplified spike computation for ultra-fast processing
             let membrane_potential = inputs.dot(&neuron.synaptic_weights);
@@ -1191,9 +1191,9 @@ impl UltraThinkNeuromorphicProcessor {
         Ok(spikes)
     }
 
-    /// ✅ ULTRATHINK MODE: Real-time adaptive threshold tuning
+    /// ✅ Advanced MODE: Real-time adaptive threshold tuning
     fn adapt_thresholds_realtime(&mut self, output_spikes: &Array1<f64>) {
-        // ✅ ULTRATHINK OPTIMIZATION: Dynamic threshold adaptation
+        // ✅ Advanced OPTIMIZATION: Dynamic threshold adaptation
         let target_activity = 0.3; // Target spike rate
         let adaptation_rate = 0.01;
 
@@ -1203,13 +1203,13 @@ impl UltraThinkNeuromorphicProcessor {
             self.adaptive_thresholds[i] = self.adaptive_thresholds[i].clamp(0.1, 2.0);
         }
 
-        // ✅ ULTRATHINK OPTIMIZATION: Update network utilization metric
+        // ✅ Advanced OPTIMIZATION: Update network utilization metric
         let average_activity = output_spikes.mean().unwrap_or(0.0);
         self.performance_metrics.network_utilization =
             (average_activity / target_activity).min(1.0);
     }
 
-    /// ✅ ULTRATHINK MODE: Ultra-fast transformation generation
+    /// ✅ Advanced MODE: Ultra-fast transformation generation
     fn ultrafast_transformation_generation(
         &self,
         output_spikes: &Array1<f64>,
@@ -1229,14 +1229,14 @@ impl UltraThinkNeuromorphicProcessor {
             TransformationType::TargetEncoder,
         ];
 
-        // ✅ ULTRATHINK OPTIMIZATION: Vectorized threshold comparison
+        // ✅ Advanced OPTIMIZATION: Vectorized threshold comparison
         for (i, &spike_rate) in output_spikes.iter().enumerate() {
             let adjusted_threshold = self.adaptive_thresholds.get(i).copied().unwrap_or(0.3);
 
             if spike_rate > adjusted_threshold && i < transformation_types.len() {
                 let mut parameters = HashMap::new();
 
-                // ✅ ULTRATHINK MODE: Intelligent parameter adaptation
+                // ✅ Advanced MODE: Intelligent parameter adaptation
                 match &transformation_types[i] {
                     TransformationType::PCA => {
                         let n_components = (spike_rate * 0.95).max(0.1);
@@ -1275,7 +1275,7 @@ impl UltraThinkNeuromorphicProcessor {
             }
         }
 
-        // ✅ ULTRATHINK OPTIMIZATION: Sort by adaptive performance score
+        // ✅ Advanced OPTIMIZATION: Sort by adaptive performance score
         transformations.sort_by(|a, b| {
             b.expected_performance
                 .partial_cmp(&a.expected_performance)
@@ -1285,7 +1285,7 @@ impl UltraThinkNeuromorphicProcessor {
         Ok(transformations)
     }
 
-    /// ✅ ULTRATHINK OPTIMIZATION: Memory pool management for efficient allocations
+    /// ✅ Advanced OPTIMIZATION: Memory pool management for efficient allocations
     fn get_pooled_array(&mut self, size: usize) -> Array1<f64> {
         // Try to reuse from pool
         for (i, arr) in self.memory_pool.iter().enumerate() {
@@ -1300,7 +1300,7 @@ impl UltraThinkNeuromorphicProcessor {
         Array1::zeros(size)
     }
 
-    /// ✅ ULTRATHINK OPTIMIZATION: Return array to memory pool
+    /// ✅ Advanced OPTIMIZATION: Return array to memory pool
     #[allow(dead_code)]
     fn return_to_pool(&mut self, array: Array1<f64>) {
         if self.memory_pool.len() < 32 {
@@ -1309,37 +1309,37 @@ impl UltraThinkNeuromorphicProcessor {
         }
     }
 
-    /// ✅ ULTRATHINK MODE: Update comprehensive performance metrics
+    /// ✅ Advanced MODE: Update comprehensive performance metrics
     fn update_advanced_metrics(&mut self) {
-        // ✅ ULTRATHINK OPTIMIZATION: Memory efficiency calculation
+        // ✅ Advanced OPTIMIZATION: Memory efficiency calculation
         let pool_hit_rate = self.memory_pool.len() as f64 / 32.0;
         self.performance_metrics.memory_efficiency = pool_hit_rate;
 
-        // ✅ ULTRATHINK OPTIMIZATION: Energy efficiency (based on computational intensity)
+        // ✅ Advanced OPTIMIZATION: Energy efficiency (based on computational intensity)
         let computational_intensity =
             self.performance_metrics.throughput * self.performance_metrics.network_utilization;
         self.performance_metrics.energy_efficiency =
             (1.0 / (computational_intensity + 1.0)).max(0.1);
 
-        // ✅ ULTRATHINK OPTIMIZATION: Real-time constraint satisfaction
+        // ✅ Advanced OPTIMIZATION: Real-time constraint satisfaction
         let target_throughput = 1000.0; // samples per second
         self.performance_metrics.real_time_satisfaction =
             (self.performance_metrics.throughput / target_throughput).min(1.0);
 
-        // ✅ ULTRATHINK OPTIMIZATION: Adaptation success rate (based on output quality)
+        // ✅ Advanced OPTIMIZATION: Adaptation success rate (based on output quality)
         let quality_score = self.performance_metrics.network_utilization
             * self.performance_metrics.memory_efficiency;
         self.performance_metrics.adaptation_success_rate = quality_score;
     }
 
-    /// ✅ ULTRATHINK MODE: Get real-time performance diagnostics
-    pub fn get_advanced_diagnostics(&self) -> &UltraThinkNeuromorphicMetrics {
+    /// ✅ Advanced MODE: Get real-time performance diagnostics
+    pub const fn get_advanced_diagnostics(&self) -> &advancedNeuromorphicMetrics {
         &self.performance_metrics
     }
 
-    /// ✅ ULTRATHINK OPTIMIZATION: Adaptive system tuning based on workload
+    /// ✅ Advanced OPTIMIZATION: Adaptive system tuning based on workload
     pub fn tune_for_workload(&mut self, expected_load: f64, latency_requirements: f64) {
-        // ✅ ULTRATHINK MODE: Dynamic batch size adaptation
+        // ✅ Advanced MODE: Dynamic batch size adaptation
         if latency_requirements < 0.01 {
             // Very low latency
             self.batch_size = 1;
@@ -1354,14 +1354,14 @@ impl UltraThinkNeuromorphicProcessor {
             self.processing_chunks = num_cpus::get().min(8);
         }
 
-        // ✅ ULTRATHINK OPTIMIZATION: Resize spike buffer for new batch size
+        // ✅ Advanced OPTIMIZATION: Resize spike buffer for new batch size
         let total_neurons = self.network.input_neurons.len()
             + self.network.hidden_neurons.len()
             + self.network.output_neurons.len();
         self.spike_buffer = Array2::zeros((self.batch_size, total_neurons));
     }
 
-    /// ✅ ULTRATHINK MODE: Advanced plasticity learning from feedback
+    /// ✅ Advanced MODE: Advanced plasticity learning from feedback
     pub fn learn_from_feedback(
         &mut self,
         meta_features: &DatasetMetaFeatures,
@@ -1370,14 +1370,14 @@ impl UltraThinkNeuromorphicProcessor {
     ) -> Result<()> {
         check_positive(performance_score, "performance_score")?;
 
-        // ✅ ULTRATHINK OPTIMIZATION: Hebbian learning for successful patterns
+        // ✅ Advanced OPTIMIZATION: Hebbian learning for successful patterns
         if performance_score > 0.8 {
             self.reinforce_successful_pattern(meta_features, applied_configs)?;
         } else if performance_score < 0.3 {
             self.suppress_unsuccessful_pattern(meta_features, applied_configs)?;
         }
 
-        // ✅ ULTRATHINK OPTIMIZATION: Update global adaptation rate
+        // ✅ Advanced OPTIMIZATION: Update global adaptation rate
         let feedback_strength = (performance_score - 0.5).abs() * 2.0; // [0, 1]
         self.network.adaptation_rate *= 1.0 + feedback_strength * 0.1;
         self.network.adaptation_rate = self.network.adaptation_rate.clamp(0.001, 0.1);
@@ -1385,15 +1385,15 @@ impl UltraThinkNeuromorphicProcessor {
         Ok(())
     }
 
-    /// ✅ ULTRATHINK MODE: Reinforce successful transformation patterns
+    /// ✅ Advanced MODE: Reinforce successful transformation patterns
     fn reinforce_successful_pattern(
         &mut self,
         meta_features: &DatasetMetaFeatures,
-        _configs: &[TransformationConfig],
+        #[allow(unused_variables)] _configs: &[TransformationConfig],
     ) -> Result<()> {
         let input_pattern = self.ultrafast_feature_encoding(meta_features)?;
 
-        // ✅ ULTRATHINK OPTIMIZATION: Strengthen connections for successful patterns
+        // ✅ Advanced OPTIMIZATION: Strengthen connections for successful patterns
         for (i, &activation) in input_pattern.iter().enumerate() {
             if i < self.network.input_neurons.len() && activation > 0.5 {
                 // Increase synaptic weights proportionally
@@ -1409,15 +1409,15 @@ impl UltraThinkNeuromorphicProcessor {
         Ok(())
     }
 
-    /// ✅ ULTRATHINK MODE: Suppress unsuccessful transformation patterns
+    /// ✅ Advanced MODE: Suppress unsuccessful transformation patterns
     fn suppress_unsuccessful_pattern(
         &mut self,
         meta_features: &DatasetMetaFeatures,
-        _configs: &[TransformationConfig],
+        #[allow(unused_variables)] _configs: &[TransformationConfig],
     ) -> Result<()> {
         let input_pattern = self.ultrafast_feature_encoding(meta_features)?;
 
-        // ✅ ULTRATHINK OPTIMIZATION: Weaken connections for unsuccessful patterns
+        // ✅ Advanced OPTIMIZATION: Weaken connections for unsuccessful patterns
         for (i, &activation) in input_pattern.iter().enumerate() {
             if i < self.network.input_neurons.len() && activation > 0.5 {
                 // Decrease synaptic weights slightly
@@ -1435,9 +1435,9 @@ impl UltraThinkNeuromorphicProcessor {
 }
 
 #[allow(dead_code)]
-impl Default for UltraThinkNeuromorphicMetrics {
+impl Default for advancedNeuromorphicMetrics {
     fn default() -> Self {
-        UltraThinkNeuromorphicMetrics {
+        advancedNeuromorphicMetrics {
             throughput: 0.0,
             memory_efficiency: 1.0,
             network_utilization: 0.0,

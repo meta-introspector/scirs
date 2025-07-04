@@ -689,7 +689,7 @@ where
     }
 }
 
-/// UltraThink Mode: Advanced Hierarchical HDC Reasoning
+/// Advanced Mode: Advanced Hierarchical HDC Reasoning
 ///
 /// Implements cutting-edge hierarchical hyperdimensional computing with:
 /// - Multi-level abstraction hierarchies
@@ -757,7 +757,7 @@ where
     })
 }
 
-/// UltraThink Mode: Continual Learning HDC System
+/// Advanced Mode: Continual Learning HDC System
 ///
 /// Advanced continual learning system that:
 /// - Learns new concepts without catastrophic forgetting
@@ -829,7 +829,7 @@ where
     })
 }
 
-/// UltraThink Mode: Multi-Modal HDC Fusion
+/// Advanced Mode: Multi-Modal HDC Fusion
 ///
 /// Fuses multiple modalities using hyperdimensional computing:
 /// - Visual-semantic fusion
@@ -911,7 +911,7 @@ where
     })
 }
 
-/// UltraThink Mode: Advanced Online Learning HDC
+/// Advanced Mode: Advanced Online Learning HDC
 ///
 /// Implements sophisticated online learning with:
 /// - Real-time adaptation to new patterns
@@ -1063,7 +1063,7 @@ where
     }
 }
 
-// UltraThink Mode Supporting Types and Structures
+// Advanced Mode Supporting Types and Structures
 
 /// Hierarchical concept library for advanced reasoning
 #[derive(Debug, Clone)]
@@ -1560,7 +1560,7 @@ pub struct OnlineLearningResult {
     pub adaptation_rate: f64,
 }
 
-// UltraThink Mode Helper Functions
+// Advanced Mode Helper Functions
 
 #[allow(dead_code)]
 fn weight_hypervector(hv: &Hypervector, weight: f64) -> Hypervector {
@@ -1873,7 +1873,7 @@ mod tests {
         assert!(sequence_hv.sparse_data.len() > 0);
     }
 
-    // UltraThink Mode Tests
+    // Advanced Mode Tests
 
     #[test]
     fn test_ultrathink_hierarchical_hdc_reasoning() {

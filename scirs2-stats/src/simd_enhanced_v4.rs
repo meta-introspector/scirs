@@ -15,7 +15,7 @@ use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 #[allow(dead_code)]
 pub fn comprehensive_stats_simd<F>(data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display + std::iter::Sum<F>,
 {
     check_array_finite(data, "data")?;
 
@@ -136,7 +136,7 @@ pub fn sliding_window_stats_simd<F>(
     window_size: usize,
 ) -> StatsResult<SlidingWindowStats<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display + std::iter::Sum<F>,
 {
     check_array_finite(data, "data")?;
     check_positive(window_size, "window_size")?;
@@ -222,7 +222,7 @@ pub struct SlidingWindowStats<F> {
 #[allow(dead_code)]
 pub fn covariance_matrix_simd<F>(data: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display + std::iter::Sum<F>,
 {
     check_array_finite(data, "data")?;
 
@@ -302,7 +302,8 @@ where
 #[allow(dead_code)]
 pub fn quantiles_batch_simd<F>(data: &ArrayView1<F>, quantiles: &[f64]) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy,
+    F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     check_array_finite(data, "data")?;
 
@@ -359,7 +360,7 @@ where
 #[allow(dead_code)]
 pub fn exponential_moving_average_simd<F>(data: &ArrayView1<F>, alpha: F) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display + std::iter::Sum<F>,
 {
     check_array_finite(data, "data")?;
 
@@ -510,7 +511,7 @@ pub fn outlier_detection_zscore_simd<F>(
     threshold: F,
 ) -> StatsResult<(Array1<bool>, ComprehensiveStats<F>)>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + std::fmt::Display + std::iter::Sum<F>,
 {
     let stats = comprehensive_stats_simd(data)?;
 

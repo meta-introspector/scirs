@@ -212,7 +212,15 @@ impl RLOptimizer for QLearningOptimizer {
             fun: f64::INFINITY,
             success: false,
             nit: 0,
+            nfev: 0,
+            njev: 0,
+            nhev: 0,
+            maxcv: 0,
+            status: 0,
             message: "Training not completed".to_string(),
+            jac: None,
+            hess: None,
+            constr: None,
         };
 
         for _episode in 0..self.config.num_episodes {

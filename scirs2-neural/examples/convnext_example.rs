@@ -1,8 +1,8 @@
-use ndarray::Array;
+// use ndarray::Array; // Unused import
 use scirs2_neural::{
     error::Result,
     // models::architectures::{ConvNeXt, ConvNeXtConfig, ConvNeXtVariant}, // TODO: Implement models module
-    prelude::*,
+    // prelude::*, // Unused import
 };
 
 #[allow(dead_code)]

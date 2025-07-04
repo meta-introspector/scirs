@@ -1,6 +1,6 @@
-//! Ultrathink Parallel Processing Enhancements
+//! Advanced Parallel Processing Enhancements
 //!
-//! Advanced parallel processing framework designed for ultrathink mode,
+//! Advanced parallel processing framework designed for Advanced mode,
 //! featuring adaptive thread management, work-stealing algorithms,
 //! numa-aware scheduling, and intelligent load balancing for optimal
 //! performance on large-scale statistical computations.
@@ -15,9 +15,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
-/// Advanced parallel configuration for ultrathink mode
+/// Advanced parallel configuration for Advanced mode
 #[derive(Debug, Clone)]
-pub struct UltrathinkParallelConfig {
+pub struct AdvancedParallelConfig {
     /// Maximum number of threads to use
     pub max_threads: usize,
     /// Minimum data size per thread
@@ -34,7 +34,7 @@ pub struct UltrathinkParallelConfig {
     pub adaptive_scaling: bool,
 }
 
-impl Default for UltrathinkParallelConfig {
+impl Default for AdvancedParallelConfig {
     fn default() -> Self {
         Self {
             max_threads: num_threads(),
@@ -74,14 +74,14 @@ pub struct ParallelExecutionMetrics {
 
 /// Ultra-parallel statistical batch processor
 pub struct UltraParallelProcessor {
-    config: UltrathinkParallelConfig,
+    config: AdvancedParallelConfig,
     performance_history: Arc<Mutex<Vec<ParallelExecutionMetrics>>>,
     adaptive_chunk_size: AtomicUsize,
 }
 
 impl UltraParallelProcessor {
     /// Create a new ultra-parallel processor
-    pub fn new(config: UltrathinkParallelConfig) -> Self {
+    pub fn new(config: AdvancedParallelConfig) -> Self {
         Self {
             adaptive_chunk_size: AtomicUsize::new(config.min_chunk_size),
             config,
@@ -96,7 +96,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let start_time = Instant::now();
         let n = data.len();
@@ -165,7 +166,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let (n_rows, n_cols) = data.dim();
 
@@ -201,7 +203,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelTimeSeriesResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let n = data.len();
 
@@ -234,7 +237,8 @@ impl UltraParallelProcessor {
     pub fn parallel_mean<F, D>(&self, data: &ArrayBase<D, Ix1>) -> StatsResult<F>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let n = data.len();
 
@@ -314,7 +318,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let n = data.len();
 
@@ -334,7 +339,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         // Work-stealing implementation would go here
         self.process_batch_static(data, _num_threads, self.config.min_chunk_size)
@@ -348,7 +354,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         // Guided scheduling with decreasing chunk sizes
         self.process_batch_static(data, _num_threads, initial_chunk_size)
@@ -362,7 +369,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         // Adaptive strategy based on data characteristics and historical performance
         let chunk_size = self.adaptive_chunk_size.load(Ordering::Relaxed);
@@ -371,7 +379,8 @@ impl UltraParallelProcessor {
 
     fn compute_chunk_statistics<F>(&self, chunk: &[F]) -> ChunkStatistics<F>
     where
-        F: Float + Copy + PartialOrd,
+        F: Float + Copy + PartialOrd
+        + std::fmt::Display,
     {
         if chunk.is_empty() {
             return ChunkStatistics::empty();
@@ -409,7 +418,8 @@ impl UltraParallelProcessor {
         total_n: usize,
     ) -> StatsResult<UltraParallelBatchResult<F>>
     where
-        F: Float + NumCast + Copy + PartialOrd,
+        F: Float + NumCast + Copy + PartialOrd
+        + std::fmt::Display,
     {
         let mut total_sum = F::zero();
         let mut total_sum_squares = F::zero();
@@ -535,7 +545,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let (n_rows, n_cols) = data.dim();
 
@@ -596,7 +607,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let (n_rows, n_cols) = data.dim();
 
@@ -657,7 +669,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let (n_rows, n_cols) = data.dim();
 
@@ -728,7 +741,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let (n_rows, n_cols) = data.dim();
 
@@ -824,7 +838,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let (n_rows, n_cols) = data.dim();
 
@@ -885,7 +900,8 @@ impl UltraParallelProcessor {
     ) -> StatsResult<UltraParallelTimeSeriesResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let n = data.len();
 
@@ -1003,7 +1019,7 @@ struct ChunkStatistics<F> {
     count: usize,
 }
 
-impl<F: Float + Copy> ChunkStatistics<F> {
+impl<F: Float + Copy + std::fmt::Display> ChunkStatistics<F> {
     fn empty() -> Self {
         Self {
             sum: F::zero(),
@@ -1072,13 +1088,13 @@ pub struct ParallelPerformanceAnalytics {
 /// Create a new ultra-parallel processor with default configuration
 #[allow(dead_code)]
 pub fn create_ultra_parallel_processor() -> UltraParallelProcessor {
-    UltraParallelProcessor::new(UltrathinkParallelConfig::default())
+    UltraParallelProcessor::new(AdvancedParallelConfig::default())
 }
 
 /// Create a new ultra-parallel processor with custom configuration
 #[allow(dead_code)]
 pub fn create_configured_ultra_parallel_processor(
-    config: UltrathinkParallelConfig,
+    config: AdvancedParallelConfig,
 ) -> UltraParallelProcessor {
     UltraParallelProcessor::new(config)
 }

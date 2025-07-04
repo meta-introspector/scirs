@@ -1,6 +1,6 @@
-//! Simple demonstration of ultrathink mode capabilities
+//! Simple demonstration of Advanced mode capabilities
 //!
-//! This example shows how to use the ultrathink mode coordinator
+//! This example shows how to use the Advanced mode coordinator
 //! for enhanced ODE solving performance.
 
 use ndarray::{array, Array1, ArrayView1};
@@ -11,10 +11,10 @@ use scirs2_integrate::{
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultrathink Mode Demonstration");
+    println!("🚀 Advanced Mode Demonstration");
     println!("================================");
 
-    // Create ultrathink mode configuration with all optimizations enabled
+    // Create Advanced mode configuration with all optimizations enabled
     let config = UltrathinkModeConfig {
         enable_gpu: true,
         enable_memory_optimization: true,
@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    println!("✅ Created ultrathink mode configuration");
+    println!("✅ Created Advanced mode configuration");
     println!("   - GPU acceleration: {}", config.enable_gpu);
     println!(
         "   - Memory optimization: {}",
@@ -37,10 +37,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!("   - Neural RL step control: {}", config.enable_neural_rl);
 
-    // Create the ultrathink mode coordinator
-    println!("\n📊 Initializing ultrathink mode coordinator...");
+    // Create the Advanced mode coordinator
+    println!("\n📊 Initializing Advanced mode coordinator...");
     let coordinator = UltrathinkModeCoordinator::<f64>::new(config)?;
-    println!("✅ Ultrathink mode coordinator initialized successfully");
+    println!("✅ Advanced mode coordinator initialized successfully");
 
     // Set up a simple ODE problem: dy/dt = -0.5 * y (exponential decay)
     let y_initial = array![2.0, 1.0, 0.5]; // Initial conditions
@@ -129,7 +129,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("   - {recommendation}");
     }
 
-    println!("\n🎉 Ultrathink mode demonstration completed successfully!");
+    println!("\n🎉 Advanced mode demonstration completed successfully!");
     println!("   All ultra-performance optimizations are active and functioning.");
 
     Ok(())

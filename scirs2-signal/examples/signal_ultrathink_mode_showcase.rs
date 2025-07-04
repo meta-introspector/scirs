@@ -1,7 +1,7 @@
-//! Ultrathink Mode Showcase for scirs2-signal
+//! Advanced Mode Showcase for scirs2-signal
 //!
 //! This example demonstrates the full capabilities of scirs2-signal in
-//! ultrathink mode with enhanced spectral analysis, advanced wavelets,
+//! Advanced mode with enhanced spectral analysis, advanced wavelets,
 //! performance optimizations, and comprehensive validation.
 
 use ndarray::{Array1, Array2};
@@ -11,10 +11,10 @@ use scirs2_signal::{
     // SIMD memory optimization
     benchmark_simd_memory_operations,
     context_adaptive_denoise,
-    generate_ultrathink_report,
+    generate_comprehensive_report,
 
     // Comprehensive validation
-    run_ultrathink_comprehensive_validation,
+    run_comprehensive_validation,
     simd_optimized_convolution,
     simd_optimized_fir_filter,
     AdvancedDenoisingConfig,
@@ -32,7 +32,7 @@ use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), SignalError> {
-    println!("🚀 Ultrathink Mode Showcase for scirs2-signal");
+    println!("🚀 Advanced Mode Showcase for scirs2-signal");
     println!("==============================================");
     println!("Demonstrating advanced signal processing capabilities");
     println!("with SIMD optimization, parallel processing, and");
@@ -54,16 +54,16 @@ fn main() -> Result<(), SignalError> {
     demo_performance_benchmarking()?;
 
     // Demo 4: Comprehensive Validation (if validation modules are available)
-    println!("\n🔍 Demo 4: Ultrathink Mode Validation");
+    println!("\n🔍 Demo 4: Advanced Mode Validation");
     println!("=====================================");
-    demo_ultrathink_validation()?;
+    demo_advanced_validation()?;
 
     // Demo 5: Production Workflow Example
     println!("\n🏭 Demo 5: Production Workflow Example");
     println!("======================================");
     demo_production_workflow()?;
 
-    println!("\n✅ Ultrathink Mode Showcase completed successfully!");
+    println!("\n✅ Advanced Mode Showcase completed successfully!");
     println!("🎯 All advanced features demonstrated and validated.");
     println!("📊 Performance optimizations confirmed.");
     println!("🚀 Ready for production deployment!");
@@ -343,19 +343,19 @@ fn demo_performance_benchmarking() -> SignalResult<()> {
     Ok(())
 }
 
-/// Demonstrate ultrathink mode validation
+/// Demonstrate Advanced mode validation
 #[allow(dead_code)]
-fn demo_ultrathink_validation() -> SignalResult<()> {
-    println!("🔬 Running comprehensive ultrathink validation...");
+fn demo_advanced_validation() -> SignalResult<()> {
+    println!("🔬 Running comprehensive Advanced validation...");
     println!("   This may take a moment for thorough testing...");
 
     // Try to run the comprehensive validation
-    match run_ultrathink_comprehensive_validation() {
+    match run_comprehensive_validation() {
         Ok(validation_result) => {
             println!("   ✅ Validation completed successfully!");
             println!(
                 "   🎯 Overall score: {:.1}%",
-                validation_result.overall_ultrathink_score
+                validation_result.overall_advanced_score
             );
             println!(
                 "   ⏱️  Total validation time: {:.2} ms",
@@ -383,7 +383,7 @@ fn demo_ultrathink_validation() -> SignalResult<()> {
             );
 
             // Generate and display summary report
-            let report = generate_ultrathink_report(&validation_result);
+            let report = generate_comprehensive_report(&validation_result);
             println!("\n📄 Validation Report Summary:");
             let lines: Vec<&str> = report.lines().take(20).collect();
             for line in lines {
@@ -529,7 +529,7 @@ fn demo_production_workflow() -> SignalResult<()> {
 /// Utility function to demonstrate feature availability
 #[allow(dead_code)]
 fn check_feature_availability() {
-    println!("🔍 Checking Ultrathink Mode Feature Availability:");
+    println!("🔍 Checking Advanced Mode Feature Availability:");
     println!("   ✅ Advanced 2D Wavelet Denoising");
     println!("   ✅ SIMD Memory Optimization");
     println!("   ✅ Performance Benchmarking");
@@ -537,5 +537,5 @@ fn check_feature_availability() {
 
     // This would check for optional features
     println!("   ⚠️  Comprehensive Validation (depends on all modules)");
-    println!("   ✅ Core Ultrathink Features Available");
+    println!("   ✅ Core Advanced Features Available");
 }

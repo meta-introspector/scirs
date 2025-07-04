@@ -27,7 +27,7 @@
 //! * Set-based distances (Hausdorff, Wasserstein)
 //! * Polygon operations (point-in-polygon, area, centroid)
 //! * Path planning algorithms (A*, RRT, visibility graphs)
-//! * **ULTRATHINK MODE: Revolutionary Computing Paradigms** - Quantum-neuromorphic fusion, next-gen GPU architectures, AI-driven optimization, extreme performance beyond current limits
+//! * **Advanced MODE: Revolutionary Computing Paradigms** - Quantum-neuromorphic fusion, next-gen GPU architectures, AI-driven optimization, extreme performance beyond current limits
 //!
 //! ## Examples
 //!
@@ -503,7 +503,7 @@
 //! }
 //! ```
 //!
-//! ## ULTRATHINK MODE: Revolutionary Computing Paradigms
+//! ## Advanced MODE: Revolutionary Computing Paradigms
 //!
 //! These cutting-edge implementations push spatial computing beyond current limitations,
 //! achieving unprecedented performance through quantum computing, neuromorphic processing,

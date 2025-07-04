@@ -666,6 +666,24 @@ pub enum SelectionStrategy {
     Diverse,
 }
 
+impl Default for SelectionStrategy {
+    fn default() -> Self {
+        SelectionStrategy::TopK
+    }
+}
+
+impl Default for EnsembleConfig {
+    fn default() -> Self {
+        Self {
+            enable_ensemble: true,
+            max_models: 5,
+            diversity_promotion: 0.5,
+            selection_strategy: SelectionStrategy::default(),
+            fusion_method: FusionMethod::WeightedAveraging,
+        }
+    }
+}
+
 impl Default for UltraEnhancedSysIdConfig {
     fn default() -> Self {
         Self {

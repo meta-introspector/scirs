@@ -139,7 +139,8 @@ pub struct PropertyBasedTestFramework<F> {
 
 impl<F> PropertyBasedTestFramework<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + Debug,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + Debug
+        + std::fmt::Display,
 {
     /// Create new property-based test framework
     pub fn new(config: PropertyTestConfig) -> Self {

@@ -1,6 +1,6 @@
-//! Ultrathink Validation Framework Showcase
+//! Advanced Validation Framework Showcase
 //!
-//! This example demonstrates the comprehensive validation framework for ultrathink
+//! This example demonstrates the comprehensive validation framework for Advanced
 //! optimizations. It validates that SIMD, parallel, and other optimizations maintain
 //! numerical accuracy while providing performance benefits.
 
@@ -10,7 +10,7 @@ use scirs2_stats::{
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🔬 Ultrathink Validation Framework Showcase");
+    println!("🔬 Advanced Validation Framework Showcase");
     println!("============================================\n");
 
     // Demonstrate default validation
@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Demonstrate detailed analysis
     demonstrate_detailed_analysis()?;
 
-    println!("\n✅ Ultrathink validation showcase completed successfully!");
+    println!("\n✅ Advanced validation showcase completed successfully!");
 
     Ok(())
 }
@@ -232,7 +232,7 @@ fn generate_recommendations(report: &scirs2_stats::ValidationReport) {
     let pass_rate = (report.passed_tests as f64 / report.total_tests as f64) * 100.0;
 
     if pass_rate >= 95.0 {
-        println!("  ✅ Excellent validation results! Ultrathink optimizations are working well.");
+        println!("  ✅ Excellent validation results! Advanced optimizations are working well.");
     } else if pass_rate >= 80.0 {
         println!("  ⚠️  Good validation results, but some optimizations may need tuning.");
     } else {

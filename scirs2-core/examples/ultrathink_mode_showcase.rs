@@ -1,6 +1,6 @@
-//! Ultrathink Mode Showcase
+//! Advanced Mode Showcase
 //!
-//! This example demonstrates the advanced capabilities of ultrathink mode
+//! This example demonstrates the advanced capabilities of Advanced mode
 //! across multiple scirs2-core modules, showing how they work together
 //! to provide enhanced AI-driven scientific computing.
 
@@ -9,18 +9,18 @@ use scirs2_core::neural_architecture_search::{
     HardwareConstraints, NASStrategy, NeuralArchitectureSearch, OptimizationObjectives,
     SearchConfig, SearchSpace,
 };
-use scirs2_core::ultrathink_distributed_computing::UltrathinkDistributedComputer;
-use scirs2_core::ultrathink_ecosystem_integration::UltrathinkEcosystemCoordinator;
+use scirs2_core::advanced_distributed_computing::advancedDistributedComputer;
+use scirs2_core::advanced_ecosystem_integration::advancedEcosystemCoordinator;
 
 #[cfg(feature = "jit")]
-use scirs2_core::ultrathink_jit_compilation::UltrathinkJitCompiler;
+use scirs2_core::advanced_jit_compilation::advancedJitCompiler;
 
 #[allow(dead_code)]
 fn main() -> CoreResult<()> {
-    println!("🚀 Ultrathink Mode Showcase - scirs2-core");
+    println!("🚀 Advanced Mode Showcase - scirs2-core");
     println!("==========================================");
 
-    // 1. Neural Architecture Search in Ultrathink Mode
+    // 1. Neural Architecture Search in Advanced Mode
     println!("\n1. 🧠 Neural Architecture Search");
     showcase_neural_architecture_search()?;
 
@@ -43,7 +43,7 @@ fn main() -> CoreResult<()> {
     println!("\n4. 🔗 Ecosystem Integration");
     showcase_ecosystem_integration()?;
 
-    println!("\n✅ Ultrathink Mode Showcase Complete!");
+    println!("\n✅ Advanced Mode Showcase Complete!");
     println!("All systems operational and ready for production use.");
 
     Ok(())
@@ -92,7 +92,7 @@ fn showcase_neural_architecture_search() -> CoreResult<()> {
 fn showcase_jit_compilation() -> CoreResult<()> {
     println!("   Initializing JIT Compilation Framework...");
 
-    let _jit_compiler = UltrathinkJitCompiler::new()?;
+    let _jit_compiler = advancedJitCompiler::new()?;
     println!("   ✓ JIT compiler initialized with LLVM backend");
 
     // Note: Actual compilation would require LLVM integration
@@ -107,7 +107,7 @@ fn showcase_jit_compilation() -> CoreResult<()> {
 fn showcase_distributed_computing() -> CoreResult<()> {
     println!("   Initializing Distributed Computing Framework...");
 
-    let _distributed_computer = UltrathinkDistributedComputer::new()?;
+    let _distributed_computer = advancedDistributedComputer::new()?;
     println!("   ✓ Distributed computing coordinator initialized");
     println!("   ✓ Cluster management system ready");
     println!("   ✓ Fault tolerance mechanisms active");
@@ -120,7 +120,7 @@ fn showcase_distributed_computing() -> CoreResult<()> {
 fn showcase_ecosystem_integration() -> CoreResult<()> {
     println!("   Initializing Ecosystem Integration...");
 
-    let _ecosystem_coordinator = UltrathinkEcosystemCoordinator::new();
+    let _ecosystem_coordinator = advancedEcosystemCoordinator::new();
     println!("   ✓ Ecosystem coordinator initialized");
     println!("   ✓ Cross-module communication enabled");
     println!("   ✓ Resource management system active");

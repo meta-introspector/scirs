@@ -11,7 +11,7 @@ use std::f64::consts::PI;
 
 /// Ultra-advanced pattern detector using ML and signal processing
 #[derive(Debug)]
-pub struct UltraThinkPatternDetector {
+pub struct advancedPatternDetector {
     /// Configuration for pattern detection
     config: UltraPatternConfig,
     /// Neural network for pattern classification
@@ -565,7 +565,7 @@ pub enum FeatureType {
     ShapeFeatures,
 }
 
-impl UltraThinkPatternDetector {
+impl advancedPatternDetector {
     /// Create a new ultra-advanced pattern detector
     pub fn new(config: UltraPatternConfig) -> Result<Self> {
         Ok(Self {

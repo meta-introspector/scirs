@@ -1,11 +1,11 @@
-//! Ultrathink Mode Demonstration
+//! Advanced Mode Demonstration
 //!
-//! This example shows how to use ultrathink mode optimizations
+//! This example shows how to use Advanced mode optimizations
 //! for graph processing algorithms.
 
 use rand::{rng, Rng};
 use scirs2_graph::advanced::{
-    create_ultrathink_processor, execute_with_ultrathink, UltrathinkConfig, UltrathinkProcessor,
+    create_advanced_processor, execute_with_advanced, AdvancedConfig, AdvancedProcessor,
 };
 use scirs2_graph::algorithms::community::louvain_communities_result;
 use scirs2_graph::algorithms::connectivity::connected_components;
@@ -18,7 +18,7 @@ use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 SciRS2 Ultrathink Mode Demonstration");
+    println!("🚀 SciRS2 Advanced Mode Demonstration");
     println!("========================================");
 
     // Create a test graph
@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!();
 
-    // Test 1: Standard vs Ultrathink PageRank
+    // Test 1: Standard vs Advanced PageRank
     println!("🧠 Test 1: PageRank Comparison");
     println!("------------------------------");
 
@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("📈 Standard PageRank completed in: {:?}", standard_time);
     println!("   - Nodes ranked: {}", standard_pagerank.len());
 
-    // Ultrathink PageRank
+    // Advanced PageRank
     let mut processor = create_advanced_processor();
     let start = Instant::now();
     let advanced_pagerank = execute_with_advanced(&mut processor, &graph, "pagerank", |g| {
@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     })?;
     let advanced_time = start.elapsed();
 
-    println!("🚀 Ultrathink PageRank completed in: {:?}", advanced_time);
+    println!("🚀 Advanced PageRank completed in: {:?}", advanced_time);
     println!("   - Nodes ranked: {}", advanced_pagerank.len());
 
     let speedup = standard_time.as_secs_f64() / advanced_time.as_secs_f64();
@@ -75,38 +75,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let configs = vec![
         ("Standard (no advanced)", None),
-        ("Ultrathink Full", Some(UltrathinkConfig::default())),
+        ("Advanced Full", Some(AdvancedConfig::default())),
         (
             "Neural RL Only",
-            Some(UltrathinkConfig {
+            Some(AdvancedConfig {
                 enable_neural_rl: true,
                 enable_gpu_acceleration: false,
                 enable_neuromorphic: false,
                 enable_realtime_adaptation: false,
                 enable_memory_optimization: false,
-                ..UltrathinkConfig::default()
+                ..AdvancedConfig::default()
             }),
         ),
         (
             "GPU Only",
-            Some(UltrathinkConfig {
+            Some(AdvancedConfig {
                 enable_neural_rl: false,
                 enable_gpu_acceleration: true,
                 enable_neuromorphic: false,
                 enable_realtime_adaptation: false,
                 enable_memory_optimization: false,
-                ..UltrathinkConfig::default()
+                ..AdvancedConfig::default()
             }),
         ),
         (
             "Neuromorphic Only",
-            Some(UltrathinkConfig {
+            Some(AdvancedConfig {
                 enable_neural_rl: false,
                 enable_gpu_acceleration: false,
                 enable_neuromorphic: true,
                 enable_realtime_adaptation: false,
                 enable_memory_optimization: false,
-                ..UltrathinkConfig::default()
+                ..AdvancedConfig::default()
             }),
         ),
     ];
@@ -117,7 +117,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let start = Instant::now();
 
         let components = if let Some(config) = config_opt {
-            let mut processor = UltrathinkProcessor::new(config);
+            let mut processor = AdvancedProcessor::new(config);
             execute_with_advanced(&mut processor, &graph, "connected_components", |g| {
                 connected_components(g)
             })?
@@ -139,7 +139,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Test 3: Community Detection Performance
-    println!("👥 Test 3: Community Detection with Ultrathink");
+    println!("👥 Test 3: Community Detection with Advanced");
     println!("----------------------------------------------");
 
     // Standard Louvain
@@ -153,7 +153,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         standard_communities.len()
     );
 
-    // Ultrathink Louvain
+    // Advanced Louvain
     let mut processor = create_advanced_processor();
     let start = Instant::now();
     let advanced_communities =
@@ -163,7 +163,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let advanced_time = start.elapsed();
 
     println!(
-        "🚀 Ultrathink Louvain: {:?} ({} communities)",
+        "🚀 Advanced Louvain: {:?} ({} communities)",
         advanced_time,
         advanced_communities.len()
     );
@@ -176,11 +176,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Test 4: Adaptive Algorithm Selection");
     println!("---------------------------------------");
 
-    let mut adaptive_processor = UltrathinkProcessor::new(UltrathinkConfig {
+    let mut adaptive_processor = AdvancedProcessor::new(AdvancedConfig {
         enable_neural_rl: true,
         enable_realtime_adaptation: true,
         learning_rate: 0.01,
-        ..UltrathinkConfig::default()
+        ..AdvancedConfig::default()
     });
 
     // Run multiple algorithms to train the adaptive selector
@@ -244,11 +244,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut rng = rand::rng();
         let probability = (size * 3) as f64 / (size * (size - 1) / 2) as f64;
         let test_graph = erdos_renyi_graph(size, probability.min(1.0), &mut rng)?;
-        let mut processor = create_ultrathink_processor();
+        let mut processor = create_advanced_processor();
 
         let start = Instant::now();
         let _ =
-            execute_with_ultrathink(&mut processor, &test_graph, "pagerank_scaling_test", |g| {
+            execute_with_advanced(&mut processor, &test_graph, "pagerank_scaling_test", |g| {
                 pagerank_centrality(g, 0.85, 1e-6)
             })?;
         let elapsed = start.elapsed();
@@ -262,11 +262,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!();
-    println!("🎉 Ultrathink demonstration completed successfully!");
+    println!("🎉 Advanced demonstration completed successfully!");
     println!("================================================");
     println!();
     println!("💡 Key Takeaways:");
-    println!("• Ultrathink mode provides significant performance improvements");
+    println!("• Advanced mode provides significant performance improvements");
     println!("• Neural RL adapts algorithm selection based on graph characteristics");
     println!("• GPU acceleration is most effective for parallel algorithms");
     println!("• Neuromorphic computing excels at pattern recognition tasks");
@@ -301,7 +301,7 @@ mod tests {
 
     #[test]
     fn test_advanced_configuration() {
-        let config = UltrathinkConfig {
+        let config = AdvancedConfig {
             enable_neural_rl: false,
             enable_gpu_acceleration: true,
             enable_neuromorphic: false,
@@ -313,7 +313,7 @@ mod tests {
             neural_hidden_size: 64,
         };
 
-        let processor = UltrathinkProcessor::new(config.clone());
+        let processor = AdvancedProcessor::new(config.clone());
         // Test that processor is created with custom config
         // (actual config validation would need processor API access)
         assert!(true); // Placeholder assertion

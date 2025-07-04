@@ -19,15 +19,15 @@ use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 
-use crate::advanced_fusion_algorithms::UltrathinkConfig;
+use crate::advanced_fusion_algorithms::AdvancedConfig;
 use crate::ai_driven_adaptive_processing::AIAdaptiveConfig;
 use crate::error::NdimageResult;
 
 /// Quantum-AI Consciousness Configuration
 #[derive(Debug, Clone)]
 pub struct QuantumAIConsciousnessConfig {
-    /// Base ultrathink configuration
-    pub base_config: UltrathinkConfig,
+    /// Base Advanced configuration
+    pub base_config: AdvancedConfig,
     /// AI adaptive configuration
     pub ai_config: AIAdaptiveConfig,
     /// Consciousness simulation depth
@@ -61,7 +61,7 @@ pub struct QuantumAIConsciousnessConfig {
 impl Default for QuantumAIConsciousnessConfig {
     fn default() -> Self {
         Self {
-            base_config: UltrathinkConfig::default(),
+            base_config: AdvancedConfig::default(),
             ai_config: AIAdaptiveConfig::default(),
             consciousness_depth: 16,
             quantum_coherence_time: 100.0,

@@ -76,7 +76,7 @@ where
     /// Create new multi-start solver
     pub fn new(func: F, bounds: Bounds, options: MultiStartOptions) -> Self {
         let ndim = bounds.len();
-        let seed = options.seed.unwrap_or_else(rand::rng().gen);
+        let seed = options.seed.unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
         let rng = StdRng::seed_from_u64(seed);
 
         Self {
@@ -129,7 +129,7 @@ where
                 let segment_size = (ub - lb) / n as f64;
 
                 // Random offset within segment
-                let offset = self.rng.random::<f64>();
+                let offset = self.rng.random_range(0.0..1.0);
                 point[j] = lb + (i as f64 + offset) * segment_size;
             }
 

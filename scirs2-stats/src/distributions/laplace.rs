@@ -23,7 +23,7 @@ pub struct Laplace<F: Float> {
     rand_distr: RandUniform<f64>,
 }
 
-impl<F: Float + NumCast> Laplace<F> {
+impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// Create a new Laplace distribution with given parameters
     ///
     /// # Arguments
@@ -435,20 +435,21 @@ impl<F: Float + NumCast> Laplace<F> {
 #[allow(dead_code)]
 pub fn laplace<F>(loc: F, scale: F) -> StatsResult<Laplace<F>>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     Laplace::new(loc, scale)
 }
 
 /// Implementation of SampleableDistribution for Laplace
-impl<F: Float + NumCast> SampleableDistribution<F> for Laplace<F> {
+impl<F: Float + NumCast + std::fmt::Display> SampleableDistribution<F> for Laplace<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs_vec(size)
     }
 }
 
 /// Implementation of Distribution trait for Laplace
-impl<F: Float + NumCast> ScirsDist<F> for Laplace<F> {
+impl<F: Float + NumCast + std::fmt::Display> ScirsDist<F> for Laplace<F> {
     fn mean(&self) -> F {
         self.mean()
     }
@@ -471,7 +472,7 @@ impl<F: Float + NumCast> ScirsDist<F> for Laplace<F> {
 }
 
 /// Implementation of ContinuousDistribution trait for Laplace
-impl<F: Float + NumCast> ContinuousDistribution<F> for Laplace<F> {
+impl<F: Float + NumCast + std::fmt::Display> ContinuousDistribution<F> for Laplace<F> {
     fn pdf(&self, x: F) -> F {
         self.pdf(x)
     }

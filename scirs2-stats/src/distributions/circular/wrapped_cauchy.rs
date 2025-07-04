@@ -55,7 +55,7 @@ pub struct WrappedCauchy<F: Float> {
     _phantom: PhantomData<F>,
 }
 
-impl<F: Float + SampleUniform + Debug + 'static> WrappedCauchy<F> {
+impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> WrappedCauchy<F> {
     /// Create a new wrapped Cauchy distribution with the given mean direction and concentration
     ///
     /// # Arguments
@@ -90,7 +90,7 @@ impl<F: Float + SampleUniform + Debug + 'static> WrappedCauchy<F> {
     }
 }
 
-impl<F: Float + SampleUniform + Debug + 'static> Distribution<F> for WrappedCauchy<F> {
+impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> Distribution<F> for WrappedCauchy<F> {
     fn mean(&self) -> F {
         self.mu
     }
@@ -123,7 +123,7 @@ impl<F: Float + SampleUniform + Debug + 'static> Distribution<F> for WrappedCauc
     }
 }
 
-impl<F: Float + SampleUniform + Debug + 'static> CircularDistribution<F> for WrappedCauchy<F> {
+impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDistribution<F> for WrappedCauchy<F> {
     fn pdf(&self, x: F) -> F {
         // f(x; μ, γ) = (1 - γ²) / (2π * (1 + γ² - 2γ * cos(x - μ)))
         let two_pi = F::from(2.0 * PI).unwrap();

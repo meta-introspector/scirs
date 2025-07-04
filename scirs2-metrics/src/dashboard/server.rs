@@ -528,7 +528,7 @@ fn predict_future_performance(metrics: &[MetricDataPoint]) -> Vec<PerformancePre
     predictions
 }
 
-/// Generate enhanced dashboard HTML with advanced ultrathink features
+/// Generate enhanced dashboard HTML with advanced Advanced features
 async fn generate_dashboard_html(dashboard: &Arc<InteractiveDashboard>) -> String {
     let metrics = dashboard.get_all_metrics().unwrap_or_default();
     let metric_names = dashboard.get_metric_names().unwrap_or_default();

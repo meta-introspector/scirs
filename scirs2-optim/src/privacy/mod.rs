@@ -140,10 +140,11 @@ pub enum AccountingMethod {
 }
 
 /// Differentially private optimizer wrapper
-pub struct DifferentiallyPrivateOptimizer<O, A>
+pub struct DifferentiallyPrivateOptimizer<O, A, D>
 where
-    A: Float + ScalarOperand + Debug,
-    O: Optimizer<A>,
+    A: Float + ScalarOperand + Debug + Send + Sync,
+    D: Dimension,
+    O: Optimizer<A, D>,
 {
     /// Base optimizer
     base_optimizer: O,
@@ -155,7 +156,7 @@ where
     accountant: MomentsAccountant,
 
     /// Random number generator for noise
-    rng: Box<dyn rand::RngCore + Send>,
+    rng: rand::rngs::ThreadRng,
 
     /// Adaptive clipping state
     adaptive_clip_state: Option<AdaptiveClippingState>,
@@ -206,10 +207,16 @@ enum PrivacyEventType {
     AdaptiveClipUpdate,
 }
 
-impl<O, A> DifferentiallyPrivateOptimizer<O, A>
+impl<O, A, D> DifferentiallyPrivateOptimizer<O, A, D>
 where
-    A: Float + rand_distr::uniform::SampleUniform + std::ops::AddAssign + std::ops::SubAssign,
-    O: Optimizer<A>,
+    A: Float
+        + rand_distr::uniform::SampleUniform
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + Send
+        + Sync,
+    D: Dimension,
+    O: Optimizer<A, D>,
 {
     /// Create a new differentially private optimizer
     pub fn new(base_optimizer: O, config: DifferentialPrivacyConfig) -> Result<Self> {
@@ -220,7 +227,7 @@ where
             config.dataset_size,
         );
 
-        let rng = Box::new(rand::rng());
+        let rng = rand::rng();
 
         let adaptive_clip_state = if config.adaptive_clipping {
             Some(AdaptiveClippingState {
@@ -246,14 +253,14 @@ where
     }
 
     /// Perform a differentially private step
-    pub fn dp_step<S, D>(
+    pub fn dp_step<S, DIM>(
         &mut self,
-        params: &ArrayBase<S, D>,
-        gradients: &mut ArrayBase<S, D>,
-    ) -> Result<Array<A, D>>
+        params: &ArrayBase<S, DIM>,
+        gradients: &mut ArrayBase<S, DIM>,
+    ) -> Result<Array<A, DIM>>
     where
         S: Data<Elem = A> + DataMut<Elem = A>,
-        D: Dimension,
+        DIM: Dimension,
     {
         self.step_count += 1;
 
@@ -360,10 +367,10 @@ where
         }
     }
 
-    fn compute_l2_norm<S, D>(&self, array: &ArrayBase<S, D>) -> f64
+    fn compute_l2_norm<S, DIM>(&self, array: &ArrayBase<S, DIM>) -> f64
     where
         S: Data<Elem = A>,
-        D: Dimension,
+        DIM: Dimension,
     {
         array
             .iter()
@@ -383,14 +390,14 @@ where
         }
     }
 
-    fn add_calibrated_noise<S, D>(
+    fn add_calibrated_noise<S, DIM>(
         &mut self,
-        gradients: &mut ArrayBase<S, D>,
+        gradients: &mut ArrayBase<S, DIM>,
         clip_threshold: f64,
     ) -> Result<()>
     where
         S: DataMut<Elem = A>,
-        D: Dimension,
+        DIM: Dimension,
     {
         use ndarray_rand::rand_distr::{Distribution, Normal};
 

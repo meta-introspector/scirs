@@ -1,4 +1,4 @@
-//! Simple test for ultrathink mode basic functionality
+//! Simple test for Advanced mode basic functionality
 
 #[allow(dead_code)]
 fn main() {
@@ -8,11 +8,11 @@ fn main() {
     println!("Testing imports...");
     
     // Test ecosystem coordinator
-    let _coordinator = scirs2_core::advanced_ecosystem_integration::UltrathinkEcosystemCoordinator::new();
+    let _coordinator = scirs2_core::advanced_ecosystem_integration::advancedEcosystemCoordinator::new();
     println!("✓ Ecosystem coordinator created");
     
     // Test distributed computer
-    match scirs2_core::advanced_distributed_computing::UltrathinkDistributedComputer::new() {
+    match scirs2_core::advanced_distributed_computing::advancedDistributedComputer::new() {
         Ok(_) => println!("✓ Distributed computer created"),
         Err(e) => println!("⚠ Distributed computer failed: {}", e),
     }
@@ -42,7 +42,7 @@ fn main() {
     #[cfg(feature = "jit")]
     {
         // Test JIT compiler if feature is enabled
-        match scirs2_core::advanced_jit_compilation::UltrathinkJitCompiler::new() {
+        match scirs2_core::advanced_jit_compilation::advancedJitCompiler::new() {
             Ok(_) => println!("✓ JIT compiler created"),
             Err(e) => println!("⚠ JIT compiler failed: {}", e),
         }

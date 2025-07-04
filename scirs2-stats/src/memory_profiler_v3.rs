@@ -210,7 +210,7 @@ struct CachedResult<F> {
     access_count: usize,
 }
 
-impl<F: Float + Clone> StatisticsCache<F> {
+impl<F: Float + Clone + std::fmt::Display> StatisticsCache<F> {
     pub fn new(max_entries: usize, max_memory: usize) -> Self {
         Self {
             cache: HashMap::new(),
@@ -405,7 +405,8 @@ pub struct ProfiledStatistics<F> {
 
 impl<F> ProfiledStatistics<F>
 where
-    F: Float + NumCast + Clone + Send + Sync,
+    F: Float + NumCast + Clone + Send + Sync
+        + std::fmt::Display,
 {
     pub fn new(profiler: Arc<MemoryProfiler>) -> Self {
         let cache = StatisticsCache::new(1000, 50 * 1024 * 1024) // 50MB cache

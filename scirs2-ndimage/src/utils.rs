@@ -2,8 +2,8 @@
 //!
 //! This module provides shared utility functions used across the ndimage crate.
 
-use num_traits::{Float, FromPrimitive};
 use crate::error::{NdimageError, NdimageResult};
+use num_traits::{Float, FromPrimitive};
 
 /// Helper function for safe conversion of hardcoded constants from f64 to generic float type
 #[allow(dead_code)]

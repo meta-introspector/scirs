@@ -1,21 +1,21 @@
-//! Ultra-Think Mode Validation
+//! advanced Mode Validation
 //!
-//! A minimal validation to test Ultra-Think coordinator and enhanced algorithms
+//! A minimal validation to test advanced coordinator and enhanced algorithms
 //! to verify all compilation errors are fixed.
 
 use scirs2_io::error::Result;
-use scirs2_io::ultrathink_coordinator::UltraThinkCoordinator;
+use scirs2_io::advanced_coordinator::AdvancedCoordinator;
 use scirs2_io::ultrathink_enhanced_algorithms::AdvancedPatternRecognizer;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🔍 Ultra-Think Mode Validation");
+    println!("🔍 advanced Mode Validation");
     println!("=============================\n");
 
-    // Test 1: Create Ultra-Think Coordinator
-    println!("✅ Test 1: Creating Ultra-Think Coordinator...");
-    let mut coordinator = UltraThinkCoordinator::new()?;
-    println!("   Ultra-Think Coordinator created successfully");
+    // Test 1: Create advanced Coordinator
+    println!("✅ Test 1: Creating advanced Coordinator...");
+    let mut coordinator = AdvancedCoordinator::new()?;
+    println!("   advanced Coordinator created successfully");
 
     // Test 2: Create Advanced Pattern Recognizer
     println!("✅ Test 2: Creating Advanced Pattern Recognizer...");
@@ -48,7 +48,7 @@ fn main() -> Result<()> {
         stats.meta_learning_accuracy
     );
 
-    println!("\n🎉 All Ultra-Think mode validations passed!");
+    println!("\n🎉 All advanced mode validations passed!");
     println!("   The implementation is working correctly and compiles without errors.");
 
     Ok(())

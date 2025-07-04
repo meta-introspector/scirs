@@ -1,14 +1,14 @@
-//! Cross-Platform Validation for Ultrathink Mode
+//! Cross-Platform Validation for Advanced Mode
 //!
-//! This module provides comprehensive validation that ultrathink optimizations
+//! This module provides comprehensive validation that Advanced optimizations
 //! work consistently across different platforms, architectures, and system
 //! configurations. It ensures numerical accuracy and performance characteristics
 //! are maintained across the entire ecosystem.
 
 use crate::error::StatsResult;
 use crate::numerical_stability_enhancements::create_exhaustive_numerical_stability_tester;
-use crate::ultrathink_unified_processor::{
-    create_ultrathink_processor, OptimizationMode, UltrathinkProcessorConfig,
+use crate::unified_processor::{
+    create_advanced_processor, OptimizationMode, UltrathinkProcessorConfig,
 };
 use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
@@ -105,7 +105,7 @@ pub enum CompatibilityRating {
     Incompatible,
 }
 
-/// Cross-platform ultrathink validator
+/// Cross-platform Advanced validator
 pub struct CrossPlatformValidator {
     stability_analyzer: crate::numerical_stability_enhancements::UltraThinkNumericalStabilityTester,
     test_configurations: Vec<UltrathinkProcessorConfig>,
@@ -233,7 +233,7 @@ impl CrossPlatformValidator {
 
         for config in &self.test_configurations {
             let mut processor =
-                crate::ultrathink_unified_processor::UltrathinkUnifiedProcessor::new(
+                crate::unified_processor::UltrathinkUnifiedProcessor::new(
                     config.clone(),
                 );
 
@@ -308,7 +308,7 @@ impl CrossPlatformValidator {
 
                 let start_time = Instant::now();
                 let optimizer = crate::advanced_simd_stats::UltraThinkSimdOptimizer::new(
-                    crate::advanced_simd_stats::UltraThinkSimdConfig::default(),
+                    crate::advanced_simd_stats::AdvancedSimdConfig::default(),
                 );
                 let data_arrays = vec![data.view()];
                 let operations = vec![crate::advanced_simd_stats::BatchOperation::Mean];
@@ -368,7 +368,7 @@ impl CrossPlatformValidator {
     /// Test parallel processing capabilities
     fn test_parallel_processing(&self) -> StatsResult<Vec<CrossPlatformTestResult>> {
         let mut results = Vec::new();
-        let processor = create_ultrathink_processor();
+        let processor = create_advanced_processor();
 
         // Test with different thread counts
         let available_cores = num_cpus::get();
@@ -500,7 +500,7 @@ impl CrossPlatformValidator {
                 let current_usage = estimate_memory_usage(data.len());
                 memory_usage_peak = memory_usage_peak.max(current_usage);
 
-                let mut processor = create_ultrathink_processor();
+                let mut processor = create_advanced_processor();
                 let result = processor.process_comprehensive_statistics(&data.view());
 
                 total_time += start_time.elapsed();
@@ -631,7 +631,7 @@ impl CrossPlatformValidator {
     fn calculate_numerical_accuracy(
         &self,
         data: &ArrayView1<f64>,
-        result: &crate::ultrathink_unified_processor::UltrathinkComprehensiveResult<f64>,
+        result: &crate::unified_processor::UltrathinkComprehensiveResult<f64>,
     ) -> f64 {
         // Simple accuracy calculation based on mean comparison
         let reference_mean = data.mean().unwrap_or(0.0);
@@ -786,7 +786,7 @@ fn time_scalar_operation(data: &Array1<f64>) -> std::time::Duration {
 fn time_simd_operation(data: &Array1<f64>) -> std::time::Duration {
     let start = Instant::now();
     let optimizer = crate::advanced_simd_stats::UltraThinkSimdOptimizer::new(
-        crate::advanced_simd_stats::UltraThinkSimdConfig::default(),
+        crate::advanced_simd_stats::AdvancedSimdConfig::default(),
     );
     let data_arrays = vec![data.view()];
     let operations = vec![crate::advanced_simd_stats::BatchOperation::Mean];

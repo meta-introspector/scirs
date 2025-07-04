@@ -1,6 +1,6 @@
-//! Basic ultrathink functionality test
+//! Basic Advanced functionality test
 //!
-//! This test verifies that the ultrathink mode can be instantiated and performs basic operations.
+//! This test verifies that the Advanced mode can be instantiated and performs basic operations.
 
 use ndarray::{Array1, ArrayView1};
 use scirs2_optimize::prelude::*;
@@ -16,27 +16,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ultrathink_coordinator_creation() {
+    fn test_advanced_coordinator_creation() {
         let initial_params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        let config = UltrathinkConfig::default();
-        let coordinator = UltrathinkCoordinator::new(config, &initial_params.view());
+        let config = AdvancedConfig::default();
+        let coordinator = AdvancedCoordinator::new(config, &initial_params.view());
 
         // Test that coordinator is created successfully
         assert_eq!(coordinator.state.global_best_solution.len(), 3);
     }
 
     #[test]
-    fn test_ultrathink_basic_optimization() {
+    fn test_advanced_basic_optimization() {
         let initial_params = Array1::from_vec(vec![1.0, 2.0]);
-        let config = UltrathinkConfig {
-            strategy: UltrathinkStrategy::AdaptiveSelection,
+        let config = AdvancedConfig {
+            strategy: advancedStrategy::AdaptiveSelection,
             max_iterations: 10,
             max_evaluations: 100,
             tolerance: 1e-4,
             ..Default::default()
         };
 
-        let result = ultrathink_optimize(quadratic_function, &initial_params.view(), Some(config));
+        let result = advanced_optimize(quadratic_function, &initial_params.view(), Some(config));
 
         // Test that optimization runs without panicking
         assert!(result.is_ok());

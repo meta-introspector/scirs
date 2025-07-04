@@ -1,6 +1,6 @@
-//! # Ultrathink Mode Demonstration
+//! # Advanced Mode Demonstration
 //!
-//! This example demonstrates the advanced capabilities of the Ultrathink Text Processing
+//! This example demonstrates the advanced capabilities of the Advanced Text Processing
 //! Coordinator, showcasing the integration of multiple AI/ML techniques for enhanced
 //! text processing performance.
 //!
@@ -18,10 +18,10 @@ use scirs2_text::ultrathink_text_coordinator::{UltrathinkTextConfig, UltrathinkT
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🚀 Ultrathink Mode Demo - Advanced Text Processing");
+    println!("🚀 Advanced Mode Demo - Advanced Text Processing");
     println!("================================================\n");
 
-    // Configure ultrathink mode with all advanced features enabled
+    // Configure Advanced mode with all advanced features enabled
     let config = UltrathinkTextConfig {
         enable_gpu_acceleration: true,
         enable_simd_optimizations: true,
@@ -56,8 +56,8 @@ fn main() -> Result<()> {
     );
     println!("  • Memory Limit: {} MB\n", config.max_memory_usage_mb);
 
-    // Initialize the ultrathink coordinator
-    println!("🔧 Initializing Ultrathink Text Coordinator...");
+    // Initialize the Advanced coordinator
+    println!("🔧 Initializing Advanced Text Coordinator...");
     let coordinator = UltrathinkTextCoordinator::new(config)?;
     println!("✅ Coordinator initialized successfully!\n");
 
@@ -76,7 +76,7 @@ fn main() -> Result<()> {
     // Demo 5: Performance reporting
     demo_performance_reporting(&coordinator)?;
 
-    println!("🎉 Ultrathink Mode Demo completed successfully!");
+    println!("🎉 Advanced Mode Demo completed successfully!");
     println!("All advanced features demonstrated with optimal performance.");
 
     Ok(())
@@ -97,7 +97,7 @@ fn demo_ultra_text_processing(coordinator: &UltrathinkTextCoordinator) -> Result
     ];
 
     println!(
-        "Processing {} documents with ultrathink optimization...",
+        "Processing {} documents with Advanced optimization...",
         sample_texts.len()
     );
 

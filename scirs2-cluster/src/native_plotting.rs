@@ -1,12 +1,12 @@
-//! Native Plotting for Ultrathink Clustering - Advanced Visualization Engine
+//! Native Plotting for Advanced Clustering - Advanced Visualization Engine
 //!
-//! This module provides comprehensive native plotting capabilities for ultrathink clustering,
+//! This module provides comprehensive native plotting capabilities for Advanced clustering,
 //! including interactive dendrogram visualization, 3D cluster plots, real-time animation,
 //! and advanced quantum state visualizations without external dependencies.
 
 use crate::error::{ClusteringError, Result};
-use crate::ultrathink_clustering::{UltrathinkClusteringResult, UltrathinkPerformanceMetrics};
-use crate::ultrathink_visualization::{UltrathinkVisualizationOutput, QuantumCoherencePlot, NeuromorphicAdaptationPlot};
+use crate::advanced_clustering::{UltrathinkClusteringResult, UltrathinkPerformanceMetrics};
+use crate::advanced_visualization::{UltrathinkVisualizationOutput, QuantumCoherencePlot, NeuromorphicAdaptationPlot};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -14,7 +14,7 @@ use std::f64::consts::PI;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// Native plotting engine for ultrathink clustering
+/// Native plotting engine for Advanced clustering
 #[derive(Debug)]
 pub struct UltrathinkNativePlotter {
     /// Plot configuration
@@ -1010,7 +1010,7 @@ impl UltrathinkNativePlotter {
     fn generate_interactive_script(&self) -> String {
         // Generate JavaScript for interactivity
         r#"
-        // Ultrathink Native Plotting Interactive Script
+        // Advanced Native Plotting Interactive Script
         (function() {
             let zoom = 1.0;
             let panX = 0, panY = 0;
@@ -1309,7 +1309,7 @@ impl InteractiveController {
 // Additional implementation methods would continue...
 // This provides the core structure for native plotting capabilities
 
-/// Convenience function to create native ultrathink visualization
+/// Convenience function to create native Advanced visualization
 #[allow(dead_code)]
 pub fn create_native_ultrathink_plot(
     data: &ArrayView2<f64>,
@@ -1339,7 +1339,7 @@ pub fn export_native_visualization(
             file.write_all(output.svg_content.as_bytes())
                 .map_err(|e| ClusteringError::InvalidInput(format!("Failed to write SVG file: {}", e)))?;
             
-            println!("✅ Exported native ultrathink visualization to {filename}.svg");
+            println!("✅ Exported native Advanced visualization to {filename}.svg");
         },
         "html" => {
             use std::fs::File;
@@ -1349,7 +1349,7 @@ pub fn export_native_visualization(
                 r#"<!DOCTYPE html>
 <html>
 <head>
-    <title>Ultrathink Native Visualization</title>
+    <title>Advanced Native Visualization</title>
     <style>
         body {{ margin: 0; padding: 20px; background: #1a1a2e; }}
         .selected {{ stroke: #FFD700 !important; stroke-width: 3px !important; }}
@@ -1370,7 +1370,7 @@ pub fn export_native_visualization(
             file.write_all(html_content.as_bytes())
                 .map_err(|e| ClusteringError::InvalidInput(format!("Failed to write HTML file: {}", e)))?;
             
-            println!("🌐 Exported interactive ultrathink visualization to {filename}.html");
+            println!("🌐 Exported interactive Advanced visualization to {filename}.html");
         },
         _ => {
             return Err(ClusteringError::InvalidInput(format!("Unsupported export format: {}", format)));

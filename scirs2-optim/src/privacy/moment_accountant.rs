@@ -536,7 +536,7 @@ impl MomentsAccountant {
     }
 
     /// Compute optimal epsilon from log moments
-    fn compute_optimal_epsilon(&self, log_moments: &HashMap<usize, f64>) -> Result<usize> {
+    fn compute_optimal_epsilon(&self, log_moments: &HashMap<usize, f64>) -> Result<(f64, usize)> {
         let mut best_epsilon = f64::INFINITY;
         let mut best_order = 2;
 
@@ -646,7 +646,7 @@ impl MomentsAccountant {
         &self,
         log_moments: &HashMap<usize, f64>,
         delta: f64,
-    ) -> Result<usize> {
+    ) -> Result<(f64, usize)> {
         let mut best_epsilon = f64::INFINITY;
         let mut best_order = 2;
 

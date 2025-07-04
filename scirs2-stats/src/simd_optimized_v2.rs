@@ -57,7 +57,8 @@ pub fn mean_simd_optimized<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     // Use scirs2-core validation
     check_not_empty(x.as_slice().unwrap(), "x").map_err(|_| {
@@ -89,7 +90,8 @@ pub fn variance_simd_optimized<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     if n <= ddof {
@@ -122,7 +124,8 @@ pub fn stats_simd_single_pass<F, D>(
 ) -> StatsResult<(F, F, F, F, F, F)>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     if x.is_empty() {
         return Err(crate::error::StatsError::invalid_argument(
@@ -244,7 +247,8 @@ where
 fn chunked_simd_sum<F, D>(x: &ArrayBase<D, Ix1>, _config: &SimdConfig) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let capabilities = PlatformCapabilities::detect();
     let _simd_width = if capabilities.simd_available { 8 } else { 1 };
@@ -278,7 +282,8 @@ fn chunked_simd_sum_squared_deviations<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     const CHUNK_SIZE: usize = 1024;
     let mut total_sum = F::zero();
@@ -312,7 +317,8 @@ where
 fn variance_scalar_welford<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let mut mean = F::zero();
     let mut m2 = F::zero();
@@ -334,7 +340,8 @@ where
 fn stats_scalar_single_pass<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F, F, F, F)>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     let n_f = F::from(n).unwrap();

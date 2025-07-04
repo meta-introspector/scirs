@@ -296,7 +296,7 @@ impl BenchmarkSuite {
     /// Run comprehensive benchmarks for descriptive statistics
     pub fn benchmark_descriptive_stats(&mut self) -> StatsResult<BenchmarkReport> {
         let mut metrics = Vec::new();
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Benchmark basic descriptive statistics
         for &size in &self.config.data_sizes {

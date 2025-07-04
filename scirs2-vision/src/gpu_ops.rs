@@ -1175,7 +1175,7 @@ impl GpuBenchmark {
     }
 }
 
-/// Ultrathink GPU memory pool for efficient buffer management
+/// Advanced GPU memory pool for efficient buffer management
 ///
 /// Reduces GPU memory allocation overhead by reusing buffers across operations.
 pub struct GpuMemoryPool {
@@ -1229,7 +1229,7 @@ impl GpuMemoryPool {
     }
 }
 
-/// Ultrathink GPU batch processing for multiple images
+/// Advanced GPU batch processing for multiple images
 ///
 /// Processes multiple images in a single GPU kernel call for maximum throughput.
 ///
@@ -1437,7 +1437,7 @@ fn batch_conv2d(@builtin(global_invocation_id) global_id: vec3<u32>) {
     })
 }
 
-/// Ultrathink async GPU operations for overlapping compute and transfer
+/// Advanced async GPU operations for overlapping compute and transfer
 ///
 /// Enables asynchronous GPU processing to overlap computation with memory transfers.
 pub struct AsyncGpuProcessor {

@@ -11,7 +11,6 @@ use super::BorderMode;
 use crate::error::{NdimageError, NdimageResult};
 use crate::utils::safe_f64_to_float;
 
-
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
@@ -27,7 +26,7 @@ pub fn calculate_kernel_size<T: Float + FromPrimitive>(
     truncate: Option<T>,
 ) -> NdimageResult<usize> {
     let truncate_val = truncate.unwrap_or_else(|| {
-        safe_f64_to_float(4.0).unwrap_or_else(|_| T::from(4).unwrap_or_else(|| T::zero()))
+        safe_f64_to_float(4.0).unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::zero()))
     });
     let size = safe_usize_to_float::<T>(1)?
         + (sigma * truncate_val * safe_f64_to_float(2.0)?)

@@ -375,7 +375,8 @@ fn create_model_matrix<F>(
     include_intercept: bool,
 ) -> Array2<F>
 where
-    F: Float + 'static + std::iter::Sum<F>,
+    F: Float + 'static + std::iter::Sum<F>
+        + std::fmt::Display,
 {
     let n = x.nrows();
     let p = indices.len();
@@ -406,7 +407,8 @@ fn find_var_position<F>(
     include_intercept: bool,
 ) -> usize
 where
-    F: Float + 'static + std::iter::Sum<F>,
+    F: Float + 'static + std::iter::Sum<F>
+        + std::fmt::Display,
 {
     let offset = if include_intercept { 1 } else { 0 };
 
@@ -479,7 +481,8 @@ where
 #[allow(dead_code)]
 fn is_criterion_better<F>(new_value: F, old_value: F, criterion: StepwiseCriterion) -> bool
 where
-    F: Float,
+    F: Float
+        + std::fmt::Display
 {
     match criterion {
         // For AIC and BIC, lower is better

@@ -1,7 +1,7 @@
-//! Ultrathink JIT Compilation Framework Demo
+//! Advanced JIT Compilation Framework Demo
 //!
 //! This comprehensive demo showcases the advanced Just-In-Time compilation
-//! capabilities of the SciRS2 ultrathink framework, demonstrating LLVM-based
+//! capabilities of the SciRS2 Advanced framework, demonstrating LLVM-based
 //! optimization, adaptive compilation strategies, and runtime performance
 //! enhancement for scientific computing workloads.
 //!
@@ -17,18 +17,18 @@
 //! - Real-time performance monitoring and analytics
 
 use scirs2_core::error::CoreResult;
-use scirs2_core::ultrathink_jit_compilation::{
-    CompiledKernel, JitCompilerConfig, UltrathinkJitCompiler,
+use scirs2_core::advanced_jit_compilation::{
+    CompiledKernel, JitCompilerConfig, advancedJitCompiler,
 };
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]
 fn main() -> CoreResult<()> {
-    println!("🚀 SciRS2 Ultrathink JIT Compilation Framework Demo");
+    println!("🚀 SciRS2 Advanced JIT Compilation Framework Demo");
     println!("====================================================\n");
 
     // Create JIT compiler with optimized configuration
-    let jit_demo = UltrathinkJitDemo::new()?;
+    let jit_demo = advancedJitDemo::new()?;
 
     // Run comprehensive demonstration
     jit_demo.run_demo()?;
@@ -37,11 +37,11 @@ fn main() -> CoreResult<()> {
 }
 
 /// Comprehensive JIT compilation demonstration
-struct UltrathinkJitDemo {
-    compiler: UltrathinkJitCompiler,
+struct advancedJitDemo {
+    compiler: advancedJitCompiler,
 }
 
-impl UltrathinkJitDemo {
+impl advancedJitDemo {
     /// Create a new JIT demonstration
     fn new() -> CoreResult<Self> {
         // Configure JIT compiler for maximum performance
@@ -66,7 +66,7 @@ impl UltrathinkJitDemo {
             enable_adaptive_compilation: true,
         };
 
-        let compiler = UltrathinkJitCompiler::with_config(config)?;
+        let compiler = advancedJitCompiler::with_config(config)?;
 
         Ok(Self { compiler })
     }
@@ -839,13 +839,13 @@ mod tests {
 
     #[test]
     fn test_jit_demo_creation() {
-        let demo = UltrathinkJitDemo::new();
+        let demo = advancedJitDemo::new();
         assert!(demo.is_ok());
     }
 
     #[test]
     fn test_matrix_kernel_generation() {
-        let demo = UltrathinkJitDemo::new().unwrap();
+        let demo = advancedJitDemo::new().unwrap();
         let kernel = demo.generate_matrix_kernel(64);
         assert!(kernel.contains("matmul_64x64"));
         assert!(kernel.contains("define void"));
@@ -853,7 +853,7 @@ mod tests {
 
     #[test]
     fn test_signal_kernel_generation() {
-        let demo = UltrathinkJitDemo::new().unwrap();
+        let demo = advancedJitDemo::new().unwrap();
         let kernel = demo.generate_signal_kernel("convolution_1d");
         assert!(kernel.contains("convolution_1d"));
         assert!(kernel.contains("define void"));

@@ -1,4 +1,4 @@
-//! AI-Driven Algorithm Selection and Optimization (Ultrathink Mode)
+//! AI-Driven Algorithm Selection and Optimization (Advanced Mode)
 //!
 //! This module represents the pinnacle of spatial computing intelligence, using
 //! advanced machine learning techniques to automatically select optimal algorithms,

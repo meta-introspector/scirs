@@ -1,7 +1,7 @@
-//! Ultra-Think Coordinator Comprehensive Demo
+//! Advanced Coordinator Comprehensive Demo
 //!
 //! This example demonstrates the most advanced I/O processing capabilities
-//! available in scirs2-io, featuring the Ultra-Think Coordinator that
+//! available in scirs2-io, featuring the Advanced Coordinator that
 //! integrates multiple AI-driven optimization systems.
 //!
 //! Features demonstrated:
@@ -13,17 +13,17 @@
 //! - Real-time performance monitoring and self-optimization
 
 use scirs2_io::error::Result;
-use scirs2_io::ultrathink_coordinator::UltraThinkCoordinator;
+use scirs2_io::advanced_coordinator::AdvancedCoordinator;
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🚀 SciRS2-IO Ultra-Think Coordinator Demo");
-    println!("==========================================\n");
+    println!("🚀 SciRS2-IO Advanced Coordinator Demo");
+    println!("=========================================\n");
 
-    // Initialize the Ultra-Think Coordinator
-    let mut coordinator = UltraThinkCoordinator::new()?;
-    println!("✅ Ultra-Think Coordinator initialized successfully");
+    // Initialize the Advanced Coordinator
+    let mut coordinator = AdvancedCoordinator::new()?;
+    println!("✅ Advanced Coordinator initialized successfully");
     println!("   - Neural adaptive system: ACTIVE");
     println!("   - Quantum-inspired processor: ACTIVE");
     println!(
@@ -63,7 +63,7 @@ fn main() -> Result<()> {
     // Final Statistics
     display_final_statistics(&coordinator)?;
 
-    println!("\n🎉 Ultra-Think Coordinator Demo Complete!");
+    println!("\n🎉 advanced Coordinator Demo Complete!");
     println!("The system has demonstrated:");
     println!("  ✅ Unified intelligence coordination");
     println!("  ✅ Adaptive multi-strategy optimization");
@@ -77,7 +77,7 @@ fn main() -> Result<()> {
 
 /// Demonstrate progressive intelligence with increasing data complexity
 #[allow(dead_code)]
-fn demonstrate_progressive_intelligence(coordinator: &mut UltraThinkCoordinator) -> Result<()> {
+fn demonstrate_progressive_intelligence(coordinator: &mut AdvancedCoordinator) -> Result<()> {
     println!("🧠 Progressive Intelligence Testing");
     println!("==================================");
 
@@ -122,7 +122,7 @@ fn demonstrate_progressive_intelligence(coordinator: &mut UltraThinkCoordinator)
 
 /// Demonstrate multi-modal processing with strategy comparison
 #[allow(dead_code)]
-fn demonstrate_multi_modal_processing(coordinator: &mut UltraThinkCoordinator) -> Result<()> {
+fn demonstrate_multi_modal_processing(coordinator: &mut AdvancedCoordinator) -> Result<()> {
     println!("⚡ Multi-Modal Processing Comparison");
     println!("===================================");
 
@@ -177,7 +177,7 @@ fn demonstrate_multi_modal_processing(coordinator: &mut UltraThinkCoordinator) -
 
 /// Demonstrate adaptive learning evolution over time
 #[allow(dead_code)]
-fn demonstrate_adaptive_learning_evolution(coordinator: &mut UltraThinkCoordinator) -> Result<()> {
+fn demonstrate_adaptive_learning_evolution(coordinator: &mut AdvancedCoordinator) -> Result<()> {
     println!("📚 Adaptive Learning Evolution");
     println!("=============================");
 
@@ -249,7 +249,7 @@ fn demonstrate_adaptive_learning_evolution(coordinator: &mut UltraThinkCoordinat
 
 /// Demonstrate cross-domain intelligence transfer
 #[allow(dead_code)]
-fn demonstrate_cross_domain_intelligence(coordinator: &mut UltraThinkCoordinator) -> Result<()> {
+fn demonstrate_cross_domain_intelligence(coordinator: &mut AdvancedCoordinator) -> Result<()> {
     println!("🌐 Cross-Domain Intelligence Transfer");
     println!("====================================");
 
@@ -322,7 +322,7 @@ fn demonstrate_cross_domain_intelligence(coordinator: &mut UltraThinkCoordinator
 
 /// Demonstrate emergent behavior detection
 #[allow(dead_code)]
-fn demonstrate_emergent_behavior_detection(coordinator: &mut UltraThinkCoordinator) -> Result<()> {
+fn demonstrate_emergent_behavior_detection(coordinator: &mut AdvancedCoordinator) -> Result<()> {
     println!("🚀 Emergent Behavior Detection");
     println!("==============================");
 
@@ -398,7 +398,7 @@ fn demonstrate_emergent_behavior_detection(coordinator: &mut UltraThinkCoordinat
 
 /// Demonstrate real-world performance analysis
 #[allow(dead_code)]
-fn demonstrate_real_world_performance(coordinator: &mut UltraThinkCoordinator) -> Result<()> {
+fn demonstrate_real_world_performance(coordinator: &mut AdvancedCoordinator) -> Result<()> {
     println!("🏭 Real-World Performance Analysis");
     println!("==================================");
 
@@ -513,8 +513,8 @@ fn demonstrate_real_world_performance(coordinator: &mut UltraThinkCoordinator) -
 
 /// Display final comprehensive statistics
 #[allow(dead_code)]
-fn display_final_statistics(coordinator: &UltraThinkCoordinator) -> Result<()> {
-    println!("📈 Final Ultra-Think Statistics");
+fn display_final_statistics(coordinator: &AdvancedCoordinator) -> Result<()> {
+    println!("📈 Final advanced Statistics");
     println!("==============================");
 
     let stats = coordinator.get_comprehensive_statistics()?;

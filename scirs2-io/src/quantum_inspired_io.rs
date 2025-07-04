@@ -1,4 +1,4 @@
-//! Quantum-inspired I/O processing algorithms with ultrathink capabilities
+//! Quantum-inspired I/O processing algorithms with advanced capabilities
 //!
 //! This module implements quantum-inspired algorithms for I/O optimization,
 //! leveraging quantum computing principles like superposition, entanglement,

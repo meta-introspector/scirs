@@ -21,7 +21,7 @@ use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 TENSOR-TRAIN DECOMPOSITION - ULTRATHINK DEMONSTRATION");
+    println!("🚀 TENSOR-TRAIN DECOMPOSITION - Advanced DEMONSTRATION");
     println!("========================================================");
     println!("Revolutionary High-Dimensional Tensor Compression and Computation");
     println!("========================================================");
@@ -347,7 +347,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("\n========================================================");
-    println!("🎯 ULTRATHINK ACHIEVEMENT: TENSOR-TRAIN DECOMPOSITION");
+    println!("🎯 Advanced ACHIEVEMENT: TENSOR-TRAIN DECOMPOSITION");
     println!("========================================================");
     println!("✅ Revolutionary high-dimensional tensor representation");
     println!("✅ Exponential compression: O(d·n·R²) vs O(n^d) storage");

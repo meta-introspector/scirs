@@ -1,4 +1,4 @@
-//! Ultra-Think Advanced Memory Optimization System
+//! advanced Advanced Memory Optimization System
 //!
 //! Next-generation memory management framework with intelligent profiling,
 //! adaptive memory pooling, cache-aware algorithms, NUMA optimization,
@@ -18,7 +18,7 @@ use std::sync::{
 };
 use std::time::{Duration, Instant};
 
-/// Ultra-Think Memory Configuration with Advanced Optimization
+/// advanced Memory Configuration with Advanced Optimization
 #[derive(Debug, Clone)]
 pub struct UltraThinkMemoryConfig {
     /// Enable intelligent memory profiling
@@ -106,7 +106,7 @@ pub enum NumaMemoryPolicy {
     Adaptive,        // Adaptive based on usage patterns
 }
 
-/// Ultra-Think Memory Manager with Advanced Intelligence
+/// advanced Memory Manager with Advanced Intelligence
 pub struct UltraThinkMemoryManager {
     config: UltraThinkMemoryConfig,
     memory_profiler: Arc<RwLock<AdvancedMemoryProfiler>>,
@@ -120,7 +120,7 @@ pub struct UltraThinkMemoryManager {
 }
 
 impl UltraThinkMemoryManager {
-    /// Create new ultra-think memory manager
+    /// Create new advanced memory manager
     pub fn new(config: UltraThinkMemoryConfig) -> Self {
         let numa_topology = detect_numa_topology();
         let cache_hierarchy = detect_cache_hierarchy();
@@ -214,7 +214,8 @@ impl UltraThinkMemoryManager {
     where
         F: Float + NumCast + Copy + Send + Sync,
         D: Data<Elem = F> + Sync,
-        R: Send + Sync,
+        R: Send + Sync
+        + std::fmt::Display,
     {
         let data_characteristics = self.analyze_array_characteristics(data);
 
@@ -245,7 +246,8 @@ impl UltraThinkMemoryManager {
         operation: NumaMatrixOp<F>,
     ) -> StatsResult<Array2<F>>
     where
-        F: Float + NumCast + Copy + Send + Sync,
+        F: Float + NumCast + Copy + Send + Sync
+        + std::fmt::Display,
     {
         let matrix_characteristics = self.analyze_matrix_memory_characteristics(matrices);
 
@@ -270,7 +272,8 @@ impl UltraThinkMemoryManager {
     where
         F: Float + NumCast + Copy + Send + Sync,
         D: Data<Elem = F> + Sync,
-        R: Send + Sync,
+        R: Send + Sync
+        + std::fmt::Display,
     {
         let streaming_config = self.optimize_streaming_memory_config(window_size, &operation)?;
 
@@ -295,7 +298,8 @@ impl UltraThinkMemoryManager {
     ) -> StatsResult<BatchMemoryResult<F>>
     where
         F: Float + NumCast + Copy + Send + Sync,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let batch_characteristics = self.analyze_batch_memory_characteristics(batches);
 
@@ -418,7 +422,8 @@ impl UltraThinkMemoryManager {
     fn analyze_array_characteristics<F, D>(&self, data: &ArrayBase<D, Ix1>) -> ArrayCharacteristics
     where
         F: Float + NumCast + Copy + Send + Sync,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let size_bytes = data.len() * std::mem::size_of::<F>();
 
@@ -440,7 +445,8 @@ impl UltraThinkMemoryManager {
         matrices: &[Array2<F>],
     ) -> MatrixMemoryCharacteristics
     where
-        F: Float + NumCast + Copy + Send + Sync,
+        F: Float + NumCast + Copy + Send + Sync
+        + std::fmt::Display,
     {
         let total_elements: usize = matrices.iter().map(|m| m.len()).sum();
         let total_bytes = total_elements * std::mem::size_of::<F>();
@@ -462,7 +468,8 @@ impl UltraThinkMemoryManager {
     ) -> BatchMemoryCharacteristics
     where
         F: Float + NumCast + Copy + Send + Sync,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         let total_elements: usize = batches.iter().map(|b| b.len()).sum();
         let total_bytes = total_elements * std::mem::size_of::<F>();
@@ -533,7 +540,8 @@ impl UltraThinkMemoryManager {
     ) -> SizeDistribution
     where
         F: Float + NumCast + Copy + Send + Sync,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         if batches.is_empty() {
             return SizeDistribution::Uniform;
@@ -561,7 +569,8 @@ impl UltraThinkMemoryManager {
     fn estimate_memory_fragmentation_risk<F, D>(&self, batches: &[ArrayBase<D, Ix1>]) -> f64
     where
         F: Float + NumCast + Copy + Send + Sync,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         // Simplified fragmentation risk estimation
         let size_variance = self.calculate_batch_size_variance(batches);
@@ -578,7 +587,8 @@ impl UltraThinkMemoryManager {
     fn estimate_parallel_memory_efficiency<F, D>(&self, batches: &[ArrayBase<D, Ix1>]) -> f64
     where
         F: Float + NumCast + Copy + Send + Sync,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         // Estimate how efficiently memory can be used in parallel processing
         let total_size: usize = batches.iter().map(|b| b.len()).sum();
@@ -595,7 +605,8 @@ impl UltraThinkMemoryManager {
     fn calculate_batch_size_variance<F, D>(&self, batches: &[ArrayBase<D, Ix1>]) -> f64
     where
         F: Float + NumCast + Copy + Send + Sync,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         if batches.is_empty() {
             return 0.0;
@@ -717,7 +728,8 @@ impl UltraThinkMemoryManager {
     where
         F: Float + NumCast + Copy + Send + Sync,
         D: Data<Elem = F> + Sync,
-        R: Send + Sync,
+        R: Send + Sync
+        + std::fmt::Display,
     {
         Err(StatsError::dimension_mismatch(
             "Not implemented".to_string(),
@@ -733,7 +745,8 @@ impl UltraThinkMemoryManager {
     where
         F: Float + NumCast + Copy + Send + Sync,
         D: Data<Elem = F> + Sync,
-        R: Send + Sync,
+        R: Send + Sync
+        + std::fmt::Display,
     {
         Err(StatsError::dimension_mismatch(
             "Not implemented".to_string(),
@@ -748,7 +761,8 @@ impl UltraThinkMemoryManager {
     where
         F: Float + NumCast + Copy + Send + Sync,
         D: Data<Elem = F> + Sync,
-        R: Send + Sync,
+        R: Send + Sync
+        + std::fmt::Display,
     {
         Err(StatsError::dimension_mismatch(
             "Not implemented".to_string(),
@@ -764,7 +778,8 @@ impl UltraThinkMemoryManager {
     where
         F: Float + NumCast + Copy + Send + Sync,
         D: Data<Elem = F> + Sync,
-        R: Send + Sync,
+        R: Send + Sync
+        + std::fmt::Display,
     {
         Err(StatsError::dimension_mismatch(
             "Not implemented".to_string(),
@@ -778,7 +793,8 @@ impl UltraThinkMemoryManager {
         _numa_layout: &NumaLayout,
     ) -> StatsResult<Array2<F>>
     where
-        F: Float + NumCast + Copy + Send + Sync,
+        F: Float + NumCast + Copy + Send + Sync
+        + std::fmt::Display,
     {
         Err(StatsError::dimension_mismatch(
             "Not implemented".to_string(),
@@ -793,7 +809,8 @@ impl UltraThinkMemoryManager {
     where
         F: Float + NumCast + Copy + Send + Sync,
         D: Data<Elem = F> + Sync,
-        R: Send + Sync,
+        R: Send + Sync
+        + std::fmt::Display,
     {
         Ok(StreamingMemoryConfig {
             buffer_size: _window_size,
@@ -809,7 +826,8 @@ impl UltraThinkMemoryManager {
     ) -> StatsResult<OptimizedStreamingBuffer<F, D>>
     where
         F: Float + NumCast + Copy + Send + Sync,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         Ok(OptimizedStreamingBuffer::new(_config.buffer_size))
     }
@@ -824,7 +842,8 @@ impl UltraThinkMemoryManager {
     where
         F: Float + NumCast + Copy + Send + Sync,
         D: Data<Elem = F> + Sync,
-        R: Send + Sync,
+        R: Send + Sync
+        + std::fmt::Display,
     {
         Err(StatsError::dimension_mismatch(
             "Not implemented".to_string(),
@@ -836,7 +855,8 @@ impl UltraThinkMemoryManager {
         _characteristics: &BatchMemoryCharacteristics,
     ) -> StatsResult<BatchMemoryLayout>
     where
-        F: Float + NumCast + Copy + Send + Sync,
+        F: Float + NumCast + Copy + Send + Sync
+        + std::fmt::Display,
     {
         Ok(BatchMemoryLayout {
             numa_distribution: vec![0, 1], // Placeholder
@@ -854,7 +874,8 @@ impl UltraThinkMemoryManager {
     ) -> StatsResult<BatchMemoryResult<F>>
     where
         F: Float + NumCast + Copy + Send + Sync,
-        D: Data<Elem = F> + Sync,
+        D: Data<Elem = F> + Sync
+        + std::fmt::Display,
     {
         Ok(BatchMemoryResult {
             results: HashMap::new(),
@@ -1628,7 +1649,8 @@ pub struct OptimizedStreamingBuffer<F, D: ndarray::RawData> {
 impl<F, D> OptimizedStreamingBuffer<F, D>
 where
     F: Float + NumCast + Copy + Send + Sync,
-    D: ndarray::RawData<Elem = F> + Data<Elem = F> + Sync,
+    D: ndarray::RawData<Elem = F> + Data<Elem = F> + Sync
+        + std::fmt::Display,
 {
     pub fn new(max_size: usize) -> Self {
         Self {
@@ -1684,13 +1706,13 @@ fn detect_cache_hierarchy() -> CacheHierarchy {
 
 // Factory functions
 
-/// Create default ultra-think memory manager
+/// Create default advanced memory manager
 #[allow(dead_code)]
 pub fn create_ultra_think_memory_manager() -> UltraThinkMemoryManager {
     UltraThinkMemoryManager::new(UltraThinkMemoryConfig::default())
 }
 
-/// Create configured ultra-think memory manager
+/// Create configured advanced memory manager
 #[allow(dead_code)]
 pub fn create_configured_ultra_think_memory_manager(
     config: UltraThinkMemoryConfig,

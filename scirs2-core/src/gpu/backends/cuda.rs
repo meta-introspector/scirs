@@ -196,7 +196,7 @@ impl CudaContext {
                 .map_err(|e| GpuError::Other(format!("Failed to initialize CUDA device: {e}")))?;
 
             Ok(Self {
-                device: device,
+                device,
                 compiled_kernels: Arc::new(Mutex::new(HashMap::new())),
                 memory_pool: Arc::new(Mutex::new(CudaMemoryPool::new(1024 * 1024 * 1024))), // 1GB pool
             })
@@ -354,7 +354,8 @@ impl CudaContext {
     /// Allocate device memory
     #[cfg(feature = "cuda")]
     pub fn allocate_device_memory(&self, size: usize) -> Result<u64, GpuError> {
-        let buffer = self.device
+        let buffer = self
+            .device
             .alloc_zeros::<u8>(size)
             .map_err(|e| GpuError::Other(format!("CUDA memory allocation failed: {e}")))?;
         Ok(buffer.device_ptr())
@@ -450,8 +451,11 @@ impl GpuBufferImpl for CudaBuffer {
             // Note: In real implementation, would need to maintain a mapping from device_ptr to CudaSlice
             // For now, we'll use a fallback implementation
             #[cfg(debug_assertions)]
-            eprintln!("CUDA copy_from_host: {} bytes to device pointer 0x{:x}", size, self.device_ptr);
-            
+            eprintln!(
+                "CUDA copy_from_host: {} bytes to device pointer 0x{:x}",
+                size, self.device_ptr
+            );
+
             // TODO: Implement proper device memory management with CudaSlice tracking
 
             #[cfg(debug_assertions)]
@@ -493,8 +497,11 @@ impl GpuBufferImpl for CudaBuffer {
             // Note: In real implementation, would need to maintain a mapping from device_ptr to CudaSlice
             // For now, we'll use a fallback implementation
             #[cfg(debug_assertions)]
-            eprintln!("CUDA copy_to_host: {} bytes from device pointer 0x{:x}", size, self.device_ptr);
-            
+            eprintln!(
+                "CUDA copy_to_host: {} bytes from device pointer 0x{:x}",
+                size, self.device_ptr
+            );
+
             // TODO: Implement proper device memory management with CudaSlice tracking
 
             #[cfg(debug_assertions)]

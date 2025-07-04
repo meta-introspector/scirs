@@ -72,7 +72,8 @@ where
         + std::marker::Send
         + std::marker::Sync
         + 'static,
-    I: num_traits::PrimInt + NumCast,
+    I: num_traits::PrimInt + NumCast
+        + std::fmt::Display,
 {
     // Check if observed is empty
     if observed.is_empty() {
@@ -184,7 +185,8 @@ where
         + std::marker::Send
         + std::marker::Sync
         + 'static,
-    I: num_traits::PrimInt + NumCast,
+    I: num_traits::PrimInt + NumCast
+        + std::fmt::Display,
 {
     // Check if observed is empty
     if observed.is_empty() {
@@ -300,7 +302,8 @@ where
         + std::marker::Send
         + std::marker::Sync
         + 'static,
-    I: num_traits::PrimInt + NumCast,
+    I: num_traits::PrimInt + NumCast
+        + std::fmt::Display,
 {
     // Check if observed is a 2x2 table
     let rows = observed.shape()[0];

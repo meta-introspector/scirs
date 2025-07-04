@@ -1,6 +1,6 @@
-//! # Ultrathink Mode Validation Showcase
+//! # Advanced Mode Validation Showcase
 //!
-//! This example demonstrates the advanced ultrathink mode capabilities
+//! This example demonstrates the advanced Advanced mode capabilities
 //! of scirs2-ndimage, showcasing the integration of quantum consciousness,
 //! meta-learning, and adaptive optimization systems.
 //!
@@ -8,24 +8,24 @@
 //! - Enhanced quantum consciousness evolution
 //! - Meta-learning with temporal fusion
 //! - Quantum-aware resource scheduling
-//! - Adaptive ultrathink optimization
+//! - Adaptive Advanced optimization
 //! - Comprehensive performance monitoring
 
 use ndarray::{Array2, ArrayView2};
 use scirs2_ndimage::{
     adaptive_ultrathink_optimizer::{AdaptiveOptimizerConfig, AdaptiveUltrathinkOptimizer},
     error::NdimageResult,
-    ultrathink_fusion_core::{
+    fusion_core::{
         enhanced_meta_learning_with_temporal_fusion, enhanced_quantum_consciousness_evolution,
-        quantum_aware_resource_scheduling_optimization, ultrathink_fusion_processing,
-        UltrathinkConfig, UltrathinkState,
+        quantum_aware_resource_scheduling_optimization, fusion_processing,
+        AdvancedConfig, UltrathinkState,
     },
 };
 
-/// Comprehensive ultrathink validation demonstration
+/// Comprehensive Advanced validation demonstration
 #[allow(dead_code)]
 pub fn demonstrate_ultrathink_capabilities() -> NdimageResult<()> {
-    println!("🚀 Ultrathink Mode Validation Showcase");
+    println!("🚀 Advanced Mode Validation Showcase");
     println!("======================================");
 
     // Create sample test image
@@ -36,9 +36,9 @@ pub fn demonstrate_ultrathink_capabilities() -> NdimageResult<()> {
         test_image.ncols()
     );
 
-    // Initialize ultrathink configuration
+    // Initialize Advanced configuration
     let config = create_ultrathink_config();
-    println!("✓ Initialized ultrathink configuration");
+    println!("✓ Initialized Advanced configuration");
 
     // Demonstration 1: Enhanced Quantum Consciousness Evolution
     println!("\n🧠 Testing Enhanced Quantum Consciousness Evolution");
@@ -65,8 +65,8 @@ pub fn demonstrate_ultrathink_capabilities() -> NdimageResult<()> {
     println!("✓ Quantum resource scheduling completed");
     println!("  - Output shape: {:?}", resource_result.dim());
 
-    // Demonstration 4: Adaptive Ultrathink Optimization
-    println!("\n🎯 Testing Adaptive Ultrathink Optimization");
+    // Demonstration 4: Adaptive Advanced Optimization
+    println!("\n🎯 Testing Adaptive Advanced Optimization");
     let adaptive_config = AdaptiveOptimizerConfig::default();
     let optimizer = AdaptiveUltrathinkOptimizer::new(adaptive_config)?;
 
@@ -78,17 +78,17 @@ pub fn demonstrate_ultrathink_capabilities() -> NdimageResult<()> {
 
         // Run abbreviated processing with optimized config
         let (processed, _state) =
-            ultrathink_fusion_processing(test_image.view(), &optimized_config, None)?;
+            fusion_processing(test_image.view(), &optimized_config, None)?;
         println!("    ✓ Processing completed with optimized config");
         println!("    - Output shape: {:?}", processed.dim());
     }
 
     // Demonstration 5: Comprehensive Integration Test
-    println!("\n🌟 Testing Comprehensive Ultrathink Integration");
+    println!("\n🌟 Testing Comprehensive Advanced Integration");
     let (final_result, final_state) =
-        ultrathink_fusion_processing(test_image.view(), &config, None)?;
+        fusion_processing(test_image.view(), &config, None)?;
 
-    println!("✓ Comprehensive ultrathink processing completed");
+    println!("✓ Comprehensive Advanced processing completed");
     println!("  - Final output shape: {:?}", final_result.dim());
     println!(
         "  - Processing state captured: {}",
@@ -98,7 +98,7 @@ pub fn demonstrate_ultrathink_capabilities() -> NdimageResult<()> {
     // Performance Summary
     println!("\n📊 Performance Summary");
     println!("====================");
-    println!("✓ All ultrathink mode components validated successfully");
+    println!("✓ All Advanced mode components validated successfully");
     println!("✓ Quantum consciousness evolution: FUNCTIONAL");
     println!("✓ Meta-learning temporal fusion: FUNCTIONAL");
     println!("✓ Quantum resource scheduling: FUNCTIONAL");
@@ -132,15 +132,15 @@ fn create_test_image(height: usize, width: usize) -> Array2<f64> {
     image
 }
 
-/// Create comprehensive ultrathink configuration
+/// Create comprehensive Advanced configuration
 #[allow(dead_code)]
-fn create_ultrathink_config() -> UltrathinkConfig {
+fn create_ultrathink_config() -> AdvancedConfig {
     use scirs2_ndimage::{
         neuromorphic_computing::NeuromorphicConfig, quantum_inspired::QuantumConfig,
         quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
     };
 
-    UltrathinkConfig {
+    AdvancedConfig {
         quantum: QuantumConfig::default(),
         neuromorphic: NeuromorphicConfig::default(),
         quantum_neuromorphic: QuantumNeuromorphicConfig::default(),
@@ -176,7 +176,7 @@ pub fn advanced_performance_validation() -> NdimageResult<()> {
         let config = create_ultrathink_config();
 
         let start_time = std::time::Instant::now();
-        let (result, state) = ultrathink_fusion_processing(test_image.view(), &config, None)?;
+        let (result, state) = fusion_processing(test_image.view(), &config, None)?;
         let duration = start_time.elapsed();
 
         println!("  ✓ Processing completed in {:?}", duration);
@@ -202,10 +202,10 @@ pub fn advanced_performance_validation() -> NdimageResult<()> {
 /// Main demonstration function
 #[allow(dead_code)]
 fn main() -> NdimageResult<()> {
-    println!("🎯 SciRS2 NDImage Ultrathink Mode Validation");
+    println!("🎯 SciRS2 NDImage Advanced Mode Validation");
     println!("===========================================");
     println!("This showcase demonstrates the advanced capabilities");
-    println!("of the ultrathink mode processing system.\n");
+    println!("of the Advanced mode processing system.\n");
 
     // Run comprehensive demonstration
     demonstrate_ultrathink_capabilities()?;
@@ -213,7 +213,7 @@ fn main() -> NdimageResult<()> {
     // Run advanced performance validation
     advanced_performance_validation()?;
 
-    println!("\n🎉 Ultrathink Mode Validation Complete!");
+    println!("\n🎉 Advanced Mode Validation Complete!");
     println!("All systems operational and functioning correctly.");
 
     Ok(())
@@ -228,7 +228,7 @@ mod tests {
         let test_image = create_test_image(32, 32);
         let config = create_ultrathink_config();
 
-        let (result, _state) = ultrathink_fusion_processing(test_image.view(), &config, None)?;
+        let (result, _state) = fusion_processing(test_image.view(), &config, None)?;
 
         assert_eq!(result.dim(), (32, 32));
         assert!(result.iter().all(|&x| x.is_finite()));

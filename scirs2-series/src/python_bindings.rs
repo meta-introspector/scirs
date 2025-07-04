@@ -10,7 +10,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyType};
 
 #[cfg(feature = "python")]
-use numpy::{PyArray1, PyReadonlyArray1};
+use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
 
 #[cfg(feature = "python")]
 use ndarray::Array1;
@@ -65,21 +65,23 @@ impl PyTimeSeries {
 
     /// Get values as numpy array
     fn get_values<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray1<f64>> {
-        self.values.to_pyarray_bound(py)
+        self.values.clone().into_pyarray(py)
     }
 
     /// Get timestamps as numpy array (if available)
     fn get_timestamps<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
-        self.timestamps.as_ref().map(|ts| ts.to_pyarray_bound(py))
+        self.timestamps
+            .as_ref()
+            .map(|ts| ts.clone().into_pyarray(py))
     }
 
     /// Convert to pandas-compatible dictionary
     fn to_dict(&self, py: Python) -> PyResult<PyObject> {
-        let dict = PyDict::new_bound(py);
-        dict.set_item("values", self.values.to_pyarray_bound(py))?;
+        let dict = PyDict::new(py);
+        dict.set_item("values", self.values.clone().into_pyarray(py))?;
 
         if let Some(ref timestamps) = self.timestamps {
-            dict.set_item("timestamps", timestamps.to_pyarray_bound(py))?;
+            dict.set_item("timestamps", timestamps.clone().into_pyarray(py))?;
         }
 
         if let Some(freq) = self.frequency {
@@ -143,6 +145,7 @@ impl PyTimeSeries {
 pub struct PyARIMA {
     model: Option<ArimaModel<f64>>,
     config: ArimaConfig,
+    data: Option<Array1<f64>>,
 }
 
 #[cfg(feature = "python")]
@@ -164,6 +167,7 @@ impl PyARIMA {
         PyARIMA {
             model: None,
             config,
+            data: None,
         }
     }
 
@@ -192,12 +196,13 @@ impl PyARIMA {
         PyARIMA {
             model: None,
             config,
+            data: None,
         }
     }
 
     /// Fit the ARIMA model
     fn fit(&mut self, data: &PyTimeSeries) -> PyResult<()> {
-        let mut model = ArimaModel::new(self.config.clone())
+        let mut model = ArimaModel::new(self.config.p, self.config.d, self.config.q)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("{}", e)))?;
 
         model
@@ -205,19 +210,20 @@ impl PyARIMA {
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
 
         self.model = Some(model);
+        self.data = Some(data.values.clone());
         Ok(())
     }
 
     /// Generate forecasts
     fn forecast<'py>(&self, py: Python<'py>, steps: usize) -> PyResult<Bound<'py, PyArray1<f64>>> {
-        match &self.model {
-            Some(model) => {
-                let forecasts = model.forecast(steps).map_err(|e| {
+        match (&self.model, &self.data) {
+            (Some(model), Some(data)) => {
+                let forecasts = model.forecast(steps, data).map_err(|e| {
                     PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e))
                 })?;
-                Ok(forecasts.to_pyarray_bound(py))
+                Ok(forecasts.into_pyarray(py))
             }
-            None => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+            _ => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
                 "Model not fitted. Call fit() first.",
             )),
         }
@@ -225,26 +231,29 @@ impl PyARIMA {
 
     /// Get model parameters
     fn get_params(&self) -> PyResult<HashMap<String, f64>> {
-        match &self.model {
-            Some(model) => {
-                let params = model.get_params().map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e))
-                })?;
-                Ok(params)
-            }
-            None => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-                "Model not fitted. Call fit() first.",
-            )),
-        }
+        let mut params = HashMap::new();
+        params.insert("p".to_string(), self.config.p as f64);
+        params.insert("d".to_string(), self.config.d as f64);
+        params.insert("q".to_string(), self.config.q as f64);
+        params.insert("seasonal_p".to_string(), self.config.seasonal_p as f64);
+        params.insert("seasonal_d".to_string(), self.config.seasonal_d as f64);
+        params.insert("seasonal_q".to_string(), self.config.seasonal_q as f64);
+        params.insert(
+            "seasonal_period".to_string(),
+            self.config.seasonal_period as f64,
+        );
+        Ok(params)
     }
 
     /// Get model summary (similar to statsmodels)
     fn summary(&self) -> PyResult<String> {
         match &self.model {
-            Some(model) => {
-                let params = model.get_params().map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e))
-                })?;
+            Some(_model) => {
+                // Get parameters from config since model doesn't have get_params method
+                let mut params = HashMap::new();
+                params.insert("p".to_string(), self.config.p as f64);
+                params.insert("d".to_string(), self.config.d as f64);
+                params.insert("q".to_string(), self.config.q as f64);
 
                 let mut summary = format!(
                     "ARIMA({},{},{}) Model Results\n",
@@ -279,9 +288,10 @@ fn calculate_statistics(data: &PyTimeSeries) -> PyResult<HashMap<String, f64>> {
 #[pyfunction]
 #[allow(dead_code)]
 fn check_stationarity(data: &PyTimeSeries) -> PyResult<bool> {
-    let stationary = is_stationary(&data.values)
+    let (_test_stat, p_value) = is_stationary(&data.values, None)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
-    Ok(stationary)
+    // Consider stationary if p-value < 0.05 (5% significance level)
+    Ok(p_value < 0.05)
 }
 
 #[cfg(feature = "python")]
@@ -294,7 +304,7 @@ fn apply_differencing<'py>(
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
     let differenced = difference_series(&data.values, periods)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
-    Ok(differenced.to_pyarray_bound(py))
+    Ok(differenced.into_pyarray(py))
 }
 
 #[cfg(feature = "python")]
@@ -307,7 +317,7 @@ fn apply_seasonal_differencing<'py>(
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
     let differenced = seasonal_difference_series(&data.values, periods)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
-    Ok(differenced.to_pyarray_bound(py))
+    Ok(differenced.into_pyarray(py))
 }
 
 /// Auto-ARIMA functionality for Python
@@ -330,22 +340,35 @@ fn auto_arima(
     let max_sq = max_seasonal_q.unwrap_or(0);
     let s_period = seasonal_period.unwrap_or(0);
 
-    let best_config = crate::arima_models::auto_arima(
-        &data.values,
+    let options = crate::arima_models::ArimaSelectionOptions {
         max_p,
         max_d,
         max_q,
         seasonal,
-        max_sp,
-        max_sd,
-        max_sq,
-        s_period,
-    )
-    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
+        max_seasonal_p: max_sp,
+        max_seasonal_d: max_sd,
+        max_seasonal_q: max_sq,
+        seasonal_period: Some(s_period),
+        ..Default::default()
+    };
+
+    let (_model, params) = crate::arima_models::auto_arima(&data.values, &options)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
+
+    let config = ArimaConfig {
+        p: params.pdq.0,
+        d: params.pdq.1,
+        q: params.pdq.2,
+        seasonal_p: params.seasonal_pdq.0,
+        seasonal_d: params.seasonal_pdq.1,
+        seasonal_q: params.seasonal_pdq.2,
+        seasonal_period: params.seasonal_period,
+    };
 
     Ok(PyARIMA {
         model: None,
-        config: best_config,
+        config,
+        data: None,
     })
 }
 
@@ -373,11 +396,11 @@ pub fn create_pandas_dataframe(
     py: Python,
     data: HashMap<String, Array1<f64>>,
 ) -> PyResult<PyObject> {
-    let pandas = py.import_bound("pandas")?;
-    let dict = PyDict::new_bound(py);
+    let pandas = py.import("pandas")?;
+    let dict = PyDict::new(py);
 
     for (key, values) in data {
-        dict.set_item(key, values.to_pyarray_bound(py))?;
+        dict.set_item(key, values.into_pyarray(py))?;
     }
 
     let df = pandas.call_method1("DataFrame", (dict,))?;
@@ -391,9 +414,9 @@ pub fn create_pandas_series(
     data: Array1<f64>,
     name: Option<&str>,
 ) -> PyResult<PyObject> {
-    let pandas = py.import_bound("pandas")?;
-    let args = (data.to_pyarray_bound(py),);
-    let kwargs = PyDict::new_bound(py);
+    let pandas = py.import("pandas")?;
+    let args = (data.into_pyarray(py),);
+    let kwargs = PyDict::new(py);
 
     if let Some(name) = name {
         kwargs.set_item("name", name)?;

@@ -2,7 +2,7 @@
 
 use ndarray::{array, Array2};
 use scirs2_cluster::metrics::silhouette_score;
-use scirs2_cluster::ultrathink_clustering::{UltrathinkClusterer, UltrathinkConfig};
+use scirs2_cluster::advanced_clustering::{AdvancedClusterer, AdvancedConfig};
 use scirs2_cluster::vq::{kmeans2, whiten, MinitMethod, MissingMethod};
 
 #[test]
@@ -68,7 +68,7 @@ fn test_silhouette_score_basic() {
     assert!(score > 0.7);
 }
 
-// Ultrathink Clustering Integration Tests
+// Advanced Clustering Integration Tests
 
 #[test]
 #[allow(dead_code)]
@@ -84,7 +84,7 @@ fn test_ultrathink_clusterer_basic() {
     )
     .unwrap();
 
-    let mut clusterer = UltrathinkClusterer::new();
+    let mut clusterer = AdvancedClusterer::new();
     let result = clusterer.cluster(&data.view()).unwrap();
 
     // Verify basic properties
@@ -113,7 +113,7 @@ fn test_ultrathink_clusterer_with_ai_selection() {
     )
     .unwrap();
 
-    let mut clusterer = UltrathinkClusterer::new()
+    let mut clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true)
         .with_meta_learning(true);
@@ -146,7 +146,7 @@ fn test_ultrathink_clusterer_with_all_features() {
     )
     .unwrap();
 
-    let mut clusterer = UltrathinkClusterer::new()
+    let mut clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true)
         .with_meta_learning(true)
@@ -171,7 +171,7 @@ fn test_ultrathink_clusterer_with_all_features() {
 #[test]
 #[allow(dead_code)]
 fn test_ultrathink_clusterer_error_handling() {
-    let mut clusterer = UltrathinkClusterer::new();
+    let mut clusterer = AdvancedClusterer::new();
 
     // Test empty data
     let empty_data = Array2::zeros((0, 2));
@@ -194,7 +194,7 @@ fn test_ultrathink_clusterer_error_handling() {
 #[test]
 #[allow(dead_code)]
 fn test_ultrathink_clusterer_different_data_sizes() {
-    let mut clusterer = UltrathinkClusterer::new().with_ai_algorithm_selection(true);
+    let mut clusterer = AdvancedClusterer::new().with_ai_algorithm_selection(true);
 
     // Test small dataset
     let small_data =
@@ -237,7 +237,7 @@ fn test_ultrathink_clusterer_high_dimensional() {
     )
     .unwrap();
 
-    let mut clusterer = UltrathinkClusterer::new()
+    let mut clusterer = AdvancedClusterer::new()
         .with_quantum_neuromorphic_fusion(true)
         .with_ai_algorithm_selection(true);
 
@@ -269,7 +269,7 @@ fn test_ultrathink_clusterer_noisy_data() {
 
     let data = Array2::from_shape_vec((16, 2), data_vec).unwrap();
 
-    let mut clusterer = UltrathinkClusterer::new()
+    let mut clusterer = AdvancedClusterer::new()
         .with_quantum_neuromorphic_fusion(true)
         .with_continual_adaptation(true);
 
@@ -283,7 +283,7 @@ fn test_ultrathink_clusterer_noisy_data() {
 #[test]
 #[allow(dead_code)]
 fn test_ultrathink_config_defaults() {
-    let config = UltrathinkConfig::default();
+    let config = AdvancedConfig::default();
 
     assert_eq!(config.max_clusters, 20);
     assert_eq!(config.ai_confidence_threshold, 0.85);
@@ -307,7 +307,7 @@ fn test_ultrathink_performance_metrics() {
     )
     .unwrap();
 
-    let mut clusterer = UltrathinkClusterer::new()
+    let mut clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true);
 

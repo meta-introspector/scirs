@@ -1,24 +1,24 @@
-//! Ultrathink Interpolation Mode Showcase
+//! Advanced Interpolation Mode Showcase
 //!
 //! This example demonstrates the advanced AI-driven interpolation optimization
-//! capabilities of the ultrathink mode, including intelligent method selection,
+//! capabilities of the Advanced mode, including intelligent method selection,
 //! adaptive accuracy optimization, and cross-domain knowledge transfer.
 
 use ndarray::Array1;
 use scirs2_interpolate::{
-    create_ultrathink_interpolation_coordinator, InterpolationMethodType,
-    UltrathinkInterpolationConfig,
+    create_advanced_interpolation_coordinator, InterpolationMethodType,
+    advancedInterpolationConfig,
 };
 use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultrathink Interpolation Mode Showcase");
+    println!("🚀 Advanced Interpolation Mode Showcase");
     println!("==========================================");
 
     // Create advanced coordinator with custom configuration
-    let mut config = UltrathinkInterpolationConfig::default();
+    let mut config = advancedInterpolationConfig::default();
     config.enable_method_selection = true;
     config.enable_accuracy_optimization = true;
     config.enable_quantum_optimization = true;
@@ -46,7 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let coordinator = create_advanced_interpolation_coordinator::<f64>()?;
-    println!("✅ Ultrathink Interpolation Coordinator created successfully");
+    println!("✅ Advanced Interpolation Coordinator created successfully");
     println!();
 
     // Test Case 1: Smooth function (should prefer high-order methods)
@@ -312,7 +312,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("==============================================");
     demonstrate_error_prediction(&coordinator)?;
 
-    println!("\n🎯 Ultrathink Interpolation Mode Showcase Complete!");
+    println!("\n🎯 Advanced Interpolation Mode Showcase Complete!");
     println!("====================================================");
     println!("The advanced mode has demonstrated:");
     println!("✅ Intelligent method selection based on data characteristics");
@@ -514,7 +514,7 @@ fn estimate_frequency_preservation(result: &Array1<f64>) -> f64 {
 /// Demonstrate adaptive learning capabilities
 #[allow(dead_code)]
 fn demonstrate_adaptive_learning(
-    coordinator: &scirs2_interpolate::UltrathinkInterpolationCoordinator<f64>,
+    coordinator: &scirs2_interpolate::advancedInterpolationCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("Running multiple similar datasets to demonstrate learning...");
 
@@ -570,7 +570,7 @@ fn demonstrate_adaptive_learning(
 /// Demonstrate cross-domain knowledge transfer
 #[allow(dead_code)]
 fn demonstrate_knowledge_transfer(
-    coordinator: &scirs2_interpolate::UltrathinkInterpolationCoordinator<f64>,
+    coordinator: &scirs2_interpolate::advancedInterpolationCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing knowledge transfer between interpolation domains...");
 
@@ -623,7 +623,7 @@ fn demonstrate_knowledge_transfer(
 /// Demonstrate quantum-inspired optimization
 #[allow(dead_code)]
 fn demonstrate_quantum_optimization(
-    coordinator: &scirs2_interpolate::UltrathinkInterpolationCoordinator<f64>,
+    coordinator: &scirs2_interpolate::advancedInterpolationCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("Evaluating quantum-inspired parameter optimization...");
 
@@ -679,7 +679,7 @@ fn demonstrate_quantum_optimization(
 /// Demonstrate error prediction capabilities
 #[allow(dead_code)]
 fn demonstrate_error_prediction(
-    coordinator: &scirs2_interpolate::UltrathinkInterpolationCoordinator<f64>,
+    coordinator: &scirs2_interpolate::advancedInterpolationCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing error prediction and accuracy optimization...");
 
@@ -779,8 +779,8 @@ mod tests {
     }
 
     #[test]
-    fn test_ultrathink_coordinator_creation() {
-        let coordinator = create_ultrathink_interpolation_coordinator::<f64>();
+    fn test_advanced_coordinator_creation() {
+        let coordinator = create_advanced_interpolation_coordinator::<f64>();
         assert!(coordinator.is_ok());
     }
 }

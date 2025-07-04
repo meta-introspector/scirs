@@ -390,7 +390,8 @@ struct SpectralCache<F> {
 
 impl<F> UltraSpectralAnalyzer<F>
 where
-    F: Float + NumCast + FloatConst + SimdUnifiedOps + One + Zero + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + FloatConst + SimdUnifiedOps + One + Zero + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     /// Create a new ultra-advanced spectral analyzer
     pub fn new(config: UltraSpectralConfig<F>) -> Self {
@@ -965,7 +966,8 @@ pub struct SpectralPeak<F> {
 
 impl<F> Default for UltraSpectralConfig<F>
 where
-    F: Float + NumCast + FloatConst + Copy,
+    F: Float + NumCast + FloatConst + Copy
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self {

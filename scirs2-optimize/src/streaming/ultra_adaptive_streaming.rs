@@ -15,10 +15,14 @@ use super::{
 use crate::error::OptimizeError;
 use ndarray::s;
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::CoreResult as Result;
-use scirs2_core::simd_ops::SimdUnifiedOps;
+// Unused import
+// use scirs2_core::error::CoreResult;
+// Unused import
+// use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
+
+type Result<T> = std::result::Result<T, OptimizeError>;
 
 /// Ultra-advanced streaming optimizer with multiple adaptation mechanisms
 #[derive(Debug, Clone)]

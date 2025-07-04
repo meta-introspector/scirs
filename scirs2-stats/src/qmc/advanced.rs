@@ -523,7 +523,7 @@ impl AdvancedQMCGenerator {
         // Generate correlated LHS if correlation matrix is specified
         if let Some(ref corr_matrix) = state.correlation_matrix {
             // Use Cholesky decomposition for correlated sampling
-            let chol = scirs2_linalg::cholesky(&corr_matrix.view(), true).map_err(|e| {
+            let chol = scirs2_linalg::cholesky(&corr_matrix.view(), None).map_err(|e| {
                 StatsError::ComputationError(format!("Cholesky decomposition failed: {}", e))
             })?;
 

@@ -102,7 +102,8 @@ pub enum QuantileInterpolation {
 #[allow(dead_code)]
 pub fn quantile<F>(x: &ArrayView1<F>, q: F, method: QuantileInterpolation) -> StatsResult<F>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {
@@ -287,7 +288,8 @@ where
 #[allow(dead_code)]
 pub fn percentile<F>(x: &ArrayView1<F>, p: F, method: QuantileInterpolation) -> StatsResult<F>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {
@@ -341,7 +343,8 @@ where
 #[allow(dead_code)]
 pub fn quartiles<F>(x: &ArrayView1<F>, method: QuantileInterpolation) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {
@@ -391,7 +394,8 @@ where
 #[allow(dead_code)]
 pub fn quintiles<F>(x: &ArrayView1<F>, method: QuantileInterpolation) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {
@@ -441,7 +445,8 @@ where
 #[allow(dead_code)]
 pub fn deciles<F>(x: &ArrayView1<F>, method: QuantileInterpolation) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {
@@ -510,7 +515,8 @@ pub fn boxplot_stats<F>(
     method: QuantileInterpolation,
 ) -> StatsResult<(F, F, F, F, F, Vec<F>)>
 where
-    F: Float + NumCast + std::fmt::Debug,
+    F: Float + NumCast + std::fmt::Debug
+        + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {
@@ -603,7 +609,8 @@ where
 #[allow(dead_code)]
 pub fn winsorized_mean<F>(x: &ArrayView1<F>, limits: F) -> StatsResult<F>
 where
-    F: Float + NumCast + std::iter::Sum,
+    F: Float + NumCast + std::iter::Sum
+        + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {
@@ -682,7 +689,8 @@ where
 #[allow(dead_code)]
 pub fn winsorized_variance<F>(x: &ArrayView1<F>, limits: F, ddof: usize) -> StatsResult<F>
 where
-    F: Float + NumCast + std::iter::Sum,
+    F: Float + NumCast + std::iter::Sum
+        + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {

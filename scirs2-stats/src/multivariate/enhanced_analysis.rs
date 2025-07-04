@@ -9,7 +9,7 @@
 //! - Multidimensional Scaling (MDS)
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
@@ -117,7 +117,7 @@ pub struct PCAResult<F> {
 
 impl<F> EnhancedPCA<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + std::fmt::Display + std::iter::Sum + ScalarOperand,
 {
     /// Create new enhanced PCA analyzer
     pub fn new(algorithm: PCAAlgorithm, config: PCAConfig) -> Self {
@@ -212,7 +212,9 @@ where
 
             // Center data
             for mut row in processed_data.rows_mut() {
-                row -= &mean;
+                for (i, &m) in mean.iter().enumerate() {
+                    row[i] = row[i] - m;
+                }
             }
 
             mean
@@ -229,7 +231,9 @@ where
                 std_dev[j] = var.sqrt();
 
                 if std_dev[j] > F::from(1e-12).unwrap() {
-                    col /= std_dev[j];
+                    for x in col.iter_mut() {
+                        *x = *x / std_dev[j];
+                    }
                 }
             }
 
@@ -255,7 +259,7 @@ where
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());
 
         // Compute SVD
-        let (u, s, vt) = scirs2_linalg::svd(&data_f64.view(), true, true, None)
+        let (u, s, vt) = scirs2_linalg::svd(&data_f64.view(), true, true)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
 
         // Extract components and singular values
@@ -457,7 +461,9 @@ where
         // Center
         if self.config.center {
             for mut row in processed_data.rows_mut() {
-                row -= &results.mean;
+                for (i, &m) in results.mean.iter().enumerate() {
+                    row[i] = row[i] - m;
+                }
             }
         }
 
@@ -465,7 +471,9 @@ where
         if let Some(ref scale) = results.scale {
             for (j, mut col) in processed_data.columns_mut().into_iter().enumerate() {
                 if scale[j] > F::from(1e-12).unwrap() {
-                    col /= scale[j];
+                    for x in col.iter_mut() {
+                        *x = *x / scale[j];
+                    }
                 }
             }
         }
@@ -505,7 +513,9 @@ where
         if let Some(ref scale) = results.scale {
             for (j, mut col) in reconstructed.columns_mut().into_iter().enumerate() {
                 if scale[j] > F::from(1e-12).unwrap() {
-                    col *= scale[j];
+                    for x in col.iter_mut() {
+                        *x = *x * scale[j];
+                    }
                 }
             }
         }
@@ -513,7 +523,9 @@ where
         // Reverse centering
         if self.config.center {
             for mut row in reconstructed.rows_mut() {
-                row += &results.mean;
+                for (i, &m) in results.mean.iter().enumerate() {
+                    row[i] = row[i] + m;
+                }
             }
         }
 
@@ -603,7 +615,7 @@ impl Default for FactorAnalysisConfig {
 
 impl<F> EnhancedFactorAnalysis<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + std::fmt::Display + std::iter::Sum + ScalarOperand,
 {
     /// Create new factor analysis
     pub fn new(n_factors: usize, config: FactorAnalysisConfig) -> StatsResult<Self> {
@@ -809,7 +821,8 @@ pub fn enhanced_pca<F>(
     algorithm: Option<PCAAlgorithm>,
 ) -> StatsResult<PCAResult<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display + std::iter::Sum + ScalarOperand,
 {
     let algorithm = algorithm.unwrap_or(PCAAlgorithm::SVD);
     let config = PCAConfig {
@@ -828,7 +841,8 @@ pub fn enhanced_factor_analysis<F>(
     rotation: Option<RotationMethod>,
 ) -> StatsResult<FactorAnalysisResult<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
+        + std::fmt::Display + std::iter::Sum + ScalarOperand,
 {
     let config = FactorAnalysisConfig {
         rotation: rotation.unwrap_or(RotationMethod::Varimax),

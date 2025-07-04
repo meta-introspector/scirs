@@ -1,7 +1,7 @@
-//! # Enhanced Validation Framework for Ultrathink Mode
+//! # Enhanced Validation Framework for Advanced Mode
 //!
 //! This module provides comprehensive validation and error handling
-//! capabilities for ultrathink mode operations, ensuring robust
+//! capabilities for Advanced mode operations, ensuring robust
 //! and reliable performance in production environments.
 
 use ndarray::{Array2, ArrayView2};
@@ -10,12 +10,12 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
-use crate::advanced_fusion_algorithms::{UltrathinkConfig, UltrathinkState};
+use crate::advanced_fusion_algorithms::{AdvancedConfig, UltrathinkState};
 use crate::error::{NdimageError, NdimageResult};
 
-/// Comprehensive validation framework for ultrathink operations
+/// Comprehensive validation framework for Advanced operations
 #[derive(Debug, Clone)]
-pub struct UltrathinkValidator {
+pub struct ComprehensiveValidator {
     /// Validation configuration
     config: ValidationConfig,
     /// Performance benchmarks
@@ -82,7 +82,7 @@ pub struct ValidationError {
     pub operation: String,
 }
 
-impl UltrathinkValidator {
+impl ComprehensiveValidator {
     /// Create new validator with default configuration
     pub fn new() -> Self {
         Self::with_config(ValidationConfig::default())
@@ -97,8 +97,8 @@ impl UltrathinkValidator {
         }
     }
 
-    /// Validate ultrathink configuration
-    pub fn validate_config(&mut self, config: &UltrathinkConfig) -> NdimageResult<()> {
+    /// Validate Advanced configuration
+    pub fn validate_config(&mut self, config: &AdvancedConfig) -> NdimageResult<()> {
         // Validate consciousness depth
         if config.consciousness_depth == 0 || config.consciousness_depth > 20 {
             return Err(NdimageError::ConfigurationError(
@@ -154,7 +154,7 @@ impl UltrathinkValidator {
         // Check maximum dimensions for performance
         if height > 10000 || width > 10000 {
             return Err(NdimageError::DimensionError(
-                "Image too large for ultrathink processing (max 10000x10000)".to_string(),
+                "Image too large for Advanced processing (max 10000x10000)".to_string(),
             ));
         }
 
@@ -221,7 +221,7 @@ impl UltrathinkValidator {
         }
 
         // Update benchmarks
-        self.update_benchmark("ultrathink_processing", processing_time, 0, quality_score);
+        self.update_benchmark("enhanced_processing", processing_time, 0, quality_score);
 
         report.quality_score = quality_score;
         report.processing_time = processing_time;
@@ -395,13 +395,13 @@ impl PerformanceSummary {
     }
 }
 
-/// Enhanced ultrathink processing with validation
+/// Enhanced Advanced processing with validation
 #[allow(dead_code)]
 pub fn validated_ultrathink_processing<T>(
     image: ArrayView2<T>,
-    config: &UltrathinkConfig,
+    config: &AdvancedConfig,
     previous_state: Option<UltrathinkState>,
-    validator: &mut UltrathinkValidator,
+    validator: &mut ComprehensiveValidator,
 ) -> NdimageResult<(Array2<T>, UltrathinkState, ValidationReport)>
 where
     T: Float + FromPrimitive + Copy + Send + Sync + Debug,
@@ -412,8 +412,8 @@ where
 
     let start_time = Instant::now();
 
-    // Perform ultrathink processing
-    let (output, state) = crate::advanced_fusion_algorithms::ultrathink_fusion_processing(
+    // Perform Advanced processing
+    let (output, state) = crate::advanced_fusion_algorithms::fusion_processing(
         image,
         config,
         previous_state,
@@ -434,14 +434,14 @@ mod tests {
 
     #[test]
     fn test_validator_creation() {
-        let validator = UltrathinkValidator::new();
+        let validator = ComprehensiveValidator::new();
         assert!(validator.benchmarks.is_empty());
         assert!(validator.error_history.is_empty());
     }
 
     #[test]
     fn test_input_validation() {
-        let mut validator = UltrathinkValidator::new();
+        let mut validator = ComprehensiveValidator::new();
         let valid_image = Array2::ones((10, 10));
         assert!(validator.validate_input_image(valid_image.view()).is_ok());
 
@@ -451,8 +451,8 @@ mod tests {
 
     #[test]
     fn test_config_validation() {
-        let mut validator = UltrathinkValidator::new();
-        let mut config = crate::ultrathink_fusion_core::UltrathinkConfig::default();
+        let mut validator = ComprehensiveValidator::new();
+        let mut config = crate::fusion_core::AdvancedConfig::default();
 
         // Valid configuration should pass
         assert!(validator.validate_config(&config).is_ok());
@@ -464,7 +464,7 @@ mod tests {
 
     #[test]
     fn test_quality_score_computation() {
-        let validator = UltrathinkValidator::new();
+        let validator = ComprehensiveValidator::new();
         let output = Array2::ones((10, 10));
         let quality = validator.compute_quality_score(&output).unwrap();
         assert!(quality > 0.0 && quality <= 1.0);

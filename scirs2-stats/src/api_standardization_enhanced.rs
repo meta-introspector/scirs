@@ -82,7 +82,8 @@ pub enum MemoryStrategy {
 /// Enhanced fluent statistics API builder
 pub struct FluentStats<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     config: FluentStatsConfig,
     operation_chain: Vec<StatisticalOperation>,
@@ -93,7 +94,8 @@ where
 
 impl<F> FluentStats<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     /// Create new fluent statistics API
     pub fn new() -> Self {
@@ -397,7 +399,8 @@ where
 /// Fluent descriptive statistics API
 pub struct FluentDescriptive<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     parent: FluentStats<F>,
     operations: Vec<DescriptiveOperation>,
@@ -405,7 +408,8 @@ where
 
 impl<F> FluentDescriptive<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     fn new(parent: FluentStats<F>) -> Self {
         Self {
@@ -475,7 +479,8 @@ where
 /// Fluent correlation analysis API
 pub struct FluentCorrelation<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     parent: FluentStats<F>,
     correlation_type: CorrelationType,
@@ -484,7 +489,8 @@ where
 
 impl<F> FluentCorrelation<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     fn new(parent: FluentStats<F>) -> Self {
         Self {
@@ -543,7 +549,8 @@ where
 /// Fluent hypothesis testing API
 pub struct FluentTesting<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     parent: FluentStats<F>,
     test_type: TestType,
@@ -551,7 +558,8 @@ where
 
 impl<F> FluentTesting<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     fn new(parent: FluentStats<F>) -> Self {
         Self {
@@ -594,7 +602,8 @@ where
 /// Fluent regression analysis API
 pub struct FluentRegression<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     parent: FluentStats<F>,
     regression_type: RegressionType,
@@ -602,7 +611,8 @@ where
 
 impl<F> FluentRegression<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     fn new(parent: FluentStats<F>) -> Self {
         Self {
@@ -892,7 +902,8 @@ struct ExecutionMetrics {
 #[allow(dead_code)]
 pub fn stats<F>() -> FluentStats<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     FluentStats::new()
 }
@@ -900,7 +911,8 @@ where
 #[allow(dead_code)]
 pub fn stats_with<F>(config: FluentStatsConfig) -> FluentStats<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     FluentStats::with_config(config)
 }
@@ -909,7 +921,8 @@ where
 #[allow(dead_code)]
 pub fn quick_descriptive<F>() -> FluentDescriptive<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     FluentStats::new().descriptive()
 }
@@ -918,7 +931,8 @@ where
 #[allow(dead_code)]
 pub fn quick_correlation<F>() -> FluentCorrelation<F>
 where
-    F: Float + NumCast + Send + Sync + 'static,
+    F: Float + NumCast + Send + Sync + 'static
+        + std::fmt::Display,
 {
     FluentStats::new().correlation()
 }

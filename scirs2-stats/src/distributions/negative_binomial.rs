@@ -24,7 +24,7 @@ pub struct NegativeBinomial<F: Float> {
     pub p: F,
 }
 
-impl<F: Float + NumCast> NegativeBinomial<F> {
+impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// Create a new Negative Binomial distribution with given parameters
     ///
     /// # Arguments
@@ -653,13 +653,14 @@ impl<F: Float + NumCast> NegativeBinomial<F> {
 #[allow(dead_code)]
 pub fn nbinom<F>(r: F, p: F) -> StatsResult<NegativeBinomial<F>>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     NegativeBinomial::new(r, p)
 }
 
 /// Implementation of SampleableDistribution for NegativeBinomial
-impl<F: Float + NumCast> SampleableDistribution<F> for NegativeBinomial<F> {
+impl<F: Float + NumCast + std::fmt::Display> SampleableDistribution<F> for NegativeBinomial<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs(size)
     }

@@ -413,7 +413,7 @@ impl GaussianMixtureGibbs {
             probs /= prob_sum;
 
             // Sample from categorical distribution
-            let u: f64 = rng.gen();
+            let u: f64 = rng.random();
             let mut cumsum = 0.0;
             let mut selected = 0;
 

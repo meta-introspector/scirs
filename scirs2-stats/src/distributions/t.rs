@@ -19,7 +19,7 @@ pub struct StudentT<F: Float> {
     rand_distr: RandStudentT<f64>,
 }
 
-impl<F: Float + NumCast + Debug> StudentT<F> {
+impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// Create a new Student's t distribution with given degrees of freedom, location, and scale
     ///
     /// # Arguments

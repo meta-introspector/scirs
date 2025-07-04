@@ -1692,7 +1692,8 @@ enum AllocationUrgency {
 
 impl<F> AdaptiveMemoryManager<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     /// Create new adaptive memory manager
     pub fn new() -> Self {
@@ -2642,7 +2643,8 @@ impl AlertingSystem {
 
 impl<F> Default for AdaptiveMemoryManager<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self::new()
@@ -2657,7 +2659,8 @@ pub type F32AdaptiveMemoryManager = AdaptiveMemoryManager<f32>;
 #[allow(dead_code)]
 pub fn create_adaptive_memory_manager<F>() -> AdaptiveMemoryManager<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     AdaptiveMemoryManager::new()
 }
@@ -2665,7 +2668,8 @@ where
 #[allow(dead_code)]
 pub fn create_optimized_memory_manager<F>(config: AdaptiveMemoryConfig) -> AdaptiveMemoryManager<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     AdaptiveMemoryManager::with_config(config)
 }

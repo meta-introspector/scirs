@@ -1,4 +1,4 @@
-//! Adaptive Transformer Enhancement for Ultrathink Mode
+//! Adaptive Transformer Enhancement for Advanced Mode
 //!
 //! This module provides advanced enhancements to the transformer optimizer
 //! including adaptive sequence processing, memory-efficient attention mechanisms,

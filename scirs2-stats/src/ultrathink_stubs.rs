@@ -1,4 +1,4 @@
-//! Temporary stubs for ultrathink modules to enable compilation
+//! Temporary stubs for Advanced modules to enable compilation
 //! These will be replaced with proper implementations once compilation issues are resolved
 
 #![allow(dead_code)]
@@ -19,11 +19,11 @@ impl UltraParallelProcessor {
     }
 }
 
-/// Temporary stub for UltrathinkParallelConfig
+/// Temporary stub for AdvancedParallelConfig
 #[derive(Debug, Clone)]
-pub struct UltrathinkParallelConfig;
+pub struct AdvancedParallelConfig;
 
-impl Default for UltrathinkParallelConfig {
+impl Default for AdvancedParallelConfig {
     fn default() -> Self {
         Self
     }
@@ -71,7 +71,7 @@ pub fn create_ultra_parallel_processor() -> UltraParallelProcessor {
     UltraParallelProcessor::new()
 }
 
-/// Temporary stub for other missing ultrathink types
+/// Temporary stub for other missing Advanced types
 #[derive(Debug, Clone)]
 pub struct UltrathinkNumericalStabilityAnalyzer;
 
@@ -95,19 +95,20 @@ impl UltrathinkNumericalStabilityAnalyzer {
     pub fn analyze_statistical_stability<F, D>(&self, _data: &ndarray::ArrayBase<D, ndarray::Ix1>) -> ComprehensiveStabilityResult
     where
         F: Float,
-        D: ndarray::Data<Elem = F>,
+        D: ndarray::Data<Elem = F>
+        + std::fmt::Display,
     {
         ComprehensiveStabilityResult
     }
 }
 
-/// Temporary stub for UltraThinkSimdConfig
+/// Temporary stub for AdvancedSimdConfig
 #[derive(Debug, Clone)]
-pub struct UltraThinkSimdConfig {
+pub struct AdvancedSimdConfig {
     pub memory_threshold_mb: f64,
 }
 
-impl Default for UltraThinkSimdConfig {
+impl Default for AdvancedSimdConfig {
     fn default() -> Self {
         Self {
             memory_threshold_mb: 1000.0,
@@ -118,11 +119,11 @@ impl Default for UltraThinkSimdConfig {
 /// Temporary stub for UltraThinkSimdOptimizer
 #[derive(Debug, Clone)]
 pub struct UltraThinkSimdOptimizer {
-    config: UltraThinkSimdConfig,
+    config: AdvancedSimdConfig,
 }
 
 impl UltraThinkSimdOptimizer {
-    pub fn new(config: UltraThinkSimdConfig) -> Self {
+    pub fn new(config: AdvancedSimdConfig) -> Self {
         Self { config }
     }
 
@@ -133,7 +134,8 @@ impl UltraThinkSimdOptimizer {
     ) -> StatsResult<BatchResults<F>>
     where
         F: Float + Copy,
-        D: ndarray::Data<Elem = F>,
+        D: ndarray::Data<Elem = F>
+        + std::fmt::Display,
     {
         // Return default values for now
         Ok(BatchResults {

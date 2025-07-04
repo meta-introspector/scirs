@@ -1,4 +1,4 @@
-//! Ultra-comprehensive validation suite for signal processing in "ultrathink mode"
+//! Ultra-comprehensive validation suite for signal processing in "Advanced mode"
 //!
 //! This module provides the most comprehensive validation system for the scirs2-signal
 //! library, incorporating all TODO requirements and validation best practices.
@@ -16,7 +16,7 @@
 //! - Memory efficiency testing
 //! - SciPy reference comparison
 
-use crate::error::{SignalResult};
+use crate::error::SignalResult;
 // use ndarray::{Array1, Array2, ArrayView1};
 use rand::prelude::*;
 // use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -25,9 +25,9 @@ use std::collections::HashMap;
 // use std::f64::consts::PI;
 use std::time::Instant;
 
-/// Ultra-comprehensive validation configuration for "ultrathink mode"
+/// Ultra-comprehensive validation configuration for "Advanced mode"
 #[derive(Debug, Clone)]
-pub struct UltrathinkValidationConfig {
+pub struct ComprehensiveValidationConfig {
     /// Numerical tolerance for ultra-precise comparisons
     pub tolerance: f64,
     /// Whether to run exhaustive tests (very slow but extremely thorough)
@@ -62,7 +62,7 @@ pub struct UltrathinkValidationConfig {
     pub scipy_comparison: bool,
 }
 
-impl Default for UltrathinkValidationConfig {
+impl Default for ComprehensiveValidationConfig {
     fn default() -> Self {
         Self {
             tolerance: 1e-14,
@@ -87,7 +87,7 @@ impl Default for UltrathinkValidationConfig {
 
 /// Comprehensive validation results for all signal processing components
 #[derive(Debug, Clone)]
-pub struct UltrathinkValidationResult {
+pub struct ComprehensiveValidationResult {
     /// Enhanced multitaper validation
     pub multitaper_results: MultitaperUltraResults,
     /// Enhanced Lomb-Scargle validation
@@ -111,7 +111,7 @@ pub struct UltrathinkValidationResult {
     /// Numerical stability analysis
     pub stability_results: StabilityValidationResults,
     /// Overall validation summary
-    pub summary: UltrathinkValidationSummary,
+    pub summary: ComprehensiveValidationSummary,
     /// Execution time for the entire validation suite
     pub total_execution_time_ms: f64,
     /// Memory usage during validation
@@ -351,7 +351,7 @@ pub struct StabilityValidationResults {
 
 /// Overall validation summary
 #[derive(Debug, Clone)]
-pub struct UltrathinkValidationSummary {
+pub struct ComprehensiveValidationSummary {
     /// Total number of tests performed
     pub total_tests: usize,
     /// Number of tests passed
@@ -556,7 +556,7 @@ pub struct ConditionAnalysisResult {
     pub condition_stability: f64,
 }
 
-/// Main validation runner function for "ultrathink mode"
+/// Main validation runner function for "Advanced mode"
 ///
 /// This function executes the most comprehensive validation suite possible,
 /// testing all aspects of the signal processing library with extreme thoroughness.
@@ -569,9 +569,9 @@ pub struct ConditionAnalysisResult {
 ///
 /// * Comprehensive validation results with detailed analysis
 #[allow(dead_code)]
-pub fn run_ultrathink_validation(
-    config: &UltrathinkValidationConfig,
-) -> SignalResult<UltrathinkValidationResult> {
+pub fn run_comprehensive_validation(
+    config: &ComprehensiveValidationConfig,
+) -> SignalResult<ComprehensiveValidationResult> {
     let start_time = Instant::now();
     let mut total_tests = 0;
     let mut passed_tests = 0;
@@ -581,7 +581,7 @@ pub fn run_ultrathink_validation(
     let mut warnings = Vec::new();
     let mut recommendations = Vec::new();
 
-    println!("🚀 Starting ultrathink validation suite...");
+    println!("🚀 Starting Advanced validation suite...");
     println!("Configuration: {:?}", config);
 
     // Set random seed for reproducibility
@@ -851,7 +851,7 @@ pub fn run_ultrathink_validation(
         recommendations.push("Exhaustive testing completed successfully".to_string());
     }
 
-    let summary = UltrathinkValidationSummary {
+    let summary = ComprehensiveValidationSummary {
         total_tests,
         passed_tests,
         failed_tests,
@@ -868,7 +868,7 @@ pub fn run_ultrathink_validation(
         ],
     };
 
-    println!("\n✅ Ultrathink validation completed!");
+    println!("\n✅ Advanced validation completed!");
     println!(
         "Total tests: {}, Passed: {}, Failed: {}, Warnings: {}",
         total_tests, passed_tests, failed_tests, warning_tests
@@ -879,7 +879,7 @@ pub fn run_ultrathink_validation(
     );
     println!("Execution time: {:.2} ms", total_execution_time_ms);
 
-    Ok(UltrathinkValidationResult {
+    Ok(ComprehensiveValidationResult {
         multitaper_results: default_multitaper,
         lombscargle_results: default_lombscargle,
         parametric_results: default_parametric,
@@ -1013,7 +1013,7 @@ pub fn run_ultrathink_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_multitaper_validation(
-    _config: &UltrathinkValidationConfig,
+    _config: &ComprehensiveValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<MultitaperUltraResults> {
     // Placeholder implementation - in a real implementation this would
@@ -1059,7 +1059,7 @@ fn run_enhanced_multitaper_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_lombscargle_validation(
-    _config: &UltrathinkValidationConfig,
+    _config: &ComprehensiveValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<LombScargleUltraResults> {
     // Placeholder implementation
@@ -1089,7 +1089,7 @@ fn run_enhanced_lombscargle_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_parametric_validation(
-    _config: &UltrathinkValidationConfig,
+    _config: &ComprehensiveValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ParametricUltraResults> {
     // Placeholder implementation
@@ -1138,7 +1138,7 @@ fn run_enhanced_parametric_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_wavelet2d_validation(
-    _config: &UltrathinkValidationConfig,
+    _config: &ComprehensiveValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<Wavelet2dUltraResults> {
     // Placeholder implementation
@@ -1167,7 +1167,7 @@ fn run_enhanced_wavelet2d_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_wavelet_packet_validation(
-    _config: &UltrathinkValidationConfig,
+    _config: &ComprehensiveValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<WaveletPacketUltraResults> {
     // Placeholder implementation
@@ -1195,7 +1195,7 @@ fn run_enhanced_wavelet_packet_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_simd_validation(
-    _config: &UltrathinkValidationConfig,
+    _config: &ComprehensiveValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<SimdValidationResults> {
     // Placeholder implementation
@@ -1212,7 +1212,7 @@ fn run_enhanced_simd_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_parallel_validation(
-    _config: &UltrathinkValidationConfig,
+    _config: &ComprehensiveValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ParallelValidationResults> {
     // Placeholder implementation
@@ -1234,10 +1234,10 @@ fn run_enhanced_parallel_validation(
 
 /// Generate a comprehensive validation report in human-readable format
 #[allow(dead_code)]
-pub fn generate_ultrathink_report(results: &UltrathinkValidationResult) -> String {
+pub fn generate_comprehensive_report(results: &ComprehensiveValidationResult) -> String {
     let mut report = String::new();
 
-    report.push_str("# Ultrathink Validation Report\n\n");
+    report.push_str("# Advanced Validation Report\n\n");
     report.push_str(&format!(
         "**Execution Time**: {:.2} ms\n",
         results.total_execution_time_ms
@@ -1385,8 +1385,8 @@ pub fn generate_ultrathink_report(results: &UltrathinkValidationResult) -> Strin
 #[allow(dead_code)]
 /// Quick validation mode for development testing
 #[allow(dead_code)]
-pub fn run_quick_ultrathink_validation() -> SignalResult<UltrathinkValidationResult> {
-    let config = UltrathinkValidationConfig {
+pub fn run_quick_comprehensive_validation() -> SignalResult<ComprehensiveValidationResult> {
+    let config = ComprehensiveValidationConfig {
         exhaustive: false,
         test_lengths: vec![128, 512],
         monte_carlo_trials: 10,
@@ -1394,13 +1394,13 @@ pub fn run_quick_ultrathink_validation() -> SignalResult<UltrathinkValidationRes
         ..Default::default()
     };
 
-    run_ultrathink_validation(&config)
+    run_comprehensive_validation(&config)
 }
 
 #[allow(dead_code)]
 /// Full validation mode for production testing
 #[allow(dead_code)]
-pub fn run_full_ultrathink_validation() -> SignalResult<UltrathinkValidationResult> {
-    let config = UltrathinkValidationConfig::default();
-    run_ultrathink_validation(&config)
+pub fn run_full_comprehensive_validation() -> SignalResult<ComprehensiveValidationResult> {
+    let config = ComprehensiveValidationConfig::default();
+    run_comprehensive_validation(&config)
 }

@@ -371,7 +371,8 @@ where
 #[allow(dead_code)]
 pub fn linregress<F>(x: &ArrayView1<F>, y: &ArrayView1<F>) -> StatsResult<(F, F, F, F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Debug + 'static,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Debug + 'static
+        + std::fmt::Display,
 {
     // Check input dimensions
     if x.len() != y.len() {
@@ -487,7 +488,8 @@ pub fn odr<F>(
     beta0: Option<[F; 2]>,
 ) -> StatsResult<(Array1<F>, Array1<F>, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Debug + 'static,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Debug + 'static
+        + std::fmt::Display,
 {
     // Check input dimensions
     if x.len() != y.len() {

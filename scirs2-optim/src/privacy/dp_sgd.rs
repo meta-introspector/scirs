@@ -15,10 +15,11 @@ use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
 
 /// DP-SGD optimizer with privacy guarantees
-pub struct DPSGDOptimizer<O, A>
+pub struct DPSGDOptimizer<O, A, D>
 where
-    A: Float,
-    O: Optimizer<A>,
+    A: Float + Send + Sync,
+    D: ndarray::Dimension,
+    O: Optimizer<A, D>,
 {
     /// Base optimizer (SGD, Adam, etc.)
     base_optimizer: O,
@@ -30,7 +31,7 @@ where
     accountant: MomentsAccountant,
 
     /// Random number generator for noise
-    rng: Box<dyn rand::RngCore + Send>,
+    rng: rand::rngs::ThreadRng,
 
     /// Adaptive clipping state
     adaptive_clipping: Option<AdaptiveClippingState>,
@@ -197,10 +198,11 @@ struct NoiseCalibration<A: Float> {
     privacy_cost: A,
 }
 
-impl<O, A> DPSGDOptimizer<O, A>
+impl<O, A, D> DPSGDOptimizer<O, A, D>
 where
     A: Float + Default + Clone + Send + Sync + ndarray_rand::rand_distr::uniform::SampleUniform,
-    O: Optimizer<A> + Send + Sync,
+    D: ndarray::Dimension,
+    O: Optimizer<A, D> + Send + Sync,
 {
     /// Create a new DP-SGD optimizer
     pub fn new(base_optimizer: O, config: DifferentialPrivacyConfig) -> Result<Self> {
@@ -211,7 +213,7 @@ where
             config.dataset_size,
         );
 
-        let rng = Box::new(rand::rng());
+        let rng = rand::rng();
 
         let adaptive_clipping = if config.adaptive_clipping {
             Some(AdaptiveClippingState::new(
@@ -241,15 +243,15 @@ where
     }
 
     /// Perform a DP-SGD step
-    pub fn dp_step<S, D>(
+    pub fn dp_step<S, DIM>(
         &mut self,
-        params: &ArrayBase<S, D>,
-        gradients: &mut ArrayBase<S, D>,
+        params: &ArrayBase<S, DIM>,
+        gradients: &mut ArrayBase<S, DIM>,
         batch_size: usize,
-    ) -> Result<Array<A, D>>
+    ) -> Result<Array<A, DIM>>
     where
         S: Data<Elem = A> + DataMut<Elem = A>,
-        D: Dimension + Clone,
+        DIM: Dimension + Clone,
     {
         self.step_count += 1;
         self.current_batch_size = batch_size;
@@ -400,10 +402,10 @@ where
     }
 
     /// Compute gradient norm
-    fn compute_gradient_norm<S, D>(&self, gradients: &ArrayBase<S, D>) -> A
+    fn compute_gradient_norm<S, DIM>(&self, gradients: &ArrayBase<S, DIM>) -> A
     where
         S: Data<Elem = A>,
-        D: Dimension,
+        DIM: Dimension,
     {
         gradients.iter().map(|&g| g * g).sum::<A>().sqrt()
     }
@@ -418,10 +420,14 @@ where
     }
 
     /// Clip gradients to threshold
-    fn clip_gradients<S, D>(&self, gradients: &mut ArrayBase<S, D>, threshold: f64) -> Result<bool>
+    fn clip_gradients<S, DIM>(
+        &self,
+        gradients: &mut ArrayBase<S, DIM>,
+        threshold: f64,
+    ) -> Result<bool>
     where
         S: DataMut<Elem = A>,
-        D: Dimension,
+        DIM: Dimension,
     {
         let norm = self.compute_gradient_norm(gradients);
         let threshold_a = A::from(threshold).unwrap();
@@ -436,14 +442,14 @@ where
     }
 
     /// Add calibrated noise to gradients
-    fn add_noise<S, D>(
+    fn add_noise<S, DIM>(
         &mut self,
-        gradients: &mut ArrayBase<S, D>,
+        gradients: &mut ArrayBase<S, DIM>,
         clipping_threshold: f64,
     ) -> Result<()>
     where
         S: DataMut<Elem = A>,
-        D: Dimension,
+        DIM: Dimension,
     {
         let noise_scale = self.config.noise_multiplier * clipping_threshold;
 

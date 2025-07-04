@@ -11,7 +11,6 @@ use std::fmt::Debug;
 use crate::error::{NdimageError, NdimageResult};
 use crate::utils::safe_f64_to_float;
 
-
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {

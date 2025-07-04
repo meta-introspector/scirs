@@ -24,8 +24,9 @@ use std::time::Instant;
 /// Ultra-advanced MCMC sampler with adaptive methods
 pub struct UltraAdvancedMCMC<F, T>
 where
-    F: Float + NumCast + Copy + Send + Sync,
-    T: UltraTarget<F>,
+    F: Float + NumCast + Copy + Send + Sync + std::fmt::Display,
+    T: UltraTarget<F>
+        + std::fmt::Display,
 {
     /// Target distribution
     target: T,
@@ -45,7 +46,8 @@ where
 /// Ultra-advanced target distribution interface
 pub trait UltraTarget<F>: Send + Sync
 where
-    F: Float + Copy,
+    F: Float + Copy
+        + std::fmt::Display,
 {
     /// Compute log probability density
     fn log_density(&self, x: &Array1<F>) -> F;
@@ -419,8 +421,9 @@ pub struct PosteriorSummary<F> {
 
 impl<F, T> UltraAdvancedMCMC<F, T>
 where
-    F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static,
-    T: UltraTarget<F> + 'static,
+    F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static + std::fmt::Display,
+    T: UltraTarget<F> + 'static
+        + std::fmt::Display,
 {
     /// Create new ultra-advanced MCMC sampler
     pub fn new(target: T, config: UltraAdvancedConfig<F>) -> StatsResult<Self> {
@@ -775,7 +778,8 @@ where
 // Implementation of helper structs
 impl<F> MCMCChain<F>
 where
-    F: Float + NumCast + Copy,
+    F: Float + NumCast + Copy
+        + std::fmt::Display,
 {
     fn new(id: usize, dim: usize, config: &UltraAdvancedConfig<F>) -> StatsResult<Self> {
         Ok(Self {
@@ -795,7 +799,8 @@ where
 
 impl<F> AdaptationState<F>
 where
-    F: Float + NumCast + Copy,
+    F: Float + NumCast + Copy
+        + std::fmt::Display,
 {
     fn new(dim: usize) -> Self {
         Self {
@@ -820,7 +825,8 @@ where
 
 impl<F> ConvergenceDiagnostics<F>
 where
-    F: Float + NumCast + Copy,
+    F: Float + NumCast + Copy
+        + std::fmt::Display,
 {
     fn new(dim: usize) -> Self {
         Self {
@@ -849,7 +855,8 @@ impl PerformanceMonitor {
 
 impl<F> Default for UltraAdvancedConfig<F>
 where
-    F: Float + NumCast + Copy,
+    F: Float + NumCast + Copy
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self {

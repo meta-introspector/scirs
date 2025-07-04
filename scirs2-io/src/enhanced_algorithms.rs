@@ -1,6 +1,6 @@
-//! Enhanced Algorithms for Ultra-Think Mode
+//! Enhanced Algorithms for advanced Mode
 //!
-//! This module provides advanced algorithmic enhancements for the Ultra-Think coordinator,
+//! This module provides advanced algorithmic enhancements for the advanced coordinator,
 //! including new optimization strategies, advanced pattern recognition, and self-improving
 //! algorithmic components.
 

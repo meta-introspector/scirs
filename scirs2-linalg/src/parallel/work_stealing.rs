@@ -2112,7 +2112,7 @@ where
 }
 
 // ============================================================================
-// ULTRATHINK MODE: Advanced Cache-Aware and NUMA-Aware Work-Stealing
+// Advanced MODE: Advanced Cache-Aware and NUMA-Aware Work-Stealing
 // ============================================================================
 
 /// Cache-aware work-stealing scheduler with memory locality optimization
@@ -2952,7 +2952,7 @@ where
 }
 
 // ============================================================================
-// ULTRATHINK MODE: Advanced Work-Stealing Scheduler Optimizations
+// Advanced MODE: Advanced Work-Stealing Scheduler Optimizations
 // ============================================================================
 
 /// Adaptive work chunk sizing based on workload characteristics

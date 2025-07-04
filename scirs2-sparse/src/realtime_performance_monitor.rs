@@ -1,7 +1,7 @@
-//! Real-Time Performance Monitoring and Adaptation for Ultrathink Processors
+//! Real-Time Performance Monitoring and Adaptation for Advanced Processors
 //!
 //! This module provides comprehensive real-time monitoring and adaptive optimization
-//! for all ultrathink mode processors, including quantum-inspired, neural-adaptive,
+//! for all Advanced mode processors, including quantum-inspired, neural-adaptive,
 //! and hybrid processors.
 
 use crate::adaptive_memory_compression::MemoryStats;
@@ -56,7 +56,7 @@ impl Default for PerformanceMonitorConfig {
     }
 }
 
-/// Real-time performance monitor for ultrathink processors
+/// Real-time performance monitor for Advanced processors
 #[allow(dead_code)]
 pub struct RealTimePerformanceMonitor {
     config: PerformanceMonitorConfig,
@@ -127,7 +127,7 @@ impl ExecutionTimer {
     }
 }
 
-/// Type of ultrathink processor
+/// Type of Advanced processor
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ProcessorType {
     QuantumInspired,
@@ -1288,7 +1288,7 @@ impl RealTimePerformanceMonitor {
         };
 
         eprintln!(
-            "[{}] UltraThink Alert: {} - {}",
+            "[{}] Advanced Alert: {} - {}",
             severity_str, alert.id, alert.message
         );
     }

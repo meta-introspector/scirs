@@ -2286,7 +2286,7 @@ impl<
             ProgressiveStage::Large => (4, 8, 256),
         };
 
-        let num_layers = rand::rng().random_range(min_layers..=max_layers);
+        let num_layers = rand::rng().gen_range(min_layers..=max_layers);
         let mut layers = Vec::new();
 
         // Generate layers with progressive complexity
@@ -2361,7 +2361,7 @@ impl<
                 LayerType::Attention,
                 LayerType::LSTM,
             ];
-            layer_types[rand::rng().random_range(0..layer_types.len())]
+            layer_types[rand::rng().gen_range(0..layer_types.len())]
         };
 
         // Adjust dimensions based on complexity
@@ -2648,13 +2648,20 @@ impl<
         let mut new_architectures = Vec::new();
         let generation_batch_size = 6;
 
+        // Collect parent architectures first (separate scope for borrowing)
+        let parent_architectures = if let SearchStrategyState::MultiObjective(ref mo_state) =
+            &self.search_strategy.state
+        {
+            self.select_pareto_parents(mo_state)?
+        } else {
+            Vec::new()
+        };
+
         if let SearchStrategyState::MultiObjective(ref mut mo_state) =
             &mut self.search_strategy.state
         {
             // Use NSGA-II style approach for multi-objective optimization
             for i in 0..generation_batch_size {
-                let parent_architectures = self.select_pareto_parents(&mo_state)?;
-
                 let architecture_spec = if parent_architectures.len() >= 2 {
                     // Crossover between Pareto-optimal parents
                     self.architecture_generator.crossover(
@@ -2787,16 +2794,12 @@ impl<
                     .unwrap();
 
             // Apply gradient to weights (simplified update)
-            rl_state.controller.weights[layer_idx] =
-                rl_state.controller.weights[layer_idx].mapv(|w| {
-                    w + gradient_scale * T::from(rand::rng().random_range(-0.1..0.1)).unwrap()
-                });
+            rl_state.controller.weights[layer_idx] = rl_state.controller.weights[layer_idx]
+                .mapv(|w| w + gradient_scale * T::from(rand::rng().gen_range(-0.1..0.1)).unwrap());
 
             // Update biases
-            rl_state.controller.biases[layer_idx] =
-                rl_state.controller.biases[layer_idx].mapv(|b| {
-                    b + gradient_scale * T::from(rand::rng().random_range(-0.1..0.1)).unwrap()
-                });
+            rl_state.controller.biases[layer_idx] = rl_state.controller.biases[layer_idx]
+                .mapv(|b| b + gradient_scale * T::from(rand::rng().gen_range(-0.1..0.1)).unwrap());
         }
 
         // Update exploration rate (epsilon decay)
@@ -2980,7 +2983,7 @@ impl<
     }
 
     fn sample_random_action(&self) -> Result<ArchitectureAction> {
-        let action_type = rand::rng().random_range(0..4);
+        let action_type = rand::rng().gen_range(0..4);
 
         match action_type {
             0 => Ok(ArchitectureAction::SelectLayerType(
@@ -3034,22 +3037,22 @@ impl<
 
     fn sample_random_layer_type(&self) -> LayerType {
         let layer_types = &self.search_space.layer_types;
-        layer_types[rand::rng().random_range(0..layer_types.len())]
+        layer_types[rand::rng().gen_range(0..layer_types.len())]
     }
 
     fn sample_random_hidden_size(&self) -> usize {
         let hidden_sizes = &self.search_space.hidden_sizes;
-        hidden_sizes[rand::rng().random_range(0..hidden_sizes.len())]
+        hidden_sizes[rand::rng().gen_range(0..hidden_sizes.len())]
     }
 
     fn sample_random_activation(&self) -> ActivationType {
         let activations = &self.search_space.activation_functions;
-        activations[rand::rng().random_range(0..activations.len())]
+        activations[rand::rng().gen_range(0..activations.len())]
     }
 
     fn sample_random_connection(&self) -> ConnectionPattern {
         let connections = &self.search_space.connection_patterns;
-        connections[rand::rng().random_range(0..connections.len())]
+        connections[rand::rng().gen_range(0..connections.len())]
     }
 
     fn action_to_layer_spec(
@@ -3237,8 +3240,8 @@ impl<
         diff_state: &mut DifferentiableNASState<T>,
     ) -> Result<ArchitectureSpec> {
         // Use Gumbel softmax to sample discrete architectures from continuous space
-        let mut layers = Vec::new();
-        let num_layers = 3 + rand::rng().random_range(0..5); // 3-7 layers
+        let mut layers: Vec<LayerSpec> = Vec::new();
+        let num_layers = 3 + rand::rng().gen_range(0..5); // 3-7 layers
 
         for i in 0..num_layers {
             // Sample layer type using continuous relaxation
@@ -3262,7 +3265,7 @@ impl<
             } else {
                 layers[i - 1].dimensions.output_dim
             };
-            let output_dim = 64 + rand::rng().random_range(0..192); // 64-256
+            let output_dim = 64 + rand::rng().gen_range(0..192); // 64-256
 
             let layer_spec = LayerSpec {
                 layer_type: self.index_to_layer_type(layer_type),
@@ -3359,7 +3362,7 @@ impl<
 
         for _ in 0..2 {
             if !mo_state.pareto_front.is_empty() {
-                let idx = rng.random_range(0..mo_state.pareto_front.len());
+                let idx = rng.gen_range(0..mo_state.pareto_front.len());
                 parents.push(mo_state.pareto_front[idx].clone());
             }
         }
@@ -3732,7 +3735,7 @@ impl<T: Float + Default + Clone> PopulationManager<T> {
 
             // Select tournament participants
             for _ in 0..tournament_size.min(self.population.len()) {
-                let candidate_idx = rng.random_range(0..self.population.len());
+                let candidate_idx = rng.gen_range(0..self.population.len());
                 let candidate = &self.population[candidate_idx];
 
                 if candidate.performance.optimization_performance > best_performance {

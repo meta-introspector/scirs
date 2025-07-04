@@ -15,14 +15,15 @@ use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
-use crate::advanced_fusion_algorithms::UltrathinkConfig;
+use crate::advanced_fusion_algorithms::AdvancedConfig;
 use crate::error::{NdimageError, NdimageResult};
+use crate::utils::{safe_usize_to_float};
 
 /// AI-Driven Adaptive Processing Configuration
 #[derive(Debug, Clone)]
 pub struct AIAdaptiveConfig {
-    /// Base ultrathink configuration
-    pub base_config: UltrathinkConfig,
+    /// Base Advanced configuration
+    pub base_config: AdvancedConfig,
     /// Learning rate for AI adaptation
     pub learning_rate: f64,
     /// Experience replay buffer size
@@ -50,7 +51,7 @@ pub struct AIAdaptiveConfig {
 impl Default for AIAdaptiveConfig {
     fn default() -> Self {
         Self {
-            base_config: UltrathinkConfig::default(),
+            base_config: AdvancedConfig::default(),
             learning_rate: 0.001,
             replay_buffer_size: 10000,
             multi_modal_learning: true,
@@ -782,7 +783,7 @@ where
     let mut features = Array1::zeros(20);
 
     // 1. Statistical Features
-    let mean = image.mean().unwrap_or(T::zero());
+    let mean = image.sum() / safe_usize_to_float(image.len()).unwrap_or(T::one());
     let variance = calculate_variance(image, mean);
     features[0] = variance.to_f64().unwrap_or(0.0);
 
@@ -2220,7 +2221,7 @@ where
     T: Float + FromPrimitive + Copy,
 {
     // Intelligent segmentation using adaptive thresholding
-    let mean = image.mean().unwrap_or(T::zero());
+    let mean = image.sum() / safe_usize_to_float(image.len()).unwrap_or(T::one());
     let mut output = Array2::zeros(image.dim());
 
     for (i, &pixel) in image.iter().enumerate() {

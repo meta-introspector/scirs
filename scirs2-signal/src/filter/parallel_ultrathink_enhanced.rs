@@ -1,4 +1,4 @@
-//! Ultrathink Enhanced Parallel Filtering Operations
+//! Advanced Enhanced Parallel Filtering Operations
 //!
 //! This module provides next-generation parallel filtering operations that push the boundaries
 //! of performance and capability. It focuses on real-time streaming, advanced multi-rate systems,
@@ -19,9 +19,9 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant};
 
-/// Ultrathink parallel filtering configuration with advanced features
+/// Advanced parallel filtering configuration with advanced features
 #[derive(Debug, Clone)]
-pub struct UltrathinkParallelConfig {
+pub struct AdvancedParallelConfig {
     /// Base parallel configuration
     pub base_config: ParallelFilterConfig,
     /// Enable real-time streaming mode
@@ -40,7 +40,7 @@ pub struct UltrathinkParallelConfig {
     pub gpu_acceleration: bool,
 }
 
-impl Default for UltrathinkParallelConfig {
+impl Default for AdvancedParallelConfig {
     fn default() -> Self {
         Self {
             base_config: ParallelFilterConfig::default(),
@@ -166,7 +166,7 @@ impl ParallelMultiRateFilterBank {
     pub fn process(
         &mut self,
         signal: &[f64],
-        config: &UltrathinkParallelConfig,
+        config: &AdvancedParallelConfig,
     ) -> SignalResult<Vec<f64>> {
         let num_bands = self.analysis_filters.len();
 
@@ -220,7 +220,7 @@ impl ParallelMultiRateFilterBank {
 
     /// Validate perfect reconstruction property
     pub fn validate_perfect_reconstruction(&mut self, test_signal: &[f64]) -> SignalResult<f64> {
-        let config = UltrathinkParallelConfig::default();
+        let config = AdvancedParallelConfig::default();
         let reconstructed = self.process(test_signal, &config)?;
 
         // Calculate reconstruction error
@@ -273,7 +273,7 @@ impl SparseParallelFilter {
     pub fn apply_parallel(
         &self,
         signal: &[f64],
-        config: &UltrathinkParallelConfig,
+        config: &AdvancedParallelConfig,
     ) -> SignalResult<Vec<f64>> {
         let signal_len = signal.len();
         let num_threads = config.base_config.num_threads.unwrap_or(num_cpus::get());
@@ -330,12 +330,12 @@ pub struct LockFreeStreamingFilter {
     /// Processing thread handles
     thread_handles: Vec<thread::JoinHandle<()>>,
     /// Configuration
-    config: UltrathinkParallelConfig,
+    config: AdvancedParallelConfig,
 }
 
 impl LockFreeStreamingFilter {
     /// Create a new lock-free streaming filter
-    pub fn new(b: Vec<f64>, a: Vec<f64>, config: UltrathinkParallelConfig) -> SignalResult<Self> {
+    pub fn new(b: Vec<f64>, a: Vec<f64>, config: AdvancedParallelConfig) -> SignalResult<Self> {
         let state = Arc::new(RwLock::new(StreamingFilterState {
             b: b.clone(),
             a: a.clone(),
@@ -521,7 +521,7 @@ impl ParallelSpectralFilter {
     pub fn apply_parallel(
         &self,
         signal: &[f64],
-        config: &UltrathinkParallelConfig,
+        config: &AdvancedParallelConfig,
     ) -> SignalResult<Vec<f64>> {
         use rustfft::{num_complex::Complex, FftPlanner};
 
@@ -724,7 +724,7 @@ pub fn benchmark_parallel_filtering_operations(
 
             // Run benchmark iterations
             for _ in 0..num_iterations {
-                let config = UltrathinkParallelConfig::default();
+                let config = AdvancedParallelConfig::default();
                 let start_time = Instant::now();
 
                 // Test sparse filtering
@@ -771,7 +771,7 @@ pub fn validate_parallel_filtering_accuracy(
             let reference_output = reference_fn(test_signal);
 
             // Test our parallel implementation
-            let config = UltrathinkParallelConfig::default();
+            let config = AdvancedParallelConfig::default();
             let sparse_filter = SparseParallelFilter::from_dense(&[0.25, 0.5, 0.25], 0.1);
             let parallel_output = sparse_filter.apply_parallel(test_signal, &config)?;
 
@@ -825,7 +825,7 @@ mod tests {
             .map(|i| (2.0 * PI * i as f64 / 10.0).sin())
             .collect();
 
-        let config = UltrathinkParallelConfig::default();
+        let config = AdvancedParallelConfig::default();
         let result = filter_bank.process(&test_signal, &config).unwrap();
 
         assert_eq!(result.len(), test_signal.len());
@@ -849,7 +849,7 @@ mod tests {
             .map(|i| (2.0 * PI * i as f64 / 20.0).sin())
             .collect();
 
-        let config = UltrathinkParallelConfig::default();
+        let config = AdvancedParallelConfig::default();
         let result = sparse_filter.apply_parallel(&test_signal, &config).unwrap();
 
         assert_eq!(result.len(), test_signal.len());
@@ -859,7 +859,7 @@ mod tests {
     fn test_lock_free_streaming_filter() {
         let b = vec![0.1, 0.2, 0.1];
         let a = vec![1.0, -0.5, 0.3];
-        let config = UltrathinkParallelConfig {
+        let config = AdvancedParallelConfig {
             lock_free: true,
             ..Default::default()
         };
@@ -903,7 +903,7 @@ mod tests {
             .map(|i| (2.0 * PI * i as f64 / 8.0).sin() + (2.0 * PI * i as f64 / 4.0).sin())
             .collect();
 
-        let config = UltrathinkParallelConfig::default();
+        let config = AdvancedParallelConfig::default();
         let filtered = spectral_filter
             .apply_parallel(&test_signal, &config)
             .unwrap();

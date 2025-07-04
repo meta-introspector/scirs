@@ -1573,7 +1573,7 @@ impl Default for GpuPerformanceProfiler {
 }
 
 // ============================================================================
-// ULTRATHINK MODE: Advanced GPU-Accelerated Algorithms
+// Advanced MODE: Advanced GPU-Accelerated Algorithms
 // ============================================================================
 
 /// Advanced GPU-accelerated linear algebra operations
@@ -2181,7 +2181,7 @@ where
     }
 }
 
-/// ULTRATHINK MODE: Ultra-Intelligent GPU Dispatch System
+/// Advanced MODE: Ultra-Intelligent GPU Dispatch System
 ///
 /// This advanced dispatch system uses machine learning-based performance prediction,
 /// workload analysis, and adaptive optimization to make optimal CPU/GPU decisions.

@@ -1,4 +1,4 @@
-//! Ultrathink Mode Showcase
+//! Advanced Mode Showcase
 //!
 //! This example demonstrates the ultra-sophisticated enhancements added to scirs2-datasets,
 //! including advanced analytics, GPU optimization, and adaptive streaming processing.
@@ -34,7 +34,7 @@ use std::time::{Duration, Instant};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 SciRS2-Datasets Ultrathink Mode Showcase");
+    println!("🚀 SciRS2-Datasets Advanced Mode Showcase");
     println!("===========================================\n");
 
     // Create a sample dataset for demonstration
@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Demonstrate adaptive streaming
     demonstrate_adaptive_streaming(&dataset)?;
 
-    println!("\n✅ Ultrathink mode demonstration completed successfully!");
+    println!("\n✅ Advanced mode demonstration completed successfully!");
     Ok(())
 }
 

@@ -636,7 +636,8 @@ impl UltraParallelStatsProcessor {
     /// Compute mean using ultra-parallel processing
     pub fn mean_ultra_parallel<F>(&self, data: ArrayView1<F>) -> StatsResult<UltraParallelResult<F>>
     where
-        F: Float + NumCast + Send + Sync + Zero + std::iter::Sum,
+        F: Float + NumCast + Send + Sync + Zero + std::iter::Sum
+        + std::fmt::Display,
     {
         let start_time = Instant::now();
 
@@ -676,7 +677,8 @@ impl UltraParallelStatsProcessor {
         ddof: usize,
     ) -> StatsResult<UltraParallelResult<F>>
     where
-        F: Float + NumCast + Send + Sync + Zero + std::iter::Sum,
+        F: Float + NumCast + Send + Sync + Zero + std::iter::Sum
+        + std::fmt::Display,
     {
         let start_time = Instant::now();
 
@@ -717,7 +719,8 @@ impl UltraParallelStatsProcessor {
         data: ArrayView2<F>,
     ) -> StatsResult<UltraParallelResult<Array2<F>>>
     where
-        F: Float + NumCast + Send + Sync + Zero + std::iter::Sum + Clone,
+        F: Float + NumCast + Send + Sync + Zero + std::iter::Sum + Clone
+        + std::fmt::Display,
     {
         let start_time = Instant::now();
         let (n_rows, n_cols) = data.dim();
@@ -860,7 +863,8 @@ impl UltraParallelStatsProcessor {
         strategy: &OptimizationStrategy,
     ) -> StatsResult<Vec<WorkUnit<Vec<f64>>>>
     where
-        F: Float + NumCast,
+        F: Float + NumCast
+        + std::fmt::Display,
     {
         let mut work_units = Vec::new();
         let data_size = data.len();
@@ -906,7 +910,8 @@ impl UltraParallelStatsProcessor {
         strategy: &OptimizationStrategy,
     ) -> StatsResult<Vec<WorkUnit<Vec<f64>>>>
     where
-        F: Float + NumCast,
+        F: Float + NumCast
+        + std::fmt::Display,
     {
         let mut work_units = Vec::new();
         let data_size = data.len();
@@ -987,7 +992,8 @@ impl UltraParallelStatsProcessor {
         work_units: &[WorkUnit<(Vec<F>, Vec<F>, usize, usize)>],
     ) -> StatsResult<Vec<((usize, usize), F)>>
     where
-        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum,
+        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum
+        + std::fmt::Display,
     {
         let num_work_units = work_units.len();
         let results = Arc::new(Mutex::new(Vec::with_capacity(num_work_units)));
@@ -1025,7 +1031,8 @@ impl UltraParallelStatsProcessor {
     /// Compute Pearson correlation between two vectors
     fn compute_correlation<F>(&self, x: &[F], y: &[F]) -> StatsResult<F>
     where
-        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum,
+        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum
+        + std::fmt::Display,
     {
         if x.len() != y.len() || x.is_empty() {
             return Ok(F::zero());
@@ -1051,7 +1058,8 @@ impl UltraParallelStatsProcessor {
     /// Combine mean results from parallel computation
     fn combine_mean_results<F>(&self, partial_results: &[f64], total_count: usize) -> StatsResult<F>
     where
-        F: Float + NumCast,
+        F: Float + NumCast
+        + std::fmt::Display,
     {
         let total_sum: f64 = partial_results.iter().sum();
         let mean = total_sum / total_count as f64;
@@ -1068,7 +1076,8 @@ impl UltraParallelStatsProcessor {
         ddof: usize,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast,
+        F: Float + NumCast
+        + std::fmt::Display,
     {
         let total_sum_sq_dev: f64 = partial_results.iter().sum();
         let variance = total_sum_sq_dev / (total_count - ddof) as f64;
@@ -1121,7 +1130,8 @@ impl UltraParallelStatsProcessor {
         work_units: &[WorkUnit<(Vec<F>, Vec<F>, usize, usize)>],
     ) -> StatsResult<ParallelExecutionMetrics>
     where
-        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum,
+        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum
+        + std::fmt::Display,
     {
         let threads_used = work_units.len();
         let _total_work: f64 = work_units.iter().map(|wu| wu.cost).sum();
@@ -1276,7 +1286,8 @@ pub fn create_ultra_parallel_processor() -> StatsResult<UltraParallelStatsProces
 #[allow(dead_code)]
 pub fn mean_ultra_parallel<F>(data: ArrayView1<F>) -> StatsResult<UltraParallelResult<F>>
 where
-    F: Float + NumCast + Send + Sync + Zero + std::iter::Sum,
+    F: Float + NumCast + Send + Sync + Zero + std::iter::Sum
+        + std::fmt::Display,
 {
     let processor = UltraParallelStatsProcessor::default()?;
     processor.mean_ultra_parallel(data)
@@ -1288,7 +1299,8 @@ pub fn variance_ultra_parallel<F>(
     ddof: usize,
 ) -> StatsResult<UltraParallelResult<F>>
 where
-    F: Float + NumCast + Send + Sync + Zero + std::iter::Sum,
+    F: Float + NumCast + Send + Sync + Zero + std::iter::Sum
+        + std::fmt::Display,
 {
     let processor = UltraParallelStatsProcessor::default()?;
     processor.variance_ultra_parallel(data, ddof)

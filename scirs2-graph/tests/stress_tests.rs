@@ -96,7 +96,8 @@ fn test_large_barabasi_albert_graph() -> CoreResult<()> {
 
         // Local clustering coefficient
         let clustering_start = Instant::now();
-        let coefficients = measures::clustering_coefficient(&graph).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        let coefficients = measures::clustering_coefficient(&graph)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         let local_clustering = coefficients.get(&sample_node).copied().unwrap_or(0.0);
         println!(
             "  Local clustering (node {}): {:.4} ({:.2}s)",
@@ -129,7 +130,8 @@ fn test_large_grid_graph() -> CoreResult<()> {
 
         // Generate graph
         let gen_start = Instant::now();
-        let graph = generators::grid_2d_graph(rows, cols).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        let graph = generators::grid_2d_graph(rows, cols)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         let gen_time = gen_start.elapsed();
 
         println!("  Generation time: {:.2}s", gen_time.as_secs_f64());
@@ -378,8 +380,9 @@ fn estimate_diameter(graph: &Graph, samples: usize) -> CoreResult<usize> {
     for _ in 0..samples {
         let source = rng.random_range(0..graph.node_count());
         // Use BFS to compute distances manually
-        let bfs_nodes = algorithms::breadth_first_search(graph, &source).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-        
+        let bfs_nodes = algorithms::breadth_first_search(graph, &source)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+
         // For BFS, distance is the position in the traversal order
         let mut dist_count = 0;
         for _ in bfs_nodes {
@@ -492,12 +495,14 @@ fn test_algorithm_scaling() -> CoreResult<()> {
 
         // Generate test graph
         let mut rng = rng();
-        let graph = generators::barabasi_albert_graph(n, 3, &mut rng).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        let graph = generators::barabasi_albert_graph(n, 3, &mut rng)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         println!("  Edges: {}", graph.edge_count());
 
         // Test BFS scaling
         let bfs_start = Instant::now();
-        let _ = algorithms::breadth_first_search(&graph, &0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        let _ = algorithms::breadth_first_search(&graph, &0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         let bfs_time = bfs_start.elapsed();
         println!("  BFS time: {:.3}s", bfs_time.as_secs_f64());
 

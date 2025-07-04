@@ -1,6 +1,6 @@
-//! GPU and Distributed Ultrathink Clustering Demonstration
+//! GPU and Distributed Advanced Clustering Demonstration
 //!
-//! This example showcases high-performance computing capabilities for ultrathink clustering,
+//! This example showcases high-performance computing capabilities for Advanced clustering,
 //! including GPU acceleration, distributed computing, and hybrid approaches for
 //! maximum scalability and performance.
 
@@ -13,15 +13,15 @@ use scirs2_cluster::ultrathink_gpu_distributed::{
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 GPU and Distributed Ultrathink Clustering Demo");
+    println!("🚀 GPU and Distributed Advanced Clustering Demo");
     println!("=================================================");
 
     // Example 1: GPU-Accelerated Clustering
-    println!("\n1️⃣  GPU-Accelerated Ultrathink Clustering");
+    println!("\n1️⃣  GPU-Accelerated Advanced Clustering");
     gpu_acceleration_demo()?;
 
     // Example 2: Distributed Clustering
-    println!("\n2️⃣  Distributed Ultrathink Clustering");
+    println!("\n2️⃣  Distributed Advanced Clustering");
     distributed_clustering_demo()?;
 
     // Example 3: Hybrid GPU-Distributed Clustering
@@ -45,12 +45,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     resource_monitoring_demo()?;
 
     println!("\n✅ All GPU and Distributed examples completed successfully!");
-    println!("🎯 High-performance ultrathink clustering demonstrates massive scalability.");
+    println!("🎯 High-performance Advanced clustering demonstrates massive scalability.");
 
     Ok(())
 }
 
-/// Demonstrates GPU-accelerated ultrathink clustering
+/// Demonstrates GPU-accelerated Advanced clustering
 #[allow(dead_code)]
 fn gpu_acceleration_demo() -> Result<(), Box<dyn std::error::Error>> {
     // Create large dataset for GPU acceleration
@@ -109,7 +109,7 @@ fn gpu_acceleration_demo() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Demonstrates distributed ultrathink clustering
+/// Demonstrates distributed Advanced clustering
 #[allow(dead_code)]
 fn distributed_clustering_demo() -> Result<(), Box<dyn std::error::Error>> {
     // Create massive dataset for distributed processing

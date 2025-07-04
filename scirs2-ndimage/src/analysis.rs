@@ -12,7 +12,7 @@ use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{sobel, BorderMode};
-use crate::utils::{safe_f64_to_float, safe_usize_to_float, safe_float_to_usize};
+use crate::utils::{safe_f64_to_float, safe_float_to_usize, safe_usize_to_float};
 
 /// Comprehensive image quality metrics
 #[derive(Debug, Clone)]
@@ -85,7 +85,15 @@ pub fn image_quality_assessment<T>(
     test_image: &ArrayView2<T>,
 ) -> NdimageResult<ImageQualityMetrics<T>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static + SimdUnifiedOps,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + SimdUnifiedOps
+        + std::ops::AddAssign,
 {
     if reference.dim() != test_image.dim() {
         return Err(NdimageError::DimensionError(
@@ -161,8 +169,10 @@ where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
 {
     // SSIM constants
-    let c1 = safe_f64_to_float(0.01)? * safe_f64_to_float(0.01)?; // (K1 * L)^2
-    let c2 = safe_f64_to_float(0.03)? * safe_f64_to_float(0.03)?; // (K2 * L)^2
+    let k1: T = safe_f64_to_float(0.01)?;
+    let k2: T = safe_f64_to_float(0.03)?;
+    let c1: T = k1 * k1; // (K1 * L)^2
+    let c2: T = k2 * k2; // (K2 * L)^2
 
     // Compute means directly (simplified SSIM without Gaussian filtering)
     let mu1 = reference.sum() / safe_usize_to_float(reference.len())?;
@@ -173,12 +183,10 @@ where
     let mu2_sq = mu2 * mu2;
     let mu1_mu2 = mu1 * mu2;
 
-    let ref_var = reference
-        .mapv(|x| (x - mu1) * (x - mu1))
-        .sum() / safe_usize_to_float(reference.len())?;
-    let test_var = test_image
-        .mapv(|x| (x - mu2) * (x - mu2))
-        .sum() / safe_usize_to_float(test_image.len())?;
+    let ref_var =
+        reference.mapv(|x| (x - mu1) * (x - mu1)).sum() / safe_usize_to_float(reference.len())?;
+    let test_var =
+        test_image.mapv(|x| (x - mu2) * (x - mu2)).sum() / safe_usize_to_float(test_image.len())?;
 
     let covar = Zip::from(reference)
         .and(test_image)
@@ -186,8 +194,8 @@ where
         / safe_usize_to_float(reference.len())?;
 
     // Compute SSIM
-    let numerator =
-        (safe_f64_to_float(2.0)? * mu1_mu2 + c1) * (safe_f64_to_float(2.0)? * covar + c2);
+    let two: T = safe_f64_to_float(2.0)?;
+    let numerator = (two * mu1_mu2 + c1) * (two * covar + c2);
     let denominator = (mu1_sq + mu2_sq + c1) * (ref_var + test_var + c2);
 
     if denominator <= T::zero() {
@@ -302,12 +310,12 @@ where
     }
 
     // Compute entropy
-    let total_pixels = safe_usize_to_float(image.len())?;
+    let total_pixels: T = safe_usize_to_float(image.len())?;
     let mut entropy = T::zero();
 
     for &count in &histogram {
         if count > 0 {
-            let probability = safe_usize_to_float(count)? / total_pixels;
+            let probability: T = safe_usize_to_float::<T>(count)? / total_pixels;
             entropy = entropy - probability * probability.log2();
         }
     }
@@ -346,9 +354,8 @@ where
 
     // Compute variance of Laplacian response (sharpness measure)
     let mean_val = filtered.sum() / safe_usize_to_float(filtered.len())?;
-    let variance = filtered
-        .mapv(|x| (x - mean_val) * (x - mean_val))
-        .sum() / safe_usize_to_float(filtered.len())?;
+    let variance = filtered.mapv(|x| (x - mean_val) * (x - mean_val)).sum()
+        / safe_usize_to_float(filtered.len())?;
 
     Ok(variance)
 }
@@ -408,7 +415,15 @@ pub fn texture_analysis<T>(
     window_size: Option<usize>,
 ) -> NdimageResult<TextureMetrics<T>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static + SimdUnifiedOps,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + SimdUnifiedOps
+        + std::ops::AddAssign,
 {
     let window = window_size.unwrap_or(7);
 
@@ -535,14 +550,22 @@ where
         }
     }
 
-    Ok(safe_usize_to_float(uniform_patterns)? / safe_usize_to_float(total_patterns)?)
+    Ok(safe_usize_to_float::<T>(uniform_patterns)? / safe_usize_to_float::<T>(total_patterns)?)
 }
 
 /// Compute Gabor filter texture features
 #[allow(dead_code)]
 fn compute_gabor_texture_features<T>(image: &ArrayView2<T>) -> NdimageResult<(T, T)>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static + SimdUnifiedOps,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + SimdUnifiedOps
+        + std::ops::AddAssign,
 {
     // Apply multiple Gabor filters at different orientations
     let orientations = [
@@ -592,8 +615,9 @@ where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static + std::ops::AddAssign,
 {
     // Convert to binary edge image for fractal analysis
-    let edges = sobel(&image.to_owned(), None)?;
-    let threshold = (edges.sum() / safe_usize_to_float(edges.len())?) * safe_f64_to_float(2.0)?;
+    let edges = sobel(&image.to_owned(), 0, None)?;
+    let threshold =
+        (edges.sum() / safe_usize_to_float(edges.len())?) * crate::utils::safe_f64_to_float(2.0)?;
 
     let (height, width) = edges.dim();
     let min_dim = height.min(width);
@@ -924,7 +948,15 @@ pub fn batch_quality_assessment<T>(
     test_images: &[ArrayView2<T>],
 ) -> NdimageResult<Vec<ImageQualityMetrics<T>>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static + SimdUnifiedOps,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + SimdUnifiedOps
+        + std::ops::AddAssign,
 {
     if reference_images.len() != test_images.len() {
         return Err(NdimageError::InvalidInput(
@@ -1069,7 +1101,15 @@ pub fn multi_scale_analysis<T>(
     config: &MultiScaleConfig,
 ) -> NdimageResult<Vec<ImageQualityMetrics<T>>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static + SimdUnifiedOps,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + SimdUnifiedOps
+        + std::ops::AddAssign,
 {
     let mut results = Vec::with_capacity(config.num_scales);
     let mut current_image = image.to_owned();

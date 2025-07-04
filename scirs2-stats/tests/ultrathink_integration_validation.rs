@@ -1,12 +1,12 @@
-//! Ultrathink Mode Integration Tests
+//! Advanced Mode Integration Tests
 //!
-//! Comprehensive integration tests to validate the ultrathink mode functionality
+//! Comprehensive integration tests to validate the Advanced mode functionality
 //! including SIMD optimizations, parallel processing, and numerical stability.
 
 use ndarray::{array, Array1, Array2, Axis};
 use scirs2_stats::{
-    create_numerical_stability_analyzer, create_ultrathink_processor,
-    ultrathink_unified_processor::{UltrathinkMatrixOperation, UltrathinkTimeSeriesOperation},
+    create_numerical_stability_analyzer, create_advanced_processor,
+    unified_processor::{UltrathinkMatrixOperation, UltrathinkTimeSeriesOperation},
     OptimizationMode, ProcessingStrategy, UltrathinkProcessorConfig,
 };
 use std::time::Instant;
@@ -14,7 +14,7 @@ use std::time::Instant;
 #[test]
 #[allow(dead_code)]
 fn test_ultrathink_basic_functionality() {
-    let mut processor = create_ultrathink_processor();
+    let mut processor = create_advanced_processor();
     let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 
     let result = processor
@@ -35,7 +35,7 @@ fn test_ultrathink_basic_functionality() {
 #[test]
 #[allow(dead_code)]
 fn test_ultrathink_large_dataset_performance() {
-    let mut processor = create_ultrathink_processor();
+    let mut processor = create_advanced_processor();
 
     // Generate a larger dataset to trigger optimizations
     let large_data: Array1<f64> = (0..10000).map(|i| (i as f64 / 1000.0).sin()).collect();
@@ -76,7 +76,7 @@ fn test_optimization_mode_selection() {
         };
 
         let mut processor =
-            scirs2_stats::ultrathink_unified_processor::UltrathinkUnifiedProcessor::new(config);
+            scirs2_stats::unified_processor::UltrathinkUnifiedProcessor::new(config);
         let result = processor
             .process_comprehensive_statistics(&test_data.view())
             .unwrap();
@@ -104,7 +104,7 @@ fn test_optimization_mode_selection() {
 #[test]
 #[allow(dead_code)]
 fn test_numerical_stability_integration() {
-    let mut processor = scirs2_stats::ultrathink_unified_processor::UltrathinkUnifiedProcessor::new(
+    let mut processor = scirs2_stats::unified_processor::UltrathinkUnifiedProcessor::new(
         UltrathinkProcessorConfig {
             enable_stability_testing: true,
             ..Default::default()
@@ -142,7 +142,7 @@ fn test_numerical_stability_integration() {
 #[test]
 #[allow(dead_code)]
 fn test_matrix_operations_integration() {
-    let mut processor = create_ultrathink_processor();
+    let mut processor = create_advanced_processor();
 
     // Create a small test matrix
     let matrix = Array2::from_shape_fn((5, 3), |(i, j)| (i as f64 + 1.0) * (j as f64 + 1.0));
@@ -192,7 +192,7 @@ fn test_matrix_operations_integration() {
 #[test]
 #[allow(dead_code)]
 fn test_time_series_processing() {
-    let mut processor = create_ultrathink_processor();
+    let mut processor = create_advanced_processor();
 
     // Generate a simple time series
     let time_series: Array1<f64> = (0..100).map(|i| (i as f64 / 10.0).sin()).collect();
@@ -218,7 +218,7 @@ fn test_time_series_processing() {
 #[test]
 #[allow(dead_code)]
 fn test_performance_monitoring() {
-    let mut processor = scirs2_stats::ultrathink_unified_processor::UltrathinkUnifiedProcessor::new(
+    let mut processor = scirs2_stats::unified_processor::UltrathinkUnifiedProcessor::new(
         UltrathinkProcessorConfig {
             enable_performance_monitoring: true,
             ..Default::default()
@@ -253,7 +253,7 @@ fn test_performance_monitoring() {
 #[test]
 #[allow(dead_code)]
 fn test_error_handling() {
-    let mut processor = create_ultrathink_processor();
+    let mut processor = create_advanced_processor();
 
     // Test with empty array
     let empty_data = Array1::<f64>::zeros(0);
@@ -333,8 +333,8 @@ fn test_processing_strategy_effectiveness() {
 #[test]
 #[allow(dead_code)]
 fn test_comprehensive_workflow() {
-    // This test demonstrates a complete ultrathink workflow
-    let mut processor = scirs2_stats::ultrathink_unified_processor::UltrathinkUnifiedProcessor::new(
+    // This test demonstrates a complete Advanced workflow
+    let mut processor = scirs2_stats::unified_processor::UltrathinkUnifiedProcessor::new(
         UltrathinkProcessorConfig {
             optimization_mode: OptimizationMode::Adaptive,
             enable_stability_testing: true,

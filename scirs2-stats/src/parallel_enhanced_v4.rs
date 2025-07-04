@@ -44,7 +44,8 @@ pub struct EnhancedParallelProcessor<F> {
 
 impl<F> EnhancedParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     /// Create new enhanced parallel processor
     pub fn new() -> Self {
@@ -414,7 +415,8 @@ pub struct MatrixParallelResult<F> {
 #[allow(dead_code)]
 pub fn mean_parallel_ultra<F>(data: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
     processor.mean_parallel_enhanced(data)
@@ -423,7 +425,8 @@ where
 #[allow(dead_code)]
 pub fn variance_parallel_ultra<F>(data: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
     processor.variance_parallel_enhanced(data, ddof)
@@ -432,7 +435,8 @@ where
 #[allow(dead_code)]
 pub fn correlation_matrix_parallel_ultra<F>(matrix: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
     processor.correlation_matrix_parallel(matrix)
@@ -446,7 +450,8 @@ pub fn bootstrap_parallel_ultra<F>(
     seed: Option<u64>,
 ) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
     processor.bootstrap_parallel_enhanced(data, n_bootstrap, statistic_fn, seed)

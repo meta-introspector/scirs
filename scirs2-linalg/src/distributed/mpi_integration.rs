@@ -1,4 +1,4 @@
-//! ULTRATHINK MODE: MPI Integration Foundation
+//! Advanced MODE: MPI Integration Foundation
 //!
 //! This module provides Message Passing Interface (MPI) integration for distributed
 //! linear algebra operations, building upon the existing distributed computing framework.
@@ -1741,7 +1741,7 @@ impl MPIBackend {
     }
 }
 
-/// ULTRATHINK MODE ENHANCEMENT: Advanced MPI Dynamic Process Management
+/// Advanced MODE ENHANCEMENT: Advanced MPI Dynamic Process Management
 /// 
 /// This enhancement provides sophisticated dynamic process management, intelligent
 /// load balancing, and adaptive communication pattern optimization for large-scale

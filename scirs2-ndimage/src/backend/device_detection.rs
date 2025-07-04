@@ -248,12 +248,19 @@ static DEVICE_MANAGER: OnceLock<Arc<Mutex<DeviceManager>>> = OnceLock::new();
 /// Get the global device manager instance
 #[allow(dead_code)]
 pub fn get_device_manager() -> NdimageResult<Arc<Mutex<DeviceManager>>> {
-    DEVICE_MANAGER
-        .get_or_try_init(|| {
-            let manager = DeviceManager::new()?;
-            Ok(Arc::new(Mutex::new(manager)))
-        })
-        .map(|arc| arc.clone())
+    let result = DEVICE_MANAGER.get_or_init(|| {
+        match DeviceManager::new() {
+            Ok(manager) => Arc::new(Mutex::new(manager)),
+            Err(_) => {
+                // Fallback to empty manager on error
+                Arc::new(Mutex::new(DeviceManager {
+                    devices: HashMap::new(),
+                    capabilities: HashMap::new(),
+                }))
+            }
+        }
+    });
+    Ok(result.clone())
 }
 
 /// Detect CUDA devices

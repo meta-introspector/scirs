@@ -13,7 +13,6 @@ use crate::error::{NdimageError, NdimageResult};
 use crate::utils::safe_f64_to_float;
 use crate::BoundaryMode;
 
-
 /// Helper function for safe float to usize conversion
 #[allow(dead_code)]
 fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {

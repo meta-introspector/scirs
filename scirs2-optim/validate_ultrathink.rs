@@ -1,16 +1,16 @@
 #!/usr/bin/env rust-script
 
-//! Ultrathink Mode Implementation Validation Script
+//! Advanced Mode Implementation Validation Script
 //! 
 //! This script validates the syntax and basic functionality of our 
-//! ultrathink mode implementations.
+//! Advanced mode implementations.
 
 use std::process::Command;
 use std::path::Path;
 
 #[allow(dead_code)]
 fn main() {
-    println!("🔍 Ultrathink Mode Implementation Validation");
+    println!("🔍 Advanced Mode Implementation Validation");
     println!("============================================\n");
 
     let validations = vec![

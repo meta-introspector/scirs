@@ -1,7 +1,7 @@
-//! Comprehensive edge case and stress testing for ultrathink features
+//! Comprehensive edge case and stress testing for Advanced features
 //!
 //! This test suite focuses on testing edge cases, numerical stability,
-//! and stress conditions for all the new ultrathink features:
+//! and stress conditions for all the new Advanced features:
 //! - Graph visualization under extreme conditions
 //! - Graph optimization with pathological cases
 //! - Thread pool behavior under high load and edge cases
@@ -904,5 +904,5 @@ fn test_edge_case_summary() {
     println!("   - Thread contention: minimal/maximal thread counts");
     println!("   - Integration stress: 7-step complex pipelines");
 
-    println!("\n🚀 All ultrathink edge case testing completed successfully!");
+    println!("\n🚀 All Advanced edge case testing completed successfully!");
 }

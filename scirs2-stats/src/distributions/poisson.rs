@@ -19,7 +19,7 @@ pub struct Poisson<F: Float> {
     rand_distr: RandPoisson<f64>,
 }
 
-impl<F: Float + NumCast> Poisson<F> {
+impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// Create a new Poisson distribution with given rate (mean) and location
     ///
     /// # Arguments
@@ -195,7 +195,7 @@ fn is_integer<F: Float>(x: F) -> bool {
 }
 
 // Implement the Distribution trait for Poisson
-impl<F: Float + NumCast> Distribution<F> for Poisson<F> {
+impl<F: Float + NumCast + std::fmt::Display> Distribution<F> for Poisson<F> {
     fn mean(&self) -> F {
         self.mu + self.loc
     }
@@ -227,7 +227,7 @@ impl<F: Float + NumCast> Distribution<F> for Poisson<F> {
 }
 
 // Implement the DiscreteDistribution trait for Poisson
-impl<F: Float + NumCast> DiscreteDistribution<F> for Poisson<F> {
+impl<F: Float + NumCast + std::fmt::Display> DiscreteDistribution<F> for Poisson<F> {
     fn pmf(&self, x: F) -> F {
         self.pmf(x)
     }
@@ -285,7 +285,7 @@ fn ln_factorial<F: Float + NumCast>(n: u64) -> F {
 }
 
 /// Implementation of SampleableDistribution for Poisson
-impl<F: Float + NumCast> SampleableDistribution<F> for Poisson<F> {
+impl<F: Float + NumCast + std::fmt::Display> SampleableDistribution<F> for Poisson<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         let array = self.rvs(size)?;
         Ok(array.to_vec())

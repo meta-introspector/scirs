@@ -402,7 +402,8 @@ pub struct AdvancedIntelligentErrorRecovery<F> {
 
 impl<F> AdvancedIntelligentErrorRecovery<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     /// Create new advanced error recovery system
     pub fn new(config: AdvancedErrorRecoveryConfig) -> Self {
@@ -891,7 +892,8 @@ pub struct RecoveryStatistics {
 #[allow(dead_code)]
 pub fn create_advanced_error_recovery<F>() -> AdvancedIntelligentErrorRecovery<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     AdvancedIntelligentErrorRecovery::new(AdvancedErrorRecoveryConfig::default())
 }
@@ -903,7 +905,8 @@ pub fn recover_computation<F, T>(
     context: RecoveryContext,
 ) -> StatsResult<T>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     let recovery_system = create_advanced_error_recovery::<F>();
     recovery_system.recover_from_error(error, operation, &context)

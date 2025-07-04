@@ -1,7 +1,9 @@
 //! Enhanced scirs2-neural implementation with core activation functions
 
 pub mod activations_minimal;
+pub mod autograd;
 pub mod error;
+// pub mod gpu; // Disabled in minimal version - has syntax errors
 pub mod layers;
 pub mod losses;
 pub mod training;

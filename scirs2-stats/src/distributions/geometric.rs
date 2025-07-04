@@ -19,7 +19,7 @@ pub struct Geometric<F: Float> {
     rand_distr: RandGeometric,
 }
 
-impl<F: Float + NumCast> Geometric<F> {
+impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// Create a new Geometric distribution with given success probability
     ///
     /// # Arguments
@@ -467,13 +467,14 @@ impl<F: Float + NumCast> Geometric<F> {
 #[allow(dead_code)]
 pub fn geom<F>(p: F) -> StatsResult<Geometric<F>>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     Geometric::new(p)
 }
 
 /// Implementation of SampleableDistribution for Geometric
-impl<F: Float + NumCast> SampleableDistribution<F> for Geometric<F> {
+impl<F: Float + NumCast + std::fmt::Display> SampleableDistribution<F> for Geometric<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs(size)
     }

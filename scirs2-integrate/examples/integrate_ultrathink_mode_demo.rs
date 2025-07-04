@@ -1,21 +1,21 @@
-//! Ultrathink Mode Demonstration
+//! Advanced Mode Demonstration
 //!
-//! This example demonstrates the basic functionality of the ultrathink mode
+//! This example demonstrates the basic functionality of the Advanced mode
 //! coordinator and its optimized integrators.
 
 use ndarray::{Array1, ArrayView1};
 use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ultrathink_mode_coordinator::{
-    PerformanceTargets, UltrathinkModeConfig, UltrathinkModeCoordinator,
+use scirs2_integrate::advanced_mode_coordinator::{
+    PerformanceTargets, advancedModeConfig, advancedModeCoordinator,
 };
 use std::time::Duration;
 
 #[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
-    println!("🚀 Ultrathink Mode Demonstration");
+    println!("🚀 Advanced Mode Demonstration");
 
-    // Create ultrathink mode configuration
-    let config = UltrathinkModeConfig {
+    // Create Advanced mode configuration
+    let config = advancedModeConfig {
         enable_gpu: false, // Disable GPU for demo
         enable_memory_optimization: true,
         enable_simd: true,
@@ -29,9 +29,9 @@ fn main() -> IntegrateResult<()> {
         },
     };
 
-    // Create ultrathink mode coordinator
-    println!("📊 Creating ultrathink mode coordinator...");
-    let coordinator = UltrathinkModeCoordinator::<f64>::new(config)?;
+    // Create Advanced mode coordinator
+    println!("📊 Creating Advanced mode coordinator...");
+    let coordinator = advancedModeCoordinator::<f64>::new(config)?;
 
     // Initialize adaptive optimization
     println!("⚙️  Initializing adaptive optimization...");
@@ -134,7 +134,7 @@ fn main() -> IntegrateResult<()> {
         }
     }
 
-    println!("\n🎉 Ultrathink mode demonstration completed successfully!");
+    println!("\n🎉 Advanced mode demonstration completed successfully!");
 
     Ok(())
 }

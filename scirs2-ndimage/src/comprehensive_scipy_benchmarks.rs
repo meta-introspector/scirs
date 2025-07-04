@@ -377,9 +377,13 @@ impl SciPyBenchmarkSuite {
         T: Float + FromPrimitive + Clone + Default + std::fmt::Debug + Send + Sync,
     {
         match operation {
-            BenchmarkOperation::GaussianFilter => {
-                crate::filters::gaussian_filter_chunked(&input_data, &[T::from(1.0).unwrap(), T::from(1.0).unwrap()], Some(T::from(4.0).unwrap()), BorderMode::Reflect, None)
-            }
+            BenchmarkOperation::GaussianFilter => crate::filters::gaussian_filter_chunked(
+                &input_data,
+                &[T::from_f64(1.0).unwrap(), T::from_f64(1.0).unwrap()],
+                Some(T::from_f64(4.0).unwrap()),
+                BorderMode::Reflect,
+                None,
+            ),
             BenchmarkOperation::MedianFilter => {
                 median_filter(&input_data, &[3, 3], Some(BorderMode::Reflect))
             }

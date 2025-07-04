@@ -330,17 +330,17 @@ fn workflow_directed_graph_analysis() -> Result<()> {
     Ok(())
 }
 
-/// Workflow 6: Ultrathink Optimization Example
+/// Workflow 6: Advanced Optimization Example
 ///
 /// Demonstrates using advanced mode for automatic performance optimization.
-#[cfg(feature = "ultrathink")]
+#[cfg(feature = "Advanced")]
 #[allow(dead_code)]
 fn workflow_advanced_optimization() -> Result<()> {
     use scirs2_graph::advanced::{
         create_enhanced_advanced_processor, execute_with_enhanced_advanced,
     };
 
-    println!("🔹 Workflow 6: Ultrathink Performance Optimization");
+    println!("🔹 Workflow 6: Advanced Performance Optimization");
 
     // Create a large graph for performance testing
     let mut rng = StdRng::seed_from_u64(42);
@@ -353,7 +353,7 @@ fn workflow_advanced_optimization() -> Result<()> {
     // Create advanced processor
     let mut processor = create_enhanced_advanced_processor();
 
-    // Standard vs Ultrathink PageRank comparison
+    // Standard vs Advanced PageRank comparison
     println!("  ⚡ Performance Comparison (PageRank):");
 
     // Standard implementation
@@ -365,7 +365,7 @@ fn workflow_advanced_optimization() -> Result<()> {
         standard_time.as_millis()
     );
 
-    // Ultrathink optimized implementation
+    // Advanced optimized implementation
     let start = std::time::Instant::now();
     let _advanced_result =
         execute_with_enhanced_advanced(&mut processor, &graph, "pagerank_large_graph", |g| {
@@ -373,7 +373,7 @@ fn workflow_advanced_optimization() -> Result<()> {
         })?;
     let advanced_time = start.elapsed();
     println!(
-        "    Ultrathink optimized: {:.2}ms",
+        "    Advanced optimized: {:.2}ms",
         advanced_time.as_millis()
     );
 
@@ -383,7 +383,7 @@ fn workflow_advanced_optimization() -> Result<()> {
     }
 
     // Community detection with advanced
-    println!("  🏘️  Community Detection with Ultrathink:");
+    println!("  🏘️  Community Detection with Advanced:");
     let start = std::time::Instant::now();
     let community_result =
         execute_with_enhanced_advanced(&mut processor, &graph, "community_detection_large", |g| {
@@ -398,7 +398,7 @@ fn workflow_advanced_optimization() -> Result<()> {
     );
     println!("    Modularity: {:.4}", community_result.modularity);
 
-    println!("  ✅ Ultrathink optimization completed\n");
+    println!("  ✅ Advanced optimization completed\n");
     Ok(())
 }
 
@@ -681,7 +681,7 @@ fn main() -> Result<()> {
 
     // Advanced workflows - feature dependent
     #[cfg(feature = "advanced")]
-    workflow_ultrathink_optimization()?;
+    workflow_advanced_optimization()?;
 
     // Application-specific workflows
     workflow_social_network_analysis()?;

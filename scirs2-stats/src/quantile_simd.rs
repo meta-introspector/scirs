@@ -14,7 +14,8 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 #[allow(dead_code)]
 pub fn quickselect_simd<F>(arr: &mut [F], k: usize) -> F
 where
-    F: Float + NumCast + SimdUnifiedOps,
+    F: Float + NumCast + SimdUnifiedOps
+        + std::fmt::Display,
 {
     if arr.len() == 1 {
         return arr[0];
@@ -43,7 +44,8 @@ where
 #[allow(dead_code)]
 fn partition_simd<F>(arr: &mut [F], left: usize, right: usize, optimizer: &AutoOptimizer) -> usize
 where
-    F: Float + NumCast + SimdUnifiedOps,
+    F: Float + NumCast + SimdUnifiedOps
+        + std::fmt::Display,
 {
     // Choose pivot using median-of-three
     let mid = left + (right - left) / 2;
@@ -157,7 +159,8 @@ fn median_of_three<F: Float>(a: F, b: F, c: F) -> F {
 pub fn quantile_simd<F, D>(x: &mut ArrayBase<D, Ix1>, q: F, method: &str) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: DataMut<Elem = F>,
+    D: DataMut<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     if n == 0 {
@@ -241,7 +244,8 @@ pub fn quantiles_simd<F, D1, D2>(
 where
     F: Float + NumCast + SimdUnifiedOps,
     D1: DataMut<Elem = F>,
-    D2: Data<Elem = F>,
+    D2: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     if n == 0 {
@@ -284,7 +288,8 @@ where
 /// Uses SIMD operations for comparison and swapping when beneficial
 pub(crate) fn simd_sort<F>(data: &mut [F])
 where
-    F: Float + NumCast + SimdUnifiedOps,
+    F: Float + NumCast + SimdUnifiedOps
+        + std::fmt::Display,
 {
     let n = data.len();
     let optimizer = AutoOptimizer::new();
@@ -329,7 +334,8 @@ fn introsort_simd<F>(
     depth_limit: usize,
     optimizer: &AutoOptimizer,
 ) where
-    F: Float + NumCast + SimdUnifiedOps,
+    F: Float + NumCast + SimdUnifiedOps
+        + std::fmt::Display,
 {
     if right <= left {
         return;
@@ -401,7 +407,8 @@ fn heapify<F: Float>(data: &mut [F], n: usize, i: usize) {
 #[allow(dead_code)]
 fn compute_quantile_from_sorted<F>(sorted_data: &[F], q: F, method: &str) -> StatsResult<F>
 where
-    F: Float + NumCast,
+    F: Float + NumCast
+        + std::fmt::Display,
 {
     let n = sorted_data.len();
 
@@ -450,7 +457,8 @@ where
 pub fn median_simd<F, D>(x: &mut ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: DataMut<Elem = F>,
+    D: DataMut<Elem = F>
+        + std::fmt::Display,
 {
     quantile_simd(x, F::from(0.5).unwrap(), "linear")
 }
@@ -462,7 +470,8 @@ where
 pub fn percentile_simd<F, D>(x: &mut ArrayBase<D, Ix1>, p: F, method: &str) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: DataMut<Elem = F>,
+    D: DataMut<Elem = F>
+        + std::fmt::Display,
 {
     if p < F::zero() || p > F::from(100.0).unwrap() {
         return Err(StatsError::invalid_argument(

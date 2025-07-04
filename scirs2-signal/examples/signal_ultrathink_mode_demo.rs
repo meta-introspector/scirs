@@ -1,23 +1,26 @@
-//! Ultrathink Mode Demonstration
+//! Advanced Mode Demonstration
 //!
-//! This example shows how to use the ultrathink mode coordinator for comprehensive
+//! This example shows how to use the Advanced mode coordinator for comprehensive
 //! validation and performance testing of signal processing implementations.
 
-use scirs2_signal::ultrathink_validation_suite::{
-    run_quick_ultrathink_validation, run_ultrathink_validation, generate_ultrathink_report, UltrathinkValidationConfig,
+use scirs2_signal::advanced_validation_suite::{
+    run_comprehensive_validation, run_quick_comprehensive_validation, ComprehensiveValidationConfig,
 };
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultrathink Mode Signal Processing Demo");
+    println!("🚀 Advanced Mode Signal Processing Demo");
     println!("=========================================\n");
 
     // Example 1: Quick validation with default settings
-    println!("1. Running quick ultrathink validation...");
-    match run_quick_ultrathink_validation() {
+    println!("1. Running quick Advanced validation...");
+    match run_quick_comprehensive_validation() {
         Ok(results) => {
             println!("✅ Quick validation completed successfully!");
-            println!("   Overall pass rate: {:.1}%", results.summary.pass_rate * 100.0);
+            println!(
+                "   Overall pass rate: {:.1}%",
+                results.summary.pass_rate * 100.0
+            );
             println!(
                 "   SIMD validation score: {:.1}",
                 results.simd_results.overall_simd_score
@@ -51,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 2: Custom configuration
     println!("2. Running validation with custom configuration...");
-    let custom_config = UltrathinkValidationConfig {
+    let custom_config = ComprehensiveValidationConfig {
         tolerance: 1e-12,
         exhaustive: false,
         test_lengths: vec![64, 128, 256, 512],
@@ -69,7 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         test_edge_cases: true,
     };
 
-    match run_ultrathink_validation(&custom_config) {
+    match run_comprehensive_validation(&custom_config) {
         Ok(results) => {
             println!("✅ Custom validation completed!");
             println!("   Validation Results:");
@@ -83,7 +86,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
             println!(
                 "     - Parametric AR accuracy: {:.1}",
-                results.parametric_results.ar_validation.order_estimation_accuracy
+                results
+                    .parametric_results
+                    .ar_validation
+                    .order_estimation_accuracy
             );
             println!(
                 "     - Wavelet 2D accuracy: {:.1}%",
@@ -110,7 +116,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for i in 1..=3 {
         println!("   Run {}...", i);
-        if let Ok(_results) = run_quick_ultrathink_validation() {
+        if let Ok(_results) = run_quick_comprehensive_validation() {
             println!("   ✅ Run {} completed", i);
         } else {
             println!("   ❌ Run {} failed", i);
@@ -121,7 +127,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 4: Memory-constrained validation
     println!("\n4. Testing memory-constrained configuration...");
-    let memory_constrained_config = UltrathinkValidationConfig {
+    let memory_constrained_config = ComprehensiveValidationConfig {
         tolerance: 1e-8,
         exhaustive: false,
         test_lengths: vec![64, 128], // Smaller test sizes
@@ -133,13 +139,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         cross_platform_testing: false,
         simd_validation: false,
         parallel_validation: false,
-        monte_carlo_trials: 10,   // Fewer trials
-        snr_levels: vec![20.0],   // Single SNR level
+        monte_carlo_trials: 10, // Fewer trials
+        snr_levels: vec![20.0], // Single SNR level
         test_complex: false,
         test_edge_cases: false,
     };
 
-    match run_ultrathink_validation(&memory_constrained_config) {
+    match run_comprehensive_validation(&memory_constrained_config) {
         Ok(results) => {
             println!("✅ Memory-constrained validation completed!");
             println!(
@@ -156,8 +162,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!("\n🎉 Ultrathink mode demonstration completed!");
-    println!("\nKey Benefits of Ultrathink Mode:");
+    println!("\n🎉 Advanced mode demonstration completed!");
+    println!("\nKey Benefits of Advanced Mode:");
     println!("  ⚡ Enhanced performance through SIMD and parallel processing");
     println!("  🔍 Comprehensive validation and testing");
     println!("  💾 Memory-efficient algorithms for large datasets");

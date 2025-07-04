@@ -34,7 +34,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 /// Available computation backends
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Backend {
     /// CPU-based implementation (default)
     Cpu,

@@ -60,7 +60,7 @@ pub struct VonMises<F: Float> {
     _phantom: PhantomData<F>,
 }
 
-impl<F: Float + SampleUniform + Debug + 'static> VonMises<F> {
+impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F> {
     /// Create a new von Mises distribution with the given mean direction and concentration
     ///
     /// # Arguments
@@ -192,7 +192,7 @@ fn von_mises_cdf<F: Float + 'static>(kappa: F, x: F) -> F {
     F::from(cdf).unwrap()
 }
 
-impl<F: Float + SampleUniform + Debug + 'static> Distribution<F> for VonMises<F> {
+impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> Distribution<F> for VonMises<F> {
     fn mean(&self) -> F {
         self.mu
     }
@@ -255,7 +255,7 @@ impl<F: Float + SampleUniform + Debug + 'static> Distribution<F> for VonMises<F>
     }
 }
 
-impl<F: Float + SampleUniform + Debug + 'static> CircularDistribution<F> for VonMises<F> {
+impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDistribution<F> for VonMises<F> {
     fn pdf(&self, x: F) -> F {
         // f(x; μ, κ) = (1 / (2π * I₀(κ))) * exp(κ * cos(x - μ))
         

@@ -128,7 +128,7 @@ impl ApiCompatibilityTester {
         let mut suggestions = Vec::new();
 
         // Test 1: Basic parameter compatibility
-        let input = Array2::zeros((10, 10));
+        let input: Array2<f64> = Array2::zeros((10, 10));
 
         // Test sigma parameter - should accept scalar and array
         let test1_success = gaussian_filter(&input, 1.0, None, None).is_ok();
@@ -193,7 +193,7 @@ impl ApiCompatibilityTester {
         let mut error_messages = Vec::new();
         let mut suggestions = Vec::new();
 
-        let input = Array2::zeros((10, 10));
+        let input: Array2<f64> = Array2::zeros((10, 10));
 
         // Test size parameter - should accept various formats
         let size_array_test = median_filter(&input, &[3, 3], None).is_ok();
@@ -240,7 +240,7 @@ impl ApiCompatibilityTester {
         let mut incompatible_params = Vec::new();
         let mut error_messages = Vec::new();
 
-        let input = Array2::zeros((10, 10));
+        let input: Array2<f64> = Array2::zeros((10, 10));
 
         // Test basic functionality
         let basic_test = uniform_filter(&input, &[3, 3], None, None).is_ok();
@@ -277,17 +277,17 @@ impl ApiCompatibilityTester {
         let mut incompatible_params = Vec::new();
         let mut error_messages = Vec::new();
 
-        let input = Array2::zeros((10, 10));
+        let input: Array2<f64> = Array2::zeros((10, 10));
 
         // Test axis parameter
-        let axis_test = sobel(&input, Some(0), None, None).is_ok();
+        let axis_test = sobel(&input, 0, None).is_ok();
         if !axis_test {
             incompatible_params.push("axis".to_string());
             error_messages.push("Axis parameter handling differs".to_string());
         }
 
         // Test without axis (should compute magnitude)
-        let no_axis_test = sobel(&input, None, None, None).is_ok();
+        let no_axis_test = sobel(&input, 1, None).is_ok();
         if !no_axis_test {
             incompatible_params.push("axis_none".to_string());
             error_messages.push("Default behavior without axis differs".to_string());
@@ -314,7 +314,7 @@ impl ApiCompatibilityTester {
         let mut incompatible_params = Vec::new();
         let mut error_messages = Vec::new();
 
-        let input = Array2::zeros((10, 10));
+        let input: Array2<f64> = Array2::zeros((10, 10));
 
         // Test minimum_filter
         let min_test = minimum_filter(&input, &[3, 3], None, None).is_ok();
@@ -331,7 +331,7 @@ impl ApiCompatibilityTester {
         }
 
         // Test percentile_filter
-        let percentile_test = percentile_filter(&input, 50.0, &[3, 3], None, None).is_ok();
+        let percentile_test = percentile_filter(&input, 50.0, &[3, 3], None).is_ok();
         if !percentile_test {
             incompatible_params.push("percentile_filter".to_string());
             error_messages.push("percentile_filter API differs".to_string());
@@ -402,7 +402,7 @@ impl ApiCompatibilityTester {
         let mut incompatible_params = Vec::new();
         let mut error_messages = Vec::new();
 
-        let input = Array2::zeros((10, 10));
+        let input: Array2<f64> = Array2::zeros((10, 10));
 
         // Test grey_erosion
         let erosion_test = grey_erosion(&input, None, None, None, None, None).is_ok();
@@ -447,10 +447,10 @@ impl ApiCompatibilityTester {
         let mut incompatible_params = Vec::new();
         let mut error_messages = Vec::new();
 
-        let input = Array2::zeros((10, 10));
+        let input: Array2<f64> = Array2::zeros((10, 10));
 
         // Test zoom with scalar factor
-        let scalar_zoom_test = zoom(&input, &[2.0, 2.0], None, None, None, None).is_ok();
+        let scalar_zoom_test = zoom(&input, &[2.0f64, 2.0f64], None, None, None, None).is_ok();
         if !scalar_zoom_test {
             incompatible_params.push("zoom_factor".to_string());
             error_messages.push("Zoom factor parameter handling differs".to_string());
@@ -459,7 +459,7 @@ impl ApiCompatibilityTester {
         // Test zoom with interpolation order
         let order_test = zoom(
             &input,
-            &[2.0, 2.0],
+            &[2.0f64, 2.0f64],
             Some(InterpolationOrder::Linear),
             None,
             None,
@@ -492,7 +492,7 @@ impl ApiCompatibilityTester {
         let mut incompatible_params = Vec::new();
         let mut error_messages = Vec::new();
 
-        let input = Array2::zeros((10, 10));
+        let input: Array2<f64> = Array2::zeros((10, 10));
 
         // Test basic rotation
         let rotate_test = rotate(&input, 45.0, None, None, None, None, None, None).is_ok();
@@ -522,7 +522,7 @@ impl ApiCompatibilityTester {
         let mut incompatible_params = Vec::new();
         let mut error_messages = Vec::new();
 
-        let input = Array2::zeros((10, 10));
+        let input: Array2<f64> = Array2::zeros((10, 10));
         let matrix = Array2::eye(2);
 
         // Test affine transform
@@ -594,7 +594,7 @@ impl ApiCompatibilityTester {
         let input = Array2::from_elem((10, 10), true);
 
         // Test label function
-        let label_test = label(&input, None).is_ok();
+        let label_test = label(&input, None, None, None).is_ok();
         if !label_test {
             incompatible_params.push("structure".to_string());
             error_messages.push("label structure parameter differs".to_string());

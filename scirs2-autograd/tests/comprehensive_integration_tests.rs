@@ -1,4 +1,4 @@
-//! Comprehensive integration tests demonstrating all new ultrathink features
+//! Comprehensive integration tests demonstrating all new Advanced features
 //!
 //! This test suite demonstrates the complete integration of:
 //! - Graph visualization and debugging tools
@@ -17,7 +17,7 @@ use scirs2_autograd::parallel::{init_thread_pool_with_config, ThreadPoolConfig};
 use scirs2_autograd::tensor_ops as T;
 use scirs2_autograd::visualization::{GraphVisualizer, OutputFormat, VisualizationConfig};
 
-/// Test the complete ultrathink feature integration pipeline
+/// Test the complete Advanced feature integration pipeline
 #[test]
 #[allow(dead_code)]
 fn test_complete_ultrathink_pipeline() {
@@ -88,7 +88,7 @@ fn test_complete_ultrathink_pipeline() {
         assert!(reduced_value.is_finite());
         assert!(reduced_value > 0.0);
 
-        println!("✅ Complete ultrathink pipeline executed successfully!");
+        println!("✅ Complete Advanced pipeline executed successfully!");
         println!("   - Input shape: [64, 128]");
         println!("   - Final output shape: [8192]");
         println!("   - Reduced sum: {}", reduced_value);
@@ -622,7 +622,7 @@ fn test_performance_optimizations_effectiveness() {
 #[test]
 #[allow(dead_code)]
 fn test_integration_summary() {
-    println!("\n🎉 ULTRATHINK MODE INTEGRATION SUMMARY");
+    println!("\n🎉 Advanced MODE INTEGRATION SUMMARY");
     println!("=====================================");
 
     // Verify all major features are accessible
@@ -652,5 +652,5 @@ fn test_integration_summary() {
     println!("   - SIMD: Add, Mul, ReLU, Sigmoid operations");
     println!("   - Memory: Checkpointing, pooling, in-place ops, tensor reuse");
 
-    println!("\n🚀 All ultrathink features successfully integrated and tested!");
+    println!("\n🚀 All Advanced features successfully integrated and tested!");
 }

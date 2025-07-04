@@ -1,4 +1,4 @@
-//! Enhanced System Identification with ULTRATHINK-level capabilities
+//! Enhanced System Identification with Advanced-level capabilities
 //!
 //! This module provides state-of-the-art system identification techniques combining:
 //! - Quantum-inspired optimization algorithms for parameter estimation

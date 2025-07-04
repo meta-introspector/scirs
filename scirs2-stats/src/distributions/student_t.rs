@@ -22,7 +22,7 @@ pub struct StudentT<F: Float + Send + Sync> {
     rand_distr: RandStudentT<f64>,
 }
 
-impl<F: Float + NumCast + Send + Sync + 'static> StudentT<F> {
+impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F> {
     /// Create a new Student's t distribution with given degrees of freedom, location, and scale
     ///
     /// # Arguments
@@ -364,7 +364,7 @@ fn regularized_beta<F: Float>(x: F, a: F, b: F) -> F {
 }
 
 /// Implementation of Distribution trait for StudentT
-impl<F: Float + NumCast + Send + Sync + 'static> ScirsDist<F> for StudentT<F> {
+impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ScirsDist<F> for StudentT<F> {
     fn mean(&self) -> F {
         // Mean is 0 for df > 1, undefined for df <= 1
         if self.df <= F::one() {
@@ -425,7 +425,7 @@ impl<F: Float + NumCast + Send + Sync + 'static> ScirsDist<F> for StudentT<F> {
 }
 
 /// Implementation of ContinuousDistribution trait for StudentT
-impl<F: Float + NumCast + Send + Sync + 'static> ContinuousDistribution<F> for StudentT<F> {
+impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ContinuousDistribution<F> for StudentT<F> {
     fn pdf(&self, x: F) -> F {
         // Call the implementation from the struct
         StudentT::pdf(self, x)
@@ -510,7 +510,7 @@ impl<F: Float + NumCast + Send + Sync + 'static> ContinuousDistribution<F> for S
 }
 
 /// Implementation of SampleableDistribution for StudentT
-impl<F: Float + NumCast + Send + Sync + 'static> SampleableDistribution<F> for StudentT<F> {
+impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> SampleableDistribution<F> for StudentT<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs_vec(size)
     }

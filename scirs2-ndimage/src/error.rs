@@ -60,6 +60,18 @@ pub enum NdimageError {
     #[error("Shape error: {0}")]
     ShapeError(#[from] ndarray::ShapeError),
 
+    /// Format error
+    #[error("Format error: {0}")]
+    FormatError(#[from] std::fmt::Error),
+
+    /// GPU not available error
+    #[error("GPU not available: {0}")]
+    GpuNotAvailable(String),
+
+    /// Configuration error
+    #[error("Configuration error: {0}")]
+    ConfigurationError(String),
+
     /// Other error
     #[error("Error: {0}")]
     Other(String),

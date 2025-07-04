@@ -1,4 +1,10 @@
 //! Machine Learning evaluation metrics module for SciRS2
+
+#![allow(clippy::uninlined_format_args)]
+#![allow(clippy::new_without_default)]
+#![allow(clippy::useless_vec)]
+#![allow(clippy::too_many_arguments)]
+#![allow(dead_code)]
 //!
 //! This module provides functions for evaluating machine learning models
 //! including classification, regression, clustering, and ranking metrics, as well as

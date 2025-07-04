@@ -1,11 +1,11 @@
-//! Ultrathink Property-Based Testing Framework
+//! Advanced Property-Based Testing Framework
 //!
-//! Advanced property-based testing specifically designed for ultrathink mode,
+//! Advanced property-based testing specifically designed for Advanced mode,
 //! featuring comprehensive mathematical invariant testing, numerical stability
 //! verification, SIMD consistency checks, and performance regression detection.
 
-use crate::advanced_simd_stats::{BatchOperation, UltraThinkSimdConfig, UltraThinkSimdOptimizer};
-use crate::ultrathink_parallel_enhancements::UltrathinkParallelConfig;
+use crate::advanced_simd_stats::{BatchOperation, AdvancedSimdConfig, UltraThinkSimdOptimizer};
+use crate::parallel_enhancements::AdvancedParallelConfig;
 use crate::{kurtosis, mean, pearson_r, skew, std, var};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
@@ -13,8 +13,8 @@ use std::time::Instant;
 
 /// Ultra-comprehensive property testing framework
 pub struct UltrathinkPropertyTester {
-    simd_config: UltraThinkSimdConfig,
-    parallel_config: UltrathinkParallelConfig,
+    simd_config: AdvancedSimdConfig,
+    parallel_config: AdvancedParallelConfig,
     numerical_tolerance: f64,
     performance_tolerance: f64,
 }
@@ -22,8 +22,8 @@ pub struct UltrathinkPropertyTester {
 impl Default for UltrathinkPropertyTester {
     fn default() -> Self {
         Self {
-            simd_config: UltraThinkSimdConfig::default(),
-            parallel_config: UltrathinkParallelConfig::default(),
+            simd_config: AdvancedSimdConfig::default(),
+            parallel_config: AdvancedParallelConfig::default(),
             numerical_tolerance: 1e-12,
             performance_tolerance: 2.0, // 2x slowdown tolerance
         }
@@ -33,8 +33,8 @@ impl Default for UltrathinkPropertyTester {
 impl UltrathinkPropertyTester {
     /// Create a new property tester with custom configuration
     pub fn new(
-        simd_config: UltraThinkSimdConfig,
-        parallel_config: UltrathinkParallelConfig,
+        simd_config: AdvancedSimdConfig,
+        parallel_config: AdvancedParallelConfig,
     ) -> Self {
         Self {
             simd_config,
@@ -47,7 +47,8 @@ impl UltrathinkPropertyTester {
     /// Test SIMD vs scalar consistency for all statistical operations
     pub fn test_simd_scalar_consistency<F>(&self, data: &ArrayView1<F>) -> PropertyTestResult
     where
-        F: Float + NumCast + Copy + Send + Sync + PartialOrd + std::fmt::Debug,
+        F: Float + NumCast + Copy + Send + Sync + PartialOrd + std::fmt::Debug
+        + std::fmt::Display,
     {
         let n = data.len();
         if n < 10 {
@@ -95,7 +96,8 @@ impl UltrathinkPropertyTester {
     /// Test mathematical invariants for statistical operations
     pub fn test_mathematical_invariants<F>(&self, data: &ArrayView1<F>) -> PropertyTestResult
     where
-        F: Float + NumCast + Copy + Send + Sync + PartialOrd + std::fmt::Debug,
+        F: Float + NumCast + Copy + Send + Sync + PartialOrd + std::fmt::Debug
+        + std::fmt::Display,
     {
         let n = data.len();
         if n < 4 {
@@ -178,7 +180,8 @@ impl UltrathinkPropertyTester {
     /// Test numerical stability under various transformations
     pub fn test_numerical_stability<F>(&self, data: &ArrayView1<F>) -> PropertyTestResult
     where
-        F: Float + NumCast + Copy + Send + Sync + PartialOrd + std::fmt::Debug,
+        F: Float + NumCast + Copy + Send + Sync + PartialOrd + std::fmt::Debug
+        + std::fmt::Display,
     {
         let n = data.len();
         if n < 2 {
@@ -269,7 +272,8 @@ impl UltrathinkPropertyTester {
         y: &ArrayView1<F>,
     ) -> PropertyTestResult
     where
-        F: Float + NumCast + Copy + Send + Sync + PartialOrd + std::fmt::Debug,
+        F: Float + NumCast + Copy + Send + Sync + PartialOrd + std::fmt::Debug
+        + std::fmt::Display,
     {
         if x.len() != y.len() || x.len() < 2 {
             return PropertyTestResult::Skipped("Invalid data for correlation testing".to_string());
@@ -334,7 +338,8 @@ impl UltrathinkPropertyTester {
     /// Test performance consistency and regression detection
     pub fn test_performance_consistency<F>(&self, data: &ArrayView1<F>) -> PropertyTestResult
     where
-        F: Float + NumCast + Copy + Send + Sync + PartialOrd + std::fmt::Debug,
+        F: Float + NumCast + Copy + Send + Sync + PartialOrd + std::fmt::Debug
+        + std::fmt::Display,
     {
         let n = data.len();
         if n < 1000 {
@@ -391,7 +396,8 @@ impl UltrathinkPropertyTester {
     /// Run comprehensive property tests on given data
     pub fn run_comprehensive_tests<F>(&self, data: &ArrayView1<F>) -> ComprehensiveTestReport
     where
-        F: Float + NumCast + Copy + Send + Sync + PartialOrd + std::fmt::Debug,
+        F: Float + NumCast + Copy + Send + Sync + PartialOrd + std::fmt::Debug
+        + std::fmt::Display,
     {
         let mut report = ComprehensiveTestReport::new();
 
@@ -415,7 +421,8 @@ impl UltrathinkPropertyTester {
 
     fn check_linearity<F>(&self, x: &ArrayView1<F>, y: &ArrayView1<F>) -> bool
     where
-        F: Float + NumCast + Copy,
+        F: Float + NumCast + Copy
+        + std::fmt::Display,
     {
         if x.len() < 3 {
             return true; // Can't determine linearity with < 3 points
@@ -537,7 +544,7 @@ impl ComprehensiveTestReport {
     }
 }
 
-/// Create a default ultrathink property tester
+/// Create a default Advanced property tester
 #[allow(dead_code)]
 pub fn create_ultrathink_property_tester() -> UltrathinkPropertyTester {
     UltrathinkPropertyTester::default()

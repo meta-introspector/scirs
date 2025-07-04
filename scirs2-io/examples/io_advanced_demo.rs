@@ -1,24 +1,24 @@
-//! Ultra-Think Mode I/O Processing Demonstration
+//! advanced Mode I/O Processing Demonstration
 //!
 //! This example showcases the advanced intelligent I/O processing capabilities
-//! of the Ultra-Think coordinator and enhanced algorithms.
+//! of the advanced coordinator and enhanced algorithms.
 
-use scirs2_io::ultrathink_coordinator::UltraThinkCoordinator;
+use scirs2_io::advanced_coordinator::AdvancedCoordinator;
 use scirs2_io::ultrathink_enhanced_algorithms::AdvancedPatternRecognizer;
 use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultra-Think Mode I/O Processing Demonstration");
+    println!("🚀 advanced Mode I/O Processing Demonstration");
     println!("================================================\n");
 
     // Create sample data with different patterns
     let samples = create_sample_datasets();
 
-    // Initialize Ultra-Think coordinator
-    println!("🧠 Initializing Ultra-Think Coordinator...");
-    let mut coordinator = UltraThinkCoordinator::new()?;
-    println!("✅ Ultra-Think Coordinator initialized successfully\n");
+    // Initialize advanced coordinator
+    println!("🧠 Initializing advanced Coordinator...");
+    let mut coordinator = AdvancedCoordinator::new()?;
+    println!("✅ advanced Coordinator initialized successfully\n");
 
     // Initialize Advanced Pattern Recognizer
     println!("🔍 Initializing Advanced Pattern Recognizer...");
@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("📊 Processing dataset: '{}'", name);
         println!("   Data size: {} bytes", data.len());
 
-        // Ultra-Think processing
+        // advanced processing
         let start_time = Instant::now();
         let processing_result = coordinator.process_ultra_intelligent(&data)?;
         let processing_duration = start_time.elapsed();
@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Get comprehensive statistics
-    println!("📈 Ultra-Think System Statistics:");
+    println!("📈 advanced System Statistics:");
     let stats = coordinator.get_comprehensive_statistics()?;
     println!(
         "   🔬 Total operations processed: {}",
@@ -112,7 +112,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         stats.overall_system_efficiency
     );
 
-    println!("\n🎉 Ultra-Think Mode demonstration completed successfully!");
+    println!("\n🎉 advanced Mode demonstration completed successfully!");
     Ok(())
 }
 

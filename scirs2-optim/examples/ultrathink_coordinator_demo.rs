@@ -1,24 +1,24 @@
-//! UltraThink Coordinator Advanced Demo
+//! Advanced Coordinator Advanced Demo
 //!
-//! This example demonstrates the enhanced UltraThink mode capabilities of the scirs2-optim
+//! This example demonstrates the enhanced Advanced mode capabilities of the scirs2-optim
 //! library, showcasing advanced AI optimization coordination with sophisticated landscape
 //! analysis, performance prediction, and multi-objective ensemble selection.
 
 use ndarray::Array1;
 use scirs2_optim::learned_optimizers::optimization_coordinator::{
-    OptimizationContext, OptimizationObjective, OptimizationState, ProblemCharacteristics,
-    ResourceConstraints, TimeConstraints, UltraThinkConfig, UltraThinkCoordinator,
+    AdvancedConfig, AdvancedCoordinator, OptimizationContext, OptimizationObjective,
+    OptimizationState, ProblemCharacteristics, ResourceConstraints, TimeConstraints,
 };
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 UltraThink Coordinator Advanced Demo");
+    println!("🚀 Advanced Coordinator Advanced Demo");
     println!("=======================================");
 
-    // Create enhanced UltraThink configuration
-    let mut config = UltraThinkConfig::<f64>::default();
+    // Create enhanced Advanced configuration
+    let mut config = AdvancedConfig::<f64>::default();
 
     // Configure advanced features
     config.enable_nas = true;
@@ -136,7 +136,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         gradients.iter().map(|&x| x * x).sum::<f64>().sqrt()
     );
 
-    println!("\n🎯 UltraThink Features Demonstration:");
+    println!("\n🎯 Advanced Features Demonstration:");
     println!("  ✓ Multi-strategy optimization ensemble");
     println!("  ✓ Neural architecture search integration");
     println!("  ✓ Adaptive transformer enhancement");
@@ -154,11 +154,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  • Hardware-aware optimization");
     println!("  • Privacy-preserving techniques");
 
-    println!("\n💡 Note: Full UltraThink coordinator instantiation requires");
+    println!("\n💡 Note: Full Advanced coordinator instantiation requires");
     println!("    implementation of all dependent subsystems. This demo");
     println!("    showcases the configuration and structure.");
 
-    println!("\n✅ UltraThink Coordinator Demo completed successfully!");
+    println!("\n✅ Advanced Coordinator Demo completed successfully!");
 
     Ok(())
 }

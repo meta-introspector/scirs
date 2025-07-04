@@ -98,7 +98,8 @@ where
 #[allow(dead_code)]
 pub fn uniform<F>(low: F, high: F, size: usize, seed: Option<u64>) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + Zero + SampleUniform,
+    F: Float + NumCast + Zero + SampleUniform
+        + std::fmt::Display,
 {
     if size == 0 {
         return Err(StatsError::InvalidArgument(

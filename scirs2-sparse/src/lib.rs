@@ -293,32 +293,32 @@ pub use parallel_vector_ops::{
     parallel_vector_sub, ultrathink_sparse_matvec_csr, ParallelVectorOptions,
 };
 
-// Quantum-inspired sparse matrix operations (ultrathink mode)
+// Quantum-inspired sparse matrix operations (Advanced mode)
 pub mod quantum_inspired_sparse;
 pub use quantum_inspired_sparse::{
     QuantumProcessorStats, QuantumSparseConfig, QuantumSparseProcessor, QuantumStrategy,
 };
 
-// Neural-adaptive sparse matrix operations (ultrathink mode)
+// Neural-adaptive sparse matrix operations (Advanced mode)
 pub mod neural_adaptive_sparse;
 pub use neural_adaptive_sparse::{
     NeuralAdaptiveConfig, NeuralAdaptiveSparseProcessor, NeuralProcessorStats, OptimizationStrategy,
 };
 
-// Quantum-Neural hybrid optimization (ultrathink mode)
+// Quantum-Neural hybrid optimization (Advanced mode)
 pub mod quantum_neural_hybrid;
 pub use quantum_neural_hybrid::{
     HybridStrategy, QuantumNeuralConfig, QuantumNeuralHybridProcessor, QuantumNeuralHybridStats,
 };
 
-// Adaptive memory compression for ultra-large sparse matrices (ultrathink mode)
+// Adaptive memory compression for ultra-large sparse matrices (Advanced mode)
 pub mod adaptive_memory_compression;
 pub use adaptive_memory_compression::{
     AdaptiveCompressionConfig, AdaptiveMemoryCompressor, CompressedMatrix, CompressionAlgorithm,
     MemoryStats,
 };
 
-// Real-time performance monitoring and adaptation (ultrathink mode)
+// Real-time performance monitoring and adaptation (Advanced mode)
 pub mod realtime_performance_monitor;
 pub use realtime_performance_monitor::{
     Alert, AlertSeverity, Forecast, PerformanceMetrics, PerformanceMonitorConfig,

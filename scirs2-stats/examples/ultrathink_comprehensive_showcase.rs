@@ -1,26 +1,26 @@
-//! Comprehensive Ultrathink Mode Showcase
+//! Comprehensive Advanced Mode Showcase
 //!
-//! This example demonstrates the full capabilities of the ultrathink mode in scirs2-stats,
+//! This example demonstrates the full capabilities of the Advanced mode in scirs2-stats,
 //! including SIMD optimizations, parallel processing, numerical stability testing,
 //! and the unified processing framework.
 
 use ndarray::{array, Array1, Array2};
 use scirs2_stats::{
-    create_numerical_stability_analyzer, create_ultrathink_processor,
-    ultrathink_parallel_enhancements::MatrixOperationType,
-    ultrathink_unified_processor::{UltrathinkMatrixOperation, UltrathinkTimeSeriesOperation},
-    NumericalStabilityConfig, OptimizationMode, UltrathinkParallelConfig,
-    UltrathinkProcessorConfig, UltrathinkSimdConfig,
+    create_numerical_stability_analyzer, create_advanced_processor,
+    parallel_enhancements::MatrixOperationType,
+    unified_processor::{UltrathinkMatrixOperation, UltrathinkTimeSeriesOperation},
+    NumericalStabilityConfig, OptimizationMode, AdvancedParallelConfig,
+    UltrathinkProcessorConfig, AdvancedSimdConfig,
 };
 use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultrathink Mode Comprehensive Showcase");
+    println!("🚀 Advanced Mode Comprehensive Showcase");
     println!("==========================================\n");
 
-    // Demonstrate basic ultrathink processing
-    demonstrate_basic_ultrathink()?;
+    // Demonstrate basic Advanced processing
+    demonstrate_basic_advanced()?;
 
     // Demonstrate advanced configurations
     demonstrate_advanced_configurations()?;
@@ -37,18 +37,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Demonstrate performance analytics
     demonstrate_performance_analytics()?;
 
-    println!("\n✅ Ultrathink mode showcase completed successfully!");
+    println!("\n✅ Advanced mode showcase completed successfully!");
 
     Ok(())
 }
 
 #[allow(dead_code)]
-fn demonstrate_basic_ultrathink() -> Result<(), Box<dyn std::error::Error>> {
-    println!("📊 Basic Ultrathink Processing");
+fn demonstrate_basic_advanced() -> Result<(), Box<dyn std::error::Error>> {
+    println!("📊 Basic Advanced Processing");
     println!("------------------------------");
 
-    // Create a unified ultrathink processor with default settings
-    let mut processor = create_ultrathink_processor();
+    // Create a unified Advanced processor with default settings
+    let mut processor = create_advanced_processor();
 
     // Generate sample data
     let data = generate_sample_data(10000);
@@ -56,7 +56,7 @@ fn demonstrate_basic_ultrathink() -> Result<(), Box<dyn std::error::Error>> {
 
     let start_time = Instant::now();
 
-    // Process comprehensive statistics using ultrathink mode
+    // Process comprehensive statistics using Advanced mode
     let result = processor.process_comprehensive_statistics(&data.view())?;
 
     let processing_time = start_time.elapsed();
@@ -108,7 +108,7 @@ fn demonstrate_advanced_configurations() -> Result<(), Box<dyn std::error::Error
             UltrathinkProcessorConfig {
                 optimization_mode: OptimizationMode::Performance,
                 enable_stability_testing: false,
-                simd_config: UltrathinkSimdConfig {
+                simd_config: AdvancedSimdConfig {
                     min_simd_size: 32,
                     adaptive_vectorization: true,
                     enable_prefetch: true,
@@ -155,7 +155,7 @@ fn demonstrate_advanced_configurations() -> Result<(), Box<dyn std::error::Error
 
     for (name, config) in configs {
         let mut processor =
-            scirs2_stats::ultrathink_unified_processor::UltrathinkUnifiedProcessor::new(config);
+            scirs2_stats::unified_processor::UltrathinkUnifiedProcessor::new(config);
 
         let start_time = Instant::now();
         let result = processor.process_comprehensive_statistics(&data.view())?;
@@ -244,10 +244,10 @@ fn demonstrate_stability_testing() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn demonstrate_matrix_operations() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🔢 Matrix Operations with Ultrathink");
+    println!("🔢 Matrix Operations with Advanced");
     println!("-------------------------------------");
 
-    let mut processor = create_ultrathink_processor();
+    let mut processor = create_advanced_processor();
 
     // Generate sample matrix data
     let matrix_data = generate_sample_matrix(100, 20);
@@ -302,7 +302,7 @@ fn demonstrate_time_series_processing() -> Result<(), Box<dyn std::error::Error>
     println!("📈 Time Series Processing");
     println!("-------------------------");
 
-    let mut processor = create_ultrathink_processor();
+    let mut processor = create_advanced_processor();
 
     // Generate time series data
     let time_series = generate_time_series_data(5000);
@@ -351,7 +351,7 @@ fn demonstrate_performance_analytics() -> Result<(), Box<dyn std::error::Error>>
     println!("📊 Performance Analytics");
     println!("------------------------");
 
-    let mut processor = create_ultrathink_processor();
+    let mut processor = create_advanced_processor();
 
     // Perform several operations to build performance history
     let data_sizes = vec![1000, 5000, 10000, 50000];

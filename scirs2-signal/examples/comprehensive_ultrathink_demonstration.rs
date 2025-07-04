@@ -1,6 +1,6 @@
-//! Comprehensive Ultrathink Mode Demonstration
+//! Comprehensive Advanced Mode Demonstration
 //!
-//! This example showcases the complete ultrathink validation suite for scirs2-signal,
+//! This example showcases the complete Advanced validation suite for scirs2-signal,
 //! demonstrating all the enhanced validation capabilities implemented:
 //!
 //! 1. Ultra-comprehensive validation suite
@@ -19,8 +19,8 @@ use std::time::Instant;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
-    // Example 1: Comprehensive ultrathink validation overview
-    println!("🚀 1. Comprehensive Ultrathink Validation Overview");
+    // Example 1: Comprehensive Advanced validation overview
+    println!("🚀 1. Comprehensive Advanced Validation Overview");
     println!("================================================");
     showcase_validation_overview()?;
 
@@ -69,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn print_header() {
-    println!("🎯 SciRS2 Signal Processing - Comprehensive Ultrathink Mode Demonstration");
+    println!("🎯 SciRS2 Signal Processing - Comprehensive Advanced Mode Demonstration");
     println!("========================================================================");
     println!("");
     println!("This demonstration showcases the most comprehensive validation system");
@@ -87,7 +87,7 @@ fn print_header() {
 
 #[allow(dead_code)]
 fn showcase_validation_overview() -> Result<(), Box<dyn std::error::Error>> {
-    println!("The ultrathink validation suite includes:");
+    println!("The Advanced validation suite includes:");
     println!("");
 
     println!("🧮 Mathematical Validation:");
@@ -486,7 +486,7 @@ fn print_summary_and_recommendations() {
     println!("🎊 Conclusion:");
     println!("The scirs2-signal library demonstrates exceptional quality and");
     println!("performance, with comprehensive validation ensuring production");
-    println!("readiness. The ultrathink validation mode provides unprecedented");
+    println!("readiness. The Advanced validation mode provides unprecedented");
     println!("confidence in the correctness and efficiency of all algorithms.");
     println!("");
 

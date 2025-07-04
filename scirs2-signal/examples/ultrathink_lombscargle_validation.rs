@@ -1,16 +1,16 @@
-//! Ultrathink Enhanced Lomb-Scargle Validation Example
+//! Advanced Enhanced Lomb-Scargle Validation Example
 //!
-//! This example demonstrates the comprehensive ultrathink validation suite for
+//! This example demonstrates the comprehensive Advanced validation suite for
 //! Lomb-Scargle periodogram, including SciPy comparison, SIMD validation,
 //! memory profiling, and statistical validation.
 
 use scirs2_signal::{
-    generate_ultrathink_lombscargle_report, run_ultrathink_lombscargle_validation,
+    generate_advanced_lombscargle_report, run_advanced_lombscargle_validation,
 };
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Ultrathink Enhanced Lomb-Scargle Validation Suite");
+    println!("🚀 Advanced Enhanced Lomb-Scargle Validation Suite");
     println!("==================================================");
 
     println!("\n🔬 Initializing comprehensive validation...");
@@ -22,12 +22,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  📈 Statistical validation");
     println!("  ⏱️ Performance regression detection");
 
-    // Run the comprehensive ultrathink validation
-    println!("\n🚀 Running ultrathink validation suite...");
-    let validation_result = run_ultrathink_lombscargle_validation()?;
+    // Run the comprehensive Advanced validation
+    println!("\n🚀 Running Advanced validation suite...");
+    let validation_result = run_advanced_lombscargle_validation()?;
 
     // Generate and display the comprehensive report
-    let report = generate_ultrathink_lombscargle_report(&validation_result);
+    let report = generate_advanced_lombscargle_report(&validation_result);
     println!("\n{}", report);
 
     // Detailed analysis with colored output
@@ -353,7 +353,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         _ => unreachable!(),
     }
 
-    println!("\n🏁 Ultrathink validation complete!");
+    println!("\n🏁 Advanced validation complete!");
     println!("   📋 Full report generated above");
     println!(
         "   📊 Quality score: {:.1}/100",

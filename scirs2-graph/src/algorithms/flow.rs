@@ -6,7 +6,7 @@
 
 use crate::base::{DiGraph, EdgeWeight, Graph, IndexType, Node};
 use crate::error::{GraphError, Result};
-use rand::{rng, seq::SliceRandom, Rng};
+use rand::{seq::SliceRandom, Rng};
 use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::Hash;

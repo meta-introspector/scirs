@@ -15,7 +15,6 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
     })
 }
 
-
 /// Helper function for safe conversion from float to usize
 #[allow(dead_code)]
 fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {

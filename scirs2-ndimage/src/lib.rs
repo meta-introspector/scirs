@@ -303,20 +303,20 @@ pub use self::neuromorphic_computing::{
     Event, NeuromorphicConfig, PlasticSynapse, SpikingNeuron,
 };
 
-// Ultrathink fusion core exports
+// Advanced fusion core exports
 pub use self::advanced_fusion_algorithms::{
     enhanced_meta_learning_with_temporal_fusion, enhanced_quantum_consciousness_evolution,
-    quantum_aware_resource_scheduling_optimization, ultrathink_fusion_processing,
+    quantum_aware_resource_scheduling_optimization, fusion_processing,
     AdaptiveMemoryConsolidation, CoherenceStrategy, ConsciousnessComplexity, ConsciousnessState,
     EnhancedMetaLearningSystem, HierarchicalLearner, MetaLearningTracker,
     QuantumAwareResourceScheduler, QuantumCoherenceOptimizer, QuantumConsciousnessEvolution,
-    ResourceSchedulingDecision, StrategyEvolution, TemporalMemoryFusion, UltrathinkConfig,
+    ResourceSchedulingDecision, StrategyEvolution, TemporalMemoryFusion, AdvancedConfig,
     UltrathinkState, WorkloadCharacteristics,
 };
 
 // Enhanced validation exports
 pub use self::comprehensive_validation::{
-    validated_ultrathink_processing, PerformanceBenchmark, PerformanceSummary, UltrathinkValidator,
+    validated_ultrathink_processing, PerformanceBenchmark, PerformanceSummary, ComprehensiveValidator,
     ValidationConfig, ValidationError, ValidationReport,
 };
 

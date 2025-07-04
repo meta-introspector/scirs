@@ -5,11 +5,12 @@
 
 use crate::error::InterpolateResult;
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis};
+
+#[cfg(all(test, feature = "simd"))]
+use ndarray::Array1;
 use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::Debug;
 
-#[cfg(test)]
-use ndarray::Array1;
 
 #[cfg(feature = "simd")]
 use scirs2_core::simd_ops::SimdUnifiedOps;

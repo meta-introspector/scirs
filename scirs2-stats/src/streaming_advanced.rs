@@ -70,7 +70,8 @@ pub struct StreamingStatsAccumulator<F> {
 
 impl<F> Default for StreamingStatsAccumulator<F>
 where
-    F: Float + Zero + Copy,
+    F: Float + Zero + Copy
+        + std::fmt::Display,
 {
     fn default() -> Self {
         Self {
@@ -88,7 +89,8 @@ where
 
 impl<F> StreamingStatsAccumulator<F>
 where
-    F: Float + NumCast + Zero + One + Copy,
+    F: Float + NumCast + Zero + One + Copy
+        + std::fmt::Display,
 {
     /// Create new streaming accumulator
     pub fn new() -> Self {
@@ -307,7 +309,8 @@ pub struct StreamingQuantileEstimator<F> {
 
 impl<F> StreamingQuantileEstimator<F>
 where
-    F: Float + NumCast + Zero + One + Copy,
+    F: Float + NumCast + Zero + One + Copy
+        + std::fmt::Display,
 {
     /// Create new quantile estimator for given quantiles
     pub fn new(quantiles: Vec<F>) -> Self {
@@ -474,7 +477,8 @@ pub struct StreamingCorrelationEstimator<F> {
 
 impl<F> StreamingCorrelationEstimator<F>
 where
-    F: Float + NumCast + Zero + One + Copy,
+    F: Float + NumCast + Zero + One + Copy
+        + std::fmt::Display,
 {
     /// Create new correlation estimator for n variables
     pub fn new(n_vars: usize) -> Self {
@@ -603,7 +607,8 @@ pub struct StreamingHistogram<F> {
 
 impl<F> StreamingHistogram<F>
 where
-    F: Float + NumCast + Zero + One + Copy,
+    F: Float + NumCast + Zero + One + Copy
+        + std::fmt::Display,
 {
     /// Create new streaming histogram
     pub fn new(max_bins: usize, adaptive: bool) -> Self {
@@ -752,7 +757,8 @@ pub struct StreamingProcessor<F> {
 
 impl<F> StreamingProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+        + std::fmt::Display,
 {
     /// Create new streaming processor
     pub fn new(config: StreamingConfig) -> Self {
@@ -919,7 +925,8 @@ impl MemoryMappedReader {
     /// Create iterator for reading chunks
     pub fn iter_chunks<F>(&mut self) -> impl Iterator<Item = StatsResult<Array1<F>>> + '_
     where
-        F: Float + NumCast + Copy,
+        F: Float + NumCast + Copy
+        + std::fmt::Display,
     {
         std::iter::from_fn(move || {
             // This is a simplified placeholder - would implement actual memory mapping
@@ -942,7 +949,8 @@ impl MemoryMappedReader {
 pub fn stream_mean<F, R>(data_reader: R) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
-    R: Iterator<Item = StatsResult<Array1<F>>> + Send,
+    R: Iterator<Item = StatsResult<Array1<F>>> + Send
+        + std::fmt::Display,
 {
     let processor = StreamingProcessor::new(StreamingConfig::default());
     let accumulator = processor.stream_descriptive_stats(data_reader)?;
@@ -953,7 +961,8 @@ where
 pub fn stream_variance<F, R>(data_reader: R) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
-    R: Iterator<Item = StatsResult<Array1<F>>> + Send,
+    R: Iterator<Item = StatsResult<Array1<F>>> + Send
+        + std::fmt::Display,
 {
     let processor = StreamingProcessor::new(StreamingConfig::default());
     let accumulator = processor.stream_descriptive_stats(data_reader)?;
@@ -964,7 +973,8 @@ where
 pub fn stream_std<F, R>(data_reader: R) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
-    R: Iterator<Item = StatsResult<Array1<F>>> + Send,
+    R: Iterator<Item = StatsResult<Array1<F>>> + Send
+        + std::fmt::Display,
 {
     let processor = StreamingProcessor::new(StreamingConfig::default());
     let accumulator = processor.stream_descriptive_stats(data_reader)?;

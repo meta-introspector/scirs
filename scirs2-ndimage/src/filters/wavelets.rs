@@ -12,7 +12,6 @@ use crate::error::{NdimageError, NdimageResult};
 use crate::filters::BorderMode;
 use crate::utils::safe_f64_to_float;
 
-
 /// Wavelet family enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WaveletFamily {

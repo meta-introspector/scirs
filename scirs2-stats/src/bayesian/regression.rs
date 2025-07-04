@@ -3,10 +3,10 @@
 //! This module implements Bayesian approaches to linear regression, providing
 //! posterior distributions over model parameters and predictions.
 
-use crate::error::{StatsError, StatsResult as Result};
+use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::validation::*;
-use scirs2_linalg::{det, inv};
+use scirs2_linalg;
 
 /// Bayesian linear regression with normal-inverse-gamma prior
 ///
@@ -105,7 +105,7 @@ impl BayesianLinearRegression {
     }
 
     /// Fit the Bayesian regression model
-    pub fn fit(&self, x: ArrayView2<f64>, y: ArrayView1<f64>) -> Result<BayesianRegressionResult> {
+    pub fn fit(&self, x: ArrayView2<f64>, y: ArrayView1<f64>) -> StatsResult<BayesianRegressionResult> {
         check_array_finite(&x, "x")?;
         check_array_finite(&y, "y")?;
         let (n_samples, n_features) = x.dim();
@@ -147,7 +147,7 @@ impl BayesianLinearRegression {
 
         // Posterior precision
         let posterior_precision = &self.prior_precision + &xtx;
-        let posterior_covariance = inv(&posterior_precision.view(), None).map_err(|e| {
+        let posterior_covariance = scirs2_linalg::inv(&posterior_precision.view(), None).map_err(|e| {
             StatsError::ComputationError(format!("Failed to invert posterior precision: {}", e))
         })?;
 
@@ -203,16 +203,16 @@ impl BayesianLinearRegression {
         posterior_precision: &Array2<f64>,
         posterior_alpha: f64,
         posterior_beta: f64,
-    ) -> Result<f64> {
+    ) -> StatsResult<f64> {
         let n = x.nrows() as f64;
         let _p = x.ncols() as f64;
 
         // Log determinant terms
-        let prior_log_det = det(&self.prior_precision.view(), None).map_err(|e| {
+        let prior_log_det = scirs2_linalg::det(&self.prior_precision.view(), None).map_err(|e| {
             StatsError::ComputationError(format!("Failed to compute prior determinant: {}", e))
         })?;
 
-        let posterior_log_det = det(&posterior_precision.view(), None).map_err(|e| {
+        let posterior_log_det = scirs2_linalg::det(&posterior_precision.view(), None).map_err(|e| {
             StatsError::ComputationError(format!("Failed to compute posterior determinant: {}", e))
         })?;
 
@@ -240,7 +240,7 @@ impl BayesianLinearRegression {
         &self,
         x: ArrayView2<f64>,
         result: &BayesianRegressionResult,
-    ) -> Result<BayesianPredictionResult> {
+    ) -> StatsResult<BayesianPredictionResult> {
         check_array_finite(&x, "x")?;
         let (n_test, n_features) = x.dim();
 
@@ -297,7 +297,7 @@ impl BayesianLinearRegression {
         x: ArrayView2<f64>,
         result: &BayesianRegressionResult,
         confidence: f64,
-    ) -> Result<BayesianPredictionResult> {
+    ) -> StatsResult<BayesianPredictionResult> {
         check_probability(confidence, "confidence")?;
 
         let mut pred_result = self.predict(x, result)?;
@@ -385,7 +385,7 @@ impl ARDBayesianRegression {
     }
 
     /// Fit ARD Bayesian regression using iterative optimization
-    pub fn fit(&self, x: ArrayView2<f64>, y: ArrayView1<f64>) -> Result<ARDRegressionResult> {
+    pub fn fit(&self, x: ArrayView2<f64>, y: ArrayView1<f64>) -> StatsResult<ARDRegressionResult> {
         check_array_finite(&x, "x")?;
         check_array_finite(&y, "y")?;
         let (n_samples, n_features) = x.dim();
@@ -432,7 +432,7 @@ impl ARDBayesianRegression {
             let alpha_diag = Array2::from_diag(&alpha);
             let precision = &alpha_diag + beta * &xtx;
 
-            let covariance = inv(&precision.view(), None).map_err(|e| {
+            let covariance = scirs2_linalg::inv(&precision.view(), None).map_err(|e| {
                 StatsError::ComputationError(format!("Failed to invert precision: {}", e))
             })?;
 
@@ -488,7 +488,7 @@ impl ARDBayesianRegression {
         // Final posterior computation
         let alpha_diag = Array2::from_diag(&alpha);
         let precision = &alpha_diag + beta * &xtx;
-        let covariance = inv(&precision.view(), None).map_err(|e| {
+        let covariance = scirs2_linalg::inv(&precision.view(), None).map_err(|e| {
             StatsError::ComputationError(format!("Failed to compute final covariance: {}", e))
         })?;
         let mean = beta * covariance.dot(&xty);
@@ -513,7 +513,7 @@ impl ARDBayesianRegression {
         y: &Array1<f64>,
         alpha: &Array1<f64>,
         beta: f64,
-    ) -> Result<f64> {
+    ) -> StatsResult<f64> {
         let n = x.nrows() as f64;
         let p = x.ncols() as f64;
 
@@ -523,14 +523,14 @@ impl ARDBayesianRegression {
         let alpha_diag = Array2::from_diag(alpha);
         let precision = &alpha_diag + beta * &xtx;
 
-        let covariance = inv(&precision.view(), None).map_err(|e| {
+        let covariance = scirs2_linalg::inv(&precision.view(), None).map_err(|e| {
             StatsError::ComputationError(format!("Failed to invert precision for log ML: {}", e))
         })?;
 
         let mean = beta * covariance.dot(&xty);
 
         // Compute log determinant
-        let log_det_precision = det(&precision.view(), None).map_err(|e| {
+        let log_det_precision = scirs2_linalg::det(&precision.view(), None).map_err(|e| {
             StatsError::ComputationError(format!("Failed to compute determinant: {}", e))
         })?;
 
@@ -603,7 +603,7 @@ fn gamma_log(x: f64) -> f64 {
 
 /// Normal distribution percent point function (inverse CDF)
 #[allow(dead_code)]
-fn normal_ppf(p: f64) -> Result<f64> {
+fn normal_ppf(p: f64) -> StatsResult<f64> {
     if p <= 0.0 || p >= 1.0 {
         return Err(StatsError::InvalidArgument(
             "p must be between 0 and 1".to_string(),
@@ -635,7 +635,7 @@ fn normal_ppf(p: f64) -> Result<f64> {
 
 /// Student's t distribution percent point function (simplified)
 #[allow(dead_code)]
-fn t_ppf(p: f64, df: f64) -> Result<f64> {
+fn t_ppf(p: f64, df: f64) -> StatsResult<f64> {
     if p <= 0.0 || p >= 1.0 {
         return Err(StatsError::InvalidArgument(
             "p must be between 0 and 1".to_string(),

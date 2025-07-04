@@ -952,7 +952,7 @@ impl ProgressTracker {
     }
 }
 
-/// Ultrathink-enhanced streaming text processor for maximum performance
+/// Advanced-enhanced streaming text processor for maximum performance
 pub struct UltrathinkStreamingProcessor<T: Tokenizer> {
     tokenizer: T,
     chunk_cache: HashMap<String, CachedChunk>,
@@ -1000,7 +1000,7 @@ pub struct StreamingPerformanceMetric {
 }
 
 impl<T: Tokenizer + Send + Sync> UltrathinkStreamingProcessor<T> {
-    /// Create a new ultrathink streaming processor
+    /// Create a new Advanced streaming processor
     pub fn new(tokenizer: T) -> Self {
         Self {
             tokenizer,

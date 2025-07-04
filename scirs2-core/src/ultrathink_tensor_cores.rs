@@ -1,7 +1,7 @@
-//! Ultrathink Tensor Cores and Automatic Kernel Tuning Framework
+//! Advanced Tensor Cores and Automatic Kernel Tuning Framework
 //!
 //! This module provides AI-driven optimization and adaptive management for tensor cores
-//! and automatic kernel tuning in ultrathink mode, enabling intelligent performance
+//! and automatic kernel tuning in Advanced mode, enabling intelligent performance
 //! optimization across diverse GPU architectures and workloads.
 //!
 //! # Features
@@ -49,7 +49,7 @@ mod gpu_implementation {
     /// Central coordinator for advanced tensor cores and kernel tuning
     #[allow(dead_code)]
     #[derive(Debug)]
-    pub struct UltrathinkTensorCoreCoordinator {
+    pub struct advancedTensorCoreCoordinator {
         /// Tensor core managers for different backends
         pub tensor_managers: Arc<RwLock<HashMap<GpuBackend, TensorCoreManager>>>,
         /// Auto-tuners for different backends
@@ -65,7 +65,7 @@ mod gpu_implementation {
         /// Real-time analytics
         pub analytics_engine: Arc<Mutex<RealTimeAnalytics>>,
         /// Configuration
-        pub config: UltrathinkTensorConfig,
+        pub config: advancedTensorConfig,
         /// Monitoring system
         pub monitoring: Arc<RwLock<TensorCoreMonitoring>>,
     }
@@ -74,7 +74,7 @@ mod gpu_implementation {
     #[allow(dead_code)]
     #[derive(Debug, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub struct UltrathinkTensorConfig {
+    pub struct advancedTensorConfig {
         /// Enable AI-driven optimization
         pub enable_ai_optimization: bool,
         /// Enable adaptive kernel tuning
@@ -99,7 +99,7 @@ mod gpu_implementation {
         pub enable_dvfs: bool,
     }
 
-    impl Default for UltrathinkTensorConfig {
+    impl Default for advancedTensorConfig {
         fn default() -> Self {
             Self {
                 enable_ai_optimization: true,
@@ -2286,9 +2286,9 @@ mod gpu_implementation {
     }
 
     #[cfg(feature = "gpu")]
-    impl UltrathinkTensorCoreCoordinator {
+    impl advancedTensorCoreCoordinator {
         /// Create a new advanced tensor core coordinator
-        pub fn new(config: UltrathinkTensorConfig) -> CoreResult<Self> {
+        pub fn new(config: advancedTensorConfig) -> CoreResult<Self> {
             let tensor_managers = Arc::new(RwLock::new(HashMap::new()));
             let auto_tuners = Arc::new(RwLock::new(HashMap::new()));
             let ai_optimizer = Arc::new(Mutex::new(AIOptimizationEngine::new()?));
@@ -3909,9 +3909,9 @@ mod gpu_implementation {
         }
     }
 
-    impl Default for UltrathinkTensorCoreCoordinator {
+    impl Default for advancedTensorCoreCoordinator {
         fn default() -> Self {
-            Self::new(UltrathinkTensorConfig::default())
+            Self::new(advancedTensorConfig::default())
                 .expect("Failed to create default coordinator")
         }
     }
@@ -4223,21 +4223,21 @@ mod gpu_implementation {
 
         #[test]
         fn test_coordinator_creation() {
-            let config = UltrathinkTensorConfig::default();
-            let coordinator = UltrathinkTensorCoreCoordinator::new(config);
+            let config = advancedTensorConfig::default();
+            let coordinator = advancedTensorCoreCoordinator::new(config);
             assert!(coordinator.is_ok());
         }
 
         #[test]
         fn test_backend_initialization() {
-            let coordinator = UltrathinkTensorCoreCoordinator::default();
+            let coordinator = advancedTensorCoreCoordinator::default();
             let result = coordinator.initialize_backend(GpuBackend::Cpu);
             assert!(result.is_ok());
         }
 
         #[test]
         fn test_config_defaults() {
-            let config = UltrathinkTensorConfig::default();
+            let config = advancedTensorConfig::default();
             assert!(config.enable_ai_optimization);
             assert!(config.enable_adaptive_tuning);
             assert!(config.enable_real_time_learning);
@@ -4342,7 +4342,7 @@ pub mod fallback {
     #[allow(dead_code)]
     #[derive(Debug, Clone, Default)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-    pub struct UltrathinkTensorConfig {
+    pub struct advancedTensorConfig {
         /// Feature disabled - GPU not available
         pub gpu_available: bool,
     }
@@ -4351,7 +4351,7 @@ pub mod fallback {
     pub fn create_fallback_coordinator() -> CoreResult<()> {
         Err(CoreError::ComputationError(
             crate::error::ErrorContext::new(
-                "Ultrathink tensor cores require GPU feature to be enabled",
+                "Advanced tensor cores require GPU feature to be enabled",
             ),
         ))
     }

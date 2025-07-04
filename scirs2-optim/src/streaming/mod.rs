@@ -166,10 +166,11 @@ pub enum LearningRateAdaptation {
 }
 
 /// Streaming gradient descent optimizer
-pub struct StreamingOptimizer<O, A>
+pub struct StreamingOptimizer<O, A, D>
 where
-    A: Float,
-    O: Optimizer<A>,
+    A: Float + Send + Sync,
+    D: ndarray::Dimension,
+    O: Optimizer<A, D>,
 {
     /// Base optimizer
     base_optimizer: O,
@@ -390,10 +391,11 @@ enum UpdatePriority {
     Critical,
 }
 
-impl<O, A> StreamingOptimizer<O, A>
+impl<O, A, D> StreamingOptimizer<O, A, D>
 where
     A: Float + Default + Clone + Send + Sync + std::fmt::Debug,
-    O: Optimizer<A> + Send + Sync,
+    D: ndarray::Dimension,
+    O: Optimizer<A, D> + Send + Sync,
 {
     /// Create a new streaming optimizer
     pub fn new(base_optimizer: O, config: StreamingConfig) -> Result<Self> {
@@ -473,10 +475,13 @@ where
             config.processing_priority,
         );
 
+        // Save buffer_size before moving config
+        let buffer_size = config.buffer_size;
+
         Ok(Self {
             base_optimizer,
             config,
-            data_buffer: VecDeque::with_capacity(config.buffer_size),
+            data_buffer: VecDeque::with_capacity(buffer_size),
             gradient_buffer: None,
             lr_adaptation_state,
             drift_detector,

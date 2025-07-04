@@ -27,7 +27,8 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 pub fn mad_simd<F, D>(x: &mut ArrayBase<D, Ix1>, scale: F, nan_policy: &str) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: DataMut<Elem = F>,
+    D: DataMut<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     if n == 0 {
@@ -115,7 +116,8 @@ pub fn iqr_simd<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: DataMut<Elem = F>,
+    D: DataMut<Elem = F>
+        + std::fmt::Display,
 {
     if x.is_empty() {
         return Err(StatsError::invalid_argument(
@@ -150,7 +152,8 @@ pub fn coefficient_of_variation_simd<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     use crate::descriptive_simd::{mean_simd, std_simd};
 
@@ -202,7 +205,8 @@ where
 pub fn range_simd<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     if x.is_empty() {
         return Err(StatsError::invalid_argument(
@@ -243,7 +247,8 @@ where
 pub fn gini_simd<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     if n == 0 {
@@ -310,7 +315,8 @@ where
 pub fn sem_simd<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>,
+    D: Data<Elem = F>
+        + std::fmt::Display,
 {
     use crate::descriptive_simd::std_simd;
 
@@ -336,7 +342,8 @@ pub fn median_abs_deviation_simd<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: DataMut<Elem = F>,
+    D: DataMut<Elem = F>
+        + std::fmt::Display,
 {
     let n = x.len();
     if n == 0 {
@@ -383,7 +390,8 @@ pub fn percentile_range_simd<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: DataMut<Elem = F>,
+    D: DataMut<Elem = F>
+        + std::fmt::Display,
 {
     if lower_pct < F::zero()
         || lower_pct > F::from(100).unwrap()

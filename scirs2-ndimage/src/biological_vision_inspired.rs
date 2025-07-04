@@ -1320,7 +1320,7 @@ mod tests {
     }
 }
 
-// # Ultrathink Mode: Advanced Biological Vision Enhancements
+// # Advanced Mode: Advanced Biological Vision Enhancements
 //
 // This section implements cutting-edge biological vision algorithms that represent
 // the absolute forefront of computational neuroscience and vision research.
@@ -1806,7 +1806,7 @@ where
     Ok(adaptation_maps)
 }
 
-// Helper functions for ultrathink mode biological vision algorithms
+// Helper functions for Advanced mode biological vision algorithms
 
 #[allow(dead_code)]
 fn extract_retinal_neighborhood<T>(

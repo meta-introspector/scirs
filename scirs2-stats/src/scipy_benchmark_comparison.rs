@@ -607,7 +607,7 @@ impl ScipyBenchmarkComparison {
 
     /// Run comprehensive comparison benchmarks
     pub fn run_comprehensive_comparison(&self) -> StatsResult<ScipyComparisonReport> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Verify SciPy environment
         let scipy_env = self.verify_scipy_environment()?;

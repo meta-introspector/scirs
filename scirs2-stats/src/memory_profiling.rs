@@ -297,7 +297,7 @@ pub mod memory_mapped {
     use super::*;
 
     /// Chunked mean calculation for memory-mapped data
-    pub fn mmap_mean<'a, F: Float + NumCast + 'a>(
+    pub fn mmap_mean<'a, F: Float + NumCast + std::fmt::Display + std::iter::Sum<F> + 'a>(
         data_chunks: impl Iterator<Item = ArrayView1<'a, F>>,
         total_count: usize,
     ) -> StatsResult<F> {
@@ -322,7 +322,7 @@ pub mod memory_mapped {
     }
 
     /// Chunked variance calculation using Welford's algorithm
-    pub fn mmap_variance<'a, F: Float + NumCast + 'a>(
+    pub fn mmap_variance<'a, F: Float + NumCast + std::fmt::Display + 'a>(
         data_chunks: impl Iterator<Item = ArrayView1<'a, F>>,
         total_count: usize,
         ddof: usize,
@@ -358,7 +358,7 @@ pub struct RingBufferStats<F: Float> {
     sum_squares: F,
 }
 
-impl<F: Float + NumCast> RingBufferStats<F> {
+impl<F: Float + NumCast + std::fmt::Display> RingBufferStats<F> {
     /// Create a new ring buffer with fixed capacity
     pub fn new(capacity: usize) -> Self {
         Self {
@@ -425,7 +425,7 @@ enum StatOperation {
     StandardScaling,
 }
 
-impl<F: Float + NumCast + std::iter::Sum> LazyStatComputation<F> {
+impl<F: Float + NumCast + std::iter::Sum + std::fmt::Display> LazyStatComputation<F> {
     /// Create a new lazy computation
     pub fn new(data: Vec<F>) -> Self {
         Self {

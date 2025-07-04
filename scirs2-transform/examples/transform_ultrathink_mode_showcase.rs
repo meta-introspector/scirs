@@ -1,32 +1,32 @@
-//! Ultrathink Mode Showcase - Demonstrates advanced optimization features
+//! Advanced Mode Showcase - Demonstrates advanced optimization features
 //!
-//! This example showcases the ULTRATHINK MODE implementations in scirs2-transform,
+//! This example showcases the Advanced MODE implementations in scirs2-transform,
 //! including neuromorphic adaptation and quantum-inspired optimization.
 
 use ndarray::{Array1, Array2};
 use scirs2_transform::{
-    auto_feature_engineering::DatasetMetaFeatures, error::Result, UltraThinkNeuromorphicProcessor,
-    UltraThinkQuantumOptimizer,
+    auto_feature_engineering::DatasetMetaFeatures, error::Result, advancedNeuromorphicProcessor,
+    advancedQuantumOptimizer,
 };
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🚀 ULTRATHINK MODE Showcase - Advanced Data Transformation Optimization");
+    println!("🚀 Advanced MODE Showcase - Advanced Data Transformation Optimization");
     println!("========================================================================");
 
     // Example 1: Neuromorphic Adaptation
-    println!("\n✅ ULTRATHINK MODE: Neuromorphic Adaptation System");
+    println!("\n✅ Advanced MODE: Neuromorphic Adaptation System");
     println!("--------------------------------------------------");
 
     demonstrate_neuromorphic_adaptation()?;
 
     // Example 2: Quantum-Inspired Optimization
-    println!("\n✅ ULTRATHINK MODE: Quantum-Inspired Optimization");
+    println!("\n✅ Advanced MODE: Quantum-Inspired Optimization");
     println!("------------------------------------------------");
 
     demonstrate_quantum_optimization()?;
 
-    println!("\n🎯 ULTRATHINK MODE Showcase completed successfully!");
+    println!("\n🎯 Advanced MODE Showcase completed successfully!");
     println!("Advanced optimization features are ready for production use.");
 
     Ok(())
@@ -35,7 +35,7 @@ fn main() -> Result<()> {
 #[allow(dead_code)]
 fn demonstrate_neuromorphic_adaptation() -> Result<()> {
     // Create ultra-fast neuromorphic processor
-    let mut processor = UltraThinkNeuromorphicProcessor::new(10, 20, 10);
+    let mut processor = advancedNeuromorphicProcessor::new(10, 20, 10);
 
     // Configure for high-throughput workload
     processor.tune_for_workload(1000.0, 0.05); // 1000 samples/sec, 50ms latency
@@ -115,7 +115,7 @@ fn demonstrate_neuromorphic_adaptation() -> Result<()> {
 
     // Get performance diagnostics
     let diagnostics = processor.get_advanced_diagnostics();
-    println!("\n📊 ULTRATHINK Performance Metrics:");
+    println!("\n📊 Advanced Performance Metrics:");
     println!("   Throughput: {:.1} samples/sec", diagnostics.throughput);
     println!("   Memory Efficiency: {:.3}", diagnostics.memory_efficiency);
     println!(
@@ -154,7 +154,7 @@ fn demonstrate_quantum_optimization() -> Result<()> {
         (0.0, 1.0),  // Regularization parameter
     ];
 
-    let mut optimizer = UltraThinkQuantumOptimizer::new(dimension, population_size, bounds, 100)?;
+    let mut optimizer = advancedQuantumOptimizer::new(dimension, population_size, bounds, 100)?;
 
     // Define a complex multi-modal optimization objective
     let objective_function = |params: &Array1<f64>| -> f64 {
@@ -202,7 +202,7 @@ fn demonstrate_quantum_optimization() -> Result<()> {
     let diagnostics = optimizer.get_advanced_diagnostics();
     let adaptive_params = optimizer.get_adaptive_params();
 
-    println!("\n⚡ ULTRATHINK Quantum Metrics:");
+    println!("\n⚡ Advanced Quantum Metrics:");
     println!(
         "   Convergence Rate: {:.1} iter/sec",
         diagnostics.convergence_rate

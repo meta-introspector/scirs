@@ -1,6 +1,6 @@
-//! Final Ultrathink Mode Validation
+//! Final Advanced Mode Validation
 //!
-//! This example validates that all ultrathink mode functionality is working correctly
+//! This example validates that all Advanced mode functionality is working correctly
 //! and provides performance metrics for the complete system.
 
 #![allow(unused_imports)]
@@ -13,12 +13,12 @@ use scirs2_graph::{
 };
 
 use scirs2_graph::advanced::{
-    create_enhanced_ultrathink_processor, create_large_graph_ultrathink_processor,
-    create_performance_ultrathink_processor, execute_with_enhanced_ultrathink, UltrathinkConfig,
-    UltrathinkProcessor,
+    create_enhanced_advanced_processor, create_large_graph_advanced_processor,
+    create_performance_advanced_processor, execute_with_enhanced_advanced, AdvancedConfig,
+    AdvancedProcessor,
 };
 
-use scirs2_graph::graph_memory_profiler::{MemoryProfilerConfig, UltrathinkMemoryProfiler};
+use scirs2_graph::graph_memory_profiler::{MemoryProfilerConfig, AdvancedMemoryProfiler};
 
 use scirs2_graph::numerical_accuracy_validation::{
     create_comprehensive_validation_suite, run_quick_validation, ValidationConfig,
@@ -30,7 +30,7 @@ use std::time::{Duration, Instant};
 
 /// Comprehensive validation report
 #[derive(Debug)]
-struct UltrathinkValidationReport {
+struct advancedValidationReport {
     pub processor_tests: HashMap<String, bool>,
     pub algorithm_tests: HashMap<String, Duration>,
     pub memory_efficiency: f64,
@@ -46,7 +46,7 @@ enum ValidationStatus {
     Fail,
 }
 
-/// Test different ultrathink processor configurations
+/// Test different Advanced processor configurations
 #[allow(dead_code)]
 fn test_processor_configurations() -> HashMap<String, bool> {
     println!("🔧 Testing advanced processor configurations...");
@@ -93,7 +93,7 @@ fn test_processor_configurations() -> HashMap<String, bool> {
 
     // Test custom configuration
     println!("  Testing custom configuration...");
-    let custom_config = UltrathinkConfig {
+    let custom_config = AdvancedConfig {
         enable_neural_rl: true,
         enable_gpu_acceleration: false, // Disable GPU for compatibility
         enable_neuromorphic: true,
@@ -105,7 +105,7 @@ fn test_processor_configurations() -> HashMap<String, bool> {
         neural_hidden_size: 64,
     };
 
-    match std::panic::catch_unwind(|| UltrathinkProcessor::new(custom_config)) {
+    match std::panic::catch_unwind(|| AdvancedProcessor::new(custom_config)) {
         Ok(_processor) => {
             results.insert("custom_configuration".to_string(), true);
             println!("    ✅ Custom configuration created successfully");
@@ -122,7 +122,7 @@ fn test_processor_configurations() -> HashMap<String, bool> {
 /// Test algorithm execution with advanced mode
 #[allow(dead_code)]
 fn test_algorithm_execution() -> HashMap<String, Duration> {
-    println!("🧮 Testing algorithm execution with ultrathink mode...");
+    println!("🧮 Testing algorithm execution with Advanced mode...");
     let mut results = HashMap::new();
 
     // Create test graph
@@ -138,7 +138,7 @@ fn test_algorithm_execution() -> HashMap<String, Duration> {
     let mut processor = create_enhanced_advanced_processor();
 
     // Test BFS
-    println!("  Testing BFS with ultrathink...");
+    println!("  Testing BFS with Advanced...");
     let start_time = Instant::now();
     match execute_with_enhanced_advanced(&mut processor, &test_graph, "bfs_test", |g| {
         breadth_first_search(g, &0)
@@ -156,7 +156,7 @@ fn test_algorithm_execution() -> HashMap<String, Duration> {
     // Test Connected Components
     println!("  Testing connected components with advanced...");
     let start_time = Instant::now();
-    match execute_with_enhanced_ultrathink(
+    match execute_with_enhanced_advanced(
         &mut processor,
         &test_graph,
         "connected_components_test",
@@ -175,7 +175,7 @@ fn test_algorithm_execution() -> HashMap<String, Duration> {
     // Test PageRank
     println!("  Testing PageRank with advanced...");
     let start_time = Instant::now();
-    match execute_with_enhanced_ultrathink(&mut processor, &test_graph, "pagerank_test", |g| {
+    match execute_with_enhanced_advanced(&mut processor, &test_graph, "pagerank_test", |g| {
         pagerank_centrality(g, None, None, None)
     }) {
         Ok(_) => {
@@ -191,7 +191,7 @@ fn test_algorithm_execution() -> HashMap<String, Duration> {
     // Test Community Detection
     println!("  Testing community detection with advanced...");
     let start_time = Instant::now();
-    match execute_with_enhanced_ultrathink(
+    match execute_with_enhanced_advanced(
         &mut processor,
         &test_graph,
         "community_detection_test",
@@ -213,7 +213,7 @@ fn test_algorithm_execution() -> HashMap<String, Duration> {
 /// Test memory efficiency with advanced mode
 #[allow(dead_code)]
 fn test_memory_efficiency() -> f64 {
-    println!("💾 Testing memory efficiency with ultrathink mode...");
+    println!("💾 Testing memory efficiency with Advanced mode...");
 
     // Create memory profiler
     let config = MemoryProfilerConfig {
@@ -224,7 +224,7 @@ fn test_memory_efficiency() -> f64 {
         enable_allocation_tracking: true,
     };
 
-    let mut profiler = UltrathinkMemoryProfiler::new(config);
+    let mut profiler = AdvancedMemoryProfiler::new(config);
 
     // Test with medium-sized graph
     let mut rng = rand::rng();
@@ -315,7 +315,7 @@ fn test_numerical_accuracy() -> bool {
 /// Compare performance with and without advanced mode
 #[allow(dead_code)]
 fn test_performance_improvements() -> HashMap<String, f64> {
-    println!("⚡ Testing performance improvements with ultrathink mode...");
+    println!("⚡ Testing performance improvements with Advanced mode...");
     let mut improvements = HashMap::new();
 
     let mut rng = rand::rng();
@@ -335,7 +335,7 @@ fn test_performance_improvements() -> HashMap<String, f64> {
     let _standard_result = pagerank_centrality(&test_graph, None, None, None);
     let standard_duration = start_time.elapsed();
 
-    // Ultrathink execution
+    // Advanced execution
     let mut processor = create_performance_advanced_processor();
     let start_time = Instant::now();
     let _advanced_result = execute_with_enhanced_advanced(
@@ -360,7 +360,7 @@ fn test_performance_improvements() -> HashMap<String, f64> {
     let _standard_result = connected_components(&test_graph);
     let standard_duration = start_time.elapsed();
 
-    // Ultrathink execution
+    // Advanced execution
     let start_time = Instant::now();
     let _advanced_result =
         execute_with_enhanced_advanced(&mut processor, &test_graph, "cc_performance_test", |g| {
@@ -388,7 +388,7 @@ fn generate_final_report(
     memory_efficiency: f64,
     numerical_accuracy: bool,
     performance_improvements: HashMap<String, f64>,
-) -> UltrathinkValidationReport {
+) -> advancedValidationReport {
     let mut overall_status = ValidationStatus::Pass;
 
     // Check processor tests
@@ -412,7 +412,7 @@ fn generate_final_report(
         overall_status = ValidationStatus::Fail;
     }
 
-    UltrathinkValidationReport {
+    advancedValidationReport {
         processor_tests,
         algorithm_tests,
         memory_efficiency,
@@ -424,9 +424,9 @@ fn generate_final_report(
 
 /// Print detailed validation report
 #[allow(dead_code)]
-fn print_validation_report(report: &UltrathinkValidationReport) {
+fn print_validation_report(report: &advancedValidationReport) {
     println!("\n" + "=".repeat(60).as_str());
-    println!("🎯 ULTRATHINK MODE FINAL VALIDATION REPORT");
+    println!("🎯 Advanced MODE FINAL VALIDATION REPORT");
     println!("=".repeat(60));
 
     // Overall status
@@ -574,11 +574,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
         ValidationStatus::Warning => {
-            println!("\n⚠️ Ultrathink mode validation completed with warnings.");
+            println!("\n⚠️ Advanced mode validation completed with warnings.");
             Ok(())
         }
         ValidationStatus::Fail => {
-            println!("\n❌ Ultrathink mode validation failed.");
+            println!("\n❌ Advanced mode validation failed.");
             std::process::exit(1);
         }
     }

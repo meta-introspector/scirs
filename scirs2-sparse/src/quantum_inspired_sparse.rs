@@ -1,4 +1,4 @@
-//! Quantum-Inspired Sparse Matrix Operations for Ultrathink Mode
+//! Quantum-Inspired Sparse Matrix Operations for Advanced Mode
 //!
 //! This module implements quantum-inspired algorithms for sparse matrix operations,
 //! leveraging principles from quantum computing to achieve enhanced performance

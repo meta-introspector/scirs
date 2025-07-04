@@ -1864,7 +1864,7 @@ mod advanced_tests {
     }
 }
 
-/// **ULTRATHINK MODE: NEXT-GENERATION META-LEARNING TECHNIQUES**
+/// **Advanced MODE: NEXT-GENERATION META-LEARNING TECHNIQUES**
 /// Prototypical Networks for Few-Shot Learning
 #[derive(Debug)]
 pub struct PrototypicalNetworks<F: Float + Debug + ndarray::ScalarOperand> {

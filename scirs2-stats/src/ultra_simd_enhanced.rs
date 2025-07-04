@@ -260,7 +260,8 @@ pub struct AccuracyMetrics {
 
 impl<F> UltraEnhancedSimdProcessor<F>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static,
+    F: Float + NumCast + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     /// Create a new ultra-enhanced SIMD processor
     pub fn new(config: UltraSimdConfig) -> StatsResult<Self> {
@@ -593,7 +594,8 @@ impl Default for UltraSimdConfig {
 #[allow(dead_code)]
 pub fn create_ultra_simd_processor<F>() -> StatsResult<UltraEnhancedSimdProcessor<F>>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static,
+    F: Float + NumCast + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     UltraEnhancedSimdProcessor::new(UltraSimdConfig::default())
 }
@@ -604,7 +606,8 @@ pub fn create_platform_optimized_simd_processor<F>(
     target_platform: TargetPlatform,
 ) -> StatsResult<UltraEnhancedSimdProcessor<F>>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static,
+    F: Float + NumCast + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     let config = match target_platform {
         TargetPlatform::IntelAvx512 => UltraSimdConfig {
@@ -645,7 +648,8 @@ pub enum TargetPlatform {
 #[allow(dead_code)]
 pub fn create_performance_optimized_simd_processor<F>() -> StatsResult<UltraEnhancedSimdProcessor<F>>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static,
+    F: Float + NumCast + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     let config = UltraSimdConfig {
         adaptive_selection: true,
@@ -667,7 +671,8 @@ where
 #[allow(dead_code)]
 pub fn create_stability_optimized_simd_processor<F>() -> StatsResult<UltraEnhancedSimdProcessor<F>>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static,
+    F: Float + NumCast + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     let config = UltraSimdConfig {
         adaptive_selection: true,
@@ -692,7 +697,8 @@ pub type F64UltraSimdProcessor = UltraEnhancedSimdProcessor<f64>;
 /// Machine learning-based algorithm selection for SIMD operations
 impl<F> UltraEnhancedSimdProcessor<F>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static,
+    F: Float + NumCast + Copy + Send + Sync + 'static
+        + std::fmt::Display,
 {
     /// Predict optimal algorithm based on data characteristics
     pub fn predict_optimal_algorithm(

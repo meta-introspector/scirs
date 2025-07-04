@@ -10,7 +10,8 @@ use scirs2_linalg::inv;
 #[inline]
 pub(crate) fn float_abs<F>(x: F) -> F
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     num_traits::Float::abs(x)
 }
@@ -19,7 +20,8 @@ where
 #[inline]
 pub(crate) fn _float_max<F>(a: F, b: F) -> F
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     num_traits::Float::max(a, b)
 }
@@ -28,7 +30,8 @@ where
 #[inline]
 pub(crate) fn _float_min<F>(a: F, b: F) -> F
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     num_traits::Float::min(a, b)
 }
@@ -37,7 +40,8 @@ where
 #[inline]
 pub(crate) fn float_ln<F>(x: F) -> F
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     num_traits::Float::ln(x)
 }
@@ -46,7 +50,8 @@ where
 #[inline]
 pub(crate) fn float_powi<F>(x: F, n: i32) -> F
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     num_traits::Float::powi(x, n)
 }
@@ -55,7 +60,8 @@ where
 #[inline]
 pub(crate) fn float_sqrt<F>(x: F) -> F
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     num_traits::Float::sqrt(x)
 }
@@ -74,7 +80,8 @@ where
         + 'static
         + num_traits::NumAssign
         + num_traits::One
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + std::fmt::Display,
 {
     // Calculate the mean squared error of the residuals
     let mse = residuals
@@ -104,7 +111,8 @@ where
 /// Calculate t-values for regression coefficients
 pub(crate) fn calculate_t_values<F>(coefficients: &Array1<F>, std_errors: &Array1<F>) -> Array1<F>
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     // Calculate t-values for each coefficient
     coefficients
@@ -123,7 +131,8 @@ where
 /// Find repeated elements in an array and return their indices
 pub(crate) fn find_repeats<F>(x: &ArrayView1<F>) -> Vec<Vec<usize>>
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     let n = x.len();
     let mut sorted_indices: Vec<usize> = (0..n).collect();
@@ -160,7 +169,8 @@ where
 /// Compute the median of slopes between all pairs of points
 pub(crate) fn compute_median_slope<F>(x: &ArrayView1<F>, y: &ArrayView1<F>) -> F
 where
-    F: Float + std::iter::Sum<F> + 'static,
+    F: Float + std::iter::Sum<F> + 'static
+        + std::fmt::Display,
 {
     let n = x.len();
     let mut slopes = Vec::with_capacity(n * (n - 1) / 2);
@@ -193,7 +203,8 @@ where
 /// Compute the normal distribution percent point function (inverse CDF)
 pub(crate) fn norm_ppf<F>(p: F) -> F
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     // This is a simplified approximation of the normal inverse CDF
     // For more accurate calculations, use the special functions in the stats module
@@ -243,7 +254,8 @@ where
 /// Compute the median absolute deviation from zero for a set of data
 pub(crate) fn median_abs_deviation_from_zero<F>(x: &ArrayView1<F>) -> F
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     let abs_x: Vec<F> = x.iter().map(|&val| float_abs(val)).collect();
 
@@ -268,7 +280,8 @@ where
 /// Add a column of ones to a matrix for an intercept term
 pub(crate) fn add_intercept<F>(x: &ArrayView2<F>) -> Array2<F>
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     let n = x.nrows();
     let p = x.ncols();
@@ -293,7 +306,8 @@ where
 /// Calculate residuals from actual y and predicted y
 pub(crate) fn _calculate_residuals<F>(y: &ArrayView1<F>, y_pred: &Array1<F>) -> Array1<F>
 where
-    F: Float + 'static,
+    F: Float + 'static
+        + std::fmt::Display,
 {
     y.to_owned() - y_pred
 }
@@ -304,7 +318,8 @@ pub(crate) fn calculate_sum_of_squares<F>(
     residuals: &ArrayView1<F>,
 ) -> (F, F, F, F)
 where
-    F: Float + std::iter::Sum<F> + 'static,
+    F: Float + std::iter::Sum<F> + 'static
+        + std::fmt::Display,
 {
     let n = y.len();
     let y_mean = y.iter().cloned().sum::<F>() / F::from(n).unwrap();

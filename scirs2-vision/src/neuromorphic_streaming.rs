@@ -18,7 +18,7 @@ use crate::error::Result;
 use crate::streaming::FrameMetadata;
 use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2, ArrayView2};
-use rand::prelude::*;
+use rand::Rng;
 use rand::rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};

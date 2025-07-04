@@ -355,8 +355,8 @@ impl AdaptiveSimdOptimizer {
         operation: impl Fn(&ArrayView1<F>, &SimdStrategy) -> StatsResult<T> + Send + Sync,
     ) -> StatsResult<SimdOptimizationResult<T>>
     where
-        F: Float + NumCast + SimdUnifiedOps + Send + Sync,
-        T: Send + Sync,
+        F: Float + NumCast + SimdUnifiedOps + Send + Sync + std::fmt::Display,
+        T: Send + Sync + std::fmt::Display,
     {
         let data_characteristics = self.analyze_data_characteristics(&data)?;
 
@@ -402,8 +402,8 @@ impl AdaptiveSimdOptimizer {
         operation: impl Fn(&ArrayView2<F>, &SimdStrategy) -> StatsResult<T> + Send + Sync,
     ) -> StatsResult<SimdOptimizationResult<T>>
     where
-        F: Float + NumCast + SimdUnifiedOps + Send + Sync,
-        T: Send + Sync,
+        F: Float + NumCast + SimdUnifiedOps + Send + Sync + std::fmt::Display,
+        T: Send + Sync + std::fmt::Display,
     {
         let data_characteristics = self.analyze_matrix_characteristics(&data)?;
         let strategy =
@@ -471,7 +471,8 @@ impl AdaptiveSimdOptimizer {
         data: &ArrayView1<F>,
     ) -> StatsResult<DataCharacteristics>
     where
-        F: Float + NumCast,
+        F: Float + NumCast
+        + std::fmt::Display,
     {
         let size = data.len();
         let element_size = std::mem::size_of::<F>();
@@ -527,7 +528,8 @@ impl AdaptiveSimdOptimizer {
         data: &ArrayView2<F>,
     ) -> StatsResult<DataCharacteristics>
     where
-        F: Float + NumCast,
+        F: Float + NumCast
+        + std::fmt::Display,
     {
         let size = data.len();
         let element_size = std::mem::size_of::<F>();
@@ -816,8 +818,8 @@ impl AdaptiveSimdOptimizer {
         failed_strategy: &SimdStrategy,
     ) -> StatsResult<SimdOptimizationResult<T>>
     where
-        F: Float + NumCast + SimdUnifiedOps + Send + Sync,
-        T: Send + Sync,
+        F: Float + NumCast + SimdUnifiedOps + Send + Sync + std::fmt::Display,
+        T: Send + Sync + std::fmt::Display,
     {
         // Create a conservative fallback strategy
         let fallback_strategy = SimdStrategy {
@@ -867,8 +869,8 @@ impl AdaptiveSimdOptimizer {
         failed_strategy: &SimdStrategy,
     ) -> StatsResult<SimdOptimizationResult<T>>
     where
-        F: Float + NumCast + SimdUnifiedOps + Send + Sync,
-        T: Send + Sync,
+        F: Float + NumCast + SimdUnifiedOps + Send + Sync + std::fmt::Display,
+        T: Send + Sync + std::fmt::Display,
     {
         // Similar to vector fallback but for matrices
         let fallback_strategy = SimdStrategy {
@@ -1028,8 +1030,8 @@ pub fn optimize_simd_operation<F, T>(
     operation: impl Fn(&ArrayView1<F>, &SimdStrategy) -> StatsResult<T> + Send + Sync,
 ) -> StatsResult<SimdOptimizationResult<T>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Send + Sync,
-    T: Send + Sync,
+    F: Float + NumCast + SimdUnifiedOps + Send + Sync + std::fmt::Display,
+    T: Send + Sync + std::fmt::Display,
 {
     let optimizer = AdaptiveSimdOptimizer::default()?;
     optimizer.optimize_vector_operation(operation_name, data, operation)

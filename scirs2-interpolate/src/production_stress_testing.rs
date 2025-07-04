@@ -559,7 +559,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                 Ok((x, y)) => {
                     // For error scenarios, we expect graceful failures
                     let mut issues = Vec::new();
-                    let mut error_count = 0;
+                    let mut _error_count = 0;
                     let mut total_tests = 0;
 
                     // Test each interpolation method
@@ -605,7 +605,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                                 }
                             }
                             Err(e) => {
-                                error_count += 1;
+                                _error_count += 1;
                                 // Check if error message is helpful
                                 let error_msg = e.to_string();
                                 if error_msg.len() < 10 || !error_msg.contains("data") {
